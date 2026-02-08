@@ -131,7 +131,7 @@ export const createAlbumSchema = z.object({
   tripId: z.number(),
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  coverPhotoId: z.number().optional(),
+  coverPhotoId: z.number().optional().nullable(),
 });
 
 // Note: Location, Activity, and Lodging associations are handled via EntityLink system, not direct FKs

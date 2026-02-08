@@ -53,7 +53,7 @@ export type LocationCategory = {
 
 export type CreateLocationInput = {
   tripId: number;
-  parentId?: number;
+  parentId?: number | null;
   name: string;
   address?: string;
   latitude?: number;
@@ -64,4 +64,7 @@ export type CreateLocationInput = {
   notes?: string;
 };
 
-export type UpdateLocationInput = Omit<Partial<CreateLocationInput>, 'tripId'>;
+export type UpdateLocationInput = Omit<Partial<CreateLocationInput>, 'tripId' | 'parentId' | 'categoryId'> & {
+  parentId?: number | null;
+  categoryId?: number | null;
+};
