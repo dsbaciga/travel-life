@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { ChevronDownIcon } from './icons';
 
 export interface MultiSelectOption {
@@ -27,6 +27,8 @@ export default function MultiSelectDropdown({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const instanceId = useId();
+  const dropdownId = `multiselect-${instanceId}`;
 
   // Close on outside click
   useEffect(() => {
@@ -81,6 +83,10 @@ export default function MultiSelectDropdown({
           setIsOpen(false);
           triggerRef.current?.focus();
           break;
+        case 'Tab':
+          // Close dropdown on Tab so focus moves naturally to the next element
+          setIsOpen(false);
+          break;
         case 'ArrowDown':
           event.preventDefault();
           setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
@@ -129,7 +135,9 @@ export default function MultiSelectDropdown({
     return `${selected.length} selected`;
   };
 
-  const dropdownId = `multiselect-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
+  const activeDescendant = isOpen && focusedIndex >= 0
+    ? `${dropdownId}-option-${focusedIndex}`
+    : undefined;
 
   return (
     <div ref={containerRef} className={`relative ${className}`} onKeyDown={handleKeyDown}>
@@ -140,6 +148,7 @@ export default function MultiSelectDropdown({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dropdownId : undefined}
+        aria-activedescendant={activeDescendant}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 focus-visible:outline-none ${
           selected.length > 0
             ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
@@ -153,18 +162,13 @@ export default function MultiSelectDropdown({
       </button>
 
       {isOpen && (
-        <div
-          id={dropdownId}
-          role="listbox"
-          aria-multiselectable="true"
-          aria-label={placeholder}
-          className="absolute z-50 mt-1 min-w-[220px] max-h-72 overflow-auto rounded-lg bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-600 shadow-lg animate-fade-in"
-        >
-          {/* Select All / Clear */}
+        <div className="absolute z-50 mt-1 min-w-[220px] max-h-72 overflow-auto rounded-lg bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-600 shadow-lg animate-fade-in">
+          {/* Select All / Clear - outside role="listbox" for ARIA compliance */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-navy-700 text-xs">
             <button
               type="button"
               onClick={selectAll}
+              tabIndex={-1}
               aria-label="Select all options"
               className="text-primary-600 dark:text-sky hover:underline font-medium focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 focus-visible:outline-none rounded"
             >
@@ -174,6 +178,7 @@ export default function MultiSelectDropdown({
               <button
                 type="button"
                 onClick={clearAll}
+                tabIndex={-1}
                 aria-label="Clear all selections"
                 className="text-slate dark:text-warm-gray hover:underline focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 focus-visible:outline-none rounded"
               >
@@ -182,49 +187,58 @@ export default function MultiSelectDropdown({
             )}
           </div>
 
-          {/* Options */}
-          {options.map((option, index) => {
-            const isSelected = selected.includes(option.value);
-            const isFocused = focusedIndex === index;
-            return (
-              <button
-                key={option.value}
-                ref={(el) => { optionRefs.current[index] = el; }}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => toggleOption(option.value)}
-                onMouseEnter={() => setFocusedIndex(index)}
-                className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors focus-visible:outline-none ${
-                  isFocused
-                    ? 'bg-primary-50 dark:bg-navy-700'
-                    : ''
-                } ${
-                  isSelected
-                    ? 'text-charcoal dark:text-warm-gray'
-                    : 'text-slate dark:text-warm-gray'
-                } ${
-                  !isFocused && !isSelected ? 'hover:bg-gray-50 dark:hover:bg-navy-700' : ''
-                }`}
-              >
-                <span
-                  className={`flex items-center justify-center w-4 h-4 rounded border flex-shrink-0 ${
+          {/* Options listbox */}
+          <div
+            id={dropdownId}
+            role="listbox"
+            aria-multiselectable="true"
+            aria-label={placeholder}
+          >
+            {options.map((option, index) => {
+              const isSelected = selected.includes(option.value);
+              const isFocused = focusedIndex === index;
+              return (
+                <button
+                  key={option.value}
+                  id={`${dropdownId}-option-${index}`}
+                  ref={(el) => { optionRefs.current[index] = el; }}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  tabIndex={-1}
+                  onClick={() => toggleOption(option.value)}
+                  onMouseEnter={() => setFocusedIndex(index)}
+                  className={`flex items-center gap-2 w-full px-3 py-2 text-sm text-left transition-colors focus-visible:outline-none ${
+                    isFocused
+                      ? 'bg-primary-50 dark:bg-navy-700'
+                      : ''
+                  } ${
                     isSelected
-                      ? 'bg-primary-600 dark:bg-sky border-primary-600 dark:border-sky'
-                      : 'border-gray-300 dark:border-navy-600'
+                      ? 'text-charcoal dark:text-warm-gray'
+                      : 'text-slate dark:text-warm-gray'
+                  } ${
+                    !isFocused && !isSelected ? 'hover:bg-gray-50 dark:hover:bg-navy-700' : ''
                   }`}
                 >
-                  {isSelected && (
-                    <svg className="w-3 h-3 text-white dark:text-navy-900" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                {option.emoji && <span>{option.emoji}</span>}
-                <span className="truncate">{option.label}</span>
-              </button>
-            );
-          })}
+                  <span
+                    className={`flex items-center justify-center w-4 h-4 rounded border flex-shrink-0 ${
+                      isSelected
+                        ? 'bg-primary-600 dark:bg-sky border-primary-600 dark:border-sky'
+                        : 'border-gray-300 dark:border-navy-600'
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg className="w-3 h-3 text-white dark:text-navy-900" viewBox="0 0 12 12" fill="none">
+                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  {option.emoji && <span>{option.emoji}</span>}
+                  <span className="truncate">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
