@@ -34,6 +34,13 @@ import { createAuthenticatedControllerArgs } from '../../__tests__/helpers/reque
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * asyncHandler does not return the inner promise, so rejected promises
+ * propagate to next() via a .catch() that runs in a later microtask.
+ * We need to flush the microtask queue before asserting on next().
+ */
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('JournalEntry Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -58,7 +65,8 @@ describe('JournalEntry Controller', () => {
         },
       });
 
-      await journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockCreateJournalEntry).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -84,7 +92,8 @@ describe('JournalEntry Controller', () => {
         },
       });
 
-      await journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -97,7 +106,8 @@ describe('JournalEntry Controller', () => {
         },
       });
 
-      await journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockCreateJournalEntry).not.toHaveBeenCalled();
@@ -124,7 +134,8 @@ describe('JournalEntry Controller', () => {
         },
       });
 
-      await journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.createJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockCreateJournalEntry).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -149,7 +160,8 @@ describe('JournalEntry Controller', () => {
         params: { tripId: '10' },
       });
 
-      await journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetJournalEntriesByTrip).toHaveBeenCalledWith(testUsers.user1.id, 10);
       expect(res.json).toHaveBeenCalledWith({
@@ -166,7 +178,8 @@ describe('JournalEntry Controller', () => {
         params: { tripId: '10' },
       });
 
-      await journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -176,7 +189,8 @@ describe('JournalEntry Controller', () => {
         params: { tripId: 'abc' },
       });
 
-      await journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntriesByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockGetJournalEntriesByTrip).not.toHaveBeenCalled();
@@ -192,7 +206,8 @@ describe('JournalEntry Controller', () => {
         params: { id: '5' },
       });
 
-      await journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetJournalEntryById).toHaveBeenCalledWith(testUsers.user1.id, 5);
       expect(res.json).toHaveBeenCalledWith({
@@ -206,7 +221,8 @@ describe('JournalEntry Controller', () => {
         params: { id: 'abc' },
       });
 
-      await journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockGetJournalEntryById).not.toHaveBeenCalled();
@@ -220,7 +236,8 @@ describe('JournalEntry Controller', () => {
         params: { id: '5' },
       });
 
-      await journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.getJournalEntryById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -236,7 +253,8 @@ describe('JournalEntry Controller', () => {
         body: { title: 'Updated Title', content: 'Updated' },
       });
 
-      await journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateJournalEntry).toHaveBeenCalledWith(testUsers.user1.id, 5, {
         title: 'Updated Title',
@@ -257,7 +275,8 @@ describe('JournalEntry Controller', () => {
         body: { title: 'Updated' },
       });
 
-      await journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -268,7 +287,8 @@ describe('JournalEntry Controller', () => {
         body: { content: '' }, // content must be min 1 char
       });
 
-      await journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.updateJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdateJournalEntry).not.toHaveBeenCalled();
@@ -284,7 +304,8 @@ describe('JournalEntry Controller', () => {
         params: { id: '5' },
       });
 
-      await journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteJournalEntry).toHaveBeenCalledWith(testUsers.user1.id, 5);
       expect(res.status).toHaveBeenCalledWith(200);
@@ -302,7 +323,8 @@ describe('JournalEntry Controller', () => {
         params: { id: '5' },
       });
 
-      await journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -312,7 +334,8 @@ describe('JournalEntry Controller', () => {
         params: { id: 'abc' },
       });
 
-      await journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      journalEntryController.deleteJournalEntry(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockDeleteJournalEntry).not.toHaveBeenCalled();

@@ -70,6 +70,13 @@ import { createAuthenticatedControllerArgs } from '../../__tests__/helpers/reque
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * asyncHandler does not return the inner promise, so rejected promises
+ * propagate to next() via a .catch() that runs in a later microtask.
+ * We need to flush the microtask queue before asserting on next().
+ */
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('User Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -82,7 +89,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getMe(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getMe(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetUserById).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -97,7 +105,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getMe(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getMe(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -112,7 +121,8 @@ describe('User Controller', () => {
         body: { timezone: 'Europe/London' },
       });
 
-      await userController.updateSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateUserSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         timezone: 'Europe/London',
@@ -131,7 +141,8 @@ describe('User Controller', () => {
         body: { timezone: 'Europe/London' },
       });
 
-      await userController.updateSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -146,7 +157,8 @@ describe('User Controller', () => {
         body: { immichApiUrl: 'http://localhost:2283', immichApiKey: 'key123' },
       });
 
-      await userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateImmichSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         immichApiUrl: 'http://localhost:2283',
@@ -169,7 +181,8 @@ describe('User Controller', () => {
         body: { immichApiUrl: null, immichApiKey: null },
       });
 
-      await userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
@@ -188,7 +201,8 @@ describe('User Controller', () => {
         body: { immichApiUrl: 'http://localhost:2283' },
       });
 
-      await userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -198,7 +212,8 @@ describe('User Controller', () => {
         body: { immichApiUrl: 'not-a-url' },
       });
 
-      await userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdateImmichSettings).not.toHaveBeenCalled();
@@ -212,7 +227,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetImmichSettings).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -227,7 +243,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -242,7 +259,8 @@ describe('User Controller', () => {
         body: { weatherApiKey: 'weather-key-123' },
       });
 
-      await userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateWeatherSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         weatherApiKey: 'weather-key-123',
@@ -264,7 +282,8 @@ describe('User Controller', () => {
         body: { weatherApiKey: null },
       });
 
-      await userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
@@ -283,7 +302,8 @@ describe('User Controller', () => {
         body: { weatherApiKey: 'key' },
       });
 
-      await userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -296,7 +316,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetWeatherSettings).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -311,7 +332,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getWeatherSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -326,7 +348,8 @@ describe('User Controller', () => {
         body: { aviationstackApiKey: 'av-key-123' },
       });
 
-      await userController.updateAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateAviationstackSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         aviationstackApiKey: 'av-key-123',
@@ -348,7 +371,8 @@ describe('User Controller', () => {
         body: { aviationstackApiKey: 'key' },
       });
 
-      await userController.updateAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -361,7 +385,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetAviationstackSettings).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -376,7 +401,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getAviationstackSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -391,7 +417,8 @@ describe('User Controller', () => {
         body: { openrouteserviceApiKey: 'ors-key-123' },
       });
 
-      await userController.updateOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateOpenrouteserviceSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         openrouteserviceApiKey: 'ors-key-123',
@@ -413,7 +440,8 @@ describe('User Controller', () => {
         body: { openrouteserviceApiKey: 'key' },
       });
 
-      await userController.updateOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -426,7 +454,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetOpenrouteserviceSettings).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -441,7 +470,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getOpenrouteserviceSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -456,7 +486,8 @@ describe('User Controller', () => {
         body: { username: 'newusername' },
       });
 
-      await userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateUsername).toHaveBeenCalledWith(testUsers.user1.id, 'newusername');
       expect(res.json).toHaveBeenCalledWith({
@@ -476,7 +507,8 @@ describe('User Controller', () => {
         body: { username: 'newusername' },
       });
 
-      await userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -486,7 +518,8 @@ describe('User Controller', () => {
         body: { username: 'ab' }, // min 3 chars
       });
 
-      await userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateUsername(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdateUsername).not.toHaveBeenCalled();
@@ -501,7 +534,8 @@ describe('User Controller', () => {
         body: { currentPassword: 'oldpassword', newPassword: 'newpassword123' },
       });
 
-      await userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdatePassword).toHaveBeenCalledWith(
         testUsers.user1.id,
@@ -524,7 +558,8 @@ describe('User Controller', () => {
         body: { currentPassword: 'wrongpass', newPassword: 'newpassword123' },
       });
 
-      await userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -534,7 +569,8 @@ describe('User Controller', () => {
         body: { currentPassword: 'oldpass', newPassword: 'short' }, // min 8 chars
       });
 
-      await userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updatePassword(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdatePassword).not.toHaveBeenCalled();
@@ -552,7 +588,8 @@ describe('User Controller', () => {
         query: { query: 'testuser2' },
       });
 
-      await userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockSearchUsers).toHaveBeenCalledWith(testUsers.user1.id, 'testuser2');
       expect(res.json).toHaveBeenCalledWith({
@@ -569,7 +606,8 @@ describe('User Controller', () => {
         query: { query: 'testuser' },
       });
 
-      await userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -579,7 +617,8 @@ describe('User Controller', () => {
         query: { query: 'ab' }, // min 3 chars
       });
 
-      await userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.searchUsers(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockSearchUsers).not.toHaveBeenCalled();
@@ -593,7 +632,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetTravelPartnerSettings).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -608,7 +648,8 @@ describe('User Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await userController.getTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.getTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -626,7 +667,8 @@ describe('User Controller', () => {
         body: { oldName: 'Vacation', newName: 'Vacation Renamed' },
       });
 
-      await userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockRenameTripType).toHaveBeenCalledWith(testUsers.user1.id, 'Vacation', 'Vacation Renamed');
       expect(res.json).toHaveBeenCalledWith({
@@ -644,7 +686,8 @@ describe('User Controller', () => {
         body: { oldName: 'Vacation', newName: 'Holiday' },
       });
 
-      await userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -654,7 +697,8 @@ describe('User Controller', () => {
         body: { oldName: '', newName: 'Holiday' }, // oldName min 1 char
       });
 
-      await userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.renameTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockRenameTripType).not.toHaveBeenCalled();
@@ -670,7 +714,8 @@ describe('User Controller', () => {
         params: { typeName: 'Vacation' },
       });
 
-      await userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteTripType).toHaveBeenCalledWith(testUsers.user1.id, 'Vacation');
       expect(res.json).toHaveBeenCalledWith({
@@ -688,7 +733,8 @@ describe('User Controller', () => {
         params: { typeName: 'Road%20Trip' },
       });
 
-      await userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteTripType).toHaveBeenCalledWith(testUsers.user1.id, 'Road Trip');
     });
@@ -701,7 +747,8 @@ describe('User Controller', () => {
         params: { typeName: 'Vacation' },
       });
 
-      await userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.deleteTripType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -716,7 +763,8 @@ describe('User Controller', () => {
         body: { travelPartnerId: 2, defaultPartnerPermission: 'edit' },
       });
 
-      await userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateTravelPartnerSettings).toHaveBeenCalledWith(testUsers.user1.id, {
         travelPartnerId: 2,
@@ -739,7 +787,8 @@ describe('User Controller', () => {
         body: { travelPartnerId: 2 },
       });
 
-      await userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -749,7 +798,8 @@ describe('User Controller', () => {
         body: { defaultPartnerPermission: 'invalid_perm' },
       });
 
-      await userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      userController.updateTravelPartnerSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdateTravelPartnerSettings).not.toHaveBeenCalled();

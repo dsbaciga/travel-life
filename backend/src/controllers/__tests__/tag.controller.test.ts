@@ -38,13 +38,16 @@ jest.mock('../../services/tag.service', () => ({
 }));
 
 import { tagController } from '../tag.controller';
-import {
-  createAuthenticatedControllerArgs,
-  createMockResponse,
-  createMockNext,
-} from '../../__tests__/helpers/requests';
+import { createAuthenticatedControllerArgs } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
+
+/**
+ * asyncHandler does not return the inner promise, so rejected promises
+ * propagate to next() via a .catch() that runs in a later microtask.
+ * We need to flush the microtask queue before asserting on next().
+ */
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
 
 describe('Tag Controller', () => {
   beforeEach(() => {
@@ -60,7 +63,8 @@ describe('Tag Controller', () => {
         body: { name: 'Beach', color: '#FF0000' },
       });
 
-      await tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockCreateTag).toHaveBeenCalledWith(testUsers.user1.id, {
         name: 'Beach',
@@ -81,7 +85,8 @@ describe('Tag Controller', () => {
         body: { name: 'Beach' },
       });
 
-      await tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -91,7 +96,8 @@ describe('Tag Controller', () => {
         body: { name: '' }, // name must be min 1 char
       });
 
-      await tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.createTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockCreateTag).not.toHaveBeenCalled();
@@ -108,7 +114,8 @@ describe('Tag Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await tagController.getTagsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetTagsByUser).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -123,7 +130,8 @@ describe('Tag Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await tagController.getTagsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -138,7 +146,8 @@ describe('Tag Controller', () => {
         params: { id: '5' },
       });
 
-      await tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetTagById).toHaveBeenCalledWith(testUsers.user1.id, 5);
       expect(res.json).toHaveBeenCalledWith({
@@ -152,7 +161,8 @@ describe('Tag Controller', () => {
         params: { id: 'abc' },
       });
 
-      await tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockGetTagById).not.toHaveBeenCalled();
@@ -166,7 +176,8 @@ describe('Tag Controller', () => {
         params: { id: '5' },
       });
 
-      await tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -182,7 +193,8 @@ describe('Tag Controller', () => {
         body: { name: 'Updated Beach', color: '#00FF00' },
       });
 
-      await tagController.updateTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.updateTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateTag).toHaveBeenCalledWith(testUsers.user1.id, 5, {
         name: 'Updated Beach',
@@ -203,7 +215,8 @@ describe('Tag Controller', () => {
         body: { name: 'Updated' },
       });
 
-      await tagController.updateTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.updateTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -217,7 +230,8 @@ describe('Tag Controller', () => {
         params: { id: '5' },
       });
 
-      await tagController.deleteTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.deleteTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteTag).toHaveBeenCalledWith(testUsers.user1.id, 5);
       expect(res.status).toHaveBeenCalledWith(204);
@@ -232,7 +246,8 @@ describe('Tag Controller', () => {
         params: { id: '5' },
       });
 
-      await tagController.deleteTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.deleteTag(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -247,7 +262,8 @@ describe('Tag Controller', () => {
         body: { tripId: 10, tagId: 5 },
       });
 
-      await tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockLinkTagToTrip).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -268,7 +284,8 @@ describe('Tag Controller', () => {
         body: { tripId: 10, tagId: 5 },
       });
 
-      await tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -278,7 +295,8 @@ describe('Tag Controller', () => {
         body: { tripId: 'invalid' },
       });
 
-      await tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.linkTagToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockLinkTagToTrip).not.toHaveBeenCalled();
@@ -293,7 +311,8 @@ describe('Tag Controller', () => {
         params: { tripId: '10', tagId: '5' },
       });
 
-      await tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUnlinkTagFromTrip).toHaveBeenCalledWith(testUsers.user1.id, 10, 5);
       expect(res.status).toHaveBeenCalledWith(204);
@@ -308,7 +327,8 @@ describe('Tag Controller', () => {
         params: { tripId: '10', tagId: '5' },
       });
 
-      await tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -318,7 +338,8 @@ describe('Tag Controller', () => {
         params: { tripId: 'abc', tagId: '5' },
       });
 
-      await tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.unlinkTagFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUnlinkTagFromTrip).not.toHaveBeenCalled();
@@ -337,7 +358,8 @@ describe('Tag Controller', () => {
         params: { tripId: '10' },
       });
 
-      await tagController.getTagsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetTagsByTrip).toHaveBeenCalledWith(testUsers.user1.id, 10);
       expect(res.json).toHaveBeenCalledWith({
@@ -354,7 +376,8 @@ describe('Tag Controller', () => {
         params: { tripId: '10' },
       });
 
-      await tagController.getTagsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      tagController.getTagsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });

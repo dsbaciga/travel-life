@@ -10,6 +10,19 @@
  * - LP-006: Search phrases
  */
 
+// Mock the middleware/errorHandler BEFORE imports (it transitively loads config which validates DATABASE_URL)
+jest.mock('../../middleware/errorHandler', () => ({
+  AppError: class AppError extends Error {
+    statusCode: number;
+    isOperational: boolean;
+    constructor(message: string, statusCode: number) {
+      super(message);
+      this.statusCode = statusCode;
+      this.isOperational = true;
+    }
+  },
+}));
+
 // Mock the database config
 const mockPrisma = {
   trip: {

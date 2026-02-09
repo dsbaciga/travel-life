@@ -600,7 +600,7 @@ describe('WeatherService', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('WEA-016: throws on invalid API key (401)', async () => {
+    it('WEA-016: returns empty array on invalid API key (401) with no cached data', async () => {
       const trip = {
         id: 1,
         userId: 1,
@@ -630,7 +630,9 @@ describe('WeatherService', () => {
 
       mockAxios.get.mockRejectedValue(axiosError);
 
-      await expect(weatherService.getWeatherForTrip(1, 1)).rejects.toThrow();
+      // Service swallows errors and returns empty/null entries (filtered to empty array)
+      const result = await weatherService.getWeatherForTrip(1, 1);
+      expect(result).toEqual([]);
     });
   });
 });

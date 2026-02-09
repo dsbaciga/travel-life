@@ -54,6 +54,13 @@ import {
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * asyncHandler does not return the inner promise, so rejected promises
+ * propagate to next() via a .catch() that runs in a later microtask.
+ * We need to flush the microtask queue before asserting on next().
+ */
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('Companion Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,7 +75,8 @@ describe('Companion Controller', () => {
         body: { name: 'Alice' },
       });
 
-      await companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockCreateCompanion).toHaveBeenCalledWith(testUsers.user1.id, { name: 'Alice' });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -86,7 +94,8 @@ describe('Companion Controller', () => {
         body: { name: 'Alice' },
       });
 
-      await companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -96,7 +105,8 @@ describe('Companion Controller', () => {
         body: { name: '' }, // name must be min 1 char
       });
 
-      await companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.createCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockCreateCompanion).not.toHaveBeenCalled();
@@ -113,7 +123,8 @@ describe('Companion Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await companionController.getCompanionsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetCompanionsByUser).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({
@@ -128,7 +139,8 @@ describe('Companion Controller', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await companionController.getCompanionsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionsByUser(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -143,7 +155,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetCompanionById).toHaveBeenCalledWith(testUsers.user1.id, 3);
       expect(res.json).toHaveBeenCalledWith({
@@ -157,7 +170,8 @@ describe('Companion Controller', () => {
         params: { id: 'abc' },
       });
 
-      await companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockGetCompanionById).not.toHaveBeenCalled();
@@ -171,7 +185,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -187,7 +202,8 @@ describe('Companion Controller', () => {
         body: { name: 'Alice Updated' },
       });
 
-      await companionController.updateCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.updateCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateCompanion).toHaveBeenCalledWith(testUsers.user1.id, 3, {
         name: 'Alice Updated',
@@ -207,7 +223,8 @@ describe('Companion Controller', () => {
         body: { name: 'Updated' },
       });
 
-      await companionController.updateCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.updateCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -221,7 +238,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.deleteCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.deleteCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteCompanion).toHaveBeenCalledWith(testUsers.user1.id, 3);
       expect(res.status).toHaveBeenCalledWith(204);
@@ -236,7 +254,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.deleteCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.deleteCompanion(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -251,7 +270,8 @@ describe('Companion Controller', () => {
         body: { tripId: 10, companionId: 3 },
       });
 
-      await companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockLinkCompanionToTrip).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -272,7 +292,8 @@ describe('Companion Controller', () => {
         body: { tripId: 10, companionId: 3 },
       });
 
-      await companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -282,7 +303,8 @@ describe('Companion Controller', () => {
         body: { tripId: 'invalid' },
       });
 
-      await companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.linkCompanionToTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockLinkCompanionToTrip).not.toHaveBeenCalled();
@@ -297,7 +319,8 @@ describe('Companion Controller', () => {
         params: { tripId: '10', companionId: '3' },
       });
 
-      await companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUnlinkCompanionFromTrip).toHaveBeenCalledWith(testUsers.user1.id, 10, 3);
       expect(res.status).toHaveBeenCalledWith(204);
@@ -312,7 +335,8 @@ describe('Companion Controller', () => {
         params: { tripId: '10', companionId: '3' },
       });
 
-      await companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -322,7 +346,8 @@ describe('Companion Controller', () => {
         params: { tripId: 'abc', companionId: '3' },
       });
 
-      await companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.unlinkCompanionFromTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockUnlinkCompanionFromTrip).not.toHaveBeenCalled();
@@ -341,7 +366,8 @@ describe('Companion Controller', () => {
         params: { tripId: '10' },
       });
 
-      await companionController.getCompanionsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetCompanionsByTrip).toHaveBeenCalledWith(testUsers.user1.id, 10);
       expect(res.json).toHaveBeenCalledWith({
@@ -358,7 +384,8 @@ describe('Companion Controller', () => {
         params: { tripId: '10' },
       });
 
-      await companionController.getCompanionsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.getCompanionsByTrip(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -375,7 +402,8 @@ describe('Companion Controller', () => {
       });
       (req as Record<string, unknown>).file = mockFile;
 
-      await companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUploadAvatar).toHaveBeenCalledWith(testUsers.user1.id, 3, mockFile);
       expect(res.json).toHaveBeenCalledWith({
@@ -390,7 +418,8 @@ describe('Companion Controller', () => {
       });
       // req.file is undefined by default
 
-      await companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0] as { message: string; statusCode: number };
@@ -408,7 +437,8 @@ describe('Companion Controller', () => {
       });
       (req as Record<string, unknown>).file = mockFile;
 
-      await companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.uploadAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -424,7 +454,8 @@ describe('Companion Controller', () => {
         body: { immichAssetId: 'asset123' },
       });
 
-      await companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockSetImmichAvatar).toHaveBeenCalledWith(testUsers.user1.id, 3, 'asset123');
       expect(res.json).toHaveBeenCalledWith({
@@ -439,7 +470,8 @@ describe('Companion Controller', () => {
         body: {},
       });
 
-      await companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0] as { message: string; statusCode: number };
@@ -456,7 +488,8 @@ describe('Companion Controller', () => {
         body: { immichAssetId: 'asset123' },
       });
 
-      await companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.setImmichAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -471,7 +504,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.deleteAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.deleteAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteAvatar).toHaveBeenCalledWith(testUsers.user1.id, 3);
       expect(res.json).toHaveBeenCalledWith({
@@ -488,7 +522,8 @@ describe('Companion Controller', () => {
         params: { id: '3' },
       });
 
-      await companionController.deleteAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      companionController.deleteAvatar(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });

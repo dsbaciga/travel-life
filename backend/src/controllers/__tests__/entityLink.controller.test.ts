@@ -57,6 +57,13 @@ import { createAuthenticatedControllerArgs } from '../../__tests__/helpers/reque
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * asyncHandler does not return the inner promise, so rejected promises
+ * propagate to next() via a .catch() that runs in a later microtask.
+ * We need to flush the microtask queue before asserting on next().
+ */
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('EntityLink Controller', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -86,7 +93,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockCreateLink).toHaveBeenCalledWith(testUsers.user1.id, expect.objectContaining({
         tripId: 10,
@@ -117,7 +125,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -133,7 +142,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.createLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockCreateLink).not.toHaveBeenCalled();
@@ -158,7 +168,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.bulkCreateLinks(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.bulkCreateLinks(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockBulkCreateLinks).toHaveBeenCalledWith(testUsers.user1.id, expect.objectContaining({
         tripId: 10,
@@ -185,7 +196,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.bulkCreateLinks(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.bulkCreateLinks(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -205,7 +217,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.bulkLinkPhotos(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.bulkLinkPhotos(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockBulkLinkPhotos).toHaveBeenCalledWith(testUsers.user1.id, expect.objectContaining({
         tripId: 10,
@@ -233,7 +246,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.bulkLinkPhotos(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.bulkLinkPhotos(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -250,7 +264,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetLinksFrom).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -272,7 +287,8 @@ describe('EntityLink Controller', () => {
         query: { targetType: 'PHOTO' },
       });
 
-      await entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetLinksFrom).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -290,7 +306,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksFrom(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -307,7 +324,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetLinksTo).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -329,7 +347,8 @@ describe('EntityLink Controller', () => {
         query: { sourceType: 'PHOTO' },
       });
 
-      await entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetLinksTo).toHaveBeenCalledWith(testUsers.user1.id, {
         tripId: 10,
@@ -347,7 +366,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksTo(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -362,7 +382,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetAllLinksForEntity).toHaveBeenCalledWith(
         testUsers.user1.id,
@@ -384,7 +405,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -399,7 +421,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getPhotosForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getPhotosForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetPhotosForEntity).toHaveBeenCalledWith(
         testUsers.user1.id,
@@ -421,7 +444,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.getPhotosForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getPhotosForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -436,7 +460,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', targetType: 'PHOTO' },
       });
 
-      await entityLinkController.getLinksByTargetType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksByTargetType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetLinksByTargetType).toHaveBeenCalledWith(
         testUsers.user1.id,
@@ -457,7 +482,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', targetType: 'PHOTO' },
       });
 
-      await entityLinkController.getLinksByTargetType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getLinksByTargetType(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -474,7 +500,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10' },
       });
 
-      await entityLinkController.getTripLinkSummary(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getTripLinkSummary(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockGetTripLinkSummary).toHaveBeenCalledWith(testUsers.user1.id, 10);
       expect(res.json).toHaveBeenCalledWith({
@@ -494,7 +521,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10' },
       });
 
-      await entityLinkController.getTripLinkSummary(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.getTripLinkSummary(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -514,7 +542,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.deleteLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteLink).toHaveBeenCalledWith(testUsers.user1.id, expect.objectContaining({
         tripId: 10,
@@ -541,7 +570,8 @@ describe('EntityLink Controller', () => {
         },
       });
 
-      await entityLinkController.deleteLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -555,7 +585,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', linkId: '5' },
       });
 
-      await entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteLinkById).toHaveBeenCalledWith(testUsers.user1.id, 10, 5);
       expect(res.status).toHaveBeenCalledWith(204);
@@ -570,7 +601,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', linkId: '5' },
       });
 
-      await entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -580,7 +612,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', linkId: 'abc' },
       });
 
-      await entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteLinkById(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockDeleteLinkById).not.toHaveBeenCalled();
@@ -597,7 +630,8 @@ describe('EntityLink Controller', () => {
         body: { relationship: 'TAKEN_AT', notes: 'Updated note' },
       });
 
-      await entityLinkController.updateLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.updateLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockUpdateLink).toHaveBeenCalledWith(testUsers.user1.id, 10, 5, {
         relationship: 'TAKEN_AT',
@@ -618,7 +652,8 @@ describe('EntityLink Controller', () => {
         body: { relationship: 'RELATED' },
       });
 
-      await entityLinkController.updateLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.updateLink(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -633,7 +668,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(mockDeleteAllLinksForEntity).toHaveBeenCalledWith(
         testUsers.user1.id,
@@ -655,7 +691,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'LOCATION', entityId: '1' },
       });
 
-      await entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -665,7 +702,8 @@ describe('EntityLink Controller', () => {
         params: { tripId: '10', entityType: 'INVALID_TYPE', entityId: '1' },
       });
 
-      await entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      entityLinkController.deleteAllLinksForEntity(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
       expect(mockDeleteAllLinksForEntity).not.toHaveBeenCalled();

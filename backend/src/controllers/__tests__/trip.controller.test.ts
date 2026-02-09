@@ -196,7 +196,8 @@ describe('TripController', () => {
         body: validCreateTripInput as unknown as Record<string, unknown>,
       });
 
-      await tripController.createTrip(req as never, res as never, next);
+      tripController.createTrip(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
@@ -281,7 +282,8 @@ describe('TripController', () => {
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
 
-      await tripController.getTrips(req as never, res as never, next);
+      tripController.getTrips(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
@@ -339,7 +341,8 @@ describe('TripController', () => {
         params: { id: '999' },
       });
 
-      await tripController.getTripById(req as never, res as never, next);
+      tripController.getTripById(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
@@ -403,7 +406,8 @@ describe('TripController', () => {
         body: validUpdateTripInput as unknown as Record<string, unknown>,
       });
 
-      await tripController.updateTrip(req as never, res as never, next);
+      tripController.updateTrip(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
@@ -448,7 +452,8 @@ describe('TripController', () => {
         params: { id: '1' },
       });
 
-      await tripController.deleteTrip(req as never, res as never, next);
+      tripController.deleteTrip(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
@@ -537,7 +542,8 @@ describe('TripController', () => {
         body: { photoId: 999 },
       });
 
-      await tripController.updateCoverPhoto(req as never, res as never, next);
+      tripController.updateCoverPhoto(req as never, res as never, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(serviceError);
     });
