@@ -1,6 +1,27 @@
 import axios from '../lib/axios';
 import type { User, UpdateUserSettingsInput, UserSearchResult, TravelPartnerSettings, UpdateTravelPartnerInput } from '../types/user';
 
+export interface SmtpSettingsResponse {
+  smtpProvider: string | null;
+  smtpHost: string | null;
+  smtpPort: number | null;
+  smtpSecure: boolean | null;
+  smtpUser: string | null;
+  smtpFrom: string | null;
+  smtpPasswordSet: boolean;
+  smtpConfigured: boolean;
+}
+
+export interface UpdateSmtpSettingsInput {
+  smtpProvider?: string | null;
+  smtpHost?: string | null;
+  smtpPort?: number | null;
+  smtpSecure?: boolean | null;
+  smtpUser?: string | null;
+  smtpPassword?: string | null;
+  smtpFrom?: string | null;
+}
+
 const userService = {
   async getMe(): Promise<User> {
     const response = await axios.get('/users/me');
@@ -49,6 +70,21 @@ const userService = {
 
   async updateOpenrouteserviceSettings(data: { openrouteserviceApiKey: string | null }): Promise<{ success: boolean; message: string; openrouteserviceApiKeySet: boolean }> {
     const response = await axios.put('/users/openrouteservice-settings', data);
+    return response.data;
+  },
+
+  async getSmtpSettings(): Promise<SmtpSettingsResponse> {
+    const response = await axios.get('/users/smtp-settings');
+    return response.data;
+  },
+
+  async updateSmtpSettings(data: UpdateSmtpSettingsInput): Promise<{ success: boolean; message: string; smtpConfigured: boolean }> {
+    const response = await axios.put('/users/smtp-settings', data);
+    return response.data;
+  },
+
+  async testSmtpSettings(): Promise<{ success: boolean; message: string }> {
+    const response = await axios.post('/users/smtp-settings/test');
     return response.data;
   },
 

@@ -81,6 +81,15 @@ interface EmailOptions {
   html: string;
 }
 
+export interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  password: string;
+  from: string;
+}
+
 /**
  * Check if email is configured
  */
@@ -121,9 +130,21 @@ function validateEmailConfiguration(): void {
 }
 
 /**
- * Create nodemailer transporter
+ * Create nodemailer transporter, optionally using a per-user SMTP override
  */
-function createTransporter() {
+function createTransporter(smtpOverride?: SmtpConfig) {
+  if (smtpOverride) {
+    return nodemailer.createTransport({
+      host: smtpOverride.host,
+      port: smtpOverride.port,
+      secure: smtpOverride.secure,
+      auth: {
+        user: smtpOverride.user,
+        pass: smtpOverride.password,
+      },
+    });
+  }
+
   if (!isEmailConfigured()) {
     return null;
   }
@@ -140,10 +161,10 @@ function createTransporter() {
 }
 
 /**
- * Send an email
+ * Send an email, optionally using a per-user SMTP override
  */
-async function sendEmail(options: EmailOptions): Promise<boolean> {
-  const transporter = createTransporter();
+async function sendEmail(options: EmailOptions, smtpOverride?: SmtpConfig): Promise<boolean> {
+  const transporter = createTransporter(smtpOverride);
 
   if (!transporter) {
     logger.warn('Email not configured. Would have sent email to:', options.to);
@@ -155,9 +176,11 @@ async function sendEmail(options: EmailOptions): Promise<boolean> {
     return false;
   }
 
+  const fromAddress = smtpOverride?.from || config.email.from;
+
   try {
     await transporter.sendMail({
-      from: config.email.from,
+      from: fromAddress,
       to: options.to,
       subject: options.subject,
       text: options.text,
@@ -331,7 +354,7 @@ export const emailService = {
   /**
    * Send a user invitation email
    */
-  async sendUserInvitation(data: UserInvitationEmailData): Promise<boolean> {
+  async sendUserInvitation(data: UserInvitationEmailData, smtpOverride?: SmtpConfig): Promise<boolean> {
     const { subject, text, html } = generateUserInvitationEmail(data);
 
     return sendEmail({
@@ -339,13 +362,13 @@ export const emailService = {
       subject,
       text,
       html,
-    });
+    }, smtpOverride);
   },
 
   /**
    * Test email configuration by sending a test email
    */
-  async sendTestEmail(to: string): Promise<boolean> {
+  async sendTestEmail(to: string, smtpOverride?: SmtpConfig): Promise<boolean> {
     return sendEmail({
       to,
       subject: 'Travel Life - Email Configuration Test',
@@ -356,6 +379,6 @@ export const emailService = {
           <p>If you received this email, your Travel Life email configuration is working correctly.</p>
         </div>
       `,
-    });
+    }, smtpOverride);
   },
 };

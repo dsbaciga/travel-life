@@ -15,6 +15,7 @@ import ImmichSettings from "../components/ImmichSettings";
 import WeatherSettings from "../components/WeatherSettings";
 import AviationstackSettings from "../components/AviationstackSettings";
 import OpenRouteServiceSettings from "../components/OpenRouteServiceSettings";
+import SmtpSettings from "../components/SmtpSettings";
 import EmojiPicker from "../components/EmojiPicker";
 import TravelDocumentManager from "../components/TravelDocumentManager";
 import InviteUsersSection from "../components/InviteUsersSection";
@@ -1317,6 +1318,9 @@ export default function SettingsPage() {
         {/* Integrations Tab */}
         {activeTab === "integrations" && (
           <div className="space-y-6">
+            {/* Email (SMTP) Settings */}
+            <SmtpSettings />
+
             {/* Immich Integration */}
             <ImmichSettings />
 

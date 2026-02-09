@@ -233,6 +233,55 @@ router.put('/openrouteservice-settings', userController.updateOpenrouteserviceSe
 
 /**
  * @openapi
+ * /api/users/smtp-settings:
+ *   get:
+ *     summary: Get SMTP email settings
+ *     description: Returns SMTP configuration (password is never returned, only whether it's set)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: SMTP settings
+ *       401:
+ *         description: Unauthorized
+ *   put:
+ *     summary: Update SMTP email settings
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: SMTP settings updated
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/smtp-settings', userController.getSmtpSettings);
+router.put('/smtp-settings', userController.updateSmtpSettings);
+
+/**
+ * @openapi
+ * /api/users/smtp-settings/test:
+ *   post:
+ *     summary: Test SMTP email configuration
+ *     description: Sends a test email to the current user's email address
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Test email sent successfully
+ *       400:
+ *         description: Failed to send test email
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/smtp-settings/test', userController.testSmtpSettings);
+
+/**
+ * @openapi
  * /api/users/username:
  *   put:
  *     summary: Update username

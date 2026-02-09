@@ -11,6 +11,8 @@ import {
   assignTripColors,
   filterVisibleTrips,
   getMonthName,
+  getTripsForMonth,
+  getTripsForYear,
   canNavigateToYear,
   type TripWithColor,
 } from './calendar/calendarUtils';
@@ -45,6 +47,12 @@ export default function TripCalendarWidget() {
       setIsLoading(false);
     }
   };
+
+  const legendTrips = useMemo(() => {
+    return viewMode === 'monthly'
+      ? getTripsForMonth(trips, currentYear, currentMonth)
+      : getTripsForYear(trips, currentYear);
+  }, [trips, viewMode, currentYear, currentMonth]);
 
   const maxYear = today.getFullYear() + 3;
 
@@ -213,11 +221,11 @@ export default function TripCalendarWidget() {
         <YearlyCalendarView year={currentYear} trips={trips} />
       )}
 
-      {/* Legend */}
+      {/* Legend - only show trips visible in current view */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-navy-700">
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
           <span className="font-medium">Trips:</span>
-          {trips.slice(0, 6).map((trip) => (
+          {legendTrips.slice(0, 6).map((trip) => (
             <div key={trip.id} className="flex items-center gap-1.5">
               <div
                 className="w-3 h-3 rounded-sm"
@@ -226,10 +234,10 @@ export default function TripCalendarWidget() {
               <span className="truncate max-w-[100px]">{trip.title}</span>
             </div>
           ))}
-          {trips.length > 6 && (
-            <span className="text-gray-500">+{trips.length - 6} more</span>
+          {legendTrips.length > 6 && (
+            <span className="text-gray-500">+{legendTrips.length - 6} more</span>
           )}
-          {trips.length === 0 && (
+          {legendTrips.length === 0 && (
             <span className="text-gray-500 italic">No trips to display</span>
           )}
         </div>

@@ -181,6 +181,20 @@ export function canNavigateToYear(targetYear: number): boolean {
 }
 
 /**
+ * Get trips that are active during a specific year
+ */
+export function getTripsForYear<T extends Trip>(trips: T[], year: number): T[] {
+  const yearStart = new Date(year, 0, 1);
+  const yearEnd = new Date(year, 11, 31);
+  return trips.filter(trip => {
+    if (!trip.startDate || !trip.endDate) return false;
+    const tripStart = parseDate(trip.startDate);
+    const tripEnd = parseDate(trip.endDate);
+    return tripStart <= yearEnd && tripEnd >= yearStart;
+  });
+}
+
+/**
  * Filter trips to exclude Dream status
  */
 export function filterVisibleTrips(trips: Trip[]): Trip[] {

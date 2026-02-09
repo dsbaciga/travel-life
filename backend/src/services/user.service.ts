@@ -212,6 +212,100 @@ class UserService {
     };
   }
 
+  async getSmtpSettings(userId: number) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        smtpProvider: true,
+        smtpHost: true,
+        smtpPort: true,
+        smtpSecure: true,
+        smtpUser: true,
+        smtpPassword: true,
+        smtpFrom: true,
+      },
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    return {
+      smtpProvider: user.smtpProvider,
+      smtpHost: user.smtpHost,
+      smtpPort: user.smtpPort,
+      smtpSecure: user.smtpSecure,
+      smtpUser: user.smtpUser,
+      smtpFrom: user.smtpFrom,
+      smtpPasswordSet: !!user.smtpPassword,
+      smtpConfigured: !!(user.smtpHost && user.smtpUser && user.smtpPassword),
+    };
+  }
+
+  async updateSmtpSettings(
+    userId: number,
+    data: {
+      smtpProvider?: string | null;
+      smtpHost?: string | null;
+      smtpPort?: number | null;
+      smtpSecure?: boolean | null;
+      smtpUser?: string | null;
+      smtpPassword?: string | null;
+      smtpFrom?: string | null;
+    }
+  ) {
+    const updateData = buildConditionalUpdateData(data);
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        smtpProvider: true,
+        smtpHost: true,
+        smtpPort: true,
+        smtpSecure: true,
+        smtpUser: true,
+        smtpPassword: true,
+        smtpFrom: true,
+      },
+    });
+
+    return user;
+  }
+
+  /**
+   * Get the effective SMTP config for a user (user override > env var default)
+   */
+  async getEffectiveSmtpConfig(userId: number) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        smtpHost: true,
+        smtpPort: true,
+        smtpSecure: true,
+        smtpUser: true,
+        smtpPassword: true,
+        smtpFrom: true,
+      },
+    });
+
+    // If user has SMTP configured, use it
+    if (user?.smtpHost && user?.smtpUser && user?.smtpPassword) {
+      return {
+        host: user.smtpHost,
+        port: user.smtpPort ?? 587,
+        secure: user.smtpSecure ?? false,
+        user: user.smtpUser,
+        password: user.smtpPassword,
+        from: user.smtpFrom ?? `Travel Life <${user.smtpUser}>`,
+      };
+    }
+
+    // Fall back to global env var config
+    return null;
+  }
+
   async updateUsername(userId: number, newUsername: string) {
     // Check if username is already taken by another user
     const existingUser = await prisma.user.findFirst({

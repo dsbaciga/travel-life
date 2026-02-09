@@ -1,6 +1,6 @@
 {
   "name": "travel-life-backend",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "description": "Travel Life Travel Documentation API",
   "main": "dist/index.js",
   "scripts": {

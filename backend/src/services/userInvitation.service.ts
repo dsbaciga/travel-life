@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { config } from '../config';
 import { emailService } from './email.service';
+import userService from './user.service';
 import type { SendUserInvitationInput, AcceptInvitationInput } from '../types/userInvitation.types';
 import { UserInvitationStatusValues } from '../types/userInvitation.types';
 
@@ -100,8 +101,9 @@ export const userInvitationService = {
       }
     });
 
-    // Send the invitation email
+    // Send the invitation email (use per-user SMTP if configured, otherwise global)
     const acceptUrl = `${config.frontendUrl}/accept-invite?token=${token}`;
+    const smtpOverride = await userService.getEffectiveSmtpConfig(userId) ?? undefined;
 
     const emailSent = await emailService.sendUserInvitation({
       recipientEmail: data.email,
@@ -110,7 +112,7 @@ export const userInvitationService = {
       personalMessage: data.message,
       acceptUrl,
       expiresAt,
-    });
+    }, smtpOverride);
 
     logger.info('User invitation sent', { invitedByUserId: userId, recipientEmail: data.email, invitationId: invitation.id });
 
@@ -415,8 +417,9 @@ export const userInvitationService = {
       },
     });
 
-    // Send the invitation email again
+    // Send the invitation email again (use per-user SMTP if configured)
     const acceptUrl = `${config.frontendUrl}/accept-invite?token=${token}`;
+    const smtpOverrideResend = await userService.getEffectiveSmtpConfig(userId) ?? undefined;
 
     const emailSent = await emailService.sendUserInvitation({
       recipientEmail: invitation.email,
@@ -425,7 +428,7 @@ export const userInvitationService = {
       personalMessage: invitation.message || undefined,
       acceptUrl,
       expiresAt,
-    });
+    }, smtpOverrideResend);
 
     logger.info('User invitation resent', { invitationId: invitationId, email: invitation.email, resentByUserId: userId });
 

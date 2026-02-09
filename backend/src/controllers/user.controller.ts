@@ -3,6 +3,7 @@ import userService from '../services/user.service';
 import { updateUserSettingsSchema } from '../types/userSettings.types';
 import { asyncHandler } from '../utils/asyncHandler';
 import { z } from 'zod';
+import { emailService } from '../services/email.service';
 
 const immichSettingsSchema = z.object({
   immichApiUrl: z.string().url().optional().nullable(),
@@ -19,6 +20,16 @@ const aviationstackSettingsSchema = z.object({
 
 const openrouteserviceSettingsSchema = z.object({
   openrouteserviceApiKey: z.string().min(1).optional().nullable(),
+});
+
+const smtpSettingsSchema = z.object({
+  smtpProvider: z.string().min(1).optional().nullable(),
+  smtpHost: z.string().min(1).optional().nullable(),
+  smtpPort: z.number().int().min(1).max(65535).optional().nullable(),
+  smtpSecure: z.boolean().optional().nullable(),
+  smtpUser: z.string().min(1).optional().nullable(),
+  smtpPassword: z.string().min(1).optional().nullable(),
+  smtpFrom: z.string().min(1).optional().nullable(),
 });
 
 const updateUsernameSchema = z.object({
@@ -208,5 +219,45 @@ export const userController = {
         ...settings,
       },
     });
+  }),
+
+  getSmtpSettings: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const settings = await userService.getSmtpSettings(userId);
+    res.json({ status: 'success', data: settings });
+  }),
+
+  updateSmtpSettings: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const data = smtpSettingsSchema.parse(req.body);
+    const user = await userService.updateSmtpSettings(userId, data);
+    res.json({
+      status: 'success',
+      data: {
+        message: 'SMTP settings updated successfully',
+        smtpConfigured: !!(user.smtpHost && user.smtpUser && user.smtpPassword),
+      },
+    });
+  }),
+
+  testSmtpSettings: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const user = await userService.getUserById(userId);
+
+    // Try user-level SMTP config first, then fall back to global
+    const userSmtp = await userService.getEffectiveSmtpConfig(userId);
+    const result = await emailService.sendTestEmail(user.email, userSmtp ?? undefined);
+
+    if (result) {
+      res.json({
+        status: 'success',
+        data: { message: `Test email sent to ${user.email}` },
+      });
+    } else {
+      res.status(400).json({
+        status: 'error',
+        message: 'Failed to send test email. Check your SMTP settings.',
+      });
+    }
   }),
 };
