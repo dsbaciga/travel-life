@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import tripService from '../services/trip.service';
 import tagService from '../services/tag.service';
@@ -21,6 +21,8 @@ import { SearchIcon, FilterIcon, CloseIcon } from '../components/icons';
 import TripCard from '../components/TripCard';
 import TripsKanbanView from '../components/TripsKanbanView';
 import TripListView from '../components/TripListView';
+import MultiSelectDropdown from '../components/MultiSelectDropdown';
+import type { MultiSelectOption } from '../components/MultiSelectDropdown';
 
 type SortOption = 'startDate-desc' | 'startDate-asc' | 'title-asc' | 'title-desc' | 'status';
 type ViewMode = 'grid' | 'kanban' | 'list';
@@ -29,8 +31,8 @@ export default function TripsPage() {
   const queryClient = useQueryClient();
   const [allTags, setAllTags] = useState<TripTag[]>([]);
   const [allTripTypes, setAllTripTypes] = useState<TripTypeCategory[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [tripTypeFilter, setTripTypeFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [tripTypeFilter, setTripTypeFilter] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [startDateFrom, setStartDateFrom] = useState('');
@@ -62,8 +64,8 @@ export default function TripsPage() {
   const params = {
     page: currentPage,
     limit: pageSize,
-    status: statusFilter,
-    tripType: tripTypeFilter,
+    status: statusFilter.join(','),
+    tripType: tripTypeFilter.join(','),
     search: debouncedSearchQuery.trim(),
     startDateFrom,
     startDateTo,
@@ -300,20 +302,20 @@ export default function TripsPage() {
     setStartDateFrom('');
     setStartDateTo('');
     setSelectedTags([]);
-    setStatusFilter('');
-    setTripTypeFilter('');
+    setStatusFilter([]);
+    setTripTypeFilter([]);
     setSortOption('startDate-desc');
     setCurrentPage(1);
   };
 
   // Reset to page 1 when filters change
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status);
+  const handleStatusFilterChange = (values: string[]) => {
+    setStatusFilter(values);
     setCurrentPage(1);
   };
 
-  const handleTripTypeFilterChange = (typeName: string) => {
-    setTripTypeFilter(typeName);
+  const handleTripTypeFilterChange = (values: string[]) => {
+    setTripTypeFilter(values);
     setCurrentPage(1);
   };
 
@@ -352,7 +354,18 @@ export default function TripsPage() {
     setCurrentPage(1);
   }, [viewMode]);
 
-  const hasActiveFilters = searchQuery || startDateFrom || startDateTo || selectedTags.length > 0 || tripTypeFilter;
+  // Build dropdown options for filters
+  const statusOptions: MultiSelectOption[] = useMemo(
+    () => Object.values(TripStatus).map((status) => ({ value: status, label: status })),
+    []
+  );
+
+  const tripTypeOptions: MultiSelectOption[] = useMemo(
+    () => allTripTypes.map((t) => ({ value: t.name, label: t.name, emoji: t.emoji })),
+    [allTripTypes]
+  );
+
+  const hasActiveFilters = searchQuery || startDateFrom || startDateTo || selectedTags.length > 0 || statusFilter.length > 0 || tripTypeFilter.length > 0;
 
   // Render pagination controls (used at both top and bottom)
   const renderPaginationControls = (position: 'top' | 'bottom') => {
@@ -529,66 +542,23 @@ export default function TripsPage() {
             </button>
           </div>
 
-          {/* Status Filter Pills */}
-          <div className="flex gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                statusFilter === ''
-                  ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
-                  : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
-              }`}
-            >
-              All
-            </button>
-            {Object.values(TripStatus).map((status) => (
-              <button
-                type="button"
-                key={status}
-                onClick={() => handleStatusFilterChange(status)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  statusFilter === status
-                    ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
-                    : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
+          {/* Status & Trip Type Filter Dropdowns */}
+          <div className="flex gap-3 flex-wrap">
+            <MultiSelectDropdown
+              options={statusOptions}
+              selected={statusFilter}
+              onChange={handleStatusFilterChange}
+              placeholder="All Statuses"
+            />
+            {tripTypeOptions.length > 0 && (
+              <MultiSelectDropdown
+                options={tripTypeOptions}
+                selected={tripTypeFilter}
+                onChange={handleTripTypeFilterChange}
+                placeholder="All Types"
+              />
+            )}
           </div>
-
-          {/* Trip Type Filter Pills */}
-          {allTripTypes.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => handleTripTypeFilterChange('')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  tripTypeFilter === ''
-                    ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
-                    : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
-                }`}
-              >
-                All Types
-              </button>
-              {allTripTypes.map((tripType) => (
-                <button
-                  type="button"
-                  key={tripType.name}
-                  onClick={() => handleTripTypeFilterChange(tripType.name)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    tripTypeFilter === tripType.name
-                      ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
-                      : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
-                  }`}
-                >
-                  {tripType.emoji && <span className="mr-1">{tripType.emoji}</span>}
-                  {tripType.name}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* Advanced Filters Panel */}
           {showAdvancedFilters && (

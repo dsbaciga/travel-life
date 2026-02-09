@@ -22,8 +22,8 @@ interface DateTimeNullableFilter {
 
 interface TripWhereInput {
   userId?: number;
-  status?: string;
-  tripType?: string;
+  status?: string | { in: string[] };
+  tripType?: string | { in: string[] };
   seriesId?: number;
   startDate?: DateTimeNullableFilter | Date | string | null;
   tagAssignments?: { some?: { tagId?: { in?: number[] } } };
@@ -249,9 +249,14 @@ export class TripService {
 
     const where: TripWhereInput = { userId };
 
-    // Filter by status
+    // Filter by status (supports comma-separated multiple values)
     if (query.status) {
-      where.status = query.status;
+      const statuses = query.status.split(',').map(s => s.trim()).filter(Boolean);
+      if (statuses.length === 1) {
+        where.status = statuses[0];
+      } else if (statuses.length > 1) {
+        where.status = { in: statuses };
+      }
     }
 
     // Search in title and description
@@ -273,9 +278,14 @@ export class TripService {
       }
     }
 
-    // Filter by trip type
+    // Filter by trip type (supports comma-separated multiple values)
     if (query.tripType) {
-      where.tripType = query.tripType;
+      const types = query.tripType.split(',').map(t => t.trim()).filter(Boolean);
+      if (types.length === 1) {
+        where.tripType = types[0];
+      } else if (types.length > 1) {
+        where.tripType = { in: types };
+      }
     }
 
     // Filter by series

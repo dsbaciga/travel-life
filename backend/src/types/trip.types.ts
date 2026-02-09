@@ -108,7 +108,7 @@ export const updateTripSchema = z.object({
 });
 
 export const getTripQuerySchema = z.object({
-  status: z.enum([...TripStatusValues as [string, ...string[]]]).optional(),
+  status: z.string().optional(), // Single status or comma-separated statuses
   search: z.string().optional(),
   page: z.string().optional(),
   limit: z.string().optional(),
@@ -116,7 +116,7 @@ export const getTripQuerySchema = z.object({
   startDateFrom: z.string().optional(),
   startDateTo: z.string().optional(),
   tags: z.string().optional(), // Comma-separated tag IDs
-  tripType: z.string().optional(),
+  tripType: z.string().optional(), // Single type or comma-separated types
   seriesId: z.string().optional(), // Filter by series ID
 });
 
