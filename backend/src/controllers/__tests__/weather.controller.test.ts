@@ -17,6 +17,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('weather.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -28,7 +30,8 @@ describe('weather.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await weatherController.getWeatherForTrip(req as any, res as any, next);
+      weatherController.getWeatherForTrip(req as any, res as any, next);
+      await flushPromises();
 
       expect(weatherService.getWeatherForTrip).toHaveBeenCalledWith(5, testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({ status: 'success', data: mockWeather });
@@ -41,7 +44,8 @@ describe('weather.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await weatherController.getWeatherForTrip(req as any, res as any, next);
+      weatherController.getWeatherForTrip(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -56,7 +60,8 @@ describe('weather.controller', () => {
         params: { tripId: '5' },
         body: { date: '2024-06-01' },
       });
-      await weatherController.refreshWeather(req as any, res as any, next);
+      weatherController.refreshWeather(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(weatherService.refreshWeatherForDate).toHaveBeenCalledWith(
@@ -73,7 +78,8 @@ describe('weather.controller', () => {
         params: { tripId: '5' },
         body: {},
       });
-      await weatherController.refreshWeather(req as any, res as any, next);
+      weatherController.refreshWeather(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
     });
@@ -87,7 +93,8 @@ describe('weather.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await weatherController.refreshAllWeather(req as any, res as any, next);
+      weatherController.refreshAllWeather(req as any, res as any, next);
+      await flushPromises();
 
       expect(weatherService.refreshAllWeatherForTrip).toHaveBeenCalledWith(5, testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({ status: 'success', data: mockWeather });

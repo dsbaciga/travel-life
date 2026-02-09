@@ -17,6 +17,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('flightTracking.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -28,7 +30,8 @@ describe('flightTracking.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { transportationId: '3' },
       });
-      await flightTrackingController.getFlightStatus(req as any, res as any, next);
+      flightTrackingController.getFlightStatus(req as any, res as any, next);
+      await flushPromises();
 
       expect(aviationstackService.getFlightStatus).toHaveBeenCalledWith(testUsers.user1.id, 3);
       expect(res.json).toHaveBeenCalledWith({ status: 'success', data: mockStatus });
@@ -41,7 +44,8 @@ describe('flightTracking.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { transportationId: '3' },
       });
-      await flightTrackingController.getFlightStatus(req as any, res as any, next);
+      flightTrackingController.getFlightStatus(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -58,7 +62,8 @@ describe('flightTracking.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await flightTrackingController.refreshFlightsForTrip(req as any, res as any, next);
+      flightTrackingController.refreshFlightsForTrip(req as any, res as any, next);
+      await flushPromises();
 
       expect(aviationstackService.refreshFlightsForTrip).toHaveBeenCalledWith(testUsers.user1.id, 5);
       expect(res.json).toHaveBeenCalledWith({
@@ -78,7 +83,8 @@ describe('flightTracking.controller', () => {
         params: { transportationId: '3' },
         body: { flightNumber: 'AA100', flightDate: '2024-06-01' },
       });
-      await flightTrackingController.updateFlightTracking(req as any, res as any, next);
+      flightTrackingController.updateFlightTracking(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(aviationstackService.updateFlightTracking).toHaveBeenCalledWith(
@@ -93,12 +99,12 @@ describe('flightTracking.controller', () => {
     it('should pass Zod validation errors for invalid body', async () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { transportationId: '3' },
-        body: {},
+        body: { status: 'invalid-status-value' },
       });
-      await flightTrackingController.updateFlightTracking(req as any, res as any, next);
+      flightTrackingController.updateFlightTracking(req as any, res as any, next);
+      await flushPromises();
 
-      // May or may not error depending on schema optionality
-      // This test validates asyncHandler catches any thrown errors
+      // status field only accepts specific enum values, so this should fail Zod validation
       expect(next).toHaveBeenCalled();
     });
   });

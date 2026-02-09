@@ -15,6 +15,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('packingSuggestion.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -32,7 +34,8 @@ describe('packingSuggestion.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await packingSuggestionController.getSuggestions(req as any, res as any, next);
+      packingSuggestionController.getSuggestions(req as any, res as any, next);
+      await flushPromises();
 
       expect(packingSuggestionService.getSuggestionsForTrip).toHaveBeenCalledWith(5, testUsers.user1.id);
       expect(res.json).toHaveBeenCalledWith({ status: 'success', data: mockSuggestions });
@@ -45,7 +48,8 @@ describe('packingSuggestion.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '5' },
       });
-      await packingSuggestionController.getSuggestions(req as any, res as any, next);
+      packingSuggestionController.getSuggestions(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -56,7 +60,8 @@ describe('packingSuggestion.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { tripId: '42' },
       });
-      await packingSuggestionController.getSuggestions(req as any, res as any, next);
+      packingSuggestionController.getSuggestions(req as any, res as any, next);
+      await flushPromises();
 
       expect(packingSuggestionService.getSuggestionsForTrip).toHaveBeenCalledWith(42, testUsers.user1.id);
     });

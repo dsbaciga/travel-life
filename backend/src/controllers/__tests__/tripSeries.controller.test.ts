@@ -33,6 +33,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('tripSeries.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -44,7 +46,8 @@ describe('tripSeries.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { name: 'European Adventures', description: 'A series of trips' },
       });
-      await tripSeriesController.create(req as any, res as any, next);
+      tripSeriesController.create(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(tripSeriesService.create).toHaveBeenCalledWith(
@@ -62,7 +65,8 @@ describe('tripSeries.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { name: 'Test' },
       });
-      await tripSeriesController.create(req as any, res as any, next);
+      tripSeriesController.create(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
     });
@@ -74,7 +78,8 @@ describe('tripSeries.controller', () => {
       (tripSeriesService.getAll as jest.Mock).mockResolvedValue(mockSeries as never);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await tripSeriesController.getAll(req as any, res as any, next);
+      tripSeriesController.getAll(req as any, res as any, next);
+      await flushPromises();
 
       expect(tripSeriesService.getAll).toHaveBeenCalledWith(testUsers.user1.id);
       expectSuccessResponse(res, 200, mockSeries);
@@ -89,7 +94,8 @@ describe('tripSeries.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { id: '1' },
       });
-      await tripSeriesController.getById(req as any, res as any, next);
+      tripSeriesController.getById(req as any, res as any, next);
+      await flushPromises();
 
       expect(tripSeriesService.getById).toHaveBeenCalledWith(testUsers.user1.id, 1);
       expectSuccessResponse(res, 200, mockSeries);
@@ -105,7 +111,8 @@ describe('tripSeries.controller', () => {
         params: { id: '1' },
         body: { name: 'Updated Name' },
       });
-      await tripSeriesController.update(req as any, res as any, next);
+      tripSeriesController.update(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(tripSeriesService.update).toHaveBeenCalledWith(
@@ -126,7 +133,8 @@ describe('tripSeries.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { id: '1' },
       });
-      await tripSeriesController.delete(req as any, res as any, next);
+      tripSeriesController.delete(req as any, res as any, next);
+      await flushPromises();
 
       expect(tripSeriesService.delete).toHaveBeenCalledWith(testUsers.user1.id, 1);
       expectSuccessResponse(res, 200, mockResult);
@@ -142,7 +150,8 @@ describe('tripSeries.controller', () => {
         params: { id: '1' },
         body: { tripId: 5 },
       });
-      await tripSeriesController.addTrip(req as any, res as any, next);
+      tripSeriesController.addTrip(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(tripSeriesService.addTrip).toHaveBeenCalledWith(testUsers.user1.id, 1, 5);
@@ -159,7 +168,8 @@ describe('tripSeries.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { id: '1', tripId: '5' },
       });
-      await tripSeriesController.removeTrip(req as any, res as any, next);
+      tripSeriesController.removeTrip(req as any, res as any, next);
+      await flushPromises();
 
       expect(tripSeriesService.removeTrip).toHaveBeenCalledWith(testUsers.user1.id, 1, 5);
       expectSuccessResponse(res, 200, mockResult);
@@ -175,7 +185,8 @@ describe('tripSeries.controller', () => {
         params: { id: '1' },
         body: { tripIds: [5, 3, 7] },
       });
-      await tripSeriesController.reorderTrips(req as any, res as any, next);
+      tripSeriesController.reorderTrips(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(tripSeriesService.reorderTrips).toHaveBeenCalledWith(

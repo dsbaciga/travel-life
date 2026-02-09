@@ -16,6 +16,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('search.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -31,7 +33,8 @@ describe('search.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: { q: 'paris', type: 'all' },
       });
-      await searchController.globalSearch(req as any, res as any, next);
+      searchController.globalSearch(req as any, res as any, next);
+      await flushPromises();
 
       if ((next as jest.Mock).mock.calls.length === 0) {
         expect(searchService.globalSearch).toHaveBeenCalledWith(
@@ -49,7 +52,8 @@ describe('search.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: { q: 'test' },
       });
-      await searchController.globalSearch(req as any, res as any, next);
+      searchController.globalSearch(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -58,7 +62,8 @@ describe('search.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: {},
       });
-      await searchController.globalSearch(req as any, res as any, next);
+      searchController.globalSearch(req as any, res as any, next);
+      await flushPromises();
 
       // Zod should fail if 'q' is required
       expect(next).toHaveBeenCalled();

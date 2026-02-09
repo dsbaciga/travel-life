@@ -36,6 +36,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 // Helper to mock user Immich settings
 function mockUserImmichSettings(apiUrl = 'http://immich:2283', apiKey = 'test-key') {
   (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -54,7 +56,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { apiUrl: 'http://immich:2283', apiKey: 'test-key' },
       });
-      await immichController.testConnection(req as any, res as any, next);
+      immichController.testConnection(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.testConnection).toHaveBeenCalledWith('http://immich:2283', 'test-key');
       expect(res.json).toHaveBeenCalledWith({
@@ -70,7 +73,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { apiUrl: 'http://immich:2283' },
       });
-      await immichController.testConnection(req as any, res as any, next);
+      immichController.testConnection(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
     });
@@ -85,7 +89,8 @@ describe('immich.controller', () => {
       (immichService.getAssetFileUrl as jest.Mock).mockReturnValue('http://file/asset-1');
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await immichController.getAssets(req as any, res as any, next);
+      immichController.getAssets(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAssets).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -115,7 +120,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: { skip: '10', take: '20' },
       });
-      await immichController.getAssets(req as any, res as any, next);
+      immichController.getAssets(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAssets).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -136,7 +142,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { assetId: 'asset-1' },
       });
-      await immichController.getAssetById(req as any, res as any, next);
+      immichController.getAssetById(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAssetById).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -165,7 +172,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { query: 'vacation' },
       });
-      await immichController.searchAssets(req as any, res as any, next);
+      immichController.searchAssets(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.searchAssets).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -188,7 +196,8 @@ describe('immich.controller', () => {
       (immichService.getAlbums as jest.Mock).mockResolvedValue(mockAlbums as never);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await immichController.getAlbums(req as any, res as any, next);
+      immichController.getAlbums(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAlbums).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -208,7 +217,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: { shared: 'true' },
       });
-      await immichController.getAlbums(req as any, res as any, next);
+      immichController.getAlbums(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAlbums).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -229,7 +239,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { albumId: 'album-1' },
       });
-      await immichController.getAlbumById(req as any, res as any, next);
+      immichController.getAlbumById(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAlbumById).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -257,7 +268,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: { startDate: '2024-06-01', endDate: '2024-06-10' },
       });
-      await immichController.getAssetsByDateRange(req as any, res as any, next);
+      immichController.getAssetsByDateRange(req as any, res as any, next);
+      await flushPromises();
 
       expect(immichService.getAssetsByDateRange).toHaveBeenCalledWith(
         'http://immich:2283',
@@ -274,7 +286,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         query: {},
       });
-      await immichController.getAssetsByDateRange(req as any, res as any, next);
+      immichController.getAssetsByDateRange(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
     });
@@ -289,7 +302,8 @@ describe('immich.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         params: { assetId: 'asset-1' },
       });
-      await immichController.getAssetUrls(req as any, res as any, next);
+      immichController.getAssetUrls(req as any, res as any, next);
+      await flushPromises();
 
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',

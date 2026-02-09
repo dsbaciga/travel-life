@@ -24,6 +24,8 @@ import {
 } from '../../__tests__/helpers/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 
+const flushPromises = () => new Promise(resolve => process.nextTick(resolve));
+
 describe('backup.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -33,7 +35,8 @@ describe('backup.controller', () => {
       (backupService.createBackup as jest.Mock).mockResolvedValue(mockBackupData as never);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await backupController.createBackup(req as any, res as any, next);
+      backupController.createBackup(req as any, res as any, next);
+      await flushPromises();
 
       expect(backupService.createBackup).toHaveBeenCalledWith(testUsers.user1.id);
       expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/json');
@@ -49,7 +52,8 @@ describe('backup.controller', () => {
       (backupService.createBackup as jest.Mock).mockRejectedValue(error as never);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await backupController.createBackup(req as any, res as any, next);
+      backupController.createBackup(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalledWith(error);
     });
@@ -70,7 +74,8 @@ describe('backup.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { backupData, options: {} },
       });
-      await backupController.restoreFromBackup(req as any, res as any, next);
+      backupController.restoreFromBackup(req as any, res as any, next);
+      await flushPromises();
 
       // If Zod validation fails, next will be called with error; otherwise service is called
       if ((next as jest.Mock).mock.calls.length === 0) {
@@ -83,7 +88,8 @@ describe('backup.controller', () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
         body: { backupData: 'invalid', options: {} },
       });
-      await backupController.restoreFromBackup(req as any, res as any, next);
+      backupController.restoreFromBackup(req as any, res as any, next);
+      await flushPromises();
 
       expect(next).toHaveBeenCalled();
     });
@@ -92,7 +98,8 @@ describe('backup.controller', () => {
   describe('getBackupInfo', () => {
     it('should return backup info with version and formats', async () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);
-      await backupController.getBackupInfo(req as any, res as any, next);
+      backupController.getBackupInfo(req as any, res as any, next);
+      await flushPromises();
 
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
