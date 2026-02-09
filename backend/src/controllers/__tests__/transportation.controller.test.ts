@@ -228,7 +228,10 @@ describe('transportationController', () => {
         testUsers.user1.id,
         5
       );
-      expectSuccessResponse(res, 200, transportations);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: transportations,
+      });
     });
 
     it('fails with invalid tripId', async () => {
@@ -264,7 +267,10 @@ describe('transportationController', () => {
         testUsers.user1.id,
         42
       );
-      expectSuccessResponse(res, 200, transportation);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: transportation,
+      });
     });
   });
 
@@ -289,7 +295,10 @@ describe('transportationController', () => {
         42,
         body
       );
-      expectSuccessResponse(res, 200, updated);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: updated,
+      });
     });
   });
 
@@ -363,7 +372,10 @@ describe('transportationController', () => {
         5,
         body
       );
-      expectSuccessResponse(res, 200, result);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: result,
+      });
     });
 
     it('fails validation when ids array is empty', async () => {
@@ -404,7 +416,10 @@ describe('transportationController', () => {
         5,
         body
       );
-      expectSuccessResponse(res, 200, result);
+      expect(res.json).toHaveBeenCalledWith({
+        status: 'success',
+        data: result,
+      });
     });
 
     it('fails validation when ids array is empty', async () => {
