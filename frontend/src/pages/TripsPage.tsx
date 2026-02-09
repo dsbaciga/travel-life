@@ -365,7 +365,7 @@ export default function TripsPage() {
     [allTripTypes]
   );
 
-  const hasActiveFilters = searchQuery || startDateFrom || startDateTo || selectedTags.length > 0 || tripTypeFilter.length > 0;
+  const hasActiveFilters = searchQuery || startDateFrom || startDateTo || selectedTags.length > 0 || statusFilter.length > 0 || tripTypeFilter.length > 0;
 
   // Render pagination controls (used at both top and bottom)
   const renderPaginationControls = (position: 'top' | 'bottom') => {
