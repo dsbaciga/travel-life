@@ -105,7 +105,7 @@ export function useEntityLinkSync() {
         return false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- entityLinkService and toast are stable module-scope imports
+    // entityLinkService and toast are stable module-scope imports
     []
   );
 
@@ -141,7 +141,7 @@ export function useEntityLinkSync() {
         return false;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- entityLinkService and toast are stable module-scope imports
+    // entityLinkService and toast are stable module-scope imports
     []
   );
 
