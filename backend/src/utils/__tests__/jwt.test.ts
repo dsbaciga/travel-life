@@ -1,3 +1,20 @@
+// Mock config BEFORE any imports that transitively load config/index.ts
+// jwt.ts imports config/index.ts which throws if DATABASE_URL is not set
+jest.mock('../../config', () => ({
+  __esModule: true,
+  config: {
+    jwt: {
+      secret: 'test-jwt-secret',
+      expiresIn: '15m',
+      refreshSecret: 'test-jwt-refresh-secret',
+      refreshExpiresIn: '7d',
+    },
+    nodeEnv: 'test',
+    port: 5000,
+    databaseUrl: 'postgresql://test:test@localhost:5432/test',
+  },
+}));
+
 import {
   generateAccessToken,
   generateRefreshToken,

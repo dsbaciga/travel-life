@@ -26,6 +26,18 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
+// Mock logger BEFORE any imports to prevent config/index.ts from loading
+// trip.service -> errorHandler -> logger -> config/index.ts (throws without DATABASE_URL)
+jest.mock('../../config/logger', () => ({
+  __esModule: true,
+  default: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 // Mock @prisma/client BEFORE any imports that depend on it
 jest.mock('@prisma/client', () => {
   class MockDecimal {

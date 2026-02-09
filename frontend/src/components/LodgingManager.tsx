@@ -328,7 +328,7 @@ export default function LodgingManager({
     setOriginalLocationId(null);
     setShowDraftPrompt(false);
     draft.clearDraft();
-  }, [baseResetForm, draft]);
+  }, [baseResetForm, draft, setShowDraftPrompt]);
 
   // Open create form with clean state
   const openCreateForm = useCallback(() => {

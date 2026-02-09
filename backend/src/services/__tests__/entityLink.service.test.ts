@@ -15,6 +15,18 @@
  * Test IDs: LINK-001 through LINK-018
  */
 
+// Mock logger BEFORE any imports to prevent config/index.ts from loading
+// entityLink.service imports logger which imports config/index.ts (throws without DATABASE_URL)
+jest.mock('../../config/logger', () => ({
+  __esModule: true,
+  default: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 // Mock Prisma client BEFORE any imports
 jest.mock('../../config/database', () => {
   const mockPrisma = {
