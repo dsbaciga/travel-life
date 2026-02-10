@@ -413,6 +413,68 @@ class UserService {
     });
   }
 
+  async renameCategory(userId: number, oldName: string, newName: string) {
+    return await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { activityCategories: true },
+      });
+
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      const categories = user.activityCategories as Array<{ name: string; emoji: string }>;
+      const updatedCategories = categories.map((c) =>
+        c.name === oldName ? { ...c, name: newName } : c
+      );
+
+      // Update user's categories
+      await tx.user.update({
+        where: { id: userId },
+        data: { activityCategories: updatedCategories },
+      });
+
+      // Update all activities using the old category name
+      await tx.activity.updateMany({
+        where: { category: oldName, trip: { userId } },
+        data: { category: newName },
+      });
+
+      return updatedCategories;
+    });
+  }
+
+  async deleteCategory(userId: number, categoryName: string) {
+    return await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { activityCategories: true },
+      });
+
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      const categories = user.activityCategories as Array<{ name: string; emoji: string }>;
+      const updatedCategories = categories.filter((c) => c.name !== categoryName);
+
+      // Update user's categories
+      await tx.user.update({
+        where: { id: userId },
+        data: { activityCategories: updatedCategories },
+      });
+
+      // Clear category from all activities using it
+      await tx.activity.updateMany({
+        where: { category: categoryName, trip: { userId } },
+        data: { category: null },
+      });
+
+      return updatedCategories;
+    });
+  }
+
   async updatePassword(userId: number, currentPassword: string, newPassword: string) {
     // Get user with password hash
     const user = await prisma.user.findUnique({

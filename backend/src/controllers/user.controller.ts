@@ -208,6 +208,31 @@ export const userController = {
     });
   }),
 
+  renameCategory: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const { oldName, newName } = z.object({
+      oldName: z.string().min(1),
+      newName: z.string().min(1),
+    }).parse(req.body);
+    const updatedCategories = await userService.renameCategory(userId, oldName, newName);
+    res.json({
+      success: true,
+      message: 'Category renamed successfully',
+      categories: updatedCategories,
+    });
+  }),
+
+  deleteCategory: asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const categoryName = decodeURIComponent(req.params.categoryName);
+    const updatedCategories = await userService.deleteCategory(userId, categoryName);
+    res.json({
+      success: true,
+      message: 'Category deleted successfully',
+      categories: updatedCategories,
+    });
+  }),
+
   updateTravelPartnerSettings: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
     const data = travelPartnerSettingsSchema.parse(req.body);

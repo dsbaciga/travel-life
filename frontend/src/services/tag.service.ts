@@ -47,6 +47,11 @@ const tagService = {
     return response.data;
   },
 
+  async reorderTags(tagIds: number[]): Promise<TripTag[]> {
+    const response = await axios.put('/tags/reorder', { tagIds });
+    return response.data;
+  },
+
   async getAllTags(): Promise<TripTag[]> {
     const response = await axios.get('/tags');
     return response.data;

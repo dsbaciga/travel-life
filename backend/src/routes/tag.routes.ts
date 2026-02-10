@@ -49,6 +49,7 @@ router.use(authenticate);
  */
 router.post('/', tagController.createTag);
 router.get('/', tagController.getTagsByUser);
+router.put('/reorder', tagController.reorderTags);
 
 /**
  * @openapi

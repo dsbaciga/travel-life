@@ -4,6 +4,7 @@ import { createTagSchema, updateTagSchema, linkTagToTripSchema } from '../types/
 import { asyncHandler } from '../utils/asyncHandler';
 import { parseId } from '../utils/parseId';
 import { requireUserId } from '../utils/controllerHelpers';
+import { z } from 'zod';
 
 export const tagController = {
   createTag: asyncHandler(async (req: Request, res: Response) => {
@@ -39,6 +40,15 @@ export const tagController = {
     const tagId = parseId(req.params.id);
     await tagService.deleteTag(userId, tagId);
     res.status(204).send();
+  }),
+
+  reorderTags: asyncHandler(async (req: Request, res: Response) => {
+    const userId = requireUserId(req);
+    const { tagIds } = z.object({
+      tagIds: z.array(z.number().int().positive()),
+    }).parse(req.body);
+    const tags = await tagService.reorderTags(userId, tagIds);
+    res.json({ status: 'success', data: tags });
   }),
 
   linkTagToTrip: asyncHandler(async (req: Request, res: Response) => {

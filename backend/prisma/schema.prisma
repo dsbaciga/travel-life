@@ -132,6 +132,7 @@ model TripTag {
   name      String   @db.VarChar(255)
   color     String?  @db.VarChar(7) // Hex color code (background)
   textColor String?  @map("text_color") @db.VarChar(7) // Hex color code (text)
+  sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
 
   user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)

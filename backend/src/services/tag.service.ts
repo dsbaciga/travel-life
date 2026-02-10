@@ -27,7 +27,7 @@ export const tagService = {
           select: { assignments: true },
         },
       },
-      orderBy: { name: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
   },
 
@@ -69,6 +69,16 @@ export const tagService = {
       throw new AppError('Tag not found', 404);
     }
 
+    // Check for duplicate name if renaming
+    if (data.name && data.name !== tag.name) {
+      const duplicate = await prisma.tripTag.findFirst({
+        where: { userId, name: data.name, id: { not: tagId } },
+      });
+      if (duplicate) {
+        throw new AppError('A tag with that name already exists', 400);
+      }
+    }
+
     return await prisma.tripTag.update({
       where: { id: tagId },
       data,
@@ -88,6 +98,31 @@ export const tagService = {
     await prisma.tripTag.delete({
       where: { id: tagId },
     });
+  },
+
+  // Reorder tags by updating sortOrder for each tag
+  async reorderTags(userId: number, tagIds: number[]) {
+    // Verify all tags belong to the user
+    const tags = await prisma.tripTag.findMany({
+      where: { userId, id: { in: tagIds } },
+      select: { id: true },
+    });
+
+    if (tags.length !== tagIds.length) {
+      throw new AppError('One or more tags not found', 404);
+    }
+
+    // Update sort order in a transaction
+    await prisma.$transaction(
+      tagIds.map((tagId, index) =>
+        prisma.tripTag.update({
+          where: { id: tagId },
+          data: { sortOrder: index },
+        })
+      )
+    );
+
+    return await this.getTagsByUser(userId);
   },
 
   // Link a tag to a trip

@@ -47,8 +47,12 @@ export default function SettingsPage() {
   const [tripTypes, setTripTypes] = useState<TripTypeCategory[]>([]);
   const [newTripType, setNewTripType] = useState("");
   const [newTripTypeEmoji, setNewTripTypeEmoji] = useState("🌍");
+  const [editingCategoryName, setEditingCategoryName] = useState<string | null>(null);
+  const [editingCategoryNewName, setEditingCategoryNewName] = useState("");
   const [editingTripTypeName, setEditingTripTypeName] = useState<string | null>(null);
   const [editingTripTypeNewName, setEditingTripTypeNewName] = useState("");
+  const [editingTagName, setEditingTagName] = useState<number | null>(null);
+  const [editingTagNewName, setEditingTagNewName] = useState("");
   const [timezone, setTimezone] = useState("UTC");
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("");
@@ -168,6 +172,69 @@ export default function SettingsPage() {
     }
   };
 
+  const handleStartRenameTag = (tag: TripTag) => {
+    setEditingTagName(tag.id);
+    setEditingTagNewName(tag.name);
+  };
+
+  const handleCancelRenameTag = () => {
+    setEditingTagName(null);
+    setEditingTagNewName("");
+  };
+
+  const handleSaveRenameTag = async (tagId: number) => {
+    const newName = editingTagNewName.trim();
+    if (!newName) {
+      handleCancelRenameTag();
+      return;
+    }
+    const currentTag = tags.find((t) => t.id === tagId);
+    if (currentTag && newName === currentTag.name) {
+      handleCancelRenameTag();
+      return;
+    }
+    if (tags.some((t) => t.name.toLowerCase() === newName.toLowerCase() && t.id !== tagId)) {
+      toast.error("A tag with that name already exists");
+      return;
+    }
+
+    try {
+      await tagService.updateTag(tagId, { name: newName });
+      await loadTags();
+      setEditingTagName(null);
+      setEditingTagNewName("");
+      toast.success("Tag renamed");
+    } catch {
+      toast.error("Failed to rename tag");
+    }
+  };
+
+  const handleMoveTagUp = async (index: number) => {
+    if (index === 0) return;
+    const newTags = [...tags];
+    [newTags[index - 1], newTags[index]] = [newTags[index], newTags[index - 1]];
+    setTags(newTags);
+    try {
+      await tagService.reorderTags(newTags.map((t) => t.id));
+    } catch {
+      toast.error("Failed to reorder tags");
+      await loadTags();
+    }
+  };
+
+  const handleMoveTagDown = async (index: number) => {
+    if (index === tags.length - 1) return;
+    const newTags = [...tags];
+    [newTags[index], newTags[index + 1]] = [newTags[index + 1], newTags[index]];
+    setTags(newTags);
+    try {
+      await tagService.reorderTags(newTags.map((t) => t.id));
+    } catch {
+      toast.error("Failed to reorder tags");
+      await loadTags();
+    }
+  };
+
   const handleStartEditTag = (tag: TripTag) => {
     setEditingTagId(tag.id);
     setEditingTagColor(tag.color || "#3B82F6");
@@ -212,8 +279,68 @@ export default function SettingsPage() {
     setNewCategoryEmoji("😀");
   };
 
-  const handleRemoveCategory = (categoryName: string) => {
-    setCategories(categories.filter((c) => c.name !== categoryName));
+  const handleDeleteCategory = async (categoryName: string) => {
+    const confirmed = await confirm({
+      title: "Delete Category",
+      message: `Delete "${categoryName}"? It will be removed from all activities that use it.`,
+      confirmLabel: "Delete",
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    try {
+      const result = await userService.deleteCategory(categoryName);
+      setCategories(result.categories);
+      toast.success("Category deleted");
+    } catch {
+      toast.error("Failed to delete category");
+    }
+  };
+
+  const handleStartRenameCategory = (categoryName: string) => {
+    setEditingCategoryName(categoryName);
+    setEditingCategoryNewName(categoryName);
+  };
+
+  const handleCancelRenameCategory = () => {
+    setEditingCategoryName(null);
+    setEditingCategoryNewName("");
+  };
+
+  const handleSaveRenameCategory = async (oldName: string) => {
+    const newName = editingCategoryNewName.trim();
+    if (!newName || newName === oldName) {
+      handleCancelRenameCategory();
+      return;
+    }
+    if (categories.some((c) => c.name.toLowerCase() === newName.toLowerCase() && c.name !== oldName)) {
+      toast.error("A category with that name already exists");
+      return;
+    }
+
+    try {
+      const result = await userService.renameCategory(oldName, newName);
+      setCategories(result.categories);
+      setEditingCategoryName(null);
+      setEditingCategoryNewName("");
+      toast.success("Category renamed");
+    } catch {
+      toast.error("Failed to rename category");
+    }
+  };
+
+  const handleMoveCategoryUp = (index: number) => {
+    if (index === 0) return;
+    const newCategories = [...categories];
+    [newCategories[index - 1], newCategories[index]] = [newCategories[index], newCategories[index - 1]];
+    setCategories(newCategories);
+  };
+
+  const handleMoveCategoryDown = (index: number) => {
+    if (index === categories.length - 1) return;
+    const newCategories = [...categories];
+    [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
+    setCategories(newCategories);
   };
 
   const handleUpdateCategoryEmoji = (
@@ -304,6 +431,20 @@ export default function SettingsPage() {
     } catch {
       toast.error("Failed to rename trip type");
     }
+  };
+
+  const handleMoveTripTypeUp = (index: number) => {
+    if (index === 0) return;
+    const newTypes = [...tripTypes];
+    [newTypes[index - 1], newTypes[index]] = [newTypes[index], newTypes[index - 1]];
+    setTripTypes(newTypes);
+  };
+
+  const handleMoveTripTypeDown = (index: number) => {
+    if (index === tripTypes.length - 1) return;
+    const newTypes = [...tripTypes];
+    [newTypes[index], newTypes[index + 1]] = [newTypes[index + 1], newTypes[index]];
+    setTripTypes(newTypes);
   };
 
   const handleSaveTripTypes = async () => {
@@ -944,29 +1085,104 @@ export default function SettingsPage() {
                     No categories yet. Add your first category above.
                   </p>
                 ) : (
-                  categories.map((category) => (
+                  categories.map((category, index) => (
                     <div
                       key={category.name}
                       className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => handleMoveCategoryUp(index)}
+                            type="button"
+                            disabled={index === 0}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                            title="Move up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleMoveCategoryDown(index)}
+                            type="button"
+                            disabled={index === categories.length - 1}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                            title="Move down"
+                          >
+                            ▼
+                          </button>
+                        </div>
                         <EmojiPicker
                           value={category.emoji}
                           onChange={(emoji) =>
                             handleUpdateCategoryEmoji(category.name, emoji)
                           }
                         />
-                        <span className="text-gray-900 dark:text-white">
-                          {category.name}
-                        </span>
+                        {editingCategoryName === category.name ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              type="text"
+                              value={editingCategoryNewName}
+                              onChange={(e) =>
+                                setEditingCategoryNewName(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  handleSaveRenameCategory(category.name);
+                                if (e.key === "Escape")
+                                  handleCancelRenameCategory();
+                              }}
+                              className="input flex-1"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() =>
+                                handleSaveRenameCategory(category.name)
+                              }
+                              type="button"
+                              className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-medium"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleCancelRenameCategory}
+                              type="button"
+                              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400"
+                            onClick={() =>
+                              handleStartRenameCategory(category.name)
+                            }
+                            title="Click to rename"
+                          >
+                            {category.name}
+                          </span>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleRemoveCategory(category.name)}
-                        type="button"
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Remove
-                      </button>
+                      {editingCategoryName !== category.name && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() =>
+                              handleStartRenameCategory(category.name)
+                            }
+                            type="button"
+                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                          >
+                            Rename
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(category.name)}
+                            type="button"
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -1006,7 +1222,7 @@ export default function SettingsPage() {
                   type="text"
                   value={newTripType}
                   onChange={(e) => setNewTripType(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleAddTripType()}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddTripType()}
                   placeholder="New trip type name"
                   className="input flex-1"
                 />
@@ -1026,12 +1242,32 @@ export default function SettingsPage() {
                     No trip types yet. Add your first trip type above.
                   </p>
                 ) : (
-                  tripTypes.map((tripType) => (
+                  tripTypes.map((tripType, index) => (
                     <div
                       key={tripType.name}
                       className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => handleMoveTripTypeUp(index)}
+                            type="button"
+                            disabled={index === 0}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                            title="Move up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => handleMoveTripTypeDown(index)}
+                            type="button"
+                            disabled={index === tripTypes.length - 1}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                            title="Move down"
+                          >
+                            ▼
+                          </button>
+                        </div>
                         <EmojiPicker
                           value={tripType.emoji}
                           onChange={(emoji) =>
@@ -1046,11 +1282,9 @@ export default function SettingsPage() {
                               onChange={(e) =>
                                 setEditingTripTypeNewName(e.target.value)
                               }
-                              onKeyPress={(e) => {
+                              onKeyDown={(e) => {
                                 if (e.key === "Enter")
                                   handleSaveRenameTripType(tripType.name);
-                              }}
-                              onKeyDown={(e) => {
                                 if (e.key === "Escape")
                                   handleCancelRenameTripType();
                               }}
@@ -1193,13 +1427,13 @@ export default function SettingsPage() {
                     No tags yet. Create your first tag above.
                   </p>
                 ) : (
-                  tags.map((tag) => (
+                  tags.map((tag, index) => (
                     <div
                       key={tag.id}
                       className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3"
                     >
                       {editingTagId === tag.id ? (
-                        // Edit mode
+                        // Edit colors mode
                         <div className="space-y-3">
                           <div className="flex items-center gap-3">
                             <span
@@ -1268,25 +1502,116 @@ export default function SettingsPage() {
                             </button>
                           </div>
                         </div>
+                      ) : editingTagName === tag.id ? (
+                        // Rename mode
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col">
+                            <button
+                              onClick={() => handleMoveTagUp(index)}
+                              type="button"
+                              disabled={index === 0}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                              title="Move up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => handleMoveTagDown(index)}
+                              type="button"
+                              disabled={index === tags.length - 1}
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                              title="Move down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                          <span
+                            className="px-3 py-1 rounded-full text-sm font-medium"
+                            style={{
+                              backgroundColor: tag.color || "#3B82F6",
+                              color: tag.textColor || "#FFFFFF",
+                            }}
+                          >
+                            {editingTagNewName || tag.name}
+                          </span>
+                          <input
+                            type="text"
+                            value={editingTagNewName}
+                            onChange={(e) =>
+                              setEditingTagNewName(e.target.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter")
+                                handleSaveRenameTag(tag.id);
+                              if (e.key === "Escape")
+                                handleCancelRenameTag();
+                            }}
+                            className="input flex-1"
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveRenameTag(tag.id)}
+                            type="button"
+                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm font-medium"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelRenameTag}
+                            type="button"
+                            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       ) : (
                         // View mode
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <button
+                                onClick={() => handleMoveTagUp(index)}
+                                type="button"
+                                disabled={index === 0}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                                title="Move up"
+                              >
+                                ▲
+                              </button>
+                              <button
+                                onClick={() => handleMoveTagDown(index)}
+                                type="button"
+                                disabled={index === tags.length - 1}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
+                                title="Move down"
+                              >
+                                ▼
+                              </button>
+                            </div>
                             <span
-                              className="px-3 py-1 rounded-full text-sm font-medium"
+                              className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer"
                               style={{
                                 backgroundColor: tag.color || "#3B82F6",
                                 color: tag.textColor || "#FFFFFF",
                               }}
+                              onClick={() => handleStartRenameTag(tag)}
+                              title="Click to rename"
                             >
                               {tag.name}
                             </span>
                           </div>
                           <div className="flex gap-2">
                             <button
+                              onClick={() => handleStartRenameTag(tag)}
+                              type="button"
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                            >
+                              Rename
+                            </button>
+                            <button
                               onClick={() => handleStartEditTag(tag)}
                               type="button"
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                             >
                               Edit Colors
                             </button>

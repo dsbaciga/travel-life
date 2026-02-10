@@ -68,6 +68,8 @@ router.get('/me', userController.getMe);
 router.put('/settings', userController.updateSettings);
 router.put('/settings/trip-types/rename', userController.renameTripType);
 router.delete('/settings/trip-types/:typeName', userController.deleteTripType);
+router.put('/settings/categories/rename', userController.renameCategory);
+router.delete('/settings/categories/:categoryName', userController.deleteCategory);
 
 /**
  * @openapi

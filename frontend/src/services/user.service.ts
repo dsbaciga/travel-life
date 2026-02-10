@@ -98,6 +98,16 @@ const userService = {
     return response.data;
   },
 
+  async renameCategory(oldName: string, newName: string): Promise<{ success: boolean; message: string; categories: Array<{ name: string; emoji: string }> }> {
+    const response = await axios.put('/users/settings/categories/rename', { oldName, newName });
+    return response.data;
+  },
+
+  async deleteCategory(categoryName: string): Promise<{ success: boolean; message: string; categories: Array<{ name: string; emoji: string }> }> {
+    const response = await axios.delete(`/users/settings/categories/${encodeURIComponent(categoryName)}`);
+    return response.data;
+  },
+
   async searchUsers(query: string, signal?: AbortSignal): Promise<UserSearchResult[]> {
     const response = await axios.get('/users/search', { params: { query }, signal });
     return response.data;
