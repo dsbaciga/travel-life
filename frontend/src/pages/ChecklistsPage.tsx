@@ -56,7 +56,7 @@ export default function ChecklistsPage() {
 
   const loadTrips = async () => {
     try {
-      const data = await tripService.getTrips();
+      const data = await tripService.getTrips({ limit: 1000, sort: 'title-asc' });
       setTrips(data.trips);
     } catch (err) {
       console.error('Failed to load trips:', err);
@@ -204,10 +204,11 @@ export default function ChecklistsPage() {
   }
 
   secondaryActions.push({
-    label: isAutoChecking ? 'Auto-checking...' : 'Auto-check from Trips',
+    label: isAutoChecking ? 'Syncing...' : 'Sync Default Lists from Trips',
     onClick: handleAutoCheck,
     disabled: isAutoChecking || checklists.length === 0,
     variant: 'secondary' as const,
+    title: 'Automatically check off airports, countries, cities, and states you\'ve visited based on your trip data',
   });
 
   if (isLoading) {

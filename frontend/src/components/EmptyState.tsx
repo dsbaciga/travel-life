@@ -92,7 +92,7 @@ export default function EmptyState({
         {message}
       </p>
       {subMessage && (
-        <p className="text-sm text-slate dark:text-warm-gray/70 font-body max-w-md mx-auto">
+        <p className="text-sm text-slate dark:text-warm-gray/70 font-body max-w-md mx-auto mb-2">
           {subMessage}
         </p>
       )}

@@ -42,9 +42,10 @@ export function createQueryClient(): QueryClient {
         // We handle this manually to avoid disrupting offline work
         refetchOnReconnect: false,
 
-        // Don't refetch when component mounts if data exists
-        // Preserves cached data during navigation
-        refetchOnMount: false,
+        // Refetch on mount only if data is stale (default behavior)
+        // This ensures invalidated data (e.g., after editing a trip) gets refreshed
+        // while still serving cached data during its staleTime window
+        refetchOnMount: true,
 
         // Retry failed requests 3 times with exponential backoff
         // This handles temporary network issues gracefully
@@ -154,9 +155,13 @@ export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
  * Filter function for dehydrating queries
  * Determines which queries should be included in the persisted cache
  */
-export function dehydrateQueryFilter(query: { queryKey: readonly unknown[] }): boolean {
-  // Only persist successful queries
-  // Don't persist error states or loading states
+export function dehydrateQueryFilter(query: { queryKey: readonly unknown[]; state: { status: string; data?: unknown } }): boolean {
+  // Only persist successful queries with resolved data
+  // Queries in pending/paused state may contain Promise objects that can't be cloned to IndexedDB
+  if (query.state.status !== 'success') {
+    return false;
+  }
+
   return shouldPersistQuery(query.queryKey);
 }
 

@@ -59,7 +59,8 @@ export default function TripsPage() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  const pageSize = viewMode === 'list' ? 40 : 20;
+  // Grid/kanban uses 24 (divisible by 2-col and 3-col layouts to avoid partial rows)
+  const pageSize = viewMode === 'list' ? 40 : 24;
 
   const params = {
     page: currentPage,
@@ -104,6 +105,27 @@ export default function TripsPage() {
     }
     // getPosition is stable from Zustand store, safe to include
   }, [getPosition, loading]);
+
+  // Continuously save scroll position so back button navigation works
+  useEffect(() => {
+    let rafId: number;
+    const handleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        savePosition(SCROLL_KEY, window.scrollY);
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [savePosition]);
+
+  // Save page number whenever it changes so back button restores correct page
+  useEffect(() => {
+    savePageNumber(SCROLL_KEY, currentPage);
+  }, [currentPage, savePageNumber]);
 
   // Save scroll position and page number before navigating away
   const handleNavigateAway = useCallback(() => {
@@ -495,7 +517,7 @@ export default function TripsPage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm p-4 rounded-xl border-2 border-primary-500/10 dark:border-sky/10 mb-6 space-y-4">
+        <div className="relative z-30 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm p-4 rounded-xl border-2 border-primary-500/10 dark:border-sky/10 mb-6 space-y-4">
           {/* Search and Sort Row */}
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Input */}

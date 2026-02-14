@@ -67,14 +67,12 @@ export default function TripCard({ trip, coverPhotoUrl, onDelete, showActions = 
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/60" />
           </>
         ) : (
-          /* Fallback gradient pattern for trips without cover photos */
+          /* Fallback gradient with map pin icon for trips without cover photos */
           <div className="absolute inset-0 bg-gradient-to-br from-primary-400 via-accent-400 to-primary-600 dark:from-primary-600 dark:via-accent-600 dark:to-primary-800">
-            {/* Decorative pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-4 left-4 w-20 h-20 border-2 border-white rounded-full" />
-              <div className="absolute top-8 left-8 w-16 h-16 border-2 border-white rounded-full" />
-              <div className="absolute bottom-4 right-4 w-24 h-24 border-2 border-white rounded-full" />
-              <div className="absolute bottom-8 right-8 w-16 h-16 border-2 border-white rounded-full" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-20 h-20 text-white/20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
+              </svg>
             </div>
           </div>
         )}
@@ -158,26 +156,41 @@ export default function TripCard({ trip, coverPhotoUrl, onDelete, showActions = 
           </div>
         </div>
 
-        {/* Stats Row */}
+        {/* Stats Row - each stat links to its tab */}
         {hasStats && (
-          <div className="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-navy-700 mt-2">
+          <div className="relative z-20 flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-navy-700 mt-2">
             {counts.locations > 0 && (
-              <div className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70">
+              <Link
+                to={`/trips/${trip.id}?tab=locations`}
+                className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70 hover:text-primary-600 dark:hover:text-gold transition-colors"
+                title={`${counts.locations} location${counts.locations !== 1 ? 's' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onNavigateAway?.(); }}
+              >
                 <MapPinIcon className="w-4 h-4 text-primary-500 dark:text-gold" />
                 <span>{counts.locations}</span>
-              </div>
+              </Link>
             )}
             {counts.photos > 0 && (
-              <div className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70">
+              <Link
+                to={`/trips/${trip.id}?tab=photos`}
+                className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70 hover:text-accent-600 dark:hover:text-gold transition-colors"
+                title={`${counts.photos} photo${counts.photos !== 1 ? 's' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onNavigateAway?.(); }}
+              >
                 <PhotoIcon className="w-4 h-4 text-accent-500 dark:text-gold" />
                 <span>{counts.photos}</span>
-              </div>
+              </Link>
             )}
             {counts.transportation > 0 && (
-              <div className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70">
+              <Link
+                to={`/trips/${trip.id}?tab=transportation`}
+                className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                title={`${counts.transportation} transportation${counts.transportation !== 1 ? 's' : ''}`}
+                onClick={(e) => { e.stopPropagation(); onNavigateAway?.(); }}
+              >
                 <TransportIcon className="w-4 h-4 text-green-500 dark:text-green-400" />
                 <span>{counts.transportation}</span>
-              </div>
+              </Link>
             )}
           </div>
         )}

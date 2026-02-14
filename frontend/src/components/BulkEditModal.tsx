@@ -227,7 +227,7 @@ export default function BulkEditModal({
         )}
 
         {/* Fields */}
-        <FormSection title="Update Fields" icon="pencil">
+        <FormSection title="Update Fields" icon="✏️">
           <div className="space-y-4">
             {fields.map(field => (
               <div key={field.key}>

@@ -52,7 +52,7 @@ export default function FloatingTripHeader({ trip, observeRef }: FloatingTripHea
 
   return (
     <div
-      className="fixed top-16 sm:top-20 left-0 right-0 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 shadow-md transform animate-slide-in-down"
+      className="fixed top-16 sm:top-20 left-0 right-0 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 shadow-md transform animate-slide-in-down"
       role="banner"
       aria-label="Trip quick info"
     >

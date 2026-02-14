@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { userInvitationService } from '../services/userInvitation.service';
+import userService from '../services/user.service';
 import { sendUserInvitationSchema, acceptInvitationSchema } from '../types/userInvitation.types';
 import { AppError } from '../utils/errors';
 import jwt from 'jsonwebtoken';
@@ -213,7 +214,10 @@ export const userInvitationController = {
         throw new AppError('Authentication required', 401);
       }
 
-      const isConfigured = userInvitationService.isEmailConfigured();
+      // Check both global (env var) SMTP and per-user SMTP settings
+      const globalConfigured = userInvitationService.isEmailConfigured();
+      const userSmtpConfig = await userService.getEffectiveSmtpConfig(userId);
+      const isConfigured = globalConfigured || !!userSmtpConfig;
 
       res.json({
         status: 'success',

@@ -14,6 +14,8 @@ interface ActionButton {
   disabled?: boolean;
   /** Icon to show before label */
   icon?: ReactNode;
+  /** Tooltip text shown on hover */
+  title?: string;
 }
 
 interface PageHeaderProps {
@@ -84,7 +86,7 @@ export default function PageHeader({
 
     if (actionConfig.href) {
       return (
-        <Link key={key} to={actionConfig.href} className={classes}>
+        <Link key={key} to={actionConfig.href} className={classes} title={actionConfig.title}>
           {content}
         </Link>
       );
@@ -96,6 +98,7 @@ export default function PageHeader({
         onClick={actionConfig.onClick}
         disabled={actionConfig.disabled}
         className={classes}
+        title={actionConfig.title}
       >
         {content}
       </button>
