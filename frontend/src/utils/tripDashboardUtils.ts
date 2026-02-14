@@ -1218,7 +1218,10 @@ export function groupActivityByDay(
     if (!groups.has(dateKey)) {
       groups.set(dateKey, []);
     }
-    groups.get(dateKey)!.push(item);
+    const group = groups.get(dateKey);
+    if (group) {
+      group.push(item);
+    }
   });
 
   return groups;

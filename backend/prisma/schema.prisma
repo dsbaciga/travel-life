@@ -73,7 +73,7 @@ model Trip {
   timezone            String?  @db.VarChar(100)
   status              String   @db.VarChar(50) // Dream, Planning, Planned, In Progress, Completed, Cancelled
   tripType            String?  @map("trip_type") @db.VarChar(100)
-  tripTypeEmoji       String?  @map("trip_type_emoji") @db.VarChar(10)
+  tripTypeEmoji       String?  @map("trip_type_emoji") @db.VarChar(50)
   privacyLevel        String   @map("privacy_level") @db.VarChar(50) // Private, Shared, Public
   coverPhotoId        Int?     @map("cover_photo_id")
   bannerPhotoId       Int?     @map("banner_photo_id")

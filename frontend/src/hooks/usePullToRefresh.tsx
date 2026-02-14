@@ -159,7 +159,7 @@ export function PullToRefreshIndicator({
       style={{
         '--pull-height': `${Math.max(pullDistance, isRefreshing ? threshold : 0)}px`,
         '--pull-opacity': pullDistance > 10 || isRefreshing ? 1 : 0,
-      } as React.CSSProperties & { '--pull-height': string; '--pull-opacity': number }}
+      }}
     >
       <div className="relative">
         {isRefreshing ? (
@@ -170,7 +170,7 @@ export function PullToRefreshIndicator({
           // Dynamic rotation requires CSS variable - cannot be moved to static CSS
           <svg
             className="w-8 h-8 text-primary-600 dark:text-sky transition-transform pull-refresh-arrow"
-            style={{ '--arrow-rotation': `${rotation}deg` } as React.CSSProperties & { '--arrow-rotation': string }}
+            style={{ '--arrow-rotation': `${rotation}deg` }}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

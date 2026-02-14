@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Checklist, ChecklistItem } from "../types/checklist";
 import checklistService from "../services/checklist.service";
@@ -17,12 +17,7 @@ export default function ChecklistDetailPage() {
   const [checklistName, setChecklistName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadChecklist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const loadChecklist = async () => {
+  const loadChecklist = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -35,7 +30,11 @@ export default function ChecklistDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadChecklist();
+  }, [loadChecklist]);
 
   const handleToggleItem = async (item: ChecklistItem) => {
     try {

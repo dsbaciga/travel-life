@@ -145,7 +145,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
       {/* Map */}
       <div
         className="map-container-dynamic rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 w-full relative z-0"
-        style={{ "--map-height": height } as React.CSSProperties & { "--map-height": string }}
+        style={{ "--map-height": height }}
       >
         <MapContainer
           bounds={bounds || undefined}

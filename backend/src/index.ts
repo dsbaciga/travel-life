@@ -182,7 +182,7 @@ app.get('/health', async (_req, res) => {
 // API routes
 app.get('/api', (_req, res) => {
   res.json({
-    message: "Captain's Log API",
+    message: "Travel Life API",
     version: packageJson.version,
     status: 'running',
   });

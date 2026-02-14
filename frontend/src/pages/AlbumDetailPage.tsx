@@ -1,4 +1,4 @@
-import { useEffect, useState, useId, useRef } from "react";
+import { useCallback, useEffect, useState, useId, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { AlbumWithPhotos, Photo } from "../types/photo";
 import type { Trip } from "../types/trip";
@@ -34,18 +34,20 @@ export default function AlbumDetailPage() {
   const [isAddingPhotos, setIsAddingPhotos] = useState(false);
   const [thumbnailCache, setThumbnailCache] = useState<{ [key: number]: string }>({});
   const blobUrlsRef = useRef<string[]>([]);
+  const thumbnailCacheRef = useRef(thumbnailCache);
+  thumbnailCacheRef.current = thumbnailCache;
 
-  // Load thumbnails for selector photos
   useEffect(() => {
     const loadThumbnails = async () => {
       const token = getAccessToken();
       if (!token) return;
 
+      const currentCache = thumbnailCacheRef.current;
       const newUrls: { [key: number]: string } = {};
       const newBlobUrls: string[] = [];
 
       for (const photo of availablePhotos) {
-        if (photo.source !== "immich" || !photo.thumbnailPath || thumbnailCache[photo.id]) {
+        if (photo.source !== "immich" || !photo.thumbnailPath || currentCache[photo.id]) {
           continue;
         }
 
@@ -77,7 +79,6 @@ export default function AlbumDetailPage() {
     if (showPhotoSelector && availablePhotos.length > 0) {
       loadThumbnails();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availablePhotos, showPhotoSelector]);
 
   // Cleanup blob URLs on unmount
@@ -115,7 +116,10 @@ export default function AlbumDetailPage() {
     { pageSize: 40 }
   );
 
-  const loadTripData = async () => {
+  const paginationRef = useRef(photosPagination);
+  paginationRef.current = photosPagination;
+
+  const loadTripData = useCallback(async () => {
     if (!tripId) return;
     try {
       const tripData = await tripService.getTripById(parseInt(tripId));
@@ -123,8 +127,9 @@ export default function AlbumDetailPage() {
     } catch (err) {
       console.error("Failed to load trip data:", err);
     }
-  };
-  const loadAlbum = async () => {
+  }, [tripId]);
+
+  const loadAlbum = useCallback(async () => {
     if (!albumId) return;
 
     setIsLoading(true);
@@ -142,19 +147,15 @@ export default function AlbumDetailPage() {
       console.error("Failed to load album:", err);
     } finally {
       setIsLoading(false);
-      // Load photos after loading state is cleared
-      // This ensures the component is fully rendered before pagination loads
-      photosPagination.loadInitial();
+      paginationRef.current.loadInitial();
     }
-  };
+  }, [albumId]);
 
   useEffect(() => {
-    // Clear previous album's photos before loading new album
-    photosPagination.clear();
+    paginationRef.current.clear();
     loadTripData();
     loadAlbum();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [albumId, tripId]);
+  }, [loadTripData, loadAlbum]);
 
   const handleUpdateAlbum = async (e: React.FormEvent) => {
     e.preventDefault();

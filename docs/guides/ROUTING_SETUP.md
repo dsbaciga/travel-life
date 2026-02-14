@@ -2,7 +2,7 @@
 
 ## Overview
 
-Captain's Log uses OpenRouteService to calculate accurate road distances for car, bicycle, and walking transportation. Without this configuration, the application will fall back to straight-line (Haversine) distance calculations, which are significantly less accurate for road-based travel.
+Travel Life uses OpenRouteService to calculate accurate road distances for car, bicycle, and walking transportation. Without this configuration, the application will fall back to straight-line (Haversine) distance calculations, which are significantly less accurate for road-based travel.
 
 ## Why You Need This
 
@@ -89,7 +89,7 @@ docker-compose -f docker-compose.truenas.optimized.yml --env-file .env restart b
 1. Check backend logs to confirm API key is loaded:
 
 ```bash
-docker logs captains-log-backend | grep "Routing Service"
+docker logs travel-life-backend | grep "Routing Service"
 ```
 
 **Success indicators:**
@@ -158,10 +158,10 @@ If the OpenRouteService API is unavailable (network error, rate limit, invalid k
 **Solution:**
 1. Verify the API key is in your `.env` file
 2. Ensure the `.env` file is in the correct location:
-   - Development: `/path/to/Captains-Log/.env`
-   - Production: `/path/to/Captains-Log/.env.production`
+   - Development: `/path/to/travel-life/.env`
+   - Production: `/path/to/travel-life/.env.production`
 3. Restart the backend container: `docker-compose restart backend`
-4. Check logs again: `docker logs captains-log-backend | tail -20`
+4. Check logs again: `docker logs travel-life-backend | tail -20`
 
 ### "Invalid OpenRouteService API key" error
 
@@ -198,7 +198,7 @@ If the OpenRouteService API is unavailable (network error, rate limit, invalid k
 5. ✅ Locations are routable (not in ocean, not too far apart)
 
 If all checkboxes pass but still seeing issues:
-- Clear route cache: `docker exec captains-log-backend npx prisma studio`
+- Clear route cache: `docker exec travel-life-backend npx prisma studio`
 - Navigate to RouteCache table and delete all entries
 - Try creating a new transportation entry
 
@@ -208,10 +208,10 @@ Run this command to see routing service activity:
 
 ```bash
 # Watch logs in real-time
-docker logs -f captains-log-backend | grep "Routing"
+docker logs -f travel-life-backend | grep "Routing"
 
 # Check recent routing activity
-docker logs captains-log-backend --tail 100 | grep "Routing"
+docker logs travel-life-backend --tail 100 | grep "Routing"
 ```
 
 **Good output:**

@@ -3,7 +3,12 @@
 
 declare const __APP_VERSION__: string;
 
-// Extend Window interface for PWA-related globals
 interface Window {
   workbox?: import('workbox-window').Workbox;
+}
+
+declare module 'react' {
+  interface CSSProperties {
+    [key: `--${string}`]: string | number | undefined;
+  }
 }

@@ -13,17 +13,17 @@ Get Travel Life running in production in under 10 minutes.
 ### 1. Clone and Configure (2 minutes)
 
 ```bash
-git clone https://github.com/dsbaciga/Captains-Log.git
-cd Captains-Log
+git clone https://github.com/dsbaciga/travel-life.git
+cd travel-life
 ```
 
 Create `.env.production` file:
 
 ```bash
 # Required
-DB_USER=captains_log_user
+DB_USER=travel_life_user
 DB_PASSWORD=your_secure_password_here
-DB_NAME=captains_log
+DB_NAME=travel_life
 JWT_SECRET=your_very_long_random_jwt_secret_min_32_chars
 JWT_REFRESH_SECRET=another_very_long_random_secret_min_32_chars
 
@@ -48,7 +48,7 @@ docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
 ### 3. Run Database Migrations (1 minute)
 
 ```bash
-docker exec captains-log-backend npx prisma migrate deploy
+docker exec travel-life-backend npx prisma migrate deploy
 ```
 
 ### 4. Verify Installation (1 minute)
@@ -90,7 +90,7 @@ docker-compose -f docker-compose.prod.yml logs
 ### Database connection issues?
 
 ```bash
-docker exec captains-log-backend npx prisma db push
+docker exec travel-life-backend npx prisma db push
 ```
 
 ### Need to reset everything?

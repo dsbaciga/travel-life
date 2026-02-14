@@ -108,7 +108,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
                 style={{
                   '--tag-bg-color': assignment.tag.color || '#3B82F6',
                   '--tag-text-color': assignment.tag.textColor || '#FFFFFF',
-                } as React.CSSProperties & { '--tag-bg-color': string; '--tag-text-color': string }}
+                }}
               >
                 {assignment.tag.name}
               </span>

@@ -1,6 +1,6 @@
 # Release Checklist
 
-Comprehensive checklist for releasing new versions of Travel Life (Captain's Log).
+Comprehensive checklist for releasing new versions of Travel Life.
 
 ## Pre-Release
 
@@ -109,10 +109,10 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Push Docker Images
 
 ```bash
-docker push ghcr.io/dsbaciga/captains-log-backend:vX.X.X
-docker push ghcr.io/dsbaciga/captains-log-frontend:vX.X.X
-docker push ghcr.io/dsbaciga/captains-log-backend:latest
-docker push ghcr.io/dsbaciga/captains-log-frontend:latest
+docker push ghcr.io/dsbaciga/travel-life-backend:vX.X.X
+docker push ghcr.io/dsbaciga/travel-life-frontend:vX.X.X
+docker push ghcr.io/dsbaciga/travel-life-backend:latest
+docker push ghcr.io/dsbaciga/travel-life-frontend:latest
 ```
 
 - [ ] Backend image pushed
@@ -182,8 +182,8 @@ If issues are discovered post-release:
 
 ```bash
 # Pull previous version
-docker pull ghcr.io/dsbaciga/captains-log-backend:vX.X.X-1
-docker pull ghcr.io/dsbaciga/captains-log-frontend:vX.X.X-1
+docker pull ghcr.io/dsbaciga/travel-life-backend:vX.X.X-1
+docker pull ghcr.io/dsbaciga/travel-life-frontend:vX.X.X-1
 
 # Update docker-compose to use previous version
 # Then restart
@@ -194,7 +194,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ```bash
 # Restore from backup
-docker exec -i captains-log-db psql -U captains_log_user captains_log < backup.sql
+docker exec -i travel-life-db psql -U travel_life_user travel_life < backup.sql
 ```
 
 ## Automation Options

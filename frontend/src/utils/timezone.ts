@@ -1,5 +1,5 @@
 /**
- * Timezone utility functions for Captain's Log
+ * Timezone utility functions for Travel Life
  *
  * Handles timezone conversions and formatting for activities, transportation, and lodging
  */
@@ -327,11 +327,11 @@ export function convertDateTimeLocalToISO(
 
   // Format this test date in the target timezone
   const parts = formatter.formatToParts(testDate);
-  const tzYear = parseInt(parts.find(p => p.type === 'year')!.value);
-  const tzMonth = parseInt(parts.find(p => p.type === 'month')!.value);
-  const tzDay = parseInt(parts.find(p => p.type === 'day')!.value);
-  const tzHour = parseInt(parts.find(p => p.type === 'hour')!.value);
-  const tzMinute = parseInt(parts.find(p => p.type === 'minute')!.value);
+  const tzYear = parseInt(parts.find(p => p.type === 'year')?.value ?? '0');
+  const tzMonth = parseInt(parts.find(p => p.type === 'month')?.value ?? '0');
+  const tzDay = parseInt(parts.find(p => p.type === 'day')?.value ?? '0');
+  const tzHour = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0');
+  const tzMinute = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0');
 
   // Calculate the difference in minutes between what we want and what we got
   const wantedMinutes = year * 525600 + (month - 1) * 43200 + day * 1440 + hour * 60 + minute;
@@ -373,11 +373,11 @@ export function convertISOToDateTimeLocal(
   });
 
   const parts = formatter.formatToParts(date);
-  const year = parts.find(p => p.type === 'year')!.value;
-  const month = parts.find(p => p.type === 'month')!.value;
-  const day = parts.find(p => p.type === 'day')!.value;
-  const hour = parts.find(p => p.type === 'hour')!.value;
-  const minute = parts.find(p => p.type === 'minute')!.value;
+  const year = parts.find(p => p.type === 'year')?.value ?? '00';
+  const month = parts.find(p => p.type === 'month')?.value ?? '00';
+  const day = parts.find(p => p.type === 'day')?.value ?? '00';
+  const hour = parts.find(p => p.type === 'hour')?.value ?? '00';
+  const minute = parts.find(p => p.type === 'minute')?.value ?? '00';
 
   return `${year}-${month}-${day}T${hour}:${minute}`;
 }

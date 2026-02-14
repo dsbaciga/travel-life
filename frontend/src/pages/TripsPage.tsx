@@ -612,7 +612,7 @@ export default function TripsPage() {
                         style={{
                           '--tag-bg-color': tag.color,
                           '--tag-text-color': tag.textColor,
-                        } as React.CSSProperties & { '--tag-bg-color': string; '--tag-text-color': string }}
+                        }}
                       >
                         {tag.name}
                       </button>

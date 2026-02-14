@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-Comprehensive guide for deploying Travel Life (Captain's Log) to production environments.
+Comprehensive guide for deploying Travel Life to production environments.
 
 ## Table of Contents
 
@@ -78,8 +78,8 @@ Contact maintainers for Helm charts and K8s manifests.
 
 ```bash
 # Clone repository
-git clone https://github.com/dsbaciga/Captains-Log.git
-cd Captains-Log
+git clone https://github.com/dsbaciga/travel-life.git
+cd travel-life
 
 # Create production environment file
 cp .env.example .env.production
@@ -91,9 +91,9 @@ Edit `.env.production`:
 
 ```bash
 # Database Configuration
-DB_USER=captains_log_user
+DB_USER=travel_life_user
 DB_PASSWORD=<generate-strong-password>
-DB_NAME=captains_log
+DB_NAME=travel_life
 DB_PORT=5432
 
 # JWT Secrets (generate with: openssl rand -base64 64)
@@ -126,7 +126,7 @@ docker-compose -f docker-compose.prod.yml --env-file .env.production build
 docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
 
 # Run migrations
-docker exec captains-log-backend npx prisma migrate deploy
+docker exec travel-life-backend npx prisma migrate deploy
 ```
 
 ### Step 4: Verify Deployment
@@ -152,13 +152,13 @@ curl -I http://localhost:80
 
 **Backend Container:**
 
-- Image: `ghcr.io/dsbaciga/captains-log-backend:latest`
+- Image: `ghcr.io/dsbaciga/travel-life-backend:latest`
 - Port: 5000
 - Environment variables: (see above)
 
 **Frontend Container:**
 
-- Image: `ghcr.io/dsbaciga/captains-log-frontend:latest`
+- Image: `ghcr.io/dsbaciga/travel-life-frontend:latest`
 - Port: 80
 
 **Database:**
@@ -179,7 +179,7 @@ docker-compose -f docker-compose.truenas.yml up -d
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DB_USER` | Database username | `captains_log_user` |
+| `DB_USER` | Database username | `travel_life_user` |
 | `DB_PASSWORD` | Database password | `secure_password` |
 | `JWT_SECRET` | Access token secret | 64+ random chars |
 | `JWT_REFRESH_SECRET` | Refresh token secret | 64+ random chars |
@@ -202,27 +202,27 @@ docker-compose -f docker-compose.truenas.yml up -d
 
 ```bash
 # Deploy pending migrations
-docker exec captains-log-backend npx prisma migrate deploy
+docker exec travel-life-backend npx prisma migrate deploy
 
 # Check migration status
-docker exec captains-log-backend npx prisma migrate status
+docker exec travel-life-backend npx prisma migrate status
 ```
 
 ### Database Backup
 
 ```bash
 # Create backup
-docker exec captains-log-db pg_dump -U $DB_USER $DB_NAME > backup_$(date +%Y%m%d).sql
+docker exec travel-life-db pg_dump -U $DB_USER $DB_NAME > backup_$(date +%Y%m%d).sql
 
 # Automated daily backup (add to crontab)
-0 2 * * * docker exec captains-log-db pg_dump -U captains_log_user captains_log > /backups/db_$(date +\%Y\%m\%d).sql
+0 2 * * * docker exec travel-life-db pg_dump -U travel_life_user travel_life > /backups/db_$(date +\%Y\%m\%d).sql
 ```
 
 ### Database Restore
 
 ```bash
 # Restore from backup
-docker exec -i captains-log-db psql -U $DB_USER $DB_NAME < backup.sql
+docker exec -i travel-life-db psql -U $DB_USER $DB_NAME < backup.sql
 ```
 
 ## Reverse Proxy Setup
@@ -307,14 +307,14 @@ certbot renew --dry-run
 
 ```bash
 #!/bin/bash
-BACKUP_DIR="/backups/captains-log"
+BACKUP_DIR="/backups/travel-life"
 DATE=$(date +%Y%m%d_%H%M%S)
 
 # Database
-docker exec captains-log-db pg_dump -U captains_log_user captains_log > $BACKUP_DIR/db_$DATE.sql
+docker exec travel-life-db pg_dump -U travel_life_user travel_life > $BACKUP_DIR/db_$DATE.sql
 
 # Uploads
-tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/lib/docker/volumes/captains-log_uploads/_data
+tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/lib/docker/volumes/travel-life_uploads/_data
 
 # Cleanup old backups (keep 30 days)
 find $BACKUP_DIR -mtime +30 -delete
@@ -350,10 +350,10 @@ docker-compose -f docker-compose.prod.yml logs -f
 docker-compose -f docker-compose.prod.yml logs -f
 
 # Backend logs only
-docker logs -f captains-log-backend
+docker logs -f travel-life-backend
 
 # Database logs
-docker logs -f captains-log-db
+docker logs -f travel-life-db
 ```
 
 ## Updating the Application
@@ -381,7 +381,7 @@ docker-compose -f docker-compose.prod.yml pull
 docker-compose -f docker-compose.prod.yml up -d
 
 # Run any new migrations
-docker exec captains-log-backend npx prisma migrate deploy
+docker exec travel-life-backend npx prisma migrate deploy
 ```
 
 ### Rollback
@@ -394,8 +394,8 @@ docker-compose -f docker-compose.prod.yml down
 docker-compose -f docker-compose.prod.yml up -d --no-build
 
 # Or specify version explicitly
-docker pull ghcr.io/dsbaciga/captains-log-backend:v4.5.7
-docker pull ghcr.io/dsbaciga/captains-log-frontend:v4.5.7
+docker pull ghcr.io/dsbaciga/travel-life-backend:v4.5.7
+docker pull ghcr.io/dsbaciga/travel-life-frontend:v4.5.7
 ```
 
 ## Security Checklist
@@ -435,7 +435,7 @@ docker pull ghcr.io/dsbaciga/captains-log-frontend:v4.5.7
 
 ```bash
 # Check logs
-docker logs captains-log-backend
+docker logs travel-life-backend
 
 # Common issues:
 # - Database not ready: wait for healthcheck
@@ -447,10 +447,10 @@ docker logs captains-log-backend
 
 ```bash
 # Verify database is running
-docker exec captains-log-db pg_isready
+docker exec travel-life-db pg_isready
 
 # Check connection string
-docker exec captains-log-backend printenv DATABASE_URL
+docker exec travel-life-backend printenv DATABASE_URL
 ```
 
 ### Nominatim not working
@@ -459,7 +459,7 @@ Nominatim requires significant initialization time (1-2 hours) on first start.
 
 ```bash
 # Check progress
-docker logs captains-log-nominatim
+docker logs travel-life-nominatim
 
 # Verify it's ready
 curl http://localhost:8080/status

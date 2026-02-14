@@ -78,10 +78,9 @@ Then review development processes:
 
 ## Key Concepts
 
-### Application Names
+### Application Name
 
-- **Travel Life** - User-facing application name (UI, branding)
-- **Captain's Log** - Technical infrastructure name (Docker, database, code)
+- **Travel Life** - The application name used across UI, branding, and technical infrastructure
 
 See [CLAUDE.md](../CLAUDE.md) for full naming convention details.
 

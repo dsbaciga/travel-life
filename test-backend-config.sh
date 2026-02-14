@@ -7,7 +7,7 @@ echo "========================================="
 echo ""
 
 # Check if frontend container exists
-if ! docker ps | grep -q captains-log-frontend; then
+if ! docker ps | grep -q travel-life-frontend; then
     echo "ERROR: Frontend container is not running"
     exit 1
 fi
@@ -17,8 +17,8 @@ echo ""
 
 # Check environment variables
 echo "Checking environment variables..."
-BACKEND_HOST=$(docker exec captains-log-frontend env | grep BACKEND_HOST | cut -d'=' -f2)
-BACKEND_PORT=$(docker exec captains-log-frontend env | grep BACKEND_PORT | cut -d'=' -f2)
+BACKEND_HOST=$(docker exec travel-life-frontend env | grep BACKEND_HOST | cut -d'=' -f2)
+BACKEND_PORT=$(docker exec travel-life-frontend env | grep BACKEND_PORT | cut -d'=' -f2)
 
 echo "  BACKEND_HOST: ${BACKEND_HOST:-not set}"
 echo "  BACKEND_PORT: ${BACKEND_PORT:-not set}"
@@ -26,9 +26,9 @@ echo ""
 
 # Check nginx configuration
 echo "Checking nginx configuration..."
-if docker exec captains-log-frontend cat /etc/nginx/conf.d/default.conf | grep -q "proxy_pass"; then
+if docker exec travel-life-frontend cat /etc/nginx/conf.d/default.conf | grep -q "proxy_pass"; then
     echo "✓ Nginx proxy configuration found"
-    docker exec captains-log-frontend cat /etc/nginx/conf.d/default.conf | grep proxy_pass | head -2
+    docker exec travel-life-frontend cat /etc/nginx/conf.d/default.conf | grep proxy_pass | head -2
 else
     echo "ERROR: Nginx proxy configuration not found"
     exit 1
@@ -37,7 +37,7 @@ echo ""
 
 # Test backend connectivity from frontend
 echo "Testing backend connectivity from frontend container..."
-if docker exec captains-log-frontend wget -qO- http://${BACKEND_HOST}:${BACKEND_PORT}/health 2>/dev/null; then
+if docker exec travel-life-frontend wget -qO- http://${BACKEND_HOST}:${BACKEND_PORT}/health 2>/dev/null; then
     echo "✓ Backend is reachable from frontend"
 else
     echo "ERROR: Cannot reach backend from frontend"

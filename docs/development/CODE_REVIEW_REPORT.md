@@ -314,14 +314,14 @@
 |---|------|-------------|--------|
 | 1 | `backend/.env.prisma:1` | **Credentials committed to git.** Contains `DATABASE_URL` with plaintext username/password, tracked in repo. | ✅ **FIXED** - File removed from git and added to `.gitignore`. |
 | 2 | `docker-compose.yml:32-33` | **Hardcoded weak JWT secrets** in dev compose (`your-super-secret-jwt-key-change-this`). | ⚠️ Acceptable for dev - prod uses env vars. |
-| 3 | `docker-compose.prod.yml:10` | **Default DB password fallback in production.** `DB_PASSWORD` falls back to `captains_log_password` if unset. | ✅ **FIXED** - Now uses `${DB_PASSWORD:?DB_PASSWORD environment variable is required}` which fails if unset. |
+| 3 | `docker-compose.prod.yml:10` | **Default DB password fallback in production.** `DB_PASSWORD` falls back to `travel_life_password` if unset. | ✅ **FIXED** - Now uses `${DB_PASSWORD:?DB_PASSWORD environment variable is required}` which fails if unset. |
 | 4 | `backend/scripts/migrate-and-start.sh:73` | **`prisma db push --accept-data-loss` in production entrypoint.** Migration failure fallback can silently destroy production data. | ✅ **FIXED** - Script now uses `prisma migrate deploy` and exits with error on failure instead of falling back to destructive push. |
 
 ### HIGH
 
 | # | File | Description | Status |
 |---|------|-------------|--------|
-| 5 | `backend/scripts/migrate-and-start.sh:60` | Hardcoded fallback credentials (`PGPASSWORD=captains_log_password`) in startup script. | ✅ **FIXED** - Removed hardcoded `PGPASSWORD`; script now requires it via environment variable. |
+| 5 | `backend/scripts/migrate-and-start.sh:60` | Hardcoded fallback credentials (`PGPASSWORD=travel_life_password`) in startup script. | ✅ **FIXED** - Removed hardcoded `PGPASSWORD`; script now requires it via environment variable. |
 | 6 | `backend/Dockerfile:1-34` | Dev Dockerfile runs as root with no `USER` directive. | ✅ **FIXED** - Added non-root `appuser` with `USER` directive. |
 | 7 | `backend/src/config/index.ts:29` | `DATABASE_URL` not validated at startup -- silently defaults to empty string. | ✅ **FIXED** - Now throws an error if `DATABASE_URL` is not set. |
 | 8 | `backend/package.json:8` | Build script uses `--noEmitOnError false` -- production builds succeed with type errors. | ✅ **FIXED** - `tsconfig.prod.json` now sets `noEmitOnError: true`. |
@@ -333,7 +333,7 @@
 |---|------|-------------|--------|
 | 10 | `.gitignore` | Missing `.env.prisma` entry. | ✅ **FIXED** - Added to `.gitignore`. |
 | 11 | `backend/.dockerignore` | Missing `.env.prisma` entry. | ✅ **FIXED** - Added `.env.prisma` to `.dockerignore`. |
-| 12 | `docker-compose.yml:9-11` | Hardcoded DB credentials in dev compose (same values used as prod fallbacks). | ✅ **FIXED** - Uses `${POSTGRES_USER:-captains_log_user}` env var references with dev fallback defaults. |
+| 12 | `docker-compose.yml:9-11` | Hardcoded DB credentials in dev compose (same values used as prod fallbacks). | ✅ **FIXED** - Uses `${POSTGRES_USER:-travel_life_user}` env var references with dev fallback defaults. |
 | 13 | `frontend/Dockerfile:1-18` | Dev frontend Dockerfile runs as root. | ✅ **FIXED** - Added non-root `appuser` with `USER` directive. |
 | 14 | `docker-compose.yml:1` / `docker-compose.prod.yml:1` | Deprecated `version: '3.8'` key (Docker Compose v2+ ignores it). | ✅ **FIXED** - Removed `version` key from both compose files. |
 

@@ -34,8 +34,8 @@ until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
   if [ $ATTEMPT -eq 5 ]; then
     echo "Resolution check for '$DB_HOST':"
     getent hosts "$DB_HOST" || echo "  ! Could not resolve '$DB_HOST'"
-    echo "Resolution check for 'captains-log-db':"
-    getent hosts captains-log-db || echo "  ! Could not resolve 'captains-log-db'"
+    echo "Resolution check for 'travel-life-db':"
+    getent hosts travel-life-db || echo "  ! Could not resolve 'travel-life-db'"
   fi
   
   sleep 2
@@ -155,11 +155,11 @@ else
   ls -la /app/uploads/ 2>/dev/null || echo "  Cannot list /app/uploads/"
   echo ""
   echo "  For TrueNAS/NAS systems, fix host directory permissions:"
-  echo "    sudo chown -R 1000:1000 /mnt/pool/captains-log/uploads"
-  echo "    sudo chmod -R 755 /mnt/pool/captains-log/uploads"
+  echo "    sudo chown -R 1000:1000 /mnt/pool/travel-life/uploads"
+  echo "    sudo chmod -R 755 /mnt/pool/travel-life/uploads"
   echo ""
   echo "  Or set container to run as root temporarily to fix permissions:"
-  echo "    docker exec -u root captains-log-backend chown -R node:node /app/uploads"
+  echo "    docker exec -u root travel-life-backend chown -R node:node /app/uploads"
   echo ""
   echo "  Continuing startup - photo uploads may fail until permissions are fixed."
   echo ""

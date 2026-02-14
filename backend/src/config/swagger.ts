@@ -7,12 +7,12 @@ const options: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: "Captain's Log API Documentation",
+      title: "Travel Life API Documentation",
       version: '1.0.0',
       description: 'API documentation for Travel Life travel documentation application',
       contact: {
         name: 'API Support',
-        url: 'https://github.com/dsbac/Captains-Log',
+        url: 'https://github.com/dsbaciga/travel-life',
       },
     },
     servers: [

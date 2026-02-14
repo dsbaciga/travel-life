@@ -36,22 +36,6 @@ All documentation is organized in the `docs/` folder. Start with the [Documentat
 
 Travel Life is a full-stack travel documentation application built with a React frontend and Express backend. The application enables users to track trips with rich features including locations, photos, transportation, lodging, journal entries, and more.
 
-### Naming Convention
-
-**IMPORTANT**: The application has two different names used in different contexts:
-
-- **Travel Life** - The user-facing application name used in the UI, branding, and user documentation
-- **Captain's Log** - The technical infrastructure name used for:
-  - Top-level folder name (`Captains-Log/`)
-  - Docker container names (`captains-log-backend`, `captains-log-frontend`, `captains-log-db`)
-  - Database name (`captains_log`)
-  - Docker image names (`ghcr.io/dsbaciga/captains-log-backend`, `ghcr.io/dsbaciga/captains-log-frontend`)
-  - Git repository references
-  - Environment variables and configuration files
-  - Build scripts and deployment commands
-
-**DO NOT change any technical infrastructure names** when updating the application. The "Captain's Log" naming in containers, databases, usernames, passwords, and folder structure remains unchanged for compatibility and deployment stability.
-
 ### Current Implementation Status
 
 **The application is ~92% complete and production-ready for personal use.** See [Implementation Status](docs/development/IMPLEMENTATION_STATUS.md) for detailed progress and [Feature Backlog](docs/development/FEATURE_BACKLOG.md) for future enhancements.
@@ -92,15 +76,15 @@ Travel Life is a full-stack travel documentation application built with a React 
 - `docker-compose up -d` - Start all services (db, backend, frontend, nominatim)
 - `docker-compose down` - Stop all services
 - `docker ps` - Check running containers
-- `docker logs captains-log-backend` - View backend logs
-- `docker logs captains-log-frontend` - View frontend logs
-- `docker exec -it captains-log-backend npx prisma migrate dev` - Run migrations in container
+- `docker logs travel-life-backend` - View backend logs
+- `docker logs travel-life-frontend` - View frontend logs
+- `docker exec -it travel-life-backend npx prisma migrate dev` - Run migrations in container
 
 **Production:**
 
 - `./build.sh v1.0.0` (Linux/Mac) or `.\build.ps1 -Version v1.0.0` (Windows) - Build production images
 - `docker-compose -f docker-compose.prod.yml --env-file .env.production up -d` - Start production services
-- `docker exec captains-log-backend npx prisma migrate deploy` - Run production migrations
+- `docker exec travel-life-backend npx prisma migrate deploy` - Run production migrations
 
 **Release Management:**
 
@@ -188,7 +172,7 @@ For debugging issues and code optimization guidance, see [Debugging & Optimizati
 **Backend** (`.env` file in `backend/`):
 
 ```bash
-DATABASE_URL=postgresql://user:password@localhost:5432/captains_log?schema=public
+DATABASE_URL=postgresql://user:password@localhost:5432/travel_life?schema=public
 JWT_SECRET=<strong-secret>
 JWT_REFRESH_SECRET=<strong-secret>
 NOMINATIM_URL=http://localhost:8080

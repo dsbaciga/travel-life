@@ -32,6 +32,8 @@ export default function AlbumsPage() {
   const [albumPhotos, setAlbumPhotos] = useState<Photo[]>([]);
   const [thumbnailCache, setThumbnailCache] = useState<{ [key: number]: string }>({});
   const blobUrlsRef = useRef<string[]>([]);
+  const thumbnailCacheRef = useRef(thumbnailCache);
+  thumbnailCacheRef.current = thumbnailCache;
 
   // Paged pagination for albums
   const loadAlbumsPage = useCallback(
@@ -53,6 +55,8 @@ export default function AlbumsPage() {
     pageSize: 30,
     onError: () => toast.error('Failed to load albums'),
   });
+  const paginationRef = useRef(albumPagination);
+  paginationRef.current = albumPagination;
 
   const getCoverPhotoUrl = (album: PhotoAlbum): string | null => {
     if (!album.coverPhoto) return null;
@@ -67,26 +71,24 @@ export default function AlbumsPage() {
     return getFullAssetUrl(path);
   };
 
-  // Load initial albums on mount or when tripId changes
   useEffect(() => {
     if (tripId) {
-      albumPagination.loadInitial();
+      paginationRef.current.loadInitial();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
-  // Load thumbnails for album covers
   useEffect(() => {
     const loadCoverThumbnails = async () => {
       const token = getAccessToken();
       if (!token) return;
 
+      const currentCache = thumbnailCacheRef.current;
       const newUrls: { [key: number]: string } = {};
       const newBlobUrls: string[] = [];
 
       for (const album of albumPagination.items) {
         const photo = album.coverPhoto;
-        if (!photo || photo.source !== "immich" || !photo.thumbnailPath || thumbnailCache[photo.id]) {
+        if (!photo || photo.source !== "immich" || !photo.thumbnailPath || currentCache[photo.id]) {
           continue;
         }
 
@@ -118,11 +120,6 @@ export default function AlbumsPage() {
     if (albumPagination.items.length > 0) {
       loadCoverThumbnails();
     }
-
-    return () => {
-      // Cleanup is handled by separate effect to avoid revoking active URLs
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumPagination.items]);
 
   // Cleanup blob URLs on unmount

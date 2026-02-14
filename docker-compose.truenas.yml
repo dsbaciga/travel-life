@@ -2,16 +2,16 @@
 #
 # TrueNAS Scale Deployment Instructions:
 # 1. Create datasets for persistent data:
-#    - /mnt/pool/captains-log/postgres
-#    - /mnt/pool/captains-log/nominatim
-#    - /mnt/pool/captains-log/uploads
+#    - /mnt/pool/travel-life/postgres
+#    - /mnt/pool/travel-life/nominatim
+#    - /mnt/pool/travel-life/uploads
 #
 # 2. Deploy using TrueNAS Scale UI or CLI:
 #    docker-compose -f docker-compose.truenas.yml up -d
 #
 # 3. Database migrations:
 #    Migrations run automatically on startup. To run them manually:
-#    docker exec captains-log-backend npx prisma migrate deploy
+#    docker exec travel-life-backend npx prisma migrate deploy
 #
 # Configuration:
 # - Frontend proxies /api and /uploads to backend via nginx
@@ -25,19 +25,19 @@ services:
   # PostgreSQL with PostGIS
   db:
     image: postgis/postgis:16-3.4
-    container_name: captains-log-db
+    container_name: travel-life-db
     environment:
-      POSTGRES_USER: captains_log_user
+      POSTGRES_USER: travel_life_user
       POSTGRES_PASSWORD: pgBasco1988!
-      POSTGRES_DB: captains_log
+      POSTGRES_DB: travel_life
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "30603:5432"
     volumes:
       # IMPORTANT: Update this path to match your TrueNAS dataset
-      - /mnt/main_pool/captains-log/postgres:/var/lib/postgresql/data
+      - /mnt/main_pool/travel-life/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U captains_log_user -d captains_log"]
+      test: ["CMD-SHELL", "pg_isready -U travel_life_user -d travel_life"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,12 +56,12 @@ services:
   backend:
     # Use pre-built image from GitHub Container Registry
     # Or build locally if you prefer
-    image: ghcr.io/dsbaciga/captains-log-backend:latest
-    container_name: captains-log-backend
+    image: ghcr.io/dsbaciga/travel-life-backend:latest
+    container_name: travel-life-backend
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://captains_log_user:pgBasco1988!@db:5432/captains_log?schema=public
+      DATABASE_URL: postgresql://travel_life_user:pgBasco1988!@db:5432/travel_life?schema=public
       JWT_SECRET: happyhorseteacups
       JWT_REFRESH_SECRET: touchymoosesister
       NOMINATIM_URL: http://nominatim:8080
@@ -75,8 +75,8 @@ services:
       - "30601:5000"
     volumes:
       # IMPORTANT: Update this path to match your TrueNAS dataset
-      - /mnt/main_pool/captains-log/uploads:/app/uploads
-      - /mnt/main_pool/captains-log/logs:/app/logs
+      - /mnt/main_pool/travel-life/uploads:/app/uploads
+      - /mnt/main_pool/travel-life/logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
@@ -107,8 +107,8 @@ services:
     # Use pre-built image with TrueNAS-specific nginx proxy configuration
     # This allows the frontend to use relative URLs (/api, /uploads)
     # which are proxied to the backend container
-    image: ghcr.io/dsbaciga/captains-log-frontend:latest
-    container_name: captains-log-frontend
+    image: ghcr.io/dsbaciga/travel-life-frontend:latest
+    container_name: travel-life-frontend
     environment:
       # Backend URL for nginx proxy (default: backend:5000 for Docker internal networking)
       # Use Docker internal networking for best performance
@@ -147,7 +147,7 @@ services:
   # Consider using a smaller region or external Nominatim service for testing
   nominatim:
     image: mediagis/nominatim:4.4
-    container_name: captains-log-nominatim
+    container_name: travel-life-nominatim
     environment:
       # Default: US map data (~10GB download)
       # For faster setup, use a smaller region:
@@ -163,7 +163,7 @@ services:
       - "30602:8080"
     volumes:
       # IMPORTANT: Update this path to match your TrueNAS dataset
-      - /mnt/main_pool/captains-log/nominatim:/var/lib/postgresql/14/main
+      - /mnt/main_pool/travel-life/nominatim:/var/lib/postgresql/14/main
     shm_size: 2gb
     restart: unless-stopped
     deploy:

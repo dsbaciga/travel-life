@@ -69,17 +69,20 @@ async function readBackupFile(file: File): Promise<BackupData> {
 
     reader.onload = (e) => {
       try {
-        const content = e.target?.result as string;
-        const backupData = JSON.parse(content) as BackupData;
+        const content = e.target?.result;
+        if (typeof content !== 'string') {
+          throw new Error('Failed to read file as text');
+        }
+        const backupData: BackupData = JSON.parse(content);
 
-        // Validate backup data structure
         if (!backupData.version || !backupData.user || !backupData.trips) {
           throw new Error('Invalid backup file format');
         }
 
         resolve(backupData);
       } catch (error) {
-        reject(new Error('Failed to parse backup file: ' + (error as Error).message));
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        reject(new Error('Failed to parse backup file: ' + message));
       }
     };
 

@@ -1003,7 +1003,7 @@ export default function TripDetailPage() {
               style={
                 {
                   "--cover-photo-url": `url(${coverPhotoUrl})`,
-                } as React.CSSProperties & { "--cover-photo-url": string }
+                }
               }
             >
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70"></div>
@@ -1153,11 +1153,7 @@ export default function TripDetailPage() {
                             {
                               "--tag-bg-color": tag.color || "#3B82F6",
                               "--tag-text-color": tag.textColor || "#FFFFFF",
-                            } as React.CSSProperties & {
-                              "--tag-bg-color": string;
-                              "--tag-text-color": string;
-                            }
-                          }
+                            }}
                         >
                           {tag.name}
                         </span>
@@ -1316,11 +1312,7 @@ export default function TripDetailPage() {
                           {
                             "--tag-bg-color": tag.color || "#3B82F6",
                             "--tag-text-color": tag.textColor || "#FFFFFF",
-                          } as React.CSSProperties & {
-                            "--tag-bg-color": string;
-                            "--tag-text-color": string;
-                          }
-                        }
+                          }}
                       >
                         {tag.name}
                       </span>

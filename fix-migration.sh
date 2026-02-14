@@ -17,7 +17,7 @@ echo ""
 # Check if we're running in the backend container
 if [ ! -f "/app/package.json" ]; then
     echo "ERROR: This script should be run inside the backend container"
-    echo "Run: docker exec -it captains-log-backend bash"
+    echo "Run: docker exec -it travel-life-backend bash"
     echo "Then run this script"
     exit 1
 fi

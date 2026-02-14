@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useId, useCallback } from "react";
+import { useState, useEffect, useMemo, useId, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import photoService from "../services/photo.service";
 import tripService from "../services/trip.service";
@@ -91,10 +91,11 @@ export default function GlobalAlbumsPage() {
     pageSize: 30,
     onError: () => toast.error("Failed to load albums"),
   });
+  const paginationRef = useRef(albumPagination);
+  paginationRef.current = albumPagination;
 
   const albums = albumPagination.items;
 
-  // Load tags and trips for filters
   useEffect(() => {
     const loadTags = async () => {
       try {
@@ -116,13 +117,11 @@ export default function GlobalAlbumsPage() {
     loadTrips();
   }, []);
 
-  // Reload albums when tag filter changes
   useEffect(() => {
-    albumPagination.clear();
-    albumPagination.loadInitial();
+    paginationRef.current.clear();
+    paginationRef.current.loadInitial();
     setCoverPhotoUrls({});
     setCollapsedTrips(new Set());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTagIds]);
 
   // Load cover photos with authentication for Immich photos

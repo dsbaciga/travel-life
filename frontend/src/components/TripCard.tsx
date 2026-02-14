@@ -102,7 +102,7 @@ export default function TripCard({ trip, coverPhotoUrl, onDelete, showActions = 
                 style={{
                   '--tag-bg-color': tag.color,
                   '--tag-text-color': tag.textColor,
-                } as React.CSSProperties & { '--tag-bg-color': string; '--tag-text-color': string }}
+                }}
                 title={tag.name}
               >
                 {tag.name}

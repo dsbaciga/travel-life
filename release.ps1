@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Automated release script for Captain's Log
+    Automated release script for Travel Life
 
 .DESCRIPTION
     This script automates the entire build and push process:
@@ -68,8 +68,8 @@ $ErrorActionPreference = "Stop"
 
 # Configuration
 $Registry = "ghcr.io/dsbaciga"
-$BackendImage = "captains-log-backend"
-$FrontendImage = "captains-log-frontend"
+$BackendImage = "travel-life-backend"
+$FrontendImage = "travel-life-frontend"
 
 # Colors for output
 function Write-Step { param($Message) Write-Host "`n=== $Message ===" -ForegroundColor Cyan }
@@ -80,7 +80,7 @@ function Write-Info { param($Message) Write-Host "     $Message" -ForegroundColo
 
 # Check if we're in the right directory
 if (-not (Test-Path "backend/package.json") -or -not (Test-Path "frontend/package.json")) {
-    Write-Err "Must be run from the Captains-Log root directory"
+    Write-Err "Must be run from the travel-life root directory"
     exit 1
 }
 
@@ -105,7 +105,7 @@ $NumericVersion = switch ($Version.ToLower()) {
 $Version = "v$NumericVersion"
 
 Write-Host "`n==========================================" -ForegroundColor Magenta
-Write-Host "  Captain's Log Release Script" -ForegroundColor Magenta
+Write-Host "  Travel Life Release Script" -ForegroundColor Magenta
 Write-Host "==========================================" -ForegroundColor Magenta
 Write-Host "Current version: $CurrentVersion"
 Write-Host "New version:     $NumericVersion"

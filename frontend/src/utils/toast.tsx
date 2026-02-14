@@ -77,8 +77,7 @@ export function toastWithUndo({ message, onUndo, duration = 5000 }: UndoToastOpt
  */
 export function toastProgress({ message, progress = 0 }: ProgressToastOptions) {
   return toast(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_: Toast) => (
+    () => (
       <div className="w-full">
         <div className="flex items-center gap-2 mb-2">
           <div className="animate-spin h-4 w-4 border-2 border-primary-500 dark:border-sky border-t-transparent rounded-full" />
@@ -90,7 +89,7 @@ export function toastProgress({ message, progress = 0 }: ProgressToastOptions) {
             {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
             <div
               className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"
-              style={{ '--progress-width': `${progress}%` } as React.CSSProperties & { '--progress-width': string }}
+              style={{ '--progress-width': `${progress}%` }}
             />
           </div>
         )}
@@ -108,8 +107,7 @@ export function toastProgress({ message, progress = 0 }: ProgressToastOptions) {
  */
 export function updateProgressToast(toastId: string, message: string, progress: number) {
   toast(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_: Toast) => (
+    () => (
       <div className="w-full">
         <div className="flex items-center gap-2 mb-2">
           <div className="animate-spin h-4 w-4 border-2 border-primary-500 dark:border-sky border-t-transparent rounded-full" />
@@ -120,7 +118,7 @@ export function updateProgressToast(toastId: string, message: string, progress: 
           {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
           <div
             className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"
-            style={{ '--progress-width': `${progress}%` } as React.CSSProperties & { '--progress-width': string }}
+            style={{ '--progress-width': `${progress}%` }}
           />
         </div>
       </div>
@@ -255,7 +253,7 @@ export function updateBatchToast(toastId: string, current: number, total: number
           {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
           <div
             className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"
-            style={{ '--progress-width': `${(current / total) * 100}%` } as React.CSSProperties & { '--progress-width': string }}
+            style={{ '--progress-width': `${(current / total) * 100}%` }}
           />
         </div>
       </div>

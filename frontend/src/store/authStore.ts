@@ -1,7 +1,12 @@
 import { create } from 'zustand';
+import type { AxiosError } from 'axios';
 import type { User, LoginInput, RegisterInput } from '../types/auth';
 import authService from '../services/auth.service';
 import { setAccessToken, registerAuthClearCallback } from '../lib/tokenManager';
+
+interface ApiErrorData {
+  message?: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -40,8 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      const errorMessage = error.response?.data?.message || 'Login failed';
+      const axiosErr = err as AxiosError<ApiErrorData>;
+      const errorMessage = axiosErr.response?.data?.message || 'Login failed';
       set({ error: errorMessage, isLoading: false });
       throw err;
     }
@@ -52,7 +57,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await authService.register(data);
 
-      // Store access token in memory only (via setAccessToken)
       setAccessToken(response.accessToken);
 
       set({
@@ -61,8 +65,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      const errorMessage = error.response?.data?.message || 'Registration failed';
+      const axiosErr = err as AxiosError<ApiErrorData>;
+      const errorMessage = axiosErr.response?.data?.message || 'Registration failed';
       set({ error: errorMessage, isLoading: false });
       throw err;
     }

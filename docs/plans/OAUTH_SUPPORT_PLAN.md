@@ -798,7 +798,7 @@ Add an "Account Linking" section to the user settings page:
 Add OAuth environment variables to `docker-compose.yml` and `docker-compose.prod.yml`:
 
 ```yaml
-captains-log-backend:
+travel-life-backend:
   environment:
     # ... existing vars ...
     - OAUTH_ENABLED=${OAUTH_ENABLED:-false}

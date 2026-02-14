@@ -137,20 +137,25 @@ class DebugLogger {
       structure.type = 'array';
       structure.length = data.length;
       structure.firstItem = data[0] ? this.getObjectStructure(data[0]) : null;
-      structure.sampleIndices = [0, Math.floor(data.length / 2), data.length - 1].filter(i => i < data.length);
-      structure.samples = (structure.sampleIndices as number[]).map((i: number) => ({
-        index: i,
-        type: typeof data[i],
-        isNull: data[i] === null,
-        isUndefined: data[i] === undefined,
-        keys: data[i] && typeof data[i] === 'object' ? Object.keys(data[i] as object).slice(0, 10) : [],
-      }));
+      const sampleIndices = [0, Math.floor(data.length / 2), data.length - 1].filter(i => i < data.length);
+      structure.sampleIndices = sampleIndices;
+      structure.samples = sampleIndices.map((i: number) => {
+        const item = data[i];
+        return {
+          index: i,
+          type: typeof item,
+          isNull: item === null,
+          isUndefined: item === undefined,
+          keys: item && typeof item === 'object' ? Object.keys(item).slice(0, 10) : [],
+        };
+      });
     } else if (data && typeof data === 'object') {
+      const record = data as Record<string, unknown>;
       structure.type = 'object';
-      structure.keys = Object.keys(data).slice(0, 20);
+      structure.keys = Object.keys(record).slice(0, 20);
       const sampleValues: Record<string, unknown> = {};
-      Object.keys(data).slice(0, 5).forEach(key => {
-        sampleValues[key] = this.getValuePreview((data as Record<string, unknown>)[key]);
+      Object.keys(record).slice(0, 5).forEach(key => {
+        sampleValues[key] = this.getValuePreview(record[key]);
       });
       structure.sampleValues = sampleValues;
     } else {

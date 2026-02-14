@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-echo "Starting Captain's Log Backend..."
+echo "Starting Travel Life Backend..."
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
@@ -117,10 +117,10 @@ if [ $MIGRATION_EXIT_CODE -ne 0 ] || echo "$MIGRATION_OUTPUT" | grep -qi "error:
     echo ""
     echo "RECOMMENDED FIX:"
     echo "  Option 1: Reset the Prisma migrations table and start fresh"
-    echo "    docker exec captains-log-backend npx prisma migrate reset --skip-seed"
+    echo "    docker exec travel-life-backend npx prisma migrate reset --skip-seed"
     echo ""
     echo "  Option 2: Mark all migrations as applied if schema is correct"
-    echo "    docker exec captains-log-backend npx prisma db push --accept-data-loss"
+    echo "    docker exec travel-life-backend npx prisma db push --accept-data-loss"
     echo ""
     echo "For now, attempting to push the schema directly..."
 

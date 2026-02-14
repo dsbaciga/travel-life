@@ -1,6 +1,6 @@
-# Testing Guide for Captain's Log
+# Testing Guide for Travel Life
 
-This document outlines the testing strategy and setup for Captain's Log.
+This document outlines the testing strategy and setup for Travel Life.
 
 ## Current Testing Status
 

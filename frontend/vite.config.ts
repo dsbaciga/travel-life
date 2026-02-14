@@ -28,8 +28,38 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
+            src: '/icons/icon-72.png',
+            sizes: '72x72',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-96.png',
+            sizes: '96x96',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-128.png',
+            sizes: '128x128',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-144.png',
+            sizes: '144x144',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-152.png',
+            sizes: '152x152',
+            type: 'image/png'
+          },
+          {
             src: '/icons/icon-192.png',
             sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icons/icon-384.png',
+            sizes: '384x384',
             type: 'image/png'
           },
           {
@@ -45,6 +75,22 @@ export default defineConfig({
           }
         ],
         categories: ['travel', 'lifestyle', 'productivity'],
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Dashboard',
+            description: 'View your trip dashboard',
+            url: '/dashboard',
+            icons: [{ src: '/icons/icon-96.png', sizes: '96x96' }]
+          },
+          {
+            name: 'New Trip',
+            short_name: 'New Trip',
+            description: 'Create a new trip',
+            url: '/trips/new',
+            icons: [{ src: '/icons/icon-96.png', sizes: '96x96' }]
+          }
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],

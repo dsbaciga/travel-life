@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
@@ -32,46 +32,33 @@ export default function TripFormPage() {
   const [userTripTypes, setUserTripTypes] = useState<TripTypeCategory[]>([]);
   const [travelPartnerSettings, setTravelPartnerSettings] = useState<TravelPartnerSettings | null>(null);
 
-  useEffect(() => {
-    if (isEdit && id) {
-      loadTrip(parseInt(id));
-    }
-    // Load travel partner settings for new trips
-    if (!isEdit) {
-      loadTravelPartnerSettings();
-    }
-    loadUserTripTypes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, isEdit]);
-
-  const loadUserTripTypes = async () => {
+  const loadUserTripTypes = useCallback(async () => {
     try {
       const user = await userService.getMe();
       setUserTripTypes(user.tripTypes || []);
     } catch (error) {
       console.error('Failed to load trip types:', error);
     }
-  };
+  }, []);
 
-  const loadTravelPartnerSettings = async () => {
+  const loadTravelPartnerSettings = useCallback(async () => {
     try {
       const settings = await userService.getTravelPartnerSettings();
       setTravelPartnerSettings(settings);
     } catch (error) {
       console.error('Failed to load travel partner settings:', error);
     }
-  };
+  }, []);
 
-  const loadTrip = async (tripId: number) => {
+  const loadTrip = useCallback(async (tripId: number) => {
     try {
       setLoading(true);
       const trip = await tripService.getTripById(tripId);
 
-      // Extract just the date part (YYYY-MM-DD) from datetime strings
       const extractDate = (dateVal: string | Date | null) => {
         if (!dateVal) return '';
         const dateStr = typeof dateVal === 'string' ? dateVal : dateVal.toISOString();
-        return dateStr.split('T')[0]; // Get just YYYY-MM-DD part
+        return dateStr.split('T')[0];
       };
 
       setTitle(trip.title);
@@ -84,7 +71,6 @@ export default function TripFormPage() {
       setExcludeFromAutoShare(trip.excludeFromAutoShare || false);
       setTripType(trip.tripType || '');
       setTripTypeEmoji(trip.tripTypeEmoji || '');
-      // Track original status for confetti celebration
       originalStatusRef.current = trip.status;
     } catch {
       toast.error('Failed to load trip');
@@ -92,7 +78,17 @@ export default function TripFormPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (isEdit && id) {
+      loadTrip(parseInt(id));
+    }
+    if (!isEdit) {
+      loadTravelPartnerSettings();
+    }
+    loadUserTripTypes();
+  }, [id, isEdit, loadTrip, loadTravelPartnerSettings, loadUserTripTypes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +141,7 @@ export default function TripFormPage() {
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
       navigate('/trips');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
+      const error = err as import('axios').AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || 'Failed to save trip');
     } finally {
       setLoading(false);

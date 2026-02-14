@@ -75,13 +75,10 @@ export function buildUpdateData<T extends Record<string, unknown>>(
     const value = values[key];
 
     if (value === '') {
-      // Convert empty string to null to clear field
-      (data as Record<string, unknown>)[key as string] = null;
+      data[key] = null as T[Extract<keyof T, string>];
     } else if (value !== undefined) {
-      // Include all defined values (including null)
       data[key] = value;
     }
-    // Omit undefined values (field not being updated)
   }
 
   return data;
@@ -231,7 +228,7 @@ export function pickFields<T extends Record<string, unknown>>(
         }
       } else {
         if (value === '') {
-          (picked as Record<string, unknown>)[field as string] = null;
+          picked[field] = null as T[keyof T];
         } else if (value !== undefined) {
           picked[field] = value;
         }

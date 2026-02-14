@@ -62,7 +62,11 @@
       "Bash(ls:*)",
       "Bash(findstr:*)",
       "Bash(npm ls:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(node -e:*)",
+      "Bash(Select-Object -First 60)",
+      "Bash(powershell -Command \"Set-Location 'c:\\\\Users\\\\dsbac\\\\travel-life\\\\frontend'; npx tsc --noEmit 2>&1 | Select-Object -First 80\":*)",
+      "Bash(where:*)"
     ],
     "deny": [],
     "ask": []

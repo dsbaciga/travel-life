@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Captain's Log Release Script
+# Travel Life Release Script
 # Automates version bumping, tagging, and building releases
 
 set -e
@@ -9,7 +9,7 @@ CURRENT_VERSION=$(cat VERSION)
 VERSION_TYPE=${1:-"patch"}
 
 echo "========================================="
-echo "Captain's Log Release Manager"
+echo "Travel Life Release Manager"
 echo "========================================="
 echo "Current version: $CURRENT_VERSION"
 echo ""

@@ -2,17 +2,17 @@ services:
   # PostgreSQL with PostGIS
   db:
     image: postgis/postgis:16-3.4
-    container_name: captains-log-db
+    container_name: travel-life-db
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-captains_log_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-captains_log_password}
-      POSTGRES_DB: ${POSTGRES_DB:-captains_log}
+      POSTGRES_USER: ${POSTGRES_USER:-travel_life_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-travel_life_password}
+      POSTGRES_DB: ${POSTGRES_DB:-travel_life}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-captains_log_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-travel_life_user}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,11 +22,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: captains-log-backend
+    container_name: travel-life-backend
     environment:
       NODE_ENV: development
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-captains_log_user}:${POSTGRES_PASSWORD:-captains_log_password}@db:5432/${POSTGRES_DB:-captains_log}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-travel_life_user}:${POSTGRES_PASSWORD:-travel_life_password}@db:5432/${POSTGRES_DB:-travel_life}?schema=public
       JWT_SECRET: your-super-secret-jwt-key-change-this
       JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-this
       NOMINATIM_URL: http://nominatim:8080
@@ -48,7 +48,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: captains-log-frontend
+    container_name: travel-life-frontend
     environment:
       VITE_API_URL: http://localhost:5000/api
       VITE_UPLOAD_URL: http://localhost:5000/uploads
@@ -64,7 +64,7 @@ services:
   # Self-hosted Nominatim for geocoding
   nominatim:
     image: mediagis/nominatim:4.4
-    container_name: captains-log-nominatim
+    container_name: travel-life-nominatim
     environment:
       PBF_URL: https://download.geofabrik.de/north-america/us-latest.osm.pbf
       REPLICATION_URL: https://download.geofabrik.de/north-america/us-updates/

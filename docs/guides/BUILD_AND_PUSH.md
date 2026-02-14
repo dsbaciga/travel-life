@@ -1,6 +1,6 @@
 # Build and Push Checklist
 
-This checklist outlines the proper steps to build, push, and tag a new version of Captain's Log.
+This checklist outlines the proper steps to build, push, and tag a new version of Travel Life.
 
 ## Quick Start (Automated)
 
@@ -104,13 +104,13 @@ If you need to run steps manually, follow the sections below.
 - [ ] **Push backend image**
 
   ```bash
-  docker push ghcr.io/dsbaciga/captains-log-backend:vX.X.X
+  docker push ghcr.io/dsbaciga/travel-life-backend:vX.X.X
   ```
 
 - [ ] **Push frontend image**
 
   ```bash
-  docker push ghcr.io/dsbaciga/captains-log-frontend:vX.X.X
+  docker push ghcr.io/dsbaciga/travel-life-frontend:vX.X.X
   ```
 
 - [ ] **Verify images on GHCR**
@@ -134,7 +134,7 @@ If you need to run steps manually, follow the sections below.
 
 - [ ] **Verify tag on GitHub**
 
-  - Check https://github.com/dsbaciga/Captains-Log/tags
+  - Check https://github.com/dsbaciga/travel-life/tags
   - Confirm new tag appears
 
 ---
@@ -242,8 +242,8 @@ cd backend && npm run build
 cd ../frontend && npm run build
 cd ..
 .\build.truenas.ps1 -Version vX.X.X -Registry ghcr.io/dsbaciga
-docker push ghcr.io/dsbaciga/captains-log-backend:vX.X.X
-docker push ghcr.io/dsbaciga/captains-log-frontend:vX.X.X
+docker push ghcr.io/dsbaciga/travel-life-backend:vX.X.X
+docker push ghcr.io/dsbaciga/travel-life-frontend:vX.X.X
 git tag -a vX.X.X -m "vX.X.X - Description"
 git push origin vX.X.X
 ```

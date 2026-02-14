@@ -101,7 +101,7 @@ This will start:
 
 ```bash
 cd backend
-docker exec -it captains-log-backend npx prisma migrate dev
+docker exec -it travel-life-backend npx prisma migrate dev
 ```
 
 ### 5. Access the Application
@@ -325,7 +325,7 @@ docker ps
 Check logs:
 
 ```bash
-docker logs captains-log-db
+docker logs travel-life-db
 ```
 
 ### Prisma Client Not Generated
@@ -350,7 +350,7 @@ ports:
 Nominatim takes time to initialize. Check progress:
 
 ```bash
-docker logs captains-log-nominatim
+docker logs travel-life-nominatim
 ```
 
 ## Production Deployment
