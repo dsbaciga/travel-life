@@ -58,15 +58,16 @@ export const userInvitationController = {
       const validatedData = acceptInvitationSchema.parse(req.body);
       const user = await userInvitationService.acceptInvitation(validatedData);
 
-      // Generate tokens for the new user
+      // Generate tokens for the new user (include passwordVersion for session invalidation support)
+      const tokenPayload = { userId: user.id, email: user.email, passwordVersion: user.passwordVersion ?? 0 };
       const accessToken = jwt.sign(
-        { userId: user.id, email: user.email },
+        tokenPayload,
         config.jwt.secret,
         { expiresIn: config.jwt.expiresIn } as jwt.SignOptions
       );
 
       const refreshToken = jwt.sign(
-        { userId: user.id, email: user.email },
+        tokenPayload,
         config.jwt.refreshSecret,
         { expiresIn: config.jwt.refreshExpiresIn } as jwt.SignOptions
       );

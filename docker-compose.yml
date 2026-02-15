@@ -27,8 +27,8 @@ services:
       NODE_ENV: development
       PORT: 5000
       DATABASE_URL: postgresql://${POSTGRES_USER:-travel_life_user}:${POSTGRES_PASSWORD:-travel_life_password}@db:5432/${POSTGRES_DB:-travel_life}?schema=public
-      JWT_SECRET: your-super-secret-jwt-key-change-this
-      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-this
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable is required - generate with: openssl rand -base64 48}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET environment variable is required - generate with: openssl rand -base64 48}
       NOMINATIM_URL: http://nominatim:8080
       OPENROUTESERVICE_API_KEY: ${OPENROUTESERVICE_API_KEY:-}
     ports:

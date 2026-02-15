@@ -558,11 +558,12 @@ class TransportationService {
       'edit'
     );
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportationId);
-
-    await prisma.transportation.delete({
-      where: { id: transportationId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportationId, tx);
+      await tx.transportation.delete({
+        where: { id: transportationId },
+      });
     });
 
     return { success: true };
@@ -589,17 +590,17 @@ class TransportationService {
       throw new AppError('One or more transportation items not found or do not belong to this trip', 404);
     }
 
-    // Clean up entity links for all transportation items
-    for (const transportation of transportations) {
-      await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportation.id);
-    }
-
-    // Delete all transportation items
-    const result = await prisma.transportation.deleteMany({
-      where: {
-        id: { in: data.ids },
-        tripId,
-      },
+    // Clean up entity links and delete atomically in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      for (const transportation of transportations) {
+        await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportation.id, tx);
+      }
+      return tx.transportation.deleteMany({
+        where: {
+          id: { in: data.ids },
+          tripId,
+        },
+      });
     });
 
     return { success: true, deletedCount: result.count };

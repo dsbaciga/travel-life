@@ -264,11 +264,12 @@ export class LocationService {
       'edit'
     );
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(location.tripId, 'LOCATION', locationId);
-
-    await prisma.location.delete({
-      where: { id: locationId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(location.tripId, 'LOCATION', locationId, tx);
+      await tx.location.delete({
+        where: { id: locationId },
+      });
     });
 
     return { message: 'Location deleted successfully' };
@@ -372,17 +373,17 @@ export class LocationService {
       throw new AppError('One or more locations not found or do not belong to this trip', 404);
     }
 
-    // Clean up entity links for all locations
-    for (const location of locations) {
-      await cleanupEntityLinks(location.tripId, 'LOCATION', location.id);
-    }
-
-    // Delete all locations
-    const result = await prisma.location.deleteMany({
-      where: {
-        id: { in: data.ids },
-        tripId,
-      },
+    // Clean up entity links and delete atomically in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      for (const location of locations) {
+        await cleanupEntityLinks(location.tripId, 'LOCATION', location.id, tx);
+      }
+      return tx.location.deleteMany({
+        where: {
+          id: { in: data.ids },
+          tripId,
+        },
+      });
     });
 
     return { success: true, deletedCount: result.count };

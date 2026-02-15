@@ -517,6 +517,9 @@ export function convertDecimals<T>(obj: T): T {
   return obj;
 }
 
+// Type for Prisma transaction client
+type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 /**
  * Cleans up all entity links associated with an entity before deletion.
  * This removes links where the entity is either the source or target.
@@ -524,13 +527,16 @@ export function convertDecimals<T>(obj: T): T {
  * @param tripId - The trip ID the entity belongs to
  * @param entityType - The type of entity being deleted
  * @param entityId - The ID of the entity being deleted
+ * @param tx - Optional Prisma transaction client for atomic operations
  */
 export async function cleanupEntityLinks(
   tripId: number,
   entityType: EntityType,
-  entityId: number
+  entityId: number,
+  tx?: TransactionClient
 ): Promise<void> {
-  await prisma.entityLink.deleteMany({
+  const client = tx ?? prisma;
+  await client.entityLink.deleteMany({
     where: {
       tripId,
       OR: [

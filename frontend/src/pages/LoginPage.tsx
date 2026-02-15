@@ -18,7 +18,9 @@ export default function LoginPage() {
       await login({ email, password });
       toast.success('Login successful!');
       // Navigate to redirect URL if provided, otherwise go to dashboard
-      const redirectUrl = searchParams.get('redirect') || '/dashboard';
+      // Validate redirect to prevent open redirect attacks (only allow same-origin paths)
+      const rawRedirect = searchParams.get('redirect') || '/dashboard';
+      const redirectUrl = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard';
       navigate(redirectUrl);
     } catch {
       toast.error(error || 'Login failed');
