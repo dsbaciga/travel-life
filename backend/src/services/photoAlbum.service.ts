@@ -393,11 +393,12 @@ class PhotoAlbumService {
       'edit'
     );
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(verifiedAlbum.tripId, 'PHOTO_ALBUM', albumId);
-
-    await prisma.photoAlbum.delete({
-      where: { id: albumId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(verifiedAlbum.tripId, 'PHOTO_ALBUM', albumId, tx);
+      await tx.photoAlbum.delete({
+        where: { id: albumId },
+      });
     });
 
     return { success: true };

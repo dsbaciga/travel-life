@@ -137,11 +137,12 @@ class JournalEntryService {
       'edit'
     );
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(entry.tripId, 'JOURNAL_ENTRY', entryId);
-
-    await prisma.journalEntry.delete({
-      where: { id: entryId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(entry.tripId, 'JOURNAL_ENTRY', entryId, tx);
+      await tx.journalEntry.delete({
+        where: { id: entryId },
+      });
     });
 
     return { success: true };

@@ -238,6 +238,7 @@ export const userInvitationService = {
           username: true,
           email: true,
           createdAt: true,
+          passwordVersion: true,
         },
       });
 
