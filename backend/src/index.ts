@@ -47,18 +47,25 @@ const app: Application = express();
 // Security middleware
 const isProduction = config.nodeEnv === 'production';
 
-// Build CSP img-src directive - only include localhost in development
-const imgSrcDirective = isProduction
-  ? ["'self'", 'data:']
-  : ["'self'", 'data:', 'http://localhost:5000'];
+// Build CSP directives - tighter in production, relaxed in development
+const cspDirectives = {
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  'img-src': isProduction
+    ? ["'self'", 'data:', 'blob:']
+    : ["'self'", 'data:', 'blob:', 'http://localhost:5000'],
+  'script-src': ["'self'"],
+  'style-src': ["'self'", "'unsafe-inline'"],  // unsafe-inline needed for Tailwind/inline styles
+  'connect-src': isProduction
+    ? ["'self'"]
+    : ["'self'", 'http://localhost:5000', 'ws://localhost:5173'],
+  'worker-src': ["'self'", 'blob:'],
+  'frame-ancestors': ["'none'"],
+};
 
 app.use(
   helmet({
     contentSecurityPolicy: {
-      directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        'img-src': imgSrcDirective,
-      },
+      directives: cspDirectives,
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })

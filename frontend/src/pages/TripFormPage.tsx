@@ -10,6 +10,11 @@ import toast from 'react-hot-toast';
 import { useConfetti } from '../hooks/useConfetti';
 import MarkdownEditor from '../components/MarkdownEditor';
 
+interface FormErrors {
+  title?: string;
+  endDate?: string;
+}
+
 export default function TripFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +36,37 @@ export default function TripFormPage() {
   const [tripTypeEmoji, setTripTypeEmoji] = useState<string>('');
   const [userTripTypes, setUserTripTypes] = useState<TripTypeCategory[]>([]);
   const [travelPartnerSettings, setTravelPartnerSettings] = useState<TravelPartnerSettings | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // Track initial form values for dirty state detection
+  const initialValuesRef = useRef({ title: '', description: '', startDate: '', endDate: '', timezone: '', status: TripStatus.PLANNING as string, privacyLevel: PrivacyLevel.PRIVATE as string, tripType: '', excludeFromAutoShare: false });
+  const formSavedRef = useRef(false);
+
+  const isDirty = useCallback(() => {
+    const initial = initialValuesRef.current;
+    return (
+      title !== initial.title ||
+      description !== initial.description ||
+      startDate !== initial.startDate ||
+      endDate !== initial.endDate ||
+      timezone !== initial.timezone ||
+      status !== initial.status ||
+      privacyLevel !== initial.privacyLevel ||
+      tripType !== initial.tripType ||
+      excludeFromAutoShare !== initial.excludeFromAutoShare
+    );
+  }, [title, description, startDate, endDate, timezone, status, privacyLevel, tripType, excludeFromAutoShare]);
+
+  // Warn before browser navigation (refresh, close tab) when form is dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty() && !formSavedRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   const loadUserTripTypes = useCallback(async () => {
     try {
@@ -61,17 +97,35 @@ export default function TripFormPage() {
         return dateStr.split('T')[0];
       };
 
+      const loadedStartDate = extractDate(trip.startDate);
+      const loadedEndDate = extractDate(trip.endDate);
+      const loadedTimezone = trip.timezone || '';
+      const loadedTripType = trip.tripType || '';
+
       setTitle(trip.title);
       setDescription(trip.description || '');
-      setStartDate(extractDate(trip.startDate));
-      setEndDate(extractDate(trip.endDate));
-      setTimezone(trip.timezone || '');
+      setStartDate(loadedStartDate);
+      setEndDate(loadedEndDate);
+      setTimezone(loadedTimezone);
       setStatus(trip.status);
       setPrivacyLevel(trip.privacyLevel);
       setExcludeFromAutoShare(trip.excludeFromAutoShare || false);
-      setTripType(trip.tripType || '');
+      setTripType(loadedTripType);
       setTripTypeEmoji(trip.tripTypeEmoji || '');
       originalStatusRef.current = trip.status;
+
+      // Store initial values for dirty tracking
+      initialValuesRef.current = {
+        title: trip.title,
+        description: trip.description || '',
+        startDate: loadedStartDate,
+        endDate: loadedEndDate,
+        timezone: loadedTimezone,
+        status: trip.status,
+        privacyLevel: trip.privacyLevel,
+        tripType: loadedTripType,
+        excludeFromAutoShare: trip.excludeFromAutoShare || false,
+      };
     } catch {
       toast.error('Failed to load trip');
       navigate('/trips');
@@ -90,11 +144,23 @@ export default function TripFormPage() {
     loadUserTripTypes();
   }, [id, isEdit, loadTrip, loadTravelPartnerSettings, loadUserTripTypes]);
 
+  const validate = (): FormErrors => {
+    const newErrors: FormErrors = {};
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (startDate && endDate && endDate < startDate) {
+      newErrors.endDate = 'End date must be on or after start date';
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) {
-      toast.error('Title is required');
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
       return;
     }
 
@@ -122,6 +188,8 @@ export default function TripFormPage() {
         tripTypeEmoji: tripTypeEmoji || null,
       };
 
+      formSavedRef.current = true;
+
       if (isEdit && id) {
         await tripService.updateTrip(parseInt(id), data);
         toast.success('Trip updated successfully');
@@ -141,10 +209,26 @@ export default function TripFormPage() {
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
       navigate('/trips');
     } catch (err: unknown) {
+      formSavedRef.current = false;
       const error = err as import('axios').AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || 'Failed to save trip');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Clear inline errors as user fixes the fields
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (errors.title && value.trim()) {
+      setErrors(prev => ({ ...prev, title: undefined }));
+    }
+  };
+
+  const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    if (errors.endDate) {
+      setErrors(prev => ({ ...prev, endDate: undefined }));
     }
   };
 
@@ -156,7 +240,7 @@ export default function TripFormPage() {
             onClick={() => navigate(-1)}
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
-            ← Back
+            &larr; Back
           </button>
           {isEdit && id && (
             <button
@@ -178,7 +262,7 @@ export default function TripFormPage() {
             {isEdit ? 'Edit Trip' : 'New Trip'}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label htmlFor="title" className="label">
                 Title *
@@ -187,11 +271,17 @@ export default function TripFormPage() {
                 type="text"
                 id="title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="input"
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className={`input ${errors.title ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
                 placeholder="My Amazing Trip"
-                required
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? 'title-error' : undefined}
               />
+              {errors.title && (
+                <p id="title-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                  {errors.title}
+                </p>
+              )}
             </div>
 
             <div>
@@ -226,9 +316,16 @@ export default function TripFormPage() {
                   type="date"
                   id="endDate"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="input"
+                  onChange={(e) => handleEndDateChange(e.target.value)}
+                  className={`input ${errors.endDate ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
+                  aria-invalid={!!errors.endDate}
+                  aria-describedby={errors.endDate ? 'endDate-error' : undefined}
                 />
+                {errors.endDate && (
+                  <p id="endDate-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                    {errors.endDate}
+                  </p>
+                )}
               </div>
             </div>
 
