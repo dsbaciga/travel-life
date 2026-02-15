@@ -106,7 +106,7 @@ export default {
         // Neutrals
         cream: '#f8fafc',
         parchment: '#f1f5f9',
-        'warm-gray': '#e2e8f0',
+        'warm-gray': '#e8eef4',
         charcoal: '#1e293b',
         slate: '#64748b',
         // Dark Mode

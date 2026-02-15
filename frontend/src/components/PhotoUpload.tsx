@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { Location } from "../types/location";
 import type { ImmichAsset, ImmichAlbum } from "../types/immich";
 import photoService from "../services/photo.service";
@@ -37,6 +37,20 @@ export default function PhotoUpload({
   const { isDraggingFiles, setupListeners } = useDragDropOverlay();
   const { triggerConfetti } = useConfetti();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup: abort pending requests on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     checkImmichSettings();
@@ -338,21 +352,35 @@ export default function PhotoUpload({
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = useCallback(async () => {
     if (selectedFiles.length === 0) return;
+
+    // Abort any previous upload in progress
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
+        // Check if aborted before each upload
+        if (controller.signal.aborted) return;
+
         const file = selectedFiles[i];
         await photoService.uploadPhoto(file, {
           tripId,
           caption: selectedFiles.length === 1 ? caption : undefined,
         });
+
+        if (!isMountedRef.current) return;
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
+
+      if (!isMountedRef.current) return;
 
       // Reset form
       setSelectedFiles([]);
@@ -363,12 +391,18 @@ export default function PhotoUpload({
       triggerConfetti('photo');
 
       onPhotoUploaded();
-    } catch {
+    } catch (err) {
+      if (!isMountedRef.current || controller.signal.aborted) return;
       alert("Failed to upload photos");
     } finally {
-      setIsUploading(false);
+      if (isMountedRef.current) {
+        setIsUploading(false);
+      }
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
-  };
+  }, [selectedFiles, tripId, caption, triggerConfetti, onPhotoUploaded]);
 
   return (
     <>

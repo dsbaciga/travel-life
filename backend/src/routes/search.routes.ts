@@ -1,11 +1,22 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { searchController } from '../controllers/search.controller';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
+// Rate limiting for search endpoint - prevents abuse of expensive search queries
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // 30 requests per minute per IP
+  message: 'Too many search requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // All search routes require authentication
 router.use(authenticate);
+router.use(searchLimiter);
 
 /**
  * @openapi

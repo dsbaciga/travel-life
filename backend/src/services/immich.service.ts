@@ -39,6 +39,19 @@ export interface ImmichMetadataSearchQuery extends ImmichSearchQuery {
   state?: string;
 }
 
+/**
+ * Sanitize a URL for logging by stripping query parameters and fragments.
+ * Prevents accidental leakage of API keys or tokens in log output.
+ */
+function sanitizeUrlForLogging(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.protocol}//${parsed.host}${parsed.pathname}`;
+  } catch {
+    return '<invalid-url>';
+  }
+}
+
 class ImmichService {
   private createClient(apiUrl: string, apiKey: string): AxiosInstance {
     // IMPORTANT: apiUrl should be the base Immich server URL WITHOUT /api suffix
@@ -78,34 +91,34 @@ class ImmichService {
 
       if (errorCode === 'ECONNREFUSED') {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[Immich Service] Cannot connect to Immich at ${apiUrl}: Server refused connection`);
+          console.error(`[Immich Service] Cannot connect to Immich at ${sanitizeUrlForLogging(apiUrl)}: Server refused connection`);
         }
         throw new AppError('Cannot connect to Immich server. Please check your configuration and ensure the server is running.', 400);
       } else if (errorCode === 'ENOTFOUND') {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[Immich Service] Cannot resolve hostname for ${apiUrl}: DNS resolution failed`);
+          console.error(`[Immich Service] Cannot resolve hostname for ${sanitizeUrlForLogging(apiUrl)}: DNS resolution failed`);
         }
         throw new AppError('Cannot connect to Immich server. Please check your configuration and network settings.', 400);
       } else if (errorCode === 'ETIMEDOUT') {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[Immich Service] Connection to ${apiUrl} timed out after 30 seconds`);
+          console.error(`[Immich Service] Connection to ${sanitizeUrlForLogging(apiUrl)} timed out after 30 seconds`);
         }
         throw new AppError('Connection to Immich server timed out. Please check network firewall rules.', 408);
       } else if (errorCode === 'DEPTH_ZERO_SELF_SIGNED_CERT' || errorCode === 'CERT_HAS_EXPIRED' || errorCode === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[Immich Service] SSL certificate error for ${apiUrl}: ${errorCode}`);
+          console.error(`[Immich Service] SSL certificate error for ${sanitizeUrlForLogging(apiUrl)}: ${errorCode}`);
         }
         throw new AppError('SSL certificate error. The Immich server has an invalid or self-signed certificate.', 400);
       } else if (responseStatus === 401 || responseStatus === 403) {
         throw new AppError('Invalid Immich API key. Check your API key in user settings.', 401);
       } else if (responseStatus === 404) {
         if (process.env.NODE_ENV === 'development') {
-          console.error(`[Immich Service] API endpoint not found at ${apiUrl}`);
+          console.error(`[Immich Service] API endpoint not found at ${sanitizeUrlForLogging(apiUrl)}`);
         }
         throw new AppError('Immich API endpoint not found. Please check that your URL is correct and points to your Immich server.', 404);
       }
       if (process.env.NODE_ENV === 'development') {
-        console.error(`[Immich Service] Connection failed to ${apiUrl}: ${errorMessage} (Code: ${errorCode})`);
+        console.error(`[Immich Service] Connection failed to ${sanitizeUrlForLogging(apiUrl)}: ${errorMessage} (Code: ${errorCode})`);
       } else {
         console.error(`[Immich Service] Connection failed: ${errorMessage} (Code: ${errorCode})`);
       }

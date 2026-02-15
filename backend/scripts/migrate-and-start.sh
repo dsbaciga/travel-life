@@ -15,8 +15,9 @@ DB_PORT="5432"
 
 if [ -n "$DATABASE_URL" ]; then
   # Very basic extraction of host and port from postgresql://user:pass@host:port/db
-  EXTRACTED_HOST=$(echo "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|:.*||')
-  EXTRACTED_PORT=$(echo "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' | grep ":" | cut -d: -f2)
+  # Use printf to avoid leaking DATABASE_URL in shell process listings
+  EXTRACTED_HOST=$(printf '%s' "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|:.*||')
+  EXTRACTED_PORT=$(printf '%s' "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' | grep ":" | cut -d: -f2)
   
   if [ -n "$EXTRACTED_HOST" ]; then DB_HOST="$EXTRACTED_HOST"; fi
   if [ -n "$EXTRACTED_PORT" ]; then DB_PORT="$EXTRACTED_PORT"; fi
@@ -85,7 +86,8 @@ if [ -d "$MANUAL_MIGRATIONS_DIR" ]; then
       migration_name=$(basename "$migration_file")
       echo "Running manual migration: $migration_name"
       if [ -n "$DATABASE_URL" ]; then
-        if psql "$DATABASE_URL" -f "$migration_file" 2>&1; then
+        # Redirect psql output to suppress connection strings from appearing in logs
+        if psql "$DATABASE_URL" -f "$migration_file" > /dev/null 2>&1; then
           echo "  ✓ $migration_name completed"
         else
           echo "  ⚠ $migration_name had issues (may already be applied)"
@@ -174,8 +176,14 @@ echo "========================================="
 if [ "$(id -u)" = "0" ] && command -v su-exec >/dev/null 2>&1; then
   echo "Dropping privileges to 'node' user..."
   exec su-exec node "$@"
+elif [ "$(id -u)" = "0" ]; then
+  # Running as root but su-exec is not available - refuse to run as root for security
+  echo "ERROR: Running as root but su-exec is not available."
+  echo "  The application must not run as root for security reasons."
+  echo "  Either install su-exec or run the container with --user node."
+  exit 1
 else
-  # Already running as node (development) or su-exec not available
+  # Already running as non-root user (e.g., 'node' via Docker USER directive)
   exec "$@"
 fi
 

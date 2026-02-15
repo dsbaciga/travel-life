@@ -557,8 +557,9 @@ export async function createBackup(userId: number): Promise<BackupData> {
 
     return backupData;
   } catch (error) {
+    if (error instanceof AppError) throw error;
     console.error('Error creating backup:', error);
-    throw new AppError('Failed to create backup', 500);
+    throw new AppError('Failed to create backup', 500, { cause: error });
   }
 }
 

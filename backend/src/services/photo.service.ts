@@ -421,20 +421,29 @@ class PhotoService {
       }
     }
 
-    const photo = await prisma.photo.create({
-      data: {
-        tripId: data.tripId,
-        source: PhotoSource.IMMICH,
-        mediaType,
-        immichAssetId: data.immichAssetId,
-        thumbnailPath: `/api/immich/assets/${data.immichAssetId}/thumbnail`,
-        duration,
-        caption: data.caption || null,
-        takenAt: data.takenAt ? new Date(data.takenAt) : null,
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
-      },
-    });
+    let photo;
+    try {
+      photo = await prisma.photo.create({
+        data: {
+          tripId: data.tripId,
+          source: PhotoSource.IMMICH,
+          mediaType,
+          immichAssetId: data.immichAssetId,
+          thumbnailPath: `/api/immich/assets/${data.immichAssetId}/thumbnail`,
+          duration,
+          caption: data.caption || null,
+          takenAt: data.takenAt ? new Date(data.takenAt) : null,
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+        },
+      });
+    } catch (error) {
+      // Handle unique constraint violation (tripId + immichAssetId)
+      if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002') {
+        throw new AppError('This Immich photo is already linked to this trip', 409);
+      }
+      throw error;
+    }
 
     return convertDecimals(photo);
   }
@@ -759,6 +768,7 @@ class PhotoService {
       WHERE trip_id = ${tripId} AND "taken_at" IS NOT NULL
       GROUP BY TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${tz}, 'YYYY-MM-DD')
       ORDER BY date ASC
+      LIMIT 366
     `;
 
     // Get total count of photos with dates

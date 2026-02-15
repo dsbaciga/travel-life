@@ -19,8 +19,11 @@ export const createBackup = asyncHandler(async (req: Request, res: Response) => 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
-  // Send backup data as downloadable JSON file
-  res.json(backupData);
+  // Send backup data wrapped in standard response format
+  res.json({
+    status: 'success',
+    data: backupData,
+  });
 });
 
 /**

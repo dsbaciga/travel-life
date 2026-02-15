@@ -74,10 +74,40 @@ app.use(
   })
 );
 // CORS configuration - use CORS_ORIGIN env var in production
+// Validate each origin is a well-formed URL (http/https, no trailing slash, no path)
+function validateCorsOrigins(origins: string[]): string[] {
+  return origins.filter((origin) => {
+    // Must start with http:// or https://
+    if (!/^https?:\/\//i.test(origin)) {
+      logger.warn(`Invalid CORS origin ignored (must start with http:// or https://): ${origin}`);
+      return false;
+    }
+    try {
+      const parsed = new URL(origin);
+      // Must not have a path (other than /)
+      if (parsed.pathname !== '/') {
+        logger.warn(`Invalid CORS origin ignored (must not contain a path): ${origin}`);
+        return false;
+      }
+      // Must not have a trailing slash in the original string
+      if (origin.endsWith('/')) {
+        logger.warn(`Invalid CORS origin ignored (must not have trailing slash): ${origin}`);
+        return false;
+      }
+      return true;
+    } catch {
+      logger.warn(`Invalid CORS origin ignored (malformed URL): ${origin}`);
+      return false;
+    }
+  });
+}
+
+const rawCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: validateCorsOrigins(rawCorsOrigins),
   credentials: true,
   exposedHeaders: ['Set-Cookie'],
 };

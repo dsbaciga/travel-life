@@ -668,6 +668,8 @@ export class TripService {
         addToPlacesVisited: false,
         tripType: sourceTrip.tripType,
         tripTypeEmoji: sourceTrip.tripTypeEmoji,
+        seriesId: sourceTrip.seriesId,
+        seriesOrder: sourceTrip.seriesOrder,
       },
     });
 

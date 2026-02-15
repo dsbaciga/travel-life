@@ -244,8 +244,9 @@ export const photoController = {
     // Validate input with Zod schema
     const validationResult = acceptAlbumSuggestionSchema.safeParse(req.body);
     if (!validationResult.success) {
+      const fieldNames = validationResult.error.errors.map(e => e.path.join('.')).filter(Boolean);
       throw new AppError(
-        `Invalid suggestion data: ${validationResult.error.errors.map(e => e.message).join(', ')}`,
+        `Validation failed${fieldNames.length > 0 ? `: invalid fields: ${fieldNames.join(', ')}` : ''}`,
         400
       );
     }

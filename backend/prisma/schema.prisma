@@ -294,6 +294,7 @@ model Photo {
   albumCoverPhoto        PhotoAlbum[]            @relation("AlbumCoverPhoto")
   albumAssignments       PhotoAlbumAssignment[]
 
+  @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
   @@index([tripId])
   @@index([takenAt])

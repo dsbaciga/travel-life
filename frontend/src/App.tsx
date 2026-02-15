@@ -156,9 +156,9 @@ function App() {
             <Suspense fallback={<LoadingSpinner.FullPage message="Loading page..." />}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/accept-invite" element={<AcceptInvitePage />} />
+              <Route path="/login" element={<ErrorBoundary><LoginPage /></ErrorBoundary>} />
+              <Route path="/register" element={<ErrorBoundary><RegisterPage /></ErrorBoundary>} />
+              <Route path="/accept-invite" element={<ErrorBoundary><AcceptInvitePage /></ErrorBoundary>} />
               <Route
                 path="/dashboard"
                 element={

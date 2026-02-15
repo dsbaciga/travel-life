@@ -18,7 +18,7 @@
  * ```
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import searchService, { type SearchResult } from '../services/search.service';
@@ -114,13 +114,13 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
   };
 
   // Handle result selection
-  const handleSelectResult = (result: SearchResult) => {
+  const handleSelectResult = useCallback((result: SearchResult) => {
     saveRecentSearch(query);
     navigate(result.url);
     setShowResults(false);
     setQuery('');
     onClose?.();
-  };
+  }, [query, navigate, saveRecentSearch, onClose]);
 
   // Handle recent search selection
   const handleRecentSearch = (searchQuery: string) => {
@@ -153,11 +153,11 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
   }, [registerShortcut]);
 
   // Get icon for result type
-  const getTypeIcon = (type: SearchResult['type']) => {
+  const getTypeIcon = useCallback((type: SearchResult['type']) => {
     switch (type) {
       case 'trip':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -168,7 +168,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
         );
       case 'location':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -179,7 +179,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
         );
       case 'photo':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -190,7 +190,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
         );
       case 'journal':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -200,7 +200,59 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           </svg>
         );
     }
-  };
+  }, []);
+
+  // Memoize the rendered search results to avoid re-computing on every render
+  const renderedResults = useMemo(() => {
+    if (!query || results.length === 0) return null;
+
+    return (
+      <div className="p-2">
+        {results.map((result, index) => (
+          <button
+            key={`${result.type}-${result.id}`}
+            onClick={() => handleSelectResult(result)}
+            className={`
+              w-full text-left px-3 py-3 rounded-lg transition-all duration-150
+              ${
+                index === selectedIndex
+                  ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+              }
+            `}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`
+                flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                ${
+                  index === selectedIndex
+                    ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-sky'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }
+              `}
+              >
+                {getTypeIcon(result.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-gray-900 dark:text-white truncate">
+                  {result.title}
+                </div>
+                {result.subtitle && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {result.subtitle}
+                  </div>
+                )}
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 capitalize">
+                  {result.type}
+                </div>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }, [query, results, selectedIndex, getTypeIcon, handleSelectResult]);
 
   return (
     <div className={`relative ${compact ? 'w-full max-w-md' : 'w-full max-w-2xl mx-auto'}`}>
@@ -322,53 +374,8 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
             </div>
           )}
 
-          {/* Search Results */}
-          {query && results.length > 0 && (
-            <div className="p-2">
-              {results.map((result, index) => (
-                <button
-                  key={`${result.type}-${result.id}`}
-                  onClick={() => handleSelectResult(result)}
-                  className={`
-                    w-full text-left px-3 py-3 rounded-lg transition-all duration-150
-                    ${
-                      index === selectedIndex
-                        ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }
-                  `}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`
-                      flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
-                      ${
-                        index === selectedIndex
-                          ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-sky'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                      }
-                    `}
-                    >
-                      {getTypeIcon(result.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 dark:text-white truncate">
-                        {result.title}
-                      </div>
-                      {result.subtitle && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {result.subtitle}
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 capitalize">
-                        {result.type}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Search Results (memoized) */}
+          {renderedResults}
 
           {/* No Results */}
           {query && !isLoading && results.length === 0 && (

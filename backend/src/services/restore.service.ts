@@ -68,10 +68,15 @@ export async function restoreFromBackup(
         }
 
         // Step 2: Update user settings
+        // Preserve current timezone if the backup doesn't include one
+        const currentUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { timezone: true },
+        });
         await tx.user.update({
           where: { id: userId },
           data: {
-            timezone: backupData.user.timezone,
+            timezone: backupData.user.timezone ?? currentUser?.timezone ?? 'UTC',
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
             immichApiUrl: backupData.user.immichApiUrl,
@@ -598,7 +603,7 @@ export async function restoreFromBackup(
       },
       {
         maxWait: 60000, // 60 seconds
-        timeout: 300000, // 5 minutes
+        timeout: 600000, // 10 minutes (large dataset restores need more time)
       }
     );
 
