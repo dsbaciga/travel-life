@@ -33,6 +33,7 @@ docs/
 │   ├── BUILD_AND_PUSH.md
 │   ├── DEVELOPMENT_WORKFLOWS.md
 │   ├── DEBUGGING_AND_OPTIMIZATION.md
+│   ├── HTTPS_SETUP.md
 │   ├── TESTING_GUIDE.md
 │   └── ROUTING_SETUP.md
 ├── plans/                    # Future planning documents
@@ -64,7 +65,8 @@ Then review development processes:
 
 1. **[Quick Start Production](../QUICK_START_PRODUCTION.md)** - Fast deployment guide
 2. **[Deployment Guide](../DEPLOYMENT.md)** - Comprehensive deployment documentation
-3. **[Release Checklist](../RELEASE_CHECKLIST.md)** - Release procedures
+3. **[HTTPS Setup](guides/HTTPS_SETUP.md)** - TLS/HTTPS configuration with Let's Encrypt or Traefik
+4. **[Release Checklist](../RELEASE_CHECKLIST.md)** - Release procedures
 
 ### For Project Managers / Contributors
 

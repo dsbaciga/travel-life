@@ -556,7 +556,6 @@ model RouteCache {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@unique([fromLat, fromLon, toLat, toLon, profile], name: "route_cache_coords_profile_unique")
-  @@index([fromLat, fromLon, toLat, toLon, profile])
   @@map("route_cache")
 }
 

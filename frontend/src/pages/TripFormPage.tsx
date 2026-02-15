@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useBlocker } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
 import userService from '../services/user.service';
@@ -67,6 +67,12 @@ export default function TripFormPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
+
+  // Block in-app navigation (React Router) when form is dirty
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty() && !formSavedRef.current && currentLocation.pathname !== nextLocation.pathname
+  );
 
   const loadUserTripTypes = useCallback(async () => {
     try {
@@ -225,6 +231,13 @@ export default function TripFormPage() {
     }
   };
 
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    if (errors.endDate) {
+      setErrors(prev => ({ ...prev, endDate: undefined }));
+    }
+  };
+
   const handleEndDateChange = (value: string) => {
     setEndDate(value);
     if (errors.endDate) {
@@ -234,6 +247,34 @@ export default function TripFormPage() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Unsaved changes confirmation dialog for in-app navigation */}
+      {blocker.state === 'blocked' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved Changes</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              You have unsaved changes. Are you sure you want to leave?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => blocker.reset?.()}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                onClick={() => blocker.proceed?.()}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <button
@@ -303,7 +344,7 @@ export default function TripFormPage() {
                   type="date"
                   id="startDate"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
                   className="input"
                 />
               </div>

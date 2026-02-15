@@ -48,16 +48,19 @@ const app: Application = express();
 const isProduction = config.nodeEnv === 'production';
 
 // Build CSP directives - tighter in production, relaxed in development
+// Note: In Docker, Nginx serves the frontend and these headers only apply to API
+// responses. They are kept correct for completeness and non-Docker deployments.
 const cspDirectives = {
   ...helmet.contentSecurityPolicy.getDefaultDirectives(),
   'img-src': isProduction
-    ? ["'self'", 'data:', 'blob:']
-    : ["'self'", 'data:', 'blob:', 'http://localhost:5000'],
+    ? ["'self'", 'data:', 'blob:', 'https://*.tile.openstreetmap.org', 'https://*.basemaps.cartocdn.com']
+    : ["'self'", 'data:', 'blob:', 'http://localhost:5000', 'https://*.tile.openstreetmap.org', 'https://*.basemaps.cartocdn.com'],
   'script-src': ["'self'"],
-  'style-src': ["'self'", "'unsafe-inline'"],  // unsafe-inline needed for Tailwind/inline styles
+  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  'font-src': ["'self'", 'https://fonts.gstatic.com'],
   'connect-src': isProduction
-    ? ["'self'"]
-    : ["'self'", 'http://localhost:5000', 'ws://localhost:5173'],
+    ? ["'self'", 'https://nominatim.openstreetmap.org']
+    : ["'self'", 'http://localhost:5000', 'ws://localhost:5173', 'https://nominatim.openstreetmap.org'],
   'worker-src': ["'self'", 'blob:'],
   'frame-ancestors': ["'none'"],
 };
