@@ -242,8 +242,8 @@ describe('Companion Controller', () => {
       await flushPromises();
 
       expect(mockDeleteCompanion).toHaveBeenCalledWith(testUsers.user1.id, 3);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {
@@ -323,8 +323,8 @@ describe('Companion Controller', () => {
       await flushPromises();
 
       expect(mockUnlinkCompanionFromTrip).toHaveBeenCalledWith(testUsers.user1.id, 10, 3);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {

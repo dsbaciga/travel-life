@@ -552,8 +552,8 @@ describe('EntityLink Controller', () => {
         targetType: 'LOCATION',
         targetId: 2,
       }));
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {
@@ -578,7 +578,7 @@ describe('EntityLink Controller', () => {
   });
 
   describe('deleteLinkById', () => {
-    it('should delete a link by id and return 204', async () => {
+    it('should delete a link by id and return 200', async () => {
       mockDeleteLinkById.mockResolvedValue(undefined);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -589,8 +589,8 @@ describe('EntityLink Controller', () => {
       await flushPromises();
 
       expect(mockDeleteLinkById).toHaveBeenCalledWith(testUsers.user1.id, 10, 5);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {

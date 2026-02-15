@@ -513,8 +513,8 @@ describe('photoController', () => {
       await flushPromises();
 
       expect(photoService.deletePhoto).toHaveBeenCalledWith(testUsers.user1.id, 5);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {
