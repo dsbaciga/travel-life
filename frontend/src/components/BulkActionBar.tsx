@@ -167,6 +167,7 @@ export default function BulkActionBar({
                     onClick={onSelectAll}
                     className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
                     title="Select all"
+                    aria-label="Select all"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -185,6 +186,7 @@ export default function BulkActionBar({
                   disabled={isEditing || selectedCount === 0}
                   className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-gold hover:bg-primary-200 dark:hover:bg-primary-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[44px] justify-center focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
                   title="Edit selected items"
+                  aria-label="Edit selected items"
                 >
                   {isEditing ? (
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -206,6 +208,7 @@ export default function BulkActionBar({
                 disabled={isDeleting || selectedCount === 0}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[44px] justify-center focus-visible:ring-2 focus-visible:ring-red-500/50"
                 title="Delete selected items"
+                aria-label="Delete selected items"
               >
                 {isDeleting ? (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -225,6 +228,7 @@ export default function BulkActionBar({
                 onClick={onExitSelectionMode}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg text-slate dark:text-warm-gray/70 hover:bg-parchment dark:hover:bg-navy-700 transition-colors ml-1 focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
                 title="Exit selection mode"
+                aria-label="Exit selection mode"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
