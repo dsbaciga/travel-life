@@ -313,6 +313,7 @@ export default function OfflineDownloadButton({
                     min-w-[44px] min-h-[44px]
                   "
                   title="Update offline data"
+                  aria-label="Update offline data"
                 >
                   <ArrowPathIcon className="w-4 h-4" />
                 </button>
@@ -331,6 +332,7 @@ export default function OfflineDownloadButton({
                     min-w-[44px] min-h-[44px]
                   "
                   title="Remove offline data"
+                  aria-label="Remove offline data"
                 >
                   {isRemoving ? (
                     <ArrowPathIcon className="w-4 h-4 animate-spin" />
@@ -375,6 +377,7 @@ export default function OfflineDownloadButton({
                     flex items-center justify-center
                   "
                   title="Remove offline data"
+                  aria-label="Remove offline data"
                 >
                   {isRemoving ? (
                     <ArrowPathIcon className="w-4 h-4 animate-spin" />

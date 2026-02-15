@@ -1098,6 +1098,7 @@ export default function SettingsPage() {
                             disabled={index === 0}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                             title="Move up"
+                            aria-label={`Move ${category.name} up`}
                           >
                             ▲
                           </button>
@@ -1107,6 +1108,7 @@ export default function SettingsPage() {
                             disabled={index === categories.length - 1}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                             title="Move down"
+                            aria-label={`Move ${category.name} down`}
                           >
                             ▼
                           </button>
