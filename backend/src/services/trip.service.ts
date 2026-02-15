@@ -680,14 +680,16 @@ export class TripService {
     const journalIdMap = new Map<number, number>();
     const albumIdMap = new Map<number, number>();
 
-    // Copy locations (with parent-child hierarchy) - requires sequential for parent references
+    // Copy locations (with parent-child hierarchy)
+    // Uses sequential create to get reliable ID mapping (avoids composite key collisions
+    // when multiple locations share the same name + coordinates)
     if (data.copyEntities?.locations && sourceTrip.locations && Array.isArray(sourceTrip.locations)) {
       const locations = sourceTrip.locations as SourceLocation[];
-      // First pass: bulk insert locations without parent references
+      // First pass: locations without parent references
       const locationsWithoutParent = locations.filter((loc) => !loc.parentId);
-      if (locationsWithoutParent.length > 0) {
-        await tx.location.createMany({
-          data: locationsWithoutParent.map((location) => ({
+      for (const location of locationsWithoutParent) {
+        const newLocation = await tx.location.create({
+          data: {
             tripId: newTrip.id,
             name: location.name,
             address: location.address,
@@ -697,30 +699,12 @@ export class TripService {
             visitDatetime: null,
             visitDurationMinutes: location.visitDurationMinutes,
             notes: location.notes,
-          })) as any,
+          } as any,
         });
-        // Query back to build ID map using composite key for uniqueness
-        // Note: Using name + coordinates as composite key to handle duplicate names
-        // (e.g., multiple locations named "Hotel Lobby" at different coordinates)
-        const newLocations = await tx.location.findMany({
-          where: { tripId: newTrip.id },
-          select: { id: true, name: true, latitude: true, longitude: true },
-        });
-        const buildLocationKey = (name: string, lat: DecimalValue | null, lng: DecimalValue | null) =>
-          `${name}|${lat ?? ''}|${lng ?? ''}`;
-        const newLocationsByKey = new Map<string, number>(
-          newLocations.map((l): [string, number] => [
-            buildLocationKey(l.name, l.latitude, l.longitude), l.id
-          ])
-        );
-        for (const location of locationsWithoutParent) {
-          const key = buildLocationKey(location.name, location.latitude, location.longitude);
-          const newId = newLocationsByKey.get(key);
-          if (newId) locationIdMap.set(location.id, newId);
-        }
+        locationIdMap.set(location.id, newLocation.id);
       }
 
-      // Second pass: child locations need sequential creation due to parent FK
+      // Second pass: child locations need parent FK resolved from the map
       const locationsWithParent = locations.filter((loc) => loc.parentId !== null);
       for (const location of locationsWithParent) {
         const newParentId = location.parentId !== null ? locationIdMap.get(location.parentId) : undefined;

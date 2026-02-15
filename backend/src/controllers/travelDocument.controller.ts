@@ -68,7 +68,7 @@ export const travelDocumentController = {
     const userId = requireUserId(req);
     const documentId = parseId(req.params.id);
     await travelDocumentService.delete(userId, documentId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Document deleted successfully' });
   }),
 
   /**

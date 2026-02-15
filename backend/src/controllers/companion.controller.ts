@@ -43,7 +43,7 @@ export const companionController = {
     const userId = requireUserId(req);
     const companionId = parseId(req.params.id);
     await companionService.deleteCompanion(userId, companionId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Companion deleted successfully' });
   }),
 
   linkCompanionToTrip: asyncHandler(async (req: Request, res: Response) => {
@@ -58,7 +58,7 @@ export const companionController = {
     const tripId = parseId(req.params.tripId, 'tripId');
     const companionId = parseId(req.params.companionId, 'companionId');
     await companionService.unlinkCompanionFromTrip(userId, tripId, companionId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Companion unlinked from trip' });
   }),
 
   getCompanionsByTrip: asyncHandler(async (req: Request, res: Response) => {

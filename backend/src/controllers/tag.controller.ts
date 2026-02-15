@@ -39,7 +39,7 @@ export const tagController = {
     const userId = requireUserId(req);
     const tagId = parseId(req.params.id);
     await tagService.deleteTag(userId, tagId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Tag deleted successfully' });
   }),
 
   reorderTags: asyncHandler(async (req: Request, res: Response) => {
@@ -63,7 +63,7 @@ export const tagController = {
     const tripId = parseId(req.params.tripId, 'tripId');
     const tagId = parseId(req.params.tagId, 'tagId');
     await tagService.unlinkTagFromTrip(userId, tripId, tagId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Tag unlinked from trip' });
   }),
 
   getTagsByTrip: asyncHandler(async (req: Request, res: Response) => {

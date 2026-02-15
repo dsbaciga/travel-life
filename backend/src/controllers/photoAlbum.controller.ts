@@ -196,7 +196,7 @@ export const photoAlbumController = {
     const userId = requireUserId(req);
     const albumId = parseId(req.params.id);
     await photoAlbumService.deleteAlbum(userId, albumId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Album deleted successfully' });
   }),
 
   addPhotosToAlbum: asyncHandler(async (req: Request, res: Response) => {
@@ -216,6 +216,6 @@ export const photoAlbumController = {
     const albumId = parseId(req.params.id);
     const photoId = parseId(req.params.photoId, 'photoId');
     await photoAlbumService.removePhotoFromAlbum(userId, albumId, photoId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Photo removed from album' });
   }),
 };

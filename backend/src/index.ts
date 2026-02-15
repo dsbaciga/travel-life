@@ -258,6 +258,10 @@ const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
   try {
+    // Stop token blacklist cleanup interval to allow clean exit
+    const { stopCleanupInterval } = await import('./services/tokenBlacklist.service');
+    stopCleanupInterval();
+
     // Close database connection
     await prisma.$disconnect();
     logger.info('Database connection closed.');

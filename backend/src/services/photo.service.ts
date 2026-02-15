@@ -135,19 +135,29 @@ async function getVideoDuration(videoPath: string): Promise<number | null> {
   });
 }
 
-// Generate thumbnail from video file using ffmpeg
+// Generate thumbnail from video file using ffmpeg (with 30s timeout)
+const FFMPEG_TIMEOUT_MS = 30_000;
+
 async function generateVideoThumbnail(videoPath: string, thumbnailPath: string): Promise<boolean> {
   return new Promise((resolve) => {
-    ffmpeg(videoPath)
+    let settled = false;
+    const settle = (value: boolean) => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+    };
+
+    const command = ffmpeg(videoPath)
       .on('end', () => {
         if (process.env.NODE_ENV === 'development') {
           console.log('[PhotoService] Video thumbnail generated successfully');
         }
-        resolve(true);
+        settle(true);
       })
       .on('error', (err: Error) => {
         console.error('[PhotoService] Failed to generate video thumbnail:', err.message);
-        resolve(false);
+        settle(false);
       })
       .screenshots({
         count: 1,
@@ -156,6 +166,15 @@ async function generateVideoThumbnail(videoPath: string, thumbnailPath: string):
         size: '400x?', // 400px width (matches image thumbnail width), auto height maintaining aspect ratio
         timestamps: ['10%'], // Take screenshot at 10% of video duration
       });
+
+    // Kill ffmpeg if it takes too long
+    setTimeout(() => {
+      if (!settled) {
+        console.error('[PhotoService] Video thumbnail generation timed out after 30s');
+        try { command.kill('SIGKILL'); } catch { /* ignore */ }
+        settle(false);
+      }
+    }, FFMPEG_TIMEOUT_MS);
   });
 }
 
@@ -307,20 +326,31 @@ class PhotoService {
         }
       }
 
-      const photo = await prisma.photo.create({
-        data: {
-          tripId: data.tripId,
-          source: PhotoSource.LOCAL,
-          mediaType,
-          localPath: localPathUrl,
-          thumbnailPath: thumbnailPathUrl,
-          duration: videoDuration,
-          caption: data.caption || null,
-          takenAt,
-          latitude,
-          longitude,
-        },
-      });
+      let photo;
+      try {
+        photo = await prisma.photo.create({
+          data: {
+            tripId: data.tripId,
+            source: PhotoSource.LOCAL,
+            mediaType,
+            localPath: localPathUrl,
+            thumbnailPath: thumbnailPathUrl,
+            duration: videoDuration,
+            caption: data.caption || null,
+            takenAt,
+            latitude,
+            longitude,
+          },
+        });
+      } catch (dbError) {
+        // DB insert failed after file was already moved - clean up the orphaned files
+        try { await fs.unlink(filepath); } catch { /* ignore cleanup errors */ }
+        if (thumbnailPathUrl) {
+          const thumbFullPath = path.join(process.cwd(), thumbnailPathUrl);
+          try { await fs.unlink(thumbFullPath); } catch { /* ignore cleanup errors */ }
+        }
+        throw dbError;
+      }
 
       return convertDecimals(photo);
     } catch (error) {

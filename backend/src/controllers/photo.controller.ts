@@ -176,7 +176,7 @@ export const photoController = {
     const photoId = parseId(req.params.id);
     await photoService.deletePhoto(requireUserId(req), photoId);
 
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Photo deleted successfully' });
   }),
 
   getPhotoDateGroupings: asyncHandler(async (req: Request, res: Response) => {

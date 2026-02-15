@@ -177,7 +177,7 @@ export const entityLinkController = {
     const tripId = parseId(req.params.tripId, 'tripId');
     const data = deleteEntityLinkSchema.parse({ ...req.body, tripId });
     await entityLinkService.deleteLink(userId, data);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Entity link deleted' });
   }),
 
   /**
@@ -189,7 +189,7 @@ export const entityLinkController = {
     const tripId = parseId(req.params.tripId, 'tripId');
     const linkId = parseId(req.params.linkId, 'linkId');
     await entityLinkService.deleteLinkById(userId, tripId, linkId);
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Entity link deleted' });
   }),
 
   /**
