@@ -1062,12 +1062,14 @@ export default function TripDetailPage() {
                     <button
                       onClick={() => setShowShareModal(true)}
                       className="btn btn-secondary flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 whitespace-nowrap"
+                      aria-label="Share trip"
                     >
                       <svg
                         className="w-4 h-4 flex-shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"

@@ -38,9 +38,15 @@ import userInvitationRoutes from './routes/userInvitation.routes';
 import tripSeriesRoutes from './routes/tripSeries.routes';
 
 // Read version from package.json
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, '../package.json'), 'utf-8')
-);
+let packageJson: { version: string; name: string };
+try {
+  packageJson = JSON.parse(
+    readFileSync(join(__dirname, '../package.json'), 'utf-8')
+  );
+} catch {
+  logger.warn('Could not read package.json, using fallback version');
+  packageJson = { version: 'unknown', name: 'travel-life-backend' };
+}
 
 const app: Application = express();
 

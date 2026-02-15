@@ -282,6 +282,7 @@ export default function CompanionsWidget({
               text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-700
               hover:bg-primary-100 dark:hover:bg-navy-600
               rounded-lg transition-colors duration-200"
+            aria-label="Invite companion"
           >
             <PlusIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Invite</span>

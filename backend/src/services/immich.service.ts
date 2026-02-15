@@ -58,6 +58,12 @@ class ImmichService {
     // (e.g., https://immich.example.com, NOT https://immich.example.com/api)
     // All endpoint paths in this service include /api/ prefix
     const baseURL = apiUrl.trim();
+
+    // Warn if the URL does not use HTTPS (API key will be sent in the clear)
+    if (baseURL && !baseURL.startsWith('https://')) {
+      console.warn(`[Immich Service] WARNING: Immich API URL does not use HTTPS. API key may be transmitted insecurely. URL: ${sanitizeUrlForLogging(baseURL)}`);
+    }
+
     return axios.create({
       baseURL,
       headers: {

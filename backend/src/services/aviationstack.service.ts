@@ -110,6 +110,8 @@ class AviationstackService {
   private readonly API_KEY = config.aviationStack.apiKey;
   // Note: AviationStack free tier only supports HTTP. HTTPS requires paid subscription.
   // The API key is sent as query parameter (required by AviationStack API design).
+  // SECURITY: Using HTTPS by default. If changed to HTTP for free tier, the API key
+  // will be transmitted in the clear. Prefer HTTPS (paid tier) for production use.
   private readonly BASE_URL = 'https://api.aviationstack.com/v1';
   private readonly CACHE_MINUTES = 15; // Cache flight data for 15 minutes
 

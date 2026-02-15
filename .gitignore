@@ -48,6 +48,15 @@ coverage/
 tmp/
 temp/
 
+# Certificates and keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Production environment files
+.env.*.production
+
 # AI/Agent configuration
 .agents/
 .gemini/
