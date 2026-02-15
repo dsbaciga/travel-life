@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { Location } from "../types/location";
 import type { ImmichAsset, ImmichAlbum } from "../types/immich";
 import photoService from "../services/photo.service";
 import immichService from "../services/immich.service";
@@ -13,7 +12,6 @@ import { parseDuration } from "../utils/duration";
 
 interface PhotoUploadProps {
   tripId: number;
-  locations: Location[];
   onPhotoUploaded: () => void;
   tripStartDate?: string;
   tripEndDate?: string;
@@ -374,7 +372,7 @@ export default function PhotoUpload({
         await photoService.uploadPhoto(file, {
           tripId,
           caption: selectedFiles.length === 1 ? caption : undefined,
-        });
+        }, { signal: controller.signal });
 
         if (!isMountedRef.current) return;
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);

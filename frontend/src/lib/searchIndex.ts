@@ -372,6 +372,9 @@ export function highlightMatches(
   query: string | null | undefined,
   tag: string = 'mark'
 ): string {
+  // Validate tag to prevent HTML injection via the tag parameter
+  const safeTag = /^[a-z][a-z0-9]*$/i.test(tag) ? tag : 'mark';
+
   if (!text || !query) return escapeHtml(text || '');
 
   const lowerText = text.toLowerCase();
@@ -404,7 +407,7 @@ export function highlightMatches(
 
   for (const pos of positions) {
     result += escapeHtml(text.substring(lastEnd, pos.start));
-    result += `<${tag}>${escapeHtml(text.substring(pos.start, pos.end))}</${tag}>`;
+    result += `<${safeTag}>${escapeHtml(text.substring(pos.start, pos.end))}</${safeTag}>`;
     lastEnd = pos.end;
   }
   result += escapeHtml(text.substring(lastEnd));

@@ -172,26 +172,28 @@ export default function Modal({
     };
   }, [isOpen, focusFirstInput]);
 
-  // Restore focus to the trigger element when modal closes or unmounts
+  // Restore focus to the trigger element when modal closes
   const prevIsOpenRef = useRef(isOpen);
   useEffect(() => {
     // Detect transition from open -> closed
     if (prevIsOpenRef.current && !isOpen) {
-      // Use setTimeout to ensure focus restoration happens after DOM updates
       const el = triggerElementRef.current;
       if (el && typeof el.focus === 'function') {
         setTimeout(() => el.focus(), 0);
       }
     }
     prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
 
-    // Also restore focus if the component unmounts while open
+  // Restore focus on unmount (empty deps = only runs cleanup on unmount)
+  useEffect(() => {
     return () => {
-      if (isOpen && triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
-        triggerElementRef.current.focus();
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        el.focus();
       }
     };
-  }, [isOpen]);
+  }, []);
 
   // Handle keyboard events, body scroll lock
   useEffect(() => {
@@ -337,13 +339,17 @@ Modal.Simple = function SimpleModal({
       }
     }
     prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
 
+  // Restore focus on unmount (empty deps = only runs cleanup on unmount)
+  useEffect(() => {
     return () => {
-      if (isOpen && triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
-        triggerElementRef.current.focus();
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        el.focus();
       }
     };
-  }, [isOpen]);
+  }, []);
 
   // Handle keyboard events and body scroll lock
   useEffect(() => {

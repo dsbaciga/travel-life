@@ -13,7 +13,7 @@ import type {
 } from '../types/photo';
 
 class PhotoService {
-  async uploadPhoto(file: File, data: UploadPhotoInput): Promise<Photo> {
+  async uploadPhoto(file: File, data: UploadPhotoInput, options?: { signal?: AbortSignal }): Promise<Photo> {
     const formData = new FormData();
     formData.append('photo', file);
     formData.append('tripId', data.tripId.toString());
@@ -34,6 +34,7 @@ class PhotoService {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      signal: options?.signal,
     });
     return response.data;
   }

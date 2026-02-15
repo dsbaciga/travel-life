@@ -13,12 +13,19 @@ echo "Waiting for database to be ready..."
 DB_HOST="db"
 DB_PORT="5432"
 
+DB_USER=""
+DB_PASSWORD=""
+DB_NAME=""
+
 if [ -n "$DATABASE_URL" ]; then
-  # Very basic extraction of host and port from postgresql://user:pass@host:port/db
-  # Use printf to avoid leaking DATABASE_URL in shell process listings
+  # Extract connection components from postgresql://user:pass@host:port/db
+  # This avoids passing the full URL as a command argument (visible in /proc)
   EXTRACTED_HOST=$(printf '%s' "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' -e 's|:.*||')
   EXTRACTED_PORT=$(printf '%s' "$DATABASE_URL" | sed -e 's|.*@||' -e 's|/.*||' | grep ":" | cut -d: -f2)
-  
+  DB_USER=$(printf '%s' "$DATABASE_URL" | sed -e 's|postgresql://||' -e 's|:.*||')
+  DB_PASSWORD=$(printf '%s' "$DATABASE_URL" | sed -e 's|postgresql://[^:]*:||' -e 's|@.*||')
+  DB_NAME=$(printf '%s' "$DATABASE_URL" | sed -e 's|.*@[^/]*/||' -e 's|?.*||')
+
   if [ -n "$EXTRACTED_HOST" ]; then DB_HOST="$EXTRACTED_HOST"; fi
   if [ -n "$EXTRACTED_PORT" ]; then DB_PORT="$EXTRACTED_PORT"; fi
 fi
@@ -56,7 +63,8 @@ fi
 # Check if PostGIS extension is installed using psql
 echo "Checking for PostGIS extension..."
 if [ -n "$DATABASE_URL" ]; then
-  psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS postgis;" > /dev/null 2>&1 || true
+  # Use PGPASSWORD env var instead of passing full URL in command args (visible in /proc)
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "CREATE EXTENSION IF NOT EXISTS postgis;" > /dev/null 2>&1 || true
 else
   echo "⚠ DATABASE_URL is not set. Cannot check PostGIS extension."
 fi
@@ -86,11 +94,15 @@ if [ -d "$MANUAL_MIGRATIONS_DIR" ]; then
       migration_name=$(basename "$migration_file")
       echo "Running manual migration: $migration_name"
       if [ -n "$DATABASE_URL" ]; then
-        # Redirect psql output to suppress connection strings from appearing in logs
-        if psql "$DATABASE_URL" -f "$migration_file" > /dev/null 2>&1; then
+        # Use PGPASSWORD env var to avoid leaking credentials in process listings
+        MIGRATION_OUTPUT=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$migration_file" 2>&1)
+        MIGRATION_EXIT=$?
+        if [ $MIGRATION_EXIT -eq 0 ]; then
           echo "  ✓ $migration_name completed"
         else
           echo "  ⚠ $migration_name had issues (may already be applied)"
+          # Show error details (filter out lines containing the connection string)
+          echo "$MIGRATION_OUTPUT" | grep -iv "postgresql://" | head -5 || true
         fi
       else
         echo "  ⚠ DATABASE_URL is not set. Skipping manual migration: $migration_name"

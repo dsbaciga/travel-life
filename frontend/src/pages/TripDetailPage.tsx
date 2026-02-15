@@ -1515,7 +1515,6 @@ export default function TripDetailPage() {
             {/* Upload Interface - Full Width */}
             <PhotoUpload
               tripId={trip.id}
-              locations={locations}
               onPhotoUploaded={async () => {
                 await queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
                 // Refresh album counts (totalPhotosCount, unsortedPhotosCount)

@@ -18,7 +18,7 @@
  * ```
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import searchService, { type SearchResult } from '../services/search.service';
@@ -39,6 +39,8 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const queryRef = useRef(query);
+  queryRef.current = query;
   const navigate = useNavigate();
 
   // Load recent searches from localStorage
@@ -113,14 +115,14 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
     }
   };
 
-  // Handle result selection
+  // Handle result selection - uses ref for query to keep stable identity
   const handleSelectResult = useCallback((result: SearchResult) => {
-    saveRecentSearch(query);
+    saveRecentSearch(queryRef.current);
     navigate(result.url);
     setShowResults(false);
     setQuery('');
     onClose?.();
-  }, [query, navigate, saveRecentSearch, onClose]);
+  }, [navigate, saveRecentSearch, onClose]);
 
   // Handle recent search selection
   const handleRecentSearch = (searchQuery: string) => {
@@ -202,57 +204,54 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
     }
   }, []);
 
-  // Memoize the rendered search results to avoid re-computing on every render
-  const renderedResults = useMemo(() => {
-    if (!query || results.length === 0) return null;
-
-    return (
-      <div className="p-2">
-        {results.map((result, index) => (
-          <button
-            key={`${result.type}-${result.id}`}
-            onClick={() => handleSelectResult(result)}
-            className={`
-              w-full text-left px-3 py-3 rounded-lg transition-all duration-150
+  // Render search results inline - the list is small enough that memoization
+  // adds complexity without meaningful benefit
+  const renderedResults = query && results.length > 0 ? (
+    <div className="p-2">
+      {results.map((result, index) => (
+        <button
+          key={`${result.type}-${result.id}`}
+          onClick={() => handleSelectResult(result)}
+          className={`
+            w-full text-left px-3 py-3 rounded-lg transition-all duration-150
+            ${
+              index === selectedIndex
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+            }
+          `}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`
+              flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
               ${
                 index === selectedIndex
-                  ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-sky'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               }
             `}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className={`
-                flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
-                ${
-                  index === selectedIndex
-                    ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-sky'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                }
-              `}
-              >
-                {getTypeIcon(result.type)}
+            >
+              {getTypeIcon(result.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-gray-900 dark:text-white truncate">
+                {result.title}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 dark:text-white truncate">
-                  {result.title}
+              {result.subtitle && (
+                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  {result.subtitle}
                 </div>
-                {result.subtitle && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                    {result.subtitle}
-                  </div>
-                )}
-                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 capitalize">
-                  {result.type}
-                </div>
+              )}
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 capitalize">
+                {result.type}
               </div>
             </div>
-          </button>
-        ))}
-      </div>
-    );
-  }, [query, results, selectedIndex, getTypeIcon, handleSelectResult]);
+          </div>
+        </button>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div className={`relative ${compact ? 'w-full max-w-md' : 'w-full max-w-2xl mx-auto'}`}>
