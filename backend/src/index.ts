@@ -38,36 +38,79 @@ import userInvitationRoutes from './routes/userInvitation.routes';
 import tripSeriesRoutes from './routes/tripSeries.routes';
 
 // Read version from package.json
-const packageJson = JSON.parse(
-  readFileSync(join(__dirname, '../package.json'), 'utf-8')
-);
+let packageJson: { version: string; name: string };
+try {
+  packageJson = JSON.parse(
+    readFileSync(join(__dirname, '../package.json'), 'utf-8')
+  );
+} catch {
+  logger.warn('Could not read package.json, using fallback version');
+  packageJson = { version: 'unknown', name: 'travel-life-backend' };
+}
 
 const app: Application = express();
 
 // Security middleware
 const isProduction = config.nodeEnv === 'production';
 
-// Build CSP img-src directive - only include localhost in development
-const imgSrcDirective = isProduction
-  ? ["'self'", 'data:']
-  : ["'self'", 'data:', 'http://localhost:5000'];
+// Build CSP directives - tighter in production, relaxed in development
+// Note: In Docker, Nginx serves the frontend and these headers only apply to API
+// responses. They are kept correct for completeness and non-Docker deployments.
+const cspDirectives = {
+  ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+  'img-src': isProduction
+    ? ["'self'", 'data:', 'blob:', 'https://*.tile.openstreetmap.org', 'https://*.basemaps.cartocdn.com']
+    : ["'self'", 'data:', 'blob:', 'http://localhost:5000', 'https://*.tile.openstreetmap.org', 'https://*.basemaps.cartocdn.com'],
+  'script-src': ["'self'"],
+  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+  'font-src': ["'self'", 'https://fonts.gstatic.com'],
+  'connect-src': isProduction
+    ? ["'self'", 'https://nominatim.openstreetmap.org']
+    : ["'self'", 'http://localhost:5000', 'ws://localhost:5173', 'https://nominatim.openstreetmap.org'],
+  'worker-src': ["'self'", 'blob:'],
+  'frame-ancestors': ["'none'"],
+};
 
 app.use(
   helmet({
     contentSecurityPolicy: {
-      directives: {
-        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        'img-src': imgSrcDirective,
-      },
+      directives: cspDirectives,
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
 // CORS configuration - use CORS_ORIGIN env var in production
+// Validate each origin is a well-formed URL (http/https, no trailing slash, no path)
+function validateCorsOrigins(origins: string[]): string[] {
+  return origins
+    .map((origin) => origin.replace(/\/+$/, '')) // Auto-trim trailing slashes
+    .filter((origin) => {
+      // Must start with http:// or https://
+      if (!/^https?:\/\//i.test(origin)) {
+        logger.warn(`Invalid CORS origin ignored (must start with http:// or https://): ${origin}`);
+        return false;
+      }
+      try {
+        const parsed = new URL(origin);
+        // Must not have a path (other than /)
+        if (parsed.pathname !== '/') {
+          logger.warn(`Invalid CORS origin ignored (must not contain a path): ${origin}`);
+          return false;
+        }
+        return true;
+      } catch {
+        logger.warn(`Invalid CORS origin ignored (malformed URL): ${origin}`);
+        return false;
+      }
+    });
+}
+
+const rawCorsOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+  : ['http://localhost:3000', 'http://localhost:5173'];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
-    : ['http://localhost:3000', 'http://localhost:5173'],
+  origin: validateCorsOrigins(rawCorsOrigins),
   credentials: true,
   exposedHeaders: ['Set-Cookie'],
 };
@@ -258,6 +301,10 @@ const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
   try {
+    // Stop token blacklist cleanup interval to allow clean exit
+    const { stopCleanupInterval } = await import('./services/tokenBlacklist.service');
+    stopCleanupInterval();
+
     // Close database connection
     await prisma.$disconnect();
     logger.info('Database connection closed.');

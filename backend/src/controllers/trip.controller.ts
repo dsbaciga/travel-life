@@ -70,7 +70,7 @@ export const tripController = {
 
     logger.info(`Trip deleted: ${tripId} by user ${userId}`);
 
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Trip deleted successfully' });
   }),
 
   updateCoverPhoto: asyncHandler(async (req: Request, res: Response) => {

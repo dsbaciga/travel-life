@@ -347,6 +347,7 @@ DataFreshnessIndicator.Detailed = function DetailedFreshnessIndicator({
             }
           `}
           title={isOnline ? 'Refresh data' : 'Cannot refresh while offline'}
+          aria-label={isOnline ? 'Refresh data' : 'Cannot refresh while offline'}
         >
           <svg
             className="w-4 h-4"

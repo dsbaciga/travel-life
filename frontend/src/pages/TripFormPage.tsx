@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useBlocker } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
 import userService from '../services/user.service';
@@ -9,6 +9,11 @@ import type { TravelPartnerSettings, TripTypeCategory } from '../types/user';
 import toast from 'react-hot-toast';
 import { useConfetti } from '../hooks/useConfetti';
 import MarkdownEditor from '../components/MarkdownEditor';
+
+interface FormErrors {
+  title?: string;
+  endDate?: string;
+}
 
 export default function TripFormPage() {
   const { id } = useParams();
@@ -31,6 +36,43 @@ export default function TripFormPage() {
   const [tripTypeEmoji, setTripTypeEmoji] = useState<string>('');
   const [userTripTypes, setUserTripTypes] = useState<TripTypeCategory[]>([]);
   const [travelPartnerSettings, setTravelPartnerSettings] = useState<TravelPartnerSettings | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // Track initial form values for dirty state detection
+  const initialValuesRef = useRef({ title: '', description: '', startDate: '', endDate: '', timezone: '', status: TripStatus.PLANNING as string, privacyLevel: PrivacyLevel.PRIVATE as string, tripType: '', excludeFromAutoShare: false });
+  const formSavedRef = useRef(false);
+
+  const isDirty = useCallback(() => {
+    const initial = initialValuesRef.current;
+    return (
+      title !== initial.title ||
+      description !== initial.description ||
+      startDate !== initial.startDate ||
+      endDate !== initial.endDate ||
+      timezone !== initial.timezone ||
+      status !== initial.status ||
+      privacyLevel !== initial.privacyLevel ||
+      tripType !== initial.tripType ||
+      excludeFromAutoShare !== initial.excludeFromAutoShare
+    );
+  }, [title, description, startDate, endDate, timezone, status, privacyLevel, tripType, excludeFromAutoShare]);
+
+  // Warn before browser navigation (refresh, close tab) when form is dirty
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty() && !formSavedRef.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // Block in-app navigation (React Router) when form is dirty
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty() && !formSavedRef.current && currentLocation.pathname !== nextLocation.pathname
+  );
 
   const loadUserTripTypes = useCallback(async () => {
     try {
@@ -61,17 +103,35 @@ export default function TripFormPage() {
         return dateStr.split('T')[0];
       };
 
+      const loadedStartDate = extractDate(trip.startDate);
+      const loadedEndDate = extractDate(trip.endDate);
+      const loadedTimezone = trip.timezone || '';
+      const loadedTripType = trip.tripType || '';
+
       setTitle(trip.title);
       setDescription(trip.description || '');
-      setStartDate(extractDate(trip.startDate));
-      setEndDate(extractDate(trip.endDate));
-      setTimezone(trip.timezone || '');
+      setStartDate(loadedStartDate);
+      setEndDate(loadedEndDate);
+      setTimezone(loadedTimezone);
       setStatus(trip.status);
       setPrivacyLevel(trip.privacyLevel);
       setExcludeFromAutoShare(trip.excludeFromAutoShare || false);
-      setTripType(trip.tripType || '');
+      setTripType(loadedTripType);
       setTripTypeEmoji(trip.tripTypeEmoji || '');
       originalStatusRef.current = trip.status;
+
+      // Store initial values for dirty tracking
+      initialValuesRef.current = {
+        title: trip.title,
+        description: trip.description || '',
+        startDate: loadedStartDate,
+        endDate: loadedEndDate,
+        timezone: loadedTimezone,
+        status: trip.status,
+        privacyLevel: trip.privacyLevel,
+        tripType: loadedTripType,
+        excludeFromAutoShare: trip.excludeFromAutoShare || false,
+      };
     } catch {
       toast.error('Failed to load trip');
       navigate('/trips');
@@ -90,11 +150,23 @@ export default function TripFormPage() {
     loadUserTripTypes();
   }, [id, isEdit, loadTrip, loadTravelPartnerSettings, loadUserTripTypes]);
 
+  const validate = (): FormErrors => {
+    const newErrors: FormErrors = {};
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (startDate && endDate && endDate < startDate) {
+      newErrors.endDate = 'End date must be on or after start date';
+    }
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim()) {
-      toast.error('Title is required');
+    const validationErrors = validate();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
       return;
     }
 
@@ -122,6 +194,8 @@ export default function TripFormPage() {
         tripTypeEmoji: tripTypeEmoji || null,
       };
 
+      formSavedRef.current = true;
+
       if (isEdit && id) {
         await tripService.updateTrip(parseInt(id), data);
         toast.success('Trip updated successfully');
@@ -141,6 +215,7 @@ export default function TripFormPage() {
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
       navigate('/trips');
     } catch (err: unknown) {
+      formSavedRef.current = false;
       const error = err as import('axios').AxiosError<{ message?: string }>;
       toast.error(error.response?.data?.message || 'Failed to save trip');
     } finally {
@@ -148,15 +223,65 @@ export default function TripFormPage() {
     }
   };
 
+  // Clear inline errors as user fixes the fields
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (errors.title && value.trim()) {
+      setErrors(prev => ({ ...prev, title: undefined }));
+    }
+  };
+
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    if (errors.endDate) {
+      setErrors(prev => ({ ...prev, endDate: undefined }));
+    }
+  };
+
+  const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    if (errors.endDate) {
+      setErrors(prev => ({ ...prev, endDate: undefined }));
+    }
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Unsaved changes confirmation dialog for in-app navigation */}
+      {blocker.state === 'blocked' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved Changes</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              You have unsaved changes. Are you sure you want to leave?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => blocker.reset?.()}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Stay
+              </button>
+              <button
+                type="button"
+                onClick={() => blocker.proceed?.()}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => navigate(-1)}
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
-            ← Back
+            &larr; Back
           </button>
           {isEdit && id && (
             <button
@@ -178,7 +303,7 @@ export default function TripFormPage() {
             {isEdit ? 'Edit Trip' : 'New Trip'}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
               <label htmlFor="title" className="label">
                 Title *
@@ -187,11 +312,17 @@ export default function TripFormPage() {
                 type="text"
                 id="title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="input"
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className={`input ${errors.title ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
                 placeholder="My Amazing Trip"
-                required
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? 'title-error' : undefined}
               />
+              {errors.title && (
+                <p id="title-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                  {errors.title}
+                </p>
+              )}
             </div>
 
             <div>
@@ -213,7 +344,7 @@ export default function TripFormPage() {
                   type="date"
                   id="startDate"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
                   className="input"
                 />
               </div>
@@ -226,9 +357,16 @@ export default function TripFormPage() {
                   type="date"
                   id="endDate"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="input"
+                  onChange={(e) => handleEndDateChange(e.target.value)}
+                  className={`input ${errors.endDate ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
+                  aria-invalid={!!errors.endDate}
+                  aria-describedby={errors.endDate ? 'endDate-error' : undefined}
                 />
+                {errors.endDate && (
+                  <p id="endDate-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+                    {errors.endDate}
+                  </p>
+                )}
               </div>
             </div>
 

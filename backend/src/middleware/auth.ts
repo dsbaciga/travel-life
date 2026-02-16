@@ -30,6 +30,9 @@ function getCachedPasswordVersion(userId: number): number | undefined {
     passwordVersionCache.delete(userId);
     return undefined;
   }
+  // LRU: Move accessed entry to the end (most recently used) by re-inserting
+  passwordVersionCache.delete(userId);
+  passwordVersionCache.set(userId, entry);
   return entry.version;
 }
 
@@ -40,10 +43,10 @@ function setCachedPasswordVersion(userId: number, version: number): void {
     for (const [key, entry] of passwordVersionCache) {
       if (now > entry.expiresAt) passwordVersionCache.delete(key);
     }
-    // If still at capacity after purging expired, drop first-inserted entry (FIFO, not LRU)
+    // If still at capacity after purging expired, drop least recently used entry (LRU)
     if (passwordVersionCache.size >= MAX_CACHE_SIZE) {
-      const firstKey = passwordVersionCache.keys().next().value;
-      if (firstKey !== undefined) passwordVersionCache.delete(firstKey);
+      const lruKey = passwordVersionCache.keys().next().value;
+      if (lruKey !== undefined) passwordVersionCache.delete(lruKey);
     }
   }
   passwordVersionCache.set(userId, { version, expiresAt: Date.now() + CACHE_TTL_MS });

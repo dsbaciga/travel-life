@@ -347,25 +347,41 @@ export function extractSnippet(
 }
 
 /**
+ * Escapes HTML special characters to prevent XSS when using dangerouslySetInnerHTML.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Highlights matched text in a snippet using HTML tags.
+ * All text is HTML-escaped before insertion to prevent XSS.
  *
  * @param text - Text to highlight in
  * @param query - Query to highlight
  * @param tag - HTML tag to use for highlighting (default: 'mark')
- * @returns Text with highlighted matches
+ * @returns HTML-escaped text with highlighted matches
  */
 export function highlightMatches(
   text: string | null | undefined,
   query: string | null | undefined,
   tag: string = 'mark'
 ): string {
-  if (!text || !query) return text || '';
+  // Validate tag to prevent HTML injection via the tag parameter
+  const safeTag = /^[a-z][a-z0-9]*$/i.test(tag) ? tag : 'mark';
+
+  if (!text || !query) return escapeHtml(text || '');
 
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase().trim();
 
   if (!lowerText.includes(lowerQuery)) {
-    return text;
+    return escapeHtml(text);
   }
 
   // Find all match positions
@@ -383,18 +399,18 @@ export function highlightMatches(
     searchStart = index + 1;
   }
 
-  if (positions.length === 0) return text;
+  if (positions.length === 0) return escapeHtml(text);
 
-  // Build result with highlights
+  // Build result with highlights (escape non-matched text, escape matched text inside tags)
   let result = '';
   let lastEnd = 0;
 
   for (const pos of positions) {
-    result += text.substring(lastEnd, pos.start);
-    result += `<${tag}>${text.substring(pos.start, pos.end)}</${tag}>`;
+    result += escapeHtml(text.substring(lastEnd, pos.start));
+    result += `<${safeTag}>${escapeHtml(text.substring(pos.start, pos.end))}</${safeTag}>`;
     lastEnd = pos.end;
   }
-  result += text.substring(lastEnd);
+  result += escapeHtml(text.substring(lastEnd));
 
   return result;
 }

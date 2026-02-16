@@ -294,6 +294,7 @@ model Photo {
   albumCoverPhoto        PhotoAlbum[]            @relation("AlbumCoverPhoto")
   albumAssignments       PhotoAlbumAssignment[]
 
+  @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
   @@index([tripId])
   @@index([takenAt])
@@ -555,7 +556,7 @@ model RouteCache {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  @@index([fromLat, fromLon, toLat, toLon, profile])
+  @@unique([fromLat, fromLon, toLat, toLon, profile], name: "route_cache_coords_profile_unique")
   @@map("route_cache")
 }
 

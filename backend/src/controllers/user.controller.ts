@@ -4,6 +4,7 @@ import { updateUserSettingsSchema } from '../types/userSettings.types';
 import { asyncHandler } from '../utils/asyncHandler';
 import { z } from 'zod';
 import { emailService } from '../services/email.service';
+import { validateUrlNotInternal } from '../utils/urlValidation';
 
 const immichSettingsSchema = z.object({
   immichApiUrl: z.string().url().optional().nullable(),
@@ -68,9 +69,10 @@ export const userController = {
     const userId = req.user!.userId;
     const data = immichSettingsSchema.parse(req.body);
 
-    // Note: No SSRF validation for Immich URLs. This is a self-hosted app where
-    // Immich typically runs on the same LAN (private IPs like 192.168.x.x).
-    // Only authenticated users can set their own Immich URL.
+    // SSRF validation: ensure the Immich URL doesn't point to internal/private IPs
+    if (data.immichApiUrl) {
+      await validateUrlNotInternal(data.immichApiUrl);
+    }
 
     const user = await userService.updateImmichSettings(userId, data);
     res.json({

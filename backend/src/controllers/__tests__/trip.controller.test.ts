@@ -442,7 +442,7 @@ describe('TripController', () => {
   // deleteTrip
   // =========================================================================
   describe('deleteTrip', () => {
-    it('should parse id, call tripService.deleteTrip, and return 204', async () => {
+    it('should parse id, call tripService.deleteTrip, and return 200', async () => {
       mockTripService.deleteTrip.mockResolvedValue(undefined);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -453,8 +453,8 @@ describe('TripController', () => {
       await flushPromises();
 
       expect(mockTripService.deleteTrip).toHaveBeenCalledWith(userId, 1);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
       expect(next).not.toHaveBeenCalled();
     });
 

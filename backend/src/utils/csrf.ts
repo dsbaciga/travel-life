@@ -55,11 +55,25 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
     return next();
   }
 
+  // Normalize the path to prevent bypass via URL encoding (e.g., %2Fauth%2Flogin)
+  // decodeURIComponent handles percent-encoded characters, then we normalize double slashes
+  let normalizedPath: string;
+  try {
+    normalizedPath = decodeURIComponent(req.path).replace(/\/+/g, '/');
+  } catch {
+    // If decoding fails (e.g., malformed percent encoding), reject the request
+    res.status(400).json({
+      status: 'error',
+      message: 'Malformed request path',
+    });
+    return;
+  }
+
   // Skip CSRF validation for auth routes (these bootstrap the CSRF token)
   // Login, register, refresh, and silent-refresh set the CSRF cookie
   // Use exact path matching to prevent bypass via crafted path prefixes
   const AUTH_CSRF_EXEMPT = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/silent-refresh'];
-  if (AUTH_CSRF_EXEMPT.includes(req.path)) {
+  if (AUTH_CSRF_EXEMPT.includes(normalizedPath)) {
     return next();
   }
 
@@ -70,8 +84,8 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   // 2. Rate limiting (20 requests per 15 minutes)
   // 3. CORS configuration (restricts origins)
   // Use exact path matching to prevent bypass attacks (e.g., /user-invitations/accept-malicious)
-  if (req.path === '/user-invitations/accept' ||
-      /^\/user-invitations\/decline\/[a-f0-9]{64}$/.test(req.path)) {
+  if (normalizedPath === '/user-invitations/accept' ||
+      /^\/user-invitations\/decline\/[a-f0-9]{64}$/.test(normalizedPath)) {
     return next();
   }
 

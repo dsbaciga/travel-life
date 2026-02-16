@@ -4,9 +4,6 @@ import { AppError } from '../utils/errors';
 // Type alias for Prisma decimal fields
 type DecimalValue = number | string | { toNumber(): number };
 
-// Use require for Prisma.raw to avoid type import issues
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Prisma } = require('@prisma/client');
 import {
   PhotoSource,
   MediaType,
@@ -135,19 +132,29 @@ async function getVideoDuration(videoPath: string): Promise<number | null> {
   });
 }
 
-// Generate thumbnail from video file using ffmpeg
+// Generate thumbnail from video file using ffmpeg (with 30s timeout)
+const FFMPEG_TIMEOUT_MS = 30_000;
+
 async function generateVideoThumbnail(videoPath: string, thumbnailPath: string): Promise<boolean> {
   return new Promise((resolve) => {
-    ffmpeg(videoPath)
+    let settled = false;
+    const settle = (value: boolean) => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+    };
+
+    const command = ffmpeg(videoPath)
       .on('end', () => {
         if (process.env.NODE_ENV === 'development') {
           console.log('[PhotoService] Video thumbnail generated successfully');
         }
-        resolve(true);
+        settle(true);
       })
       .on('error', (err: Error) => {
         console.error('[PhotoService] Failed to generate video thumbnail:', err.message);
-        resolve(false);
+        settle(false);
       })
       .screenshots({
         count: 1,
@@ -156,6 +163,15 @@ async function generateVideoThumbnail(videoPath: string, thumbnailPath: string):
         size: '400x?', // 400px width (matches image thumbnail width), auto height maintaining aspect ratio
         timestamps: ['10%'], // Take screenshot at 10% of video duration
       });
+
+    // Kill ffmpeg if it takes too long
+    setTimeout(() => {
+      if (!settled) {
+        console.error('[PhotoService] Video thumbnail generation timed out after 30s');
+        try { command.kill('SIGKILL'); } catch { /* ignore */ }
+        settle(false);
+      }
+    }, FFMPEG_TIMEOUT_MS);
   });
 }
 
@@ -307,20 +323,31 @@ class PhotoService {
         }
       }
 
-      const photo = await prisma.photo.create({
-        data: {
-          tripId: data.tripId,
-          source: PhotoSource.LOCAL,
-          mediaType,
-          localPath: localPathUrl,
-          thumbnailPath: thumbnailPathUrl,
-          duration: videoDuration,
-          caption: data.caption || null,
-          takenAt,
-          latitude,
-          longitude,
-        },
-      });
+      let photo;
+      try {
+        photo = await prisma.photo.create({
+          data: {
+            tripId: data.tripId,
+            source: PhotoSource.LOCAL,
+            mediaType,
+            localPath: localPathUrl,
+            thumbnailPath: thumbnailPathUrl,
+            duration: videoDuration,
+            caption: data.caption || null,
+            takenAt,
+            latitude,
+            longitude,
+          },
+        });
+      } catch (dbError) {
+        // DB insert failed after file was already moved - clean up the orphaned files
+        try { await fs.unlink(filepath); } catch { /* ignore cleanup errors */ }
+        if (thumbnailPathUrl) {
+          const thumbFullPath = path.join(process.cwd(), thumbnailPathUrl);
+          try { await fs.unlink(thumbFullPath); } catch { /* ignore cleanup errors */ }
+        }
+        throw dbError;
+      }
 
       return convertDecimals(photo);
     } catch (error) {
@@ -394,20 +421,29 @@ class PhotoService {
       }
     }
 
-    const photo = await prisma.photo.create({
-      data: {
-        tripId: data.tripId,
-        source: PhotoSource.IMMICH,
-        mediaType,
-        immichAssetId: data.immichAssetId,
-        thumbnailPath: `/api/immich/assets/${data.immichAssetId}/thumbnail`,
-        duration,
-        caption: data.caption || null,
-        takenAt: data.takenAt ? new Date(data.takenAt) : null,
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
-      },
-    });
+    let photo;
+    try {
+      photo = await prisma.photo.create({
+        data: {
+          tripId: data.tripId,
+          source: PhotoSource.IMMICH,
+          mediaType,
+          immichAssetId: data.immichAssetId,
+          thumbnailPath: `/api/immich/assets/${data.immichAssetId}/thumbnail`,
+          duration,
+          caption: data.caption || null,
+          takenAt: data.takenAt ? new Date(data.takenAt) : null,
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+        },
+      });
+    } catch (error) {
+      // Handle unique constraint violation (tripId + immichAssetId)
+      if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002') {
+        throw new AppError('This Immich photo is already linked to this trip', 409);
+      }
+      throw error;
+    }
 
     return convertDecimals(photo);
   }
@@ -723,16 +759,16 @@ class PhotoService {
 
     // Use raw SQL for efficient date grouping with timezone conversion
     // Convert from UTC (stored) to the trip's timezone for grouping
-    // Note: Using Prisma.raw for timezone since AT TIME ZONE requires a literal string
-    // The timezone is already validated above, so it's safe to use Prisma.raw
+    // Timezone is passed as a parameterized value (AT TIME ZONE accepts text params)
     const groupings = await prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
       SELECT
-        TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}, 'YYYY-MM-DD') as date,
+        TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${tz}, 'YYYY-MM-DD') as date,
         COUNT(*) as count
       FROM photos
       WHERE trip_id = ${tripId} AND "taken_at" IS NOT NULL
-      GROUP BY TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}, 'YYYY-MM-DD')
+      GROUP BY TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${tz}, 'YYYY-MM-DD')
       ORDER BY date ASC
+      LIMIT 366
     `;
 
     // Get total count of photos with dates
@@ -791,8 +827,7 @@ class PhotoService {
 
     // Use raw SQL to query photos for the specific date in the given timezone
     // This ensures we get the same photos that were grouped under this date
-    // Note: Using Prisma.raw for timezone since AT TIME ZONE requires a literal string
-    // The timezone is already validated above, so it's safe to use Prisma.raw
+    // Timezone is passed as a parameterized value (AT TIME ZONE accepts text params)
     const photos = await prisma.$queryRaw<RawPhotoResult[]>`
       SELECT p.*,
         json_agg(
@@ -805,7 +840,7 @@ class PhotoService {
       LEFT JOIN photo_albums a ON paa.album_id = a.id
       WHERE p.trip_id = ${tripId}
         AND p."taken_at" IS NOT NULL
-        AND TO_CHAR(p."taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${Prisma.raw(`'${tz}'`)}, 'YYYY-MM-DD') = ${date}
+        AND TO_CHAR(p."taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${tz}, 'YYYY-MM-DD') = ${date}
       GROUP BY p.id
       ORDER BY p."taken_at" ASC
     `;
@@ -875,11 +910,12 @@ class PhotoService {
       }
     }
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(verifiedPhoto.tripId, 'PHOTO', photoId);
-
-    await prisma.photo.delete({
-      where: { id: photoId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(verifiedPhoto.tripId, 'PHOTO', photoId, tx);
+      await tx.photo.delete({
+        where: { id: photoId },
+      });
     });
 
     return { success: true };

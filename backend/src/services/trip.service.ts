@@ -668,6 +668,7 @@ export class TripService {
         addToPlacesVisited: false,
         tripType: sourceTrip.tripType,
         tripTypeEmoji: sourceTrip.tripTypeEmoji,
+        // Don't copy seriesId/seriesOrder - duplicated trip should be independent
       },
     });
 
@@ -680,14 +681,16 @@ export class TripService {
     const journalIdMap = new Map<number, number>();
     const albumIdMap = new Map<number, number>();
 
-    // Copy locations (with parent-child hierarchy) - requires sequential for parent references
+    // Copy locations (with parent-child hierarchy)
+    // Uses sequential create to get reliable ID mapping (avoids composite key collisions
+    // when multiple locations share the same name + coordinates)
     if (data.copyEntities?.locations && sourceTrip.locations && Array.isArray(sourceTrip.locations)) {
       const locations = sourceTrip.locations as SourceLocation[];
-      // First pass: bulk insert locations without parent references
+      // First pass: locations without parent references
       const locationsWithoutParent = locations.filter((loc) => !loc.parentId);
-      if (locationsWithoutParent.length > 0) {
-        await tx.location.createMany({
-          data: locationsWithoutParent.map((location) => ({
+      for (const location of locationsWithoutParent) {
+        const newLocation = await tx.location.create({
+          data: {
             tripId: newTrip.id,
             name: location.name,
             address: location.address,
@@ -697,30 +700,12 @@ export class TripService {
             visitDatetime: null,
             visitDurationMinutes: location.visitDurationMinutes,
             notes: location.notes,
-          })) as any,
+          } as any,
         });
-        // Query back to build ID map using composite key for uniqueness
-        // Note: Using name + coordinates as composite key to handle duplicate names
-        // (e.g., multiple locations named "Hotel Lobby" at different coordinates)
-        const newLocations = await tx.location.findMany({
-          where: { tripId: newTrip.id },
-          select: { id: true, name: true, latitude: true, longitude: true },
-        });
-        const buildLocationKey = (name: string, lat: DecimalValue | null, lng: DecimalValue | null) =>
-          `${name}|${lat ?? ''}|${lng ?? ''}`;
-        const newLocationsByKey = new Map<string, number>(
-          newLocations.map((l): [string, number] => [
-            buildLocationKey(l.name, l.latitude, l.longitude), l.id
-          ])
-        );
-        for (const location of locationsWithoutParent) {
-          const key = buildLocationKey(location.name, location.latitude, location.longitude);
-          const newId = newLocationsByKey.get(key);
-          if (newId) locationIdMap.set(location.id, newId);
-        }
+        locationIdMap.set(location.id, newLocation.id);
       }
 
-      // Second pass: child locations need sequential creation due to parent FK
+      // Second pass: child locations need parent FK resolved from the map
       const locationsWithParent = locations.filter((loc) => loc.parentId !== null);
       for (const location of locationsWithParent) {
         const newParentId = location.parentId !== null ? locationIdMap.get(location.parentId) : undefined;
@@ -742,12 +727,12 @@ export class TripService {
       }
     }
 
-    // Copy photos using bulk insert
+    // Copy photos sequentially to get deterministic ID mapping
     if (data.copyEntities?.photos && sourceTrip.photos && Array.isArray(sourceTrip.photos)) {
       const photos = sourceTrip.photos as SourcePhoto[];
-      if (photos.length > 0) {
-        await tx.photo.createMany({
-          data: photos.map((photo) => ({
+      for (const photo of photos) {
+        const newPhoto = await tx.photo.create({
+          data: {
             tripId: newTrip.id,
             source: photo.source,
             immichAssetId: photo.immichAssetId,
@@ -757,30 +742,20 @@ export class TripService {
             latitude: photo.latitude,
             longitude: photo.longitude,
             takenAt: photo.takenAt,
-          })) as any,
+          } as any,
         });
-        // Query back and build ID map using localPath/immichAssetId as unique identifiers
-        const newPhotos = await tx.photo.findMany({
-          where: { tripId: newTrip.id },
-          select: { id: true, localPath: true, immichAssetId: true },
-        });
-        for (const oldPhoto of photos) {
-          const newPhoto = newPhotos.find(
-            (p) => p.localPath === oldPhoto.localPath && p.immichAssetId === oldPhoto.immichAssetId
-          );
-          if (newPhoto) photoIdMap.set(oldPhoto.id, newPhoto.id);
-        }
+        photoIdMap.set(photo.id, newPhoto.id);
       }
     }
 
     // Copy activities (with parent-child hierarchy)
     if (data.copyEntities?.activities && sourceTrip.activities && Array.isArray(sourceTrip.activities)) {
       const activities = sourceTrip.activities as SourceActivity[];
-      // First pass: bulk insert activities without parent
+      // First pass: create activities without parent sequentially for deterministic ID mapping
       const activitiesWithoutParent = activities.filter((act) => !act.parentId);
-      if (activitiesWithoutParent.length > 0) {
-        await tx.activity.createMany({
-          data: activitiesWithoutParent.map((activity) => ({
+      for (const activity of activitiesWithoutParent) {
+        const newActivity = await tx.activity.create({
+          data: {
             tripId: newTrip.id,
             name: activity.name,
             description: activity.description,
@@ -795,27 +770,9 @@ export class TripService {
             bookingReference: activity.bookingReference,
             notes: activity.notes,
             manualOrder: activity.manualOrder,
-          })) as any,
+          } as any,
         });
-        // Query back to build ID map using composite key for uniqueness
-        // Note: Using name + cost + manualOrder as composite key to handle duplicate names
-        // (e.g., multiple activities named "Breakfast" at different costs/order)
-        const newActivities = await tx.activity.findMany({
-          where: { tripId: newTrip.id },
-          select: { id: true, name: true, cost: true, manualOrder: true },
-        });
-        const buildActivityKey = (name: string, cost: DecimalValue | null, manualOrder: number | null) =>
-          `${name}|${cost ?? ''}|${manualOrder ?? ''}`;
-        const newActivitiesByKey = new Map<string, number>(
-          newActivities.map((a): [string, number] => [
-            buildActivityKey(a.name, a.cost, a.manualOrder), a.id
-          ])
-        );
-        for (const activity of activitiesWithoutParent) {
-          const key = buildActivityKey(activity.name, activity.cost, activity.manualOrder);
-          const newId = newActivitiesByKey.get(key);
-          if (newId) activityIdMap.set(activity.id, newId);
-        }
+        activityIdMap.set(activity.id, newActivity.id);
       }
 
       // Second pass: child activities need sequential creation due to parent FK

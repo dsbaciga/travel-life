@@ -234,8 +234,8 @@ describe('Tag Controller', () => {
       await flushPromises();
 
       expect(mockDeleteTag).toHaveBeenCalledWith(testUsers.user1.id, 5);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {
@@ -304,7 +304,7 @@ describe('Tag Controller', () => {
   });
 
   describe('unlinkTagFromTrip', () => {
-    it('should unlink a tag from a trip and return 204', async () => {
+    it('should unlink a tag from a trip and return 200', async () => {
       mockUnlinkTagFromTrip.mockResolvedValue(undefined);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -315,8 +315,8 @@ describe('Tag Controller', () => {
       await flushPromises();
 
       expect(mockUnlinkTagFromTrip).toHaveBeenCalledWith(testUsers.user1.id, 10, 5);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {

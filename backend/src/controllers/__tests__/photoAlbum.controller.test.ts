@@ -431,8 +431,8 @@ describe('photoAlbumController', () => {
       await flushPromises();
 
       expect(photoAlbumService.deleteAlbum).toHaveBeenCalledWith(testUsers.user1.id, 1);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {
@@ -498,7 +498,7 @@ describe('photoAlbumController', () => {
   // removePhotoFromAlbum
   // -------------------------------------------------------
   describe('removePhotoFromAlbum', () => {
-    it('should remove a photo from an album and return 204', async () => {
+    it('should remove a photo from an album and return 200', async () => {
       (photoAlbumService.removePhotoFromAlbum as jest.Mock).mockResolvedValue(undefined);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -513,8 +513,8 @@ describe('photoAlbumController', () => {
         1,
         10
       );
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
 
     it('should propagate service errors via next', async () => {

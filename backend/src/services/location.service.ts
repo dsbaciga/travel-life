@@ -3,10 +3,27 @@ import { AppError } from '../middleware/errorHandler';
 import { CreateLocationInput, UpdateLocationInput, CreateLocationCategoryInput, UpdateLocationCategoryInput, BulkDeleteLocationsInput, BulkUpdateLocationsInput } from '../types/location.types';
 import { verifyTripAccessWithPermission, verifyEntityAccessWithPermission, buildConditionalUpdateData, convertDecimals, cleanupEntityLinks } from '../utils/serviceHelpers';
 
+/**
+ * Validate latitude and longitude ranges.
+ * Latitude must be between -90 and 90, longitude between -180 and 180.
+ * Only validates if values are provided (they may be optional).
+ */
+function validateLatLng(latitude?: number | null, longitude?: number | null): void {
+  if (latitude != null && (latitude < -90 || latitude > 90)) {
+    throw new AppError('Latitude must be between -90 and 90', 400);
+  }
+  if (longitude != null && (longitude < -180 || longitude > 180)) {
+    throw new AppError('Longitude must be between -180 and 180', 400);
+  }
+}
+
 export class LocationService {
   async createLocation(userId: number, data: CreateLocationInput) {
     // Verify user has edit permission on the trip
     await verifyTripAccessWithPermission(userId, data.tripId, 'edit');
+
+    // Validate lat/lng ranges if provided
+    validateLatLng(data.latitude, data.longitude);
 
     // If parentId is provided, verify it exists and belongs to the same trip
     if (data.parentId) {
@@ -175,6 +192,9 @@ export class LocationService {
       'edit'
     );
 
+    // Validate lat/lng ranges if provided
+    validateLatLng(data.latitude, data.longitude);
+
     // If updating parentId, verify it exists and belongs to the same trip
     if (data.parentId !== undefined && data.parentId !== null) {
       // Prevent self-referencing
@@ -239,15 +259,17 @@ export class LocationService {
 
   // Helper method to get all descendants of a location using recursive CTE
   // This is O(1) queries instead of O(n) for the recursive approach
+  // Depth is limited to 10 levels to prevent runaway recursion in case of data corruption
   private async getDescendants(locationId: number): Promise<{ id: number }[]> {
     const descendants = await prisma.$queryRaw<{ id: number }[]>`
       WITH RECURSIVE descendants AS (
         -- Base case: direct children of the location
-        SELECT id FROM "locations" WHERE "parent_id" = ${locationId}
+        SELECT id, 1 AS depth FROM "locations" WHERE "parent_id" = ${locationId}
         UNION ALL
-        -- Recursive case: children of descendants
-        SELECT l.id FROM "locations" l
+        -- Recursive case: children of descendants (limited to 10 levels)
+        SELECT l.id, d.depth + 1 FROM "locations" l
         INNER JOIN descendants d ON l."parent_id" = d.id
+        WHERE d.depth < 10
       )
       SELECT id FROM descendants
     `;
@@ -264,11 +286,12 @@ export class LocationService {
       'edit'
     );
 
-    // Clean up entity links before deleting
-    await cleanupEntityLinks(location.tripId, 'LOCATION', locationId);
-
-    await prisma.location.delete({
-      where: { id: locationId },
+    // Clean up entity links and delete atomically in a transaction
+    await prisma.$transaction(async (tx) => {
+      await cleanupEntityLinks(location.tripId, 'LOCATION', locationId, tx);
+      await tx.location.delete({
+        where: { id: locationId },
+      });
     });
 
     return { message: 'Location deleted successfully' };
@@ -372,17 +395,17 @@ export class LocationService {
       throw new AppError('One or more locations not found or do not belong to this trip', 404);
     }
 
-    // Clean up entity links for all locations
-    for (const location of locations) {
-      await cleanupEntityLinks(location.tripId, 'LOCATION', location.id);
-    }
-
-    // Delete all locations
-    const result = await prisma.location.deleteMany({
-      where: {
-        id: { in: data.ids },
-        tripId,
-      },
+    // Clean up entity links and delete atomically in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      for (const location of locations) {
+        await cleanupEntityLinks(location.tripId, 'LOCATION', location.id, tx);
+      }
+      return tx.location.deleteMany({
+        where: {
+          id: { in: data.ids },
+          tripId,
+        },
+      });
     });
 
     return { success: true, deletedCount: result.count };

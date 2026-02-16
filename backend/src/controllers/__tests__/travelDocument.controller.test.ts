@@ -97,7 +97,7 @@ describe('travelDocument.controller', () => {
   });
 
   describe('delete', () => {
-    it('should delete a travel document and return 204', async () => {
+    it('should delete a travel document and return 200', async () => {
       (travelDocumentService.delete as jest.Mock).mockResolvedValue(undefined as never);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -106,8 +106,8 @@ describe('travelDocument.controller', () => {
       await travelDocumentController.delete(req as any, res as any, next);
 
       expect(travelDocumentService.delete).toHaveBeenCalledWith(testUsers.user1.id, 1);
-      expect(res.status).toHaveBeenCalledWith(204);
-      expect(res.send).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalled();
     });
   });
 

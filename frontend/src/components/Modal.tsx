@@ -132,7 +132,7 @@ export default function Modal({
     [onClose, closeOnEscape, formId]
   );
 
-  // Focus management and return focus on close
+  // Focus management: save trigger element and set initial focus
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
@@ -172,11 +172,30 @@ export default function Modal({
     };
   }, [isOpen, focusFirstInput]);
 
-  // Track if modal is open for cleanup logic
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  // Restore focus to the trigger element when modal closes
+  const prevIsOpenRef = useRef(isOpen);
+  useEffect(() => {
+    // Detect transition from open -> closed
+    if (prevIsOpenRef.current && !isOpen) {
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        setTimeout(() => el.focus(), 0);
+      }
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
 
-  // Handle keyboard events, body scroll, and restore focus on unmount
+  // Restore focus on unmount (empty deps = only runs cleanup on unmount)
+  useEffect(() => {
+    return () => {
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        el.focus();
+      }
+    };
+  }, []);
+
+  // Handle keyboard events, body scroll lock
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
@@ -185,11 +204,6 @@ export default function Modal({
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = '';
-        // Only return focus to trigger element if the modal is actually closing
-        // (not just re-running due to handleKeyDown changing)
-        if (!isOpenRef.current) {
-          triggerElementRef.current?.focus();
-        }
       };
     }
   }, [isOpen, handleKeyDown]);
@@ -266,8 +280,7 @@ Modal.Simple = function SimpleModal({
 }: Pick<ModalProps, 'isOpen' | 'onClose' | 'children' | 'maxWidth' | 'className' | 'zIndex'>) {
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<HTMLElement | null>(null);
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  const prevIsOpenRef = useRef(isOpen);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -297,6 +310,7 @@ Modal.Simple = function SimpleModal({
     [onClose]
   );
 
+  // Focus management: save trigger and set initial focus
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
@@ -309,18 +323,43 @@ Modal.Simple = function SimpleModal({
         const firstFocusable = modalRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
         (firstFocusable || modalRef.current)?.focus();
       }, 0);
+    }
 
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isOpen]);
+
+  // Restore focus to trigger element when modal closes or unmounts
+  useEffect(() => {
+    if (prevIsOpenRef.current && !isOpen) {
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        setTimeout(() => el.focus(), 0);
+      }
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Restore focus on unmount (empty deps = only runs cleanup on unmount)
+  useEffect(() => {
+    return () => {
+      const el = triggerElementRef.current;
+      if (el && typeof el.focus === 'function') {
+        el.focus();
+      }
+    };
+  }, []);
+
+  // Handle keyboard events and body scroll lock
+  useEffect(() => {
+    if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
 
       return () => {
-        if (timeoutId) clearTimeout(timeoutId);
         document.removeEventListener('keydown', handleKeyDown);
         document.body.style.overflow = '';
-        // Only return focus to trigger element if the modal is actually closing
-        if (!isOpenRef.current) {
-          triggerElementRef.current?.focus();
-        }
       };
     }
   }, [isOpen, handleKeyDown]);

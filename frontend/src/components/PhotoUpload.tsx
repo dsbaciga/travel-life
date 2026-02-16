@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import type { Location } from "../types/location";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type { ImmichAsset, ImmichAlbum } from "../types/immich";
 import photoService from "../services/photo.service";
 import immichService from "../services/immich.service";
@@ -13,7 +12,6 @@ import { parseDuration } from "../utils/duration";
 
 interface PhotoUploadProps {
   tripId: number;
-  locations: Location[];
   onPhotoUploaded: () => void;
   tripStartDate?: string;
   tripEndDate?: string;
@@ -37,6 +35,20 @@ export default function PhotoUpload({
   const { isDraggingFiles, setupListeners } = useDragDropOverlay();
   const { triggerConfetti } = useConfetti();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup: abort pending requests on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     checkImmichSettings();
@@ -338,21 +350,35 @@ export default function PhotoUpload({
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = useCallback(async () => {
     if (selectedFiles.length === 0) return;
+
+    // Abort any previous upload in progress
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
+        // Check if aborted before each upload
+        if (controller.signal.aborted) return;
+
         const file = selectedFiles[i];
         await photoService.uploadPhoto(file, {
           tripId,
           caption: selectedFiles.length === 1 ? caption : undefined,
-        });
+        }, { signal: controller.signal });
+
+        if (!isMountedRef.current) return;
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
+
+      if (!isMountedRef.current) return;
 
       // Reset form
       setSelectedFiles([]);
@@ -364,11 +390,17 @@ export default function PhotoUpload({
 
       onPhotoUploaded();
     } catch {
+      if (!isMountedRef.current || controller.signal.aborted) return;
       alert("Failed to upload photos");
     } finally {
-      setIsUploading(false);
+      if (isMountedRef.current) {
+        setIsUploading(false);
+      }
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
-  };
+  }, [selectedFiles, tripId, caption, triggerConfetti, onPhotoUploaded]);
 
   return (
     <>

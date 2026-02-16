@@ -166,58 +166,6 @@ router.patch('/trip/:tripId/bulk', locationController.bulkUpdateLocations);
 
 /**
  * @openapi
- * /api/locations/{id}:
- *   get:
- *     summary: Get a location by ID
- *     tags: [Locations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Location details
- *       404:
- *         description: Location not found
- *   put:
- *     summary: Update a location
- *     tags: [Locations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Location updated
- *   delete:
- *     summary: Delete a location
- *     tags: [Locations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Location deleted
- */
-router.get('/:id', locationController.getLocationById);
-router.put('/:id', locationController.updateLocation);
-router.delete('/:id', locationController.deleteLocation);
-
-/**
- * @openapi
  * /api/locations/categories/list:
  *   get:
  *     summary: Get all location categories (system + user)
@@ -305,5 +253,58 @@ router.post('/categories', locationController.createCategory);
  */
 router.put('/categories/:id', locationController.updateCategory);
 router.delete('/categories/:id', locationController.deleteCategory);
+
+/**
+ * @openapi
+ * /api/locations/{id}:
+ *   get:
+ *     summary: Get a location by ID
+ *     tags: [Locations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Location details
+ *       404:
+ *         description: Location not found
+ *   put:
+ *     summary: Update a location
+ *     tags: [Locations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Location updated
+ *   delete:
+ *     summary: Delete a location
+ *     tags: [Locations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Location deleted
+ */
+// IMPORTANT: /:id routes must be LAST to avoid catching named routes like /visited, /categories/*
+router.get('/:id', locationController.getLocationById);
+router.put('/:id', locationController.updateLocation);
+router.delete('/:id', locationController.deleteLocation);
 
 export default router;

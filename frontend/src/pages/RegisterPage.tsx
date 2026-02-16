@@ -38,7 +38,7 @@ export default function RegisterPage() {
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-cream via-parchment to-warm-gray dark:from-navy-900 dark:via-navy-900 dark:to-navy-800">
       {/* Decorative compass rose - top left */}
       <div className="absolute top-8 left-8 w-32 h-32 opacity-5 dark:opacity-10 animate-float">
-        <svg viewBox="0 0 100 100" fill="currentColor" className="text-primary-500 dark:text-sky">
+        <svg viewBox="0 0 100 100" fill="currentColor" className="text-primary-500 dark:text-sky" aria-hidden="true">
           <circle cx="50" cy="50" r="2" />
           <path d="M50 10 L52 48 L50 50 L48 48 Z" />
           <path d="M90 50 L52 52 L50 50 L52 48 Z" />

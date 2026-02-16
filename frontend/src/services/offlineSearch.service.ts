@@ -362,7 +362,7 @@ class OfflineSearchService {
         value: Date.now(),
       });
 
-      console.log(`[OfflineSearch] Indexed ${indexedCount} entries for trip ${tripId}`);
+      // Debug logging removed for production (SEC-16)
       return indexedCount;
     } catch (error) {
       console.error(`[OfflineSearch] Failed to build index for trip ${tripId}:`, error);
@@ -398,7 +398,7 @@ class OfflineSearchService {
         value: Date.now(),
       });
 
-      console.log(`[OfflineSearch] Rebuilt all indexes: ${totalIndexed} total entries`);
+      // Debug logging removed for production (SEC-16)
       return totalIndexed;
     } catch (error) {
       console.error('[OfflineSearch] Failed to rebuild indexes:', error);
@@ -427,7 +427,7 @@ class OfflineSearchService {
       // Remove metadata
       await db.delete('metadata', `searchIndex:${tripId}:lastIndexed`);
 
-      console.log(`[OfflineSearch] Removed ${entries.length} index entries for trip ${tripId}`);
+      // Debug logging removed for production (SEC-16)
     } catch (error) {
       console.error(`[OfflineSearch] Failed to remove index for trip ${tripId}:`, error);
       throw error;

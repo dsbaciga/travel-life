@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { Prisma } from '@prisma/client';
 import { BackupData, RestoreOptions } from '../types/backup.types';
 import { AppError } from '../utils/errors';
+import { validateUrlNotInternal } from '../utils/urlValidation';
 
 /**
  * Statistics returned after a restore operation
@@ -68,14 +69,29 @@ export async function restoreFromBackup(
         }
 
         // Step 2: Update user settings
+        // Preserve current timezone if the backup doesn't include one
+        const currentUser = await tx.user.findUnique({
+          where: { id: userId },
+          select: { timezone: true },
+        });
+        // Validate Immich URL from backup to prevent SSRF
+        let sanitizedImmichUrl = backupData.user.immichApiUrl;
+        if (sanitizedImmichUrl) {
+          try {
+            await validateUrlNotInternal(sanitizedImmichUrl);
+          } catch {
+            sanitizedImmichUrl = null; // Reject URLs that fail SSRF validation
+          }
+        }
+
         await tx.user.update({
           where: { id: userId },
           data: {
-            timezone: backupData.user.timezone,
+            timezone: backupData.user.timezone ?? currentUser?.timezone ?? 'UTC',
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
-            immichApiUrl: backupData.user.immichApiUrl,
-            immichApiKey: backupData.user.immichApiKey,
+            immichApiUrl: sanitizedImmichUrl,
+            immichApiKey: sanitizedImmichUrl ? backupData.user.immichApiKey : null,
             weatherApiKey: backupData.user.weatherApiKey,
             aviationstackApiKey: backupData.user.aviationstackApiKey,
             openrouteserviceApiKey: backupData.user.openrouteserviceApiKey,
@@ -598,7 +614,7 @@ export async function restoreFromBackup(
       },
       {
         maxWait: 60000, // 60 seconds
-        timeout: 300000, // 5 minutes
+        timeout: 600000, // 10 minutes (large dataset restores need more time)
       }
     );
 

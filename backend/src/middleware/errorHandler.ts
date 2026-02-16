@@ -28,7 +28,7 @@ const sanitizeForLogging = (obj: Record<string, unknown> | undefined): Record<st
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     const lowerKey = key.toLowerCase();
-    if (SENSITIVE_FIELDS.has(lowerKey) || lowerKey.includes('password') || lowerKey.includes('secret') || lowerKey.includes('token') || lowerKey.includes('apikey')) {
+    if (SENSITIVE_FIELDS.has(lowerKey) || lowerKey.includes('password') || lowerKey.includes('secret') || lowerKey.includes('token') || lowerKey.includes('apikey') || lowerKey.includes('api_key') || lowerKey.includes('authorization')) {
       sanitized[key] = '[REDACTED]';
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       sanitized[key] = sanitizeForLogging(value as Record<string, unknown>);
@@ -93,12 +93,13 @@ export const errorHandler = (
     ...prismaErrorInfo,
   });
 
-  // Zod validation errors
+  // Zod validation errors - return only field names, not full schema details
   if (err instanceof ZodError) {
+    const fieldNames = err.errors.map(e => e.path.join('.')).filter(Boolean);
     return res.status(400).json({
       status: 'error',
-      message: 'Validation error',
-      errors: err.errors,
+      message: 'Validation failed',
+      fields: fieldNames.length > 0 ? fieldNames : undefined,
     });
   }
 

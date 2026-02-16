@@ -176,7 +176,7 @@ export const photoController = {
     const photoId = parseId(req.params.id);
     await photoService.deletePhoto(requireUserId(req), photoId);
 
-    res.status(204).send();
+    res.status(200).json({ status: 'success', message: 'Photo deleted successfully' });
   }),
 
   getPhotoDateGroupings: asyncHandler(async (req: Request, res: Response) => {
@@ -244,8 +244,9 @@ export const photoController = {
     // Validate input with Zod schema
     const validationResult = acceptAlbumSuggestionSchema.safeParse(req.body);
     if (!validationResult.success) {
+      const fieldNames = validationResult.error.errors.map(e => e.path.join('.')).filter(Boolean);
       throw new AppError(
-        `Invalid suggestion data: ${validationResult.error.errors.map(e => e.message).join(', ')}`,
+        `Validation failed${fieldNames.length > 0 ? `: invalid fields: ${fieldNames.join(', ')}` : ''}`,
         400
       );
     }
