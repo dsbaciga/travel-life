@@ -389,7 +389,7 @@ export default function PhotoUpload({
       triggerConfetti('photo');
 
       onPhotoUploaded();
-    } catch (err) {
+    } catch {
       if (!isMountedRef.current || controller.signal.aborted) return;
       alert("Failed to upload photos");
     } finally {
