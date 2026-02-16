@@ -55,6 +55,7 @@ import Pagination from "../components/Pagination";
 import { useScrollToHighlight } from "../hooks/useScrollToHighlight";
 import { useSwipeGesture } from "../hooks/useSwipeGesture";
 import Breadcrumbs from "../components/Breadcrumbs";
+import { useScrollStore } from "../store/scrollStore";
 import TabGroup from "../components/TabGroup";
 import type { TabGroupItem } from "../components/TabGroup";
 import TripSidebar from "../components/TripSidebar";
@@ -95,6 +96,7 @@ export default function TripDetailPage() {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { clearPosition: clearTripsPageState } = useScrollStore();
   
   const [userTimezone, setUserTimezone] = useState<string>("");
   
@@ -991,7 +993,7 @@ export default function TripDetailPage() {
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         <Breadcrumbs
-          items={[{ label: "Trips", href: "/trips" }, { label: trip.title }]}
+          items={[{ label: "Trips", href: "/trips", onClick: () => clearTripsPageState('trips-page') }, { label: trip.title }]}
         />
         {/* Trip Header */}
         <div ref={tripHeaderRef} className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigationType } from 'react-router-dom';
 import tripService from '../services/trip.service';
 import tagService from '../services/tag.service';
 import userService from '../services/user.service';
@@ -27,26 +27,60 @@ import type { MultiSelectOption } from '../components/MultiSelectDropdown';
 type SortOption = 'startDate-desc' | 'startDate-asc' | 'title-asc' | 'title-desc' | 'status';
 type ViewMode = 'grid' | 'kanban' | 'list';
 
+interface TripsPageState {
+  searchQuery: string;
+  statusFilter: string[];
+  tripTypeFilter: string[];
+  startDateFrom: string;
+  startDateTo: string;
+  selectedTags: number[];
+  sortOption: SortOption;
+  showAdvancedFilters: boolean;
+  viewMode: ViewMode;
+  sortColumn: string;
+  sortDirection: 'asc' | 'desc';
+}
+
+const DEFAULT_STATE: TripsPageState = {
+  searchQuery: '',
+  statusFilter: [],
+  tripTypeFilter: [],
+  startDateFrom: '',
+  startDateTo: '',
+  selectedTags: [],
+  sortOption: 'startDate-desc',
+  showAdvancedFilters: false,
+  viewMode: 'grid',
+  sortColumn: 'startDate',
+  sortDirection: 'desc',
+};
+
 export default function TripsPage() {
   const queryClient = useQueryClient();
+  const navigationType = useNavigationType();
+  const scrollStore = useScrollStore();
+
+  // Determine if we should restore state: back/forward nav, or returning from trip detail/edit
+  const shouldRestore = navigationType === 'POP' || scrollStore.skipNextScrollToTop;
+  const savedState = shouldRestore ? scrollStore.getPageState('trips-page') as Partial<TripsPageState> | undefined : undefined;
+  const savedPage = shouldRestore ? scrollStore.getPageNumber('trips-page') : 1;
+
   const [allTags, setAllTags] = useState<TripTag[]>([]);
   const [allTripTypes, setAllTripTypes] = useState<TripTypeCategory[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [tripTypeFilter, setTripTypeFilter] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [startDateFrom, setStartDateFrom] = useState('');
-  const [startDateTo, setStartDateTo] = useState('');
-  const [selectedTags, setSelectedTags] = useState<number[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>('startDate-desc');
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string[]>(savedState?.statusFilter ?? DEFAULT_STATE.statusFilter);
+  const [tripTypeFilter, setTripTypeFilter] = useState<string[]>(savedState?.tripTypeFilter ?? DEFAULT_STATE.tripTypeFilter);
+  const [searchQuery, setSearchQuery] = useState(savedState?.searchQuery ?? DEFAULT_STATE.searchQuery);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(savedState?.searchQuery ?? DEFAULT_STATE.searchQuery);
+  const [startDateFrom, setStartDateFrom] = useState(savedState?.startDateFrom ?? DEFAULT_STATE.startDateFrom);
+  const [startDateTo, setStartDateTo] = useState(savedState?.startDateTo ?? DEFAULT_STATE.startDateTo);
+  const [selectedTags, setSelectedTags] = useState<number[]>(savedState?.selectedTags ?? DEFAULT_STATE.selectedTags);
+  const [sortOption, setSortOption] = useState<SortOption>(savedState?.sortOption ?? DEFAULT_STATE.sortOption);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(savedState?.showAdvancedFilters ?? DEFAULT_STATE.showAdvancedFilters);
   const [coverPhotoUrls, setCoverPhotoUrls] = useState<{ [key: number]: string }>({});
-  // Initialize currentPage from stored value - need to call hook at top level
-  const initialPage = useScrollStore((state) => state.pageNumbers['trips-page'] || 1);
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [sortColumn, setSortColumn] = useState<string>('startDate');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(savedPage);
+  const [viewMode, setViewMode] = useState<ViewMode>(savedState?.viewMode ?? DEFAULT_STATE.viewMode);
+  const [sortColumn, setSortColumn] = useState<string>(savedState?.sortColumn ?? DEFAULT_STATE.sortColumn);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(savedState?.sortDirection ?? DEFAULT_STATE.sortDirection);
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   // Use ref to track blob URLs for proper cleanup (avoids stale closure issues)
   const blobUrlsRef = useRef<string[]>([]);
@@ -87,24 +121,23 @@ export default function TripsPage() {
   const { trips = [], totalPages = 1, total: totalTrips = 0 } = tripsData || {};
 
   // Scroll and pagination position management
-  const { savePosition, getPosition, savePageNumber, setSkipNextScrollToTop } = useScrollStore();
+  const { savePosition, getPosition, savePageNumber, savePageState, setSkipNextScrollToTop } = useScrollStore();
   const SCROLL_KEY = 'trips-page';
 
   // Track if we've restored scroll position (to avoid restoring on every data load)
   const hasRestoredScroll = useRef(false);
 
-  // Restore scroll position after data loads
+  // Restore scroll position after data loads (only when returning via back/forward)
   useEffect(() => {
+    if (!shouldRestore) return;
     const savedPosition = getPosition(SCROLL_KEY);
     if (savedPosition > 0 && !loading && !hasRestoredScroll.current) {
       hasRestoredScroll.current = true;
-      // Use requestAnimationFrame to ensure DOM is ready after render
       requestAnimationFrame(() => {
         window.scrollTo(0, savedPosition);
       });
     }
-    // getPosition is stable from Zustand store, safe to include
-  }, [getPosition, loading]);
+  }, [getPosition, loading, shouldRestore]);
 
   // Continuously save scroll position so back button navigation works
   useEffect(() => {
@@ -127,7 +160,24 @@ export default function TripsPage() {
     savePageNumber(SCROLL_KEY, currentPage);
   }, [currentPage, savePageNumber]);
 
-  // Save scroll position and page number before navigating away
+  // Save full page state (filters, view mode, etc.) whenever they change
+  useEffect(() => {
+    savePageState(SCROLL_KEY, {
+      searchQuery,
+      statusFilter,
+      tripTypeFilter,
+      startDateFrom,
+      startDateTo,
+      selectedTags,
+      sortOption,
+      showAdvancedFilters,
+      viewMode,
+      sortColumn,
+      sortDirection,
+    });
+  }, [searchQuery, statusFilter, tripTypeFilter, startDateFrom, startDateTo, selectedTags, sortOption, showAdvancedFilters, viewMode, sortColumn, sortDirection, savePageState]);
+
+  // Save scroll position, page number, and filters before navigating away
   const handleNavigateAway = useCallback(() => {
     savePosition(SCROLL_KEY, window.scrollY);
     savePageNumber(SCROLL_KEY, currentPage);
@@ -371,8 +421,13 @@ export default function TripsPage() {
     }
   };
 
-  // Reset to page 1 when view mode changes
+  // Reset to page 1 when view mode changes (skip the initial mount)
+  const viewModeInitialized = useRef(false);
   useEffect(() => {
+    if (!viewModeInitialized.current) {
+      viewModeInitialized.current = true;
+      return;
+    }
     setCurrentPage(1);
   }, [viewMode]);
 

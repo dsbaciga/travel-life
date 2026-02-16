@@ -8,6 +8,7 @@ import type { TripStatusType, PrivacyLevelType } from '../types/trip';
 import type { TravelPartnerSettings, TripTypeCategory } from '../types/user';
 import toast from 'react-hot-toast';
 import { useConfetti } from '../hooks/useConfetti';
+import { useScrollStore } from '../store/scrollStore';
 import MarkdownEditor from '../components/MarkdownEditor';
 
 interface FormErrors {
@@ -21,6 +22,7 @@ export default function TripFormPage() {
   const queryClient = useQueryClient();
   const isEdit = !!id;
   const { triggerConfetti } = useConfetti();
+  const { setSkipNextScrollToTop } = useScrollStore();
   const originalStatusRef = useRef<TripStatusType | null>(null);
 
   const [loading, setLoading] = useState(false);
@@ -213,6 +215,10 @@ export default function TripFormPage() {
 
       // Invalidate trips cache so the list refreshes
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
+      // When editing, restore trips page position; when creating, start fresh
+      if (isEdit) {
+        setSkipNextScrollToTop(true);
+      }
       navigate('/trips');
     } catch (err: unknown) {
       formSavedRef.current = false;

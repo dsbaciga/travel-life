@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { useScrollStore } from "../store/scrollStore";
 import GlobalSearch from "./GlobalSearch";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { clearPosition } = useScrollStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -68,7 +70,7 @@ export default function Navbar() {
 
   const navLinks = [
     { path: "/dashboard", label: "Dashboard" },
-    { path: "/trips", label: "Trips" },
+    { path: "/trips", label: "Trips", onClick: () => clearPosition('trips-page') },
     { path: "/albums", label: "Albums" },
     { path: "/companions", label: "Companions" },
     { path: "/places-visited", label: "Places" },
@@ -80,10 +82,12 @@ export default function Navbar() {
     path,
     label,
     mobile = false,
+    onClick,
   }: {
     path: string;
     label: string;
     mobile?: boolean;
+    onClick?: () => void;
   }) => (
     <Link
       to={path}
@@ -94,7 +98,10 @@ export default function Navbar() {
           ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800"
           : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
       }`}
-      onClick={() => mobile && setShowMobileMenu(false)}
+      onClick={() => {
+        onClick?.();
+        if (mobile) setShowMobileMenu(false);
+      }}
     >
       <span className="relative z-10">{label}</span>
       {!mobile && (
@@ -140,7 +147,7 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-1 ml-8">
             {navLinks.map((link) => (
-              <NavLink key={link.path} path={link.path} label={link.label} />
+              <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} />
             ))}
           </div>
 
@@ -304,6 +311,7 @@ export default function Navbar() {
                 key={link.path}
                 path={link.path}
                 label={link.label}
+                onClick={link.onClick}
                 mobile
               />
             ))}

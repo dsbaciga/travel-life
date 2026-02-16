@@ -4,15 +4,17 @@
  */
 
 import { Link, useLocation } from 'react-router-dom';
+import { useScrollStore } from '../store/scrollStore';
 
 export default function MobileBottomNav() {
   const location = useLocation();
+  const { clearPosition } = useScrollStore();
 
   const isActive = (path: string) => {
     return location.pathname.startsWith(path);
   };
 
-  const navItems = [
+  const navItems: Array<{ path: string; icon: React.ReactNode; label: string; onClick?: () => void }> = [
     {
       path: '/dashboard',
       icon: (
@@ -30,6 +32,7 @@ export default function MobileBottomNav() {
         </svg>
       ),
       label: 'Trips',
+      onClick: () => clearPosition('trips-page'),
     },
     {
       path: '/albums',
@@ -73,6 +76,7 @@ export default function MobileBottomNav() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={item.onClick}
               aria-current={active ? 'page' : undefined}
               className={`flex flex-col items-center justify-center flex-1 h-full min-w-[44px] transition-all duration-200 ${
                 active

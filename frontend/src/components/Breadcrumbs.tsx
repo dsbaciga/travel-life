@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 interface BreadcrumbItem {
   label: string;
   href?: string;
+  onClick?: () => void;
 }
 
 interface BreadcrumbsProps {
@@ -60,6 +61,7 @@ export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps)
               {item.href && !isLast ? (
                 <Link
                   to={item.href}
+                  onClick={item.onClick}
                   className="text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-accent-400 hover:underline transition-colors truncate"
                   title={item.label}
                 >
