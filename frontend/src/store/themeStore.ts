@@ -43,6 +43,12 @@ export const useThemeStore = create<ThemeState>()(
   )
 );
 
+// Selectors for granular subscriptions (prevents unnecessary re-renders)
+export const useTheme = () => useThemeStore((state) => state.theme);
+export const useIsDarkMode = () => useThemeStore((state) => state.isDarkMode);
+export const useToggleTheme = () => useThemeStore((state) => state.toggleTheme);
+export const useSetTheme = () => useThemeStore((state) => state.setTheme);
+
 // Initialize theme on app load
 const storedTheme = localStorage.getItem('theme-storage');
 if (storedTheme) {

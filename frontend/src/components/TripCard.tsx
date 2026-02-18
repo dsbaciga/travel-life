@@ -11,6 +11,7 @@
  * - Hover effects with lift and photo zoom
  */
 
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Trip } from '../types/trip';
 import { getTripStatusRibbonColor } from '../utils/statusColors';
@@ -38,7 +39,7 @@ function TransportIcon({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
-export default function TripCard({ trip, coverPhotoUrl, onDelete, showActions = true, onNavigateAway }: TripCardProps) {
+const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, showActions = true, onNavigateAway }: TripCardProps) {
   const counts = trip._count;
   const hasStats = counts && (counts.locations > 0 || counts.photos > 0 || counts.transportation > 0);
 
@@ -226,4 +227,6 @@ export default function TripCard({ trip, coverPhotoUrl, onDelete, showActions = 
       </div>
     </div>
   );
-}
+});
+
+export default TripCard;

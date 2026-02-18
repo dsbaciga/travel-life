@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   color?: 'primary' | 'white' | 'current';
@@ -36,7 +38,7 @@ const colorClasses = {
  * <LoadingSpinner.FullPage message="Loading your data..." />
  * ```
  */
-export default function LoadingSpinner({
+const LoadingSpinner = memo(function LoadingSpinner({
   size = 'md',
   color = 'primary',
   className = '',
@@ -60,7 +62,10 @@ export default function LoadingSpinner({
       <span className="sr-only">{label || 'Loading...'}</span>
     </div>
   );
-}
+}) as React.MemoExoticComponent<React.FC<LoadingSpinnerProps>> & {
+  FullPage: React.FC<FullPageProps>;
+  Inline: React.FC<InlineProps>;
+};
 
 interface FullPageProps {
   message?: string;
@@ -99,3 +104,5 @@ LoadingSpinner.Inline = function InlineSpinner({ className = '' }: InlineProps) 
     </div>
   );
 };
+
+export default LoadingSpinner;

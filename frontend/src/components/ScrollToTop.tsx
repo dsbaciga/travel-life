@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
-import { useScrollStore } from '../store/scrollStore';
+import { useSkipNextScrollToTop, useSetSkipNextScrollToTop } from '../store/scrollStore';
 
 /**
  * Component that scrolls to the top of the page whenever the route changes,
@@ -13,7 +13,8 @@ import { useScrollStore } from '../store/scrollStore';
 export default function ScrollToTop() {
   const { pathname } = useLocation();
   const navigationType = useNavigationType();
-  const { skipNextScrollToTop, setSkipNextScrollToTop } = useScrollStore();
+  const skipNextScrollToTop = useSkipNextScrollToTop();
+  const setSkipNextScrollToTop = useSetSkipNextScrollToTop();
 
   useEffect(() => {
     if (skipNextScrollToTop) {

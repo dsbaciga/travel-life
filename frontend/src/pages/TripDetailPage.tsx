@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from "react";
 import {
   useParams,
   useNavigate,
@@ -22,29 +22,32 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import type { Photo } from "../types/photo";
 import { TripStatus, type TripStatusType } from "../types/trip";
 import toast from "react-hot-toast";
-import PhotoGallery from "../components/PhotoGallery";
-import PhotoUpload from "../components/PhotoUpload";
-import PhotosMapView from "../components/PhotosMapView";
-import AlbumSuggestions from "../components/AlbumSuggestions";
-import Timeline from "../components/Timeline";
-import { DailyView } from "../components/daily-view";
-import TripMap from "../components/TripMap";
-import PhotoTimeline from "../components/PhotoTimeline";
-import ActivityManager from "../components/ActivityManager";
-import UnscheduledItems from "../components/UnscheduledItems";
-import TransportationManager from "../components/TransportationManager";
-import LodgingManager from "../components/LodgingManager";
-import JournalManager from "../components/JournalManager";
-import CompanionManager from "../components/CompanionManager";
-import LocationManager from "../components/LocationManager";
-import CollaboratorsManager from "../components/CollaboratorsManager";
+import LoadingSpinner from "../components/LoadingSpinner";
+
+// Lazy-loaded heavy tab components (only loaded when their tab is active)
+const PhotoGallery = lazy(() => import("../components/PhotoGallery"));
+const PhotoUpload = lazy(() => import("../components/PhotoUpload"));
+const PhotosMapView = lazy(() => import("../components/PhotosMapView"));
+const AlbumSuggestions = lazy(() => import("../components/AlbumSuggestions"));
+const Timeline = lazy(() => import("../components/Timeline"));
+const DailyView = lazy(() => import("../components/daily-view/DailyView"));
+const TripMap = lazy(() => import("../components/TripMap"));
+const PhotoTimeline = lazy(() => import("../components/PhotoTimeline"));
+const ActivityManager = lazy(() => import("../components/ActivityManager"));
+const UnscheduledItems = lazy(() => import("../components/UnscheduledItems"));
+const TransportationManager = lazy(() => import("../components/TransportationManager"));
+const LodgingManager = lazy(() => import("../components/LodgingManager"));
+const JournalManager = lazy(() => import("../components/JournalManager"));
+const CompanionManager = lazy(() => import("../components/CompanionManager"));
+const LocationManager = lazy(() => import("../components/LocationManager"));
+const CollaboratorsManager = lazy(() => import("../components/CollaboratorsManager"));
 import Modal from "../components/Modal";
 import collaborationService from "../services/collaboration.service";
 import type { UserPermission } from "../types/collaboration";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
-import TagsModal from "../components/TagsModal";
+const TagsModal = lazy(() => import("../components/TagsModal"));
 import AlbumsSidebar from "../components/AlbumsSidebar";
 import AlbumModal from "../components/AlbumModal";
 import AddPhotosToAlbumModal from "../components/AddPhotosToAlbumModal";
@@ -61,7 +64,7 @@ import type { TabGroupItem } from "../components/TabGroup";
 import TripSidebar from "../components/TripSidebar";
 import NavigationLayoutToggle from "../components/NavigationLayoutToggle";
 import { useNavigationStore } from "../store/navigationStore";
-import { TripDashboard } from "../components/trip-dashboard";
+const TripDashboard = lazy(() => import("../components/trip-dashboard/TripDashboard"));
 import {
   formatTripDates,
   getTripDateStatus,
@@ -1406,6 +1409,8 @@ export default function TripDetailPage() {
           {/* Dashboard Tab */}
           {activeTab === "dashboard" && (
             <div className="animate-fadeIn">
+              <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner.FullPage message="Loading dashboard..." />}>
               <TripDashboard
                 trip={trip}
                 activities={activitiesData || []}
@@ -1433,6 +1438,8 @@ export default function TripDetailPage() {
                 onToggleChecklistItem={handleToggleChecklistItem}
                 onNavigateToEntity={handleNavigateToEntity}
               />
+              </Suspense>
+              </ErrorBoundary>
             </div>
           )}
 
@@ -1443,6 +1450,8 @@ export default function TripDetailPage() {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                   Timeline
                 </h2>
+                <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner.FullPage message="Loading timeline..." />}>
                 <Timeline
                   tripId={parseInt(id!)}
                   tripTitle={trip.title}
@@ -1456,6 +1465,8 @@ export default function TripDetailPage() {
                   onNavigateToTab={(tab) => changeTab(tab as TabId)}
                   onRefresh={() => queryClient.invalidateQueries({ queryKey: ['trip', tripId] })}
                 />
+                </Suspense>
+                </ErrorBoundary>
               </div>
             </div>
           )}
@@ -1464,6 +1475,8 @@ export default function TripDetailPage() {
           {activeTab === "daily" && (
             <div className="space-y-6 animate-fadeIn">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner.FullPage message="Loading daily view..." />}>
                 <DailyView
                   tripId={parseInt(id!)}
                   tripTitle={trip.title}
@@ -1473,6 +1486,8 @@ export default function TripDetailPage() {
                   tripEndDate={trip.endDate || undefined}
                   onRefresh={() => queryClient.invalidateQueries({ queryKey: ['trip', tripId] })}
                 />
+                </Suspense>
+                </ErrorBoundary>
               </div>
             </div>
           )}
@@ -1487,10 +1502,14 @@ export default function TripDetailPage() {
                 {isTransportationLoading ? (
                   <Skeleton className="h-96" />
                 ) : (
+                  <ErrorBoundary>
+                  <Suspense fallback={<LoadingSpinner.FullPage message="Loading map..." />}>
                   <TripMap
                     transportations={transportationData || []}
                     height="600px"
                   />
+                  </Suspense>
+                  </ErrorBoundary>
                 )}
               </div>
             </div>
@@ -1501,11 +1520,13 @@ export default function TripDetailPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             <ErrorBoundary>
               {isLocationsLoading ? <Skeleton /> : (
+              <Suspense fallback={<LoadingSpinner.FullPage message="Loading locations..." />}>
               <LocationManager
                 tripId={trip.id}
                 tripTimezone={trip.timezone}
                 onUpdate={() => queryClient.invalidateQueries({ queryKey: ['locations', tripId] })}
               />
+              </Suspense>
               )}
             </ErrorBoundary>
           </div>
@@ -1513,6 +1534,8 @@ export default function TripDetailPage() {
 
         {/* Photos Tab */}
         {activeTab === "photos" && (
+          <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner.FullPage message="Loading photos..." />}>
           <div className="space-y-6 animate-fadeIn">
             {/* Upload Interface - Full Width */}
             <PhotoUpload
@@ -1861,6 +1884,8 @@ export default function TripDetailPage() {
               />
             )}
           </div>
+          </Suspense>
+          </ErrorBoundary>
         )}
 
         {/* Photo Map Tab */}
@@ -1869,6 +1894,8 @@ export default function TripDetailPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Photo Map
             </h2>
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading photo map..." />}>
             <PhotosMapView
               tripId={trip.id}
               fetchAllPhotos
@@ -1876,6 +1903,8 @@ export default function TripDetailPage() {
                 // TODO: Implement lightbox or photo navigation
               }}
             />
+            </Suspense>
+            </ErrorBoundary>
           </div>
         )}
 
@@ -1885,11 +1914,15 @@ export default function TripDetailPage() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               Photo Timeline
             </h2>
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading photo timeline..." />}>
             <PhotoTimeline
               tripId={trip.id}
               tripTimezone={trip.timezone || undefined}
               tripStartDate={trip.startDate || undefined}
             />
+            </Suspense>
+            </ErrorBoundary>
           </div>
         )}
 
@@ -1897,6 +1930,8 @@ export default function TripDetailPage() {
         {activeTab === "activities" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {isActivitiesLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading activities..." />}>
             <ActivityManager
               tripId={trip.id}
               locations={locations}
@@ -1904,6 +1939,8 @@ export default function TripDetailPage() {
               tripStartDate={trip.startDate}
               onUpdate={() => queryClient.invalidateQueries({ queryKey: ['activities', tripId] })}
             />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1912,6 +1949,8 @@ export default function TripDetailPage() {
         {activeTab === "unscheduled" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {isActivitiesLoading || isTransportationLoading || isLodgingLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading unscheduled items..." />}>
             <UnscheduledItems
               tripId={trip.id}
               locations={locations}
@@ -1919,6 +1958,8 @@ export default function TripDetailPage() {
               tripStartDate={trip.startDate}
               onUpdate={() => queryClient.invalidateQueries({ queryKey: ['trip', tripId] })}
             />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1927,6 +1968,8 @@ export default function TripDetailPage() {
         {activeTab === "transportation" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {isTransportationLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading transportation..." />}>
             <TransportationManager
               tripId={trip.id}
               locations={locations}
@@ -1934,6 +1977,8 @@ export default function TripDetailPage() {
               tripStartDate={trip.startDate}
               onUpdate={() => queryClient.invalidateQueries({ queryKey: ['transportation', tripId] })}
             />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1942,6 +1987,8 @@ export default function TripDetailPage() {
         {activeTab === "lodging" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {isLodgingLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading lodging..." />}>
             <LodgingManager
               tripId={trip.id}
               locations={locations}
@@ -1949,6 +1996,8 @@ export default function TripDetailPage() {
               tripStartDate={trip.startDate}
               onUpdate={() => queryClient.invalidateQueries({ queryKey: ['lodging', tripId] })}
             />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1957,11 +2006,15 @@ export default function TripDetailPage() {
         {activeTab === "journal" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {isJournalLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading journal..." />}>
             <JournalManager
               tripId={trip.id}
               tripStartDate={trip.startDate}
               onUpdate={() => queryClient.invalidateQueries({ queryKey: ['journal', tripId] })}
             />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1970,7 +2023,11 @@ export default function TripDetailPage() {
         {activeTab === "companions" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 animate-fadeIn">
             {areCompanionsLoading ? <Skeleton /> : (
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading companions..." />}>
             <CompanionManager tripId={trip.id} onUpdate={() => queryClient.invalidateQueries({ queryKey: ['companions', tripId] })} />
+            </Suspense>
+            </ErrorBoundary>
             )}
           </div>
         )}
@@ -1983,6 +2040,8 @@ export default function TripDetailPage() {
 
       {/* Tags Modal */}
       {showTagsModal && (
+        <ErrorBoundary>
+        <Suspense fallback={null}>
         <TagsModal
           tripId={trip.id}
           onClose={() => setShowTagsModal(false)}
@@ -1990,6 +2049,8 @@ export default function TripDetailPage() {
             queryClient.invalidateQueries({ queryKey: ['tags', tripId] });
           }}
         />
+        </Suspense>
+        </ErrorBoundary>
       )}
 
       {/* Share / Collaborators Modal */}
@@ -2000,12 +2061,16 @@ export default function TripDetailPage() {
         icon="👥"
         maxWidth="lg"
       >
+        <ErrorBoundary>
+        <Suspense fallback={<LoadingSpinner />}>
         <CollaboratorsManager
           tripId={trip.id}
           tripTitle={trip.title}
           isOwner={userPermission?.isOwner ?? true}
           userPermission={userPermission?.permissionLevel ?? null}
         />
+        </Suspense>
+        </ErrorBoundary>
       </Modal>
 
       {/* Duplicate Trip Dialog */}

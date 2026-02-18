@@ -1,12 +1,14 @@
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { useIsAuthenticated, useIsAuthInitialized, useIsAuthLoading } from '../store/authStore';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isInitialized, isLoading } = useAuthStore();
+  const isAuthenticated = useIsAuthenticated();
+  const isInitialized = useIsAuthInitialized();
+  const isLoading = useIsAuthLoading();
 
   // Wait for auth initialization before making redirect decision
   if (!isInitialized || isLoading) {

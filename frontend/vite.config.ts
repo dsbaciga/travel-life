@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
@@ -13,6 +14,7 @@ const packageJson = JSON.parse(
 export default defineConfig({
   plugins: [
     react(),
+    ...(process.env.ANALYZE ? [visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true })] : []),
     VitePWA({
       registerType: 'autoUpdate', // Automatically activate new service worker versions
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
@@ -94,9 +96,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // Navigate fallback for SPA
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api\//], // Don't fallback API requests
+        // SPA navigate fallback - serve index.html for all navigation requests
+        // so React Router handles client-side routing correctly
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/offline\.html$/],
         runtimeCaching: [
           // API responses - Network first, fallback to cache
           {
@@ -254,7 +257,7 @@ export default defineConfig({
           // 'vendor-tiptap': ['@tiptap/react', '@tiptap/starter-kit'], // Not yet installed
           'vendor-markdown': ['react-markdown', 'remark-gfm'],
           'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-persist-client'],
-          'vendor-emoji': ['emoji-picker-react'],
+          // vendor-emoji removed: emoji-picker-react is lazy-loaded via React.lazy
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           'vendor-icons': ['lucide-react', '@heroicons/react'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],

@@ -41,4 +41,12 @@ export const useNavigationStore = create<NavigationState>()(
   )
 );
 
+// Selectors for granular subscriptions (prevents unnecessary re-renders)
+export const useNavigationLayout = () => useNavigationStore((state) => state.layout);
+export const useSidebarCollapsed = () => useNavigationStore((state) => state.sidebarCollapsed);
+export const useSetLayout = () => useNavigationStore((state) => state.setLayout);
+export const useToggleLayout = () => useNavigationStore((state) => state.toggleLayout);
+export const useToggleSidebar = () => useNavigationStore((state) => state.toggleSidebar);
+export const useSetSidebarCollapsed = () => useNavigationStore((state) => state.setSidebarCollapsed);
+
 export default useNavigationStore;

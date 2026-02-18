@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import EmojiPickerReact from "emoji-picker-react";
+import React, { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useDropdownPosition } from "../hooks/useDropdownPosition";
+
+const EmojiPickerReact = React.lazy(() => import("emoji-picker-react"));
 
 interface EmojiPickerProps {
   value: string;
@@ -65,13 +66,19 @@ export default function EmojiPicker({ value, onChange, className = "" }: EmojiPi
           className={`absolute z-[95] ${verticalClass} ${horizontalClass}`}
           style={position.maxHeight ? { maxHeight: position.maxHeight } : undefined}
         >
-          <EmojiPickerReact
-            onEmojiClick={handleEmojiClick}
-            searchDisabled={false}
-            skinTonesDisabled
-            width={300}
-            height={position.maxHeight ? Math.min(400, position.maxHeight) : 400}
-          />
+          <Suspense
+            fallback={
+              <div className="w-[300px] h-[400px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
+            }
+          >
+            <EmojiPickerReact
+              onEmojiClick={handleEmojiClick}
+              searchDisabled={false}
+              skinTonesDisabled
+              width={300}
+              height={position.maxHeight ? Math.min(400, position.maxHeight) : 400}
+            />
+          </Suspense>
         </div>
       )}
     </div>

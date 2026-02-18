@@ -146,3 +146,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 registerAuthClearCallback(() => {
   useAuthStore.getState().clearAuth();
 });
+
+// Selectors for granular subscriptions (prevents unnecessary re-renders)
+export const useUser = () => useAuthStore((state) => state.user);
+export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
+export const useIsAuthLoading = () => useAuthStore((state) => state.isLoading);
+export const useIsAuthInitialized = () => useAuthStore((state) => state.isInitialized);
+export const useAuthError = () => useAuthStore((state) => state.error);
+export const useLogin = () => useAuthStore((state) => state.login);
+export const useRegister = () => useAuthStore((state) => state.register);
+export const useLogout = () => useAuthStore((state) => state.logout);
+export const useInitializeAuth = () => useAuthStore((state) => state.initializeAuth);
+export const useUpdateUser = () => useAuthStore((state) => state.updateUser);
+export const useClearAuthError = () => useAuthStore((state) => state.clearError);

@@ -3,12 +3,13 @@
  * Thumb-friendly navigation with icons and labels
  */
 
+import { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useScrollStore } from '../store/scrollStore';
+import { useClearPosition } from '../store/scrollStore';
 
-export default function MobileBottomNav() {
+const MobileBottomNav = memo(function MobileBottomNav() {
   const location = useLocation();
-  const { clearPosition } = useScrollStore();
+  const clearPosition = useClearPosition();
 
   const isActive = (path: string) => {
     return location.pathname.startsWith(path);
@@ -96,4 +97,6 @@ export default function MobileBottomNav() {
       </div>
     </nav>
   );
-}
+});
+
+export default MobileBottomNav;

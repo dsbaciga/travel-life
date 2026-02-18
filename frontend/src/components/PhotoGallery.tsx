@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Photo, PhotoAlbum } from "../types/photo";
 import { stripMarkdown } from "../utils/stripMarkdown";
 import photoService from "../services/photo.service";
@@ -13,6 +14,15 @@ import EntityPickerModal from "./EntityPickerModal";
 import BatchPhotoToolbar from "./BatchPhotoToolbar";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import { formatDuration } from "../utils/duration";
+
+/** Number of photos beyond which we enable virtual scrolling for the grid */
+const VIRTUALIZATION_THRESHOLD = 50;
+/** Fixed column count used for virtualization row calculation */
+const VIRTUAL_GRID_COLUMNS = 4;
+/** Estimated row height in pixels (square aspect ratio items + gap) */
+const VIRTUAL_ROW_HEIGHT = 260;
+/** Number of rows to render outside the visible area */
+const VIRTUAL_OVERSCAN = 3;
 
 /**
  * PhotoGallery displays a collection of photos in grid or list view with
@@ -137,6 +147,150 @@ async function fetchWithRetry(
   }
 
   throw lastError || new Error('Fetch failed after retries');
+}
+
+/**
+ * Individual photo grid item extracted as a separate component to be shared
+ * between the simple grid and the virtualized grid renderers.
+ */
+function PhotoGridItem({
+  photo,
+  index,
+  thumbnailUrl,
+  isSelected,
+  selectionMode,
+  coverPhotoId,
+  onToggleSelection,
+  onSelectPhoto,
+}: {
+  photo: Photo;
+  index: number;
+  thumbnailUrl: string | null;
+  isSelected: boolean;
+  selectionMode: boolean;
+  coverPhotoId?: number | null;
+  onToggleSelection: (photoId: number, shiftKey: boolean) => void;
+  onSelectPhoto: (photo: Photo) => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={photo.caption || `Photo ${index + 1}`}
+      {...(selectionMode && { 'aria-pressed': isSelected })}
+      className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl bg-parchment dark:bg-navy-800 shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
+      onClick={(e) =>
+        selectionMode
+          ? onToggleSelection(photo.id, e.shiftKey)
+          : onSelectPhoto(photo)
+      }
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (selectionMode) {
+            onToggleSelection(photo.id, e.shiftKey);
+          } else {
+            onSelectPhoto(photo);
+          }
+        }
+      }}
+    >
+      {thumbnailUrl ? (
+        <ProgressiveImage
+          src={thumbnailUrl}
+          alt={photo.caption || "Photo"}
+          aspectRatio="1/1"
+          imgClassName="transform group-hover:scale-110 transition-transform duration-500"
+          lazy={index > 20}
+          rootMargin="400px"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-slate/40 dark:text-warm-gray/40">
+          <svg
+            className="w-16 h-16"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Video indicator */}
+      {photo.mediaType === 'video' && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-black/60 rounded-full p-3 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Video duration badge */}
+      {photo.mediaType === 'video' && photo.duration && (
+        <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded font-mono z-10">
+          {formatDuration(photo.duration)}
+        </div>
+      )}
+
+      {/* Gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {photo.caption && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+            <p className="text-white font-body text-sm font-medium line-clamp-2">
+              {photo.caption}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Badges */}
+      {coverPhotoId === photo.id && (
+        <div className="absolute top-3 left-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-xs px-3 py-1.5 rounded-full font-body font-semibold shadow-lg z-10">
+          Cover Photo
+        </div>
+      )}
+      {photo.location && (
+        <div className="absolute top-3 right-3 bg-primary-500/90 dark:bg-primary-600/90 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-body font-medium shadow-lg">
+          {photo.location.name}
+        </div>
+      )}
+
+      {/* Selection checkbox */}
+      {selectionMode && (
+        <div className="absolute top-3 left-3 z-10">
+          <div
+            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shadow-lg transition-all ${
+              isSelected
+                ? "bg-primary-600 dark:bg-accent-500 border-primary-600 dark:border-accent-500 scale-110"
+                : "bg-white/90 dark:bg-navy-800/90 border-primary-200 dark:border-navy-700 backdrop-blur-sm hover:border-primary-400 dark:hover:border-accent-400"
+            }`}
+          >
+            {isSelected && (
+              <svg
+                className="w-5 h-5 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function PhotoGallery({
@@ -649,6 +803,35 @@ export default function PhotoGallery({
   // Photos are already sorted by the backend, no need to sort client-side
   const sortedPhotos = photos;
 
+  const shouldVirtualize = sortedPhotos.length > VIRTUALIZATION_THRESHOLD;
+
+  // Pre-compute index lookup map to avoid O(n) indexOf calls in virtual rows
+  const photoIndexMap = useMemo(() => {
+    const map = new Map<number, number>();
+    sortedPhotos.forEach((p, i) => map.set(p.id, i));
+    return map;
+  }, [sortedPhotos]);
+
+  // Split photos into rows of VIRTUAL_GRID_COLUMNS for the virtualizer
+  const photoRows = useMemo(() => {
+    if (!shouldVirtualize) return [];
+    const rows: Photo[][] = [];
+    for (let i = 0; i < sortedPhotos.length; i += VIRTUAL_GRID_COLUMNS) {
+      rows.push(sortedPhotos.slice(i, i + VIRTUAL_GRID_COLUMNS));
+    }
+    return rows;
+  }, [sortedPhotos, shouldVirtualize]);
+
+  // Scrollable container ref for the virtualizer
+  const gridScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: photoRows.length,
+    getScrollElement: () => gridScrollContainerRef.current,
+    estimateSize: useCallback(() => VIRTUAL_ROW_HEIGHT, []),
+    overscan: VIRTUAL_OVERSCAN,
+  });
+
   if (photos.length === 0) {
     return (
       <EmptyState
@@ -813,132 +996,66 @@ export default function PhotoGallery({
       </div>
 
       {/* Grid View */}
-      {viewMode === "grid" && (
+      {viewMode === "grid" && !shouldVirtualize && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-          {sortedPhotos.map((photo, index) => {
-            const thumbnailUrl = getThumbnailUrl(photo);
-            const isSelected = selectedPhotoIds.has(photo.id);
-            return (
-              <div
-                key={photo.id}
-                role="button"
-                tabIndex={0}
-                aria-label={photo.caption || `Photo ${index + 1}`}
-                {...(selectionMode && { 'aria-pressed': isSelected })}
-                className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl bg-parchment dark:bg-navy-800 shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
-                onClick={(e) =>
-                  selectionMode
-                    ? togglePhotoSelection(photo.id, e.shiftKey)
-                    : setSelectedPhoto(photo)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (selectionMode) {
-                      togglePhotoSelection(photo.id, e.shiftKey);
-                    } else {
-                      setSelectedPhoto(photo);
-                    }
-                  }
-                }}
-              >
-                {thumbnailUrl ? (
-                  <ProgressiveImage
-                    src={thumbnailUrl}
-                    alt={photo.caption || "Photo"}
-                    aspectRatio="1/1"
-                    imgClassName="transform group-hover:scale-110 transition-transform duration-500"
-                    lazy={index > 20}
-                    rootMargin="400px"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate/40 dark:text-warm-gray/40">
-                    <svg
-                      className="w-16 h-16"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          {sortedPhotos.map((photo, index) => (
+            <PhotoGridItem
+              key={photo.id}
+              photo={photo}
+              index={index}
+              thumbnailUrl={getThumbnailUrl(photo)}
+              isSelected={selectedPhotoIds.has(photo.id)}
+              selectionMode={selectionMode}
+              coverPhotoId={coverPhotoId}
+              onToggleSelection={togglePhotoSelection}
+              onSelectPhoto={setSelectedPhoto}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Virtualized Grid View (for large galleries) */}
+      {viewMode === "grid" && shouldVirtualize && (
+        <div
+          ref={gridScrollContainerRef}
+          className="overflow-auto"
+          style={{ height: "calc(100vh - 280px)" }}
+        >
+          <div
+            className="relative w-full"
+            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const rowPhotos = photoRows[virtualRow.index];
+              return (
+                <div
+                  key={virtualRow.key}
+                  className="absolute top-0 left-0 w-full grid grid-cols-4 gap-2 sm:gap-4"
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {rowPhotos.map((photo) => {
+                    const globalIndex = photoIndexMap.get(photo.id) ?? 0;
+                    return (
+                      <PhotoGridItem
+                        key={photo.id}
+                        photo={photo}
+                        index={globalIndex}
+                        thumbnailUrl={getThumbnailUrl(photo)}
+                        isSelected={selectedPhotoIds.has(photo.id)}
+                        selectionMode={selectionMode}
+                        coverPhotoId={coverPhotoId}
+                        onToggleSelection={togglePhotoSelection}
+                        onSelectPhoto={setSelectedPhoto}
                       />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Video indicator */}
-                {photo.mediaType === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-black/60 rounded-full p-3 shadow-lg">
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-
-                {/* Video duration badge */}
-                {photo.mediaType === 'video' && photo.duration && (
-                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded font-mono z-10">
-                    {formatDuration(photo.duration)}
-                  </div>
-                )}
-
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {photo.caption && (
-                    <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <p className="text-white font-body text-sm font-medium line-clamp-2">
-                        {photo.caption}
-                      </p>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-
-                {/* Badges */}
-                {coverPhotoId === photo.id && (
-                  <div className="absolute top-3 left-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-xs px-3 py-1.5 rounded-full font-body font-semibold shadow-lg z-10">
-                    Cover Photo
-                  </div>
-                )}
-                {photo.location && (
-                  <div className="absolute top-3 right-3 bg-primary-500/90 dark:bg-primary-600/90 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-body font-medium shadow-lg">
-                    {photo.location.name}
-                  </div>
-                )}
-
-                {/* Selection checkbox */}
-                {selectionMode && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <div
-                      className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center shadow-lg transition-all ${
-                        isSelected
-                          ? "bg-primary-600 dark:bg-accent-500 border-primary-600 dark:border-accent-500 scale-110"
-                          : "bg-white/90 dark:bg-navy-800/90 border-primary-200 dark:border-navy-700 backdrop-blur-sm hover:border-primary-400 dark:hover:border-accent-400"
-                      }`}
-                    >
-                      {isSelected && (
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 

@@ -76,4 +76,16 @@ export const useScrollStore = create<ScrollState>()((set, get) => ({
     set({ skipNextScrollToTop: skip }),
 }));
 
+// Selectors for granular subscriptions (prevents unnecessary re-renders)
+export const useSavePosition = () => useScrollStore((state) => state.savePosition);
+export const useGetPosition = () => useScrollStore((state) => state.getPosition);
+export const useClearPosition = () => useScrollStore((state) => state.clearPosition);
+export const useClearAllPositions = () => useScrollStore((state) => state.clearAllPositions);
+export const useSavePageNumber = () => useScrollStore((state) => state.savePageNumber);
+export const useGetPageNumber = () => useScrollStore((state) => state.getPageNumber);
+export const useSavePageState = () => useScrollStore((state) => state.savePageState);
+export const useGetPageState = () => useScrollStore((state) => state.getPageState);
+export const useSkipNextScrollToTop = () => useScrollStore((state) => state.skipNextScrollToTop);
+export const useSetSkipNextScrollToTop = () => useScrollStore((state) => state.setSkipNextScrollToTop);
+
 export default useScrollStore;

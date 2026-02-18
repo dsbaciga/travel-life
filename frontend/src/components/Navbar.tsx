@@ -1,14 +1,58 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-import { useScrollStore } from "../store/scrollStore";
+import { useUser, useLogout } from "../store/authStore";
+import { useClearPosition } from "../store/scrollStore";
 import GlobalSearch from "./GlobalSearch";
 
-export default function Navbar() {
+// Hoisted outside Navbar to maintain stable component identity across renders
+function NavLink({
+  path,
+  label,
+  mobile = false,
+  onClick,
+  isActive,
+  onCloseMobileMenu,
+}: {
+  path: string;
+  label: string;
+  mobile?: boolean;
+  onClick?: () => void;
+  isActive: boolean;
+  onCloseMobileMenu?: () => void;
+}) {
+  return (
+    <Link
+      to={path}
+      className={`${
+        mobile ? "block w-full px-4 py-2.5 text-base" : "px-4 py-2.5"
+      } rounded-lg font-body font-medium relative group transition-colors ${
+        isActive
+          ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800"
+          : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
+      }`}
+      onClick={() => {
+        onClick?.();
+        if (mobile) onCloseMobileMenu?.();
+      }}
+    >
+      <span className="relative z-10">{label}</span>
+      {!mobile && (
+        <div
+          className={`absolute inset-x-2 bottom-1 h-0.5 bg-gradient-to-r from-primary-500 to-accent-400 dark:from-gold dark:to-accent-400 transition-transform origin-left ${
+            isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+          }`}
+        />
+      )}
+    </Link>
+  );
+}
+
+const Navbar = memo(function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
-  const { clearPosition } = useScrollStore();
+  const user = useUser();
+  const logout = useLogout();
+  const clearPosition = useClearPosition();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -19,9 +63,11 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const isActive = (path: string) => {
+  const isActivePath = (path: string) => {
     return location.pathname.startsWith(path);
   };
+
+  const closeMobileMenu = () => setShowMobileMenu(false);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -78,42 +124,6 @@ export default function Navbar() {
     { path: "/trip-series", label: "Series" },
   ];
 
-  const NavLink = ({
-    path,
-    label,
-    mobile = false,
-    onClick,
-  }: {
-    path: string;
-    label: string;
-    mobile?: boolean;
-    onClick?: () => void;
-  }) => (
-    <Link
-      to={path}
-      className={`${
-        mobile ? "block w-full px-4 py-2.5 text-base" : "px-4 py-2.5"
-      } rounded-lg font-body font-medium relative group transition-colors ${
-        isActive(path)
-          ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800"
-          : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
-      }`}
-      onClick={() => {
-        onClick?.();
-        if (mobile) setShowMobileMenu(false);
-      }}
-    >
-      <span className="relative z-10">{label}</span>
-      {!mobile && (
-        <div
-          className={`absolute inset-x-2 bottom-1 h-0.5 bg-gradient-to-r from-primary-500 to-accent-400 dark:from-gold dark:to-accent-400 transition-transform origin-left ${
-            isActive(path) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-          }`}
-        />
-      )}
-    </Link>
-  );
-
   return (
     <nav className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-md shadow-sm border-b border-primary-500/10 dark:border-gold/20 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
@@ -147,7 +157,7 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-1 ml-8">
             {navLinks.map((link) => (
-              <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} />
+              <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} isActive={isActivePath(link.path)} />
             ))}
           </div>
 
@@ -312,6 +322,8 @@ export default function Navbar() {
                 path={link.path}
                 label={link.label}
                 onClick={link.onClick}
+                isActive={isActivePath(link.path)}
+                onCloseMobileMenu={closeMobileMenu}
                 mobile
               />
             ))}
@@ -356,4 +368,6 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+});
+
+export default Navbar;

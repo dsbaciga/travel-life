@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams, useBlocker } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
 import userService from '../services/user.service';
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { useConfetti } from '../hooks/useConfetti';
 import { useScrollStore } from '../store/scrollStore';
 import MarkdownEditor from '../components/MarkdownEditor';
+import { useNavigationBlock } from '../hooks/useNavigationBlock';
 
 interface FormErrors {
   title?: string;
@@ -70,11 +71,8 @@ export default function TripFormPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Block in-app navigation (React Router) when form is dirty
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      isDirty() && !formSavedRef.current && currentLocation.pathname !== nextLocation.pathname
-  );
+  // Block in-app navigation when form is dirty
+  const blocker = useNavigationBlock(isDirty() && !formSavedRef.current);
 
   const loadUserTripTypes = useCallback(async () => {
     try {

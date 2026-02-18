@@ -1,27 +1,31 @@
-import { useEffect, useState, useId } from "react";
+import { useEffect, useState, useId, Suspense, lazy } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import userService from "../services/user.service";
 import tagService from "../services/tag.service";
 import apiService from "../services/api.service";
 import backupService from "../services/backup.service";
-import { useAuthStore } from "../store/authStore";
-import { useThemeStore } from "../store/themeStore";
+import { useUpdateUser } from "../store/authStore";
+import { useTheme, useToggleTheme } from "../store/themeStore";
 import type { ActivityCategory, TripTypeCategory } from "../types/user";
 import type { TripTag } from "../types/tag";
 import type { RestoreOptions } from "../types/backup";
 import toast from "react-hot-toast";
 import DietaryTagSelector from "../components/DietaryTagSelector";
-import ImmichSettings from "../components/ImmichSettings";
-import WeatherSettings from "../components/WeatherSettings";
-import AviationstackSettings from "../components/AviationstackSettings";
-import OpenRouteServiceSettings from "../components/OpenRouteServiceSettings";
-import SmtpSettings from "../components/SmtpSettings";
 import EmojiPicker from "../components/EmojiPicker";
-import TravelDocumentManager from "../components/TravelDocumentManager";
-import InviteUsersSection from "../components/InviteUsersSection";
-import TravelPartnerSettings from "../components/TravelPartnerSettings";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { getRandomTagColor } from "../utils/tagColors";
+
+// Lazy-loaded heavy tab components (only loaded when their tab is active)
+const ImmichSettings = lazy(() => import("../components/ImmichSettings"));
+const WeatherSettings = lazy(() => import("../components/WeatherSettings"));
+const AviationstackSettings = lazy(() => import("../components/AviationstackSettings"));
+const OpenRouteServiceSettings = lazy(() => import("../components/OpenRouteServiceSettings"));
+const SmtpSettings = lazy(() => import("../components/SmtpSettings"));
+const TravelDocumentManager = lazy(() => import("../components/TravelDocumentManager"));
+const InviteUsersSection = lazy(() => import("../components/InviteUsersSection"));
+const TravelPartnerSettings = lazy(() => import("../components/TravelPartnerSettings"));
 
 type TabType =
   | "account"
@@ -32,8 +36,9 @@ type TabType =
   | "backup";
 
 export default function SettingsPage() {
-  const { updateUser } = useAuthStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const updateUser = useUpdateUser();
+  const theme = useTheme();
+  const toggleTheme = useToggleTheme();
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -960,7 +965,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Travel Partner */}
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading travel partners..." />}>
             <TravelPartnerSettings />
+            </Suspense>
+            </ErrorBoundary>
 
             {/* Appearance */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -1638,12 +1647,18 @@ export default function SettingsPage() {
         {/* Travel Documents Tab */}
         {activeTab === "documents" && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading documents..." />}>
             <TravelDocumentManager />
+            </Suspense>
+            </ErrorBoundary>
           </div>
         )}
 
         {/* Integrations Tab */}
         {activeTab === "integrations" && (
+          <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner.FullPage message="Loading integrations..." />}>
           <div className="space-y-6">
             {/* Email (SMTP) Settings */}
             <SmtpSettings />
@@ -1660,10 +1675,18 @@ export default function SettingsPage() {
             {/* OpenRouteService Settings */}
             <OpenRouteServiceSettings />
           </div>
+          </Suspense>
+          </ErrorBoundary>
         )}
 
         {/* Invite Users Tab */}
-        {activeTab === "invites" && <InviteUsersSection />}
+        {activeTab === "invites" && (
+          <ErrorBoundary>
+          <Suspense fallback={<LoadingSpinner.FullPage message="Loading invitations..." />}>
+          <InviteUsersSection />
+          </Suspense>
+          </ErrorBoundary>
+        )}
 
         {/* Backup & Restore Tab */}
         {activeTab === "backup" && (
