@@ -19,10 +19,12 @@ const userInvitationService = {
 
   /**
    * Get all invitations sent by the current user
+   * Backend returns { invitations, total, page, totalPages }
+   * after the axios interceptor unwraps { status, data }
    */
   async getSentInvitations(): Promise<UserInvitation[]> {
     const response = await axios.get('/user-invitations');
-    return response.data;
+    return response.data?.invitations ?? [];
   },
 
   /**
