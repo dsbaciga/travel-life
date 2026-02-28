@@ -173,6 +173,44 @@ router.post('/photos', entityLinkController.bulkLinkPhotos);
 
 /**
  * @openapi
+ * /api/trips/{tripId}/links/cleanup-orphans:
+ *   post:
+ *     summary: Clean up orphaned entity links
+ *     description: >
+ *       Removes EntityLinks where the source or target entity no longer exists.
+ *       This is a safety net for any deletion paths that might have missed cleanup.
+ *     tags: [Entity Links]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The trip ID
+ *     responses:
+ *       200:
+ *         description: Orphaned links cleaned up
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     deletedCount:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/cleanup-orphans', entityLinkController.cleanupOrphans);
+
+/**
+ * @openapi
  * /api/trips/{tripId}/links/summary:
  *   get:
  *     summary: Get link summary for the entire trip

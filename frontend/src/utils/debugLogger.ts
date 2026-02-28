@@ -5,7 +5,7 @@
  * the source of errors that are difficult to trace in minified production builds.
  */
 
-const DEBUG_ENABLED = true; // Set to false to disable all debug logging
+const DEBUG_ENABLED = import.meta.env.DEV || import.meta.env.VITE_DEBUG === 'true';
 
 export interface DebugContext {
   component?: string;
@@ -239,8 +239,8 @@ class DebugLogger {
 // Export singleton instance
 export const debugLogger = new DebugLogger();
 
-// Export helper to attach to window for console access
-if (typeof window !== 'undefined') {
+// Export helper to attach to window for console access (debug builds only)
+if (typeof window !== 'undefined' && DEBUG_ENABLED) {
   window.__debugLogger = debugLogger;
   console.log('[DEBUG] Debug logger attached to window.__debugLogger');
   console.log('[DEBUG] Use window.__debugLogger.getRecentContext() to see recent logs');

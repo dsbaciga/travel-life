@@ -220,6 +220,8 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
             <input
               type="text"
               id="companion-name"
+              name="name"
+              autoComplete="off"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="input"
@@ -236,6 +238,9 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               <input
                 type="email"
                 id="companion-email"
+                name="email"
+                autoComplete="email"
+                spellCheck={false}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="input"
@@ -249,6 +254,8 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               <input
                 type="tel"
                 id="companion-phone"
+                name="phone"
+                autoComplete="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="input"
@@ -263,22 +270,25 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
             </label>
             <textarea
               id="companion-notes"
+              name="notes"
+              autoComplete="off"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="input"
               rows={3}
-              placeholder="Additional information..."
+              placeholder="Additional information\u2026"
               maxLength={1000}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="dietary-preferences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Dietary Preferences
             </label>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
               Track dietary restrictions to easily find suitable restaurants when traveling together.
             </p>
             <DietaryTagSelector
+              id="dietary-preferences"
               selectedTags={formData.dietaryPreferences}
               onChange={(tags) => setFormData({ ...formData, dietaryPreferences: tags })}
               compact
@@ -402,7 +412,8 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search companions by name..."
+              placeholder="Search companions by name\u2026"
+              aria-label="Search companions"
               className="input w-full"
             />
           </div>

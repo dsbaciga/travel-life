@@ -106,7 +106,7 @@ export default {
         // Neutrals
         cream: '#f8fafc',
         parchment: '#f1f5f9',
-        'warm-gray': '#e8eef4',
+        'warm-gray': '#e2e8f0',
         charcoal: '#1e293b',
         slate: '#64748b',
         // Dark Mode
@@ -117,8 +117,8 @@ export default {
         },
         // Gold accent for dark mode
         gold: '#fbbf24',
-        // Sky accent for dark mode (consistent with Tailwind's sky-400)
-        sky: '#38bdf8',
+        // Sky accent for dark mode - sky-300 for better contrast on navy-700 (WCAG AA)
+        sky: '#7dd3fc',
       },
       // Custom box shadows with gold glow for dark mode
       boxShadow: {

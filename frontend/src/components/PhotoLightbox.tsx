@@ -245,6 +245,7 @@ export default function PhotoLightbox({
       role="dialog"
       aria-modal="true"
       aria-label="Photo lightbox"
+      style={{ overscrollBehavior: 'contain' }}
     >
       {/* Main image container */}
       <div
@@ -262,6 +263,8 @@ export default function PhotoLightbox({
               ref={videoRef}
               src={photoUrl}
               className="max-w-full max-h-full object-contain select-none"
+              width={1200}
+              height={800}
               controls
               autoPlay
               muted
@@ -277,6 +280,8 @@ export default function PhotoLightbox({
               src={photoUrl}
               alt={photo.caption || "Photo"}
               className="max-w-full max-h-full object-contain select-none transition-transform duration-150"
+              width={1200}
+              height={800}
               style={{
                 transform: `scale(${zoom}) translate(${position.x / zoom}px, ${
                   position.y / zoom
@@ -353,7 +358,7 @@ export default function PhotoLightbox({
         <button
           type="button"
           onClick={handlePrev}
-          className={`absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/75 rounded-full w-12 h-12 flex items-center justify-center transition-all ${
+          className={`absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/75 rounded-full w-12 h-12 flex items-center justify-center transition-opacity ${
             showControls ? "opacity-100" : "opacity-0"
           }`}
           aria-label="Previous photo"
@@ -379,7 +384,7 @@ export default function PhotoLightbox({
         <button
           type="button"
           onClick={handleNext}
-          className={`absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/75 rounded-full w-12 h-12 flex items-center justify-center transition-all ${
+          className={`absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/75 rounded-full w-12 h-12 flex items-center justify-center transition-opacity ${
             showControls ? "opacity-100" : "opacity-0"
           }`}
           aria-label="Next photo"
@@ -441,6 +446,7 @@ export default function PhotoLightbox({
                     onClick={() => onEditTakenAtChange?.(null)}
                     className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
                     title="Clear date"
+                    aria-label="Clear date"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

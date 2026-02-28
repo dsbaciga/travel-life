@@ -5,6 +5,8 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { z } from 'zod';
 import { emailService } from '../services/email.service';
 import { validateUrlNotInternal } from '../utils/urlValidation';
+import { AppError } from '../utils/errors';
+import logger from '../config/logger';
 
 const immichSettingsSchema = z.object({
   immichApiUrl: z.string().url().optional().nullable(),
@@ -68,6 +70,25 @@ export const userController = {
   updateImmichSettings: asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
     const data = immichSettingsSchema.parse(req.body);
+
+    // Enforce HTTPS for public/external Immich URLs.
+    // HTTP is only allowed for local/private network addresses (development use).
+    if (data.immichApiUrl) {
+      const url = new URL(data.immichApiUrl);
+      const isLocal = ['localhost', '127.0.0.1', '::1'].includes(url.hostname) ||
+                      url.hostname.startsWith('192.168.') ||
+                      url.hostname.startsWith('10.') ||
+                      /^172\.(1[6-9]|2\d|3[01])\./.test(url.hostname) ||
+                      url.hostname.endsWith('.local');
+      if (url.protocol !== 'https:' && !isLocal) {
+        throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
+      }
+      if (url.protocol !== 'https:' && isLocal) {
+        logger.warn('Immich URL uses HTTP on local network — API key may be transmitted insecurely', {
+          host: url.hostname,
+        });
+      }
+    }
 
     // SSRF validation: ensure the Immich URL doesn't point to internal/private IPs
     if (data.immichApiUrl) {

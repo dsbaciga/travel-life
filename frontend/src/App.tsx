@@ -99,8 +99,8 @@ function App() {
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-    console.log('[DEBUG] Global error handlers installed');
-    console.log('[DEBUG] Access window.__debugLogger.getRecentContext() to see recent debug logs');
+    debugLogger.log('Global error handlers installed', { component: 'App', operation: 'setup' });
+    debugLogger.log('Access window.__debugLogger.getRecentContext() to see recent debug logs', { component: 'App', operation: 'setup' });
 
     return () => {
       window.removeEventListener('error', handleError);
@@ -114,7 +114,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-cream-200">Loading...</p>
+          <p className="mt-4 text-navy-600 dark:text-cream-200">Loading\u2026</p>
         </div>
       </div>
     );
@@ -132,7 +132,7 @@ function App() {
       }}
       onSuccess={() => {
         // Called when the cache has been restored
-        console.log('[QueryPersist] Cache restored from IndexedDB');
+        debugLogger.log('Cache restored from IndexedDB', { component: 'App', operation: 'QueryPersist' });
       }}
     >
       <BrowserRouter>
@@ -153,7 +153,7 @@ function App() {
           </a>
           <Navbar />
           <main id="main-content" className="pt-16 sm:pt-20 pb-16 md:pb-0" tabIndex={-1}>
-            <Suspense fallback={<LoadingSpinner.FullPage message="Loading page..." />}>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading page\u2026" />}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/login" element={<ErrorBoundary><LoginPage /></ErrorBoundary>} />

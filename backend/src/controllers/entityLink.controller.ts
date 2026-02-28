@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { entityLinkService } from '../services/entityLink.service';
+import { entityLinkService, cleanupOrphanedEntityLinks } from '../services/entityLink.service';
 import {
   createEntityLinkSchema,
   bulkCreateEntityLinksSchema,
@@ -12,6 +12,7 @@ import {
 import { asyncHandler } from '../utils/asyncHandler';
 import { parseId } from '../utils/parseId';
 import { requireUserId } from '../utils/controllerHelpers';
+import { verifyTripAccessWithPermission } from '../utils/serviceHelpers';
 
 export const entityLinkController = {
   /**
@@ -222,5 +223,20 @@ export const entityLinkController = {
       entityId
     );
     res.json({ status: 'success', data: result });
+  }),
+
+  /**
+   * Clean up orphaned entity links for a trip
+   * POST /api/trips/:tripId/links/cleanup-orphans
+   */
+  cleanupOrphans: asyncHandler(async (req: Request, res: Response) => {
+    const userId = requireUserId(req);
+    const tripId = parseId(req.params.tripId, 'tripId');
+
+    // Verify user has edit permission on the trip
+    await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    const deletedCount = await cleanupOrphanedEntityLinks(tripId);
+    res.json({ status: 'success', data: { deletedCount } });
   }),
 };

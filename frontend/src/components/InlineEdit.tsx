@@ -131,7 +131,7 @@ export default function InlineEdit({
   };
 
   const baseInputClasses =
-    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all';
+    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-colors';
   const inputClasses = error
     ? `${baseInputClasses} border-red-500 dark:border-red-400 ${editClassName}`
     : `${baseInputClasses} border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${editClassName}`;
@@ -143,6 +143,7 @@ export default function InlineEdit({
           onClick={() => setIsEditing(true)}
           className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group ${displayClassName}`}
           title="Click to edit"
+          aria-label="Edit"
         >
           <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
             {value || placeholder}
@@ -160,6 +161,8 @@ export default function InlineEdit({
       {multiline ? (
         <textarea
           ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+          name="inline-edit"
+          aria-label="Edit value"
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleSave}
@@ -174,6 +177,8 @@ export default function InlineEdit({
         <input
           ref={inputRef as React.RefObject<HTMLInputElement>}
           type="text"
+          name="inline-edit"
+          aria-label="Edit value"
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={handleSave}
@@ -282,6 +287,7 @@ export function InlineEditNumber({
           onClick={() => setIsEditing(true)}
           className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group ${displayClassName}`}
           title="Click to edit"
+          aria-label="Edit"
         >
           <span className={value !== null ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
             {value !== null ? `${prefix}${value}${suffix}` : placeholder}
@@ -299,6 +305,8 @@ export function InlineEditNumber({
       <input
         ref={inputRef}
         type="number"
+        name="inline-edit"
+        aria-label="Edit value"
         value={editValue}
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={handleSave}

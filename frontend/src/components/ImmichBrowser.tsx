@@ -362,7 +362,7 @@ export default function ImmichBrowser({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-full sm:h-5/6 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-full sm:h-5/6 flex flex-col" style={{ overscrollBehavior: 'contain' }}>
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4">
@@ -381,6 +381,7 @@ export default function ImmichBrowser({
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -437,6 +438,7 @@ export default function ImmichBrowser({
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Search photos..."
+                  aria-label="Search assets"
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 <button
@@ -469,6 +471,7 @@ export default function ImmichBrowser({
                 value={albumSearchTerm}
                 onChange={(e) => setAlbumSearchTerm(e.target.value)}
                 placeholder="Search albums..."
+                aria-label="Search albums"
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
@@ -597,7 +600,7 @@ export default function ImmichBrowser({
                       key={asset.id}
                       onClick={() => handleSelectAsset(asset)}
                       type="button"
-                      className={`relative aspect-square rounded-lg overflow-hidden border-4 transition-all ${
+                      className={`relative aspect-square rounded-lg overflow-hidden border-4 transition-transform ${
                         selectedAssetsMap.has(asset.id)
                           ? "border-blue-600 shadow-lg scale-105"
                           : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
@@ -608,6 +611,9 @@ export default function ImmichBrowser({
                           src={blobUrl}
                           alt={asset.originalFileName}
                           className="w-full h-full object-cover"
+                          width={300}
+                          height={300}
+                          loading="lazy"
                           onError={(e) =>
                             console.error(
                               `[ImmichBrowser] Image failed to load: ${asset.id}`,
@@ -625,7 +631,7 @@ export default function ImmichBrowser({
                           {/* Video play icon overlay */}
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="bg-black/50 rounded-full p-2">
-                              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M8 5v14l11-7z" />
                               </svg>
                             </div>
@@ -644,6 +650,7 @@ export default function ImmichBrowser({
                             className="w-12 h-12 text-white"
                             fill="currentColor"
                             viewBox="0 0 20 20"
+                            aria-hidden="true"
                           >
                             <path
                               fillRule="evenodd"

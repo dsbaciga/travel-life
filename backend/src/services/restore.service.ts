@@ -625,7 +625,11 @@ export async function restoreFromBackup(
     };
   } catch (error) {
     console.error('Error restoring from backup:', error);
-    throw new AppError('Failed to restore from backup: ' + (error as Error).message, 500);
+    throw new AppError(
+      `Failed to restore from backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      500,
+      { cause: error }
+    );
   }
 }
 

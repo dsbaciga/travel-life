@@ -933,7 +933,8 @@ export default function TripDetailPage() {
           `[data-entity-id="${entityType}-${entityId}"]`
         );
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          element.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
           element.classList.add("scroll-highlight");
           setTimeout(() => element.classList.remove("scroll-highlight"), 2000);
         }
@@ -1051,6 +1052,7 @@ export default function TripDetailPage() {
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"
@@ -1097,7 +1099,7 @@ export default function TripDetailPage() {
                 {/* Duplicate button - positioned in bottom right */}
                 <button
                   onClick={handleOpenDuplicateDialog}
-                  className="absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/40 rounded-lg transition-all hover:shadow-lg"
+                  className="absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/40 rounded-lg transition-colors hover:shadow-lg"
                   title="Duplicate Trip"
                   aria-label="Duplicate Trip"
                 >
@@ -1256,7 +1258,7 @@ export default function TripDetailPage() {
               {/* Duplicate button - positioned in bottom right */}
               <button
                 onClick={handleOpenDuplicateDialog}
-                className="absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition-all hover:shadow-lg"
+                className="absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors hover:shadow-lg"
                 title="Duplicate Trip"
                 aria-label="Duplicate Trip"
               >
@@ -1403,7 +1405,7 @@ export default function TripDetailPage() {
 
         {/* Tab Content with smooth transitions - Swipe enabled on mobile */}
         <div
-          className="transition-all duration-300 ease-in-out"
+          className="transition-opacity duration-300 ease-in-out"
           {...swipeHandlers}
         >
           {/* Dashboard Tab */}
@@ -2083,10 +2085,11 @@ export default function TripDetailPage() {
               </h2>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="duplicate-trip-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   New Trip Title
                 </label>
                 <input
+                  id="duplicate-trip-title"
                   type="text"
                   value={duplicateTripTitle}
                   onChange={(e) => setDuplicateTripTitle(e.target.value)}

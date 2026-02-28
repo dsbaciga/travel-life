@@ -79,7 +79,7 @@ const MobileBottomNav = memo(function MobileBottomNav() {
               to={item.path}
               onClick={item.onClick}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center flex-1 h-full min-w-[44px] transition-all duration-200 ${
+              className={`flex flex-col items-center justify-center flex-1 h-full min-w-[44px] transition-colors duration-200 ${
                 active
                   ? 'text-primary-600 dark:text-sky'
                   : 'text-gray-600 dark:text-gray-400 active:scale-95'

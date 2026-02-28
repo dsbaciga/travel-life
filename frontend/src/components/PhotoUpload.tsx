@@ -523,7 +523,7 @@ export default function PhotoUpload({
                 onChange={(e) => setCaption(e.target.value)}
                 rows={2}
                 className="input"
-                placeholder="Add a caption..."
+                placeholder="Add a caption\u2026"
                 disabled={isUploading}
               />
             </div>
@@ -534,7 +534,7 @@ export default function PhotoUpload({
             <div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all"
+                  className="bg-blue-600 h-2 rounded-full transition-[width]"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>

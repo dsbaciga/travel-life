@@ -31,6 +31,7 @@ export default function AlbumsPage() {
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumWithPhotos | null>(null);
   const [albumPhotos, setAlbumPhotos] = useState<Photo[]>([]);
   const [thumbnailCache, setThumbnailCache] = useState<{ [key: number]: string }>({});
+  const [failedThumbnails, setFailedThumbnails] = useState<Set<number>>(new Set());
   const blobUrlsRef = useRef<string[]>([]);
   const thumbnailCacheRef = useRef(thumbnailCache);
   thumbnailCacheRef.current = thumbnailCache;
@@ -85,6 +86,7 @@ export default function AlbumsPage() {
       const currentCache = thumbnailCacheRef.current;
       const newUrls: { [key: number]: string } = {};
       const newBlobUrls: string[] = [];
+      const newFailedIds: number[] = [];
 
       for (const album of albumPagination.items) {
         const photo = album.coverPhoto;
@@ -94,7 +96,10 @@ export default function AlbumsPage() {
 
         try {
           const fullUrl = getFullAssetUrl(photo.thumbnailPath);
-          if (!fullUrl) continue;
+          if (!fullUrl) {
+            newFailedIds.push(album.id);
+            continue;
+          }
 
           const response = await fetch(fullUrl, {
             headers: { Authorization: `Bearer ${token}` },
@@ -105,15 +110,26 @@ export default function AlbumsPage() {
             const blobUrl = URL.createObjectURL(blob);
             newUrls[photo.id] = blobUrl;
             newBlobUrls.push(blobUrl);
+          } else {
+            newFailedIds.push(album.id);
           }
         } catch (error) {
           console.error(`Failed to load cover for album ${album.id}:`, error);
+          newFailedIds.push(album.id);
         }
       }
 
       if (Object.keys(newUrls).length > 0) {
         blobUrlsRef.current = [...blobUrlsRef.current, ...newBlobUrls];
         setThumbnailCache(prev => ({ ...prev, ...newUrls }));
+      }
+
+      if (newFailedIds.length > 0) {
+        setFailedThumbnails(prev => {
+          const next = new Set(prev);
+          newFailedIds.forEach(id => next.add(id));
+          return next;
+        });
       }
     };
 
@@ -129,6 +145,64 @@ export default function AlbumsPage() {
       blobUrlsRef.current = [];
     };
   }, []);
+
+  const handleRetryThumbnail = async (album: PhotoAlbum) => {
+    const photo = album.coverPhoto;
+    if (!photo || photo.source !== "immich" || !photo.thumbnailPath) return;
+
+    // Remove from failed set to show loading state
+    setFailedThumbnails(prev => {
+      const next = new Set(prev);
+      next.delete(album.id);
+      return next;
+    });
+
+    const token = getAccessToken();
+    if (!token) {
+      setFailedThumbnails(prev => {
+        const next = new Set(prev);
+        next.add(album.id);
+        return next;
+      });
+      return;
+    }
+
+    try {
+      const fullUrl = getFullAssetUrl(photo.thumbnailPath);
+      if (!fullUrl) {
+        setFailedThumbnails(prev => {
+          const next = new Set(prev);
+          next.add(album.id);
+          return next;
+        });
+        return;
+      }
+
+      const response = await fetch(fullUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        blobUrlsRef.current.push(blobUrl);
+        setThumbnailCache(prev => ({ ...prev, [photo.id]: blobUrl }));
+      } else {
+        setFailedThumbnails(prev => {
+          const next = new Set(prev);
+          next.add(album.id);
+          return next;
+        });
+      }
+    } catch (error) {
+      console.error(`Retry failed for album ${album.id}:`, error);
+      setFailedThumbnails(prev => {
+        const next = new Set(prev);
+        next.add(album.id);
+        return next;
+      });
+    }
+  };
 
   const handleCreateAlbum = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,10 +338,11 @@ export default function AlbumsPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create New Album</h2>
             <form onSubmit={handleCreateAlbum} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="album-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Album Name *
                 </label>
               <input
+                id="album-name"
                 type="text"
                 value={albumName}
                 onChange={(e) => setAlbumName(e.target.value)}
@@ -278,10 +353,11 @@ export default function AlbumsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="album-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description
               </label>
               <textarea
+                id="album-description"
                 value={albumDescription}
                 onChange={(e) => setAlbumDescription(e.target.value)}
                 rows={3}
@@ -314,15 +390,43 @@ export default function AlbumsPage() {
               className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div
-                className="h-48 bg-gray-200 dark:bg-gray-700 cursor-pointer"
+                className="h-48 bg-gray-200 dark:bg-gray-700 cursor-pointer relative"
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/trips/${tripId}/albums/${album.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/trips/${tripId}/albums/${album.id}`); } }}
               >
                 {getCoverPhotoUrl(album) ? (
                   <img
                     src={getCoverPhotoUrl(album)!}
                     alt={album.name}
                     className="w-full h-full object-cover"
+                    width={400}
+                    height={300}
+                    loading="lazy"
                   />
+                ) : failedThumbnails.has(album.id) ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 gap-2">
+                    <PhotoIcon className="w-12 h-12" />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Failed to load</p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRetryThumbnail(album);
+                      }}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500 border border-gray-300 dark:border-gray-500 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Retry
+                    </button>
+                  </div>
+                ) : album.coverPhoto?.source === "immich" && album.coverPhoto?.thumbnailPath ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <LoadingSpinner size="sm" />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
                     <PhotoIcon className="w-16 h-16" />
@@ -332,10 +436,15 @@ export default function AlbumsPage() {
 
               <div className="p-4">
                 <h3
-                  className="font-semibold text-lg text-gray-900 dark:text-white mb-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 break-words line-clamp-2"
-                  onClick={() => navigate(`/trips/${tripId}/albums/${album.id}`)}
+                  className="font-semibold text-lg text-gray-900 dark:text-white mb-1 break-words line-clamp-2"
                 >
-                  {album.name}
+                  <button
+                    type="button"
+                    className="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 bg-transparent border-none p-0 text-left font-inherit text-inherit"
+                    onClick={() => navigate(`/trips/${tripId}/albums/${album.id}`)}
+                  >
+                    {album.name}
+                  </button>
                 </h3>
                 {album.description && (
                   <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2 break-words">
@@ -482,6 +591,9 @@ export default function AlbumsPage() {
                             src={photoUrl}
                             alt={photo.caption || "Photo"}
                             className="w-full h-full object-cover"
+                            width={200}
+                            height={200}
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">

@@ -1,4 +1,4 @@
-import { useState, useId, useMemo, useCallback, useEffect } from "react";
+import { useState, useId, useMemo, useCallback, useEffect, useRef } from "react";
 import type { JournalEntry, CreateJournalEntryInput, UpdateJournalEntryInput } from "../types/journalEntry";
 import journalEntryService from "../services/journalEntry.service";
 import toast from "react-hot-toast";
@@ -15,6 +15,7 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
 import { useEditFromUrlParam } from "../hooks/useEditFromUrlParam";
 import { useAutoSaveDraft } from "../hooks/useAutoSaveDraft";
+import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
@@ -98,6 +99,9 @@ export default function JournalManager({
 
   const { values: formValues, setField, resetFields, setAllFields } = useFormFields(initialFormValues);
 
+  // Track unsaved changes for browser close/refresh warning
+  const { captureInitialValues, isDirty: isFormDirty, markSaved } = useUnsavedChangesWarning(formValues, manager.showForm);
+
   // Auto-save draft for form data
   const draftKey = manager.editingId ? manager.editingId : tripId;
   const draft = useAutoSaveDraft(formValues, {
@@ -155,6 +159,23 @@ export default function JournalManager({
   const titleFieldId = useId();
   const entryDateFieldId = useId();
 
+  // Capture initial form values for dirty tracking when form opens or switches mode.
+  // Uses a microtask delay so handleChange calls from populate effects have settled.
+  const prevFormOpenRef = useRef(false);
+  const prevEditingIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const justOpened = manager.showForm && !prevFormOpenRef.current;
+    const editingChanged = manager.editingId !== prevEditingIdRef.current;
+    prevFormOpenRef.current = manager.showForm;
+    prevEditingIdRef.current = manager.editingId;
+
+    if (manager.showForm && (justOpened || editingChanged)) {
+      const timer = setTimeout(() => captureInitialValues(formValues), 0);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager.showForm, manager.editingId, captureInitialValues]);
+
   // handleEdit must be defined before handleEditFromUrl since it's used as a dependency
   const handleEdit = useCallback((entry: JournalEntry) => {
     setAllFields({
@@ -209,6 +230,7 @@ export default function JournalManager({
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        markSaved();
         invalidateLinkSummary(); // Refresh link counts
         resetForm();
         manager.closeForm();
@@ -223,6 +245,7 @@ export default function JournalManager({
       };
       const success = await manager.handleCreate(createData);
       if (success) {
+        markSaved();
         invalidateLinkSummary(); // Refresh link counts
         if (keepFormOpenAfterSave) {
           // Reset form but keep modal open for quick successive entries
@@ -264,11 +287,16 @@ export default function JournalManager({
 
   const truncateContent = (text: string, maxLength: number = 200) => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
+    return text.substring(0, maxLength) + "\u2026";
   };
 
-  // resetForm already closes the form via useFormReset
-  const handleCloseForm = resetForm;
+  // Wrap close handler with unsaved changes confirmation
+  const handleCloseForm = useCallback(() => {
+    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+      return;
+    }
+    resetForm();
+  }, [isFormDirty, resetForm]);
 
   return (
     <div className="space-y-6">
@@ -352,6 +380,8 @@ export default function JournalManager({
             <input
               type="text"
               id={titleFieldId}
+              name="title"
+              autoComplete="off"
               value={formValues.title}
               onChange={(e) => setField('title', e.target.value)}
               className="input"
@@ -371,6 +401,8 @@ export default function JournalManager({
                 <input
                   type="datetime-local"
                   id={entryDateFieldId}
+                  name="entry-date"
+                  autoComplete="off"
                   value={formValues.entryDate}
                   onChange={(e) => setField('entryDate', e.target.value)}
                   className="input"
@@ -383,7 +415,7 @@ export default function JournalManager({
                 value={formValues.content}
                 onChange={(val) => setField('content', val)}
                 rows={12}
-                placeholder="Write your journal entry here..."
+                placeholder="Write your journal entry here\u2026"
                 label="Content"
                 required={true}
               />

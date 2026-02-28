@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { AppError } from '../utils/errors';
+import logger from '../config/logger';
 import {
   ImmichAsset,
   ImmichAlbum,
@@ -59,9 +60,14 @@ class ImmichService {
     // All endpoint paths in this service include /api/ prefix
     const baseURL = apiUrl.trim();
 
-    // Warn if the URL does not use HTTPS (API key will be sent in the clear)
+    // Warn if the URL does not use HTTPS (API key will be sent in the clear).
+    // Non-HTTPS is only permitted for local/private network URLs (e.g. localhost,
+    // 192.168.x.x, 10.x.x.x) for development purposes. Public URLs are required
+    // to use HTTPS and are enforced at save time in the user controller.
     if (baseURL && !baseURL.startsWith('https://')) {
-      console.warn(`[Immich Service] WARNING: Immich API URL does not use HTTPS. API key may be transmitted insecurely. URL: ${sanitizeUrlForLogging(baseURL)}`);
+      logger.warn('Immich API URL does not use HTTPS — API key may be transmitted insecurely', {
+        url: sanitizeUrlForLogging(baseURL),
+      });
     }
 
     return axios.create({
@@ -404,14 +410,17 @@ class ImmichService {
     try {
       const client = this.createClient(apiUrl, apiKey);
 
+      // When no options provided, fetch ALL assets (used by "Select All" feature)
+      const fetchAll = !options;
       const skip = options?.skip || 0;
-      const take = options?.take || 100;
+      const take = fetchAll ? Infinity : (options?.take || 100);
+      const pageSize = fetchAll ? 1000 : take;
 
       // Build request with date range and size parameter for server-side pagination
       const baseRequest: { takenAfter: string; takenBefore: string; size: number; page?: string } = {
         takenAfter: startDate,
         takenBefore: endDate,
-        size: take,
+        size: pageSize,
       };
 
       let collectedAssets: ImmichAsset[] = [];
@@ -447,7 +456,7 @@ class ImmichService {
         } else {
           // Take some assets from this page (partial skip)
           const assetsFromThisPage = pageAssets.slice(remainingToSkip);
-          collectedAssets = assetsFromThisPage.slice(0, take);
+          collectedAssets = fetchAll ? assetsFromThisPage : assetsFromThisPage.slice(0, take);
           skippedCount = skip;
           break;
         }
@@ -461,16 +470,20 @@ class ImmichService {
         }
       }
 
-      // If we still need more assets to fill the 'take' requirement
-      while (collectedAssets.length < take && nextPage && pageNum < maxPages) {
+      // If we still need more assets (or fetching all)
+      while ((fetchAll || collectedAssets.length < take) && nextPage && pageNum < maxPages) {
         const requestBody = { ...baseRequest, page: nextPage };
         const response = await client.post('/api/search/metadata', requestBody);
         const pageAssets = response.data.assets?.items || response.data.assets || [];
         nextPage = response.data.assets?.nextPage || null;
         pageNum++;
 
-        const needed = take - collectedAssets.length;
-        collectedAssets = collectedAssets.concat(pageAssets.slice(0, needed));
+        if (fetchAll) {
+          collectedAssets = collectedAssets.concat(pageAssets);
+        } else {
+          const needed = take - collectedAssets.length;
+          collectedAssets = collectedAssets.concat(pageAssets.slice(0, needed));
+        }
 
         if (pageAssets.length === 0) {
           break;
@@ -482,6 +495,28 @@ class ImmichService {
         const response = await client.post('/api/search/metadata', baseRequest);
         collectedAssets = response.data.assets?.items || response.data.assets || [];
         nextPage = response.data.assets?.nextPage || null;
+      }
+
+      if (fetchAll) {
+        // When fetching all, continue paginating until no more pages
+        while (nextPage && pageNum < maxPages) {
+          const requestBody = { ...baseRequest, page: nextPage };
+          const response = await client.post('/api/search/metadata', requestBody);
+          const pageAssets = response.data.assets?.items || response.data.assets || [];
+          nextPage = response.data.assets?.nextPage || null;
+          pageNum++;
+
+          collectedAssets = collectedAssets.concat(pageAssets);
+
+          if (pageAssets.length === 0) {
+            break;
+          }
+        }
+
+        return {
+          assets: collectedAssets,
+          hasMore: false,
+        };
       }
 
       const hasMore = nextPage !== null || collectedAssets.length === take;

@@ -178,7 +178,7 @@ function PhotoGridItem({
       tabIndex={0}
       aria-label={photo.caption || `Photo ${index + 1}`}
       {...(selectionMode && { 'aria-pressed': isSelected })}
-      className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl bg-parchment dark:bg-navy-800 shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
+      className="relative group cursor-pointer aspect-square overflow-hidden rounded-xl bg-parchment dark:bg-navy-800 shadow-md hover:shadow-2xl transition-transform duration-300 hover:scale-105 active:scale-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
       onClick={(e) =>
         selectionMode
           ? onToggleSelection(photo.id, e.shiftKey)
@@ -211,6 +211,7 @@ function PhotoGridItem({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -226,7 +227,7 @@ function PhotoGridItem({
       {photo.mediaType === 'video' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-black/60 rounded-full p-3 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
@@ -278,6 +279,7 @@ function PhotoGridItem({
                 className="w-5 h-5 text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
+                aria-hidden="true"
               >
                 <path
                   fillRule="evenodd"
@@ -854,7 +856,7 @@ export default function PhotoGallery({
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`px-3 py-2 rounded-md transition-all duration-200 ${
+              className={`px-3 py-2 rounded-md transition-colors duration-200 ${
                 viewMode === "grid"
                   ? "bg-white dark:bg-gray-800 text-primary-600 dark:text-sky shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
@@ -881,7 +883,7 @@ export default function PhotoGallery({
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className={`px-3 py-2 rounded-md transition-all duration-200 ${
+              className={`px-3 py-2 rounded-md transition-colors duration-200 ${
                 viewMode === "list"
                   ? "bg-white dark:bg-gray-800 text-primary-600 dark:text-sky shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
@@ -941,7 +943,7 @@ export default function PhotoGallery({
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded-full hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
                   title={`${retryableFailedCount} thumbnail(s) failed to load. Click to retry.`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   Retry {retryableFailedCount}
@@ -952,7 +954,7 @@ export default function PhotoGallery({
                   className="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-full"
                   title={`${permanentlyFailedCount} thumbnail(s) failed after maximum retries`}
                 >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   {permanentlyFailedCount} failed
@@ -970,7 +972,7 @@ export default function PhotoGallery({
             onClick={() => setSelectionMode(true)}
             className="btn btn-secondary inline-flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Select Photos
@@ -1072,7 +1074,7 @@ export default function PhotoGallery({
                 tabIndex={0}
                 aria-label={photo.caption || `Photo ${index + 1}`}
                 {...(selectionMode && { 'aria-pressed': isSelected })}
-                className="relative group cursor-pointer bg-white dark:bg-navy-800 rounded-xl p-4 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-primary-200 dark:hover:border-sky/30 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
+                className="relative group cursor-pointer bg-white dark:bg-navy-800 rounded-xl p-4 shadow-md hover:shadow-xl transition-shadow duration-300 border-2 border-transparent hover:border-primary-200 dark:hover:border-sky/30 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky focus:ring-offset-2"
                 onClick={(e) =>
                   selectionMode
                     ? togglePhotoSelection(photo.id, e.shiftKey)
@@ -1135,6 +1137,7 @@ export default function PhotoGallery({
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
+                          aria-hidden="true"
                         >
                           <path
                             strokeLinecap="round"
@@ -1164,6 +1167,7 @@ export default function PhotoGallery({
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                aria-hidden="true"
                               >
                                 <path
                                   strokeLinecap="round"
@@ -1182,6 +1186,7 @@ export default function PhotoGallery({
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                aria-hidden="true"
                               >
                                 <path
                                   strokeLinecap="round"
@@ -1200,7 +1205,7 @@ export default function PhotoGallery({
                       <div className="flex-shrink-0 flex items-center gap-2">
                         {photo.mediaType === 'video' && (
                           <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded text-xs">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path d="M8 5v14l11-7z" />
                             </svg>
                             Video
@@ -1289,6 +1294,7 @@ export default function PhotoGallery({
         >
           <div
             className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -1328,6 +1334,7 @@ export default function PhotoGallery({
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"

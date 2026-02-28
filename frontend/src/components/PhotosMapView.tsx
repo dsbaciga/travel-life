@@ -113,7 +113,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
     case 'exif':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -128,7 +128,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
     case 'linked_location':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -143,7 +143,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
     case 'album_location':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -358,6 +358,7 @@ export default function PhotosMapView({
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -412,10 +413,12 @@ export default function PhotosMapView({
                           src={photoUrl}
                           alt={photo.caption || 'Photo'}
                           className="w-full h-32 object-cover rounded-t-lg"
+                          width={200}
+                          height={150}
                         />
                       ) : (
                         <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-t-lg">
-                          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"

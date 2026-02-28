@@ -56,12 +56,16 @@ RUN sed -i 's/\r$//' /usr/local/bin/migrate-and-start.sh && chmod +x /usr/local/
 # These will be copied to Docker volumes on first initialization
 RUN mkdir -p /app/uploads/temp /app/uploads/photos /app/logs /app/data && chown -R node:node /app/uploads /app/logs /app/data
 
-# NOTE: We intentionally do NOT use "USER node" here.
-# The entrypoint script runs as root to fix bind mount permissions (especially on TrueNAS),
-# then uses gosu/su-exec to drop privileges to 'node' for the actual application.
-# This pattern allows the container to fix its own permissions on first start.
-# SECURITY: If su-exec is unavailable, the entrypoint script will fail explicitly
-# rather than silently running as root. To run without su-exec, use: docker run --user node
+# SECURITY: Default to non-root execution as a defense-in-depth measure.
+# The entrypoint script (migrate-and-start.sh) handles both root and non-root execution:
+#   - As non-root (default): skips permission fixing, runs app directly
+#   - As root (override):    fixes bind mount permissions, then drops to 'node' via su-exec
+#
+# For TrueNAS or systems requiring root-level permission fixes on startup,
+# override the user in docker-compose.yml:
+#   user: "root"
+# The entrypoint will still drop privileges to 'node' before starting the app.
+USER node
 
 # Expose port
 EXPOSE 5000

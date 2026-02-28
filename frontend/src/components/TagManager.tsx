@@ -226,10 +226,12 @@ export default function TagManager({ tripId }: TagManagerProps) {
             <input
               type="text"
               id={tagNameId}
+              name="tag-name"
+              autoComplete="off"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="input"
-              placeholder="Adventure, Beach, Food..."
+              placeholder="Adventure, Beach, Food\u2026"
               maxLength={50}
               required
             />
@@ -256,6 +258,8 @@ export default function TagManager({ tripId }: TagManagerProps) {
             <input
               type="color"
               id={tagColorId}
+              name="tag-color"
+              autoComplete="off"
               value={formData.color}
               onChange={(e) => setFormData({ ...formData, color: e.target.value })}
               className="mt-2 h-10 w-32 cursor-pointer"

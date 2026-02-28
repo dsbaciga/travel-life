@@ -213,7 +213,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           key={`${result.type}-${result.id}`}
           onClick={() => handleSelectResult(result)}
           className={`
-            w-full text-left px-3 py-3 rounded-lg transition-all duration-150
+            w-full text-left px-3 py-3 rounded-lg transition-colors duration-150
             ${
               index === selectedIndex
                 ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
@@ -276,6 +276,8 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
         <input
           ref={inputRef}
           type="text"
+          name="search"
+          autoComplete="off"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -283,7 +285,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           }}
           onFocus={() => setShowResults(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search trips, locations, photos..."
+          placeholder="Search trips, locations, photos\u2026"
           aria-label="Search trips, locations, photos"
           className={`
             w-full pl-10 pr-12 py-3
@@ -293,7 +295,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
             rounded-xl
             focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky
             focus:border-transparent
-            transition-all duration-200
+            transition-colors duration-200
             ${compact ? 'text-sm' : 'text-base'}
           `}
         />
@@ -358,6 +360,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path
                         strokeLinecap="round"
@@ -384,6 +387,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -405,6 +409,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       {showResults && (
         <div
           className="fixed inset-0 z-[60]"
+          aria-hidden="true"
           onClick={() => {
             setShowResults(false);
             onClose?.();

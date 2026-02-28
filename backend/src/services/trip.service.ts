@@ -1,42 +1,13 @@
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 import { CreateTripInput, UpdateTripInput, GetTripQuery, TripStatus, DuplicateTripInput } from '../types/trip.types';
 import { companionService } from './companion.service';
 import { buildConditionalUpdateData, tripDateTransformer, convertDecimals, toSafePermissionLevel } from '../utils/serviceHelpers';
 
-// Type aliases for Prisma types (to work without requiring Prisma client generation)
+// Type aliases for Prisma types
 type DecimalValue = number | string | { toNumber(): number };
 type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-
-// Prisma-like filter and ordering types
-interface DateTimeNullableFilter {
-  equals?: Date | string | null;
-  in?: Date[] | string[];
-  notIn?: Date[] | string[];
-  lt?: Date | string;
-  lte?: Date | string;
-  gt?: Date | string;
-  gte?: Date | string;
-  not?: DateTimeNullableFilter | null;
-}
-
-interface TripWhereInput {
-  userId?: number;
-  status?: string | { in: string[] };
-  tripType?: string | { in: string[] };
-  seriesId?: number;
-  startDate?: DateTimeNullableFilter | Date | string | null;
-  tagAssignments?: { some?: { tagId?: { in?: number[] } } };
-  OR?: Array<{
-    title?: { contains?: string; mode?: string };
-    description?: { contains?: string; mode?: string };
-  }>;
-  [key: string]: unknown;
-}
-
-interface TripOrderByItem {
-  [key: string]: 'asc' | 'desc' | { sort: 'asc' | 'desc'; nulls: 'first' | 'last' };
-}
 
 // Type definitions for source trip entities used in duplication
 interface SourceLocation {
@@ -247,7 +218,7 @@ export class TripService {
     const skip = (page - 1) * limit;
     const sortOption = query.sort || 'startDate-desc';
 
-    const where: TripWhereInput = { userId };
+    const where: Prisma.TripWhereInput = { userId };
 
     // Filter by status (supports comma-separated multiple values)
     if (query.status) {
@@ -269,13 +240,14 @@ export class TripService {
 
     // Filter by date range
     if (query.startDateFrom || query.startDateTo) {
-      where.startDate = {};
+      const startDateFilter: Prisma.DateTimeNullableFilter = {};
       if (query.startDateFrom) {
-        (where.startDate as DateTimeNullableFilter).gte = new Date(query.startDateFrom + 'T00:00:00.000Z');
+        startDateFilter.gte = new Date(query.startDateFrom + 'T00:00:00.000Z');
       }
       if (query.startDateTo) {
-        (where.startDate as DateTimeNullableFilter).lte = new Date(query.startDateTo + 'T23:59:59.999Z');
+        startDateFilter.lte = new Date(query.startDateTo + 'T23:59:59.999Z');
       }
+      where.startDate = startDateFilter;
     }
 
     // Filter by trip type (supports comma-separated multiple values)
@@ -306,7 +278,7 @@ export class TripService {
     }
 
     // Build orderBy based on sort option (database-level sorting)
-    let orderBy: TripOrderByItem[];
+    let orderBy: Prisma.TripOrderByWithRelationInput[];
     if (sortOption === 'startDate-desc') {
       // Newest first: nulls last, then by date desc, then by createdAt desc
       orderBy = [
@@ -333,8 +305,8 @@ export class TripService {
     // Fetch trips with database-level pagination and sorting
     const [trips, total] = await Promise.all([
       prisma.trip.findMany({
-        where: where as any,
-        orderBy: orderBy as any,
+        where,
+        orderBy,
         skip,
         take: limit,
         include: {
@@ -359,7 +331,7 @@ export class TripService {
           },
         },
       }),
-      prisma.trip.count({ where: where as any }),
+      prisma.trip.count({ where }),
     ]);
 
     return {
@@ -522,8 +494,7 @@ export class TripService {
 
     const trip = await prisma.trip.update({
       where: { id: tripId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
-      data: updateData as any,
+      data: updateData as Prisma.TripUncheckedUpdateInput,
     });
 
     return convertDecimals(trip);
@@ -700,7 +671,7 @@ export class TripService {
             visitDatetime: null,
             visitDurationMinutes: location.visitDurationMinutes,
             notes: location.notes,
-          } as any,
+          } as Prisma.LocationUncheckedCreateInput,
         });
         locationIdMap.set(location.id, newLocation.id);
       }
@@ -721,7 +692,7 @@ export class TripService {
             visitDatetime: null,
             visitDurationMinutes: location.visitDurationMinutes,
             notes: location.notes,
-          } as any,
+          } as Prisma.LocationUncheckedCreateInput,
         });
         locationIdMap.set(location.id, newLocation.id);
       }
@@ -742,7 +713,7 @@ export class TripService {
             latitude: photo.latitude,
             longitude: photo.longitude,
             takenAt: photo.takenAt,
-          } as any,
+          } as Prisma.PhotoUncheckedCreateInput,
         });
         photoIdMap.set(photo.id, newPhoto.id);
       }
@@ -770,7 +741,7 @@ export class TripService {
             bookingReference: activity.bookingReference,
             notes: activity.notes,
             manualOrder: activity.manualOrder,
-          } as any,
+          } as Prisma.ActivityUncheckedCreateInput,
         });
         activityIdMap.set(activity.id, newActivity.id);
       }
@@ -796,7 +767,7 @@ export class TripService {
             bookingReference: activity.bookingReference,
             notes: activity.notes,
             manualOrder: activity.manualOrder,
-          } as any,
+          } as Prisma.ActivityUncheckedCreateInput,
         });
         activityIdMap.set(activity.id, newActivity.id);
       }
@@ -835,7 +806,7 @@ export class TripService {
             calculatedDistance: transport.calculatedDistance,
             calculatedDuration: transport.calculatedDuration,
             distanceSource: transport.distanceSource,
-          })) as any,
+          })) as Prisma.TransportationCreateManyInput[],
         });
         // Query back and build ID map using type + referenceNumber + company as identifier
         const newTransports = await tx.transportation.findMany({
@@ -872,7 +843,7 @@ export class TripService {
             cost: lodging.cost,
             currency: lodging.currency,
             notes: lodging.notes,
-          })) as any,
+          })) as Prisma.LodgingCreateManyInput[],
         });
         // Query back and build ID map using composite key for uniqueness
         // Note: Using name + address + confirmationNumber to handle duplicate names
@@ -898,7 +869,6 @@ export class TripService {
       const journals = sourceTrip.journalEntries as SourceJournal[];
       if (journals.length > 0) {
         await tx.journalEntry.createMany({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma Exact type incompatible with mapped arrays
           data: journals.map((journal) => ({
             tripId: newTrip.id,
             date: null,
@@ -907,7 +877,7 @@ export class TripService {
             entryType: journal.entryType,
             mood: journal.mood,
             weatherNotes: journal.weatherNotes,
-          })) as any,
+          })) as Prisma.JournalEntryCreateManyInput[],
         });
         // Query back and build ID map using composite key for uniqueness
         // Note: Using title + entryType + content prefix to handle duplicate titles
@@ -992,8 +962,7 @@ export class TripService {
           }
         }
         if (allAssignments.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma Exact type incompatible with dynamically-built arrays
-          await tx.photoAlbumAssignment.createMany({ data: allAssignments as any });
+          await tx.photoAlbumAssignment.createMany({ data: allAssignments as Prisma.PhotoAlbumAssignmentCreateManyInput[] });
         }
       }
     }
@@ -1040,7 +1009,6 @@ export class TripService {
       if (checklists.length > 0) {
         // Create all checklists first
         await tx.checklist.createMany({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma Exact type incompatible with mapped arrays
           data: checklists.map((checklist) => ({
             userId,
             tripId: newTrip.id,
@@ -1049,7 +1017,7 @@ export class TripService {
             type: checklist.type,
             isDefault: checklist.isDefault,
             sortOrder: checklist.sortOrder,
-          })) as any,
+          })) as Prisma.ChecklistCreateManyInput[],
         });
         // Query back new checklists using composite key for uniqueness
         // Note: Using name + type + description prefix to handle duplicate checklist names
@@ -1093,8 +1061,7 @@ export class TripService {
           }
         }
         if (allItems.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma Exact type incompatible with dynamically-built arrays
-          await tx.checklistItem.createMany({ data: allItems as any });
+          await tx.checklistItem.createMany({ data: allItems as Prisma.ChecklistItemCreateManyInput[] });
         }
       }
     }

@@ -241,10 +241,11 @@ export default function ChecklistsPage() {
             </h2>
             <form onSubmit={handleCreateChecklist}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="checklist-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Name*
                 </label>
                 <input
+                  id="checklist-name"
                   type="text"
                   value={newChecklistName}
                   onChange={(e) => setNewChecklistName(e.target.value)}
@@ -254,10 +255,11 @@ export default function ChecklistsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="checklist-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
                 </label>
                 <textarea
+                  id="checklist-description"
                   value={newChecklistDescription}
                   onChange={(e) => setNewChecklistDescription(e.target.value)}
                   className="input"
@@ -337,10 +339,12 @@ export default function ChecklistsPage() {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           handleDeleteChecklist(checklist.id);
                         }}
                         className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                         title="Delete checklist"
+                        aria-label="Delete checklist"
                       >
                         🗑️
                       </button>
@@ -358,7 +362,7 @@ export default function ChecklistsPage() {
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
                         <div
-                          className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all progress-bar"
+                          className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-[width] progress-bar"
                           style={{ '--progress-width': `${checklist.stats.percentage}%` }}
                         />
                       </div>

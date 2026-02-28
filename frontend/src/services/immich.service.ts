@@ -96,8 +96,11 @@ class ImmichService {
       take?: number;
     }
   ): Promise<{ assets: ImmichAsset[]; hasMore: boolean }> {
+    // Normalize dates to YYYY-MM-DD format (strip time component from ISO strings)
+    const normalizedStart = startDate.includes('T') ? startDate.split('T')[0] : startDate;
+    const normalizedEnd = endDate.includes('T') ? endDate.split('T')[0] : endDate;
     const response = await axios.get('/immich/assets/date-range', {
-      params: { startDate, endDate, ...options },
+      params: { startDate: normalizedStart, endDate: normalizedEnd, ...options },
     });
     return response.data;
   }

@@ -18,7 +18,6 @@ import {
   type SearchableEntityType,
   ENTITY_TYPE_LABELS,
   ENTITY_TYPE_ICONS,
-  highlightMatches,
 } from '../lib/searchIndex';
 
 // ============================================
@@ -53,6 +52,45 @@ export interface OfflineSearchResultsProps {
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+/**
+ * Escapes special regex characters in a string so it can be used in a RegExp safely.
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Renders text with search query matches highlighted using React elements
+ * instead of raw HTML. Matched portions are wrapped in <mark> elements.
+ */
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query || !query.trim()) return <>{text}</>;
+
+  const escapedQuery = escapeRegex(query.trim());
+  const splitRegex = new RegExp(`(${escapedQuery})`, 'gi');
+  const testRegex = new RegExp(`^${escapedQuery}$`, 'i');
+  const parts = text.split(splitRegex);
+
+  if (parts.length === 1) {
+    // No matches found
+    return <>{text}</>;
+  }
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        testRegex.test(part) ? (
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 text-inherit rounded-sm">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
 
 /**
  * Formats a timestamp for display.
@@ -230,12 +268,6 @@ function ResultItem({
 }) {
   const iconPath = getIconPath(result.type);
 
-  // Create highlighted title/subtitle
-  const highlightedTitle = highlightMatches(result.title, query);
-  const highlightedSubtitle = result.subtitle
-    ? highlightMatches(result.subtitle, query)
-    : null;
-
   return (
     <button
       onClick={onClick}
@@ -274,15 +306,13 @@ function ResultItem({
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div
-            className="font-medium text-gray-900 dark:text-white truncate"
-            dangerouslySetInnerHTML={{ __html: highlightedTitle }}
-          />
-          {highlightedSubtitle && (
-            <div
-              className="text-sm text-gray-500 dark:text-gray-400 truncate"
-              dangerouslySetInnerHTML={{ __html: highlightedSubtitle }}
-            />
+          <div className="font-medium text-gray-900 dark:text-white truncate">
+            <HighlightText text={result.title} query={query} />
+          </div>
+          {result.subtitle && (
+            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+              <HighlightText text={result.subtitle} query={query} />
+            </div>
           )}
           <div className="flex items-center gap-2 mt-1">
             <span className="text-xs text-gray-400 dark:text-gray-500 capitalize">

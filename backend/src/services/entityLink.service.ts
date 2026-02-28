@@ -535,7 +535,7 @@ export const entityLinkService = {
     userId: number,
     data: GetLinksFromEntityInput
   ): Promise<EnrichedEntityLink[]> {
-    await verifyTripAccessWithPermission(userId, data.tripId, 'edit');
+    await verifyTripAccessWithPermission(userId, data.tripId, 'view');
 
     const where: EntityLinkWhereInput = {
       tripId: data.tripId,
@@ -581,7 +581,7 @@ export const entityLinkService = {
     userId: number,
     data: GetLinksToEntityInput
   ): Promise<EnrichedEntityLink[]> {
-    await verifyTripAccessWithPermission(userId, data.tripId, 'edit');
+    await verifyTripAccessWithPermission(userId, data.tripId, 'view');
 
     const where: EntityLinkWhereInput = {
       tripId: data.tripId,
@@ -896,3 +896,122 @@ export const entityLinkService = {
     return summaryMap;
   },
 };
+
+/**
+ * Clean up orphaned EntityLinks where the source or target entity no longer exists.
+ * This is a safety net for any deletion paths that might miss cleanupEntityLinks().
+ *
+ * Checks each entity type referenced in EntityLinks and removes links where the
+ * referenced entity no longer exists in the database.
+ *
+ * @param tripId - The trip ID to clean up orphaned links for
+ * @returns The number of orphaned EntityLinks that were deleted
+ */
+export async function cleanupOrphanedEntityLinks(tripId: number): Promise<number> {
+  // Get all entity links for this trip
+  const links = await prisma.entityLink.findMany({
+    where: { tripId },
+    select: {
+      id: true,
+      sourceType: true,
+      sourceId: true,
+      targetType: true,
+      targetId: true,
+    },
+  });
+
+  if (links.length === 0) return 0;
+
+  // Collect unique entity references to check, grouped by type
+  const entityRefs = new Map<string, Set<number>>();
+  for (const link of links) {
+    const sourceKey = link.sourceType;
+    const targetKey = link.targetType;
+    if (!entityRefs.has(sourceKey)) entityRefs.set(sourceKey, new Set());
+    if (!entityRefs.has(targetKey)) entityRefs.set(targetKey, new Set());
+    entityRefs.get(sourceKey)!.add(link.sourceId);
+    entityRefs.get(targetKey)!.add(link.targetId);
+  }
+
+  // For each entity type, query which IDs actually exist
+  const existingIds = new Map<string, Set<number>>();
+
+  for (const [entityType, ids] of entityRefs) {
+    const idArray = [...ids];
+    let foundIds: number[] = [];
+
+    switch (entityType) {
+      case 'PHOTO':
+        foundIds = (await prisma.photo.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'LOCATION':
+        foundIds = (await prisma.location.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'ACTIVITY':
+        foundIds = (await prisma.activity.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'LODGING':
+        foundIds = (await prisma.lodging.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'TRANSPORTATION':
+        foundIds = (await prisma.transportation.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'JOURNAL_ENTRY':
+        foundIds = (await prisma.journalEntry.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      case 'PHOTO_ALBUM':
+        foundIds = (await prisma.photoAlbum.findMany({
+          where: { id: { in: idArray } },
+          select: { id: true },
+        })).map(e => e.id);
+        break;
+      default:
+        // Unknown entity type - skip (don't delete, could be a new type)
+        logger.warn(`cleanupOrphanedEntityLinks: unknown entity type "${entityType}" - skipping`);
+        existingIds.set(entityType, ids); // Treat all as existing to avoid false positives
+        continue;
+    }
+
+    existingIds.set(entityType, new Set(foundIds));
+  }
+
+  // Find links where either source or target entity no longer exists
+  const orphanedLinkIds: number[] = [];
+  for (const link of links) {
+    const sourceExists = existingIds.get(link.sourceType)?.has(link.sourceId) ?? false;
+    const targetExists = existingIds.get(link.targetType)?.has(link.targetId) ?? false;
+
+    if (!sourceExists || !targetExists) {
+      orphanedLinkIds.push(link.id);
+    }
+  }
+
+  if (orphanedLinkIds.length === 0) return 0;
+
+  // Delete orphaned links
+  const result = await prisma.entityLink.deleteMany({
+    where: { id: { in: orphanedLinkIds } },
+  });
+
+  logger.info(`cleanupOrphanedEntityLinks: removed ${result.count} orphaned entity links for trip ${tripId}`);
+
+  return result.count;
+}

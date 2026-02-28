@@ -11,6 +11,7 @@ declare global {
 
 // Always use dark mode
 document.documentElement.classList.add('dark');
+document.documentElement.style.colorScheme = 'dark';
 
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

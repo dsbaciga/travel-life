@@ -352,7 +352,7 @@ export default function LocationManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected locations...",
+      placeholder: "Add notes to all selected locations\u2026",
     },
   ], [categories]);
 
@@ -377,10 +377,13 @@ export default function LocationManager({
       <div key={location.id} className={isChild ? "" : "space-y-2"}>
         <div
           data-entity-id={`location-${location.id}`}
+          role={bulkSelection.selectionMode && !isChild ? "button" : undefined}
+          tabIndex={bulkSelection.selectionMode && !isChild ? 0 : undefined}
           onClick={bulkSelection.selectionMode && !isChild ? (e) => {
             e.stopPropagation();
             bulkSelection.toggleItemSelection(location.id, index, e.shiftKey, topLevelLocations);
           } : undefined}
+          onKeyDown={bulkSelection.selectionMode && !isChild ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulkSelection.toggleItemSelection(location.id, index, false, topLevelLocations); } } : undefined}
           className={`border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow ${
             isChild
               ? "bg-gray-50 dark:bg-gray-700"
@@ -639,6 +642,8 @@ export default function LocationManager({
               <input
                 type="text"
                 id="location-name"
+                name="name"
+                autoComplete="off"
                 value={values.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 className="input"
@@ -678,6 +683,8 @@ export default function LocationManager({
                     <>
                       <select
                         id="location-parent"
+                        name="parent"
+                        autoComplete="off"
                         value={values.parentId || ""}
                         onChange={(e) =>
                           handleChange(
@@ -715,6 +722,8 @@ export default function LocationManager({
               <input
                 type="text"
                 id="location-address"
+                name="address"
+                autoComplete="off"
                 value={values.address}
                 onChange={(e) => handleChange("address", e.target.value)}
                 className="input"
@@ -732,6 +741,8 @@ export default function LocationManager({
                 </label>
                 <select
                   id="location-category"
+                  name="category"
+                  autoComplete="off"
                   value={values.categoryId || ""}
                   onChange={(e) =>
                     handleChange(
@@ -756,7 +767,7 @@ export default function LocationManager({
               value={values.notes}
               onChange={(val) => handleChange("notes", val)}
               rows={2}
-              placeholder="Additional notes..."
+              placeholder="Additional notes\u2026"
               label="Notes"
               compact
             />

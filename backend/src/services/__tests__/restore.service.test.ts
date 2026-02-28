@@ -483,12 +483,12 @@ describe('RestoreService', () => {
       expect(result.stats.photosImported).toBe(0);
     });
 
-    it('RST-013: handles transaction error with proper error message', async () => {
+    it('RST-013: handles transaction error with specific error message', async () => {
       mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
 
       await expect(
         restoreFromBackup(1, minimalBackup)
-      ).rejects.toThrow('Failed to restore from backup');
+      ).rejects.toThrow('Failed to restore from backup: Transaction failed');
     });
 
     it('RST-014: accepts v1.0.0 and v1.1.0 backup versions', async () => {

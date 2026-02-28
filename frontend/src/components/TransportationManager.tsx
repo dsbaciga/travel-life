@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import toast from "react-hot-toast";
 import type {
   Transportation,
@@ -34,6 +34,7 @@ import LocationQuickAdd from "./LocationQuickAdd";
 import BulkActionBar from "./BulkActionBar";
 import BulkEditModal from "./BulkEditModal";
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
+import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
@@ -162,6 +163,9 @@ function TransportationItem({
   return (
     <div
       data-entity-id={`transportation-${transportation.id}`}
+      role={selectionMode ? "button" : undefined}
+      tabIndex={selectionMode ? 0 : undefined}
+      onKeyDown={selectionMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleSelection?.(transportation.id, index, false); } } : undefined}
       onClick={selectionMode ? (e) => {
         e.stopPropagation();
         onToggleSelection?.(transportation.id, index, e.shiftKey);
@@ -424,6 +428,9 @@ export default function TransportationManager({
   const { values, handleChange, reset, setAllFields } =
     useFormFields<TransportationFormFields>(getInitialFormState);
 
+  // Track unsaved changes for browser close/refresh warning
+  const { captureInitialValues, isDirty: isFormDirty, markSaved } = useUnsavedChangesWarning(values, manager.showForm);
+
   // Create wrappers for useFormReset hook
   // TODO: Replace with useManagerFormWrapper hook
   const setShowForm = useCallback((show: boolean) => {
@@ -493,6 +500,23 @@ export default function TransportationManager({
     draft.clearDraft();
     setShowDraftPrompt(false);
   }, [draft]);
+
+  // Capture initial form values for dirty tracking when form opens or switches mode.
+  // Uses a microtask delay so handleChange calls from populate effects have settled.
+  const prevFormOpenRef = useRef(false);
+  const prevEditingIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const justOpened = manager.showForm && !prevFormOpenRef.current;
+    const editingChanged = manager.editingId !== prevEditingIdRef.current;
+    prevFormOpenRef.current = manager.showForm;
+    prevEditingIdRef.current = manager.editingId;
+
+    if (manager.showForm && (justOpened || editingChanged)) {
+      const timer = setTimeout(() => captureInitialValues(values), 0);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager.showForm, manager.editingId, captureInitialValues]);
 
   // handleEdit must be defined before handleEditFromUrl since it's used as a dependency
   const handleEdit = useCallback((transportation: Transportation) => {
@@ -751,6 +775,7 @@ export default function TransportationManager({
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        markSaved();
         resetForm();
         manager.closeForm();
       }
@@ -776,6 +801,7 @@ export default function TransportationManager({
       };
       const success = await manager.handleCreate(createData);
       if (success) {
+        markSaved();
         // Save currency for next time
         if (values.currency) {
           saveLastUsedCurrency(values.currency);
@@ -886,7 +912,7 @@ export default function TransportationManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected transportation...",
+      placeholder: "Add notes to all selected transportation\u2026",
     },
   ], []);
 
@@ -987,8 +1013,13 @@ export default function TransportationManager({
     );
   };
 
-  // resetForm already closes the form via useFormReset
-  const handleCloseForm = resetForm;
+  // Wrap close handler with unsaved changes confirmation
+  const handleCloseForm = useCallback(() => {
+    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+      return;
+    }
+    resetForm();
+  }, [isFormDirty, resetForm]);
 
   return (
     <div className="space-y-6">
@@ -1152,6 +1183,8 @@ export default function TransportationManager({
               </label>
               <select
                 id="transportation-type"
+                name="type"
+                autoComplete="off"
                 value={values.type}
                 onChange={(e) =>
                   handleChange("type", e.target.value as TransportationType)
@@ -1183,6 +1216,8 @@ export default function TransportationManager({
               </label>
               <select
                 id="transportation-from-location"
+                name="from-location"
+                autoComplete="off"
                 value={values.fromLocationId || ""}
                 onChange={(e) =>
                   handleChange(
@@ -1227,6 +1262,8 @@ export default function TransportationManager({
               </label>
               <select
                 id="transportation-to-location"
+                name="to-location"
+                autoComplete="off"
                 value={values.toLocationId || ""}
                 onChange={(e) =>
                   handleChange(
@@ -1276,6 +1313,8 @@ export default function TransportationManager({
                   <input
                     type="datetime-local"
                     id="transportation-departure-time"
+                    name="departure-time"
+                    autoComplete="off"
                     value={values.departureTime}
                     onChange={(e) =>
                       handleChange("departureTime", e.target.value)
@@ -1315,6 +1354,8 @@ export default function TransportationManager({
                   <input
                     type="datetime-local"
                     id="transportation-arrival-time"
+                    name="arrival-time"
+                    autoComplete="off"
                     value={values.arrivalTime}
                     onChange={(e) => handleChange("arrivalTime", e.target.value)}
                     className="input flex-1"
@@ -1362,6 +1403,8 @@ export default function TransportationManager({
                   <input
                     type="text"
                     id="transportation-carrier"
+                    name="carrier"
+                    autoComplete="off"
                     value={values.carrier}
                     onChange={(e) => handleChange("carrier", e.target.value)}
                     className="input"
@@ -1379,6 +1422,8 @@ export default function TransportationManager({
                   <input
                     type="text"
                     id="transportation-vehicle-number"
+                    name="vehicle-number"
+                    autoComplete="off"
                     value={values.vehicleNumber}
                     onChange={(e) => handleChange("vehicleNumber", e.target.value)}
                     className="input"
@@ -1413,6 +1458,8 @@ export default function TransportationManager({
                   <input
                     type="text"
                     id="transportation-from-custom"
+                    name="from-custom"
+                    autoComplete="off"
                     value={values.fromLocationName}
                     onChange={(e) =>
                       handleChange("fromLocationName", e.target.value)
@@ -1432,6 +1479,8 @@ export default function TransportationManager({
                   <input
                     type="text"
                     id="transportation-to-custom"
+                    name="to-custom"
+                    autoComplete="off"
                     value={values.toLocationName}
                     onChange={(e) =>
                       handleChange("toLocationName", e.target.value)
@@ -1458,7 +1507,7 @@ export default function TransportationManager({
               value={values.notes}
               onChange={(val) => handleChange("notes", val)}
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes\u2026"
               label="Notes"
               compact
             />

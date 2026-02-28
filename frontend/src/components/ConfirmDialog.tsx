@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface ConfirmDialogProps {
@@ -27,6 +27,9 @@ export default function ConfirmDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const generatedId = useId();
+  const dialogTitleId = `confirm-dialog-title-${generatedId}`;
+  const dialogDescriptionId = `confirm-dialog-description-${generatedId}`;
 
   // Focus trap and keyboard handling
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -111,8 +114,8 @@ export default function ConfirmDialog({
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-description"
+      aria-labelledby={dialogTitleId}
+      aria-describedby={dialogDescriptionId}
     >
       {/* Backdrop */}
       <div
@@ -136,13 +139,13 @@ export default function ConfirmDialog({
           {/* Content */}
           <div className="flex-1 min-w-0">
             <h3
-              id="confirm-dialog-title"
+              id={dialogTitleId}
               className="text-lg font-display font-semibold text-charcoal dark:text-warm-gray"
             >
               {title}
             </h3>
             <p
-              id="confirm-dialog-description"
+              id={dialogDescriptionId}
               className="mt-2 text-sm text-slate dark:text-warm-gray/80 font-body"
             >
               {message}
@@ -166,7 +169,7 @@ export default function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded-lg font-medium font-body transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${styles.confirmButton}`}
+            className={`w-full sm:w-auto px-4 py-2.5 rounded-lg font-medium font-body transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${styles.confirmButton}`}
           >
             {isLoading ? (
               <>

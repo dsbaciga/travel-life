@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { Activity, CreateActivityInput, UpdateActivityInput } from "../types/activity";
 import type { Location } from "../types/location";
 import type { ActivityCategory } from "../types/user";
@@ -111,6 +111,8 @@ export default function ActivityManager({
   const [sortBy, setSortBy] = useState<"date" | "category">("date");
   const [dietaryFilter, setDietaryFilter] = useState<string[]>([]);
   const [userDietaryPreferences, setUserDietaryPreferences] = useState<string[]>([]);
+  // Track dirty state from child ActivityForm for modal close confirmation
+  const activityFormDirtyRef = useRef(false);
 
   // Create wrappers for useFormReset hook
   // ActivityManager uses editingActivity instead of form fields, so we adapt the pattern
@@ -458,7 +460,7 @@ export default function ActivityManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected activities...",
+      placeholder: "Add notes to all selected activities\u2026",
     },
   ], [activityCategories]);
 
@@ -484,10 +486,13 @@ export default function ActivityManager({
       <div
         key={activity.id}
         data-entity-id={`activity-${activity.id}`}
+        role={bulkSelection.selectionMode ? "button" : undefined}
+        tabIndex={bulkSelection.selectionMode ? 0 : undefined}
         onClick={bulkSelection.selectionMode ? (e) => {
           e.stopPropagation();
           bulkSelection.toggleItemSelection(activity.id, index, e.shiftKey, topLevelActivities);
         } : undefined}
+        onKeyDown={bulkSelection.selectionMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulkSelection.toggleItemSelection(activity.id, index, false, topLevelActivities); } } : undefined}
         className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${
           isChild
             ? "ml-4 sm:ml-8 mt-3 border-l-4 border-blue-300 dark:border-blue-700"
@@ -667,8 +672,14 @@ export default function ActivityManager({
     );
   };
 
-  // resetForm already closes the form via useFormReset
-  const handleCloseForm = resetForm;
+  // Wrap close handler with unsaved changes confirmation
+  const handleCloseForm = useCallback(() => {
+    if (activityFormDirtyRef.current && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+      return;
+    }
+    activityFormDirtyRef.current = false;
+    resetForm();
+  }, [resetForm]);
 
   // handleOpenForm uses the dedicated openCreateForm function
   const handleOpenForm = openCreateForm;
@@ -757,6 +768,7 @@ export default function ActivityManager({
           onSubmit={handleFormSubmit}
           onLocationCreated={handleLocationCreated}
           defaultUnscheduled={false}
+          onDirtyChange={(dirty) => { activityFormDirtyRef.current = dirty; }}
         />
       </FormModal>
 

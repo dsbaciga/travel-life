@@ -133,7 +133,7 @@ const Navbar = memo(function Navbar() {
             to="/dashboard"
             className="flex items-center space-x-2 sm:space-x-3 group"
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
               <svg
                 className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                 fill="none"
@@ -173,7 +173,7 @@ const Navbar = memo(function Navbar() {
               <button
                 type="button"
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-body font-medium text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-800 rounded-lg transition-all"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-body font-medium text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
                 {...(dropdownExpanded === "true"
                   ? { "aria-expanded": "true" }
                   : { "aria-expanded": "false" })}
@@ -341,7 +341,7 @@ const Navbar = memo(function Navbar() {
                 <p className="font-medium text-charcoal dark:text-warm-gray">
                   {user.username}
                 </p>
-                <p className="text-sm text-slate dark:text-warm-gray/70">
+                <p className="text-sm text-slate dark:text-warm-gray/70 truncate">
                   {user.email}
                 </p>
               </div>

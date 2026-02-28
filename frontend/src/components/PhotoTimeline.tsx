@@ -451,13 +451,15 @@ export default function PhotoTimeline({
                             tabIndex={0}
                             onClick={() => handlePhotoClick(photo)}
                             onKeyDown={(e) => handlePhotoKeyDown(e, photo)}
-                            className="group relative aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                            className="group relative aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-transform"
                             aria-label={photo.caption || `Photo from ${dayGroup.dateKey}${timeDisplay ? ` at ${timeDisplay}` : ''}`}
                           >
                             <img
                               src={hasFailed ? PLACEHOLDER_IMAGE : getPhotoUrl(photo, true)}
                               alt={photo.caption || 'Trip photo'}
                               className={`w-full h-full object-cover ${hasFailed ? 'p-4 bg-gray-200 dark:bg-gray-600' : ''}`}
+                              width={300}
+                              height={300}
                               loading="lazy"
                               onError={() => handleImageError(photo.id)}
                             />

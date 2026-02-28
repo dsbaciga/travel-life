@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { Lodging, LodgingType, CreateLodgingInput, UpdateLodgingInput } from "../types/lodging";
 import type { Location } from "../types/location";
 import lodgingService from "../services/lodging.service";
@@ -33,6 +33,7 @@ import { ListItemSkeleton } from "./SkeletonLoader";
 import BulkActionBar from "./BulkActionBar";
 import BulkEditModal from "./BulkEditModal";
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
+import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
@@ -181,6 +182,9 @@ export default function LodgingManager({
   const { values, handleChange, reset, setAllFields } =
     useFormFields<LodgingFormFields>(getInitialFormState);
 
+  // Track unsaved changes for browser close/refresh warning
+  const { captureInitialValues, isDirty: isFormDirty, markSaved } = useUnsavedChangesWarning(values, manager.showForm);
+
   // Auto-save draft for form data
   const draftKey = manager.editingId ? manager.editingId : tripId;
   const draft = useAutoSaveDraft(values, {
@@ -216,6 +220,23 @@ export default function LodgingManager({
     setEditingId: manager.setEditingId,
     setShowForm,
   });
+
+  // Capture initial form values for dirty tracking when form opens or switches mode.
+  // Uses a microtask delay so handleChange calls from populate effects have settled.
+  const prevFormOpenRef = useRef(false);
+  const prevEditingIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const justOpened = manager.showForm && !prevFormOpenRef.current;
+    const editingChanged = manager.editingId !== prevEditingIdRef.current;
+    prevFormOpenRef.current = manager.showForm;
+    prevEditingIdRef.current = manager.editingId;
+
+    if (manager.showForm && (justOpened || editingChanged)) {
+      const timer = setTimeout(() => captureInitialValues(values), 0);
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager.showForm, manager.editingId, captureInitialValues]);
 
   // Sync localLocations with locations prop
   useEffect(() => {
@@ -387,6 +408,7 @@ export default function LodgingManager({
           invalidateLinkSummary,
         });
 
+        markSaved();
         resetForm();
         manager.closeForm();
       }
@@ -411,6 +433,7 @@ export default function LodgingManager({
         // Call service directly to get the created lodging ID for linking
         const createdLodging = await lodgingService.createLodging(createData);
         toast.success('Lodging added successfully');
+        markSaved();
 
         // Sync location link via shared hook (Pattern 14)
         await syncLocationLinkOnCreate({
@@ -485,7 +508,7 @@ export default function LodgingManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected lodging...",
+      placeholder: "Add notes to all selected lodging\u2026",
     },
   ], []);
 
@@ -527,8 +550,13 @@ export default function LodgingManager({
     }
   };
 
-  // resetForm already closes the form via useFormReset
-  const handleCloseForm = resetForm;
+  // Wrap close handler with unsaved changes confirmation
+  const handleCloseForm = useCallback(() => {
+    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+      return;
+    }
+    resetForm();
+  }, [isFormDirty, resetForm]);
 
   return (
     <div className="space-y-6">
@@ -607,6 +635,8 @@ export default function LodgingManager({
                 </label>
                 <select
                   id="lodging-type"
+                  name="type"
+                  autoComplete="off"
                   value={values.type}
                   onChange={(e) =>
                     handleChange("type", e.target.value as LodgingType)
@@ -633,6 +663,8 @@ export default function LodgingManager({
                 <input
                   type="text"
                   id="lodging-name"
+                  name="name"
+                  autoComplete="off"
                   value={values.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   className="input"
@@ -656,6 +688,8 @@ export default function LodgingManager({
                 <input
                   type="datetime-local"
                   id="lodging-check-in"
+                  name="check-in"
+                  autoComplete="off"
                   value={values.checkInDate}
                   onChange={(e) => handleChange("checkInDate", e.target.value)}
                   className="input"
@@ -673,6 +707,8 @@ export default function LodgingManager({
                 <input
                   type="datetime-local"
                   id="lodging-check-out"
+                  name="check-out"
+                  autoComplete="off"
                   value={values.checkOutDate}
                   onChange={(e) => handleChange("checkOutDate", e.target.value)}
                   className="input"
@@ -709,6 +745,8 @@ export default function LodgingManager({
                 <div className="flex gap-2">
                   <select
                     id="lodging-location"
+                    name="location"
+                    autoComplete="off"
                     value={values.locationId || ""}
                     onChange={(e) =>
                       handleChange(
@@ -745,6 +783,8 @@ export default function LodgingManager({
                 <input
                   type="text"
                   id="lodging-address"
+                  name="address"
+                  autoComplete="off"
                   value={values.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   className="input"
@@ -780,7 +820,7 @@ export default function LodgingManager({
               value={values.notes}
               onChange={(val) => handleChange("notes", val)}
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes\u2026"
               label="Notes"
               compact
             />
@@ -825,6 +865,9 @@ export default function LodgingManager({
             <div
               key={lodging.id}
               data-entity-id={`lodging-${lodging.id}`}
+              role={bulk.selection.selectionMode ? "button" : undefined}
+              tabIndex={bulk.selection.selectionMode ? 0 : undefined}
+              onKeyDown={bulk.selection.selectionMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulk.selection.toggleItemSelection(lodging.id, index, false, sortedLodging); } } : undefined}
               onClick={bulk.selection.selectionMode ? (e) => {
                 e.stopPropagation();
                 bulk.selection.toggleItemSelection(lodging.id, index, e.shiftKey, sortedLodging);

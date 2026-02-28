@@ -213,6 +213,10 @@ export default function TripFormPage() {
 
       // Invalidate trips cache so the list refreshes
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
+      // Also invalidate the specific trip detail cache so header/dates update
+      if (isEdit && id) {
+        await queryClient.invalidateQueries({ queryKey: ['trip', parseInt(id)] });
+      }
       // When editing, restore trips page position; when creating, start fresh
       if (isEdit) {
         setSkipNextScrollToTop(true);

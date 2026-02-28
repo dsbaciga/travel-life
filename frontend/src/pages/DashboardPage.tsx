@@ -94,7 +94,7 @@ export default function DashboardPage() {
               to="/trips"
               className="block group"
             >
-              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
+              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">🗺️</div>
                   <div>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
               to="/companions"
               className="block group"
             >
-              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
+              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">👥</div>
                   <div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
               to="/places-visited"
               className="block group"
             >
-              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
+              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">📍</div>
                   <div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               to="/checklists"
               className="block group"
             >
-              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
+              <div className="h-24 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow duration-300 border-2 border-primary-500/10 dark:border-sky/10 hover:border-accent-400 dark:hover:border-accent-400">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">✅</div>
                   <div>

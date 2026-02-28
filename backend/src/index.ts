@@ -172,6 +172,10 @@ const authenticateFileAccess = (req: Request, res: Response, next: NextFunction)
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
+      if (isBlacklisted(token)) {
+        res.status(404).json({ status: 'error', message: 'Not found' });
+        return;
+      }
       verifyAccessToken(token);
       next();
       return;

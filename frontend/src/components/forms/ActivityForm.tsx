@@ -4,6 +4,7 @@ import type { Location } from "../../types/location";
 import type { ActivityCategory } from "../../types/user";
 import { useFormFields } from "../../hooks/useFormFields";
 import { useAutoSaveDraft } from "../../hooks/useAutoSaveDraft";
+import { useUnsavedChangesWarning } from "../../hooks/useUnsavedChangesWarning";
 import FormSection, { CollapsibleSection } from "../FormSection";
 import DraftRestorePrompt from "../DraftRestorePrompt";
 import TimezoneSelect from "../TimezoneSelect";
@@ -71,6 +72,7 @@ interface ActivityFormProps {
   onLocationCreated?: (locationId: number, locationName: string) => void;
   defaultUnscheduled?: boolean;
   showMoreOptionsDefault?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 const getInitialFormState = (
@@ -114,6 +116,7 @@ export default function ActivityForm({
   onLocationCreated,
   defaultUnscheduled = false,
   showMoreOptionsDefault = false,
+  onDirtyChange,
 }: ActivityFormProps) {
   const [showLocationQuickAdd, setShowLocationQuickAdd] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(showMoreOptionsDefault);
@@ -125,6 +128,14 @@ export default function ActivityForm({
   const { values, handleChange, reset, setAllFields } = useFormFields<ActivityFormFields>(
     initialFormState
   );
+
+  // Track unsaved changes for browser close/refresh warning
+  const { captureInitialValues, isDirty: isFormDirty, markSaved } = useUnsavedChangesWarning(values, true);
+
+  // Notify parent of dirty state changes (for modal close confirmation)
+  useEffect(() => {
+    onDirtyChange?.(isFormDirty);
+  }, [isFormDirty, onDirtyChange]);
 
   // Auto-save draft for form data
   const isEditMode = !!editingActivity;
@@ -257,6 +268,17 @@ export default function ActivityForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingActivity, editingLocationId, tripTimezone, defaultUnscheduled]);
 
+  // Capture initial values for dirty tracking after form populates.
+  // Uses a microtask to ensure all handleChange calls from the populate effect have settled.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      captureInitialValues(values);
+    }, 0);
+    return () => clearTimeout(timer);
+    // Only re-capture when the editing activity changes, not on every keystroke
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingActivity, captureInitialValues]);
+
   // Auto-fill: End Time = Start Time + 1 Hour (only when creating)
   useEffect(() => {
     if (!editingActivity && !values.allDay && !values.unscheduled && values.startDate && values.startTime) {
@@ -365,6 +387,9 @@ export default function ActivityForm({
 
       await onSubmit(formData, values.locationId || null);
 
+      // Mark form as saved to suppress unsaved changes warning
+      markSaved();
+
       // Clear draft on successful submit
       draft.clearDraft();
     } finally {
@@ -401,12 +426,14 @@ export default function ActivityForm({
             <input
               type="text"
               id={`${formId}-name`}
+              name="name"
+              autoComplete="off"
               value={values.name}
               onChange={(e) => handleChange("name", e.target.value)}
               className="input"
               required
               disabled={isSubmitting}
-              placeholder="Activity name"
+              placeholder="Activity name\u2026"
             />
           </div>
 
@@ -419,6 +446,8 @@ export default function ActivityForm({
             </label>
             <select
               id={`${formId}-category`}
+              name="category"
+              autoComplete="off"
               value={values.category}
               onChange={(e) => handleChange("category", e.target.value)}
               className="input"
@@ -457,6 +486,7 @@ export default function ActivityForm({
           <input
             type="checkbox"
             id={`${formId}-unscheduled`}
+            name="unscheduled"
             checked={values.unscheduled}
             onChange={(e) => {
               handleChange("unscheduled", e.target.checked);
@@ -486,6 +516,7 @@ export default function ActivityForm({
               <input
                 type="checkbox"
                 id={`${formId}-allDay`}
+                name="all-day"
                 checked={values.allDay}
                 onChange={(e) => handleChange("allDay", e.target.checked)}
                 className="rounded"
@@ -512,6 +543,8 @@ export default function ActivityForm({
                   <input
                     type="date"
                     id={`${formId}-start-date`}
+                    name="start-date"
+                    autoComplete="off"
                     value={values.startDate}
                     onChange={(e) => handleChange("startDate", e.target.value)}
                     className="input"
@@ -528,6 +561,8 @@ export default function ActivityForm({
                   <input
                     type="date"
                     id={`${formId}-end-date`}
+                    name="end-date"
+                    autoComplete="off"
                     value={values.endDate}
                     onChange={(e) => handleChange("endDate", e.target.value)}
                     className="input"
@@ -549,6 +584,8 @@ export default function ActivityForm({
                       <input
                         type="date"
                         id={`${formId}-start-date-time`}
+                        name="start-date"
+                        autoComplete="off"
                         value={values.startDate}
                         onChange={(e) => handleChange("startDate", e.target.value)}
                         className="input flex-1"
@@ -557,6 +594,8 @@ export default function ActivityForm({
                       <input
                         type="time"
                         id={`${formId}-start-time`}
+                        name="start-time"
+                        autoComplete="off"
                         aria-label="Start time"
                         value={values.startTime}
                         onChange={(e) => handleChange("startTime", e.target.value)}
@@ -577,6 +616,8 @@ export default function ActivityForm({
                       <input
                         type="date"
                         id={`${formId}-end-date-time`}
+                        name="end-date"
+                        autoComplete="off"
                         value={values.endDate}
                         onChange={(e) => handleChange("endDate", e.target.value)}
                         className="input flex-1"
@@ -585,6 +626,8 @@ export default function ActivityForm({
                       <input
                         type="time"
                         id={`${formId}-end-time`}
+                        name="end-time"
+                        autoComplete="off"
                         aria-label="End time"
                         value={values.endTime}
                         onChange={(e) => handleChange("endTime", e.target.value)}
@@ -641,6 +684,8 @@ export default function ActivityForm({
             <div className="flex gap-2">
               <select
                 id={`${formId}-location`}
+                name="location"
+                autoComplete="off"
                 value={values.locationId || ""}
                 onChange={(e) =>
                   handleChange(
@@ -682,6 +727,8 @@ export default function ActivityForm({
               </label>
               <select
                 id={`${formId}-parent`}
+                name="parent"
+                autoComplete="off"
                 value={values.parentId || ""}
                 onChange={(e) =>
                   handleChange(
@@ -749,7 +796,7 @@ export default function ActivityForm({
           value={values.notes}
           onChange={(val) => handleChange("notes", val)}
           rows={3}
-          placeholder="Additional notes..."
+          placeholder="Additional notes\u2026"
           disabled={isSubmitting}
           label="Notes"
           compact

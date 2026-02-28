@@ -1076,6 +1076,7 @@ export default function SettingsPage() {
                   onChange={(e) => setNewCategory(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
                   placeholder="New category name"
+                  aria-label="New category name"
                   className="input flex-1"
                 />
                 <button
@@ -1143,6 +1144,7 @@ export default function SettingsPage() {
                                   handleCancelRenameCategory();
                               }}
                               className="input flex-1"
+                              aria-label="Edit category name"
                               autoFocus
                             />
                             <button
@@ -1163,15 +1165,16 @@ export default function SettingsPage() {
                             </button>
                           </div>
                         ) : (
-                          <span
-                            className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400"
+                          <button
+                            type="button"
+                            className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit"
                             onClick={() =>
                               handleStartRenameCategory(category.name)
                             }
                             title="Click to rename"
                           >
                             {category.name}
-                          </span>
+                          </button>
                         )}
                       </div>
                       {editingCategoryName !== category.name && (
@@ -1235,6 +1238,7 @@ export default function SettingsPage() {
                   onChange={(e) => setNewTripType(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddTripType()}
                   placeholder="New trip type name"
+                  aria-label="New trip type name"
                   className="input flex-1"
                 />
                 <button
@@ -1266,6 +1270,7 @@ export default function SettingsPage() {
                             disabled={index === 0}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                             title="Move up"
+                            aria-label="Move up"
                           >
                             ▲
                           </button>
@@ -1275,6 +1280,7 @@ export default function SettingsPage() {
                             disabled={index === tripTypes.length - 1}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                             title="Move down"
+                            aria-label="Move down"
                           >
                             ▼
                           </button>
@@ -1300,6 +1306,7 @@ export default function SettingsPage() {
                                   handleCancelRenameTripType();
                               }}
                               className="input flex-1"
+                              aria-label="Edit trip type name"
                               autoFocus
                             />
                             <button
@@ -1320,15 +1327,16 @@ export default function SettingsPage() {
                             </button>
                           </div>
                         ) : (
-                          <span
-                            className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400"
+                          <button
+                            type="button"
+                            className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit"
                             onClick={() =>
                               handleStartRenameTripType(tripType.name)
                             }
                             title="Click to rename"
                           >
                             {tripType.name}
-                          </span>
+                          </button>
                         )}
                       </div>
                       {editingTripTypeName !== tripType.name && (
@@ -1388,6 +1396,7 @@ export default function SettingsPage() {
                   onChange={(e) => setNewTagName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreateTag()}
                   placeholder="New tag name"
+                  aria-label="New tag name"
                   className="input w-full"
                 />
                 <div className="flex gap-4">
@@ -1523,6 +1532,7 @@ export default function SettingsPage() {
                               disabled={index === 0}
                               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                               title="Move up"
+                              aria-label="Move up"
                             >
                               ▲
                             </button>
@@ -1532,6 +1542,7 @@ export default function SettingsPage() {
                               disabled={index === tags.length - 1}
                               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                               title="Move down"
+                              aria-label="Move down"
                             >
                               ▼
                             </button>
@@ -1558,6 +1569,7 @@ export default function SettingsPage() {
                                 handleCancelRenameTag();
                             }}
                             className="input flex-1"
+                            aria-label="Edit tag name"
                             autoFocus
                           />
                           <button
@@ -1586,6 +1598,7 @@ export default function SettingsPage() {
                                 disabled={index === 0}
                                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                                 title="Move up"
+                                aria-label="Move up"
                               >
                                 ▲
                               </button>
@@ -1595,12 +1608,14 @@ export default function SettingsPage() {
                                 disabled={index === tags.length - 1}
                                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none"
                                 title="Move down"
+                                aria-label="Move down"
                               >
                                 ▼
                               </button>
                             </div>
-                            <span
-                              className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer"
+                            <button
+                              type="button"
+                              className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer bg-transparent border-none p-0"
                               style={{
                                 backgroundColor: tag.color || "#3B82F6",
                                 color: tag.textColor || "#FFFFFF",
@@ -1609,7 +1624,7 @@ export default function SettingsPage() {
                               title="Click to rename"
                             >
                               {tag.name}
-                            </span>
+                            </button>
                           </div>
                           <div className="flex gap-2">
                             <button

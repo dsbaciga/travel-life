@@ -559,7 +559,11 @@ export async function createBackup(userId: number): Promise<BackupData> {
   } catch (error) {
     if (error instanceof AppError) throw error;
     console.error('Error creating backup:', error);
-    throw new AppError('Failed to create backup', 500, { cause: error });
+    throw new AppError(
+      `Failed to create backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      500,
+      { cause: error }
+    );
   }
 }
 

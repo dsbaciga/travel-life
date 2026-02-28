@@ -198,6 +198,7 @@ export default function DragDropUpload({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -230,14 +231,17 @@ export default function DragDropUpload({
       />
 
       <div
+        role="button"
+        tabIndex={0}
         onClick={handleClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         className={`
           relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer
-          transition-all duration-300
+          transition-colors duration-300
           ${
             isDragging
               ? "border-primary-500 dark:border-accent-400 bg-primary-50 dark:bg-accent-900/20 scale-105"
@@ -253,6 +257,7 @@ export default function DragDropUpload({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -272,6 +277,7 @@ export default function DragDropUpload({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

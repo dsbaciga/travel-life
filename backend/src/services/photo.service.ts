@@ -108,13 +108,23 @@ async function ensureUploadDirs() {
 // Constants for video validation
 const MAX_VIDEO_DURATION_SECONDS = 3600; // 1 hour limit
 
-// Get video duration using ffprobe
+// Get video duration using ffprobe (with 15s timeout)
+const FFPROBE_TIMEOUT_MS = 15_000;
+
 async function getVideoDuration(videoPath: string): Promise<number | null> {
   return new Promise((resolve) => {
+    let settled = false;
+    const settle = (value: number | null) => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+    };
+
     ffmpeg.ffprobe(videoPath, (err, metadata) => {
       if (err) {
         console.error('[PhotoService] ffprobe error:', err.message);
-        resolve(null);
+        settle(null);
         return;
       }
 
@@ -123,12 +133,20 @@ async function getVideoDuration(videoPath: string): Promise<number | null> {
         if (process.env.NODE_ENV === 'development') {
           console.log(`[PhotoService] Video duration: ${duration} seconds`);
         }
-        resolve(Math.round(duration));
+        settle(Math.round(duration));
       } else {
         console.error('[PhotoService] Could not extract video duration from metadata');
-        resolve(null);
+        settle(null);
       }
     });
+
+    // Resolve with null if ffprobe hangs (e.g. corrupted file)
+    setTimeout(() => {
+      if (!settled) {
+        console.error('[PhotoService] ffprobe timed out after 15s');
+        settle(null);
+      }
+    }, FFPROBE_TIMEOUT_MS);
   });
 }
 

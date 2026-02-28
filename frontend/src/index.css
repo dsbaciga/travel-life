@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 @layer base {
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
   body {
     @apply bg-cream text-charcoal m-0 font-body;
     min-height: 100vh;
@@ -45,7 +49,7 @@
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium font-body transition-all duration-200;
+    @apply px-4 py-2 rounded-lg font-medium font-body transition-colors duration-200;
   }
 
   .btn-primary {
@@ -56,7 +60,7 @@
            text-white shadow-lg shadow-primary-500/20 dark:shadow-accent-400/20
            hover:shadow-xl hover:shadow-primary-500/30
            transform hover:-translate-y-0.5 active:translate-y-0
-           transition-all duration-200
+           transition-colors duration-200
            whitespace-nowrap
            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
@@ -74,7 +78,7 @@
            border-2 border-primary-100 dark:border-navy-700
            hover:bg-primary-50 dark:hover:bg-navy-700
            transform hover:-translate-y-0.5 active:translate-y-0
-           transition-all duration-200
+           transition-colors duration-200
            whitespace-nowrap
            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
@@ -86,7 +90,7 @@
            text-white shadow-lg shadow-red-600/20
            hover:shadow-xl hover:shadow-red-600/30
            transform hover:-translate-y-0.5 active:translate-y-0
-           transition-all duration-200
+           transition-colors duration-200
            whitespace-nowrap
            disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
   }
@@ -100,7 +104,7 @@
            focus:outline-none
            focus:border-primary-500 dark:focus:border-gold
            focus:ring-4 focus:ring-primary-500/10 dark:focus:ring-gold/20
-           transition-all duration-200;
+           transition-colors duration-200;
   }
 
   /* Enhanced gold glow on focus in dark mode */
@@ -168,7 +172,7 @@
     @apply absolute -top-10 left-4 z-[100]
            px-4 py-2 rounded-lg
            bg-primary-600 text-white font-medium
-           transition-all duration-200
+           transition-transform duration-200
            focus:top-4;
   }
 
@@ -176,7 +180,7 @@
     @apply bg-white/80 backdrop-blur-sm
            rounded-2xl shadow-lg p-6
            border-2 border-primary-500/10
-           transition-all duration-300
+           transition-shadow duration-300
            hover:shadow-xl hover:border-accent-400/30;
   }
 
@@ -272,7 +276,7 @@
            bg-gradient-to-br from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600
            text-white shadow-2xl
            flex items-center justify-center
-           transition-all duration-300
+           transition-colors duration-300
            hover:scale-110 hover:shadow-2xl hover:shadow-primary-500/50
            active:scale-95;
   }
@@ -289,13 +293,13 @@
   /* Badge animations */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-           transition-all duration-200
+           transition-colors duration-200
            hover:scale-105;
   }
 
   /* Tab animations */
   .tab {
-    @apply relative px-4 py-2 font-medium transition-all duration-200
+    @apply relative px-4 py-2 font-medium transition-colors duration-200
            hover:text-primary-600 dark:hover:text-gold;
   }
 
@@ -336,7 +340,7 @@
     @apply absolute left-4 top-1/2 -translate-y-1/2
            text-slate/50 dark:text-warm-gray/40
            font-body text-base
-           transition-all duration-200 pointer-events-none;
+           transition-[top,font-size,color] duration-200 pointer-events-none;
   }
 
   .input-float:focus ~ .label-float,
@@ -350,7 +354,7 @@
     @apply absolute z-20 px-3 py-2 text-sm font-medium text-white
            bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg
            opacity-0 invisible
-           transition-all duration-200 pointer-events-none;
+           transition-opacity duration-200 pointer-events-none;
   }
 
   .tooltip-trigger:hover .tooltip {
@@ -396,7 +400,7 @@
            w-0 h-0 rounded-full
            bg-white/30
            transform -translate-x-1/2 -translate-y-1/2
-           transition-all duration-500;
+           transition-[transform,opacity] duration-500;
   }
 
   .ripple:active::after {

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useEffect, useCallback, useRef, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons';
 
@@ -90,6 +90,8 @@ export default function Modal({
   const modalRef = useRef<HTMLDivElement>(null);
   const hasFocusedRef = useRef(false);
   const triggerElementRef = useRef<HTMLElement | null>(null);
+  const generatedId = useId();
+  const titleId = `modal-title-${generatedId}`;
 
   // Handle keyboard events including focus trap
   const handleKeyDown = useCallback(
@@ -216,7 +218,7 @@ export default function Modal({
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
     >
       {/* Backdrop */}
       <div
@@ -234,7 +236,7 @@ export default function Modal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gold/20 flex-shrink-0">
           <h2
-            id="modal-title"
+            id={titleId}
             className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
           >
             {icon && <span>{icon}</span>}
@@ -277,7 +279,8 @@ Modal.Simple = function SimpleModal({
   maxWidth = 'md',
   className = '',
   zIndex = 80,
-}: Pick<ModalProps, 'isOpen' | 'onClose' | 'children' | 'maxWidth' | 'className' | 'zIndex'>) {
+  ariaLabel = 'Dialog',
+}: Pick<ModalProps, 'isOpen' | 'onClose' | 'children' | 'maxWidth' | 'className' | 'zIndex'> & { ariaLabel?: string }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<HTMLElement | null>(null);
   const prevIsOpenRef = useRef(isOpen);
@@ -372,6 +375,7 @@ Modal.Simple = function SimpleModal({
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"
+      aria-label={ariaLabel}
     >
       <div
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"

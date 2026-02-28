@@ -334,13 +334,13 @@ describe('BackupService', () => {
     it('BKP-009: throws 404 when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(createBackup(999)).rejects.toThrow('Failed to create backup');
+      await expect(createBackup(999)).rejects.toThrow('User not found');
     });
 
-    it('BKP-010: throws 500 on database error', async () => {
+    it('BKP-010: throws 500 on database error with specific message', async () => {
       mockPrisma.user.findUnique.mockRejectedValue(new Error('DB connection failed'));
 
-      await expect(createBackup(1)).rejects.toThrow('Failed to create backup');
+      await expect(createBackup(1)).rejects.toThrow('Failed to create backup: DB connection failed');
     });
 
     it('BKP-011: handles empty data (no trips, tags, companions)', async () => {

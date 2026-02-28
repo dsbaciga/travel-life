@@ -454,7 +454,7 @@ export default function TripsPage() {
           type="button"
           onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600 disabled:hover:bg-parchment dark:disabled:hover:bg-navy-700"
+          className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600 disabled:hover:bg-parchment dark:disabled:hover:bg-navy-700"
         >
           Previous
         </button>
@@ -477,7 +477,7 @@ export default function TripsPage() {
             if (showEllipsisBefore || showEllipsisAfter) {
               return (
                 <span key={`${position}-ellipsis-${page}`} className="px-2 py-2 text-slate dark:text-warm-gray">
-                  ...
+                  &hellip;
                 </span>
               );
             }
@@ -487,7 +487,7 @@ export default function TripsPage() {
                 type="button"
                 key={`${position}-page-${page}`}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   currentPage === page
                     ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
                     : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
@@ -503,7 +503,7 @@ export default function TripsPage() {
           type="button"
           onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600 disabled:hover:bg-parchment dark:disabled:hover:bg-navy-700"
+          className="px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600 disabled:hover:bg-parchment dark:disabled:hover:bg-navy-700"
         >
           Next
         </button>
@@ -524,13 +524,14 @@ export default function TripsPage() {
             <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
               <button
                 type="button"
-                onClick={() => setViewMode('grid')}
+                onClick={() => { setViewMode('grid'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
                 title="Grid View"
+                aria-label="Grid View"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -538,13 +539,14 @@ export default function TripsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('list')}
+                onClick={() => { setViewMode('list'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'list'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
                 title="List View"
+                aria-label="List View"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -552,13 +554,14 @@ export default function TripsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode('kanban')}
+                onClick={() => { setViewMode('kanban'); setCurrentPage(1); }}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                   viewMode === 'kanban'
                     ? 'bg-blue-600 text-white'
                     : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
                 title="Kanban View"
+                aria-label="Kanban View"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
@@ -583,6 +586,7 @@ export default function TripsPage() {
                 placeholder="Search trips..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                aria-label="Search trips"
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray placeholder-slate/50 dark:placeholder-warm-gray/50 border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors"
               />
             </div>
@@ -605,7 +609,7 @@ export default function TripsPage() {
             <button
               type="button"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className={`px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all ${
+              className={`px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                 showAdvancedFilters || hasActiveFilters
                   ? 'bg-primary-600 dark:bg-sky text-white dark:text-navy-900'
                   : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
@@ -680,7 +684,7 @@ export default function TripsPage() {
                         type="button"
                         key={tag.id}
                         onClick={() => toggleTagFilter(tag.id)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all tag-colored ${
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors tag-colored ${
                           selectedTags.includes(tag.id)
                             ? 'ring-2 ring-offset-2 ring-primary-500 dark:ring-sky'
                             : 'opacity-70 hover:opacity-100'
