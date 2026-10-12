@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.7] - 2026-10-12
+
 ### Fixed
 
 - **Clicking a linked photo in the Links panel now opens it in the photo lightbox** instead
