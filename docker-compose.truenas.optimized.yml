@@ -62,7 +62,7 @@ services:
     #   APP_VERSION=v5.5.5 docker-compose -f <this file> up -d
     # or set APP_VERSION in the env file. Do not go back to :latest - deploys must be
     # reproducible, and rollback must be a matter of naming the previous tag.
-    image: ghcr.io/dsbaciga/travel-life-backend:${APP_VERSION:-v6.1.4}
+    image: ghcr.io/dsbaciga/travel-life-backend:${APP_VERSION:-v6.1.6}
     container_name: travel-life-backend
     environment:
       NODE_ENV: production
@@ -134,7 +134,7 @@ services:
     #   APP_VERSION=v5.5.5 docker-compose -f <this file> up -d
     # or set APP_VERSION in the env file. Do not go back to :latest - deploys must be
     # reproducible, and rollback must be a matter of naming the previous tag.
-    image: ghcr.io/dsbaciga/travel-life-frontend:${APP_VERSION:-v6.1.4}
+    image: ghcr.io/dsbaciga/travel-life-frontend:${APP_VERSION:-v6.1.6}
     container_name: travel-life-frontend
     environment:
       BACKEND_HOST: backend
