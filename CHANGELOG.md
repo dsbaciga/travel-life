@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Clicking a linked photo in the Links panel now opens it in the photo lightbox** instead
+  of navigating away to the trip's photos tab.
+- **Albums sidebar no longer stacks above overlays on desktop.** The mobile drawer's
+  `z-40` and transform now reset at the `md` breakpoint.
+
 ## [6.1.6] - 2026-10-12
 
 ### Fixed

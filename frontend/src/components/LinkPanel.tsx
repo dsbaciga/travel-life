@@ -6,6 +6,10 @@ import entityLinkService from '../services/entityLink.service';
 import { useInvalidateEntityLinks } from '../hooks/useInvalidateEntityLinks';
 import GeneralEntityPickerModal from './GeneralEntityPickerModal';
 import LinkEditModal from './LinkEditModal';
+import PhotoLightbox from './PhotoLightbox';
+import photoService from '../services/photo.service';
+import { useImmichThumbnailCache, isImmichPhoto } from '../hooks/useImmichThumbnail';
+import type { Photo } from '../types/photo';
 import { getFullAssetUrl } from '../lib/config';
 import { getAccessToken } from '../lib/axios';
 import type {
@@ -74,13 +78,42 @@ export default function LinkPanel({
   const [showAddLinkModal, setShowAddLinkModal] = useState(false);
   const [editingLink, setEditingLink] = useState<EnrichedEntityLink | null>(null);
   const [thumbnailCache, setThumbnailCache] = useState<Record<number, string>>({});
+  const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
+  const lightboxThumbnails = useImmichThumbnailCache();
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<HTMLElement | null>(null);
   const blobUrlsRef = useRef<string[]>([]);
   const invalidateEntityLinks = useInvalidateEntityLinks();
 
+  // Open a linked photo in the lightbox without leaving the panel
+  const openPhotoLightbox = async (photoId: number) => {
+    try {
+      const photo = await photoService.getPhotoById(photoId);
+      void lightboxThumbnails.loadThumbnail(photo.id, photo.thumbnailPath, photo.source);
+      setLightboxPhoto(photo);
+    } catch {
+      toast.error('Failed to load photo');
+    }
+  };
+
+  const getLightboxPhotoUrl = (photo: Photo): string | null => {
+    if (photo.source === 'local') {
+      return getFullAssetUrl(photo.localPath) || null;
+    }
+    if (isImmichPhoto(photo.thumbnailPath, photo.source)) {
+      return lightboxThumbnails.getThumbnailUrl(photo.id);
+    }
+    return getFullAssetUrl(photo.thumbnailPath) || null;
+  };
+
   // Navigate to the linked entity's location in the trip detail page
   const handleNavigateToEntity = (linkedEntityType: EntityType, linkedEntityId: number) => {
+    // Photos open in the lightbox over the panel instead of navigating away
+    if (linkedEntityType === 'PHOTO') {
+      void openPhotoLightbox(linkedEntityId);
+      return;
+    }
+
     // Close the panel first
     onClose();
 
@@ -242,13 +275,13 @@ export default function LinkPanel({
   // Handle keyboard events including focus trap
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Escape to close (only when sub-modals are closed)
-    if (e.key === 'Escape' && !showAddLinkModal && !editingLink) {
+    if (e.key === 'Escape' && !showAddLinkModal && !editingLink && !lightboxPhoto) {
       onClose();
       return;
     }
 
     // Focus trap - keep Tab navigation within the panel (only when sub-modals are closed)
-    if (e.key === 'Tab' && panelRef.current && !showAddLinkModal && !editingLink) {
+    if (e.key === 'Tab' && panelRef.current && !showAddLinkModal && !editingLink && !lightboxPhoto) {
       const focusableElements = panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       if (focusableElements.length === 0) return;
 
@@ -263,7 +296,7 @@ export default function LinkPanel({
         firstElement.focus();
       }
     }
-  }, [onClose, showAddLinkModal, editingLink]);
+  }, [onClose, showAddLinkModal, editingLink, lightboxPhoto]);
 
   // Focus management and keyboard handling
   useEffect(() => {
@@ -559,6 +592,18 @@ export default function LinkPanel({
             refetch();
             onUpdate?.();
           }}
+        />
+      )}
+
+      {/* Photo Lightbox */}
+      {lightboxPhoto && (
+        <PhotoLightbox
+          photo={lightboxPhoto}
+          photos={[lightboxPhoto]}
+          getPhotoUrl={getLightboxPhotoUrl}
+          onClose={() => setLightboxPhoto(null)}
+          onNavigate={setLightboxPhoto}
+          tripId={tripId}
         />
       )}
 
