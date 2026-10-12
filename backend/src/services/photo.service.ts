@@ -464,15 +464,20 @@ class PhotoService {
           if (asset.type) {
             mediaType = asset.type === 'VIDEO' ? MediaType.VIDEO : MediaType.IMAGE;
           }
-          // Extract duration for videos (Immich returns duration as string like "00:05:30.123")
-          if (asset.duration && mediaType === MediaType.VIDEO) {
-            // Parse duration string to seconds
-            const durationMatch = asset.duration.match(/^(\d+):(\d+):(\d+)/);
-            if (durationMatch) {
-              const hours = parseInt(durationMatch[1], 10);
-              const minutes = parseInt(durationMatch[2], 10);
-              const seconds = parseInt(durationMatch[3], 10);
-              duration = hours * 3600 + minutes * 60 + seconds;
+          // Extract duration for videos. Immich usually returns a string like
+          // "00:05:30.123", but other versions return a number (seconds) or null.
+          const rawDuration: unknown = asset.duration;
+          if (rawDuration && mediaType === MediaType.VIDEO) {
+            if (typeof rawDuration === 'string') {
+              const durationMatch = rawDuration.match(/^(\d+):(\d+):(\d+)/);
+              if (durationMatch) {
+                const hours = parseInt(durationMatch[1], 10);
+                const minutes = parseInt(durationMatch[2], 10);
+                const seconds = parseInt(durationMatch[3], 10);
+                duration = hours * 3600 + minutes * 60 + seconds;
+              }
+            } else if (typeof rawDuration === 'number' && Number.isFinite(rawDuration)) {
+              duration = Math.round(rawDuration);
             }
           }
         }
@@ -829,8 +834,8 @@ class PhotoService {
         COUNT(*) as count
       FROM photos
       WHERE trip_id = ${tripId} AND "taken_at" IS NOT NULL
-      GROUP BY TO_CHAR("taken_at" AT TIME ZONE 'UTC' AT TIME ZONE ${tz}, 'YYYY-MM-DD')
-      ORDER BY date ASC
+      GROUP BY 1
+      ORDER BY 1 ASC
       LIMIT 366
     `;
 

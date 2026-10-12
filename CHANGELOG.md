@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.6] - 2026-10-12
+
+### Fixed
+
+- **Linking an Immich video no longer drops its duration when Immich reports it as a
+  number.** Duration parsing assumed a `HH:MM:SS` string and threw on numeric values.
+- **Photo date grouping no longer fails with a Postgres GROUP BY error.** The timezone
+  parameter made the `SELECT` and `GROUP BY` expressions differ; the query now groups by
+  column position.
+
 ## [6.1.4] - 2026-08-02
 
 ### Added
