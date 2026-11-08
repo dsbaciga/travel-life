@@ -19,6 +19,7 @@ const PlacesVisitedPage = React.lazy(() => import('./pages/PlacesVisitedPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 const ChecklistsPage = React.lazy(() => import('./pages/ChecklistsPage'));
 const SavedLinksInboxPage = React.lazy(() => import('./pages/SavedLinksInboxPage'));
+const FoodLogPage = React.lazy(() => import('./pages/FoodLogPage'));
 const YearInReviewPage = React.lazy(() => import('./pages/YearInReviewPage'));
 const ChecklistDetailPage = React.lazy(() => import('./pages/ChecklistDetailPage'));
 const TripSeriesListPage = React.lazy(() =>
@@ -270,6 +271,16 @@ function App() {
                   <ProtectedRoute>
                     <ErrorBoundary>
                       <ChecklistsPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/food-log"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <FoodLogPage />
                     </ErrorBoundary>
                   </ProtectedRoute>
                 }

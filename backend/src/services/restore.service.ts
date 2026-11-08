@@ -603,6 +603,23 @@ export async function restoreFromBackup(
             });
           }
 
+          // Import food log entries. Activity/location links are remapped through the
+          // old-id -> new-id maps; a link missing from the backup is dropped, not the entry.
+          for (const foodData of tripData.foodLogEntries || []) {
+            await tx.foodLogEntry.create({
+              data: {
+                tripId: trip.id,
+                restaurantName: foodData.restaurantName,
+                dish: foodData.dish,
+                rating: foodData.rating,
+                notes: foodData.notes ?? null,
+                orderAgain: foodData.orderAgain ?? false,
+                activityId: foodData.activityId ? activityMap.get(foodData.activityId) ?? null : null,
+                locationId: foodData.locationId ? locationMap.get(foodData.locationId) ?? null : null,
+              },
+            });
+          }
+
           // Import journal entries
           for (const journalData of tripData.journalEntries || []) {
             await tx.journalEntry.create({

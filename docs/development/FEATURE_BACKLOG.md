@@ -1964,7 +1964,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Attach to restaurant-type activities/locations
 - Searchable best-meals view; feeds #107 semantic search later
 
-**Status**: Not started
+**Status**: ✅ Shipped (not yet run against a live database). New `FoodLogEntry` table (migration `20260811000000_add_food_log`, rating 1-5 enforced by a CHECK, optional activity/location links with ON DELETE SET NULL, cascade with the trip), trip CRUD at `/api/trips/:tripId/food-log`, cross-trip best-meals search at `/api/food-log` (minRating, orderAgain, q), backup/restore support (links remapped on restore), a Food Log tab on the trip page and a Best Meals page at `/food-log`. Not done: restricting the link picker to dining-category activities, and the semantic-search hookup (#107).
 
 ### 122. Receipt Scan to Expense
 
