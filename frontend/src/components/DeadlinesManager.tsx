@@ -19,6 +19,7 @@ import {
   formatDateTimeInTimezone,
 } from "../utils/timezone";
 import EmptyState from "./EmptyState";
+import LoadingSpinner from "./LoadingSpinner";
 
 /**
  * DeadlinesManager - cancellation cutoffs, check-in windows and payment due
@@ -174,8 +175,8 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="min-w-0">
           <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Deadlines</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Cancellation cutoffs, check-in windows and payment due dates
@@ -186,6 +187,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
           className="btn-primary"
           onClick={() => (showForm ? closeForm() : setShowForm(true))}
           disabled={bookings.length === 0}
+          title={bookings.length === 0 ? "Add a lodging, transportation or activity first" : undefined}
         >
           {showForm ? "Cancel" : "Add Deadline"}
         </button>
@@ -255,7 +257,11 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         </form>
       )}
 
-      {isLoading ? null : deadlines.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner label="Loading deadlines..." />
+        </div>
+      ) : deadlines.length === 0 ? (
         <EmptyState
           icon="⏰"
           message="No deadlines yet"
@@ -275,31 +281,41 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
             return (
               <li
                 key={d.id}
-                className={`flex items-start justify-between gap-4 rounded-xl border p-4 ${
-                  d.dismissedAt
-                    ? "border-gray-200 dark:border-gray-700 opacity-60"
-                    : overdue
-                      ? "border-red-300 dark:border-red-500/40"
-                      : "border-gray-200 dark:border-gray-700"
+                className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 rounded-xl border p-4 ${
+                  overdue
+                    ? "border-red-300 dark:border-red-500/40"
+                    : "border-gray-200 dark:border-gray-700"
                 }`}
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 dark:text-white">
                     {DEADLINE_KIND_LABELS[d.kind]}
-                    {overdue && <span className="ml-2 text-xs text-red-600 dark:text-red-400">Overdue</span>}
-                    {d.dismissedAt && <span className="ml-2 text-xs text-gray-500">Done</span>}
+                    {overdue && <span className="ml-2 text-sm text-red-600 dark:text-red-400">Overdue</span>}
+                    {d.dismissedAt && (
+                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">Done</span>
+                    )}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {target?.label ?? "Booking"} ·{" "}
-                    {formatDateTimeInTimezone(d.dueAt, resolveTz(target?.timezone, tripTimezone))}
-                  </p>
-                  {d.note && <p className="text-sm text-gray-500 dark:text-gray-400">{d.note}</p>}
+                  <div className={d.dismissedAt ? "opacity-60" : undefined}>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {target?.label ?? "Booking"} ·{" "}
+                      {formatDateTimeInTimezone(d.dueAt, resolveTz(target?.timezone, tripTimezone))}
+                    </p>
+                    {d.note && <p className="text-sm text-gray-500 dark:text-gray-400">{d.note}</p>}
+                  </div>
                 </div>
                 <div className="flex shrink-0 gap-3 text-sm">
-                  <button type="button" onClick={() => toggleDismissed(d)} className="text-primary-600 dark:text-gold hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => toggleDismissed(d)}
+                    className="inline-flex items-center min-h-[44px] sm:min-h-0 px-3 sm:px-1 rounded text-primary-600 dark:text-gold hover:underline focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
+                  >
                     {d.dismissedAt ? "Reopen" : "Mark done"}
                   </button>
-                  <button type="button" onClick={() => handleDelete(d)} className="text-red-600 dark:text-red-400 hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(d)}
+                    className="inline-flex items-center min-h-[44px] sm:min-h-0 px-3 sm:px-1 rounded text-red-600 dark:text-red-400 hover:underline focus-visible:ring-2 focus-visible:ring-red-500/50"
+                  >
                     Delete
                   </button>
                 </div>

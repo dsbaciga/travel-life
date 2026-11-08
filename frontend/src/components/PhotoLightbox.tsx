@@ -6,6 +6,66 @@ import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import PhotoDetailsPanel from "./PhotoDetailsPanel";
 import { pushModal, popModal } from "../utils/modalStack";
+import { getFullAssetUrl } from "../lib/config";
+import { getAccessToken } from "../lib/axios";
+
+/**
+ * Fetch an Immich original with auth and expose it as a blob URL. `<video src>`
+ * can't send the Bearer header the proxy requires, so it can't load it directly.
+ */
+type ImmichVideoStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+interface ImmichVideoState {
+  assetId: string | null;
+  url: string | null;
+  status: ImmichVideoStatus;
+}
+
+function useImmichVideoUrl(assetId: string | null): { url: string | null; status: ImmichVideoStatus } {
+  const [state, setState] = useState<ImmichVideoState>({ assetId: null, url: null, status: 'idle' });
+
+  useEffect(() => {
+    const token = getAccessToken();
+    const fullUrl = assetId && getFullAssetUrl(`/api/immich/assets/${assetId}/original`);
+    if (!assetId || !fullUrl || !token) {
+      setState({ assetId, url: null, status: assetId ? 'error' : 'idle' });
+      return;
+    }
+
+    setState({ assetId, url: null, status: 'loading' });
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
+
+    fetch(fullUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Video fetch failed: ${res.status}`);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (controller.signal.aborted) return;
+        objectUrl = URL.createObjectURL(blob);
+        setState({ assetId, url: objectUrl, status: 'ready' });
+      })
+      .catch(() => {
+        // Aborted fetches are superseded by a newer request; only real failures are errors
+        if (controller.signal.aborted) return;
+        setState({ assetId, url: null, status: 'error' });
+      });
+
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [assetId]);
+
+  // State from a previous asset must never leak into the current one: during the
+  // render before the effect runs, report loading instead of a stale blob URL.
+  if (assetId && state.assetId !== assetId) return { url: null, status: 'loading' };
+  return { url: state.url, status: state.status };
+}
 
 interface PhotoLightboxProps {
   photo: Photo;
@@ -230,7 +290,15 @@ export default function PhotoLightbox({
     setIsDragging(false);
   };
 
-  const photoUrl = getPhotoUrl(photo);
+  const thumbnailUrl = getPhotoUrl(photo);
+  // Immich videos: the parent hands us the JPEG thumbnail, which a <video> can't
+  // play, so stream the authenticated original instead.
+  const needsImmichVideo = isVideo && photo.source === 'immich' && !!photo.immichAssetId;
+  const { url: immichVideoUrl, status: immichVideoStatus } = useImmichVideoUrl(
+    needsImmichVideo ? photo.immichAssetId : null
+  );
+  const photoUrl = needsImmichVideo ? immichVideoUrl : thumbnailUrl;
+  const isLoadingVideo = needsImmichVideo && immichVideoStatus === 'loading';
 
   return createPortal(
     <div
@@ -282,6 +350,15 @@ export default function PhotoLightbox({
               draggable={false}
             />
           )
+        ) : isLoadingVideo ? (
+          <div
+            className="flex items-center justify-center"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="sr-only">Loading video</span>
+          </div>
         ) : (
           <div className="text-center text-gray-400">
             <svg
