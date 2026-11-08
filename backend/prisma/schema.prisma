@@ -156,6 +156,8 @@ model Trip {
   @@index([userId, status])
   @@index([startDate, endDate])
   @@index([seriesId, seriesOrder])
+  @@index([coverImagePath])
+  @@index([coverImageThumbnailPath])
   @@map("trips")
 }
 
@@ -227,6 +229,8 @@ model TravelCompanion {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   tripAssignments TripCompanion[]
 
+  @@index([userId])
+  @@index([avatarUrl])
   @@map("travel_companions")
 }
 
@@ -448,6 +452,8 @@ model Photo {
   @@index([tripId, takenAt])
   @@index([tripId])
   @@index([takenAt])
+  @@index([localPath])
+  @@index([thumbnailPath])
   @@index([coordinates], type: Gist)
   @@map("photos")
 }

@@ -6,6 +6,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { verifyTripAccess } from '../services/_shared/tripAccess';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { isAxiosError } from '../types/prisma-helpers';
+import { decryptSecret } from '../security/encryption';
 
 interface OpenWeatherResponse {
   daily: {
@@ -110,7 +111,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = trip.user.weatherApiKey || this.API_KEY;
+    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       console.warn('No weather API key configured');
@@ -854,7 +855,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = trip.user.weatherApiKey || this.API_KEY;
+    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       throw new AppError('No weather API key configured', 400);

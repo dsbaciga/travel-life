@@ -5,6 +5,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { verifyTripAccess } from '../services/_shared/tripAccess';
 import { isAxiosError } from '../types/prisma-helpers';
 import pushNotificationService from './pushNotification.service';
+import { decryptSecret } from '../security/encryption';
 
 /**
  * AviationStack API Response Types
@@ -186,7 +187,7 @@ class AviationstackService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = transportation.trip.user.aviationstackApiKey || this.API_KEY;
+    const apiKey = decryptSecret(transportation.trip.user.aviationstackApiKey) || this.API_KEY;
 
     if (!apiKey) {
       // No API key available - return existing cached data or null

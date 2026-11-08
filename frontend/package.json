@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "(tsc -b tsconfig.prod.json || echo 'TypeScript warnings ignored') && vite build",
+    "build": "tsc -b tsconfig.prod.json && vite build",
     "build:strict": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "analyze": "ANALYZE=true vite build",
     "analyze:win": "set ANALYZE=true && vite build",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   },

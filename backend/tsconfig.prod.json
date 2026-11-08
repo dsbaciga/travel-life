@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": false,
@@ -10,7 +10,7 @@
     "declaration": false,
     "declarationMap": false,
     "skipLibCheck": true,
-    "noImplicitAny": false
+    "noImplicitAny": true
   },
   "ts-node": {
     "transpileOnly": true

@@ -94,15 +94,9 @@ jobs:
           cd backend
           npm run build
 
-      # Strict type-check. `npm run build` is non-blocking by design in both packages,
-      # so without this nothing in CI counteracts the relaxed config.
-      #
-      # backend: continue-on-error until the strict baseline is confirmed clean -
-      # the relaxed build above is the blocking gate today. Flip to a required step
-      # (delete continue-on-error) once `npm run build:strict` is verified green.
+      # Strict type-check.
       - name: Strict type-check (backend)
         if: matrix.component == 'backend'
-        continue-on-error: true
         run: |
           cd backend
           npm run build:strict
@@ -115,14 +109,14 @@ jobs:
           cd frontend
           npm run build:strict
 
-      # TODO: remove `continue-on-error` and make this a required check once the stale
-      # backend mocks are repaired. Baseline as of 2026-07-25: 1522 pass / 30 fail
-      # across 13 suites, almost all stale test fixtures rather than product defects.
-      # Until then this step reports real failures instead of the old
-      # `|| echo "No tests configured yet"`, which exited 0 no matter what.
       - name: Run tests (backend only)
         if: matrix.component == 'backend'
-        continue-on-error: true
         run: |
           cd backend
           npm test
+
+      - name: Run tests (frontend only)
+        if: matrix.component == 'frontend'
+        run: |
+          cd frontend
+          npm run test:run

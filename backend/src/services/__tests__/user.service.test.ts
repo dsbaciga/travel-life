@@ -90,6 +90,7 @@ import userService from '../user.service';
 import bcrypt from 'bcrypt';
 import { companionService } from '../companion.service';
 import { invalidatePasswordVersionCache } from '../../middleware/auth';
+import { encryptSecret, decryptSecret } from '../../security/encryption';
 
 describe('UserService', () => {
   beforeEach(() => {
@@ -187,13 +188,13 @@ describe('UserService', () => {
   // USR-004: Update Immich settings
   // ============================================================
   describe('USR-004: Update Immich settings', () => {
-    it('should update Immich API URL and key', async () => {
+    it('should encrypt Immich API key at rest when updating settings', async () => {
       const updatedUser = {
         id: 1,
         username: 'testuser',
         email: 'test@example.com',
         immichApiUrl: 'http://localhost:2283',
-        immichApiKey: 'test-key',
+        immichApiKey: 'enc:v1:encrypted',
       };
       mockPrisma.user.update.mockResolvedValue(updatedUser);
 
@@ -206,10 +207,12 @@ describe('UserService', () => {
         where: { id: 1 },
         data: expect.objectContaining({
           immichApiUrl: 'http://localhost:2283',
-          immichApiKey: 'test-key',
+          immichApiKey: expect.stringMatching(/^enc:v1:/),
         }),
         select: expect.any(Object),
       });
+      const savedKey = mockPrisma.user.update.mock.calls[0][0].data.immichApiKey as string;
+      expect(decryptSecret(savedKey)).toBe('test-key');
       expect(result.immichApiUrl).toBe('http://localhost:2283');
     });
 
@@ -272,20 +275,22 @@ describe('UserService', () => {
   // USR-006: Update weather settings
   // ============================================================
   describe('USR-006: Update weather settings', () => {
-    it('should update weather API key', async () => {
+    it('should encrypt weather API key at rest', async () => {
       const updatedUser = {
         id: 1,
         username: 'testuser',
         email: 'test@example.com',
-        weatherApiKey: 'new-weather-key',
+        weatherApiKey: 'enc:v1:encrypted',
       };
       mockPrisma.user.update.mockResolvedValue(updatedUser);
 
-      const result = await userService.updateWeatherSettings(1, {
+      await userService.updateWeatherSettings(1, {
         weatherApiKey: 'new-weather-key',
       });
 
-      expect(result.weatherApiKey).toBe('new-weather-key');
+      const savedKey = mockPrisma.user.update.mock.calls[0][0].data.weatherApiKey as string;
+      expect(savedKey).toMatch(/^enc:v1:/);
+      expect(decryptSecret(savedKey)).toBe('new-weather-key');
     });
   });
 
@@ -567,6 +572,50 @@ describe('UserService', () => {
         where: { userId: 1, tripType: 'Vacation' },
         data: { tripType: null, tripTypeEmoji: null },
       });
+    });
+  });
+
+  // ============================================================
+  // USR-019: Encrypt and decrypt per-user API keys & SMTP password
+  // ============================================================
+  describe('USR-019: Per-user secret encryption and decryption', () => {
+    it('encrypts aviationstack, openrouteservice, llm API keys and smtpPassword on save', async () => {
+      mockPrisma.user.update.mockResolvedValue({});
+
+      await userService.updateAviationstackSettings(1, { aviationstackApiKey: 'av-secret' });
+      const savedAv = mockPrisma.user.update.mock.calls[0][0].data.aviationstackApiKey as string;
+      expect(savedAv).toMatch(/^enc:v1:/);
+      expect(decryptSecret(savedAv)).toBe('av-secret');
+
+      await userService.updateOpenrouteserviceSettings(1, { openrouteserviceApiKey: 'ors-secret' });
+      const savedOrs = mockPrisma.user.update.mock.calls[1][0].data.openrouteserviceApiKey as string;
+      expect(savedOrs).toMatch(/^enc:v1:/);
+      expect(decryptSecret(savedOrs)).toBe('ors-secret');
+
+      await userService.updateLlmSettings(1, { llmApiKey: 'sk-llm-secret' });
+      const savedLlm = mockPrisma.user.update.mock.calls[2][0].data.llmApiKey as string;
+      expect(savedLlm).toMatch(/^enc:v1:/);
+      expect(decryptSecret(savedLlm)).toBe('sk-llm-secret');
+
+      await userService.updateSmtpSettings(1, { smtpPassword: 'smtp-password-123' });
+      const savedSmtp = mockPrisma.user.update.mock.calls[3][0].data.smtpPassword as string;
+      expect(savedSmtp).toMatch(/^enc:v1:/);
+      expect(decryptSecret(savedSmtp)).toBe('smtp-password-123');
+    });
+
+    it('decrypts encrypted smtpPassword in getEffectiveSmtpConfig', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        smtpHost: 'smtp.example.com',
+        smtpPort: 587,
+        smtpSecure: false,
+        smtpUser: 'user@example.com',
+        smtpPassword: encryptSecret('super-secret-smtp-pass'),
+        smtpFrom: 'Travel Life <user@example.com>',
+      });
+
+      const smtpConfig = await userService.getEffectiveSmtpConfig(1);
+      expect(smtpConfig).not.toBeNull();
+      expect(smtpConfig?.password).toBe('super-secret-smtp-pass');
     });
   });
 });

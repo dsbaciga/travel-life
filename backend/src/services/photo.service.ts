@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { AppError } from '../errors/errors';
+import { decryptSecret } from '../security/encryption';
 
 // Type alias for Prisma decimal fields
 type DecimalValue = number | string | { toNumber(): number };
@@ -437,13 +438,14 @@ class PhotoService {
     let duration = data.duration || null;
 
     // Verify Immich asset exists (if user has Immich configured)
-    if (user?.immichApiUrl && user?.immichApiKey) {
+    const immichApiKey = decryptSecret(user?.immichApiKey);
+    if (user?.immichApiUrl && immichApiKey) {
       try {
         const response = await axios.get(
           `${user.immichApiUrl}/api/assets/${data.immichAssetId}`,
           {
             headers: {
-              'x-api-key': user.immichApiKey,
+              'x-api-key': immichApiKey,
             },
           }
         );

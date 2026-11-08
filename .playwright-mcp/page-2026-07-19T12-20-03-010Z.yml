@@ -1,4 +1,0 @@
-- generic [active] [ref=f2e1]:
-  - link "Skip to content" [ref=f2e2] [cursor=pointer]:
-    - /url: "#root"
-  - paragraph [ref=f2e7]: Loading\u2026
