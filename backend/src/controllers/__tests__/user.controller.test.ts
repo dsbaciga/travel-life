@@ -41,6 +41,8 @@ const mockGetTravelPartnerSettings = jest.fn();
 const mockRenameTripType = jest.fn();
 const mockDeleteTripType = jest.fn();
 const mockUpdateTravelPartnerSettings = jest.fn();
+const mockUpdateLlmSettings = jest.fn();
+const mockUpdateSmtpSettings = jest.fn();
 
 jest.mock('../../services/user.service', () => ({
   __esModule: true,
@@ -62,10 +64,13 @@ jest.mock('../../services/user.service', () => ({
     renameTripType: (...args: unknown[]) => mockRenameTripType(...args),
     deleteTripType: (...args: unknown[]) => mockDeleteTripType(...args),
     updateTravelPartnerSettings: (...args: unknown[]) => mockUpdateTravelPartnerSettings(...args),
+    updateLlmSettings: (...args: unknown[]) => mockUpdateLlmSettings(...args),
+    updateSmtpSettings: (...args: unknown[]) => mockUpdateSmtpSettings(...args),
   },
 }));
 
 import { userController } from '../user.controller';
+import { config } from '../../config';
 import { createAuthenticatedControllerArgs } from '../../__tests__/mockBuilders/requests';
 import { testUsers } from '../../__tests__/fixtures/users';
 import { Request, Response, NextFunction } from 'express';
@@ -149,7 +154,11 @@ describe('User Controller', () => {
   });
 
   describe('updateImmichSettings', () => {
-    it('should update immich settings and return success message', async () => {
+    beforeEach(() => {
+      config.security.allowPrivateIntegrationUrls = true;
+    });
+
+    it('should update immich settings and return success message when private URLs are allowed', async () => {
       const mockUser = { immichApiUrl: 'http://localhost:2283', immichApiKey: 'key123' };
       mockUpdateImmichSettings.mockResolvedValue(mockUser);
 
@@ -171,6 +180,24 @@ describe('User Controller', () => {
           immichConfigured: true,
         },
       });
+    });
+
+    it('should reject local/private Immich URLs when allowPrivateIntegrationUrls is false', async () => {
+      config.security.allowPrivateIntegrationUrls = false;
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { immichApiUrl: 'http://192.168.1.50:2283', immichApiKey: 'key123' },
+      });
+
+      userController.updateImmichSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/private or internal IP/),
+        })
+      );
+      expect(mockUpdateImmichSettings).not.toHaveBeenCalled();
     });
 
     it('should return immichConfigured as false when URL/key are cleared', async () => {
@@ -804,6 +831,86 @@ describe('User Controller', () => {
 
       expect(next).toHaveBeenCalled();
       expect(mockUpdateTravelPartnerSettings).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateLlmSettings & updateSmtpSettings SSRF private URL guard', () => {
+    it('rejects private LLM URL when allowPrivateIntegrationUrls is false', async () => {
+      config.security.allowPrivateIntegrationUrls = false;
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { llmBaseUrl: 'http://127.0.0.1:11434/v1' },
+      });
+
+      userController.updateLlmSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/private or internal IP/),
+        })
+      );
+      expect(mockUpdateLlmSettings).not.toHaveBeenCalled();
+    });
+
+    it('allows local LLM URL when allowPrivateIntegrationUrls is true', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      mockUpdateLlmSettings.mockResolvedValue({
+        llmApiKey: null,
+        llmBaseUrl: 'http://127.0.0.1:11434/v1',
+        llmModel: 'llama3',
+      });
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { llmBaseUrl: 'http://127.0.0.1:11434/v1', llmModel: 'llama3' },
+      });
+
+      userController.updateLlmSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
+
+      expect(mockUpdateLlmSettings).toHaveBeenCalledWith(testUsers.user1.id, {
+        llmBaseUrl: 'http://127.0.0.1:11434/v1',
+        llmModel: 'llama3',
+      });
+    });
+
+    it('rejects private SMTP host when allowPrivateIntegrationUrls is false', async () => {
+      config.security.allowPrivateIntegrationUrls = false;
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { smtpHost: '192.168.1.25', smtpPort: 587 },
+      });
+
+      userController.updateSmtpSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
+
+      expect(next).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringMatching(/private or internal IP/),
+        })
+      );
+      expect(mockUpdateSmtpSettings).not.toHaveBeenCalled();
+    });
+
+    it('allows private SMTP host when allowPrivateIntegrationUrls is true', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      mockUpdateSmtpSettings.mockResolvedValue({
+        smtpHost: '192.168.1.25',
+        smtpUser: 'user',
+        smtpPassword: 'enc:v1:encrypted',
+      });
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { smtpHost: '192.168.1.25', smtpPort: 587 },
+      });
+
+      userController.updateSmtpSettings(req as unknown as Request, res as unknown as Response, next as NextFunction);
+      await flushPromises();
+
+      expect(mockUpdateSmtpSettings).toHaveBeenCalledWith(testUsers.user1.id, {
+        smtpHost: '192.168.1.25',
+        smtpPort: 587,
+      });
     });
   });
 });

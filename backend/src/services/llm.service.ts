@@ -2,6 +2,7 @@ import axios from 'axios';
 import { config } from '../config';
 import prisma from '../config/database';
 import logger from '../config/logger';
+import { decryptSecret } from '../security/encryption';
 
 interface LlmOptions {
   maxTokens?: number;
@@ -46,7 +47,7 @@ class LlmService {
         where: { id: userId },
         select: { llmApiKey: true, llmBaseUrl: true, llmModel: true },
       });
-      userApiKey = user?.llmApiKey ?? null;
+      userApiKey = decryptSecret(user?.llmApiKey);
       userBaseUrl = user?.llmBaseUrl ?? null;
       userModel = user?.llmModel ?? null;
     }
@@ -112,6 +113,7 @@ class LlmService {
         {
           headers,
           timeout: 30000,
+          maxRedirects: 0,
         }
       );
 

@@ -46,15 +46,20 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     timezone: trip.timezone as string | null,
     status: trip.status as string,
     privacyLevel: trip.privacyLevel as string,
+    archived: trip.archived as boolean | undefined,
     coverPhotoId: trip.coverPhotoId as number | null,
     coverImagePath: trip.coverImagePath as string | null,
     coverImageThumbnailPath: trip.coverImageThumbnailPath as string | null,
     bannerPhotoId: trip.bannerPhotoId as number | null,
     addToPlacesVisited: trip.addToPlacesVisited as boolean | undefined,
+    excludeFromAutoShare: trip.excludeFromAutoShare as boolean | undefined,
     tripType: trip.tripType as string | null,
     tripTypeEmoji: trip.tripTypeEmoji as string | null,
     seriesId: trip.seriesId as number | null,
     seriesOrder: trip.seriesOrder as number | null,
+    budget: trip.budget as number | null,
+    budgetCurrency: trip.budgetCurrency as string | null,
+    countryCode: trip.countryCode as string | null,
 
     // Related entities
     locations: trip.locations as BackupTrip['locations'],
@@ -79,6 +84,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       bookingUrl: t.bookingUrl as string | null,
       cost: t.cost as number | null,
       currency: t.currency as string | null,
+      exchangeRate: t.exchangeRate as number | null,
+      baseAmount: t.baseAmount as number | null,
+      baseCurrency: t.baseCurrency as string | null,
       status: t.status as string | undefined,
       delayMinutes: t.delayMinutes as number | null,
       notes: t.notes as string | null,
@@ -135,6 +143,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       ...item,
       typeName: type?.name ?? null,
     })) as BackupTrip['customItems'],
+    // Expenses and emergency card info (added in v1.6.0)
+    expenses: trip.expenses as BackupTrip['expenses'],
+    emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
 
@@ -232,10 +243,14 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           timezone: true,
           cost: true,
           currency: true,
+          exchangeRate: true,
+          baseAmount: true,
+          baseCurrency: true,
           bookingUrl: true,
           bookingReference: true,
           notes: true,
           manualOrder: true,
+          dietaryTags: true,
         },
       },
       transportation: {
@@ -265,6 +280,9 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           bookingUrl: true,
           cost: true,
           currency: true,
+          exchangeRate: true,
+          baseAmount: true,
+          baseCurrency: true,
           notes: true,
         },
       },
@@ -366,10 +384,38 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           locationId: true,
           cost: true,
           currency: true,
+          exchangeRate: true,
+          baseAmount: true,
+          baseCurrency: true,
           url: true,
           confirmationNumber: true,
           // The type travels by name, not id — see BackupCustomItemSchema.
           type: { select: { name: true } },
+        },
+      },
+      expenses: {
+        select: {
+          id: true,
+          description: true,
+          category: true,
+          amount: true,
+          currency: true,
+          exchangeRate: true,
+          baseAmount: true,
+          baseCurrency: true,
+          date: true,
+          notes: true,
+        },
+      },
+      emergencyInfo: {
+        select: {
+          insuranceProvider: true,
+          insurancePolicyNumber: true,
+          insuranceAssistancePhone: true,
+          embassyName: true,
+          embassyPhone: true,
+          embassyAddress: true,
+          notes: true,
         },
       },
     },
@@ -415,6 +461,10 @@ export async function createBackup(userId: number): Promise<BackupData> {
         timezone: true,
         activityCategories: true,
         tripTypes: true,
+        dietaryPreferences: true,
+        useCustomMapStyle: true,
+        baseCurrency: true,
+        preferredMapsApp: true,
         immichApiUrl: true,
         llmBaseUrl: true,
         llmModel: true,
@@ -447,6 +497,8 @@ export async function createBackup(userId: number): Promise<BackupData> {
         isMyself: true,
         avatarUrl: true,
         dietaryPreferences: true,
+        medicalNotes: true,
+        allergies: true,
       },
     });
 
@@ -520,6 +572,21 @@ export async function createBackup(userId: number): Promise<BackupData> {
       },
     });
 
+    // Fetch unfiled saved links (inbox links where tripId is null)
+    const unfiledSavedLinks = await prisma.savedLink.findMany({
+      where: { userId, tripId: null },
+      select: {
+        url: true,
+        title: true,
+        description: true,
+        siteName: true,
+        imageUrl: true,
+        notes: true,
+        source: true,
+        metadataStatus: true,
+      },
+    });
+
     // =========================================================================
     // CHUNKED TRIP LOADING
     // =========================================================================
@@ -575,6 +642,10 @@ export async function createBackup(userId: number): Promise<BackupData> {
       timezone: user.timezone,
       activityCategories: user.activityCategories as BackupData['user']['activityCategories'],
       tripTypes: user.tripTypes as BackupData['user']['tripTypes'],
+      dietaryPreferences: (user.dietaryPreferences as string[]) ?? [],
+      useCustomMapStyle: user.useCustomMapStyle,
+      baseCurrency: user.baseCurrency,
+      preferredMapsApp: user.preferredMapsApp,
       immichApiUrl: user.immichApiUrl,
       immichApiKey: null,
       weatherApiKey: null,
@@ -593,7 +664,8 @@ export async function createBackup(userId: number): Promise<BackupData> {
       tags,
       companions: companions.map((c) => ({
         ...c,
-        dietaryPreferences: c.dietaryPreferences as string[],
+        dietaryPreferences: (c.dietaryPreferences as string[]) ?? [],
+        allergies: (c.allergies as string[]) ?? [],
       })),
       locationCategories,
       customItemTypes,
@@ -624,6 +696,8 @@ export async function createBackup(userId: number): Promise<BackupData> {
         isPrimary: doc.isPrimary,
         alertDaysBefore: doc.alertDaysBefore,
       })),
+      // Unfiled saved links (inbox links where tripId is null)
+      unfiledSavedLinks,
       // Trips are already transformed during chunked loading above
       trips: allTransformedTrips,
     };
