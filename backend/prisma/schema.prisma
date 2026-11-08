@@ -153,6 +153,7 @@ model Trip {
   emergencyInfo             TripEmergencyInfo?
   customItems               CustomItem[]
   bookingDeadlines          BookingDeadline[]
+  foodLogEntries            FoodLogEntry[]
 
   @@index([userId, status])
   @@index([startDate, endDate])
@@ -324,6 +325,7 @@ model Location {
   @@index([parentId])
   @@index([coordinates], type: Gist)
   @@map("locations")
+  foodLogEntries FoodLogEntry[]
 }
 
 model LocationCategory {
@@ -526,6 +528,7 @@ model Activity {
   @@index([tripId, manualOrder])
   @@index([startTime])
   @@map("activities")
+  foodLogEntries FoodLogEntry[]
 }
 
 model Transportation {
@@ -1324,4 +1327,36 @@ model EmailIngest {
   @@index([userId, status])
   @@index([status])
   @@map("email_ingests")
+}
+
+// =============================================================================
+// Food log
+// =============================================================================
+// Dishes eaten at a restaurant/dining stop, with a 1-5 rating and an
+// "order again" flag. Optionally linked to a dining Activity or a Location of
+// the same trip; deleting either keeps the entry (SetNull) because restaurantName
+// is stored on the entry itself. rating is constrained to 1..5 by a DB CHECK
+// (food_log_entries_rating_range) in migration 20260811000000_add_food_log.
+model FoodLogEntry {
+  id             Int      @id @default(autoincrement())
+  tripId         Int      @map("trip_id")
+  activityId     Int?     @map("activity_id")
+  locationId     Int?     @map("location_id")
+  restaurantName String   @map("restaurant_name") @db.VarChar(200)
+  dish           String   @db.VarChar(200)
+  rating         Int
+  notes          String?  @db.VarChar(2000)
+  orderAgain     Boolean  @default(false) @map("order_again")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activity Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
+  @@index([activityId])
+  @@index([locationId])
+  @@index([rating])
+  @@map("food_log_entries")
 }
