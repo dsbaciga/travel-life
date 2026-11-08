@@ -7,6 +7,7 @@ jest.mock('../../config/database', () => ({ __esModule: true, default: {} }));
 jest.mock('../backup.service', () => ({ __esModule: true, default: {} }));
 
 import { selectFilesToKeep } from '../scheduledBackup.service';
+import { computeBackupHmac, signBackup } from '../backupIntegrity.service';
 
 const name = (d: string) => `travel-life-backup-${d}.json`;
 
@@ -30,5 +31,23 @@ describe('selectFilesToKeep', () => {
   it('keeps everything when under the daily limit', () => {
     const files = [name('2026-11-01'), name('2026-11-02')];
     expect(selectFilesToKeep(files, 7, 4).size).toBe(2);
+  });
+});
+
+describe('backup signing', () => {
+  it('signs so that restore-style verification (strip integrity, recompute) matches', () => {
+    const data = { version: '1', trips: [{ title: 'Rome', startDate: null }] };
+    const signed = JSON.parse(JSON.stringify(signBackup(data)));
+
+    const { integrity, ...rest } = signed;
+    expect(integrity.algorithm).toBe('hmac-sha256');
+    expect(integrity.signature).toBe(computeBackupHmac(rest));
+  });
+
+  it('detects tampering', () => {
+    const signed = JSON.parse(JSON.stringify(signBackup({ trips: [{ title: 'Rome' }] })));
+    signed.trips[0].title = 'Paris';
+    const { integrity, ...rest } = signed;
+    expect(integrity.signature).not.toBe(computeBackupHmac(rest));
   });
 });

@@ -4,6 +4,7 @@ import prisma from '../config/database';
 import config from '../config';
 import logger from '../config/logger';
 import backupService from './backup.service';
+import { signBackup } from './backupIntegrity.service';
 
 const FILE_RE = /^travel-life-backup-(\d{4})-(\d{2})-(\d{2})\.json$/;
 
@@ -91,7 +92,8 @@ export async function runScheduledBackups(now: Date = new Date()): Promise<Sched
       const data = await backupService.createBackup(id);
       const file = path.join(dir, `travel-life-backup-${dateStamp(now)}.json`);
       const tmp = `${file}.tmp`;
-      await fs.writeFile(tmp, JSON.stringify(data), { mode: 0o600 });
+      // Signed exactly like a manual download: restore refuses unsigned files.
+      await fs.writeFile(tmp, JSON.stringify(signBackup(data)), { mode: 0o600 });
       await fs.rename(tmp, file); // atomic: never leaves a half-written backup under the real name
       await pruneUserDir(dir);
       ok++;
