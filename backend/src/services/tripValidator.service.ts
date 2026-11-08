@@ -166,6 +166,7 @@ class TripValidatorService {
       issues.push(...this.checkTimelineConflicts(trip, dismissedSet));
       issues.push(...this.checkInvalidDates(trip, dismissedSet));
       issues.push(...this.checkLocationClosures(trip, dismissedSet));
+      issues.push(...await this.checkBookingDeadlines(trip, dismissedSet));
       issues.push(...await this.checkTravelTimeAlerts(trip, dismissedSet));
     }
 
@@ -420,6 +421,58 @@ class TripValidatorService {
     }
 
     return issues;
+  }
+
+  /**
+   * Flag booking deadlines (cancellation cutoffs, check-in windows, payment due dates)
+   * that have already passed or fall within the next 3 days. Deadlines the user has
+   * dismissed on the deadline itself are skipped entirely; the health-check dismissal
+   * (dismissedSet) is separate and only hides the warning.
+   */
+  private async checkBookingDeadlines(trip: TripWithRelations, dismissedSet: Set<string>): Promise<ValidationIssue[]> {
+    const now = new Date();
+    const soon = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    const deadlines = await prisma.bookingDeadline.findMany({
+      where: { tripId: trip.id, dismissedAt: null, dueAt: { lte: soon } },
+      include: {
+        lodging: { select: { name: true } },
+        transportation: { select: { type: true, company: true } },
+        activity: { select: { name: true } },
+      },
+      orderBy: { dueAt: 'asc' },
+    });
+
+    const kindLabel: Record<string, string> = {
+      cancellation: 'Free cancellation ends',
+      check_in: 'Online check-in opens',
+      payment: 'Payment due',
+      other: 'Deadline',
+    };
+
+    return deadlines.map((d) => {
+      const bookingName =
+        d.lodging?.name ??
+        d.activity?.name ??
+        (d.transportation ? [d.transportation.company, d.transportation.type].filter(Boolean).join(' ') : 'booking');
+      const overdue = d.dueAt.getTime() < now.getTime();
+      const issueId = this.generateIssueId('booking_deadline', `deadline:${d.id}`);
+      const label = kindLabel[d.kind] ?? kindLabel.other;
+
+      return {
+        id: issueId,
+        category: 'SCHEDULE' as const,
+        type: 'booking_deadline',
+        message: overdue
+          ? `${label} for "${bookingName}" has passed (${d.dueAt.toISOString().slice(0, 10)})`
+          : `${label} for "${bookingName}" is coming up (${d.dueAt.toISOString().slice(0, 10)})`,
+        affectedItems: [d.id],
+        suggestion: d.note ?? (overdue
+          ? 'Confirm this was handled, then dismiss the deadline.'
+          : 'Handle this before the deadline, then dismiss it.'),
+        isDismissed: dismissedSet.has(issueId),
+      };
+    });
   }
 
   /**

@@ -1859,6 +1859,183 @@ directly to the itinerary was what failed. Keep the review queue in front of it.
 
 ---
 
+## 💡 Ideas Review — 2026-11-07
+
+Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day, iCal feed, jet lag calculator. Items are worked in order, starting with #115.
+
+### 115. Scheduled Automatic Backups
+
+**Category**: Data Safety
+**Effort**: Low
+**Impact**: High
+
+**Description**: Backups are currently manual JSON downloads (`backup.service.ts`). Add a scheduled job that writes the same backup to a configurable directory or S3-compatible target with retention.
+
+**Features**:
+- Cron-style schedule per user/instance (default nightly)
+- Retention policy (keep N daily / M weekly)
+- Local-path and S3 targets; last-run status and failure surfacing in Settings
+- Reuses `backup.service.ts`; restore path unchanged
+
+**Status**: ✅ Core shipped (local-directory target, retention, cron). Not yet done: S3 target and last-run status in Settings UI
+
+### 116. Booking Deadline Tracker
+
+**Category**: Planning & Validation
+**Effort**: Medium
+**Impact**: High
+
+**Description**: Track free-cancellation cutoffs, online check-in windows, and payment due dates.
+
+**Features**:
+- Optional deadline fields on lodging/transportation/activities
+- Dashboard widget + push notification (push infra exists) ahead of each deadline
+- Health Check rule for missed or imminent deadlines
+
+**Status**: ✅ Shipped. New `BookingDeadline` table (migration `20260810000000_add_booking_deadlines`, exactly one of lodging/transportation/activity enforced by a CHECK), CRUD + `/api/deadlines/upcoming`, hourly push reminders for deadlines due within 24h (persisted `notifiedAt`), Health Check rule (overdue or due within 3 days), backup/restore support, Deadlines tab on the trip page, and a dashboard widget. Not done: per-form deadline editing inside the lodging/transportation/activity forms
+
+### 117. Today Mode Enhancements
+
+**Category**: Mobile & PWA
+**Effort**: Medium
+**Impact**: High
+
+**Description**: The trip dashboard already has a today view; make it a true on-trip mode.
+
+**Features**:
+- Next-up card with countdown, address, confirmation number, one-tap route
+- Local vs home time side by side
+- Fully usable offline (builds on PWA + offline maps)
+
+**Status**: Not started
+
+### 118. Passport & Visa Validity Check
+
+**Category**: Travel Documents
+**Effort**: Low
+**Impact**: Medium
+
+**Description**: Flag trips that break the 6-month passport rule or lack required visas.
+
+**Features**:
+- Passport expiry and name stored on the user/document record
+- Health Check rule comparing expiry to trip end date
+- Cross-check against existing `VisaRequirement` data; pairs with #110
+
+**Status**: Mostly already built: `tripValidator.service.ts` has `checkPassportValidity` (missing passport, no expiry, expires during trip, 6-month rule) and `checkVisaRequirements`. Remaining gap not yet verified: name mismatch across bookings
+
+### 119. Weather-Aware Packing List
+
+**Category**: Planning
+**Effort**: Low
+**Impact**: Medium
+
+**Description**: Generate a draft checklist from forecast, trip length, and activity types.
+
+**Features**:
+- Uses existing weather integration and checklist models
+- Suggestions are proposals the user accepts; never auto-written
+
+**Status**: Not started
+
+### 120. Day Auto-Draft Journal
+
+**Category**: AI & ML
+**Effort**: Medium
+**Impact**: Medium
+
+**Description**: Turn a day's photos, locations, and activities into a first-draft journal entry.
+
+**Features**:
+- Reuses `llm.service.ts` and the per-user key handling
+- Result lands as an editable draft only; no direct writes to published entries
+
+**Status**: Not started
+
+### 121. Food Log
+
+**Category**: Memories
+**Effort**: Low
+**Impact**: Medium
+
+**Description**: Dishes, ratings, and order-again notes per restaurant.
+
+**Features**:
+- Attach to restaurant-type activities/locations
+- Searchable best-meals view; feeds #107 semantic search later
+
+**Status**: Not started
+
+### 122. Receipt Scan to Expense
+
+**Category**: Budget
+**Effort**: Medium
+**Impact**: Medium
+
+**Description**: Snap a receipt; OCR creates the expense with amount, currency, and date.
+
+**Features**:
+- Feeds `TripExpense` and multi-currency (#96)
+- Result opens in a confirm form before saving
+
+**Status**: Not started
+
+### 123. Parking & Rental Car Log
+
+**Category**: On-Trip Utilities
+**Effort**: Low
+**Impact**: Low
+
+**Description**: Where-I-parked pin with photo and meter expiry reminder, plus rental pickup/return details.
+
+**Features**:
+- Quick action from Today mode
+- Reminder via existing push notifications
+
+**Status**: Not started
+
+### 124. Data Quality Dashboard
+
+**Category**: Insight
+**Effort**: Medium
+**Impact**: Medium
+
+**Description**: List photos missing dates or locations, activities without costs, and trips without journal entries, each with a quick fix.
+
+**Features**:
+- Complements Trip Health Check, but spans the whole archive
+
+**Status**: Not started
+
+### 125. Personal Records & Trends
+
+**Category**: Insight
+**Effort**: Low
+**Impact**: Low
+
+**Description**: Longest trip, most-visited country, spend per day over years, usual travel season.
+
+**Features**:
+- Extends Year in Review and PlacesVisited stats
+
+**Status**: Not started
+
+### 126. Share Links with PIN & Expiry
+
+**Category**: Export & Sharing
+**Effort**: Low
+**Impact**: Medium
+
+**Description**: Finer control over the public trip page (#87).
+
+**Features**:
+- Optional PIN and expiry date per share link
+- Revoke individual links
+
+**Status**: Not started
+
+---
+
 ## Quick Reference
 
 ### By Implementation Effort
@@ -2014,6 +2191,7 @@ directly to the itinerary was what failed. Keep the review queue in front of it.
 
 ## Update Log
 
+- **2026-11-07**: Added #115–#126 (backups, deadline tracker, Today mode, passport check, packing list, journal auto-draft, food log, receipt scan, parking log, data quality, records, share PINs)
 - **2026-07-25 (evening)**: Shipped #96 (multi-currency with FX rates), #102 (opening hours & closure warnings), and #112 (transit & rideshare deep links). Built in parallel in isolated worktrees. Backend +144 tests, frontend +81, zero new failures against the v5.6.0 baseline of 30 pre-existing ones. Note for future verification: `npx tsc --noEmit` in `frontend/` is a **no-op** — the root `tsconfig.json` has `"files": []` with only project references, so it silently checks nothing. Use `npx tsc -b` (which is what `npm run build:strict` already does); the shortcut hid a real type error in this batch
 - **2026-07-25**: Added #96–#114 from a fresh pass over the schema and services. Ideas that duplicated existing entries were folded into those rather than listed twice — ratings widened in #41, GPX import added to #43, booking-email import updated in #69 (the IMAP transport now exists after the saved-link email ingest work, so it is far cheaper than the 2026-04 attempt). Also added #95 (Technical Debt: `transformTripToBackupFormat` type assertions). Highest-value new items: #96 multi-currency, which fixes a real correctness bug where mixed-currency budget totals are simply summed without conversion; #102 opening hours, which catches the most common itinerary failure; and #97 expense splitting
 - **2026-07-19 (evening)**: Feature batch shipped — Budget & expense tracking (`TripExpense` + Budget tab + dashboard widget), Public trip sharing (#87), On This Day memories (#37, app-internal) + Year in Review (#55), iCal feed (one-way subscription form of Calendar Sync #68), Push notifications (#67, completing PWA #64), Trip Archive (#25), Favorite Places (#12, location starring), Default Timezone (#21), plus Immich regression tests

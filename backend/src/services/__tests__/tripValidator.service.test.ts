@@ -48,6 +48,9 @@ const mockPrisma = {
   entityLink: {
     findMany: jest.fn(),
   },
+  bookingDeadline: {
+    findMany: jest.fn(),
+  },
   dismissedValidationIssue: {
     upsert: jest.fn(),
     deleteMany: jest.fn(),
@@ -93,6 +96,7 @@ describe('TripValidatorService', () => {
     jest.clearAllMocks();
     mockPrisma.entityLink.findMany.mockResolvedValue([]);
     mockPrisma.location.findMany.mockResolvedValue([]);
+    mockPrisma.bookingDeadline.findMany.mockResolvedValue([]);
   });
 
   // Helper to create a trip with relations
@@ -657,6 +661,70 @@ describe('TripValidatorService', () => {
 
       expect(docIssues.length).toBeGreaterThan(0);
       expect(docIssues[0].message).toContain('expires');
+    });
+  });
+  describe('booking deadlines', () => {
+    const planned = () =>
+      createTripWithRelations({
+        status: 'Planned',
+        lodging: [{ checkInDate: new Date('2024-07-01'), checkOutDate: new Date('2024-07-03') }],
+      });
+
+    it('VAL-021: flags an overdue cancellation deadline in SCHEDULE', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(planned());
+      mockPrisma.bookingDeadline.findMany.mockResolvedValue([
+        {
+          id: 9,
+          kind: 'cancellation',
+          dueAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          note: null,
+          lodging: { name: 'Hotel Roma' },
+          transportation: null,
+          activity: null,
+        },
+      ]);
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+      const issues = result.issuesByCategory.SCHEDULE.filter((i) => i.type === 'booking_deadline');
+
+      expect(issues).toHaveLength(1);
+      expect(issues[0].message).toContain('Free cancellation ends');
+      expect(issues[0].message).toContain('Hotel Roma');
+      expect(issues[0].message).toContain('has passed');
+    });
+
+    it('VAL-022: words an upcoming deadline differently from an overdue one', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(planned());
+      mockPrisma.bookingDeadline.findMany.mockResolvedValue([
+        {
+          id: 10,
+          kind: 'payment',
+          dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          note: 'Balance due at the front desk',
+          lodging: null,
+          transportation: null,
+          activity: { name: 'Vatican tour' },
+        },
+      ]);
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+      const issue = result.issuesByCategory.SCHEDULE.find((i) => i.type === 'booking_deadline');
+
+      expect(issue?.message).toContain('is coming up');
+      expect(issue?.suggestion).toBe('Balance due at the front desk');
+    });
+
+    it('VAL-023: only queries deadlines that are undismissed and within 3 days', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(planned());
+
+      await tripValidatorService.validateTrip(1, 1);
+
+      const args = mockPrisma.bookingDeadline.findMany.mock.calls[0][0] as {
+        where: { tripId: number; dismissedAt: unknown; dueAt: { lte: Date } };
+      };
+      expect(args.where.tripId).toBe(1);
+      expect(args.where.dismissedAt).toBeNull();
+      expect(args.where.dueAt.lte.getTime()).toBeGreaterThan(Date.now());
     });
   });
 });

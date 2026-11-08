@@ -578,6 +578,31 @@ export async function restoreFromBackup(
             stats.lodgingImported++;
           }
 
+          // Import booking deadlines. Targets are remapped through the old-id -> new-id
+          // maps built above; a deadline whose booking is missing from the backup is skipped.
+          for (const deadlineData of tripData.bookingDeadlines || []) {
+            const targetMap =
+              deadlineData.entityType === 'lodging'
+                ? lodgingMap
+                : deadlineData.entityType === 'transportation'
+                  ? transportationMap
+                  : activityMap;
+            const newTargetId = targetMap.get(deadlineData.entityId);
+            if (!newTargetId) continue;
+            await tx.bookingDeadline.create({
+              data: {
+                tripId: trip.id,
+                lodgingId: deadlineData.entityType === 'lodging' ? newTargetId : null,
+                transportationId: deadlineData.entityType === 'transportation' ? newTargetId : null,
+                activityId: deadlineData.entityType === 'activity' ? newTargetId : null,
+                kind: deadlineData.kind,
+                dueAt: new Date(deadlineData.dueAt),
+                note: deadlineData.note ?? null,
+                dismissedAt: deadlineData.dismissedAt ? new Date(deadlineData.dismissedAt) : null,
+              },
+            });
+          }
+
           // Import journal entries
           for (const journalData of tripData.journalEntries || []) {
             await tx.journalEntry.create({

@@ -45,6 +45,7 @@ const CompanionManager = lazy(() => import("../components/CompanionManager"));
 const LocationManager = lazy(() => import("../components/LocationManager"));
 const CollaboratorsManager = lazy(() => import("../components/CollaboratorsManager"));
 const BudgetManager = lazy(() => import("../components/BudgetManager"));
+const DeadlinesManager = lazy(() => import("../components/DeadlinesManager"));
 const SavedLinksManager = lazy(() => import("../components/SavedLinksManager"));
 const CustomItemsManager = lazy(() => import("../components/CustomItemsManager"));
 const EmergencyCard = lazy(() => import("../components/EmergencyCard"));
@@ -98,6 +99,7 @@ type TabId =
   | "transportation"
   | "lodging"
   | "budget"
+  | "deadlines"
   | "links"
   | "custom"
   | "unscheduled"
@@ -105,7 +107,7 @@ type TabId =
   | "emergency"
   | "local-norms";
 
-const VALID_TAB_IDS = new Set<string>(["dashboard", "timeline", "daily", "trip-map", "locations", "photos", "photo-map", "photo-timeline", "journal", "activities", "transportation", "lodging", "budget", "links", "custom", "unscheduled", "companions", "emergency", "local-norms"]);
+const VALID_TAB_IDS = new Set<string>(["dashboard", "timeline", "daily", "trip-map", "locations", "photos", "photo-map", "photo-timeline", "journal", "activities", "transportation", "lodging", "budget", "deadlines", "links", "custom", "unscheduled", "companions", "emergency", "local-norms"]);
 
 function isTabId(value: string | null | undefined): value is TabId {
   return value != null && VALID_TAB_IDS.has(value);
@@ -587,6 +589,20 @@ export default function TripDetailPage() {
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            ),
+          },
+          {
+            id: "deadlines",
+            label: "Deadlines",
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             ),
@@ -2019,6 +2035,21 @@ export default function TripDetailPage() {
                 queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
                 queryClient.invalidateQueries({ queryKey: ['budget-summary', tripId] });
               }}
+            />
+            </Suspense>
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Deadlines Tab */}
+        {activeTab === "deadlines" && (
+          <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6 animate-fadeIn">
+            <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner.FullPage message="Loading deadlines..." />}>
+            <DeadlinesManager
+              tripId={trip.id}
+              tripTimezone={trip.timezone}
+              onUpdate={() => queryClient.invalidateQueries({ queryKey: ['trip', tripId] })}
             />
             </Suspense>
             </ErrorBoundary>

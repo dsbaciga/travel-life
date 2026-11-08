@@ -152,6 +152,7 @@ model Trip {
   savedLinks                SavedLink[]
   emergencyInfo             TripEmergencyInfo?
   customItems               CustomItem[]
+  bookingDeadlines          BookingDeadline[]
 
   @@index([userId, status])
   @@index([startDate, endDate])
@@ -513,11 +514,12 @@ model Activity {
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  trip        Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
   // Note: Location association is handled via EntityLink system, not direct FK
-  parent      Activity?  @relation("ActivityChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children    Activity[] @relation("ActivityChildren")
-  dietaryTags Json?      @map("dietary_tags")
+  parent           Activity?         @relation("ActivityChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children         Activity[]        @relation("ActivityChildren")
+  dietaryTags      Json?             @map("dietary_tags")
+  bookingDeadlines BookingDeadline[]
 
   @@index([tripId])
   @@index([parentId])
@@ -565,10 +567,11 @@ model Transportation {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  startLocation  Location?       @relation("StartLocation", fields: [startLocationId], references: [id], onDelete: SetNull)
-  endLocation    Location?       @relation("EndLocation", fields: [endLocationId], references: [id], onDelete: SetNull)
-  flightTracking FlightTracking?
+  trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  startLocation    Location?         @relation("StartLocation", fields: [startLocationId], references: [id], onDelete: SetNull)
+  endLocation      Location?         @relation("EndLocation", fields: [endLocationId], references: [id], onDelete: SetNull)
+  flightTracking   FlightTracking?
+  bookingDeadlines BookingDeadline[]
 
   @@index([tripId])
   @@index([scheduledStart])
@@ -600,8 +603,9 @@ model Lodging {
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
   // Note: Location association is handled via EntityLink system, not direct FK
+  bookingDeadlines BookingDeadline[]
 
   @@index([tripId])
   @@index([checkInDate])
@@ -634,6 +638,40 @@ model TripExpense {
   // Matches the primary list query (order by date desc, created_at desc) in expense.service.ts
   @@index([tripId, date])
   @@map("trip_expenses")
+}
+
+// =============================================================================
+// Booking deadlines
+// =============================================================================
+// Cancellation cutoffs, check-in windows and payment due dates attached to a
+// lodging, transportation or activity record. Exactly one of the three FKs is
+// set; that is enforced by a DB CHECK (booking_deadlines_one_target) added in
+// migration 20260810000000_add_booking_deadlines, which Prisma cannot represent.
+model BookingDeadline {
+  id               Int       @id @default(autoincrement())
+  tripId           Int       @map("trip_id")
+  lodgingId        Int?      @map("lodging_id")
+  transportationId Int?      @map("transportation_id")
+  activityId       Int?      @map("activity_id")
+  kind             String    @db.VarChar(30) // cancellation, check_in, payment, other
+  dueAt            DateTime  @map("due_at")
+  note             String?   @db.VarChar(500)
+  dismissedAt      DateTime? @map("dismissed_at")
+  notifiedAt       DateTime? @map("notified_at") // set once the push reminder has been sent
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  lodging        Lodging?        @relation(fields: [lodgingId], references: [id], onDelete: Cascade)
+  transportation Transportation? @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  activity       Activity?       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([dueAt])
+  @@index([lodgingId])
+  @@index([transportationId])
+  @@index([activityId])
+  @@map("booking_deadlines")
 }
 
 // =============================================================================
@@ -1140,20 +1178,20 @@ enum TravelPartnerRequestStatus {
 }
 
 model TravelPartnerRequest {
-  id          Int                        @id @default(autoincrement())
-  requesterId Int                        @map("requester_id")
-  recipientId Int                        @map("recipient_id")
-  status      TravelPartnerRequestStatus @default(PENDING)
-  message     String?                    @db.Text // Optional personal note from the requester
+  id                 Int                        @id @default(autoincrement())
+  requesterId        Int                        @map("requester_id")
+  recipientId        Int                        @map("recipient_id")
+  status             TravelPartnerRequestStatus @default(PENDING)
+  message            String?                    @db.Text // Optional personal note from the requester
   // The REQUESTER's opt-in to back-sharing their OWN existing trips with the
   // recipient if the request is accepted. Recorded here because the choice is made
   // at send time but only acted on at accept time. The recipient's equivalent choice
   // is passed on the accept call and never stored — it is acted on immediately.
   // Neither flag can grant anyone access to the other side's history.
-  shareExistingTrips Boolean                 @default(false) @map("share_existing_trips")
-  respondedAt DateTime?                  @map("responded_at")
-  createdAt   DateTime                   @default(now()) @map("created_at")
-  updatedAt   DateTime                   @updatedAt @map("updated_at")
+  shareExistingTrips Boolean                    @default(false) @map("share_existing_trips")
+  respondedAt        DateTime?                  @map("responded_at")
+  createdAt          DateTime                   @default(now()) @map("created_at")
+  updatedAt          DateTime                   @updatedAt @map("updated_at")
 
   requester User @relation("TravelPartnerRequestsSent", fields: [requesterId], references: [id], onDelete: Cascade)
   recipient User @relation("TravelPartnerRequestsReceived", fields: [recipientId], references: [id], onDelete: Cascade)

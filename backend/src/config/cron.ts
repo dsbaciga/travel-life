@@ -3,6 +3,7 @@ import tripService from '../services/trip.service';
 import pushNotificationService from '../services/pushNotification.service';
 import emailIngestService from '../services/emailIngest.service';
 import { pdfImportService } from '../services/pdfImport.service';
+import scheduledBackupService from '../services/scheduledBackup.service';
 import config from './index';
 import logger from './logger';
 
@@ -31,6 +32,19 @@ export function initCronJobs(): void {
       }
     } catch (error) {
       logger.error('Error during trip-start push reminder cron job:', error);
+    }
+  });
+
+  // Hourly booking-deadline reminders (cancellation cutoffs, check-in windows,
+  // payment due dates). No-op when web push is not configured.
+  cron.schedule('15 * * * *', async () => {
+    try {
+      const notified = await pushNotificationService.sendDeadlineReminders();
+      if (notified > 0) {
+        logger.info(`Sent booking-deadline push reminders for ${notified} deadline(s).`);
+      }
+    } catch (error) {
+      logger.error('Error during booking-deadline push reminder cron job:', error);
     }
   });
 
@@ -70,6 +84,21 @@ export function initCronJobs(): void {
     logger.info(`Email link ingest enabled (schedule: ${config.imap.pollCron}).`);
   } else {
     logger.info('Email link ingest disabled (IMAP not configured).');
+  }
+
+  // Scheduled backups to BACKUP_DIR (opt-in via BACKUP_SCHEDULE_ENABLED=true).
+  if (config.scheduledBackup.enabled) {
+    cron.schedule(config.scheduledBackup.cron, async () => {
+      try {
+        const result = await scheduledBackupService.runScheduledBackups();
+        logger.info(
+          `Scheduled backup finished: ${result.lastSuccessCount} ok, ${result.lastFailureCount} failed.`
+        );
+      } catch (error) {
+        logger.error('Error during scheduled backup cron job:', error);
+      }
+    });
+    logger.info(`Scheduled backups enabled (schedule: ${config.scheduledBackup.cron}).`);
   }
 
   // Run once on startup to ensure data is fresh
