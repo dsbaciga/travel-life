@@ -128,6 +128,11 @@ export const PERSISTABLE_QUERY_KEYS = [
   'checklists',
   'checklist',
   'savedLinks',
+  'customItems',
+  'budget-summary',
+  'expenses',
+  'emergency-card',
+  'tripSeries',
   'user',
   'settings',
 ] as const;

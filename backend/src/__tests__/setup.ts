@@ -5,6 +5,8 @@ import { jest } from '@jest/globals';
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/travel_life_test';
 // Secrets must be >= 32 chars and must not be a well-known placeholder value
 // (see requireStrongSecret in src/config/index.ts).
 process.env.JWT_SECRET =

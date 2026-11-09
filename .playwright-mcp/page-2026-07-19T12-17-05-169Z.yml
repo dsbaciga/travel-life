@@ -1,9 +1,0 @@
-- generic [ref=e4]:
-  - heading "Access Token Required" [level=1] [ref=e5]
-  - paragraph [ref=e6]:
-    - text: Paste the access token from your terminal. Look for the
-    - img "key" [ref=e7]: 🔑
-    - text: line.
-  - generic [ref=e8]:
-    - textbox "Paste token here..." [active] [ref=e9]
-    - button "Continue" [disabled] [ref=e10]

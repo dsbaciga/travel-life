@@ -6,7 +6,7 @@
  * - validateCsrf accepts a correctly signed token for the presenting session
  * - a token signed for a DIFFERENT session is rejected
  * - a tampered nonce or tampered HMAC is rejected
- * - legacy plain 64-hex tokens are still accepted (migration path)
+ * - unsigned plain 64-hex tokens without an HMAC suffix are rejected with 403
  * - exempt-path normalisation exempts exactly the intended paths and cannot be
  *   widened by encoding tricks, double slashes or trailing junk
  */
@@ -363,55 +363,46 @@ describe('validateCsrf — signed double-submit', () => {
 });
 
 // ===========================================================================
-// Legacy migration path
+// Unsigned plain-hex tokens (rejected)
 // ===========================================================================
 
-describe('validateCsrf — legacy plain-hex tokens', () => {
-  it('accepts a plain 64-hex token with no HMAC suffix', () => {
-    const legacy = generateCsrfToken();
-    expect(legacy).toMatch(/^[a-f0-9]{64}$/);
+describe('validateCsrf — unsigned plain-hex tokens', () => {
+  it('rejects an unsigned 64-hex token with no HMAC suffix with 403', () => {
+    const unsigned = generateCsrfToken();
+    expect(unsigned).toMatch(/^[a-f0-9]{64}$/);
 
     const { res, next } = runValidateCsrf({
-      cookieToken: legacy,
-      headerToken: legacy,
+      cookieToken: unsigned,
+      headerToken: unsigned,
       refreshToken: 'any-session',
     });
 
-    expectPassed(res, next);
+    expectRejected(res, next, 403);
   });
 
-  it('accepts a legacy token regardless of which session presents it (bare double-submit semantics)', () => {
-    const legacy = HEX64_A;
+  it('rejects an unsigned 64-hex token even when no refresh session is present', () => {
+    const unsigned = HEX64_A;
 
-    const a = runValidateCsrf({ cookieToken: legacy, headerToken: legacy, refreshToken: 'rt-a' });
-    expectPassed(a.res, a.next);
-
-    jest.clearAllMocks();
-    const b = runValidateCsrf({ cookieToken: legacy, headerToken: legacy, refreshToken: 'rt-b' });
-    expectPassed(b.res, b.next);
-  });
-
-  it('still requires the legacy token to match the header', () => {
     const { res, next } = runValidateCsrf({
-      cookieToken: HEX64_A,
-      headerToken: HEX64_B,
-      refreshToken: 'rt-a',
+      cookieToken: unsigned,
+      headerToken: unsigned,
     });
-    expectRejected(res, next);
+
+    expectRejected(res, next, 403);
   });
 
   it('rejects a 63-hex and a 65-hex token', () => {
     for (const bad of ['a'.repeat(63), 'a'.repeat(65)]) {
       jest.clearAllMocks();
       const { res, next } = runValidateCsrf({ cookieToken: bad, headerToken: bad });
-      expectRejected(res, next);
+      expectRejected(res, next, 403);
     }
   });
 
-  it('rejects an uppercase-hex legacy token (patterns are lowercase-only)', () => {
+  it('rejects an uppercase-hex token', () => {
     const upper = 'A'.repeat(64);
     const { res, next } = runValidateCsrf({ cookieToken: upper, headerToken: upper });
-    expectRejected(res, next);
+    expectRejected(res, next, 403);
   });
 });
 

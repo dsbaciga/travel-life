@@ -35,8 +35,11 @@ interface RestoreStats {
  * v1.3.0 - Removed plaintext secrets (API keys, SMTP password) from exports
  * v1.4.0 - Added savedLinks
  * v1.5.0 - Added customItems and customItemTypes
+ * v1.6.0 - Added expenses, emergencyInfo, unfiledSavedLinks, companion medical fields,
+ *          trip budget/countryCode/archived/excludeFromAutoShare, user preferences,
+ *          activity dietaryTags, and FX snapshots on costed items
  */
-const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0'];
+const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
 
 /**
  * Second layer of defence for file paths coming out of an uploaded backup.
@@ -182,6 +185,18 @@ export async function restoreFromBackup(
             timezone: resolveTimezone(backupData.user.timezone, currentUser?.timezone),
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
+            ...(backupData.user.dietaryPreferences !== undefined
+              ? { dietaryPreferences: backupData.user.dietaryPreferences as Prisma.JsonArray }
+              : {}),
+            ...(backupData.user.useCustomMapStyle !== undefined
+              ? { useCustomMapStyle: backupData.user.useCustomMapStyle }
+              : {}),
+            ...(backupData.user.baseCurrency !== undefined
+              ? { baseCurrency: backupData.user.baseCurrency }
+              : {}),
+            ...(backupData.user.preferredMapsApp !== undefined
+              ? { preferredMapsApp: backupData.user.preferredMapsApp }
+              : {}),
             immichApiUrl: sanitizedImmichUrl,
             // If we have no Immich URL after sanitization, also clear any existing
             // Immich key — an orphan key without a URL is meaningless and confusing.
@@ -221,6 +236,8 @@ export async function restoreFromBackup(
               isMyself: companion.isMyself,
               avatarUrl: sanitizeStoredPath(companion.avatarUrl, userId, 'companion.avatarUrl'),
               dietaryPreferences: companion.dietaryPreferences || [],
+              medicalNotes: companion.medicalNotes ?? null,
+              allergies: companion.allergies || [],
             },
           });
           companionMap.set(companion.name, created.id);
@@ -346,6 +363,28 @@ export async function restoreFromBackup(
           }
         }
 
+        // Step 6.8: Import unfiled saved links (inbox links where tripId is null, added in v1.6.0)
+        if (backupData.unfiledSavedLinks) {
+          for (const linkData of backupData.unfiledSavedLinks) {
+            await tx.savedLink.create({
+              data: {
+                userId,
+                tripId: null,
+                url: linkData.url,
+                title: linkData.title,
+                description: linkData.description,
+                siteName: linkData.siteName,
+                imageUrl: linkData.imageUrl,
+                notes: linkData.notes,
+                source: linkData.source === 'EMAIL' ? 'EMAIL' : 'MANUAL',
+                metadataStatus:
+                  linkData.metadataStatus === 'FETCHED' ? 'FETCHED' : 'PENDING',
+              },
+            });
+            stats.savedLinksImported++;
+          }
+        }
+
         // Step 7: Import trips with all related data
         for (const tripData of backupData.trips) {
           // Map seriesId from old to new
@@ -364,6 +403,7 @@ export async function restoreFromBackup(
               tripType: tripData.tripType || null,
               tripTypeEmoji: tripData.tripTypeEmoji || null,
               privacyLevel: tripData.privacyLevel,
+              archived: tripData.archived ?? false,
               coverImagePath: sanitizeStoredPath(tripData.coverImagePath, userId, 'trip.coverImagePath'),
               coverImageThumbnailPath: sanitizeStoredPath(
                 tripData.coverImageThumbnailPath,
@@ -371,8 +411,12 @@ export async function restoreFromBackup(
                 'trip.coverImageThumbnailPath'
               ),
               addToPlacesVisited: tripData.addToPlacesVisited,
+              excludeFromAutoShare: tripData.excludeFromAutoShare ?? false,
               seriesId: mappedSeriesId,
               seriesOrder: mappedSeriesId ? (tripData.seriesOrder || null) : null,
+              budget: tripData.budget != null ? new Prisma.Decimal(tripData.budget) : null,
+              budgetCurrency: tripData.budgetCurrency ?? null,
+              countryCode: tripData.countryCode ?? null,
             },
           });
           stats.tripsImported++;
@@ -473,10 +517,23 @@ export async function restoreFromBackup(
                 timezone: activityData.timezone,
                 cost: activityData.cost,
                 currency: activityData.currency,
+                exchangeRate:
+                  activityData.exchangeRate != null
+                    ? new Prisma.Decimal(activityData.exchangeRate)
+                    : null,
+                baseAmount:
+                  activityData.baseAmount != null
+                    ? new Prisma.Decimal(activityData.baseAmount)
+                    : null,
+                baseCurrency: activityData.baseCurrency ?? null,
                 bookingUrl: activityData.bookingUrl,
                 bookingReference: activityData.bookingReference,
                 notes: activityData.notes,
                 manualOrder: activityData.manualOrder,
+                dietaryTags:
+                  activityData.dietaryTags === null
+                    ? Prisma.DbNull
+                    : activityData.dietaryTags,
               },
             });
             if (activityData.id != null) activityMap.set(activityData.id, activity.id);
@@ -525,6 +582,15 @@ export async function restoreFromBackup(
                 bookingUrl: transportData.bookingUrl,
                 cost: transportData.cost,
                 currency: transportData.currency,
+                exchangeRate:
+                  transportData.exchangeRate != null
+                    ? new Prisma.Decimal(transportData.exchangeRate)
+                    : null,
+                baseAmount:
+                  transportData.baseAmount != null
+                    ? new Prisma.Decimal(transportData.baseAmount)
+                    : null,
+                baseCurrency: transportData.baseCurrency ?? null,
                 status: transportData.status,
                 delayMinutes: transportData.delayMinutes,
                 notes: transportData.notes,
@@ -571,6 +637,15 @@ export async function restoreFromBackup(
                 bookingUrl: lodgingData.bookingUrl,
                 cost: lodgingData.cost,
                 currency: lodgingData.currency,
+                exchangeRate:
+                  lodgingData.exchangeRate != null
+                    ? new Prisma.Decimal(lodgingData.exchangeRate)
+                    : null,
+                baseAmount:
+                  lodgingData.baseAmount != null
+                    ? new Prisma.Decimal(lodgingData.baseAmount)
+                    : null,
+                baseCurrency: lodgingData.baseCurrency ?? null,
                 notes: lodgingData.notes,
               },
             });
@@ -801,16 +876,63 @@ export async function restoreFromBackup(
                 locationId: itemData.locationId
                   ? locationMap.get(itemData.locationId) ?? null
                   : null,
-                // FX snapshot columns are not backed up — they are recomputed
-                // from cost/currency, matching how activities and lodging behave.
                 cost: itemData.cost != null ? new Prisma.Decimal(itemData.cost) : null,
                 currency: itemData.currency,
+                exchangeRate:
+                  itemData.exchangeRate != null
+                    ? new Prisma.Decimal(itemData.exchangeRate)
+                    : null,
+                baseAmount:
+                  itemData.baseAmount != null
+                    ? new Prisma.Decimal(itemData.baseAmount)
+                    : null,
+                baseCurrency: itemData.baseCurrency ?? null,
                 url: itemData.url,
                 confirmationNumber: itemData.confirmationNumber,
               },
             });
             if (itemData.id != null) customItemMap.set(itemData.id, customItem.id);
             stats.customItemsImported++;
+          }
+
+          // Import trip expenses (added in v1.6.0)
+          for (const expenseData of tripData.expenses || []) {
+            await tx.tripExpense.create({
+              data: {
+                tripId: trip.id,
+                description: expenseData.description,
+                category: expenseData.category,
+                amount: new Prisma.Decimal(expenseData.amount),
+                currency: expenseData.currency ?? null,
+                exchangeRate:
+                  expenseData.exchangeRate != null
+                    ? new Prisma.Decimal(expenseData.exchangeRate)
+                    : null,
+                baseAmount:
+                  expenseData.baseAmount != null
+                    ? new Prisma.Decimal(expenseData.baseAmount)
+                    : null,
+                baseCurrency: expenseData.baseCurrency ?? null,
+                date: expenseData.date ? new Date(expenseData.date) : null,
+                notes: expenseData.notes ?? null,
+              },
+            });
+          }
+
+          // Import trip emergency info (added in v1.6.0)
+          if (tripData.emergencyInfo) {
+            await tx.tripEmergencyInfo.create({
+              data: {
+                tripId: trip.id,
+                insuranceProvider: tripData.emergencyInfo.insuranceProvider ?? null,
+                insurancePolicyNumber: tripData.emergencyInfo.insurancePolicyNumber ?? null,
+                insuranceAssistancePhone: tripData.emergencyInfo.insuranceAssistancePhone ?? null,
+                embassyName: tripData.emergencyInfo.embassyName ?? null,
+                embassyPhone: tripData.emergencyInfo.embassyPhone ?? null,
+                embassyAddress: tripData.emergencyInfo.embassyAddress ?? null,
+                notes: tripData.emergencyInfo.notes ?? null,
+              },
+            });
           }
 
           // Import EntityLinks (relationships between entities)

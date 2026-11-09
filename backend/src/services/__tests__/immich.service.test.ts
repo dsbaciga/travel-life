@@ -89,6 +89,7 @@ describe('ImmichService', () => {
       expect(mockAxios.create).toHaveBeenCalledWith(
         expect.objectContaining({
           baseURL: TEST_API_URL,
+          maxRedirects: 0,
           headers: expect.objectContaining({
             'x-api-key': TEST_API_KEY,
           }),

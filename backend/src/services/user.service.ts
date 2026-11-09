@@ -7,6 +7,7 @@ import { hashPassword } from '../auth/password';
 import { companionService } from './companion.service';
 import { invalidatePasswordVersionCache } from '../middleware/auth';
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
+import { encryptSecret, decryptSecret } from '../security/encryption';
 
 class UserService {
   async getUserById(userId: number) {
@@ -64,7 +65,11 @@ class UserService {
     userId: number,
     data: { immichApiUrl?: string | null; immichApiKey?: string | null }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        immichApiKey: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -106,7 +111,11 @@ class UserService {
     userId: number,
     data: { weatherApiKey?: string | null }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        weatherApiKey: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -144,7 +153,11 @@ class UserService {
     userId: number,
     data: { aviationstackApiKey?: string | null }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        aviationstackApiKey: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -182,7 +195,11 @@ class UserService {
     userId: number,
     data: { openrouteserviceApiKey?: string | null }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        openrouteserviceApiKey: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -220,7 +237,11 @@ class UserService {
     userId: number,
     data: { llmApiKey?: string | null; llmBaseUrl?: string | null; llmModel?: string | null }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        llmApiKey: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -386,7 +407,11 @@ class UserService {
       smtpFrom?: string | null;
     }
   ) {
-    const updateData = buildConditionalUpdateData(data);
+    const updateData = buildConditionalUpdateData(data, {
+      transformers: {
+        smtpPassword: encryptSecret,
+      },
+    });
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -422,14 +447,16 @@ class UserService {
       },
     });
 
+    const smtpPassword = decryptSecret(user?.smtpPassword);
+
     // If user has SMTP configured, use it
-    if (user?.smtpHost && user?.smtpUser && user?.smtpPassword) {
+    if (user?.smtpHost && user?.smtpUser && smtpPassword) {
       return {
         host: user.smtpHost,
         port: user.smtpPort ?? 587,
         secure: user.smtpSecure ?? false,
         user: user.smtpUser,
-        password: user.smtpPassword,
+        password: smtpPassword,
         from: user.smtpFrom ?? `Travel Life <${user.smtpUser}>`,
       };
     }

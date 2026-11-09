@@ -129,6 +129,12 @@ const mockTx = {
   foodLogEntry: {
     create: jest.fn(),
   },
+  tripExpense: {
+    create: jest.fn(),
+  },
+  tripEmergencyInfo: {
+    create: jest.fn(),
+  },
 };
 
 const mockPrisma = {
@@ -348,6 +354,11 @@ describe('RestoreService', () => {
     mockTx.entityLink.create.mockResolvedValue({ id: 1 });
     mockTx.tripLanguage.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
+    mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
+    mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
+    mockTx.savedLink.create.mockResolvedValue({ id: 1 });
+    mockTx.customItem.create.mockResolvedValue({ id: 1 });
+    mockTx.customItemType.create.mockResolvedValue({ id: 1 });
     mockTx.user.update.mockResolvedValue({});
     mockTx.trip.update.mockResolvedValue({});
     mockTx.location.update.mockResolvedValue({});
@@ -358,9 +369,11 @@ describe('RestoreService', () => {
     mockTx.tripTag.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.travelCompanion.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.locationCategory.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.customItemType.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.checklist.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.travelDocument.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.tripSeries.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.savedLink.deleteMany.mockResolvedValue({ count: 0 });
   });
 
   describe('restoreFromBackup', () => {
@@ -598,6 +611,193 @@ describe('RestoreService', () => {
       const v110Backup: BackupData = { ...minimalBackup, version: '1.1.0' };
       const result110 = await restoreFromBackup(1, v110Backup);
       expect(result110.success).toBe(true);
+    });
+
+    it('RST-016: restores v1.6.0 fields (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
+      const v160Backup: BackupData = {
+        ...minimalBackup,
+        version: '1.6.0',
+        user: {
+          ...minimalBackup.user,
+          dietaryPreferences: ['vegan'],
+          useCustomMapStyle: false,
+          baseCurrency: 'EUR',
+          preferredMapsApp: 'apple',
+        },
+        companions: [
+          {
+            name: 'Alice',
+            medicalNotes: 'Penicillin allergy',
+            allergies: ['penicillin', 'shellfish'],
+          },
+        ],
+        unfiledSavedLinks: [
+          {
+            url: 'https://example.com/inbox',
+            title: 'Inbox Link',
+            source: 'EMAIL',
+            metadataStatus: 'FETCHED',
+          },
+        ],
+        trips: [
+          {
+            title: 'Japan 2026',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            archived: true,
+            excludeFromAutoShare: true,
+            budget: 4500,
+            budgetCurrency: 'EUR',
+            countryCode: 'JP',
+            activities: [
+              {
+                id: 1,
+                name: 'Sushi Lunch',
+                cost: 3000,
+                currency: 'JPY',
+                exchangeRate: 0.0062,
+                baseAmount: 18.6,
+                baseCurrency: 'EUR',
+                dietaryTags: ['fish'],
+              },
+            ],
+            transportation: [
+              {
+                type: 'train',
+                cost: 12000,
+                currency: 'JPY',
+                exchangeRate: 0.0062,
+                baseAmount: 74.4,
+                baseCurrency: 'EUR',
+              },
+            ],
+            lodging: [
+              {
+                type: 'hotel',
+                name: 'Tokyo Hotel',
+                checkInDate: '2026-05-01',
+                checkOutDate: '2026-05-05',
+                cost: 40000,
+                currency: 'JPY',
+                exchangeRate: 0.0062,
+                baseAmount: 248,
+                baseCurrency: 'EUR',
+              },
+            ],
+            customItems: [
+              {
+                name: 'SIM Card',
+                cost: 3500,
+                currency: 'JPY',
+                exchangeRate: 0.0062,
+                baseAmount: 21.7,
+                baseCurrency: 'EUR',
+              },
+            ],
+            expenses: [
+              {
+                description: 'Matcha Latte',
+                category: 'food',
+                amount: 600,
+                currency: 'JPY',
+                exchangeRate: 0.0062,
+                baseAmount: 3.72,
+                baseCurrency: 'EUR',
+                date: '2026-05-02',
+                notes: 'Uji cafe',
+              },
+            ],
+            emergencyInfo: {
+              insuranceProvider: 'Allianz',
+              insurancePolicyNumber: 'ALZ-999',
+              insuranceAssistancePhone: '+1-800-555-0100',
+              embassyName: 'Embassy in Tokyo',
+              embassyPhone: '+81-3-0000-0000',
+              embassyAddress: 'Minato-ku, Tokyo',
+              notes: 'Emergency contact on file',
+            },
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, v160Backup);
+      expect(result.success).toBe(true);
+      expect(result.stats.savedLinksImported).toBe(1);
+
+      expect(mockTx.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            dietaryPreferences: ['vegan'],
+            useCustomMapStyle: false,
+            baseCurrency: 'EUR',
+            preferredMapsApp: 'apple',
+          }),
+        })
+      );
+
+      expect(mockTx.travelCompanion.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            name: 'Alice',
+            medicalNotes: 'Penicillin allergy',
+            allergies: ['penicillin', 'shellfish'],
+          }),
+        })
+      );
+
+      expect(mockTx.savedLink.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            userId: 1,
+            tripId: null,
+            url: 'https://example.com/inbox',
+          }),
+        })
+      );
+
+      expect(mockTx.trip.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            title: 'Japan 2026',
+            archived: true,
+            excludeFromAutoShare: true,
+            budgetCurrency: 'EUR',
+            countryCode: 'JP',
+          }),
+        })
+      );
+
+      expect(mockTx.activity.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            name: 'Sushi Lunch',
+            baseCurrency: 'EUR',
+            dietaryTags: ['fish'],
+          }),
+        })
+      );
+
+      expect(mockTx.tripExpense.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            description: 'Matcha Latte',
+            category: 'food',
+            currency: 'JPY',
+            baseCurrency: 'EUR',
+            notes: 'Uji cafe',
+          }),
+        })
+      );
+
+      expect(mockTx.tripEmergencyInfo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            insuranceProvider: 'Allianz',
+            insurancePolicyNumber: 'ALZ-999',
+            embassyName: 'Embassy in Tokyo',
+          }),
+        })
+      );
     });
   });
 });

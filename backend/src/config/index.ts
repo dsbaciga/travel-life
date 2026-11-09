@@ -184,6 +184,13 @@ export const config = {
     passwordLoginDisabled: process.env.DISABLE_PASSWORD_LOGIN === 'true',
   },
 
+  // Security controls for user-configured integration URLs (Immich, LLM, SMTP)
+  security: {
+    allowPrivateIntegrationUrls:
+      process.env.ALLOW_PRIVATE_INTEGRATION_URLS === 'true' ||
+      process.env.NODE_ENV === 'development',
+  },
+
   // Web Push (VAPID) - push notifications are disabled gracefully when unset
   vapid: {
     publicKey: process.env.VAPID_PUBLIC_KEY || '',

@@ -6,7 +6,11 @@ import { z } from 'zod';
 // v1.3.0 - Removed plaintext secrets (API keys, SMTP password) from exports
 // v1.4.0 - Added savedLinks; ENTITY_TYPES gained PDF_IMPORT and SAVED_LINK
 // v1.5.0 - Added customItems and customItemTypes; ENTITY_TYPES gained CUSTOM_ITEM
-export const BACKUP_VERSION = '1.5.0';
+// v1.6.0 - Added expenses, emergencyInfo, unfiledSavedLinks, companion medical fields,
+//          trip budget/countryCode/archived/excludeFromAutoShare, user dietaryPreferences/
+//          useCustomMapStyle/baseCurrency/preferredMapsApp, activity dietaryTags, and FX
+//          snapshots on costed items
+export const BACKUP_VERSION = '1.6.0';
 
 // =============================================================================
 // Shared/Reusable Schemas
@@ -90,6 +94,8 @@ const BackupCompanionSchema = z.object({
   isMyself: z.boolean().optional(),
   avatarUrl: StoredUploadPathSchema,
   dietaryPreferences: z.array(z.string()).optional(),
+  medicalNotes: z.string().nullable().optional(),
+  allergies: z.array(z.string()).optional(),
 });
 
 // Location category schema
@@ -251,10 +257,14 @@ const BackupActivitySchema = z.object({
   timezone: z.string().nullable().optional(),
   cost: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
+  exchangeRate: FlexibleCoordinateSchema,
+  baseAmount: FlexibleCoordinateSchema,
+  baseCurrency: z.string().nullable().optional(),
   bookingUrl: z.string().nullable().optional(),
   bookingReference: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   manualOrder: z.number().nullable().optional(),
+  dietaryTags: FlexibleJsonSchema,
 });
 
 // Flight tracking schema
@@ -288,6 +298,9 @@ const BackupTransportationSchema = z.object({
   bookingUrl: z.string().nullable().optional(),
   cost: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
+  exchangeRate: FlexibleCoordinateSchema,
+  baseAmount: FlexibleCoordinateSchema,
+  baseCurrency: z.string().nullable().optional(),
   status: z.string().optional(),
   delayMinutes: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
@@ -312,6 +325,9 @@ const BackupLodgingSchema = z.object({
   bookingUrl: z.string().nullable().optional(),
   cost: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
+  exchangeRate: FlexibleCoordinateSchema,
+  baseAmount: FlexibleCoordinateSchema,
+  baseCurrency: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
@@ -438,8 +454,39 @@ const BackupCustomItemSchema = z.object({
   locationId: z.number().nullable().optional(),
   cost: z.union([z.number(), z.string()]).nullable().optional(),
   currency: z.string().nullable().optional(),
+  exchangeRate: FlexibleCoordinateSchema,
+  baseAmount: FlexibleCoordinateSchema,
+  baseCurrency: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
   confirmationNumber: z.string().nullable().optional(),
+});
+
+// Trip expense schema (added in v1.6.0)
+const BackupExpenseSchema = z.object({
+  id: z.number().optional(),
+  description: z.string(),
+  category: z.string(),
+  amount: z.preprocess(
+    (val) => (hasToNumber(val) ? val.toNumber() : val),
+    z.union([z.number(), z.string()])
+  ),
+  currency: z.string().nullable().optional(),
+  exchangeRate: FlexibleCoordinateSchema,
+  baseAmount: FlexibleCoordinateSchema,
+  baseCurrency: z.string().nullable().optional(),
+  date: FlexibleDateSchema,
+  notes: z.string().nullable().optional(),
+});
+
+// Trip emergency info schema (added in v1.6.0)
+const BackupEmergencyInfoSchema = z.object({
+  insuranceProvider: z.string().nullable().optional(),
+  insurancePolicyNumber: z.string().nullable().optional(),
+  insuranceAssistancePhone: z.string().nullable().optional(),
+  embassyName: z.string().nullable().optional(),
+  embassyPhone: z.string().nullable().optional(),
+  embassyAddress: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 // Trip checklist schema (trip-specific checklists with items)
@@ -462,18 +509,24 @@ const BackupTripSchema = z.object({
   timezone: z.string().nullable().optional(),
   status: z.string(),
   privacyLevel: z.string(),
+  archived: z.boolean().optional(),
   coverPhotoId: z.number().nullable().optional(),
   // Uploaded cover image paths (added in v1.3.0) — file paths only, like photos
   coverImagePath: StoredUploadPathSchema,
   coverImageThumbnailPath: StoredUploadPathSchema,
   bannerPhotoId: z.number().nullable().optional(),
   addToPlacesVisited: z.boolean().optional(),
+  excludeFromAutoShare: z.boolean().optional(),
   // Trip type (added in v1.2.0)
   tripType: z.string().nullable().optional(),
   tripTypeEmoji: z.string().nullable().optional(),
   // Series assignment (added in v1.2.0)
   seriesId: z.number().nullable().optional(),
   seriesOrder: z.number().nullable().optional(),
+  // Budget and destination country (added in v1.6.0)
+  budget: FlexibleCoordinateSchema,
+  budgetCurrency: z.string().nullable().optional(),
+  countryCode: z.string().nullable().optional(),
 
   // Related entities
   locations: z.array(BackupLocationSchema).optional(),
@@ -505,6 +558,10 @@ const BackupTripSchema = z.object({
 
   // Custom items (added in v1.5.0)
   customItems: z.array(BackupCustomItemSchema).optional(),
+
+  // Expenses and emergency info (added in v1.6.0)
+  expenses: z.array(BackupExpenseSchema).optional(),
+  emergencyInfo: BackupEmergencyInfoSchema.nullable().optional(),
 });
 
 // =============================================================================
@@ -524,6 +581,10 @@ export const BackupDataSchema = z.object({
       name: z.string(),
       emoji: z.string().optional(),
     })).optional(),
+    dietaryPreferences: z.array(z.string()).optional(),
+    useCustomMapStyle: z.boolean().optional(),
+    baseCurrency: z.string().nullable().optional(),
+    preferredMapsApp: z.string().nullable().optional(),
     immichApiUrl: z.string().nullable(),
     // Secret fields are NEVER serialized as plaintext in v1.3.0+ backups.
     // We accept the legacy plaintext shape (z.string().nullable()) for backward
@@ -552,6 +613,8 @@ export const BackupDataSchema = z.object({
     name: z.string(),
     description: z.string().nullable().optional(),
   })).optional(),
+  // Unfiled saved links (inbox links where tripId is null, added in v1.6.0)
+  unfiledSavedLinks: z.array(BackupSavedLinkSchema).optional(),
   trips: z.array(BackupTripSchema),
 });
 
@@ -577,6 +640,8 @@ export type BackupTripLanguage = z.infer<typeof BackupTripLanguageSchema>;
 export type BackupSavedLink = z.infer<typeof BackupSavedLinkSchema>;
 export type BackupCustomItem = z.infer<typeof BackupCustomItemSchema>;
 export type BackupCustomItemType = z.infer<typeof BackupCustomItemTypeSchema>;
+export type BackupExpense = z.infer<typeof BackupExpenseSchema>;
+export type BackupEmergencyInfo = z.infer<typeof BackupEmergencyInfoSchema>;
 
 // Response types
 export const BackupInfoResponseSchema = z.object({

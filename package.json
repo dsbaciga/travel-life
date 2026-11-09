@@ -1,5 +1,13 @@
 {
-  "dependencies": {
-    "claude-flow": "^3.1.0-alpha.39"
+  "name": "travel-life",
+  "version": "6.1.7",
+  "private": true,
+  "description": "Travel Life - Full-Stack Travel Documentation Application",
+  "scripts": {
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend run test:run",
+    "lint:frontend": "npm --prefix frontend run lint"
   }
 }

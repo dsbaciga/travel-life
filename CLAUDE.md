@@ -19,8 +19,8 @@ All documentation is organized in the `docs/` folder. Start with the [Documentat
 | **Release a new version** | [Build & Push](docs/guides/BUILD_AND_PUSH.md), [Release Checklist](RELEASE_CHECKLIST.md) |
 | **Track progress** | [Implementation Status](docs/development/IMPLEMENTATION_STATUS.md) |
 | **Development workflows** | [Development Workflows](docs/guides/DEVELOPMENT_WORKFLOWS.md) |
-| **Debug issues** | [Debugging & Optimization](docs/guides/DEBUGGING_AND_OPTIMIZATION.md), [Debugger Agent](.agents/DEBUGGER.md) |
-| **Optimize code** | [Debugging & Optimization](docs/guides/DEBUGGING_AND_OPTIMIZATION.md), [Code Optimizer Agent](.agents/CODE_OPTIMIZER.md) |
+| **Debug issues** | [Debugging & Optimization](docs/guides/DEBUGGING_AND_OPTIMIZATION.md) |
+| **Optimize code** | [Debugging & Optimization](docs/guides/DEBUGGING_AND_OPTIMIZATION.md) |
 
 ## Project Overview
 
@@ -34,12 +34,12 @@ Standard scripts (`dev`, `build`, `test`, `lint`, `preview`, `prisma:*`) are in 
 
 ### Backend (run from `backend/` directory)
 
-- `npm run build:strict` - Compile with full strict type-checking (`build` uses relaxed `tsconfig.prod.json`)
+- `npm run build:strict` - Compile with full strict type-checking (`build` uses `tsconfig.prod.json`)
 
 ### Frontend (run from `frontend/` directory)
 
-- `npm run build` - ⚠️ TypeScript errors are NON-blocking
-- `npm run build:strict` - Build with strict type-checking (TypeScript errors DO fail the build)
+- `npm run build` - Build for production (`tsc -b tsconfig.prod.json && vite build`)
+- `npm run build:strict` - Build with strict type-checking (`tsc -b && vite build`)
 - `npm run analyze` - Build with bundle analyzer (`analyze:win` on Windows)
 
 ### Docker Commands (run from project root)
@@ -122,8 +122,6 @@ For debugging issues and code optimization guidance, see [Debugging & Optimizati
 - **Validation errors**: Check Zod schemas use `.nullable().optional()` for updates
 - **Type errors**: Verify types match between frontend/backend
 - **Data not refreshing**: Ensure `onUpdate?.()` callbacks are called
-- Use the [Debugger Agent](.agents/DEBUGGER.md) for systematic bug investigation
-- Use the [Code Optimizer Agent](.agents/CODE_OPTIMIZER.md) for reducing duplication (Rule of Three)
 
 ## Environment Setup
 

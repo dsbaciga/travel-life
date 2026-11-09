@@ -64,6 +64,9 @@ const mockPrisma = {
   tripSeries: {
     findMany: jest.fn(),
   },
+  savedLink: {
+    findMany: jest.fn(),
+  },
   photo: {
     findMany: jest.fn(),
   },
@@ -84,7 +87,7 @@ jest.mock('../../types/travelDocument.types', () => ({
 
 // Import the service after all mocks
 import { createBackup } from '../backup.service';
-import { BACKUP_VERSION } from '../../types/backup.types';
+import { BACKUP_VERSION, BackupDataSchema } from '../../types/backup.types';
 
 describe('BackupService', () => {
   const mockUser = {
@@ -93,6 +96,10 @@ describe('BackupService', () => {
     timezone: 'America/New_York',
     activityCategories: [{ name: 'Sightseeing', emoji: 'museum' }],
     tripTypes: [{ name: 'Vacation', emoji: 'palm_tree' }],
+    dietaryPreferences: ['gluten-free'],
+    useCustomMapStyle: false,
+    baseCurrency: 'USD',
+    preferredMapsApp: 'google',
     immichApiUrl: 'http://localhost:2283',
     immichApiKey: 'immich-key',
     weatherApiKey: 'weather-key',
@@ -119,6 +126,8 @@ describe('BackupService', () => {
       isMyself: false,
       avatarUrl: null,
       dietaryPreferences: ['vegetarian'],
+      medicalNotes: 'Carries EpiPen',
+      allergies: ['peanuts'],
     },
   ];
 
@@ -157,6 +166,19 @@ describe('BackupService', () => {
     { id: 1, name: 'Europe Series', description: 'Annual trips to Europe' },
   ];
 
+  const mockUnfiledSavedLinks = [
+    {
+      url: 'https://example.com/inbox-guide',
+      title: 'Inbox Guide',
+      description: null,
+      siteName: 'Example',
+      imageUrl: null,
+      notes: 'Read later',
+      source: 'MANUAL',
+      metadataStatus: 'FETCHED',
+    },
+  ];
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -165,9 +187,11 @@ describe('BackupService', () => {
     mockPrisma.tripTag.findMany.mockResolvedValue(mockTags);
     mockPrisma.travelCompanion.findMany.mockResolvedValue(mockCompanions);
     mockPrisma.locationCategory.findMany.mockResolvedValue(mockLocationCategories);
+    mockPrisma.customItemType.findMany.mockResolvedValue([]);
     mockPrisma.checklist.findMany.mockResolvedValue(mockChecklists);
     mockPrisma.travelDocument.findMany.mockResolvedValue(mockTravelDocuments);
     mockPrisma.tripSeries.findMany.mockResolvedValue(mockTripSeries);
+    mockPrisma.savedLink.findMany.mockResolvedValue(mockUnfiledSavedLinks);
     mockPrisma.trip.findMany.mockResolvedValue([]); // No trips by default
     mockPrisma.photo.findMany.mockResolvedValue([]); // No photos by default
   });
@@ -396,6 +420,7 @@ describe('BackupService', () => {
       mockPrisma.checklist.findMany.mockResolvedValue([]);
       mockPrisma.travelDocument.findMany.mockResolvedValue([]);
       mockPrisma.tripSeries.findMany.mockResolvedValue([]);
+      mockPrisma.savedLink.findMany.mockResolvedValue([]);
 
       const result = await createBackup(1);
 
@@ -404,6 +429,192 @@ describe('BackupService', () => {
       expect(result.companions).toHaveLength(0);
       expect(result.locationCategories).toHaveLength(0);
       expect(result.checklists).toHaveLength(0);
+    });
+
+    it('BKP-012: exports v1.6.0 fields (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Japan Trip',
+        description: null,
+        startDate: '2026-04-01',
+        endDate: '2026-04-14',
+        timezone: 'Asia/Tokyo',
+        status: 'Planned',
+        privacyLevel: 'Private',
+        archived: true,
+        excludeFromAutoShare: true,
+        coverPhotoId: null,
+        bannerPhotoId: null,
+        addToPlacesVisited: true,
+        tripType: 'Leisure',
+        tripTypeEmoji: null,
+        seriesId: null,
+        seriesOrder: null,
+        budget: 5000,
+        budgetCurrency: 'USD',
+        countryCode: 'JP',
+        locations: [],
+        photos: [],
+        activities: [
+          {
+            id: 1,
+            parentId: null,
+            name: 'Ramen Dinner',
+            description: null,
+            category: 'Dining',
+            allDay: false,
+            startTime: null,
+            endTime: null,
+            timezone: 'Asia/Tokyo',
+            cost: 1500,
+            currency: 'JPY',
+            exchangeRate: 0.0067,
+            baseAmount: 10.05,
+            baseCurrency: 'USD',
+            bookingUrl: null,
+            bookingReference: null,
+            notes: null,
+            manualOrder: null,
+            dietaryTags: ['pork'],
+          },
+        ],
+        transportation: [
+          {
+            type: 'train',
+            startLocationId: null,
+            startLocationText: 'Tokyo',
+            endLocationId: null,
+            endLocationText: 'Kyoto',
+            scheduledStart: null,
+            scheduledEnd: null,
+            startTimezone: null,
+            endTimezone: null,
+            actualStart: null,
+            actualEnd: null,
+            company: 'JR',
+            referenceNumber: null,
+            seatNumber: null,
+            bookingReference: null,
+            bookingUrl: null,
+            cost: 14000,
+            currency: 'JPY',
+            exchangeRate: 0.0067,
+            baseAmount: 93.8,
+            baseCurrency: 'USD',
+            status: 'on_time',
+            delayMinutes: null,
+            notes: null,
+            connectionGroupId: null,
+            isAutoGenerated: false,
+            calculatedDistance: null,
+            calculatedDuration: null,
+            distanceSource: null,
+            flightTracking: null,
+          },
+        ],
+        lodging: [
+          {
+            id: 1,
+            type: 'hotel',
+            name: 'Ryokan',
+            address: null,
+            checkInDate: '2026-04-01',
+            checkOutDate: '2026-04-05',
+            timezone: 'Asia/Tokyo',
+            confirmationNumber: null,
+            bookingUrl: null,
+            cost: 50000,
+            currency: 'JPY',
+            exchangeRate: 0.0067,
+            baseAmount: 335,
+            baseCurrency: 'USD',
+            notes: null,
+          },
+        ],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        entityLinks: [],
+        languages: [],
+        savedLinks: [],
+        customItems: [
+          {
+            id: 1,
+            name: 'Pocket WiFi',
+            notes: null,
+            allDay: false,
+            startTime: null,
+            endTime: null,
+            timezone: null,
+            locationId: null,
+            cost: 8000,
+            currency: 'JPY',
+            exchangeRate: 0.0067,
+            baseAmount: 53.6,
+            baseCurrency: 'USD',
+            url: null,
+            confirmationNumber: null,
+            type: { name: 'Gear' },
+          },
+        ],
+        expenses: [
+          {
+            id: 10,
+            description: 'Suica top-up',
+            category: 'transportation',
+            amount: 3000,
+            currency: 'JPY',
+            exchangeRate: 0.0067,
+            baseAmount: 20.1,
+            baseCurrency: 'USD',
+            date: '2026-04-02',
+            notes: 'At station',
+          },
+        ],
+        emergencyInfo: {
+          insuranceProvider: 'WorldNomads',
+          insurancePolicyNumber: 'WN-12345',
+          insuranceAssistancePhone: '+1-800-555-0199',
+          embassyName: 'U.S. Embassy Tokyo',
+          embassyPhone: '+81-3-3224-5000',
+          embassyAddress: '1-10-5 Akasaka, Minato-ku',
+          notes: 'Keep copy in daypack',
+        },
+      });
+
+      const result = await createBackup(1);
+
+      expect(result.version).toBe('1.6.0');
+      expect(result.user.dietaryPreferences).toEqual(['gluten-free']);
+      expect(result.user.useCustomMapStyle).toBe(false);
+      expect(result.user.baseCurrency).toBe('USD');
+      expect(result.user.preferredMapsApp).toBe('google');
+      expect(result.companions[0].medicalNotes).toBe('Carries EpiPen');
+      expect(result.companions[0].allergies).toEqual(['peanuts']);
+      expect(result.unfiledSavedLinks).toHaveLength(1);
+      expect(result.unfiledSavedLinks![0].url).toBe('https://example.com/inbox-guide');
+
+      const trip = result.trips[0];
+      expect(trip.archived).toBe(true);
+      expect(trip.excludeFromAutoShare).toBe(true);
+      expect(trip.budget).toBe(5000);
+      expect(trip.budgetCurrency).toBe('USD');
+      expect(trip.countryCode).toBe('JP');
+      expect(trip.activities![0].dietaryTags).toEqual(['pork']);
+      expect(trip.activities![0].exchangeRate).toBe(0.0067);
+      expect(trip.transportation![0].baseAmount).toBe(93.8);
+      expect(trip.lodging![0].baseCurrency).toBe('USD');
+      expect(trip.customItems![0].exchangeRate).toBe(0.0067);
+      expect(trip.expenses).toHaveLength(1);
+      expect(trip.expenses![0].description).toBe('Suica top-up');
+      expect(trip.emergencyInfo?.insuranceProvider).toBe('WorldNomads');
+
+      // Validate that BackupDataSchema accepts the full v1.6.0 output
+      expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
   });
 });

@@ -13,8 +13,8 @@ RUN npm ci
 COPY . .
 
 # Build arguments for environment variables
-ARG VITE_API_URL
-ARG VITE_UPLOAD_URL
+ARG VITE_API_URL=/api
+ARG VITE_UPLOAD_URL=/uploads
 
 # Set build-time environment variables
 ENV VITE_API_URL=${VITE_API_URL}
@@ -31,19 +31,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built application from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Create a script to inject runtime environment variables
-# SECURITY NOTE: This is intentional and safe. Only public, non-secret URLs are written here.
-# VITE_API_URL and VITE_UPLOAD_URL are public-facing URLs that the browser needs to reach the API.
-# Do NOT add any secret or sensitive variables (API keys, tokens, passwords) to this script.
-RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-env.sh && \
-    echo 'if [ -n "$VITE_API_URL" ] || [ -n "$VITE_UPLOAD_URL" ]; then' >> /docker-entrypoint.d/40-inject-env.sh && \
-    echo '  echo "window.ENV = {" > /usr/share/nginx/html/env-config.js' >> /docker-entrypoint.d/40-inject-env.sh && \
-    echo '  echo "  VITE_API_URL: \"$VITE_API_URL\"," >> /usr/share/nginx/html/env-config.js' >> /docker-entrypoint.d/40-inject-env.sh && \
-    echo '  echo "  VITE_UPLOAD_URL: \"$VITE_UPLOAD_URL\"" >> /usr/share/nginx/html/env-config.js' >> /docker-entrypoint.d/40-inject-env.sh && \
-    echo '  echo "};" >> /usr/share/nginx/html/env-config.js' >> /docker-entrypoint.d/40-inject-env.sh && \
-    echo 'fi' >> /docker-entrypoint.d/40-inject-env.sh && \
-    chmod +x /docker-entrypoint.d/40-inject-env.sh
 
 # Expose port 80
 EXPOSE 80

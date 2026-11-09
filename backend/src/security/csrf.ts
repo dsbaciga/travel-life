@@ -13,7 +13,6 @@ const REFRESH_COOKIE_NAME = 'refreshToken';
 // COOKIE_DOMAIN could forge it. The HMAC key is server-side only, so a token
 // minted for one session cannot be replayed against another.
 const SIGNED_TOKEN_PATTERN = /^([a-f0-9]{64})\.([a-f0-9]{64})$/;
-const LEGACY_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
 // Derived from JWT_SECRET rather than requiring a new env var. Domain-separated
 // so it can never collide with the token-signing key.
@@ -164,16 +163,6 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
 
   const signed = SIGNED_TOKEN_PATTERN.exec(cookieToken);
   if (!signed) {
-    // MIGRATION: tokens issued before session binding are 64 hex chars with no
-    // HMAC suffix. Rejecting them would 403 every in-flight logged-in session
-    // until the user cleared cookies, so they are accepted for now — they are
-    // no weaker than the previous bare double-submit. Every login, refresh and
-    // silent-refresh reissues a signed token, so legacy tokens age out within
-    // one access-token lifetime (~15 min) and can be rejected in a later
-    // release by deleting this branch.
-    if (LEGACY_TOKEN_PATTERN.test(cookieToken)) {
-      return next();
-    }
     res.status(403).json({
       status: 'error',
       message: 'Invalid CSRF token',

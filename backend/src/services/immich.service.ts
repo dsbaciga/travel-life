@@ -2,6 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { AppError } from '../errors/errors';
 import logger from '../config/logger';
 import prisma from '../config/database';
+import { decryptSecret } from '../security/encryption';
 import {
   ImmichAsset,
   ImmichAlbum,
@@ -78,6 +79,7 @@ class ImmichService {
         'Content-Type': 'application/json',
       },
       timeout: 30000,
+      maxRedirects: 0,
     });
   }
 
@@ -602,11 +604,12 @@ class ImmichService {
       select: { immichApiUrl: true, immichApiKey: true },
     });
 
-    if (!user?.immichApiUrl || !user?.immichApiKey) {
+    const apiKey = decryptSecret(user?.immichApiKey);
+    if (!user?.immichApiUrl || !apiKey) {
       throw new AppError('Immich settings not configured', 400);
     }
 
-    return { apiUrl: user.immichApiUrl, apiKey: user.immichApiKey };
+    return { apiUrl: user.immichApiUrl, apiKey };
   }
 }
 

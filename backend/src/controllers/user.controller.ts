@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { emailService } from '../services/email.service';
 import { validateUrlNotInternal, isLocalNetworkHostname } from '../security/urlValidation';
 import { AppError } from '../errors/errors';
+import { config } from '../config';
 import logger from '../config/logger';
 
 const immichSettingsSchema = z.object({
@@ -66,7 +67,7 @@ async function validateSmtpHost(host: string): Promise<void> {
   if (!/^[A-Za-z0-9._-]+$/.test(host)) {
     throw new AppError('Invalid SMTP host', 400);
   }
-  if (isLocalNetworkHostname(host)) return;
+  if (config.security.allowPrivateIntegrationUrls && isLocalNetworkHostname(host)) return;
   await validateUrlNotInternal(`https://${host}`);
 }
 
@@ -128,25 +129,23 @@ export const userController = {
     const data = immichSettingsSchema.parse(req.body);
 
     // Enforce HTTPS for public/external Immich URLs.
-    // HTTP is only allowed for local/private network addresses (development use).
+    // HTTP and private/local addresses are only allowed when allowPrivateIntegrationUrls is enabled.
     if (data.immichApiUrl) {
       const url = new URL(data.immichApiUrl);
-      const isLocal = isLocalNetworkHostname(url.hostname);
-      if (url.protocol !== 'https:' && !isLocal) {
+      const isLocalHost = isLocalNetworkHostname(url.hostname);
+      const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
+      if (url.protocol !== 'https:' && !isLocalHost) {
         throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
-      }
-      if (url.protocol !== 'https:' && isLocal) {
-        logger.warn('Immich URL uses HTTP on local network — API key may be transmitted insecurely', {
-          host: url.hostname,
-        });
       }
 
       // SSRF validation: ensure the Immich URL doesn't point to internal/private IPs.
-      // Skipped for local addresses, which are intentionally reachable — a LAN
-      // self-hosted Immich is the feature's primary deployment pattern, and running
-      // this unconditionally rejected exactly those URLs. Matches updateLlmSettings.
-      if (!isLocal) {
+      // Only skipped for local addresses when allowPrivateIntegrationUrls is true.
+      if (!allowLocal) {
         await validateUrlNotInternal(data.immichApiUrl);
+      } else if (url.protocol !== 'https:') {
+        logger.warn('Immich URL uses HTTP on local network — API key may be transmitted insecurely', {
+          host: url.hostname,
+        });
       }
     }
 
@@ -228,18 +227,18 @@ export const userController = {
     const data = llmSettingsSchema.parse(req.body);
 
     // Validate the LLM base URL. Local addresses (localhost, 127.x, 192.168.x, etc.)
-    // are allowed so users can point to local LLMs like Ollama — but HTTPS is still
-    // required for any non-local address to protect transmitted API keys.
-    // SSRF validation is skipped for local addresses (they are intentionally reachable).
+    // are only allowed to bypass SSRF validation when allowPrivateIntegrationUrls is true.
+    // HTTPS is required for any non-local address to protect transmitted API keys.
     if (data.llmBaseUrl) {
       const url = new URL(data.llmBaseUrl);
       const hostname = url.hostname.toLowerCase();
-      const isLocal = isLocalNetworkHostname(hostname);
-      if (!isLocal) {
-        if (url.protocol !== 'https:') {
-          throw new AppError('LLM URL must use HTTPS for non-local connections', 400);
-        }
-        // SSRF validation: block cloud metadata, DNS rebinding, etc.
+      const isLocalHost = isLocalNetworkHostname(hostname);
+      const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
+      if (url.protocol !== 'https:' && !isLocalHost) {
+        throw new AppError('LLM URL must use HTTPS for non-local connections', 400);
+      }
+      if (!allowLocal) {
+        // SSRF validation: block private IPs (unless opted in), cloud metadata, DNS rebinding, etc.
         await validateUrlNotInternal(data.llmBaseUrl);
       } else if (url.protocol !== 'https:') {
         logger.warn('LLM URL uses HTTP on local network — API key may be transmitted insecurely', {
