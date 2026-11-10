@@ -61,19 +61,21 @@ function YearInReviewBanner({ review, isPastYear }: YearInReviewBannerProps) {
   return (
     <Link
       to="/year-in-review"
-      className="block group rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-navy-800 dark:to-navy-900 p-6 sm:p-8 shadow-lg hover:shadow-xl border-2 border-transparent dark:border-gold/20 hover:border-accent-300 dark:hover:border-gold/50 transition-all duration-300"
+      // from-primary-600, not -500: this card carries white/75-white/80 label
+      // text, which on primary-500 lands at 2.43:1-2.57:1.
+      className="block group rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-navy-800 dark:to-navy-900 p-6 sm:p-8 shadow-lg hover:shadow-xl border-2 border-transparent dark:border-gold/20 hover:border-accent-300 dark:hover:border-gold/50 transition-all duration-300"
     >
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Year + stats */}
         <div className="min-w-0">
-          <p className="text-xs font-body font-medium uppercase tracking-widest text-white/80 dark:text-gold mb-1">
+          <p className="text-xs font-body font-medium uppercase tracking-widest text-white dark:text-gold mb-1">
             Year in Review
           </p>
           <div className="flex items-baseline gap-3 mb-5">
             <span className="text-4xl sm:text-5xl font-display font-bold text-white leading-none">
               {review.year}
             </span>
-            <span className="text-sm text-white/80 dark:text-warm-gray">
+            <span className="text-sm text-white dark:text-warm-gray">
               {isPastYear ? 'your most recent year of travel' : 'your travels so far'}
             </span>
           </div>
@@ -84,7 +86,7 @@ function YearInReviewBanner({ review, isPastYear }: YearInReviewBannerProps) {
                 <div className="text-2xl sm:text-3xl font-display font-bold text-white leading-none">
                   {stat.value}
                 </div>
-                <div className="text-xs sm:text-sm text-white/75 dark:text-warm-gray mt-1">
+                <div className="text-xs sm:text-sm text-white dark:text-warm-gray mt-1">
                   {stat.label}
                 </div>
               </div>

@@ -157,7 +157,15 @@ function App() {
             Skip to main content
           </a>
           <Navbar />
-          <main id="main-content" className="pt-16 sm:pt-20 pb-16 md:pb-0" tabIndex={-1}>
+          {/* Bottom padding clears MobileBottomNav, which is h-16 plus a 2px top
+              border plus its own safe-area-inset-bottom. A flat pb-16 was 2px
+              short on every phone and ~36px short on one with a home indicator,
+              hiding the end of every page behind the nav. */}
+          <main
+            id="main-content"
+            className="pt-16 sm:pt-20 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0"
+            tabIndex={-1}
+          >
             <Suspense fallback={<LoadingSpinner.FullPage message="Loading page…" />}>
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />

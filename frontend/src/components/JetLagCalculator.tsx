@@ -269,7 +269,7 @@ export default function JetLagCalculator({
           </div>
         </div>
         <ChevronDownIcon
-          className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
+          className={`w-5 h-5 text-gray-400 dark:text-gray-400 transition-transform duration-200 ${
             isExpanded ? 'rotate-180' : ''
           }`}
         />

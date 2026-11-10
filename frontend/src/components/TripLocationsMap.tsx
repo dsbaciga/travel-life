@@ -109,7 +109,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
           icon="🗺️"
           message="No locations with coordinates to display on the map."
         />
-        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2 text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
           Add coordinates to your locations to see them on the map.
         </p>
       </div>

@@ -318,7 +318,7 @@ export default function GeneralEntityPickerModal({
               <p className="text-gray-600 dark:text-gray-400">
                 No available {ENTITY_TYPE_CONFIG[selectedType].pluralLabel.toLowerCase()} to link.
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 All items may already be linked or none exist yet.
               </p>
             </div>

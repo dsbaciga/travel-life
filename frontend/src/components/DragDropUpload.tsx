@@ -273,7 +273,7 @@ export default function DragDropUpload({
         ) : (
           <>
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
+              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -293,7 +293,7 @@ export default function DragDropUpload({
               {subtext}
             </p>
             {maxSize && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+              <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">
                 Max file size: {(maxSize / 1024 / 1024).toFixed(1)}MB
               </p>
             )}

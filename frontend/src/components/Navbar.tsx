@@ -52,7 +52,7 @@ function NavLink({
         {label}
         {badge !== undefined && badge > 0 && (
           <span
-            className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-primary-500 dark:bg-gold text-white dark:text-navy-900"
+            className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-primary-600 dark:bg-gold text-white dark:text-navy-900"
             aria-label={`${badge} unassigned`}
           >
             {badge > 99 ? "99+" : badge}

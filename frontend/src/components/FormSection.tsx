@@ -32,7 +32,7 @@ export default function FormSection({
 
       {/* Optional Description */}
       {description && (
-        <p className="text-xs text-slate/70 dark:text-warm-gray/60 -mt-1">
+        <p className="text-xs text-slate dark:text-warm-gray/70 -mt-1">
           {description}
         </p>
       )}
@@ -82,7 +82,7 @@ export function CollapsibleSection({
           {icon && <span>{icon}</span>}
           <span>{isExpanded ? `Hide ${title}` : `Show ${title}`}</span>
           {badge && !isExpanded && (
-            <span className="text-xs text-slate/70 dark:text-warm-gray/60">
+            <span className="text-xs text-slate dark:text-warm-gray/70">
               ({badge})
             </span>
           )}

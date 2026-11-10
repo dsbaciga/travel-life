@@ -172,7 +172,7 @@ export default function TransportationStats({
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {Math.round(flightStats.distance).toLocaleString()} km
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {Math.round(flightStats.distance * 0.621371).toLocaleString()}{" "}
                   miles
                   {flights.some((t) => t.distanceSource === "route") && (
@@ -190,7 +190,7 @@ export default function TransportationStats({
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatDuration(flightStats.duration)}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {Math.round(flightStats.duration / 60)} hours
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function TransportationStats({
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {Math.round(stats.distance).toLocaleString()} km
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {Math.round(stats.distance * 0.621371).toLocaleString()}{" "}
                       miles
                     </div>
@@ -266,7 +266,7 @@ export default function TransportationStats({
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatDuration(stats.duration)}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {Math.round(stats.duration / 60)} hours
                     </div>
                   </div>

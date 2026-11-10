@@ -229,7 +229,7 @@ function EmptyState({ query }: { query: string }) {
   return (
     <div className="p-8 text-center">
       <svg
-        className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500"
+        className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -242,7 +242,7 @@ function EmptyState({ query }: { query: string }) {
         />
       </svg>
       <p className="text-gray-600 dark:text-gray-400 font-medium">No results found</p>
-      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
         No offline data matches "{query}"
       </p>
       <p className="text-xs text-gray-400 dark:text-gray-600 mt-3">
@@ -315,7 +315,7 @@ function ResultItem({
             </div>
           )}
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-gray-400 dark:text-gray-500 capitalize">
+            <span className="text-xs text-gray-400 dark:text-gray-400 capitalize">
               {getTypeLabel(result.type)}
             </span>
             {result.isOfflineResult && result.score && (
@@ -361,7 +361,7 @@ function GroupHeader({
       <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
         {label}
       </span>
-      <span className="text-xs text-gray-400 dark:text-gray-500">
+      <span className="text-xs text-gray-400 dark:text-gray-400">
         ({count})
       </span>
     </div>

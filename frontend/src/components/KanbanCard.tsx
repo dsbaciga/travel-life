@@ -91,7 +91,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
             className={`text-xs mt-1 ${
               isActive
                 ? 'text-green-600 dark:text-green-400 font-medium'
-                : 'text-gray-400 dark:text-gray-500'
+                : 'text-gray-400 dark:text-gray-400'
             }`}
           >
             {dateStatus}

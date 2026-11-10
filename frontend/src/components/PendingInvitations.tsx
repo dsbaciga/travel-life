@@ -125,7 +125,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"

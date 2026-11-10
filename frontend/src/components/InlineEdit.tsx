@@ -145,10 +145,10 @@ export default function InlineEdit({
           title="Click to edit"
           aria-label="Edit"
         >
-          <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
+          <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-400'}>
             {value || placeholder}
           </span>
-          <span className="ml-2 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="ml-2 text-gray-400 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
             ✏️
           </span>
         </button>
@@ -289,10 +289,10 @@ export function InlineEditNumber({
           title="Click to edit"
           aria-label="Edit"
         >
-          <span className={value !== null ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}>
+          <span className={value !== null ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-400'}>
             {value !== null ? `${prefix}${value}${suffix}` : placeholder}
           </span>
-          <span className="ml-2 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="ml-2 text-gray-400 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
             ✏️
           </span>
         </button>

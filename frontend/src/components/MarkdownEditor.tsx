@@ -56,7 +56,7 @@ export default function MarkdownEditor({
           {value ? (
             <MarkdownRenderer content={value} compact={compact} />
           ) : (
-            <p className="text-gray-400 dark:text-gray-500 italic text-sm">Nothing to preview</p>
+            <p className="text-gray-400 dark:text-gray-400 italic text-sm">Nothing to preview</p>
           )}
         </div>
       ) : (

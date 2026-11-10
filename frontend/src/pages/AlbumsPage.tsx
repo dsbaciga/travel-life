@@ -406,7 +406,7 @@ export default function AlbumsPage() {
                     loading="lazy"
                   />
                 ) : failedThumbnails.has(album.id) ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 gap-2">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 gap-2">
                     <PhotoIcon className="w-12 h-12" />
                     <p className="text-xs text-gray-500 dark:text-gray-400">Failed to load</p>
                     <button
@@ -428,7 +428,7 @@ export default function AlbumsPage() {
                     <LoadingSpinner size="sm" />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400">
                     <PhotoIcon className="w-16 h-16" />
                   </div>
                 )}

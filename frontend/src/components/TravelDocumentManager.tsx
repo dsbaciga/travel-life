@@ -481,7 +481,7 @@ export default function TravelDocumentManager() {
                             </p>
                           )}
                           {doc.notes && (
-                            <p className="text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">
+                            <p className="text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                               {doc.notes}
                             </p>
                           )}

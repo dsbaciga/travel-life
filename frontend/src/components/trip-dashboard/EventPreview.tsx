@@ -72,7 +72,7 @@ export default function EventPreview({
             </p>
           )}
         </div>
-        <ChevronRightIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+        <ChevronRightIcon className="w-4 h-4 text-gray-400 dark:text-gray-400 flex-shrink-0" />
       </button>
     );
   }
@@ -141,7 +141,7 @@ export default function EventPreview({
 
         {/* Navigate arrow */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+          <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-400" />
         </div>
       </div>
     </button>

@@ -99,7 +99,7 @@ function LocationSourceLegend({ stats }: { stats: LocationResolutionStats }) {
         </span>
       )}
       {stats.noLocation > 0 && (
-        <span className="text-gray-400 dark:text-gray-500">
+        <span className="text-gray-400 dark:text-gray-400">
           ({stats.noLocation} without location)
         </span>
       )}
@@ -354,7 +354,7 @@ export default function PhotosMapView({
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
         <svg
-          className="w-16 h-16 text-gray-400 dark:text-gray-500 mb-4"
+          className="w-16 h-16 text-gray-400 dark:text-gray-400 mb-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -368,7 +368,7 @@ export default function PhotosMapView({
           />
         </svg>
         <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No photos with locations</p>
-        <p className="text-gray-400 dark:text-gray-500 text-sm mt-1 text-center max-w-md px-4">
+        <p className="text-gray-400 dark:text-gray-400 text-sm mt-1 text-center max-w-md px-4">
           Photos will appear on the map if they have GPS data, are linked to a location, or belong to an album linked
           to a location.
         </p>

@@ -152,7 +152,7 @@ export default function TransportationCard({
               <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {formatTime(transportation.departureTime, startTz)}
                 {startTz && (
-                  <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">
+                  <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
                     {getTimezoneAbbr(startTz)}
                   </span>
                 )}
@@ -163,7 +163,7 @@ export default function TransportationCard({
           {/* Arrow - horizontal on mobile, vertical on desktop */}
           <div className="flex items-center justify-center gap-2 sm:flex-col sm:gap-0 py-1 sm:py-0">
             <svg
-              className="w-6 h-6 text-gray-400 dark:text-gray-500 rotate-90 sm:rotate-0"
+              className="w-6 h-6 text-gray-400 dark:text-gray-400 rotate-90 sm:rotate-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -176,7 +176,7 @@ export default function TransportationCard({
               />
             </svg>
             {durationMinutes && durationMinutes > 0 && (
-              <span className="text-xs text-gray-400 dark:text-gray-500 sm:mt-1">
+              <span className="text-xs text-gray-400 dark:text-gray-400 sm:mt-1">
                 {formatDuration(durationMinutes)}
               </span>
             )}
@@ -192,7 +192,7 @@ export default function TransportationCard({
               <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {formatTime(transportation.arrivalTime, endTz)}
                 {endTz && (
-                  <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">
+                  <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
                     {getTimezoneAbbr(endTz)}
                   </span>
                 )}
@@ -216,7 +216,7 @@ export default function TransportationCard({
               {transportation.calculatedDistance.toFixed(1)} km
             </span>
             {transportation.distanceSource && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-gray-400 dark:text-gray-400">
                 ({transportation.distanceSource === 'route' ? 'road distance' : 'straight line'})
               </span>
             )}

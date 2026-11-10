@@ -223,7 +223,7 @@ function TransportationItem({
               </span>
             )}
             {transportation.vehicleNumber && (
-              <span className="text-xs text-gray-500 dark:text-gray-500 break-all min-w-0">
+              <span className="text-xs text-gray-500 dark:text-gray-400 break-all min-w-0">
                 #{transportation.vehicleNumber}
               </span>
             )}

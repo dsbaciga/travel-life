@@ -88,7 +88,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
           {formatTripDates(trip.startDate, trip.endDate)}
         </p>
         {metaLine && (
-          <p className="truncate text-xs text-slate/70 dark:text-warm-gray/60">{metaLine}</p>
+          <p className="truncate text-xs text-slate dark:text-warm-gray/70">{metaLine}</p>
         )}
       </div>
 
@@ -197,7 +197,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
             <span>{formatTripDates(trip.startDate, trip.endDate)}</span>
           </div>
           {/* Duration and relative timing */}
-          <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate/70 dark:text-warm-gray/60 ml-5">
+          <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate dark:text-warm-gray/70 ml-5">
             {formatTripDuration(trip.startDate, trip.endDate) && (
               <span>{formatTripDuration(trip.startDate, trip.endDate)}</span>
             )}
@@ -207,7 +207,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
                 <span className={`${
                   getTripDateStatus(trip.startDate, trip.endDate)?.includes('progress') ||
                   getTripDateStatus(trip.startDate, trip.endDate)?.includes('today')
-                    ? 'text-green-600 dark:text-green-400 font-medium'
+                    ? 'text-green-700 dark:text-green-400 font-medium'
                     : ''
                 }`}>
                   {getTripDateStatus(trip.startDate, trip.endDate)}

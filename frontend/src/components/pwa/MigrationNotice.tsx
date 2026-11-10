@@ -140,7 +140,7 @@ export function MigrationNotice({
             className={`
               flex-shrink-0 p-1 rounded
               text-gray-400 hover:text-gray-600
-              dark:text-gray-500 dark:hover:text-gray-300
+              dark:text-gray-400 dark:hover:text-gray-300
               hover:bg-gray-100 dark:hover:bg-navy-700
               transition-colors
             `}

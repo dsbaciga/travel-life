@@ -290,7 +290,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
                 ))}
               </div>
             ) : (
-              <p className="text-lg text-gray-400 dark:text-gray-500">-</p>
+              <p className="text-lg text-gray-400 dark:text-gray-400">-</p>
             )}
           </div>
 
@@ -306,7 +306,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
                 ))}
               </div>
             ) : (
-              <p className="text-lg text-gray-400 dark:text-gray-500">-</p>
+              <p className="text-lg text-gray-400 dark:text-gray-400">-</p>
             )}
           </div>
         </div>

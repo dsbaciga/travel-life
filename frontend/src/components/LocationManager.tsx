@@ -468,7 +468,7 @@ export default function LocationManager({
                   </div>
                 )}
                 {isChild && (
-                  <span className="text-gray-400 dark:text-gray-500 mt-0.5">
+                  <span className="text-gray-400 dark:text-gray-400 mt-0.5">
                     {String.fromCharCode(8627)}
                   </span>
                 )}
@@ -537,7 +537,7 @@ export default function LocationManager({
                 className={`p-1 rounded transition-colors ${
                   location.isFavorite
                     ? "text-amber-500 dark:text-gold hover:text-amber-600 dark:hover:text-gold/80"
-                    : "text-gray-400 dark:text-gray-500 hover:text-amber-500 dark:hover:text-gold"
+                    : "text-gray-400 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gold"
                 }`}
               >
                 <svg

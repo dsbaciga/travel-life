@@ -100,7 +100,7 @@ export default function ActivityCard({
                       {activity.endTime && ` - ${formatTime(activity.endTime, timezone)}`}
                     </span>
                     {timezone && (
-                      <span className="text-gray-400 dark:text-gray-500 text-xs">
+                      <span className="text-gray-400 dark:text-gray-400 text-xs">
                         {getTimezoneAbbr(timezone)}
                       </span>
                     )}

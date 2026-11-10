@@ -135,7 +135,7 @@ export default function TimelineEventCard({
             Check-in: {formatTime(item.dateTime, displayTimezone)}
           </span>
           {displayTimezone && (
-            <span className="text-gray-400 dark:text-gray-500 ml-1">
+            <span className="text-gray-400 dark:text-gray-400 ml-1">
               {getTimezoneAbbr(displayTimezone)}
             </span>
           )}
@@ -149,7 +149,7 @@ export default function TimelineEventCard({
             Check-out: {formatTime(item.endDateTime, displayTimezone)}
           </span>
           {displayTimezone && (
-            <span className="text-gray-400 dark:text-gray-500 ml-1">
+            <span className="text-gray-400 dark:text-gray-400 ml-1">
               {getTimezoneAbbr(displayTimezone)}
             </span>
           )}
@@ -168,7 +168,7 @@ export default function TimelineEventCard({
           {endTime && ` - ${endTime}`}
         </span>
         {displayTimezone && (
-          <span className="text-gray-400 dark:text-gray-500 ml-1">
+          <span className="text-gray-400 dark:text-gray-400 ml-1">
             {getTimezoneAbbr(displayTimezone)}
           </span>
         )}
@@ -190,7 +190,7 @@ export default function TimelineEventCard({
           <span className="text-gray-500 dark:text-gray-400">
             Check-in: {formatTime(item.dateTime, userTimezone)}
           </span>
-          <span className="text-gray-400 dark:text-gray-500 ml-1">
+          <span className="text-gray-400 dark:text-gray-400 ml-1">
             {getTimezoneAbbr(userTimezone)}
           </span>
         </>
@@ -202,7 +202,7 @@ export default function TimelineEventCard({
           <span className="text-gray-500 dark:text-gray-400">
             Check-out: {formatTime(item.endDateTime, userTimezone)}
           </span>
-          <span className="text-gray-400 dark:text-gray-500 ml-1">
+          <span className="text-gray-400 dark:text-gray-400 ml-1">
             {getTimezoneAbbr(userTimezone)}
           </span>
         </>
@@ -219,7 +219,7 @@ export default function TimelineEventCard({
           {primaryTime}
           {endTime && ` - ${endTime}`}
         </span>
-        <span className="text-gray-400 dark:text-gray-500 ml-1">
+        <span className="text-gray-400 dark:text-gray-400 ml-1">
           {getTimezoneAbbr(userTimezone)}
         </span>
       </>
@@ -256,7 +256,7 @@ export default function TimelineEventCard({
     }
     if (parts.length === 0) return null;
     return (
-      <span className="text-gray-400 dark:text-gray-500">
+      <span className="text-gray-400 dark:text-gray-400">
         {' '}· {parts.join(' · ')}
       </span>
     );
@@ -334,7 +334,7 @@ export default function TimelineEventCard({
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                     {renderTripTime()}
                   </div>
-                  <div className="text-gray-400 dark:text-gray-500">{renderDurationDistance()}</div>
+                  <div className="text-gray-400 dark:text-gray-400">{renderDurationDistance()}</div>
                 </div>
                 <div className="flex items-center gap-1.5">
                   {renderHomeTime()}
@@ -372,7 +372,7 @@ export default function TimelineEventCard({
 
         {/* Booking info */}
         {(item.vehicleNumber || item.confirmationNumber) && (
-          <div className={`flex items-center gap-3 text-gray-500 dark:text-gray-500 font-mono ${isCompact ? 'mt-1 text-xs' : 'mt-2 text-xs'}`}>
+          <div className={`flex items-center gap-3 text-gray-500 dark:text-gray-400 font-mono ${isCompact ? 'mt-1 text-xs' : 'mt-2 text-xs'}`}>
             {item.vehicleNumber && (
               <span className="inline-flex items-center gap-1">
                 <HashIcon />
@@ -395,7 +395,7 @@ export default function TimelineEventCard({
             <div>
               <div>{item.location}</div>
               {address && (
-                <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   {address}
                 </div>
               )}
