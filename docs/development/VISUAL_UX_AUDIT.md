@@ -241,8 +241,8 @@ red fill for the confirmation dialog only.
 
 ### 17. Date ranges omit the year inconsistently — Fixed
 
-**Files:** `frontend/src/components/widgets/UpcomingTripsWidget.tsx:68` versus
-`frontend/src/components/TripCard.tsx`
+**Files:** `frontend/src/components/widgets/UpcomingTripsWidget.tsx:68` and
+`frontend/src/pages/YearInReviewPage.tsx:33` versus `frontend/src/components/TripCard.tsx`
 
 `UpcomingTripsWidget` formats with `{ month: 'short', day: 'numeric' }` and so never emits a
 year: it rendered a January 2027 trip as "Jan 10 - Jan 24", while the trips list rendered the
@@ -250,11 +250,19 @@ same trip as "Jan 10-24, 2027". For an app whose whole
 subject is dated trips spanning multiple years, dropping the year in one place and not the other
 is actively misleading.
 
-**Fix applied:** `UpcomingTripsWidget`, `DashboardHero` and the calendar's `TripPopup` each
-carried their own date-range formatter; all three now call `formatTripDates` from
-`utils/dateFormat.ts`, the helper `TripCard`, `TripListView`, `FloatingTripHeader`, `KanbanCard`
-and `TripHeroHeader` already used. It always emits the year and follows the documented
-"Mar 15-22, 2024" form.
+**Fix applied:** `UpcomingTripsWidget`, `DashboardHero`, the calendar's `TripPopup` and
+`YearInReviewPage` each carried their own date-range formatter; all four now call
+`formatTripDates` from `utils/dateFormat.ts`, the helper `TripCard`, `TripListView`,
+`FloatingTripHeader`, `KanbanCard` and `TripHeroHeader` already used. It always emits the year
+and follows the documented "Mar 15-22, 2024" form.
+
+`YearInReviewPage` was a second instance of the same defect, fixed after the first pass. Its
+local `formatTripDates` routed through `formatDateOnly` like the two kept below, but formatted
+with `{ month: 'short', day: 'numeric' }` and so dropped the year. That is the most misleading
+place in the app for it: on a page framed as a single calendar year, a trip crossing the
+boundary rendered as "Dec 30 - Jan 5" with nothing to say the end date falls in the next year.
+Going through `formatDateOnly` is not on its own evidence that a formatter is correct - it fixes
+which calendar day is shown, not whether the year is shown at all.
 
 `OnThisDayWidget` and `PrintableItinerary` keep their own formatters deliberately: both route
 through `formatDateOnly` for the date-only/UTC reason documented in `CLAUDE.md`, and both already
