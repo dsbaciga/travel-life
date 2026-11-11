@@ -10,7 +10,7 @@ import {
 } from '../types/memories.types';
 
 /** Trip statuses that never represent real travel and are excluded from memories. */
-const EXCLUDED_STATUSES = ['Dream', 'Planning', 'Cancelled'];
+const EXCLUDED_STATUSES = ['Dream', 'Cancelled'];
 
 /** Maximum photos returned per "On This Day" year group. */
 const MAX_PHOTOS_PER_YEAR = 8;
@@ -265,7 +265,11 @@ class MemoriesService {
    * traveled, countries/cities, distance, flights, photos, journal entries,
    * top tags, per-month trip-day counts, and highlight photos.
    */
-  async getYearInReview(userId: number, year: number): Promise<YearInReview> {
+  async getYearInReview(
+    userId: number,
+    year: number,
+    includePlanning = false
+  ): Promise<YearInReview> {
     if (year < 1900 || year > 2100) {
       throw new AppError('Invalid year: must be between 1900 and 2100', 400);
     }
@@ -273,11 +277,16 @@ class MemoriesService {
     const yearStart = new Date(Date.UTC(year, 0, 1));
     const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
+    // Trips still in the Planning phase haven't happened yet; opt-in only
+    const excludedStatuses = includePlanning
+      ? EXCLUDED_STATUSES
+      : [...EXCLUDED_STATUSES, 'Planning'];
+
     const [allDatedTrips, yearTrips] = await Promise.all([
       prisma.trip.findMany({
         where: {
           userId,
-          status: { notIn: EXCLUDED_STATUSES },
+          status: { notIn: excludedStatuses },
           startDate: { not: null },
           endDate: { not: null },
         },
@@ -286,7 +295,7 @@ class MemoriesService {
       prisma.trip.findMany({
         where: {
           userId,
-          status: { notIn: EXCLUDED_STATUSES },
+          status: { notIn: excludedStatuses },
           startDate: { not: null, lte: yearEnd },
           endDate: { not: null, gte: yearStart },
         },

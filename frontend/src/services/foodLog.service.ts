@@ -2,6 +2,7 @@ import axios from '../lib/axios';
 import type {
   FoodLogEntry,
   FoodLogEntryWithTrip,
+  FoodLogImmichAssetInput,
   FoodLogSearchFilters,
   CreateFoodLogEntryInput,
   UpdateFoodLogEntryInput,
@@ -36,6 +37,22 @@ export const foodLogService = {
     const response = await axios.post<FoodLogEntry>(
       `/trips/${tripId}/food-log/${entryId}/photos`,
       { photoIds }
+    );
+    return response.data;
+  },
+
+  /**
+   * Attaches Immich photos to an entry. The server links each asset to the trip first
+   * (reusing the photo if it is already linked). Photos only; videos are rejected.
+   */
+  async attachImmichAssets(
+    tripId: number,
+    entryId: number,
+    assets: FoodLogImmichAssetInput[]
+  ): Promise<FoodLogEntry> {
+    const response = await axios.post<FoodLogEntry>(
+      `/trips/${tripId}/food-log/${entryId}/photos/immich`,
+      { assets }
     );
     return response.data;
   },

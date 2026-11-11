@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import foodLogService from "../services/foodLog.service";
 import photoService from "../services/photo.service";
+import immichService from "../services/immich.service";
 import activityService from "../services/activity.service";
 import locationService from "../services/location.service";
 import { FOOD_RATINGS, MAX_FOOD_PHOTOS, type FoodLogEntry } from "../types/foodLog";
@@ -10,7 +11,14 @@ import { groupByRestaurant, ratingStars } from "../utils/foodLog";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
 import FoodLogPhotoStrip from "./FoodLogPhotoStrip";
-import { foodPhotoUrls } from "../utils/foodLogPhotos";
+import FoodLogThumb from "./FoodLogThumb";
+import ImmichBrowser from "./ImmichBrowser";
+import type { ImmichAsset } from "../types/immich";
+import {
+  foodPhotoThumbPath,
+  immichAssetPayload,
+  immichThumbPath,
+} from "../utils/foodLogPhotos";
 
 /**
  * FoodLogManager - dishes eaten on a trip with a 1-5 rating, notes and an
@@ -21,9 +29,14 @@ import { foodPhotoUrls } from "../utils/foodLogPhotos";
  * Photos: an entry can carry up to MAX_FOOD_PHOTOS photos. They are uploaded as
  * ordinary trip photos (so they also appear in the gallery) and attached to the
  * entry after it is saved. Removing one detaches it; the photo stays in the gallery.
+ * Photos can also be picked from Immich (when configured); the server links each
+ * one to the trip first. Only still images are accepted, never videos.
  */
 interface FoodLogManagerProps {
   tripId: number;
+  /** Trip dates, used to pre-filter the Immich browser to the trip. */
+  tripStartDate?: string;
+  tripEndDate?: string;
   onUpdate?: () => void;
 }
 
@@ -52,7 +65,12 @@ function linkKeyOf(entry: FoodLogEntry): string {
   return "";
 }
 
-export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps) {
+export default function FoodLogManager({
+  tripId,
+  tripStartDate,
+  tripEndDate,
+  onUpdate,
+}: FoodLogManagerProps) {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [showForm, setShowForm] = useState(false);
@@ -62,6 +80,8 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
   // Photo edits are staged until Save so Cancel discards them.
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [removedPhotoIds, setRemovedPhotoIds] = useState<number[]>([]);
+  const [immichAssets, setImmichAssets] = useState<ImmichAsset[]>([]);
+  const [showImmichBrowser, setShowImmichBrowser] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: entries = [], isLoading } = useQuery({
@@ -76,6 +96,13 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
     queryKey: ["locations", tripId],
     queryFn: () => locationService.getLocationsByTrip(tripId),
   });
+
+  const { data: immichSettings } = useQuery({
+    queryKey: ["immich", "settings"],
+    queryFn: () => immichService.getSettings(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const immichConfigured = immichSettings?.immichConfigured === true;
 
   const linkOptions = useMemo(
     () => [
@@ -94,7 +121,28 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
     () => (editingEntry?.photos ?? []).filter((p) => !removedPhotoIds.includes(p.id)),
     [editingEntry, removedPhotoIds]
   );
-  const photoSlotsLeft = MAX_FOOD_PHOTOS - keptPhotos.length - newFiles.length;
+  const photoCount = keptPhotos.length + newFiles.length + immichAssets.length;
+  const photoSlotsLeft = MAX_FOOD_PHOTOS - photoCount;
+
+  // Immich assets already on this entry or already picked: hidden in the browser so
+  // the same photo cannot be chosen twice.
+  const takenAssetIds = useMemo(() => {
+    const ids = new Set<string>(immichAssets.map((a) => a.id));
+    keptPhotos.forEach((p) => {
+      if (p.immichAssetId) ids.add(p.immichAssetId);
+    });
+    return ids;
+  }, [immichAssets, keptPhotos]);
+
+  const handleImmichSelect = async (assets: ImmichAsset[]) => {
+    // The browser already hides videos; filter again so a stray one can never be staged.
+    const fresh = assets.filter((a) => a.type !== "VIDEO" && !takenAssetIds.has(a.id));
+    if (fresh.length > photoSlotsLeft) {
+      toast.error(`An entry can have at most ${MAX_FOOD_PHOTOS} photos`);
+    }
+    setImmichAssets((prev) => [...prev, ...fresh.slice(0, Math.max(photoSlotsLeft, 0))]);
+    setShowImmichBrowser(false);
+  };
 
   // Object URLs for the not-yet-uploaded files; revoked when the selection changes.
   const previews = useMemo(
@@ -125,12 +173,15 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
     setForm(EMPTY_FORM);
     setNewFiles([]);
     setRemovedPhotoIds([]);
+    setImmichAssets([]);
+    setShowImmichBrowser(false);
   };
 
   const startEdit = (entry: FoodLogEntry) => {
     setEditingId(entry.id);
     setNewFiles([]);
     setRemovedPhotoIds([]);
+    setImmichAssets([]);
     setForm({
       link: linkKeyOf(entry),
       restaurantName: entry.restaurantName,
@@ -179,6 +230,18 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
         await foodLogService.attachPhotos(tripId, entryId, uploadedIds);
       } catch {
         failures += uploadedIds.length;
+      }
+    }
+
+    if (immichAssets.length > 0) {
+      try {
+        await foodLogService.attachImmichAssets(
+          tripId,
+          entryId,
+          immichAssets.map(immichAssetPayload)
+        );
+      } catch {
+        failures += immichAssets.length;
       }
     }
     return failures;
@@ -346,17 +409,17 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
             <span className="block text-sm font-medium mb-1" id="food-photos-label">
               Photos (optional)
             </span>
-            {(keptPhotos.length > 0 || previews.length > 0) && (
+            {(keptPhotos.length > 0 || previews.length > 0 || immichAssets.length > 0) && (
               <ul className="mb-2 flex flex-wrap gap-2" aria-labelledby="food-photos-label">
                 {keptPhotos.map((photo) => {
-                  const urls = foodPhotoUrls(photo);
+                  const thumb = foodPhotoThumbPath(photo);
                   return (
                     <li key={`photo-${photo.id}`} className="relative">
-                      {urls ? (
-                        <img
-                          src={urls.thumb}
+                      {thumb ? (
+                        <FoodLogThumb
+                          thumbnailPath={thumb}
+                          source={photo.source}
                           alt={photo.caption || "Attached photo"}
-                          className="h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
                         />
                       ) : (
                         <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-xs text-gray-500">
@@ -391,6 +454,24 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
                     </button>
                   </li>
                 ))}
+                {immichAssets.map((asset) => (
+                  <li key={`immich-${asset.id}`} className="relative">
+                    <FoodLogThumb
+                      thumbnailPath={immichThumbPath(asset.id)}
+                      source="immich"
+                      alt={`Immich photo ${asset.originalFileName}`}
+                      className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setImmichAssets((prev) => prev.filter((a) => a.id !== asset.id))}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                      aria-label={`Remove ${asset.originalFileName}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
               </ul>
             )}
             <input
@@ -410,10 +491,20 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
               onClick={() => fileInputRef.current?.click()}
               disabled={photoSlotsLeft <= 0 || isSaving}
             >
-              {keptPhotos.length + newFiles.length > 0 ? "Add more photos" : "Add photos"}
+              {photoCount > 0 ? "Add more photos" : "Add photos"}
             </button>
+            {immichConfigured && (
+              <button
+                type="button"
+                className="btn-secondary ml-2"
+                onClick={() => setShowImmichBrowser(true)}
+                disabled={photoSlotsLeft <= 0 || isSaving}
+              >
+                Add from Immich
+              </button>
+            )}
             <span className="ml-3 text-xs text-gray-500 dark:text-gray-400">
-              {keptPhotos.length + newFiles.length}/{MAX_FOOD_PHOTOS}
+              {photoCount}/{MAX_FOOD_PHOTOS}
             </span>
           </div>
           <div className="flex justify-end gap-3">
@@ -478,6 +569,17 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
             </section>
           ))}
         </div>
+      )}
+      {/* Rendered outside the form so none of its buttons can submit the entry. */}
+      {showImmichBrowser && (
+        <ImmichBrowser
+          imagesOnly
+          onSelect={handleImmichSelect}
+          onClose={() => setShowImmichBrowser(false)}
+          tripStartDate={tripStartDate}
+          tripEndDate={tripEndDate}
+          excludeAssetIds={takenAssetIds}
+        />
       )}
       <ConfirmDialogComponent />
     </div>

@@ -31,6 +31,14 @@ export type FoodLogEntry = {
   updatedAt: string;
 };
 
+/** An Immich asset to attach to an entry; the server links it to the trip first. */
+export type FoodLogImmichAssetInput = {
+  immichAssetId: string;
+  takenAt?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
 export type FoodLogEntryWithTrip = FoodLogEntry & {
   trip: { id: number; title: string; timezone: string | null };
 };

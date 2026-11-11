@@ -80,8 +80,10 @@ class MemoriesService {
     return response.data;
   }
 
-  async getYearInReview(year: number): Promise<YearInReview> {
-    const response = await axios.get<YearInReview>(`/memories/year-in-review/${year}`);
+  async getYearInReview(year: number, includePlanning = false): Promise<YearInReview> {
+    const response = await axios.get<YearInReview>(`/memories/year-in-review/${year}`, {
+      params: includePlanning ? { includePlanning: true } : undefined,
+    });
     return response.data;
   }
 }

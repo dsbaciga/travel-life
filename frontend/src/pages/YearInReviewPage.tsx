@@ -59,10 +59,11 @@ export default function YearInReviewPage() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const year = selectedYear ?? currentYear;
+  const [includePlanning, setIncludePlanning] = useState(false);
 
   const { data: review, isLoading, isError } = useQuery<YearInReview>({
-    queryKey: ['memories', 'year-in-review', year],
-    queryFn: () => memoriesService.getYearInReview(year),
+    queryKey: ['memories', 'year-in-review', year, includePlanning],
+    queryFn: () => memoriesService.getYearInReview(year, includePlanning),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -142,7 +143,16 @@ export default function YearInReviewPage() {
                 {year}
               </h1>
             </div>
-            <div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includePlanning}
+                  onChange={(e) => setIncludePlanning(e.target.checked)}
+                  className="w-4 h-4 rounded border-primary-200 dark:border-gold/30 text-primary-600 dark:text-gold focus:ring-primary-500 dark:focus:ring-gold/50"
+                />
+                Include trips still being planned
+              </label>
               <label htmlFor="year-select" className="sr-only">
                 Select year
               </label>

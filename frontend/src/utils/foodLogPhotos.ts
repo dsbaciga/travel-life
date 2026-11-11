@@ -1,16 +1,36 @@
 import { getFullAssetUrl } from "../lib/config";
-import type { FoodLogPhoto } from "../types/foodLog";
+import type { FoodLogImmichAssetInput, FoodLogPhoto } from "../types/foodLog";
+import type { ImmichAsset } from "../types/immich";
 
 /**
- * Resolves a food log photo to displayable URLs.
- *
- * Local photos resolve straight to a file URL. Immich-backed photos need an
- * authenticated fetch, which the food log does not do, so they return null and
- * are skipped by the UI.
+ * Path to load a thumbnail from. Local photos fall back to the full image when
+ * there is no thumbnail; Immich photos always have a (proxied, authenticated)
+ * thumbnail path. Returns null when the photo has nothing displayable.
  */
-export function foodPhotoUrls(photo: FoodLogPhoto): { thumb: string; full: string } | null {
-  if (photo.source !== "local") return null;
-  const full = getFullAssetUrl(photo.localPath);
-  const thumb = getFullAssetUrl(photo.thumbnailPath) ?? full;
-  return full && thumb ? { thumb, full } : null;
+export function foodPhotoThumbPath(photo: FoodLogPhoto): string | null {
+  if (photo.thumbnailPath) return photo.thumbnailPath;
+  return photo.source === "local" ? photo.localPath : null;
+}
+
+/**
+ * Full-size URL, or null when there is none to link to. Immich originals sit
+ * behind the authenticated proxy, so they cannot be opened with a plain link.
+ */
+export function foodPhotoFullUrl(photo: FoodLogPhoto): string | null {
+  return photo.source === "local" ? getFullAssetUrl(photo.localPath) : null;
+}
+
+/** The authenticated-proxy thumbnail path for an Immich asset, as stored on a linked photo. */
+export function immichThumbPath(assetId: string): string {
+  return `/api/immich/assets/${assetId}/thumbnail`;
+}
+
+/** Maps a picked Immich asset to the attach request payload. */
+export function immichAssetPayload(asset: ImmichAsset): FoodLogImmichAssetInput {
+  return {
+    immichAssetId: asset.id,
+    takenAt: asset.exifInfo?.dateTimeOriginal ?? asset.fileCreatedAt ?? null,
+    latitude: asset.exifInfo?.latitude ?? null,
+    longitude: asset.exifInfo?.longitude ?? null,
+  };
 }
