@@ -1,2 +1,5 @@
 .env
 prisma/.env
+
+# Runtime state written by the server (revoked tokens); not source
+data/token-blacklist.json
