@@ -799,24 +799,54 @@ export function formatNextUpEventDateTime(
 }
 
 /**
- * Determines if the trip is completed based on end date or status
+ * Parse a trip start/end date to local midnight.
+ *
+ * These are `@db.Date` calendar dates stored at UTC midnight, so
+ * `new Date('2026-01-10')` lands on UTC midnight and reads back as the
+ * *previous* day for any viewer west of UTC. Splitting the string and building
+ * a local date keeps the calendar day the user actually chose.
  */
-export function isTripCompleted(
-  tripStatus: TripStatusType,
-  tripEndDate: string | null
-): boolean {
-  if (tripStatus === TripStatus.COMPLETED) {
-    return true;
+function parseTripDateToLocalMidnight(date: string): Date | null {
+  const [year, month, day] = date.split('T')[0].split('-').map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    return null;
+  }
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Whether the trip's end date is in the past, ignoring its stored status.
+ *
+ * This answers "what do the dates say", nothing more. Use it to notice that a
+ * status has gone stale — not to decide that a trip is complete.
+ */
+export function hasEndDatePassed(tripEndDate: string | null): boolean {
+  if (!tripEndDate) {
+    return false;
   }
 
-  if (tripEndDate) {
-    const endDate = new Date(tripEndDate);
-    const now = new Date();
-    endDate.setHours(23, 59, 59, 999);
-    return now > endDate;
+  const endDate = parseTripDateToLocalMidnight(tripEndDate);
+  if (!endDate) {
+    return false;
   }
 
-  return false;
+  endDate.setHours(23, 59, 59, 999);
+  return new Date() > endDate;
+}
+
+/**
+ * Determines if the trip is completed.
+ *
+ * Completion is *declared* by the stored status, never inferred from the dates.
+ * A trip the user still has marked "Planning" is not complete just because its
+ * end date slipped past — the dashboard used to infer that here while
+ * `TripDayIndicator` kept reading the status, so one card announced
+ * "Trip Complete!" beside another insisting the trip was still being planned.
+ * When the dates have passed but the status has not caught up, that mismatch is
+ * its own state (`dates_passed`) rather than a guess in either direction.
+ */
+export function isTripCompleted(tripStatus: TripStatusType): boolean {
+  return tripStatus === TripStatus.COMPLETED;
 }
 
 /**
@@ -831,10 +861,12 @@ export function hasTripStarted(
   }
 
   if (tripStartDate) {
-    const startDate = new Date(tripStartDate);
-    const now = new Date();
+    const startDate = parseTripDateToLocalMidnight(tripStartDate);
+    if (!startDate) {
+      return false;
+    }
     startDate.setHours(0, 0, 0, 0);
-    return now >= startDate;
+    return new Date() >= startDate;
   }
 
   return false;
@@ -848,6 +880,8 @@ export type NextUpDisplayState =
   | 'upcoming'
   | 'in_progress'
   | 'completed'
+  | 'dates_passed'
+  | 'cancelled'
   | 'dream';
 
 /**
@@ -867,8 +901,18 @@ export function getNextUpDisplayState(
     return 'dream';
   }
 
-  if (isTripCompleted(tripStatus, tripEndDate)) {
+  // A cancelled trip is neither complete nor underway, and its dates are beside
+  // the point — it gets its own state rather than being read off the calendar.
+  if (tripStatus === TripStatus.CANCELLED) {
+    return 'cancelled';
+  }
+
+  if (isTripCompleted(tripStatus)) {
     return 'completed';
+  }
+
+  if (hasEndDatePassed(tripEndDate)) {
+    return 'dates_passed';
   }
 
   if (hasTripStarted(tripStatus, tripStartDate)) {

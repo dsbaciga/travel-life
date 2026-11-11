@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { TripWithColor } from './calendarUtils';
-import { parseDate } from './calendarUtils';
+import { formatTripDates } from '../../../utils/dateFormat';
 import { getAccessToken } from '../../../lib/axios';
 import { getFullAssetUrl } from '../../../lib/config';
 
@@ -84,22 +84,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
   // Format date range
   const formatDateRange = () => {
     if (!trip.startDate || !trip.endDate) return 'Dates not set';
-
-    const start = parseDate(trip.startDate);
-    const end = parseDate(trip.endDate);
-
-    const startStr = start.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    const endStr = end.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    return `${startStr} - ${endStr}`;
+    return formatTripDates(trip.startDate, trip.endDate);
   };
 
   // Get status badge styles

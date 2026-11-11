@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import type { Trip } from '../../types/trip';
 import tripService from '../../services/trip.service';
+import { formatTripDates } from '../../utils/dateFormat';
 import { Skeleton } from '../Skeleton';
 
 export default function UpcomingTripsWidget() {
@@ -52,25 +53,9 @@ export default function UpcomingTripsWidget() {
     }
   };
 
-  // Parse date string without UTC interpretation issues
-  const parseDate = (dateStr: string): Date => {
-    const datePart = dateStr.split('T')[0];
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
   const formatDateRange = (trip: Trip) => {
     if (!trip.startDate) return 'Dates TBD';
-    const start = parseDate(trip.startDate);
-    const end = trip.endDate ? parseDate(trip.endDate) : null;
-
-    const formatDate = (date: Date) =>
-      date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-    if (end) {
-      return `${formatDate(start)} - ${formatDate(end)}`;
-    }
-    return formatDate(start);
+    return formatTripDates(trip.startDate, trip.endDate);
   };
 
   if (isLoading) {
