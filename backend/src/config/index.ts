@@ -220,6 +220,17 @@ export const config = {
     pollCron: process.env.IMAP_POLL_CRON || '*/5 * * * *',
     maxLinksPerMessage: parseInt(process.env.IMAP_MAX_LINKS || '20', 10),
   },
+
+  // Scheduled automatic backups (off unless BACKUP_SCHEDULE_ENABLED=true).
+  // Written as plain JSON files, which include the user's stored API keys, so
+  // point BACKUP_DIR at storage with the same access controls as the database.
+  scheduledBackup: {
+    enabled: process.env.BACKUP_SCHEDULE_ENABLED === 'true',
+    dir: process.env.BACKUP_DIR || './backups',
+    cron: process.env.BACKUP_CRON || '0 3 * * *',
+    keepDaily: parseInt(process.env.BACKUP_KEEP_DAILY || '7', 10),
+    keepWeekly: parseInt(process.env.BACKUP_KEEP_WEEKLY || '4', 10),
+  },
 };
 
 export default config;

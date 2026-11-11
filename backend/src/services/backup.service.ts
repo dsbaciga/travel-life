@@ -98,6 +98,26 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       flightTracking: t.flightTracking as BackupTransportation['flightTracking'],
     })),
     lodging: trip.lodging as BackupTrip['lodging'],
+    bookingDeadlines: ((trip.bookingDeadlines ?? []) as Array<Record<string, unknown>>).map((d) => ({
+      entityType: (d.lodgingId ? 'lodging' : d.transportationId ? 'transportation' : 'activity') as
+        | 'lodging'
+        | 'transportation'
+        | 'activity',
+      entityId: (d.lodgingId ?? d.transportationId ?? d.activityId) as number,
+      kind: d.kind as string,
+      dueAt: (d.dueAt as Date).toISOString(),
+      note: d.note as string | null,
+      dismissedAt: d.dismissedAt ? (d.dismissedAt as Date).toISOString() : null,
+    })),
+    foodLogEntries: ((trip.foodLogEntries ?? []) as Array<Record<string, unknown>>).map((f) => ({
+      restaurantName: f.restaurantName as string,
+      dish: f.dish as string,
+      rating: f.rating as number,
+      notes: f.notes as string | null,
+      orderAgain: f.orderAgain as boolean,
+      activityId: f.activityId as number | null,
+      locationId: f.locationId as number | null,
+    })),
     journalEntries: journalEntries.map((j) => ({
       date: j.date as string | null,
       title: j.title as string | null,
@@ -284,6 +304,28 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseAmount: true,
           baseCurrency: true,
           notes: true,
+        },
+      },
+      bookingDeadlines: {
+        select: {
+          lodgingId: true,
+          transportationId: true,
+          activityId: true,
+          kind: true,
+          dueAt: true,
+          note: true,
+          dismissedAt: true,
+        },
+      },
+      foodLogEntries: {
+        select: {
+          restaurantName: true,
+          dish: true,
+          rating: true,
+          notes: true,
+          orderAgain: true,
+          activityId: true,
+          locationId: true,
         },
       },
       journalEntries: true,

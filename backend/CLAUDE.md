@@ -41,6 +41,16 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 - `EXCHANGE_RATE_API_URL` - Base URL for currency conversion rates (defaults to `https://api.frankfurter.dev/v1`). Frankfurter is free and needs no API key, so multi-currency budgets work out of the box; override only to point at a self-hosted instance. Rates are cached per (date, currency pair) in the `exchange_rates` table and never re-fetched, and a lookup that fails leaves the amount unconverted rather than erroring
 - `DISABLE_PASSWORD_LOGIN` - Set to `true` for SSO-only mode: password login and registration are refused and hidden from the login page. Ignored unless OIDC is enabled (lockout guard)
 
+### Scheduled backups
+
+Off unless `BACKUP_SCHEDULE_ENABLED=true`. Writes one JSON backup per user to
+`BACKUP_DIR/user-<id>/travel-life-backup-YYYY-MM-DD.json` and prunes old files.
+
+- `BACKUP_DIR` - Target directory (defaults to `./backups`). Mount a volume or NAS path here. Files contain the user's stored API keys, so protect it like the database
+- `BACKUP_CRON` - Schedule (defaults to `0 3 * * *`, nightly at 3am)
+- `BACKUP_KEEP_DAILY` - Newest N daily files to keep (defaults to `7`)
+- `BACKUP_KEEP_WEEKLY` - Additional one-per-week files kept beyond the daily window (defaults to `4`)
+
 ### Saved-link email ingest (IMAP)
 
 Forward a link to the ingest mailbox and it lands in your saved-links inbox. The

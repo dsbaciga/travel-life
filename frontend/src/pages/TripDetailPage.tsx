@@ -52,6 +52,8 @@ const JournalManager = lazy(() => import("../components/JournalManager"));
 const CompanionManager = lazy(() => import("../components/CompanionManager"));
 const LocationManager = lazy(() => import("../components/LocationManager"));
 const BudgetManager = lazy(() => import("../components/BudgetManager"));
+const DeadlinesManager = lazy(() => import("../components/DeadlinesManager"));
+const FoodLogManager = lazy(() => import("../components/FoodLogManager"));
 const SavedLinksManager = lazy(() => import("../components/SavedLinksManager"));
 const CustomItemsManager = lazy(() => import("../components/CustomItemsManager"));
 const EmergencyCard = lazy(() => import("../components/EmergencyCard"));
@@ -883,6 +885,44 @@ export default function TripDetailPage() {
                           });
                           queryClient.invalidateQueries({
                             queryKey: ["budget-summary", tripId],
+                          });
+                        }}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              )}
+
+              {/* Food Log Tab */}
+              {activeTab === "food-log" && (
+                <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6 animate-fadeIn">
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <LoadingSpinner.FullPage message="Loading food log..." />
+                      }
+                    >
+                      <FoodLogManager tripId={trip.id} />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              )}
+
+              {/* Deadlines Tab */}
+              {activeTab === "deadlines" && (
+                <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6 animate-fadeIn">
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <LoadingSpinner.FullPage message="Loading deadlines..." />
+                      }
+                    >
+                      <DeadlinesManager
+                        tripId={trip.id}
+                        tripTimezone={trip.timezone}
+                        onUpdate={() => {
+                          queryClient.invalidateQueries({
+                            queryKey: ["trip", tripId],
                           });
                         }}
                       />

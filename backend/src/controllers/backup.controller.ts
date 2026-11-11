@@ -1,24 +1,13 @@
 import crypto from 'crypto';
 import { Request, Response } from 'express';
 import backupService from '../services/backup.service';
+import { computeBackupHmac, signBackup } from '../services/backupIntegrity.service';
 import restoreService from '../services/restore.service';
 import { BackupDataSchema, RestoreOptionsSchema } from '../types/backup.types';
 import { asyncHandler } from '../http/asyncHandler';
 import { requireUserId } from '../auth/controllerHelpers';
 import { AppError } from '../errors/errors';
-import config from '../config';
 import logger from '../config/logger';
-
-/**
- * Compute an HMAC-SHA256 signature over the given data using the JWT secret.
- * The data should NOT contain the integrity field itself.
- */
-function computeBackupHmac(data: unknown): string {
-  return crypto
-    .createHmac('sha256', config.jwt.secret)
-    .update(JSON.stringify(data))
-    .digest('hex');
-}
 
 /**
  * Create and download a backup of all user data
@@ -29,17 +18,8 @@ export const createBackup = asyncHandler(async (req: Request, res: Response) => 
   // Create backup
   const backupData = await backupService.createBackup(userId);
 
-  // Compute HMAC-SHA256 integrity signature over the backup data
-  const signature = computeBackupHmac(backupData);
-
-  // Add integrity field to the backup output
-  const backupWithIntegrity = {
-    ...backupData,
-    integrity: {
-      algorithm: 'hmac-sha256',
-      signature,
-    },
-  };
+  // Attach the HMAC-SHA256 integrity signature
+  const backupWithIntegrity = signBackup(backupData);
 
   // Set headers for file download
   const filename = `travel-life-backup-${new Date().toISOString().split('T')[0]}.json`;

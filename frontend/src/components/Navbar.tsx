@@ -163,6 +163,7 @@ const Navbar = memo(function Navbar() {
     { path: "/places-visited", label: "Places" },
     { path: "/checklists", label: "Checklists" },
     { path: "/trip-series", label: "Series" },
+    { path: "/food-log", label: "Food" },
     { path: "/saved-links", label: "Links", badge: savedLinksInboxCount },
   ];
 

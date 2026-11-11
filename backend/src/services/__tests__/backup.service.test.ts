@@ -340,6 +340,35 @@ describe('BackupService', () => {
       expect(trip.tripLanguages).toHaveLength(1);
     });
 
+    it('BKP-013: includes food log entries on trips', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Food Trip',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        foodLogEntries: [
+          { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      expect(result.trips[0].foodLogEntries).toEqual([
+        { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null },
+      ]);
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 

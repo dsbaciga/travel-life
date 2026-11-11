@@ -6,6 +6,7 @@ import TravelStatsWidget from '../components/widgets/TravelStatsWidget';
 import RecentPhotosWidget from '../components/widgets/RecentPhotosWidget';
 import QuickActionsWidget from '../components/widgets/QuickActionsWidget';
 import OnThisDayWidget from '../components/widgets/OnThisDayWidget';
+import DeadlinesWidget from '../components/widgets/DeadlinesWidget';
 import TripCalendarWidget from '../components/widgets/TripCalendarWidget';
 import YearInReviewWidget from '../components/widgets/YearInReviewWidget';
 import PendingInvitations from '../components/PendingInvitations';
@@ -75,6 +76,9 @@ export default function DashboardPage() {
               {/* On This Day Memories (renders nothing when there are none,
                   so it is not wrapped — an empty wrapper would add a flex gap) */}
               <OnThisDayWidget />
+
+              {/* Booking deadlines (renders nothing when there are none) */}
+              <DeadlinesWidget />
 
               {/* Upcoming Trips */}
               <div className="animate-fade-in">

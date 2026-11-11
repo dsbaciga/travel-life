@@ -653,6 +653,48 @@ export async function restoreFromBackup(
             stats.lodgingImported++;
           }
 
+          // Import booking deadlines. Targets are remapped through the old-id -> new-id
+          // maps built above; a deadline whose booking is missing from the backup is skipped.
+          for (const deadlineData of tripData.bookingDeadlines || []) {
+            const targetMap =
+              deadlineData.entityType === 'lodging'
+                ? lodgingMap
+                : deadlineData.entityType === 'transportation'
+                  ? transportationMap
+                  : activityMap;
+            const newTargetId = targetMap.get(deadlineData.entityId);
+            if (!newTargetId) continue;
+            await tx.bookingDeadline.create({
+              data: {
+                tripId: trip.id,
+                lodgingId: deadlineData.entityType === 'lodging' ? newTargetId : null,
+                transportationId: deadlineData.entityType === 'transportation' ? newTargetId : null,
+                activityId: deadlineData.entityType === 'activity' ? newTargetId : null,
+                kind: deadlineData.kind,
+                dueAt: new Date(deadlineData.dueAt),
+                note: deadlineData.note ?? null,
+                dismissedAt: deadlineData.dismissedAt ? new Date(deadlineData.dismissedAt) : null,
+              },
+            });
+          }
+
+          // Import food log entries. Activity/location links are remapped through the
+          // old-id -> new-id maps; a link missing from the backup is dropped, not the entry.
+          for (const foodData of tripData.foodLogEntries || []) {
+            await tx.foodLogEntry.create({
+              data: {
+                tripId: trip.id,
+                restaurantName: foodData.restaurantName,
+                dish: foodData.dish,
+                rating: foodData.rating,
+                notes: foodData.notes ?? null,
+                orderAgain: foodData.orderAgain ?? false,
+                activityId: foodData.activityId ? activityMap.get(foodData.activityId) ?? null : null,
+                locationId: foodData.locationId ? locationMap.get(foodData.locationId) ?? null : null,
+              },
+            });
+          }
+
           // Import journal entries
           for (const journalData of tripData.journalEntries || []) {
             await tx.journalEntry.create({

@@ -253,6 +253,56 @@ class PushNotificationService {
 
     return notified;
   }
+
+  /**
+   * Remind trip owners about booking deadlines (cancellation cutoffs, check-in
+   * windows, payment due dates) falling within the next 24 hours. Unlike the
+   * trip-start reminders, "already sent" is persisted on the row (notifiedAt)
+   * so a restart cannot cause a duplicate, and editing dueAt re-arms it.
+   * Returns the number of deadlines notified.
+   */
+  async sendDeadlineReminders(): Promise<number> {
+    if (!this.isConfigured()) {
+      return 0;
+    }
+
+    const now = new Date();
+    const horizon = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const deadlines = await prisma.bookingDeadline.findMany({
+      where: {
+        dismissedAt: null,
+        notifiedAt: null,
+        dueAt: { gt: now, lte: horizon },
+        trip: { status: { notIn: ['cancelled', 'Cancelled'] } },
+      },
+      include: { trip: { select: { id: true, title: true, userId: true } } },
+      take: 200,
+    });
+
+    const labels: Record<string, string> = {
+      cancellation: 'Free cancellation ends',
+      check_in: 'Online check-in opens',
+      payment: 'Payment due',
+      other: 'Booking deadline',
+    };
+
+    let notified = 0;
+    for (const d of deadlines) {
+      const sent = await this.sendToUser(d.trip.userId, {
+        title: labels[d.kind] ?? labels.other,
+        body: `"${d.trip.title}": ${d.note ?? labels[d.kind] ?? 'deadline'} within 24 hours.`,
+        url: `/trips/${d.trip.id}`,
+        tag: `deadline-${d.id}`,
+      });
+      // Mark handled even with no subscriptions, so we don't re-query every hour.
+      await prisma.bookingDeadline.update({
+        where: { id: d.id },
+        data: { notifiedAt: new Date() },
+      });
+      if (sent > 0) notified += 1;
+    }
+    return notified;
+  }
 }
 
 export const pushNotificationService = new PushNotificationService();

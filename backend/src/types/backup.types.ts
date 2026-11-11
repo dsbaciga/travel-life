@@ -331,6 +331,29 @@ const BackupLodgingSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
+// Booking deadline schema within a trip. Targets reference the OLD ids of the
+// lodging/transportation/activity records in the same backup.
+const BackupBookingDeadlineSchema = z.object({
+  entityType: z.enum(['lodging', 'transportation', 'activity']),
+  entityId: z.number(),
+  kind: z.string(),
+  dueAt: z.string(), // ISO datetime
+  note: z.string().nullable().optional(),
+  dismissedAt: z.string().nullable().optional(),
+});
+
+// Food log entry schema within a trip. activityId/locationId reference the OLD ids
+// of records in the same backup; unresolved links are restored as null.
+const BackupFoodLogEntrySchema = z.object({
+  restaurantName: z.string(),
+  dish: z.string(),
+  rating: z.number().int().min(1).max(5),
+  notes: z.string().nullable().optional(),
+  orderAgain: z.boolean().optional(),
+  activityId: z.number().nullable().optional(),
+  locationId: z.number().nullable().optional(),
+});
+
 // Journal entry schema within a trip
 const BackupJournalEntrySchema = z.object({
   date: z.string().nullable().optional(), // ISO date
@@ -511,6 +534,8 @@ const BackupTripSchema = z.object({
   activities: z.array(BackupActivitySchema).optional(),
   transportation: z.array(BackupTransportationSchema).optional(),
   lodging: z.array(BackupLodgingSchema).optional(),
+  bookingDeadlines: z.array(BackupBookingDeadlineSchema).optional(),
+  foodLogEntries: z.array(BackupFoodLogEntrySchema).optional(),
   journalEntries: z.array(BackupJournalEntrySchema).optional(),
   photoAlbums: z.array(BackupPhotoAlbumSchema).optional(),
   weatherData: z.array(BackupWeatherDataSchema).optional(),

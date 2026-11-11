@@ -126,6 +126,9 @@ const mockTx = {
   tripLanguage: {
     create: jest.fn(),
   },
+  foodLogEntry: {
+    create: jest.fn(),
+  },
   tripExpense: {
     create: jest.fn(),
   },
@@ -350,6 +353,7 @@ describe('RestoreService', () => {
     mockTx.tripCompanion.create.mockResolvedValue({ id: 1 });
     mockTx.entityLink.create.mockResolvedValue({ id: 1 });
     mockTx.tripLanguage.create.mockResolvedValue({ id: 1 });
+    mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
     mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
     mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
     mockTx.savedLink.create.mockResolvedValue({ id: 1 });
@@ -480,6 +484,39 @@ describe('RestoreService', () => {
       expect(result.stats.lodgingImported).toBe(1);
       expect(result.stats.journalEntriesImported).toBe(1);
       expect(result.stats.tripLanguagesImported).toBe(1);
+    });
+
+    it('RST-016: restores food log entries, remapping activity/location links', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            foodLogEntries: [
+              { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: 'Perfect', orderAgain: true, activityId: 1, locationId: 1 },
+              { restaurantName: 'Cafe', dish: 'Espresso', rating: 3, activityId: 999, locationId: null },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.foodLogEntry.create).toHaveBeenCalledTimes(2);
+      const first = mockTx.foodLogEntry.create.mock.calls[0][0] as { data: Record<string, unknown> };
+      // old activity id 1 / location id 1 map to the freshly created ids
+      expect(first.data).toMatchObject({
+        restaurantName: 'Trattoria',
+        dish: 'Carbonara',
+        rating: 5,
+        orderAgain: true,
+        activityId: 60,
+        locationId: 10,
+      });
+      const second = mockTx.foodLogEntry.create.mock.calls[1][0] as { data: Record<string, unknown> };
+      // an unresolvable link is dropped but the entry survives
+      expect(second.data).toMatchObject({ activityId: null, locationId: null, orderAgain: false, notes: null });
     });
 
     it('RST-008: imports entity links with mapped IDs', async () => {
