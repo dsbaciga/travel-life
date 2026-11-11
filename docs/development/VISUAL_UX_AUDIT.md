@@ -99,9 +99,9 @@ Measured on the live button:
 keeps the gold gradient but uses `dark:text-navy-900` (11.9:1), which is the same dark-on-gold
 pattern `Navbar`'s count chip already uses.
 
-**Follow-up needed:** `docs/architecture/STYLE_GUIDE.md` still documents `.btn-primary` as
-`from-primary-500 to-primary-600` with white text. That table should be updated to match, or
-this change reverted if the lighter gradient is preferred and the contrast accepted.
+`docs/architecture/STYLE_GUIDE.md` has been updated to match, along with its Status Colors,
+Color Contrast, Hover Effects and safe-area sections. Revert both together if the lighter
+gradient is preferred and the contrast accepted.
 
 ### 5. Dashboard hero username at 2.05:1 — Fixed
 

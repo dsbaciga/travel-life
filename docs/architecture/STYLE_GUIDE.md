@@ -79,20 +79,50 @@ Light mode primary palette - warm amber tones:
 | `navy-800` | `#1e293b` | Card backgrounds |
 | `navy-700` | `#334155` | Elevated surfaces |
 | `gold` | `#fbbf24` | Primary accent, highlights |
+| `sky` | `#7dd3fc` | Secondary accent (bare `text-sky`, `border-sky`) |
 | `warm-gray` | `#e2e8f0` | Body text (dark mode) |
+
+`sky` is both a single accent value and the full Tailwind `sky-50`…`sky-950` scale:
+`tailwind.config.js` spreads the default scale and adds `DEFAULT`. Define any future flat
+accent the same way. A bare `sky: '#7dd3fc'` inside `extend.colors` **replaces** the scale
+rather than adding to it, and every `bg-sky-500` / `text-sky-800` in the app then silently
+emits no CSS — which is exactly how the Planned status badge ended up rendering with no
+background at all.
 
 ### Status Colors
 
-Used for trip status badges and system states:
+Trip status has two treatments, both in `src/utils/statusColors.ts`. Use the subtle one
+by default. The ribbon is the high-contrast chip used where status has to carry across a
+dense scan or sit on a cover photo — `TripCard` (cover ribbon and compact row) and
+`TripListView`.
+
+**Subtle** (`tripStatusColors`, via `getTripStatusColor` / `getTripStatusBadgeClasses`):
 
 | Status | Light BG | Dark BG | Text |
 |--------|----------|---------|------|
-| Dream | `purple-100` | `purple-900` | `purple-700` / `purple-300` |
-| Planning | `blue-100` | `blue-900` | `blue-700` / `blue-300` |
-| Planned | `sky-100` | `sky-900` | `sky-700` / `sky-300` |
-| In Progress | `amber-100` | `amber-900` | `amber-700` / `amber-300` |
-| Completed | `green-100` | `green-900` | `green-700` / `green-300` |
-| Cancelled | `red-100` | `red-900` | `red-700` / `red-300` |
+| Dream | `purple-100` | `purple-900` | `purple-800` / `purple-300` |
+| Planning | `blue-100` | `blue-900` | `blue-800` / `blue-300` |
+| Planned | `sky-100` | `sky-900` | `sky-800` / `sky-300` |
+| In Progress | `amber-100` | `amber-900` | `amber-800` / `amber-300` |
+| Completed | `green-100` | `green-900` | `green-800` / `green-300` |
+| Cancelled | `red-100` | `red-900` | `red-800` / `red-300` |
+
+**Ribbon** (`tripStatusRibbonColors`, via `getTripStatusRibbonColor`) — a solid fill with
+white text, same in both themes:
+
+| Status | Background |
+|--------|------------|
+| Dream | `purple-700` |
+| Planning | `blue-700` |
+| Planned | `sky-700` |
+| In Progress | `amber-700` |
+| Completed | `green-700` |
+| Cancelled | `red-700` |
+
+Ribbons use the `-700` step, not `-500`. The label is 10-12px uppercase white text, so it
+needs 4.5:1, and at `-500` every one of these failed — In Progress 2.15:1, Completed
+2.28:1, Planning 3.68:1, Cancelled 3.76:1, Dream 3.96:1. Keep new status colors at `-700`
+or darker whenever the fill carries white text.
 
 ---
 
@@ -194,11 +224,16 @@ Responsive grids for card displays:
 <button class="btn-primary">Save Trip</button>
 ```
 
-- Gradient: `from-primary-500 to-primary-600` (light) / `from-accent-400 to-accent-600` (dark)
-- White text
+- Gradient: `from-primary-600 to-primary-700` (light) / `from-accent-400 to-accent-600` (dark)
+- Text: white (light) / `navy-900` (dark)
 - Shadow with color-matched glow
 - Hover: lift effect (`-translate-y-0.5`) + enhanced shadow
 - Dark mode hover: gold glow (`0 0 20px rgba(251,191,36,0.25)`)
+
+The gradient starts at `primary-600`, not `primary-500`, and dark mode puts dark text on
+gold rather than white: white on `primary-500` is 3.19:1 and white on `accent-400` is
+1.67:1, both under the 4.5:1 this label needs. The current pairs are 5.02:1 (light) and
+11.9:1 (dark). See [Color Contrast](#color-contrast).
 
 **Secondary Button** (`.btn-secondary`):
 
@@ -537,6 +572,13 @@ shadow-glow-gold-lg: 0 0 30px rgba(251, 191, 36, 0.2)
 <div class="hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 ```
 
+**Match the transition to what actually changes.** `transition-colors` covers only colour
+properties and `transition-shadow` only `box-shadow`; neither covers `transform`. A lift
+or shadow declared under one of those does not animate — it snaps, with no warning at
+build time. If a hover changes more than colour, use `transition-all`. This caught
+`.btn-primary`, `.btn-secondary`, `.btn-danger` and `.card`, all of which declared a lift
+they never animated.
+
 ### Stagger Delays
 
 For sequential animations:
@@ -689,8 +731,23 @@ All interactive elements have visible focus states:
 ### Color Contrast
 
 - Body text: Minimum 4.5:1 contrast ratio
-- Large text: Minimum 3:1 contrast ratio
+- Large text (≥24px, or ≥18.66px bold): Minimum 3:1 contrast ratio
 - Interactive elements: Clear visual distinction
+
+Two habits break this repeatedly, and both have in this codebase:
+
+- **White on a mid-tone fill rarely passes.** Against white, the `-500` step of most hues
+  lands between 1.8:1 and 4:1 — `amber-500` is 2.15:1, `green-500` 2.28:1, `primary-500`
+  3.19:1. For white text on a solid fill, start at `-700`. For gold (`accent-400`,
+  1.67:1 against white) use `navy-900` text instead.
+- **Opacity on a text colour silently breaks it.** `text-slate` is 4.76:1 on white but
+  `text-slate/70` is 2.72:1, and `text-white/80` on `primary-600` drops to 3.80:1. Get
+  de-emphasis from size and weight, or pick a lighter token — not from an alpha suffix on
+  text that still has to be read.
+
+Both the thresholds and the composited colour matter, so check the rendered pair rather
+than the token name: a semi-transparent card over a gradient is not the colour its class
+says it is.
 
 ### Keyboard Navigation
 
@@ -762,6 +819,13 @@ The timeline export uses print-optimized styles:
 | `.safe-area-inset-bottom` | Padding for notched devices (iOS) |
 | `.safe-area-bottom` | Alias for safe area padding |
 | `.safe-area-bottom-nav` | Safe area + nav height padding |
+
+`MobileBottomNav` is `h-16` plus a 2px top border **plus** its own
+`.safe-area-inset-bottom`, so anything scrolling beneath it needs that same inset in its
+bottom padding. A flat `pb-16` is short by 2px on an ordinary phone and by roughly 36px on
+one with a home indicator. `App.tsx` uses
+`pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0`; use that, or
+`.safe-area-bottom-nav`, rather than a bare spacing class.
 
 ### CSS Variable Utilities
 
