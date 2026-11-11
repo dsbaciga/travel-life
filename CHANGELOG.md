@@ -17,6 +17,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-11-11
+
+### Added
+
+- **Scheduled backups.** Opt-in nightly per-user JSON backups written to `BACKUP_DIR` with
+  daily and weekly retention and atomic writes. Backups are HMAC-signed, so they can be
+  restored and are tamper-checked.
+- **Booking deadline tracker.** New `booking_deadlines` table, CRUD and upcoming API, hourly
+  push reminders, a Health Check rule, backup/restore support, a Deadlines tab and a
+  dashboard widget.
+- **Food log** for recording what you ate on a trip.
+- Immich videos show a loading spinner while the original downloads.
+
+### Fixed
+
+- **Light mode survives a page load.** The theme was force-reset to dark on every boot; the
+  stored theme is now applied, defaulting to dark.
+- **`sky-*` Tailwind utilities render again** (the Planned status badge had no background).
+- **Travel Stats no longer shows "NaN"** for photos, and loads its per-trip data in parallel.
+- **Trip dashboard no longer contradicts itself** for a trip whose dates have passed but whose
+  status is still Planning.
+- Date ranges consistently include the year across dashboard widgets and Year in Review.
+- Frontend accessibility pass: contrast fixes across status ribbons, buttons, calendar bars
+  and dark-mode captions; content is no longer hidden behind the mobile bottom nav.
+
+### Migrations
+
+Run `npx prisma migrate deploy` before using the new version. New since 6.1.7:
+
+- `20260810000000_add_booking_deadlines`
+- `20260811000000_add_food_log`
+- `20261108000000_add_upload_path_indexes`
+
 ## [6.1.7] - 2026-10-12
 
 ### Fixed
