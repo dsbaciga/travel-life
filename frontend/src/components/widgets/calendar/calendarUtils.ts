@@ -1,19 +1,27 @@
 import type { Trip } from '../../../types/trip';
 
-// Visually distinct color palette for trips
+/**
+ * Visually distinct color palette for trips.
+ *
+ * The `-700` step of each hue, not `-500`: the calendar draws the trip title in
+ * white 12px directly on these fills, and at `-500` ten of the twelve fell below
+ * the 4.5:1 that normal-size text needs (lime 1.83:1, amber 2.15:1, cyan 2.37:1,
+ * teal 2.49:1, emerald 2.54:1 …). Every `-700` here clears 4.5:1 against white
+ * while keeping the hues just as easy to tell apart.
+ */
 export const TRIP_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#84cc16', // lime
-  '#f97316', // orange
-  '#6366f1', // indigo
-  '#14b8a6', // teal
-  '#a855f7', // purple
+  '#1d4ed8', // blue
+  '#047857', // emerald
+  '#b45309', // amber
+  '#b91c1c', // red
+  '#6d28d9', // violet
+  '#be185d', // pink
+  '#0e7490', // cyan
+  '#4d7c0f', // lime
+  '#c2410c', // orange
+  '#4338ca', // indigo
+  '#0f766e', // teal
+  '#7e22ce', // purple
 ];
 
 export interface TripWithColor extends Trip {

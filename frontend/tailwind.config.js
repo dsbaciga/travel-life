@@ -1,3 +1,5 @@
+import colors from 'tailwindcss/colors';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -117,8 +119,15 @@ export default {
         },
         // Gold accent for dark mode
         gold: '#fbbf24',
-        // Sky accent for dark mode - sky-300 for better contrast on navy-700 (WCAG AA)
-        sky: '#7dd3fc',
+        // Sky accent for dark mode - sky-300 for better contrast on navy-700 (WCAG AA).
+        // Spread Tailwind's own sky scale first: a bare `sky: '#7dd3fc'` REPLACES the
+        // scale, which silently kills every `bg-sky-500`/`text-sky-800`/... utility in
+        // the app (the Planned status badge rendered with no background at all).
+        // DEFAULT keeps the bare `text-sky` / `border-sky` usages working.
+        sky: {
+          ...colors.sky,
+          DEFAULT: '#7dd3fc',
+        },
       },
       // Custom box shadows with gold glow for dark mode
       boxShadow: {

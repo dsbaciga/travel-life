@@ -32,7 +32,7 @@ export default function EmptyDayPlaceholder({
       {/* Empty state icon */}
       <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
         <svg
-          className="w-10 h-10 text-gray-400 dark:text-gray-500"
+          className="w-10 h-10 text-gray-400 dark:text-gray-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

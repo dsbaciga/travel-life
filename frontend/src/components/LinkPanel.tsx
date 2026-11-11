@@ -420,7 +420,7 @@ export default function LinkPanel({
               <p className="text-gray-600 dark:text-gray-400">
                 No linked items yet
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Click "Add Link" above to connect this item to photos, locations, or other entities.
               </p>
             </div>
@@ -500,7 +500,7 @@ export default function LinkPanel({
                                 <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                   <span>{getRelationshipLabel(link.relationship)}</span>
                                   {link.notes && (
-                                    <span className="text-gray-400 dark:text-gray-500" title={link.notes}>
+                                    <span className="text-gray-400 dark:text-gray-400" title={link.notes}>
                                       - {link.notes.length > 20 ? link.notes.slice(0, 20) + '...' : link.notes}
                                     </span>
                                   )}
@@ -508,7 +508,7 @@ export default function LinkPanel({
                               </div>
                               {/* Go to icon */}
                               <svg
-                                className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0"
+                                className="w-4 h-4 text-gray-400 dark:text-gray-400 flex-shrink-0"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"

@@ -89,7 +89,7 @@ export default function YearlyCalendarView({ year, trips }: YearlyCalendarViewPr
             {DAY_ABBREVS.map((abbrev, i) => (
               <div
                 key={i}
-                className="text-center text-[10px] text-gray-400 dark:text-gray-500"
+                className="text-center text-[10px] text-gray-400 dark:text-gray-400"
               >
                 {abbrev}
               </div>

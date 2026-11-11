@@ -264,7 +264,7 @@ export default function CollaboratorsManager({
                   </button>
                 )}
               </div>
-              <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+              <div className="mt-2 text-xs text-gray-400 dark:text-gray-400">
                 Added {formatDate(collaborator.createdAt)}
               </div>
             </div>
@@ -351,7 +351,7 @@ export default function CollaboratorsManager({
       {collaborators.length === 0 && pendingInvitations.length === 0 && (
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-navy-700 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

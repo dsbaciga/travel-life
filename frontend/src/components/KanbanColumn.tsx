@@ -53,7 +53,7 @@ export default function KanbanColumn({
       >
         <SortableContext items={tripIds} strategy={verticalListSortingStrategy}>
           {trips.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500 text-sm">
+            <div className="flex items-center justify-center h-32 text-gray-400 dark:text-gray-400 text-sm">
               Drop trips here
             </div>
           ) : (

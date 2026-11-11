@@ -243,7 +243,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                   {result.subtitle}
                 </div>
               )}
-              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 capitalize">
+              <div className="text-xs text-gray-400 dark:text-gray-400 mt-1 capitalize">
                 {result.type}
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg
-            className="w-5 h-5 text-gray-400 dark:text-gray-500"
+            className="w-5 h-5 text-gray-400 dark:text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -321,7 +321,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
               </svg>
             </button>
           ) : (
-            <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
+            <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
               ⌘K
             </kbd>
           )}
@@ -383,7 +383,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           {query && !isLoading && results.length === 0 && (
             <div className="p-8 text-center">
               <svg
-                className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500"
+                className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -397,7 +397,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                 />
               </svg>
               <p className="text-gray-600 dark:text-gray-400 font-medium">No results found</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Try different keywords
               </p>
             </div>

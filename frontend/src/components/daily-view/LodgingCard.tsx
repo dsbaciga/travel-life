@@ -180,14 +180,14 @@ export default function LodgingCard({
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   {formatTime(lodging.checkInDate, timezone)}
                   {timezone && (
-                    <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">
+                    <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
                       {getTimezoneAbbr(timezone)}
                     </span>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-400 dark:text-gray-500">Not set</div>
+              <div className="text-gray-400 dark:text-gray-400">Not set</div>
             )}
           </div>
 
@@ -208,14 +208,14 @@ export default function LodgingCard({
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   {formatTime(lodging.checkOutDate, timezone)}
                   {timezone && (
-                    <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">
+                    <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
                       {getTimezoneAbbr(timezone)}
                     </span>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-400 dark:text-gray-500">Not set</div>
+              <div className="text-gray-400 dark:text-gray-400">Not set</div>
             )}
           </div>
         </div>

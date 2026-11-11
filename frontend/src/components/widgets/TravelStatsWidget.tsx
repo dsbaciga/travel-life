@@ -48,7 +48,10 @@ export default function TravelStatsWidget() {
       for (const trip of trips) {
         try {
           const photosResponse = await photoService.getPhotosByTrip(trip.id, { skip: 0, take: 1 });
-          photoCount += photosResponse.total;
+          // `?? 0`: the catch below only covers a rejected request. A resolved
+          // response missing `total` would make photoCount NaN and the tile
+          // would render the literal string "NaN" instead of a number.
+          photoCount += photosResponse.total ?? 0;
         } catch {
           // Skip if fails
         }
@@ -263,7 +266,7 @@ export default function TravelStatsWidget() {
                   {stat.valueDisplay}
                 </div>
                 {stat.subtext && (
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mb-0.5">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
                     {stat.subtext}
                   </div>
                 )}

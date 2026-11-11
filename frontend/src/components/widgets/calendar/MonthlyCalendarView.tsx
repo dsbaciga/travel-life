@@ -137,7 +137,7 @@ export default function MonthlyCalendarView({ year, month, trips }: MonthlyCalen
                       className={`
                         inline-flex items-center justify-center w-7 h-7 text-sm rounded-full
                         ${isToday(day)
-                          ? 'bg-primary-500 text-white font-bold'
+                          ? 'bg-primary-600 text-white font-bold'
                           : 'text-gray-700 dark:text-gray-300'
                         }
                       `}

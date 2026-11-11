@@ -82,7 +82,7 @@ export default function UnscheduledActivityCard({
 
           {/* Notes */}
           {activity.notes && !isCompact && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 italic line-clamp-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic line-clamp-1">
               {activity.notes}
             </p>
           )}

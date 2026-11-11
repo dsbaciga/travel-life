@@ -15,15 +15,20 @@ export const tripStatusColors: Record<TripStatusType, string> = {
 
 /**
  * Ribbon color mappings for trip cards
- * More vibrant colors for visual impact on card ribbons
+ * More vibrant colors for visual impact on card ribbons.
+ *
+ * The `-700` step rather than `-500`: these ribbons are 10-12px uppercase text
+ * on a solid fill, so they need 4.5:1 against white. At `-500` every one of them
+ * failed (amber 2.15:1, green 2.28:1, blue 3.68:1, red 3.76:1, purple 3.96:1);
+ * `-700` clears 4.5:1 across the set while staying fully saturated.
  */
 export const tripStatusRibbonColors: Record<TripStatusType, string> = {
-  [TripStatus.DREAM]: 'bg-purple-500 text-white',
-  [TripStatus.PLANNING]: 'bg-blue-500 text-white',
-  [TripStatus.PLANNED]: 'bg-sky-500 text-white',
-  [TripStatus.IN_PROGRESS]: 'bg-amber-500 text-white',
-  [TripStatus.COMPLETED]: 'bg-green-500 text-white',
-  [TripStatus.CANCELLED]: 'bg-red-500 text-white',
+  [TripStatus.DREAM]: 'bg-purple-700 text-white',
+  [TripStatus.PLANNING]: 'bg-blue-700 text-white',
+  [TripStatus.PLANNED]: 'bg-sky-700 text-white',
+  [TripStatus.IN_PROGRESS]: 'bg-amber-700 text-white',
+  [TripStatus.COMPLETED]: 'bg-green-700 text-white',
+  [TripStatus.CANCELLED]: 'bg-red-700 text-white',
 };
 
 /**

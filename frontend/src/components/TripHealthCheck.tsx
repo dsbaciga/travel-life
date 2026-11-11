@@ -268,7 +268,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${issue.isDismissed ? 'text-gray-500 dark:text-gray-500' : 'text-gray-700 dark:text-gray-300'}`}>
+                              <p className={`text-sm ${issue.isDismissed ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
                                 {issue.message}
                               </p>
                               {issue.suggestion && !issue.isDismissed && (

@@ -53,7 +53,9 @@ export default function DashboardPage() {
           <h1 className="text-2xl md:text-5xl lg:text-7xl font-display font-bold text-primary-600 dark:text-sky tracking-tight leading-none mb-1 md:mb-4 break-words">
             <span className="md:hidden">Hi, </span>
             <span className="hidden md:inline">Welcome back,<br /></span>
-            <span className="text-accent-500 dark:text-warm-gray">{user?.username}</span>
+            {/* primary-600, not accent-500: accent-500 on the cream page is
+                2.05:1, under the 3:1 that even display-size text needs. */}
+            <span className="text-primary-600 dark:text-warm-gray">{user?.username}</span>
           </h1>
           <p className="text-sm md:text-xl text-slate dark:text-warm-gray font-body max-w-2xl">
             {activeTripLine ?? 'Your adventures await. Continue documenting your journey.'}

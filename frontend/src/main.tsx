@@ -9,9 +9,22 @@ declare global {
   }
 }
 
-// Always use dark mode
-document.documentElement.classList.add('dark');
-document.documentElement.style.colorScheme = 'dark';
+// Dark is the default, but the user's stored choice wins. Applied here, before
+// React mounts, so there is no light-to-dark flash on first paint. themeStore
+// re-applies the same value on rehydration; both must agree or the Appearance
+// toggle in Settings reads the opposite of what is on screen.
+{
+  let storedTheme: string | null = null;
+  try {
+    const raw = localStorage.getItem('theme-storage');
+    if (raw) storedTheme = JSON.parse(raw)?.state?.theme ?? null;
+  } catch {
+    // Unparseable or unavailable storage: fall through to the dark default.
+  }
+  const isDark = storedTheme !== 'light';
+  document.documentElement.classList.toggle('dark', isDark);
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+}
 
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

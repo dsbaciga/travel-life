@@ -320,7 +320,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
       <div className="p-4">
         {!hasAnySuggestions ? (
           <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-gray-500 mb-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-gray-400 mb-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
