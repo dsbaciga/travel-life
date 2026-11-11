@@ -43,59 +43,68 @@ export default function TravelStatsWidget() {
       const tripsResponse = await tripService.getTrips();
       const trips = tripsResponse.trips;
 
-      // Count photos across all trips
-      let photoCount = 0;
-      for (const trip of trips) {
-        try {
-          const photosResponse = await photoService.getPhotosByTrip(trip.id, { skip: 0, take: 1 });
-          // `?? 0`: the catch below only covers a rejected request. A resolved
-          // response missing `total` would make photoCount NaN and the tile
-          // would render the literal string "NaN" instead of a number.
-          photoCount += photosResponse.total ?? 0;
-        } catch {
-          // Skip if fails
-        }
-      }
+      // Every per-trip request below is independent, so they all go out at once
+      // rather than one await at a time: this used to be three sequential loops
+      // (3 x trip count round-trips in series) and the dashboard waited for all
+      // of them before painting.
+      //
+      // `orEmpty` keeps the old per-request tolerance — a single trip's failed
+      // request contributes nothing instead of rejecting the whole batch, which
+      // is what the per-iteration try/catch did before.
+      const orEmpty = <T,>(request: Promise<T>, fallback: T): Promise<T> =>
+        request.catch(() => fallback);
 
-      // Count locations across all trips
+      const [photoTotals, locationsPerTrip, transportationPerTrip] = await Promise.all([
+        Promise.all(
+          trips.map((trip) =>
+            orEmpty(
+              photoService
+                .getPhotosByTrip(trip.id, { skip: 0, take: 1 })
+                // `?? 0`: a resolved response missing `total` would make the
+                // running total NaN and the tile would render the literal
+                // string "NaN" instead of a number.
+                .then((response) => response.total ?? 0),
+              0
+            )
+          )
+        ),
+        Promise.all(
+          trips.map((trip) => orEmpty(locationService.getLocationsByTrip(trip.id), []))
+        ),
+        Promise.all(
+          trips.map((trip) => orEmpty(transportationService.getTransportationByTrip(trip.id), []))
+        ),
+      ]);
+
+      const photoCount = photoTotals.reduce((sum, total) => sum + total, 0);
+
       let locationCount = 0;
       const uniqueCountries = new Set<string>();
-      for (const trip of trips) {
-        try {
-          const locations = await locationService.getLocationsByTrip(trip.id);
-          locationCount += locations.length;
+      for (const locations of locationsPerTrip) {
+        locationCount += locations.length;
 
-          // Extract countries from location addresses
-          locations.forEach(location => {
-            if (location.address) {
-              // Try to get country from address (typically last part after comma)
-              const parts = location.address.split(',').map(p => p.trim());
-              if (parts.length > 0) {
-                const potentialCountry = parts[parts.length - 1];
-                if (potentialCountry.length > 0 && potentialCountry.length < 50) {
-                  uniqueCountries.add(potentialCountry);
-                }
+        // Extract countries from location addresses
+        locations.forEach((location) => {
+          if (location.address) {
+            // Try to get country from address (typically last part after comma)
+            const parts = location.address.split(',').map((p) => p.trim());
+            if (parts.length > 0) {
+              const potentialCountry = parts[parts.length - 1];
+              if (potentialCountry.length > 0 && potentialCountry.length < 50) {
+                uniqueCountries.add(potentialCountry);
               }
             }
-          });
-        } catch {
-          // Skip if fails
-        }
+          }
+        });
       }
 
-      // Calculate total distance traveled across all trips
       let totalDistanceKm = 0;
-      for (const trip of trips) {
-        try {
-          const transportation = await transportationService.getTransportationByTrip(trip.id);
-          transportation.forEach(trans => {
-            if (trans.calculatedDistance) {
-              totalDistanceKm += Number(trans.calculatedDistance);
-            }
-          });
-        } catch {
-          // Skip if fails
-        }
+      for (const transportation of transportationPerTrip) {
+        transportation.forEach((trans) => {
+          if (trans.calculatedDistance) {
+            totalDistanceKm += Number(trans.calculatedDistance);
+          }
+        });
       }
 
       setStats({

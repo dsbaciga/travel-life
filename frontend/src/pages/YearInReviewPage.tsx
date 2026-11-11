@@ -17,7 +17,7 @@ import EmptyState from '../components/EmptyState';
 import PlacesVisitedMapContainer from '../components/PlacesVisitedMapContainer';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils'; // Runs the leaflet icon setup
-import { formatDateOnly } from '../utils/timezone';
+import { formatTripDates } from '../utils/dateFormat';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -29,15 +29,6 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
   Completed: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
   Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
 };
-
-function formatTripDates(startDate: string | null, endDate: string | null): string {
-  // Trip dates are calendar dates — see formatDateOnly for why these stay UTC.
-  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-  const start = formatDateOnly(startDate, options, 'en-US');
-  const end = formatDateOnly(endDate, options, 'en-US');
-  if (start && end) return `${start} – ${end}`;
-  return start ?? end ?? '';
-}
 
 interface StatCardProps {
   label: string;

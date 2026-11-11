@@ -4,8 +4,9 @@ An audit of the Travel Life frontend for visual and UX quality, carried out agai
 app at desktop (1440×900) and mobile (375×812) widths in both light and dark mode.
 
 Findings are grouped **Broken** → **Confusing** → **Polish**. Each names the file and the
-specific element. Items marked **Fixed** were applied in the same change as this document;
-everything else is a recommendation left for a decision.
+specific element. Items marked **Fixed** have been applied — findings 1-14 alongside the original
+audit, findings 17-19 in a follow-up change; everything else is a recommendation left for a
+decision.
 
 ## How this was audited
 
@@ -238,10 +239,10 @@ weight on the card.
 omits them entirely and reads better for it), or demote Delete to a text button and keep the
 red fill for the confirmation dialog only.
 
-### 17. Date ranges omit the year inconsistently
+### 17. Date ranges omit the year inconsistently — Fixed
 
-**Files:** `frontend/src/components/widgets/UpcomingTripsWidget.tsx:68` versus
-`frontend/src/components/TripCard.tsx`
+**Files:** `frontend/src/components/widgets/UpcomingTripsWidget.tsx:68` and
+`frontend/src/pages/YearInReviewPage.tsx:33` versus `frontend/src/components/TripCard.tsx`
 
 `UpcomingTripsWidget` formats with `{ month: 'short', day: 'numeric' }` and so never emits a
 year: it rendered a January 2027 trip as "Jan 10 - Jan 24", while the trips list rendered the
@@ -249,10 +250,25 @@ same trip as "Jan 10-24, 2027". For an app whose whole
 subject is dated trips spanning multiple years, dropping the year in one place and not the other
 is actively misleading.
 
-**Recommendation:** route all trip date-range formatting through one shared helper that includes
-the year whenever the range falls outside the current year.
+**Fix applied:** `UpcomingTripsWidget`, `DashboardHero`, the calendar's `TripPopup` and
+`YearInReviewPage` each carried their own date-range formatter; all four now call
+`formatTripDates` from `utils/dateFormat.ts`, the helper `TripCard`, `TripListView`,
+`FloatingTripHeader`, `KanbanCard` and `TripHeroHeader` already used. It always emits the year
+and follows the documented "Mar 15-22, 2024" form.
 
-### 18. The trip dashboard contradicts itself
+`YearInReviewPage` was a second instance of the same defect, fixed after the first pass. Its
+local `formatTripDates` routed through `formatDateOnly` like the two kept below, but formatted
+with `{ month: 'short', day: 'numeric' }` and so dropped the year. That is the most misleading
+place in the app for it: on a page framed as a single calendar year, a trip crossing the
+boundary rendered as "Dec 30 - Jan 5" with nothing to say the end date falls in the next year.
+Going through `formatDateOnly` is not on its own evidence that a formatter is correct - it fixes
+which calendar day is shown, not whether the year is shown at all.
+
+`OnThisDayWidget` and `PrintableItinerary` keep their own formatters deliberately: both route
+through `formatDateOnly` for the date-only/UTC reason documented in `CLAUDE.md`, and both already
+show the year.
+
+### 18. The trip dashboard contradicts itself — Fixed
 
 **File:** `frontend/src/components/trip-dashboard/` (Trip Status and completion cards)
 
@@ -260,10 +276,24 @@ A trip whose status is "Planning" but whose end date has passed showed a "Planni
 Set dates to track countdown" badge directly beside a "Trip Complete!" headline and a "Trip
 Complete / Another adventure for the books!" card, in the same viewport.
 
-**Recommendation:** decide whether these cards key off the stored status or off the dates, and
-make both use the same source.
+The root cause was `isTripCompleted()` in `utils/tripDashboardUtils.ts`, which returned true
+whenever the end date was in the past regardless of status. `NextUpCard` and
+`CountdownTimerWidget` read that; `TripDayIndicator` read the stored status instead.
 
-### 19. Travel Stats issues three requests per trip, in series
+**Fix applied:** one rule now governs both — **completion is declared by the stored status, never
+inferred from the dates.** `isTripCompleted()` tests the status alone. When the dates have run out
+but the status has not caught up, that is its own state (`dates_passed`) which says so plainly
+("These dates have passed / Still marked as Planning") rather than guessing in either direction.
+`TripDayIndicator` no longer tells the user to "set dates to track countdown" for a trip whose
+dates are set. Cancelled trips likewise get their own state instead of being read off the
+calendar.
+
+`hasEndDatePassed()` and `hasTripStarted()` also now parse these `@db.Date` values to local
+midnight; `new Date('2026-01-10')` lands on UTC midnight and reads back as the previous day west
+of UTC, which could flip the phase a day early. Covered by
+`frontend/src/utils/__tests__/tripPhaseReconciliation.test.ts` (20 cases).
+
+### 19. Travel Stats issues three requests per trip, in series — Fixed
 
 **File:** `frontend/src/components/widgets/TravelStatsWidget.tsx`
 
@@ -272,8 +302,13 @@ location request, then transportation — sequentially. With six fixture trips t
 round-trips before the widget paints; the cost grows linearly with the trip count, on the
 dashboard, on every visit.
 
-**Recommendation:** add a single aggregate stats endpoint, or at minimum `Promise.all` the
-per-trip requests.
+**Fix applied:** all three request sets now go out together via `Promise.all`, so the widget
+waits one round-trip deep instead of `3 x trip count`. Per-request tolerance is preserved — an
+`orEmpty` wrapper makes a single failed request contribute nothing rather than rejecting the
+batch, which is what the per-iteration `try/catch` did before.
+
+A single aggregate endpoint would still be better and is left as a recommendation; this removes
+the serial wait without a backend change.
 
 ### 20. The error state is a thin banner on an empty page
 

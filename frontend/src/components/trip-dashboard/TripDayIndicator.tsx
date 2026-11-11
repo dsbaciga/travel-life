@@ -24,12 +24,36 @@ function parseDateString(dateStr: string): Date {
 }
 
 /**
+ * Copy for a trip whose start date has passed while its status still reads
+ * Planning or Planned.
+ *
+ * The dashboard does not promote such a trip to "complete" by itself — that is
+ * the stored status's job — so this states the discrepancy instead of guessing
+ * which of the two the user meant.
+ */
+function pastDatedIndicator(
+  end: Date | null,
+  now: Date,
+  statusWord: 'planning' | 'planned'
+): { label: string; subLabel?: string; icon?: 'countdown' } {
+  const subLabel = `Still marked as ${statusWord}`;
+
+  if (end && now > end) {
+    return { label: 'These dates have passed', subLabel, icon: 'countdown' };
+  }
+
+  return { label: 'These dates are underway', subLabel, icon: 'countdown' };
+}
+
+/**
  * Displays trip day/countdown information based on trip status.
  *
  * Status Display Logic:
  * - Dream: "Dream Trip"
- * - Planning: "X days until trip" (if start date set) or "Set dates to begin"
- * - Planned: "X days until trip"
+ * - Planning: "X days until trip", or "Set dates to track countdown" with no
+ *   dates, or "These dates have passed / are underway" once the start date is
+ *   behind us and the status has not caught up
+ * - Planned: as Planning, with ready-to-go copy
  * - In Progress: "Day X of Y" with progress indicator
  * - Completed: "Completed X days ago"
  * - Cancelled: "Cancelled"
@@ -78,6 +102,11 @@ export default function TripDayIndicator({
               icon: 'countdown',
             };
           }
+          // Start date is behind us while the status still says Planning.
+          // Falling through to the no-dates copy below told the user to "set
+          // dates to track countdown" for a trip whose dates were already set,
+          // right beside a sibling card reading "Trip Complete!".
+          return pastDatedIndicator(end, now, 'planning');
         }
         return {
           label: 'Planning in progress',
@@ -101,6 +130,7 @@ export default function TripDayIndicator({
               icon: 'countdown',
             };
           }
+          return pastDatedIndicator(end, now, 'planned');
         }
         return {
           label: 'Trip planned',

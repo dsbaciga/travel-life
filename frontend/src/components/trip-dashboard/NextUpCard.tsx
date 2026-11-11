@@ -179,6 +179,64 @@ function CompletedTripState({
 }
 
 /**
+ * Shown when the trip's dates have passed but its status still says otherwise.
+ *
+ * The dashboard deliberately does not decide the trip is finished on the user's
+ * behalf — it reports the mismatch and leaves the call to them.
+ */
+function DatesPassedState({
+  tripStatus,
+  activitiesCount,
+  photosCount,
+  onViewMemories,
+  onViewTimeline,
+}: {
+  tripStatus: TripStatusType;
+  activitiesCount: number;
+  photosCount: number;
+  onViewMemories: () => void;
+  onViewTimeline: () => void;
+}) {
+  return (
+    <div className="text-center py-6">
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+        <svg
+          className="w-8 h-8 text-amber-600 dark:text-amber-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      </div>
+      <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
+        These dates have passed
+      </h4>
+      <p className="text-sm text-slate dark:text-warm-gray/70 mb-4">
+        This trip is still marked as <span className="font-medium">{tripStatus}</span>.
+        {activitiesCount > 0 || photosCount > 0
+          ? ` ${activitiesCount} activities and ${photosCount} photos captured.`
+          : ''}
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        <button onClick={onViewMemories} className="btn-secondary">
+          View Memories
+        </button>
+        <button onClick={onViewTimeline} className="btn-secondary">
+          View Timeline
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Main NextUpCard component
  */
 export default function NextUpCard({
@@ -234,6 +292,10 @@ export default function NextUpCard({
         return 'Your Dream';
       case 'completed':
         return 'Trip Complete';
+      case 'dates_passed':
+        return 'Trip Status';
+      case 'cancelled':
+        return 'Trip Cancelled';
       case 'in_progress':
         return tripStatus === TripStatus.IN_PROGRESS ? 'Up Next' : 'Next Up';
       case 'upcoming':
@@ -251,7 +313,11 @@ export default function NextUpCard({
             <h3 className="font-semibold text-lg text-charcoal dark:text-warm-gray">
               {getHeaderText()}
             </h3>
-            {hasScheduledEvents && displayState !== 'completed' && displayState !== 'no_events' && (
+            {hasScheduledEvents &&
+              displayState !== 'completed' &&
+              displayState !== 'dates_passed' &&
+              displayState !== 'cancelled' &&
+              displayState !== 'no_events' && (
               <button
                 onClick={() => onNavigateToTab('timeline')}
                 className="text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 transition-colors sm:hidden"
@@ -268,7 +334,11 @@ export default function NextUpCard({
             endDate={tripEndDate}
           />
         </div>
-        {hasScheduledEvents && displayState !== 'completed' && displayState !== 'no_events' && (
+        {hasScheduledEvents &&
+          displayState !== 'completed' &&
+          displayState !== 'dates_passed' &&
+          displayState !== 'cancelled' &&
+          displayState !== 'no_events' && (
           <button
             onClick={() => onNavigateToTab('timeline')}
             className="hidden sm:flex text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium items-center gap-1 transition-colors shrink-0"
@@ -294,6 +364,43 @@ export default function NextUpCard({
 
       {displayState === 'completed' && (
         <CompletedTripState
+          activitiesCount={activitiesCount}
+          photosCount={photosCount}
+          onViewMemories={() => onNavigateToTab('photos')}
+          onViewTimeline={() => onNavigateToTab('timeline')}
+        />
+      )}
+
+      {displayState === 'cancelled' && (
+        <div className="text-center py-6">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate/10 dark:bg-navy-700 flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-slate dark:text-warm-gray/50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </div>
+          <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
+            This trip was cancelled
+          </h4>
+          <p className="text-sm text-slate dark:text-warm-gray/70">
+            Its plans are kept here if you want to revive them.
+          </p>
+        </div>
+      )}
+
+      {displayState === 'dates_passed' && (
+        <DatesPassedState
+          tripStatus={tripStatus}
           activitiesCount={activitiesCount}
           photosCount={photosCount}
           onViewMemories={() => onNavigateToTab('photos')}

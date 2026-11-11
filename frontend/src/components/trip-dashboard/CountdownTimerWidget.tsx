@@ -356,6 +356,31 @@ function TripCompletedDisplay() {
 }
 
 /**
+ * Dates-have-passed display
+ *
+ * For a trip whose end date is behind us but whose status still says Planning,
+ * Planned or In Progress. The widget reports that plainly rather than declaring
+ * the trip complete on the user's behalf.
+ */
+function DatesPassedDisplay({ tripStatus }: { tripStatus: TripStatusType }) {
+  return (
+    <div className="text-center py-4">
+      {/* Icon */}
+      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+        <ClockIcon className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+      </div>
+
+      <h4 className="text-2xl font-bold font-display text-charcoal dark:text-warm-gray mb-2">
+        These dates have passed
+      </h4>
+      <p className="text-slate dark:text-warm-gray/70">
+        Still marked as <span className="font-medium">{tripStatus}</span>.
+      </p>
+    </div>
+  );
+}
+
+/**
  * No dates set display
  */
 function NoDatesDisplay() {
@@ -488,9 +513,13 @@ export default function CountdownTimerWidget({
       if (tripStatus === TripStatus.IN_PROGRESS) {
         return 'in_progress';
       }
-      // Trip started but not marked as in progress (might be completed or just started)
+      // The dates are over but the status has not caught up. This used to
+      // report 'completed', which announced "Trip Complete" next to
+      // TripDayIndicator's "Planning in progress" for the very same trip.
+      // Completion is the stored status's call (handled above), so say what is
+      // actually true instead: the dates have passed.
       if (endDate && now > endDate) {
-        return 'completed';
+        return 'dates_passed';
       }
       return 'in_progress';
     }
@@ -579,6 +608,8 @@ export default function CountdownTimerWidget({
       {displayMode === 'no_dates' && <NoDatesDisplay />}
 
       {displayMode === 'completed' && <TripCompletedDisplay />}
+
+      {displayMode === 'dates_passed' && <DatesPassedDisplay tripStatus={tripStatus} />}
 
       {displayMode === 'in_progress' && tripProgress && (
         <TripInProgressDisplay progress={tripProgress} />

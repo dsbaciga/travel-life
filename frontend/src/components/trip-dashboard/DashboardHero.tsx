@@ -1,5 +1,6 @@
 import { TripStatus, type Trip } from '../../types/trip';
 import TripDayIndicator from './TripDayIndicator';
+import { formatTripDates } from '../../utils/dateFormat';
 import { stripMarkdown } from '../../utils/stripMarkdown';
 
 interface DashboardHeroProps {
@@ -23,46 +24,8 @@ export default function DashboardHero({
   coverPhotoUrl,
   className = '',
 }: DashboardHeroProps) {
-  const formatDateRange = (startDate: string | null, endDate: string | null): string => {
-    if (!startDate && !endDate) return 'Dates not set';
-
-    // Parse date string without UTC interpretation issues
-    const parseDate = (dateStr: string): Date => {
-      const datePart = dateStr.split('T')[0];
-      const [year, month, day] = datePart.split('-').map(Number);
-      return new Date(year, month - 1, day);
-    };
-
-    const formatDate = (date: string): string => {
-      return parseDate(date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    };
-
-    if (startDate && endDate) {
-      const start = parseDate(startDate);
-      const end = parseDate(endDate);
-
-      // Same year - don't repeat year
-      if (start.getFullYear() === end.getFullYear()) {
-        const startFormatted = start.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        });
-        const endFormatted = formatDate(endDate);
-        return `${startFormatted} - ${endFormatted}`;
-      }
-
-      return `${formatDate(startDate)} - ${formatDate(endDate)}`;
-    }
-
-    if (startDate) return `Starting ${formatDate(startDate)}`;
-    if (endDate) return `Ending ${formatDate(endDate)}`;
-
-    return 'Dates not set';
-  };
+  const formatDateRange = (startDate: string | null, endDate: string | null): string =>
+    formatTripDates(startDate, endDate);
 
   const getStatusBadgeClasses = (status: string): string => {
     switch (status) {
