@@ -212,7 +212,10 @@ const Navbar = memo(function Navbar() {
           {/* Right Side: User Menu + Mobile Toggle */}
           <div className="flex items-center space-x-2">
             {/* User Menu (Desktop) */}
-            <div className="hidden sm:block relative z-[100]" ref={dropdownRef}>
+            {/* Must stay below the mobile overlay (z-[60]) and drawer (z-[70]); they
+                share this nav's stacking context, so a higher value here would
+                draw the dropdown on top of the open side menu. */}
+            <div className="hidden sm:block relative z-50" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setShowDropdown(!showDropdown)}
@@ -242,7 +245,7 @@ const Navbar = memo(function Navbar() {
               </button>
 
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-navy-800 rounded-xl shadow-xl py-2 z-[100] border-2 border-primary-500/10 dark:border-gold/20 backdrop-blur-sm">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-navy-800 rounded-xl shadow-xl py-2 z-50 border-2 border-primary-500/10 dark:border-gold/20 backdrop-blur-sm">
                   <Link
                     to="/settings"
                     className="flex items-center justify-between px-4 py-2.5 text-sm font-body text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-700 hover:text-primary-600 dark:hover:text-gold transition-colors"

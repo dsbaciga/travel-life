@@ -521,16 +521,19 @@
 .stagger-4 { animation-delay: 0.4s; }
 .stagger-5 { animation-delay: 0.5s; }
 
-/* Focus visible styles for accessibility */
-*:focus-visible {
+/* Focus visible styles for accessibility.
+   `.input` draws its own border + ring on :focus, so it is excluded here;
+   otherwise the field gets an outline and an offset ring on top of its own
+   highlight (a "double highlight"). */
+*:focus-visible:not(.input) {
   @apply outline-2 outline-offset-2 outline-primary-500 dark:outline-gold;
 }
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+input:focus-visible:not(.input),
+select:focus-visible:not(.input),
+textarea:focus-visible:not(.input) {
   @apply ring-2 ring-primary-500/50 dark:ring-gold/50 ring-offset-2 ring-offset-white dark:ring-offset-navy-900;
 }
 
