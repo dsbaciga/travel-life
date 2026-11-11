@@ -6,7 +6,27 @@
  * cards and slate text. Amber is the accent, kept for actions and highlights
  * rather than spread across every surface. Dark mode is navy with gold.
  */
-import { useColorScheme } from 'react-native';
+import { Appearance, useColorScheme } from 'react-native';
+import { create } from 'zustand';
+
+import type { SqlDriver } from '../db/driver';
+import { kvGet, kvSet } from '../db/repository';
+
+let dbProvider: (() => Promise<SqlDriver>) | null = null;
+
+export function configureThemeDb(provider: () => Promise<SqlDriver>): void {
+  dbProvider = provider;
+}
+
+async function getThemeDb(): Promise<SqlDriver | null> {
+  if (dbProvider) return dbProvider();
+  try {
+    const { getDb } = await import('./db');
+    return await getDb();
+  } catch {
+    return null;
+  }
+}
 
 export interface Palette {
   background: string;
@@ -97,10 +117,69 @@ export const radius = { sm: 8, md: 12, lg: 16, pill: 999 } as const;
 /** Minimum touch target, per the style guide. */
 export const TOUCH_TARGET = 44;
 
+export type ThemePreference = 'system' | 'light' | 'dark';
+
+interface ThemeStore {
+  preference: ThemePreference;
+  hydrated: boolean;
+  setPreference: (preference: ThemePreference) => Promise<void>;
+  hydrate: () => Promise<void>;
+}
+
+export const useThemeStore = create<ThemeStore>((set, get) => ({
+  preference: 'system',
+  hydrated: false,
+  async hydrate() {
+    if (get().hydrated) return;
+    try {
+      const db = await getThemeDb();
+      if (db) {
+        const stored = await kvGet<ThemePreference>(db, 'themePreference');
+        if (stored === 'light' || stored === 'dark' || stored === 'system') {
+          set({ preference: stored, hydrated: true });
+          if (typeof Appearance?.setColorScheme === 'function') {
+            Appearance.setColorScheme(stored === 'system' ? 'unspecified' : stored);
+          }
+          return;
+        }
+      }
+    } catch {
+      // In tests or before DB is ready, fallback gracefully.
+    }
+    set({ hydrated: true });
+  },
+  async setPreference(preference: ThemePreference) {
+    set({ preference });
+    try {
+      const db = await getThemeDb();
+      if (db) {
+        await kvSet(db, 'themePreference', preference);
+      }
+    } catch {
+      // Non-fatal if DB write fails.
+    }
+    try {
+      if (typeof Appearance?.setColorScheme === 'function') {
+        Appearance.setColorScheme(preference === 'system' ? 'unspecified' : preference);
+      }
+    } catch {
+      // Non-fatal in test or headless environments.
+    }
+  },
+}));
+
+export function useResolvedColorScheme(): 'light' | 'dark' {
+  const system = useColorScheme();
+  const preference = useThemeStore((state) => state.preference);
+  if (preference === 'dark') return 'dark';
+  if (preference === 'light') return 'light';
+  return system === 'dark' ? 'dark' : 'light';
+}
+
 export function usePalette(): Palette {
-  return useColorScheme() === 'dark' ? darkPalette : lightPalette;
+  return useResolvedColorScheme() === 'dark' ? darkPalette : lightPalette;
 }
 
 export function useTypeColors(): (typeof typeColors)['light' | 'dark'] {
-  return useColorScheme() === 'dark' ? typeColors.dark : typeColors.light;
+  return useResolvedColorScheme() === 'dark' ? typeColors.dark : typeColors.light;
 }

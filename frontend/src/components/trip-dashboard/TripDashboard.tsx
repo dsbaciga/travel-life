@@ -236,7 +236,6 @@ export default function TripDashboard({
               tripStartDate={trip.startDate}
               tripEndDate={trip.endDate}
               tripStatus={trip.status}
-              tripTimezone={tripTimezone}
             />
           )}
 

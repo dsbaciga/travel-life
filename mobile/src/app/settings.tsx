@@ -3,18 +3,20 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Switch } from 'react-native';
 
-import { AppText, Banner, Button, Card, Row, Screen } from '@/components/ui';
+import { AppText, Banner, Button, Card, Chip, Row, Screen } from '@/components/ui';
 import { kvSet } from '@/db/repository';
 import { getDb } from '@/lib/db';
 import { useActiveTrip, useKv } from '@/lib/hooks';
 import { useSession } from '@/lib/session';
 import { notifyLocalChange, useSync } from '@/lib/sync';
-import { usePalette } from '@/lib/theme';
+import { spacing, usePalette, useThemeStore } from '@/lib/theme';
 import { isTracking, startTracking, stopTracking } from '@/tasks/location';
 import { unregisterPush } from '@/tasks/notifications';
 
 export default function SettingsScreen() {
   const palette = usePalette();
+  const themePreference = useThemeStore((state) => state.preference);
+  const setThemePreference = useThemeStore((state) => state.setPreference);
   const session = useSession((state) => state.session);
   const counts = useSync((state) => state.counts);
   const { data: trip } = useActiveTrip();
@@ -100,6 +102,23 @@ export default function SettingsScreen() {
         <AppText variant="caption" muted>
           Times use {session?.user.timezone ?? 'this phone’s timezone'} when a trip or item has none of its own.
         </AppText>
+      </Card>
+
+      <Card>
+        <AppText variant="heading">Appearance</AppText>
+        <AppText variant="caption" muted>
+          Choose how Travel Life looks on your phone.
+        </AppText>
+        <Row style={{ gap: spacing.sm, marginTop: spacing.xs }}>
+          {(['system', 'light', 'dark'] as const).map((mode) => (
+            <Chip
+              key={mode}
+              label={mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark'}
+              selected={themePreference === mode}
+              onPress={() => void setThemePreference(mode)}
+            />
+          ))}
+        </Row>
       </Card>
 
       <Card>

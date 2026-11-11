@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { ShareIntentProvider } from 'expo-share-intent';
 import { useEffect } from 'react';
-import { AppState, useColorScheme } from 'react-native';
+import { AppState } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -15,6 +15,7 @@ import ShareIntentRouter from '@/components/ShareIntentRouter';
 import { setIdFactory } from '@/domain/mutations';
 import { useSession } from '@/lib/session';
 import { syncNow } from '@/lib/sync';
+import { useResolvedColorScheme, useThemeStore } from '@/lib/theme';
 import { registerForPush } from '@/tasks/notifications';
 // Side-effect imports: background tasks and the widget handler must be defined
 // at module load, before the OS can deliver an event to a headless launch.
@@ -38,12 +39,13 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useResolvedColorScheme();
   const hydrated = useSession((state) => state.hydrated);
   const signedIn = useSession((state) => state.session !== null);
 
   useEffect(() => {
     void useSession.getState().hydrate();
+    void useThemeStore.getState().hydrate();
   }, []);
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export default function RootLayout() {
               </Stack>
               {signedIn ? <ShareIntentRouter /> : null}
               <ActionSheetHost />
-              <StatusBar style="auto" />
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             </ThemeProvider>
           </ShareIntentProvider>
         </QueryClientProvider>
