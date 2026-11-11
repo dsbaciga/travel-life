@@ -1,8 +1,21 @@
 import webpush, { WebPushError } from 'web-push';
+import axios from 'axios';
 import prisma from '../config/database';
 import config from '../config';
 import logger from '../config/logger';
 import { resolveTimezone } from './_shared/timezoneResolution';
+import type { RegisterMobilePushTokenInput } from '../types/mobile.types';
+
+/** Expo's push gateway, which fans out to FCM (Android) and APNs (iOS). */
+const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+/** Expo accepts at most 100 messages per request. */
+const EXPO_PUSH_CHUNK = 100;
+
+interface ExpoPushTicket {
+  status?: string;
+  details?: { error?: string };
+}
 
 export interface PushNotificationPayload {
   title: string;
@@ -20,11 +33,16 @@ export interface PushSubscriptionInput {
 }
 
 /**
- * Web Push notification service.
+ * Push notification service: Web Push for browsers, Expo push for the native
+ * companion app.
  *
- * Requires VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT (mailto:)
- * environment variables. When unset the feature is disabled gracefully:
- * isConfigured() returns false and sendToUser() is a no-op.
+ * Web Push requires VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT
+ * (mailto:) environment variables. When unset the web channel is disabled
+ * gracefully: isConfigured() returns false and browsers receive nothing.
+ *
+ * The native channel needs no server configuration — a phone that registered
+ * an Expo push token is reachable through Expo's gateway — so sendToUser()
+ * delivers to mobile tokens whether or not VAPID is set.
  *
  * VAPID details are applied lazily on first send so that importing this
  * module never throws when the env vars are missing.
@@ -106,16 +124,107 @@ class PushNotificationService {
   }
 
   /**
-   * Send a notification to all of a user's subscriptions.
+   * Register (or refresh) a native push token. Upserts by token: reinstalling
+   * the app or signing in as someone else on the same phone moves the token to
+   * the new user instead of leaving the previous account receiving alerts.
+   */
+  async saveMobileToken(
+    userId: number,
+    data: RegisterMobilePushTokenInput
+  ): Promise<{ id: number; platform: string }> {
+    const record = await prisma.mobilePushToken.upsert({
+      where: { token: data.token },
+      create: {
+        userId,
+        token: data.token,
+        platform: data.platform,
+        deviceName: data.deviceName ?? null,
+      },
+      update: {
+        userId,
+        platform: data.platform,
+        deviceName: data.deviceName ?? null,
+        lastSeenAt: new Date(),
+      },
+    });
+    return { id: record.id, platform: record.platform };
+  }
+
+  /**
+   * Remove a native push token (scoped to the requesting user), e.g. on logout.
+   */
+  async removeMobileToken(userId: number, data: { token: string }): Promise<{ removed: number }> {
+    const result = await prisma.mobilePushToken.deleteMany({ where: { userId, token: data.token } });
+    return { removed: result.count };
+  }
+
+  /**
+   * Deliver to a user's native tokens through the Expo push gateway.
+   * Tokens the gateway reports as `DeviceNotRegistered` (app uninstalled) are
+   * pruned. Returns the number of accepted messages.
+   */
+  private async sendToMobileTokens(
+    userId: number,
+    payload: PushNotificationPayload
+  ): Promise<number> {
+    const tokens = await prisma.mobilePushToken.findMany({ where: { userId } });
+    if (tokens.length === 0) {
+      return 0;
+    }
+
+    let sent = 0;
+    for (let i = 0; i < tokens.length; i += EXPO_PUSH_CHUNK) {
+      const chunk = tokens.slice(i, i + EXPO_PUSH_CHUNK);
+      const messages = chunk.map((t) => ({
+        to: t.token,
+        title: payload.title,
+        body: payload.body,
+        sound: 'default',
+        // The app deep-links on `url`; `tag` lets it collapse repeats.
+        data: { url: payload.url ?? '/', tag: payload.tag },
+      }));
+
+      try {
+        const response = await axios.post(EXPO_PUSH_URL, messages, {
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          timeout: 15000,
+        });
+        const tickets: unknown = response.data?.data;
+        const list: ExpoPushTicket[] = Array.isArray(tickets) ? tickets : [];
+        for (let j = 0; j < chunk.length; j += 1) {
+          const ticket = list[j];
+          if (ticket?.status === 'ok') {
+            sent += 1;
+          } else if (ticket?.details?.error === 'DeviceNotRegistered') {
+            await prisma.mobilePushToken
+              .delete({ where: { id: chunk[j].id } })
+              .catch(() => undefined);
+            logger.info(`Pruned unregistered mobile push token ${chunk[j].id} for user ${userId}`);
+          }
+        }
+      } catch (error) {
+        logger.warn(`Failed to send mobile push notifications for user ${userId}`, {
+          error: error instanceof Error ? error.message : error,
+        });
+      }
+    }
+    return sent;
+  }
+
+  /**
+   * Send a notification to every destination a user has: browser
+   * subscriptions (when VAPID is configured) and native app tokens.
    * Subscriptions rejected with 404/410 (expired/unsubscribed) are pruned.
-   * Returns the number of successful sends.
+   * Returns the number of successful sends across both channels.
    */
   async sendToUser(
     userId: number,
     payload: PushNotificationPayload
   ): Promise<number> {
+    const mobileSent = await this.sendToMobileTokens(userId, payload);
+
     if (!this.ensureVapid()) {
-      return 0;
+      return mobileSent;
     }
 
     const subscriptions = await prisma.pushSubscription.findMany({
@@ -123,7 +232,7 @@ class PushNotificationService {
     });
 
     if (subscriptions.length === 0) {
-      return 0;
+      return mobileSent;
     }
 
     const body = JSON.stringify({
@@ -133,7 +242,7 @@ class PushNotificationService {
       tag: payload.tag,
     });
 
-    let sent = 0;
+    let sent = mobileSent;
     for (const sub of subscriptions) {
       try {
         await webpush.sendNotification(
@@ -168,6 +277,16 @@ class PushNotificationService {
   }
 
   /**
+   * True when a notification could reach anyone: web push is configured, or at
+   * least one native app has registered. Lets the hourly reminder jobs stay
+   * no-ops on installs that use neither.
+   */
+  private async hasAnyDestination(): Promise<boolean> {
+    if (this.isConfigured()) return true;
+    return (await prisma.mobilePushToken.count()) > 0;
+  }
+
+  /**
    * Format "today + dayOffset" as YYYY-MM-DD in the given IANA timezone.
    *
    * Callers pass the trip's zone and then the owner's, so "tomorrow" means
@@ -192,7 +311,7 @@ class PushNotificationService {
    * Deduped in-memory per process (see sentTripReminders limitation above).
    */
   async sendTripStartReminders(): Promise<number> {
-    if (!this.isConfigured()) {
+    if (!(await this.hasAnyDestination())) {
       return 0;
     }
 
@@ -262,7 +381,10 @@ class PushNotificationService {
    * Returns the number of deadlines notified.
    */
   async sendDeadlineReminders(): Promise<number> {
-    if (!this.isConfigured()) {
+    // Must stay a hard early-return: the loop below stamps notifiedAt even when
+    // nothing was delivered, so running it with no channel at all would silently
+    // consume every deadline before anyone could be told about it.
+    if (!(await this.hasAnyDestination())) {
       return 0;
     }
 

@@ -55,7 +55,9 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
 }
 
 /** True when lat/lng are finite and in range. Guards against `0,0` "null island" too. */
-export function isUsableCoordinate(point: Partial<LatLng> | null | undefined): point is LatLng {
+export function isUsableCoordinate(
+  point: { latitude?: number | null; longitude?: number | null } | null | undefined
+): point is LatLng {
   if (!point) return false;
   const { latitude, longitude } = point;
   if (typeof latitude !== 'number' || typeof longitude !== 'number') return false;

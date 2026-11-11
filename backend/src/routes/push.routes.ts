@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
 import { pushController } from '../controllers/push.controller';
+import { mobilePushController } from '../controllers/mobile.controller';
 
 const router = express.Router();
 
@@ -106,5 +107,45 @@ router.delete('/subscribe', authenticate, pushController.unsubscribe);
  *         description: Push notifications not configured on the server
  */
 router.post('/test', authenticate, pushController.sendTest);
+
+/**
+ * @openapi
+ * /api/push/mobile-token:
+ *   post:
+ *     summary: Register the native companion app's Expo push token
+ *     tags: [Push]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, platform]
+ *             properties:
+ *               token: { type: string, example: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]" }
+ *               platform: { type: string, enum: [ios, android] }
+ *               deviceName: { type: string }
+ *     responses:
+ *       201:
+ *         description: Token registered
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Unauthorized
+ *   delete:
+ *     summary: Remove a native push token (on logout)
+ *     tags: [Push]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Number of tokens removed
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/mobile-token', authenticate, mobilePushController.registerToken);
+router.delete('/mobile-token', authenticate, mobilePushController.unregisterToken);
 
 export default router;

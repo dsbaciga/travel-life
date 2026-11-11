@@ -48,6 +48,20 @@ short exempt list rather than a blanket auth-routes exemption:
 
 Everything else — including every other authenticated route — requires the `x-csrf-token` header to match the `csrf-token` cookie on any non-safe method.
 
+**Native clients.** A request that carries an `Authorization: Bearer <token>` header **and no
+`refreshToken` cookie** skips CSRF validation: CSRF abuses credentials a browser attaches on its
+own, and a cross-site page cannot make a browser send an `Authorization` header. Both conditions
+are required, so every browser session (which always has the cookie) is still fully validated.
+`POST /api/auth/mobile/pair` and `POST /api/auth/oidc/mobile-exchange` are also exempt — they are
+unauthenticated exchanges where the single-use token in the body is the credential.
+
+### Native (mobile) clients
+
+Send `X-Client-Platform: mobile` on `/auth/login`, `/auth/register` and `/auth/refresh`. The
+response then includes `refreshToken` in the JSON body and **no cookies are set**; the client
+stores both tokens in the OS keystore and sends its refresh token in the body of `/auth/refresh`
+(and `/auth/logout`). Refresh tokens stay single-use and rotate on every refresh.
+
 ## API Endpoints
 
 ### Authentication (`/api/auth`)
@@ -58,6 +72,10 @@ Everything else — including every other authenticated route — requires the `
 | POST | `/login` | Authenticate user, returns tokens | No |
 | POST | `/refresh` | Refresh access token (reads refresh token cookie) | No |
 | POST | `/silent-refresh` | Restore auth state from httpOnly cookie on page load | No |
+| POST | `/mobile/pairing-token` | Mint a 5-minute, single-use token for the "Pair Mobile App" QR code; returns `{ pairingToken, expiresAt, serverUrl }` | Yes |
+| POST | `/mobile/pair` | Redeem a pairing token (`{ pairingToken }`) for `{ user, accessToken, refreshToken }` | No |
+| GET | `/oidc/login?client=mobile&code_challenge=<sha256 hex>` | Start SSO from the native app; the callback redirects to `travellife://auth/oidc?code=…` | No |
+| POST | `/oidc/mobile-exchange` | Exchange that code plus the verifier (`{ code, codeVerifier }`) for tokens | No |
 | GET | `/me` | Get current authenticated user | Yes |
 | POST | `/logout` | Clear refresh token cookie (works even with an expired token) | No |
 
@@ -374,6 +392,27 @@ Web push via VAPID. Endpoints return `503` when push is not configured on the se
 | POST | `/subscribe` | Register a web push subscription for the current user (upserts by `endpoint`) | Yes |
 | DELETE | `/subscribe` | Remove a web push subscription (`{ endpoint }` in body) | Yes |
 | POST | `/test` | Send a test push notification to the caller's active subscriptions | Yes |
+| POST | `/mobile-token` | Register the companion app's Expo push token (`{ token, platform, deviceName? }`, upserts by token) | Yes |
+| DELETE | `/mobile-token` | Remove a native push token (`{ token }`) | Yes |
+
+Native tokens are delivered through the Expo push gateway and need no VAPID configuration:
+`sendToUser` reaches a user's phones whether or not web push is set up.
+
+### Mobile Companion (`/api/trips/:tripId`)
+
+Endpoints added for the native companion app. All require authentication.
+
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/mobile-sync?since=<ISO instant>` | Every entity of the trip plus its entity-link graph in one response. With `since`, only rows changed after it; `ids` and `linkIds` always list every current row so deletions can be detected. Rows use database column names (`scheduledStart`, not `departureTime`) | view |
+| POST | `/tracks/batch` | Ingest up to 2000 background GPS points (`{ points: [{ latitude, longitude, recordedAt, accuracy?, altitude?, speed? }] }`). Idempotent per `(trip, user, recordedAt)` | edit |
+| GET | `/tracks?date=YYYY-MM-DD&timezone=<IANA>` | The caller's own trail for one day as a GeoJSON `LineString` feature. The day is resolved in `timezone`, else the trip's zone, else the user's | view |
+| POST | `/photos/infer-locations` | Match un-geotagged photos to the caller's trail by `takenAt` and propose `TAKEN_AT` links. Read-only unless `{ apply: true }` | view (edit to apply) |
+| POST | `/expenses/parse-receipt` | Parse OCR text (`{ text, defaultCurrency?, dateOrder?, useLlm? }`) into `{ amount, currency, merchant, date, category, confidence, source }`. Deterministic parsing always runs; an LLM refines it when configured. Saves nothing | edit |
+
+Two existing update schemas gained fields the app writes: `PUT /api/activities/:id` accepts
+`manualOrder`, and `PUT /api/transportation/:id` accepts `actualDepartureTime`,
+`actualArrivalTime`, `status`, `delayMinutes` and `seatNumber`.
 
 ### Search (`/api/search`)
 

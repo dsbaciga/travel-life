@@ -249,6 +249,40 @@ export class AuthService {
     }
   }
 
+  /**
+   * Mint a fresh access/refresh pair for an already-authenticated identity.
+   *
+   * Used when the proof of identity is something other than a password: a
+   * redeemed mobile pairing token or a mobile OIDC exchange code. The caller is
+   * responsible for having verified that proof.
+   *
+   * @param userId - The user to issue tokens for
+   * @throws {AppError} 404 if the user no longer exists
+   */
+  async issueTokensForUser(userId: number): Promise<AuthResponse> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+    const payload = {
+      id: user.id,
+      userId: user.id,
+      email: user.email,
+      passwordVersion: user.passwordVersion ?? 0,
+    };
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        timezone: user.timezone,
+      },
+      accessToken: generateAccessToken(payload),
+      refreshToken: generateRefreshToken(payload),
+    };
+  }
+
   async getCurrentUser(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

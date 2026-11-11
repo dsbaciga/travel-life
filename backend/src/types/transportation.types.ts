@@ -131,6 +131,13 @@ export const updateTransportationSchema = z.object({
   cost: optionalPositiveNumber(),
   currency: optionalCurrencyCode(),
   notes: optionalNotesWithMax(2000),
+  // Day-of-travel reality, logged from the companion app: when the leg really
+  // left/arrived and whether it ran late. Distinct from the scheduled times.
+  actualDepartureTime: optionalDatetime(),
+  actualArrivalTime: optionalDatetime(),
+  status: z.enum(['on_time', 'delayed', 'cancelled']).optional(),
+  delayMinutes: z.number().int().min(0).max(100000).optional().nullable(),
+  seatNumber: optionalStringWithMax(50),
 });
 
 export type CreateTransportationInput = z.infer<typeof createTransportationSchema>;

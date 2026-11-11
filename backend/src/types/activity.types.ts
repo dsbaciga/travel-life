@@ -48,6 +48,9 @@ export const updateActivitySchema = z.object({
   bookingReference: optionalStringWithMax(255),
   notes: optionalNotes(),
   dietaryTags: z.array(z.string()).nullable().optional(),
+  // Position within the day after a drag-to-reorder; null returns the activity
+  // to chronological ordering.
+  manualOrder: z.number().int().min(0).max(100000).optional().nullable(),
 });
 
 export type CreateActivityInput = z.infer<typeof createActivitySchema>;
