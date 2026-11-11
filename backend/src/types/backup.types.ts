@@ -343,7 +343,9 @@ const BackupBookingDeadlineSchema = z.object({
 });
 
 // Food log entry schema within a trip. activityId/locationId reference the OLD ids
-// of records in the same backup; unresolved links are restored as null.
+// of records in the same backup; unresolved links are restored as null. Attached
+// photos reference the OLD ids of photos in the same backup and are only restored
+// when photos are imported.
 const BackupFoodLogEntrySchema = z.object({
   restaurantName: z.string(),
   dish: z.string(),
@@ -352,6 +354,9 @@ const BackupFoodLogEntrySchema = z.object({
   orderAgain: z.boolean().optional(),
   activityId: z.number().nullable().optional(),
   locationId: z.number().nullable().optional(),
+  photos: z
+    .array(z.object({ photoId: z.number(), sortOrder: z.number().int().optional() }))
+    .optional(),
 });
 
 // Journal entry schema within a trip

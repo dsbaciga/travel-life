@@ -10,7 +10,7 @@ import {
 } from '../types/memories.types';
 
 /** Trip statuses that never represent real travel and are excluded from memories. */
-const EXCLUDED_STATUSES = ['Dream', 'Cancelled'];
+const EXCLUDED_STATUSES = ['Dream', 'Planning', 'Cancelled'];
 
 /** Maximum photos returned per "On This Day" year group. */
 const MAX_PHOTOS_PER_YEAR = 8;

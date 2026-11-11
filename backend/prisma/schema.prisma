@@ -18,7 +18,7 @@ model User {
   email                  String   @unique @db.VarChar(255)
   passwordHash           String   @map("password_hash") @db.VarChar(255)
   avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
-  timezone               String?  @default("UTC") @db.VarChar(100)
+  timezone               String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
   activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
   tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
   dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
@@ -453,6 +453,7 @@ model Photo {
   tripBannerPhoto  Trip[]                 @relation("TripBannerPhoto")
   albumCoverPhoto  PhotoAlbum[]           @relation("AlbumCoverPhoto")
   albumAssignments PhotoAlbumAssignment[]
+  foodLogEntries   FoodLogEntryPhoto[]
 
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
@@ -1359,15 +1360,35 @@ model FoodLogEntry {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  activity Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
-  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  trip     Trip                @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activity Activity?           @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  location Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  photos   FoodLogEntryPhoto[]
 
   @@index([tripId])
   @@index([activityId])
   @@index([locationId])
   @@index([rating])
   @@map("food_log_entries")
+}
+
+// Photos attached to a food log entry. A food photo is an ordinary trip Photo
+// (it also shows in the trip gallery); this join only says which entries show it.
+// Deleting either side removes the link, never the other side.
+model FoodLogEntryPhoto {
+  id        Int      @id @default(autoincrement())
+  entryId   Int      @map("entry_id")
+  photoId   Int      @map("photo_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  entry FoodLogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  photo Photo        @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, photoId])
+  @@index([entryId])
+  @@index([photoId])
+  @@map("food_log_entry_photos")
 }
 
 // =============================================================================

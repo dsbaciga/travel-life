@@ -1963,6 +1963,14 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 **Features**:
 - Attach to restaurant-type activities/locations
 - Searchable best-meals view; feeds #107 semantic search later
+- Photos on an entry (up to 12): uploaded as ordinary trip photos and attached through a
+  `food_log_entry_photos` join (migration `20261112000000_add_food_log_entry_photos`).
+  `POST /api/trips/:tripId/food-log/:id/photos` (`{ photoIds }`, photos must belong to the
+  same trip, duplicates ignored) and `DELETE .../photos/:photoId`. Detaching, or deleting
+  the entry, never deletes the photo; deleting the photo drops only the link. Entries are
+  returned with `photos: Photo[]` in display order; backup/restore carry the links through
+  the photo id map (only when photos are imported). Immich-backed photos are not rendered
+  in the food log UI (they need an authenticated fetch)
 
 **Status**: ✅ Shipped (not yet run against a live database). New `FoodLogEntry` table (migration `20260811000000_add_food_log`, rating 1-5 enforced by a CHECK, optional activity/location links with ON DELETE SET NULL, cascade with the trip), trip CRUD at `/api/trips/:tripId/food-log`, cross-trip best-meals search at `/api/food-log` (minRating, orderAgain, q), backup/restore support (links remapped on restore), a Food Log tab on the trip page and a Best Meals page at `/food-log`. Not done: restricting the link picker to dining-category activities, and the semantic-search hookup (#107).
 

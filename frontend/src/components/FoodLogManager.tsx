@@ -1,19 +1,26 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import foodLogService from "../services/foodLog.service";
+import photoService from "../services/photo.service";
 import activityService from "../services/activity.service";
 import locationService from "../services/location.service";
-import { FOOD_RATINGS, type FoodLogEntry } from "../types/foodLog";
+import { FOOD_RATINGS, MAX_FOOD_PHOTOS, type FoodLogEntry } from "../types/foodLog";
 import { groupByRestaurant, ratingStars } from "../utils/foodLog";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
+import FoodLogPhotoStrip from "./FoodLogPhotoStrip";
+import { foodPhotoUrls } from "../utils/foodLogPhotos";
 
 /**
  * FoodLogManager - dishes eaten on a trip with a 1-5 rating, notes and an
  * "order again" flag. An entry can optionally point at one of the trip's
  * activities or locations; the restaurant name is stored on the entry itself,
  * so it survives if that activity or location is later deleted.
+ *
+ * Photos: an entry can carry up to MAX_FOOD_PHOTOS photos. They are uploaded as
+ * ordinary trip photos (so they also appear in the gallery) and attached to the
+ * entry after it is saved. Removing one detaches it; the photo stays in the gallery.
  */
 interface FoodLogManagerProps {
   tripId: number;
@@ -52,6 +59,10 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  // Photo edits are staged until Save so Cancel discards them.
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<number[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ["food-log", "trip", tripId],
@@ -75,6 +86,34 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
   );
   const groups = useMemo(() => groupByRestaurant(entries), [entries]);
 
+  const editingEntry = useMemo(
+    () => (editingId ? entries.find((e) => e.id === editingId) ?? null : null),
+    [entries, editingId]
+  );
+  const keptPhotos = useMemo(
+    () => (editingEntry?.photos ?? []).filter((p) => !removedPhotoIds.includes(p.id)),
+    [editingEntry, removedPhotoIds]
+  );
+  const photoSlotsLeft = MAX_FOOD_PHOTOS - keptPhotos.length - newFiles.length;
+
+  // Object URLs for the not-yet-uploaded files; revoked when the selection changes.
+  const previews = useMemo(
+    () => newFiles.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [newFiles]
+  );
+  useEffect(() => () => previews.forEach((p) => URL.revokeObjectURL(p.url)), [previews]);
+
+  const handlePickFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith("image/"));
+    // Reset so choosing the same file again still fires onChange.
+    e.target.value = "";
+    if (picked.length === 0) return;
+    if (picked.length > photoSlotsLeft) {
+      toast.error(`An entry can have at most ${MAX_FOOD_PHOTOS} photos`);
+    }
+    setNewFiles((prev) => [...prev, ...picked.slice(0, Math.max(photoSlotsLeft, 0))]);
+  };
+
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["food-log"] });
     onUpdate?.();
@@ -84,10 +123,14 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
     setShowForm(false);
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setNewFiles([]);
+    setRemovedPhotoIds([]);
   };
 
   const startEdit = (entry: FoodLogEntry) => {
     setEditingId(entry.id);
+    setNewFiles([]);
+    setRemovedPhotoIds([]);
     setForm({
       link: linkKeyOf(entry),
       restaurantName: entry.restaurantName,
@@ -107,6 +150,38 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
       link: key,
       restaurantName: prev.restaurantName.trim() || !option ? prev.restaurantName : option.name,
     }));
+  };
+
+  /** Applies staged photo removals and uploads; returns how many operations failed. */
+  const syncPhotos = async (entryId: number): Promise<number> => {
+    let failures = 0;
+
+    for (const photoId of removedPhotoIds) {
+      try {
+        await foodLogService.removePhoto(tripId, entryId, photoId);
+      } catch {
+        failures++;
+      }
+    }
+
+    // Upload one at a time: keeps memory and server load bounded for phone-sized batches.
+    const uploadedIds: number[] = [];
+    for (const file of newFiles) {
+      try {
+        const photo = await photoService.uploadPhoto(file, { tripId });
+        uploadedIds.push(photo.id);
+      } catch {
+        failures++;
+      }
+    }
+    if (uploadedIds.length > 0) {
+      try {
+        await foodLogService.attachPhotos(tripId, entryId, uploadedIds);
+      } catch {
+        failures += uploadedIds.length;
+      }
+    }
+    return failures;
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -130,12 +205,20 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
     };
     setIsSaving(true);
     try {
-      if (editingId) {
-        await foodLogService.updateEntry(tripId, editingId, payload);
-        toast.success("Entry updated");
+      const saved = editingId
+        ? await foodLogService.updateEntry(tripId, editingId, payload)
+        : await foodLogService.createEntry(tripId, payload);
+
+      // The entry is saved at this point; a photo problem must not lose it, so
+      // photo failures are reported separately instead of aborting the save.
+      const photoFailures = await syncPhotos(saved.id);
+
+      if (photoFailures > 0) {
+        toast.error(
+          `Saved, but ${photoFailures} photo change${photoFailures === 1 ? "" : "s"} failed. Edit the entry to retry.`
+        );
       } else {
-        await foodLogService.createEntry(tripId, payload);
-        toast.success("Dish logged");
+        toast.success(editingId ? "Entry updated" : "Dish logged");
       }
       closeForm();
       refresh();
@@ -259,6 +342,80 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
             />
           </div>
+          <div>
+            <span className="block text-sm font-medium mb-1" id="food-photos-label">
+              Photos (optional)
+            </span>
+            {(keptPhotos.length > 0 || previews.length > 0) && (
+              <ul className="mb-2 flex flex-wrap gap-2" aria-labelledby="food-photos-label">
+                {keptPhotos.map((photo) => {
+                  const urls = foodPhotoUrls(photo);
+                  return (
+                    <li key={`photo-${photo.id}`} className="relative">
+                      {urls ? (
+                        <img
+                          src={urls.thumb}
+                          alt={photo.caption || "Attached photo"}
+                          className="h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-xs text-gray-500">
+                          Photo
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setRemovedPhotoIds((prev) => [...prev, photo.id])}
+                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                        aria-label="Remove photo"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  );
+                })}
+                {previews.map(({ file, url }) => (
+                  <li key={`new-${file.name}-${file.size}-${file.lastModified}`} className="relative">
+                    <img
+                      src={url}
+                      alt={`New photo ${file.name}`}
+                      className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewFiles((prev) => prev.filter((f) => f !== file))}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              id="food-photos"
+              aria-labelledby="food-photos-label"
+              onChange={handlePickFiles}
+              disabled={photoSlotsLeft <= 0 || isSaving}
+            />
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={photoSlotsLeft <= 0 || isSaving}
+            >
+              {keptPhotos.length + newFiles.length > 0 ? "Add more photos" : "Add photos"}
+            </button>
+            <span className="ml-3 text-xs text-gray-500 dark:text-gray-400">
+              {keptPhotos.length + newFiles.length}/{MAX_FOOD_PHOTOS}
+            </span>
+          </div>
           <div className="flex justify-end gap-3">
             <button type="button" className="btn-secondary" onClick={closeForm} disabled={isSaving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
@@ -305,6 +462,7 @@ export default function FoodLogManager({ tripId, onUpdate }: FoodLogManagerProps
                       {entry.notes && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">{entry.notes}</p>
                       )}
+                      <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
                     </div>
                     <div className="flex shrink-0 gap-3 text-sm">
                       <button type="button" onClick={() => startEdit(entry)} className="text-primary-600 dark:text-gold hover:underline">

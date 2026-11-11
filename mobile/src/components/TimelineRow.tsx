@@ -14,7 +14,7 @@ import type { TimelineItem } from '../domain/timeline';
 import { getDb } from '../lib/db';
 import { notifyLocalChange } from '../lib/sync';
 import { showActionSheet, type SheetAction } from './ActionSheet';
-import { spacing, usePalette } from '../lib/theme';
+import { radius, spacing, usePalette, useTypeColors, type TypeColorKey } from '../lib/theme';
 import { AppText, Card, Chip, Row } from './ui';
 
 interface TimelineRowProps {
@@ -37,6 +37,14 @@ const ICONS: Readonly<Record<TimelineItem['type'], string>> = {
   CUSTOM_ITEM: '📌',
 };
 
+const COLOR_KEYS: Readonly<Record<TimelineItem['type'], TypeColorKey>> = {
+  ACTIVITY: 'ACTIVITY',
+  TRANSPORTATION: 'TRANSPORTATION',
+  LODGING_CHECK_IN: 'LODGING',
+  LODGING_CHECK_OUT: 'LODGING',
+  CUSTOM_ITEM: 'CUSTOM_ITEM',
+};
+
 async function apply(work: () => Promise<unknown>): Promise<void> {
   await work();
   await Haptics.selectionAsync().catch(() => undefined);
@@ -45,6 +53,7 @@ async function apply(work: () => Promise<unknown>): Promise<void> {
 
 function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: TimelineRowProps) {
   const palette = usePalette();
+  const [typeColor, typeWash] = useTypeColors()[COLOR_KEYS[item.type]];
 
   const open = () =>
     router.push({
@@ -114,36 +123,43 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
       onPress={open}
       onLongPress={showActions}
       accessibilityLabel={`${item.title}, ${time}. Long press to adjust.`}>
-      <Row style={styles.header}>
-        <AppText variant="label" muted>
-          {ICONS[item.type]} {time}
-        </AppText>
-        <Row>
-          {item.status === 'delayed' ? (
-            <Chip
-              label={item.delayMinutes ? `Delayed ${item.delayMinutes}m` : 'Delayed'}
-              tone="warning"
-            />
-          ) : null}
-          {item.status === 'cancelled' ? <Chip label="Cancelled" tone="danger" /> : null}
-          {pending ? <Chip label="Not synced" tone="info" /> : null}
-        </Row>
-      </Row>
-      <AppText variant="heading" numberOfLines={2}>
-        {item.title}
-      </AppText>
-      {item.subtitle ? (
-        <AppText muted numberOfLines={1}>
-          {item.subtitle}
-        </AppText>
-      ) : null}
-      {item.confirmation ? (
-        <View style={[styles.code, { backgroundColor: palette.surfaceRaised }]}>
-          <AppText variant="label" selectable>
-            {item.confirmation}
-          </AppText>
+      <View style={styles.layout}>
+        <View style={[styles.badge, { backgroundColor: typeWash }]}>
+          <AppText style={styles.badgeGlyph}>{ICONS[item.type]}</AppText>
         </View>
-      ) : null}
+        <View style={styles.body}>
+          <Row style={styles.header}>
+            <AppText variant="label" color={typeColor}>
+              {time}
+            </AppText>
+            <Row>
+              {item.status === 'delayed' ? (
+                <Chip
+                  label={item.delayMinutes ? `Delayed ${item.delayMinutes}m` : 'Delayed'}
+                  tone="warning"
+                />
+              ) : null}
+              {item.status === 'cancelled' ? <Chip label="Cancelled" tone="danger" /> : null}
+              {pending ? <Chip label="Not synced" tone="info" /> : null}
+            </Row>
+          </Row>
+          <AppText variant="heading" numberOfLines={2}>
+            {item.title}
+          </AppText>
+          {item.subtitle ? (
+            <AppText muted numberOfLines={1}>
+              {item.subtitle}
+            </AppText>
+          ) : null}
+          {item.confirmation ? (
+            <View style={[styles.code, { backgroundColor: palette.surfaceRaised }]}>
+              <AppText variant="label" selectable>
+                {item.confirmation}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+      </View>
     </Card>
   );
 }
@@ -151,6 +167,10 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
 export default memo(TimelineRow);
 
 const styles = StyleSheet.create({
+  layout: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+  badge: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  badgeGlyph: { fontSize: 18, lineHeight: 24 },
+  body: { flex: 1, gap: spacing.xs },
   header: { justifyContent: 'space-between' },
   code: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 6 },
 });

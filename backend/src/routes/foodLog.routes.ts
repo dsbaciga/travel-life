@@ -50,6 +50,62 @@ import { foodLogController } from '../controllers/foodLog.controller';
  *       - bearerAuth: []
  *     responses:
  *       200: { description: Entry deleted }
+ * /api/trips/{tripId}/food-log/{id}/photos:
+ *   post:
+ *     summary: Attach existing photos of the trip to an entry (max 12 per entry; already-attached photos are ignored)
+ *     tags: [Food Log]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [photoIds]
+ *             properties:
+ *               photoIds: { type: array, minItems: 1, maxItems: 12, items: { type: integer } }
+ *     responses:
+ *       200: { description: The entry with its photos }
+ *       404: { description: Entry or a photo not found in this trip }
+ * /api/trips/{tripId}/food-log/{id}/photos/immich:
+ *   post:
+ *     summary: Attach Immich photos to an entry. Each asset is linked to the trip first (reusing the photo if already linked). Photos only - videos are rejected. Max 12 per entry
+ *     tags: [Food Log]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [assets]
+ *             properties:
+ *               assets:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 12
+ *                 items:
+ *                   type: object
+ *                   required: [immichAssetId]
+ *                   properties:
+ *                     immichAssetId: { type: string }
+ *                     mediaType: { type: string, enum: [image] }
+ *                     takenAt: { type: string, nullable: true }
+ *                     latitude: { type: number, nullable: true }
+ *                     longitude: { type: number, nullable: true }
+ *     responses:
+ *       200: { description: The entry with its photos }
+ *       400: { description: A video was supplied, or the per-entry photo cap would be exceeded }
+ * /api/trips/{tripId}/food-log/{id}/photos/{photoId}:
+ *   delete:
+ *     summary: Detach a photo from an entry (the photo stays in the trip gallery)
+ *     tags: [Food Log]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Photo detached }
  */
 // mergeParams to access :tripId from the parent mount path
 const router = Router({ mergeParams: true });
@@ -58,6 +114,9 @@ router.post('/', foodLogController.createEntry);
 router.get('/', foodLogController.getEntriesByTrip);
 router.put('/:id', foodLogController.updateEntry);
 router.delete('/:id', foodLogController.deleteEntry);
+router.post('/:id/photos', foodLogController.attachPhotos);
+router.post('/:id/photos/immich', foodLogController.attachImmichAssets);
+router.delete('/:id/photos/:photoId', foodLogController.removePhoto);
 
 /**
  * @openapi

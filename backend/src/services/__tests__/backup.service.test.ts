@@ -358,14 +358,24 @@ describe('BackupService', () => {
         checklists: [],
         languages: [],
         foodLogEntries: [
-          { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null },
+          {
+            restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null,
+            photos: [{ photoId: 12, sortOrder: 1 }],
+          },
+          { restaurantName: 'Cafe', dish: 'Flat white', rating: 4, notes: null, orderAgain: false, activityId: null, locationId: null },
         ],
       });
 
       const result = await createBackup(1);
 
+      // Attached photos are exported by their (old) photo id so restore can remap them;
+      // an entry with no photos exports an empty list rather than omitting the key.
       expect(result.trips[0].foodLogEntries).toEqual([
-        { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null },
+        {
+          restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, notes: null, orderAgain: true, activityId: 4, locationId: null,
+          photos: [{ photoId: 12, sortOrder: 1 }],
+        },
+        { restaurantName: 'Cafe', dish: 'Flat white', rating: 4, notes: null, orderAgain: false, activityId: null, locationId: null, photos: [] },
       ]);
     });
 

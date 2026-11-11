@@ -244,8 +244,8 @@ export default function TodayScreen() {
         <Banner tone="warning" text="Someone else changed an item you edited offline. Tap the conflict chip to choose." />
       ) : null}
 
-      <Card style={{ borderColor: palette.primary }}>
-        <AppText variant="label" color={palette.primary}>
+      <Card tone="hero">
+        <AppText variant="label" color={palette.heroAccent}>
           {nextUp ? (nextUp.inProgress ? 'HAPPENING NOW' : 'NEXT UP') : 'NEXT UP'}
         </AppText>
         {nextUp && nextUp.item.start ? (
@@ -253,7 +253,7 @@ export default function TodayScreen() {
             <AppText variant="title" numberOfLines={2}>
               {nextUp.item.title}
             </AppText>
-            <AppText variant="heading" color={palette.accent}>
+            <AppText variant="heading" color={palette.heroAccent}>
               {nextUp.inProgress
                 ? `Started ${formatCountdown(nextUp.item.start, now)}`
                 : formatCountdown(nextUp.item.start, now)}

@@ -129,6 +129,9 @@ const mockTx = {
   foodLogEntry: {
     create: jest.fn(),
   },
+  foodLogEntryPhoto: {
+    create: jest.fn(),
+  },
   tripExpense: {
     create: jest.fn(),
   },
@@ -354,6 +357,7 @@ describe('RestoreService', () => {
     mockTx.entityLink.create.mockResolvedValue({ id: 1 });
     mockTx.tripLanguage.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
+    mockTx.foodLogEntryPhoto.create.mockResolvedValue({ id: 1 });
     mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
     mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
     mockTx.savedLink.create.mockResolvedValue({ id: 1 });
@@ -517,6 +521,54 @@ describe('RestoreService', () => {
       const second = mockTx.foodLogEntry.create.mock.calls[1][0] as { data: Record<string, unknown> };
       // an unresolvable link is dropped but the entry survives
       expect(second.data).toMatchObject({ activityId: null, locationId: null, orderAgain: false, notes: null });
+    });
+
+    it('RST-016b: re-attaches food log photos through the photo id map', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            foodLogEntries: [
+              {
+                restaurantName: 'Trattoria',
+                dish: 'Carbonara',
+                rating: 5,
+                // old photo 1 was restored as new id 50; old photo 777 is not in the backup
+                photos: [{ photoId: 1, sortOrder: 2 }, { photoId: 777, sortOrder: 3 }],
+              },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup, { clearExistingData: false, importPhotos: true });
+
+      expect(mockTx.foodLogEntryPhoto.create).toHaveBeenCalledTimes(1);
+      expect(mockTx.foodLogEntryPhoto.create).toHaveBeenCalledWith({
+        data: { entryId: 1, photoId: 50, sortOrder: 2 },
+      });
+    });
+
+    it('RST-016c: does not attach food log photos when photos are not imported', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            foodLogEntries: [
+              { restaurantName: 'Trattoria', dish: 'Carbonara', rating: 5, photos: [{ photoId: 1, sortOrder: 0 }] },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup, { clearExistingData: false, importPhotos: false });
+
+      expect(mockTx.foodLogEntry.create).toHaveBeenCalledTimes(1); // the entry itself still restores
+      expect(mockTx.foodLogEntryPhoto.create).not.toHaveBeenCalled();
     });
 
     it('RST-008: imports entity links with mapped IDs', async () => {

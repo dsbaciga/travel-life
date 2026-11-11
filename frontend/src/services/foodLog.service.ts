@@ -31,6 +31,20 @@ export const foodLogService = {
     await axios.delete(`/trips/${tripId}/food-log/${entryId}`);
   },
 
+  /** Attaches existing photos of the trip to an entry; returns the entry with its photos. */
+  async attachPhotos(tripId: number, entryId: number, photoIds: number[]): Promise<FoodLogEntry> {
+    const response = await axios.post<FoodLogEntry>(
+      `/trips/${tripId}/food-log/${entryId}/photos`,
+      { photoIds }
+    );
+    return response.data;
+  },
+
+  /** Detaches a photo from an entry. The photo stays in the trip gallery. */
+  async removePhoto(tripId: number, entryId: number, photoId: number): Promise<void> {
+    await axios.delete(`/trips/${tripId}/food-log/${entryId}/photos/${photoId}`);
+  },
+
   /** Best-meals search across all of the user's trips. */
   async search(filters: FoodLogSearchFilters): Promise<FoodLogEntryWithTrip[]> {
     const params: Record<string, string | number | boolean> = {};

@@ -1,7 +1,7 @@
 /**
  * Small themed building blocks shared by every screen.
  */
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -17,6 +17,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
+
+/** True inside a hero card, where text and controls switch to the on-dark colours. */
+const HeroContext = createContext(false);
 
 interface ScreenProps {
   children: ReactNode;
@@ -47,16 +50,22 @@ interface CardProps {
   onPress?: () => void;
   onLongPress?: () => void;
   accessibilityLabel?: string;
+  /** `hero` is the single dark, high-emphasis card on a screen. */
+  tone?: 'default' | 'hero';
 }
 
-export function Card({ children, style, onPress, onLongPress, accessibilityLabel }: CardProps) {
+export function Card({ children, style, onPress, onLongPress, accessibilityLabel, tone = 'default' }: CardProps) {
   const palette = usePalette();
+  const hero = tone === 'hero';
   const base = [
     styles.card,
-    { backgroundColor: palette.surface, borderColor: palette.border },
+    hero
+      ? [styles.cardHero, { backgroundColor: palette.hero, borderColor: palette.hero }]
+      : { backgroundColor: palette.surface, borderColor: palette.border },
     style,
   ];
-  if (!onPress && !onLongPress) return <View style={base}>{children}</View>;
+  const body = <HeroContext.Provider value={hero}>{children}</HeroContext.Provider>;
+  if (!onPress && !onLongPress) return <View style={base}>{body}</View>;
   return (
     <Pressable
       accessibilityRole="button"
@@ -64,7 +73,7 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
       onPress={onPress}
       onLongPress={onLongPress}
       style={({ pressed }) => [base, pressed && styles.pressed]}>
-      {children}
+      {body}
     </Pressable>
   );
 }
@@ -89,13 +98,21 @@ export function AppText({
   selectable,
 }: AppTextProps) {
   const palette = usePalette();
+  const onHero = useContext(HeroContext);
+  const fallback = onHero
+    ? muted
+      ? palette.heroMuted
+      : palette.onHero
+    : muted
+      ? palette.textMuted
+      : palette.text;
   return (
     <Text
       numberOfLines={numberOfLines}
       selectable={selectable}
       style={[
         textStyles[variant],
-        { color: color ?? (muted ? palette.textMuted : palette.text) },
+        { color: color ?? fallback },
         style,
       ]}>
       {children}
@@ -123,16 +140,31 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const palette = usePalette();
+  const onHero = useContext(HeroContext);
   const background =
     variant === 'primary'
-      ? palette.primary
+      ? onHero
+        ? palette.heroAccent
+        : palette.primary
       : variant === 'danger'
         ? palette.danger
         : variant === 'secondary'
-          ? palette.surfaceRaised
+          ? onHero
+            ? HERO_WASH
+            : palette.surface
           : 'transparent';
   const foreground =
-    variant === 'primary' ? palette.onPrimary : variant === 'danger' ? '#ffffff' : palette.text;
+    variant === 'primary'
+      ? onHero
+        ? palette.hero
+        : palette.onPrimary
+      : variant === 'danger'
+        ? '#ffffff'
+        : onHero
+          ? palette.onHero
+          : palette.text;
+  const outline =
+    variant === 'ghost' || variant === 'secondary' ? (onHero ? HERO_WASH : palette.border) : background;
   return (
     <Pressable
       accessibilityRole="button"
@@ -144,7 +176,7 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         compact && styles.buttonCompact,
-        { backgroundColor: background, borderColor: variant === 'ghost' ? palette.border : background },
+        { backgroundColor: background, borderColor: outline },
         (disabled || loading) && styles.disabled,
         pressed && styles.pressed,
       ]}>
@@ -176,16 +208,18 @@ export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) 
           : tone === 'info'
             ? palette.info
             : palette.textMuted;
+  const onHero = useContext(HeroContext);
+  const idleLabel = onHero ? palette.onHero : toneColor;
   const body = (
-    <Text style={[styles.chipLabel, { color: selected ? palette.onPrimary : toneColor }]}>
+    <Text style={[styles.chipLabel, { color: selected ? palette.onPrimary : idleLabel }]}>
       {label}
     </Text>
   );
   const chipStyle = [
     styles.chip,
     {
-      backgroundColor: selected ? palette.primary : palette.surfaceRaised,
-      borderColor: selected ? palette.primary : palette.border,
+      backgroundColor: selected ? palette.primary : onHero ? HERO_WASH : palette.surface,
+      borderColor: selected ? palette.primary : onHero ? HERO_WASH : palette.border,
     },
   ];
   if (!onPress) return <View style={chipStyle}>{body}</View>;
@@ -277,17 +311,32 @@ export function Banner({ text, tone = 'info' }: { text: string; tone?: 'info' | 
   );
 }
 
+/** Translucent white, for controls sitting on the hero surface. */
+const HERO_WASH = 'rgba(255, 255, 255, 0.14)';
+
 const textStyles = StyleSheet.create({
-  title: { fontSize: 26, fontWeight: '700', lineHeight: 32 },
+  title: { fontSize: 26, fontWeight: '700', lineHeight: 32, letterSpacing: -0.3 },
   heading: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
   body: { fontSize: 16, lineHeight: 22 },
-  label: { fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  label: { fontSize: 13, fontWeight: '600', lineHeight: 18, letterSpacing: 0.2 },
   caption: { fontSize: 13, lineHeight: 18 },
 });
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  card: { borderRadius: radius.md, borderWidth: 1, padding: spacing.lg, gap: spacing.sm },
+  card: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    // A soft lift instead of a heavy outline.
+    elevation: 1,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  cardHero: { elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
   pressed: { opacity: 0.7 },
   disabled: { opacity: 0.5 },
   button: {

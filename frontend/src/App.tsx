@@ -40,6 +40,7 @@ const TripSeriesPage = React.lazy(() =>
 );
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
+import HomeTimezonePrompt from './components/HomeTimezonePrompt';
 import MobileBottomNav from './components/MobileBottomNav';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -157,6 +158,7 @@ function App() {
             Skip to main content
           </a>
           <Navbar />
+          <HomeTimezonePrompt />
           {/* Bottom padding clears MobileBottomNav, which is h-16 plus a 2px top
               border plus its own safe-area-inset-bottom. A flat pb-16 was 2px
               short on every phone and ~36px short on one with a home indicator,
