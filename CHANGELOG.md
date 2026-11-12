@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.1] - 2026-11-11
+
 ### Added
 
 - **Android companion app** with offline sync, built and attached to each GitHub Release as an APK. Includes a user-selectable dark mode.
