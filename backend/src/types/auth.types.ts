@@ -29,6 +29,12 @@ export const mobileOidcExchangeSchema = z.object({
   codeVerifier: z.string().min(32).max(256),
 });
 
+/** Form body posted by the mobile sign-in confirmation page. */
+export const mobileOidcConfirmSchema = z.object({
+  nonce: z.string().regex(/^[a-f0-9]{64}$/, 'Malformed nonce'),
+  action: z.enum(['continue', 'cancel']),
+});
+
 /** `code_challenge` on a mobile OIDC login: lowercase hex SHA-256. */
 export const MOBILE_CODE_CHALLENGE_PATTERN = /^[a-f0-9]{64}$/;
 

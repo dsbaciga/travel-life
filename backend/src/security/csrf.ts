@@ -137,6 +137,13 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   // The two mobile endpoints are unauthenticated token exchanges: the single-use
   // pairing token / exchange code in the body is the credential, and no cookie
   // is read or set, so there is no ambient authority for a forged request to ride.
+  // `/auth/oidc/mobile-confirm` is the plain HTML form on the mobile sign-in
+  // confirmation page. It cannot send an `x-csrf-token` header (the page runs
+  // no script) and the browser may hold no session at all. The single-use nonce
+  // in the form body, readable only from the page the server just rendered, is
+  // the credential; the handler reads no cookie. A cross-site page cannot guess
+  // a victim's nonce, and replaying the attacker's OWN nonce only yields a code
+  // bound to the attacker's challenge for the attacker's account.
   const AUTH_CSRF_EXEMPT = [
     '/auth/login',
     '/auth/register',
@@ -144,6 +151,7 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
     '/auth/silent-refresh',
     '/auth/mobile/pair',
     '/auth/oidc/mobile-exchange',
+    '/auth/oidc/mobile-confirm',
   ];
   if (AUTH_CSRF_EXEMPT.includes(normalizedPath)) {
     return next();

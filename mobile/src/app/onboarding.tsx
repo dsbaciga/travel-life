@@ -70,8 +70,9 @@ export default function OnboardingScreen() {
   const signInWithSso = () =>
     run(async () => {
       if (!server) return;
-      // The provider round trip happens in a system browser session; the
-      // server finishes by redirecting to the app scheme with a one-time code.
+      // The provider round trip happens in a system browser session. The
+      // server then shows a confirmation page there, and only once the user
+      // taps Continue does it redirect to the app scheme with a one-time code.
       //
       // The code comes back over a custom URL scheme that another installed app
       // could also claim, so it is bound to this app: a random verifier stays
@@ -90,6 +91,8 @@ export default function OnboardingScreen() {
       );
       if (result.type !== 'success') return;
       const params = new URL(result.url).searchParams;
+      // Cancel on the confirmation page: treat it like closing the browser.
+      if (params.get('error') === 'cancelled') return;
       const code = params.get('code');
       if (!code) throw new Error('Single sign-on did not complete. Please try again.');
       await useSession.getState().signInWithOidcCode(server.url, code, codeVerifier);

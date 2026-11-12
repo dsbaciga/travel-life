@@ -20,6 +20,18 @@ interface PairingRecord {
 }
 
 /**
+ * A mobile OIDC sign-in the identity provider has completed but the user has
+ * not yet confirmed. No exchange code exists until they do.
+ */
+interface PendingSignInRecord {
+  userId: number;
+  /** Shown on the confirmation page so the user sees which account is being handed over. */
+  email: string;
+  challenge: string;
+  expiresAt: number;
+}
+
+/**
  * Short-lived, single-use tokens that hand a signed-in identity to the native
  * companion app.
  *
@@ -30,7 +42,12 @@ interface PairingRecord {
  *   in one scan.
  * - **Mobile OIDC** — the OIDC callback cannot hand tokens to a native app
  *   through cookies, so it redirects to the app's URL scheme with one of these
- *   as an exchange code.
+ *   as an exchange code. The code is not minted in the callback: the callback
+ *   parks a *pending sign-in* behind a confirmation page, and only the user
+ *   pressing Continue there (`confirmPendingSignIn`) mints it. Without that
+ *   step another installed app could start the flow itself, claim the URL
+ *   scheme, and — if the user already has an identity-provider session —
+ *   collect a code with no user interaction at all.
  *
  * Storage is in-memory, like the token blacklist: tokens live five minutes, so
  * losing them on restart costs a user one re-scan. Only the SHA-256 of a token
@@ -38,6 +55,7 @@ interface PairingRecord {
  */
 class MobilePairingService {
   private readonly records = new Map<string, PairingRecord>();
+  private readonly pendingSignIns = new Map<string, PendingSignInRecord>();
 
   private hash(token: string): string {
     return crypto.createHash('sha256').update(token).digest('hex');
@@ -46,6 +64,23 @@ class MobilePairingService {
   private prune(now: number): void {
     for (const [key, record] of this.records) {
       if (record.expiresAt <= now) this.records.delete(key);
+    }
+    for (const [key, record] of this.pendingSignIns) {
+      if (record.expiresAt <= now) this.pendingSignIns.delete(key);
+    }
+  }
+
+  /** Drops a user's oldest entries until there is room for one more. */
+  private evictOldest<T extends { userId: number; expiresAt: number }>(
+    store: Map<string, T>,
+    userId: number
+  ): void {
+    const mine = [...store.entries()]
+      .filter(([, record]) => record.userId === userId)
+      .sort((a, b) => a[1].expiresAt - b[1].expiresAt);
+    while (mine.length >= MAX_ACTIVE_TOKENS_PER_USER) {
+      const oldest = mine.shift();
+      if (oldest) store.delete(oldest[0]);
     }
   }
 
@@ -65,13 +100,7 @@ class MobilePairingService {
 
     // Oldest-first eviction keeps the newest QR code valid when a user reopens
     // the dialog repeatedly.
-    const mine = [...this.records.entries()]
-      .filter(([, record]) => record.userId === userId)
-      .sort((a, b) => a[1].expiresAt - b[1].expiresAt);
-    while (mine.length >= MAX_ACTIVE_TOKENS_PER_USER) {
-      const oldest = mine.shift();
-      if (oldest) this.records.delete(oldest[0]);
-    }
+    this.evictOldest(this.records, userId);
 
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = now + PAIRING_TOKEN_TTL_MS;
@@ -111,9 +140,57 @@ class MobilePairingService {
     return record.userId;
   }
 
+  /**
+   * Park a completed mobile OIDC sign-in until the user confirms it.
+   *
+   * @param userId - The user the identity provider authenticated
+   * @param email - Their email, echoed on the confirmation page
+   * @param challenge - SHA-256 hex of the verifier held by the app that started the flow
+   * @returns A single-use nonce for the confirmation form, and its expiry
+   */
+  createPendingSignIn(
+    userId: number,
+    email: string,
+    challenge: string
+  ): { nonce: string; expiresAt: Date } {
+    const now = Date.now();
+    this.prune(now);
+    this.evictOldest(this.pendingSignIns, userId);
+
+    const nonce = crypto.randomBytes(32).toString('hex');
+    const expiresAt = now + PAIRING_TOKEN_TTL_MS;
+    this.pendingSignIns.set(this.hash(nonce), { userId, email, challenge, expiresAt });
+    return { nonce, expiresAt: new Date(expiresAt) };
+  }
+
+  /**
+   * The user pressed Continue: consume the pending sign-in and mint the
+   * exchange code, bound to the challenge the flow started with.
+   *
+   * Like `redeem`, the record is deleted before the expiry check, so a nonce
+   * works at most once and an expired one cannot be probed.
+   *
+   * @throws {AppError} 401 for an unknown, used, or expired nonce
+   */
+  confirmPendingSignIn(nonce: string): { token: string; expiresAt: Date } {
+    const key = this.hash(nonce);
+    const pending = this.pendingSignIns.get(key);
+    this.pendingSignIns.delete(key);
+    if (!pending || pending.expiresAt <= Date.now()) {
+      throw new AppError('Sign-in request is invalid or has expired', 401);
+    }
+    return this.createPairingToken(pending.userId, pending.challenge);
+  }
+
+  /** The user pressed Cancel: discard the pending sign-in. Unknown nonces are a no-op. */
+  cancelPendingSignIn(nonce: string): void {
+    this.pendingSignIns.delete(this.hash(nonce));
+  }
+
   /** Test hook. */
   clear(): void {
     this.records.clear();
+    this.pendingSignIns.clear();
   }
 }
 

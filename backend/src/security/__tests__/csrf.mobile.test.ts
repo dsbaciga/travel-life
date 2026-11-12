@@ -9,6 +9,7 @@
  * - CSRF-MOB-005: X-Client-Platform alone grants nothing
  * - CSRF-MOB-006: Pairing and OIDC exchange endpoints are exempt, with exact path matching
  * - CSRF-MOB-007: isBearerOnlyRequest predicate
+ * - CSRF-MOB-008: The mobile sign-in confirmation form is exempt, exactly, even from a browser with a session
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -108,6 +109,20 @@ describe('validateCsrf — native bearer-only clients', () => {
     expectRejected(run({ path: '/auth/mobile/pair/extra' }));
     expectRejected(run({ path: '/auth/mobile/pairx' }));
     expectRejected(run({ path: '/x/auth/mobile/pair' }));
+  });
+
+  it('CSRF-MOB-008: the mobile sign-in confirmation form is exempt, exactly', () => {
+    // A plain HTML form: no x-csrf-token header, no Authorization header.
+    expectPassed(run({ path: '/auth/oidc/mobile-confirm' }));
+    // The same browser may also hold a web session; the form still has no header.
+    expectPassed(run({ path: '/auth/oidc/mobile-confirm', cookies: { refreshToken: 'r' } }));
+    // Encoded and doubled slashes normalise to the same exact path.
+    expectPassed(run({ path: '/auth/oidc%2Fmobile-confirm' }));
+    expectRejected(run({ path: '/auth/oidc/mobile-confirm/extra' }));
+    expectRejected(run({ path: '/auth/oidc/mobile-confirmx' }));
+    expectRejected(run({ path: '/x/auth/oidc/mobile-confirm' }));
+    // Other state-changing OIDC paths gain nothing from it.
+    expectRejected(run({ path: '/auth/oidc/callback' }));
   });
 
   it('CSRF-MOB-007: isBearerOnlyRequest predicate', () => {

@@ -54,6 +54,9 @@ own, and a cross-site page cannot make a browser send an `Authorization` header.
 are required, so every browser session (which always has the cookie) is still fully validated.
 `POST /api/auth/mobile/pair` and `POST /api/auth/oidc/mobile-exchange` are also exempt — they are
 unauthenticated exchanges where the single-use token in the body is the credential.
+`POST /api/auth/oidc/mobile-confirm` is exempt for the same reason: it is a plain HTML form post
+from the server-rendered confirmation page, which cannot send an `x-csrf-token` header, and the
+single-use nonce in the form body is the credential. The handler reads no cookie.
 
 ### Native (mobile) clients
 
@@ -61,6 +64,38 @@ Send `X-Client-Platform: mobile` on `/auth/login`, `/auth/register` and `/auth/r
 response then includes `refreshToken` in the JSON body and **no cookies are set**; the client
 stores both tokens in the OS keystore and sends its refresh token in the body of `/auth/refresh`
 (and `/auth/logout`). Refresh tokens stay single-use and rotate on every refresh.
+
+#### Mobile single sign-on
+
+1. The app generates a random verifier, keeps it, and opens
+   `GET /api/auth/oidc/login?client=mobile&code_challenge=<sha256 hex of the verifier>` in a system
+   browser session.
+2. After the identity provider round trip, `GET /api/auth/oidc/callback` does **not** redirect to
+   the app. It renders a confirmation page — "Sign in to the Travel Life app?", naming the account
+   email — with **Continue** and **Cancel**. At this point no exchange code exists; the sign-in is
+   only pending.
+3. The page's form posts `nonce` and `action` (`continue` or `cancel`) to
+   `POST /api/auth/oidc/mobile-confirm` as `application/x-www-form-urlencoded`.
+   - `continue` mints the one-time exchange code and answers `303` to
+     `travellife://auth/oidc?code=<code>`.
+   - `cancel` discards the pending sign-in and answers `303` to
+     `travellife://auth/oidc?error=cancelled`.
+   - An unknown, reused or expired nonce renders an HTML error page (`401`; `400` for a malformed
+     form) and redirects nowhere.
+4. The app posts `{ code, codeVerifier }` to `POST /api/auth/oidc/mobile-exchange` and receives
+   `{ user, accessToken, refreshToken }`.
+
+The confirmation step exists because the code travels over a custom URL scheme that any installed
+app can register for. The verifier binds a code to whoever *started* the flow, but another app
+could start it too; with an existing identity-provider session the whole round trip would complete
+without the user seeing anything. Requiring a tap on a page that names the account closes that.
+
+Lifetimes: the nonce is single-use and valid for five minutes from the callback; the exchange code
+is single-use and valid for five minutes from confirmation. Both live in server memory, so a
+restart in between means signing in again. The confirmation page is sent with
+`Cache-Control: no-store`, `X-Frame-Options: DENY` and a `default-src 'none'`
+Content-Security-Policy (`frame-ancestors 'none'`, no script), so it can be neither cached nor
+framed.
 
 ## API Endpoints
 
@@ -74,7 +109,8 @@ stores both tokens in the OS keystore and sends its refresh token in the body of
 | POST | `/silent-refresh` | Restore auth state from httpOnly cookie on page load | No |
 | POST | `/mobile/pairing-token` | Mint a 5-minute, single-use token for the "Pair Mobile App" QR code; returns `{ pairingToken, expiresAt, serverUrl }` | Yes |
 | POST | `/mobile/pair` | Redeem a pairing token (`{ pairingToken }`) for `{ user, accessToken, refreshToken }` | No |
-| GET | `/oidc/login?client=mobile&code_challenge=<sha256 hex>` | Start SSO from the native app; the callback redirects to `travellife://auth/oidc?code=…` | No |
+| GET | `/oidc/login?client=mobile&code_challenge=<sha256 hex>` | Start SSO from the native app; the callback renders a confirmation page instead of redirecting (see [Mobile single sign-on](#mobile-single-sign-on)) | No |
+| POST | `/oidc/mobile-confirm` | Form post from the confirmation page (`nonce`, `action`); `continue` redirects to `travellife://auth/oidc?code=…`, `cancel` to `travellife://auth/oidc?error=cancelled` | No (single-use nonce) |
 | POST | `/oidc/mobile-exchange` | Exchange that code plus the verifier (`{ code, codeVerifier }`) for tokens | No |
 | GET | `/me` | Get current authenticated user | Yes |
 | POST | `/logout` | Clear refresh token cookie (works even with an expired token) | No |

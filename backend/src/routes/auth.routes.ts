@@ -187,12 +187,55 @@ router.get('/oidc/login', oidcController.login);
  *   get:
  *     summary: OIDC callback endpoint
  *     tags: [Authentication]
- *     description: The identity provider redirects here. On success, sets auth cookies and redirects to the frontend; on failure, redirects to the login page with an error code.
+ *     description: >
+ *       The identity provider redirects here. On success, sets auth cookies and
+ *       redirects to the frontend; on failure, redirects to the login page with
+ *       an error code. For a flow started with `client=mobile`, success instead
+ *       renders an HTML confirmation page; no exchange code exists until the
+ *       user confirms via `/api/auth/oidc/mobile-confirm`.
  *     responses:
+ *       200:
+ *         description: Mobile flow - HTML confirmation page
  *       302:
  *         description: Redirect to the frontend
  */
 router.get('/oidc/callback', oidcController.callback);
+
+/**
+ * @openapi
+ * /api/auth/oidc/mobile-confirm:
+ *   post:
+ *     summary: Confirm or cancel a pending mobile OIDC sign-in
+ *     description: >
+ *       Posted by the form on the confirmation page the mobile callback renders,
+ *       never by the app itself. `continue` mints the one-time exchange code and
+ *       redirects to `travellife://auth/oidc?code=...`; `cancel` discards the
+ *       pending sign-in and redirects to `travellife://auth/oidc?error=cancelled`.
+ *       The nonce is single-use, expires after five minutes, and is the only
+ *       credential (the route is CSRF-exempt).
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             required: [nonce, action]
+ *             properties:
+ *               nonce:
+ *                 type: string
+ *               action:
+ *                 type: string
+ *                 enum: [continue, cancel]
+ *     responses:
+ *       303:
+ *         description: Redirect to the app URL scheme
+ *       400:
+ *         description: Malformed form (HTML error page)
+ *       401:
+ *         description: Nonce unknown, already used, or expired (HTML error page)
+ */
+router.post('/oidc/mobile-confirm', oidcController.mobileConfirm);
 
 /**
  * @openapi
@@ -248,8 +291,9 @@ router.post('/mobile/pair', authController.redeemPairingToken);
  *     description: >
  *       Start the flow at
  *       `/api/auth/oidc/login?client=mobile&code_challenge=<sha256 hex of a random verifier>`.
- *       The callback redirects to `travellife://auth/oidc?code=...`; post that
- *       code here together with the verifier.
+ *       After the user confirms on the page the callback renders, the browser
+ *       is redirected to `travellife://auth/oidc?code=...`; post that code here
+ *       together with the verifier.
  *     tags: [Authentication]
  *     requestBody:
  *       required: true

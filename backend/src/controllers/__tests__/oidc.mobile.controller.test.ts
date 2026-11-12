@@ -3,8 +3,8 @@
  *
  * Test cases:
  * - OIDC-MOB-001: login?client=mobile records the mobile flag in the state cookie
- * - OIDC-MOB-002: a mobile callback redirects to the fixed app scheme with a one-time code and sets no session cookies
- * - OIDC-MOB-003: the redirect target is constant — a `redirect` query param cannot steer the code elsewhere
+ * - OIDC-MOB-002: a mobile callback parks a pending sign-in behind the confirmation page — no redirect, no code, no session cookies
+ * - OIDC-MOB-003: the redirect target is constant — a stored `redirect` cannot steer the page or the code elsewhere
  * - OIDC-MOB-004: a failed mobile callback redirects to the app scheme with an error and mints no code
  * - OIDC-MOB-005: a browser callback is unchanged (cookies set, frontend redirect, no code minted)
  * - OIDC-MOB-006: mobileExchange redeems the code and returns tokens in the body
@@ -12,6 +12,12 @@
  * - OIDC-MOB-008: a state mismatch never reaches the provider, mobile flag or not
  * - OIDC-MOB-009: a mobile login without a valid code_challenge is refused before contacting the provider
  * - OIDC-MOB-010: mobileExchange requires a code verifier
+ * - OIDC-MOB-011: mobileConfirm continue mints the code via the pending sign-in and redirects (303) to the app scheme
+ * - OIDC-MOB-012: mobileConfirm cancel discards the pending sign-in and mints nothing
+ * - OIDC-MOB-013: mobileConfirm passes unexpected service failures to the error handler
+ *
+ * The nonce lifecycle against the real pairing service (reuse, expiry) is in
+ * oidc.mobileConfirm.controller.test.ts.
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -22,7 +28,13 @@ jest.mock('../../services/oidc.service', () => ({ __esModule: true, default: moc
 const mockAuthService = { issueTokensForUser: jest.fn() };
 jest.mock('../../services/auth.service', () => ({ __esModule: true, default: mockAuthService }));
 
-const mockPairing = { createPairingToken: jest.fn(), redeem: jest.fn() };
+const mockPairing = {
+  createPairingToken: jest.fn(),
+  redeem: jest.fn(),
+  createPendingSignIn: jest.fn(),
+  confirmPendingSignIn: jest.fn(),
+  cancelPendingSignIn: jest.fn(),
+};
 jest.mock('../../services/mobilePairing.service', () => ({ __esModule: true, default: mockPairing }));
 
 const mockSetRefreshTokenCookie = jest.fn();
@@ -67,6 +79,7 @@ import { AppError } from '../../errors/errors';
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
 const CODE = 'cd'.repeat(32);
+const NONCE = 'ef'.repeat(32);
 const CHALLENGE = 'ab'.repeat(32);
 const VERIFIER = 'v'.repeat(43);
 const authResult = {
@@ -103,6 +116,8 @@ describe('OidcController — native clients', () => {
     jest.clearAllMocks();
     mockOidcService.handleCallback.mockResolvedValue(authResult as never);
     mockPairing.createPairingToken.mockReturnValue({ token: CODE, expiresAt: new Date() });
+    mockPairing.createPendingSignIn.mockReturnValue({ nonce: NONCE, expiresAt: new Date() });
+    mockPairing.confirmPendingSignIn.mockReturnValue({ token: CODE, expiresAt: new Date() });
   });
 
   it('OIDC-MOB-001: login?client=mobile records the mobile flag in the state cookie', async () => {
@@ -132,22 +147,29 @@ describe('OidcController — native clients', () => {
     expect(browser.mobileChallenge).toBeUndefined();
   });
 
-  it('OIDC-MOB-002: mobile callback redirects to the app scheme with a one-time code, no cookies', async () => {
+  it('OIDC-MOB-002: mobile callback parks a pending sign-in behind the confirmation page', async () => {
     const res = await callback(
       { state: 'st', codeVerifier: 'cv', mobileChallenge: CHALLENGE },
       { code: 'idp-code', state: 'st' }
     );
 
     expect(mockOidcService.handleCallback).toHaveBeenCalledWith('idp-code', 'cv');
-    // The code is bound to the challenge the app sent at the start.
-    expect(mockPairing.createPairingToken).toHaveBeenCalledWith(7, CHALLENGE);
-    expect(res.redirect).toHaveBeenCalledWith(`${MOBILE_OIDC_REDIRECT}?code=${CODE}`);
+    // The pending sign-in carries the challenge the app sent at the start.
+    expect(mockPairing.createPendingSignIn).toHaveBeenCalledWith(7, 'dana@example.com', CHALLENGE);
+    // Reaching the callback is not enough: no code, no redirect to the app.
+    expect(mockPairing.createPairingToken).not.toHaveBeenCalled();
+    expect(mockPairing.confirmPendingSignIn).not.toHaveBeenCalled();
+    expect(res.redirect).not.toHaveBeenCalled();
     expect(mockSetRefreshTokenCookie).not.toHaveBeenCalled();
     expect(mockSetCsrfCookie).not.toHaveBeenCalled();
-    // Tokens themselves never appear in the URL.
-    const target = res.redirect.mock.calls[0][0] as string;
-    expect(target).not.toContain('access');
-    expect(target).not.toContain('refresh');
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const html = String(res.send.mock.calls[0][0]);
+    expect(html).toContain('dana@example.com');
+    expect(html).toContain(`name="nonce" value="${NONCE}"`);
+    // Tokens never appear in the page.
+    expect(html).not.toContain('access');
+    expect(html).not.toContain('refresh');
   });
 
   it('OIDC-MOB-003: the redirect target is constant regardless of the stored redirect', async () => {
@@ -155,9 +177,21 @@ describe('OidcController — native clients', () => {
       { state: 'st', codeVerifier: 'cv', mobileChallenge: CHALLENGE, redirect: '//evil.example.com/steal' },
       { code: 'idp-code', state: 'st' }
     );
-    const target = res.redirect.mock.calls[0][0] as string;
-    expect(target.startsWith('travellife://auth/oidc?code=')).toBe(true);
-    expect(target).not.toContain('evil');
+    expect(res.redirect).not.toHaveBeenCalled();
+    expect(String(res.send.mock.calls[0][0])).not.toContain('evil');
+
+    // Nothing in the confirm request can steer the code either.
+    const confirmRes = makeRes();
+    oidcController.mobileConfirm(
+      createMockRequest({
+        body: { nonce: NONCE, action: 'continue', redirect: 'https://evil.example.com/steal' },
+        query: { redirect: '//evil.example.com/steal' },
+      }) as never,
+      confirmRes as never,
+      createMockNext() as never
+    );
+    await flushPromises();
+    expect(confirmRes.redirect).toHaveBeenCalledWith(303, `travellife://auth/oidc?code=${CODE}`);
   });
 
   it('OIDC-MOB-004: a failed mobile callback returns an error to the app and mints no code', async () => {
@@ -168,6 +202,7 @@ describe('OidcController — native clients', () => {
     );
     expect(res.redirect).toHaveBeenCalledWith(`${MOBILE_OIDC_REDIRECT}?error=oidc_failed`);
     expect(mockPairing.createPairingToken).not.toHaveBeenCalled();
+    expect(mockPairing.createPendingSignIn).not.toHaveBeenCalled();
   });
 
   it('OIDC-MOB-005: a browser callback is unchanged', async () => {
@@ -179,6 +214,8 @@ describe('OidcController — native clients', () => {
     expect(mockSetCsrfCookie).toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith('https://app.example.com/trips');
     expect(mockPairing.createPairingToken).not.toHaveBeenCalled();
+    expect(mockPairing.createPendingSignIn).not.toHaveBeenCalled();
+    expect(res.send).not.toHaveBeenCalled();
   });
 
   it('OIDC-MOB-006: mobileExchange redeems the code and returns tokens in the body', async () => {
@@ -234,6 +271,7 @@ describe('OidcController — native clients', () => {
     );
     expect(mockOidcService.handleCallback).not.toHaveBeenCalled();
     expect(mockPairing.createPairingToken).not.toHaveBeenCalled();
+    expect(mockPairing.createPendingSignIn).not.toHaveBeenCalled();
     expect(res.redirect).toHaveBeenCalledWith('https://app.example.com/login?error=oidc_invalid');
   });
 
@@ -261,6 +299,57 @@ describe('OidcController — native clients', () => {
     );
     await flushPromises();
     expect(mockPairing.redeem).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it('OIDC-MOB-011: mobileConfirm continue mints the code and redirects to the app scheme', async () => {
+    const res = makeRes();
+    oidcController.mobileConfirm(
+      createMockRequest({ body: { nonce: NONCE, action: 'continue' } }) as never,
+      res as never,
+      createMockNext() as never
+    );
+    await flushPromises();
+
+    expect(mockPairing.confirmPendingSignIn).toHaveBeenCalledWith(NONCE);
+    expect(mockPairing.cancelPendingSignIn).not.toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(303, `${MOBILE_OIDC_REDIRECT}?code=${CODE}`);
+    expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
+    // Confirming hands over a code, never a session.
+    expect(mockSetRefreshTokenCookie).not.toHaveBeenCalled();
+    expect(mockSetCsrfCookie).not.toHaveBeenCalled();
+    expect(mockAuthService.issueTokensForUser).not.toHaveBeenCalled();
+  });
+
+  it('OIDC-MOB-012: mobileConfirm cancel discards the pending sign-in and mints nothing', async () => {
+    const res = makeRes();
+    oidcController.mobileConfirm(
+      createMockRequest({ body: { nonce: NONCE, action: 'cancel' } }) as never,
+      res as never,
+      createMockNext() as never
+    );
+    await flushPromises();
+
+    expect(mockPairing.cancelPendingSignIn).toHaveBeenCalledWith(NONCE);
+    expect(mockPairing.confirmPendingSignIn).not.toHaveBeenCalled();
+    expect(mockPairing.createPairingToken).not.toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(303, `${MOBILE_OIDC_REDIRECT}?error=cancelled`);
+  });
+
+  it('OIDC-MOB-013: mobileConfirm passes unexpected failures to the error handler', async () => {
+    mockPairing.confirmPendingSignIn.mockImplementation(() => {
+      throw new Error('boom');
+    });
+    const res = makeRes();
+    const next = createMockNext();
+    oidcController.mobileConfirm(
+      createMockRequest({ body: { nonce: NONCE, action: 'continue' } }) as never,
+      res as never,
+      next as never
+    );
+    await flushPromises();
+
+    expect(res.redirect).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledTimes(1);
   });
 });
