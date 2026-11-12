@@ -51,9 +51,13 @@ export const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 /**
  * CARTO tile URLs for light/dark themes
  */
+const CARTO_KEY_QUERY = import.meta.env.VITE_CARTO_API_KEY
+  ? `?key=${encodeURIComponent(String(import.meta.env.VITE_CARTO_API_KEY).trim())}`
+  : '';
+
 export const CARTO_TILE_URLS = {
-  light: 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-  dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+  light: `https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png${CARTO_KEY_QUERY}`,
+  dark: `https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png${CARTO_KEY_QUERY}`,
 } as const;
 
 /**

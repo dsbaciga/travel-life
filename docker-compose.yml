@@ -52,6 +52,7 @@ services:
     environment:
       VITE_API_URL: http://localhost:5000/api
       VITE_UPLOAD_URL: http://localhost:5000/uploads
+      VITE_CARTO_API_KEY: ${VITE_CARTO_API_KEY:-}
     ports:
       - "3000:3000"
     volumes:

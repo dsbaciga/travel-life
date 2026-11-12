@@ -351,6 +351,7 @@ The database is not published to the host; only the backend container reaches it
 | `CORS_ORIGIN` | localhost origins | Comma-separated allowed browser origins. Only needed when the frontend is served from a different origin than the API |
 | `VITE_API_URL` | `/api` | **Build-time only** — see below |
 | `VITE_UPLOAD_URL` | `/uploads` | **Build-time only** — see below |
+| `VITE_CARTO_API_KEY` | _(empty)_ | **Build-time only.** Free [CARTO basemaps key](https://carto.com/basemaps/apikey) for the light/dark map styles. Without it the app falls back to OpenStreetMap tiles. In CI, set it as a repository **variable** |
 
 **`VITE_*` variables are baked into the frontend bundle at image build time.**
 Changing them requires `docker-compose -f docker-compose.prod.yml build frontend`,

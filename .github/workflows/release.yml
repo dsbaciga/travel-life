@@ -94,6 +94,7 @@ jobs:
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL || '/api' }}
             VITE_UPLOAD_URL=${{ vars.VITE_UPLOAD_URL || '/uploads' }}
+            VITE_CARTO_API_KEY=${{ vars.VITE_CARTO_API_KEY }}
 
   create-release:
     needs: build-and-push
