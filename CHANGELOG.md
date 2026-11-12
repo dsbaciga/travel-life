@@ -17,6 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Android companion app** with offline sync, built and attached to each GitHub Release as an APK. Includes a user-selectable dark mode.
+- **Food log photos.** Attach local or Immich photos to a food log entry; thumbnails open in the same lightbox as trip photos.
+- **Year in Review** has an "Include trips still being planned" toggle (off by default). Trips in the Planning phase are now excluded unless it is ticked.
+- Shared platform-agnostic travel utilities and entity link rules.
+
+### Changed
+
+- **Trip dashboard Countdown** now counts down on the user's home time zone rather than the destination's.
+- Dietary Preferences in Settings no longer offers "Select all".
+- Navbar dropdown stacking, input focus ring and empty-state spacing polish.
+
+### Fixed
+
+- Places tab: child locations can now be selected for bulk actions, and "Cancel" exits selection mode without selecting anything first.
+- Mobile SSO redirect now requires confirmation.
+
+### Migrations
+
+- `20261111000000_add_mobile_companion`, `20261112000000_add_food_log_entry_photos` and `20261113000000_user_timezone_no_default` (run `npx prisma migrate deploy`).
+
 ## [6.2.0] - 2026-11-11
 
 ### Added
