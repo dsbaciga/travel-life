@@ -3,6 +3,11 @@
 
 declare const __APP_VERSION__: string;
 
+interface ImportMetaEnv {
+  /** Free CARTO basemaps key (https://carto.com/basemaps/apikey), baked in at build time. */
+  readonly VITE_CARTO_API_KEY?: string;
+}
+
 interface Window {
   workbox?: import('workbox-window').Workbox;
 }

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Light and dark map styles showed "API KEY REQUIRED" tiles because CARTO now requires a free basemaps key. Set `VITE_CARTO_API_KEY` at build time to restore them; without a key the app falls back to OpenStreetMap tiles instead of showing a broken map.
+
 ## [6.2.1] - 2026-11-11
 
 ### Added
