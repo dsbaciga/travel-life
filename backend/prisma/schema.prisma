@@ -18,7 +18,7 @@ model User {
   email                  String   @unique @db.VarChar(255)
   passwordHash           String   @map("password_hash") @db.VarChar(255)
   avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
-  timezone               String?  @default("UTC") @db.VarChar(100)
+  timezone               String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
   activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
   tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
   dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
@@ -77,6 +77,8 @@ model User {
   pdfImports              PdfImport[]
   pendingEntities         PendingEntity[]
   pushSubscriptions       PushSubscription[]
+  mobilePushTokens        MobilePushToken[]
+  trackPoints             TripTrackPoint[]
   savedLinks              SavedLink[]
   emailIngests            EmailIngest[]
   customItemTypes         CustomItemType[]
@@ -154,6 +156,7 @@ model Trip {
   customItems               CustomItem[]
   bookingDeadlines          BookingDeadline[]
   foodLogEntries            FoodLogEntry[]
+  trackPoints               TripTrackPoint[]
 
   @@index([userId, status])
   @@index([startDate, endDate])
@@ -450,6 +453,7 @@ model Photo {
   tripBannerPhoto  Trip[]                 @relation("TripBannerPhoto")
   albumCoverPhoto  PhotoAlbum[]           @relation("AlbumCoverPhoto")
   albumAssignments PhotoAlbumAssignment[]
+  foodLogEntries   FoodLogEntryPhoto[]
 
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
@@ -1356,13 +1360,83 @@ model FoodLogEntry {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  activity Activity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
-  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  trip     Trip                @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  activity Activity?           @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  location Location?           @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  photos   FoodLogEntryPhoto[]
 
   @@index([tripId])
   @@index([activityId])
   @@index([locationId])
   @@index([rating])
   @@map("food_log_entries")
+}
+
+// Photos attached to a food log entry. A food photo is an ordinary trip Photo
+// (it also shows in the trip gallery); this join only says which entries show it.
+// Deleting either side removes the link, never the other side.
+model FoodLogEntryPhoto {
+  id        Int      @id @default(autoincrement())
+  entryId   Int      @map("entry_id")
+  photoId   Int      @map("photo_id")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  entry FoodLogEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  photo Photo        @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, photoId])
+  @@index([entryId])
+  @@index([photoId])
+  @@map("food_log_entry_photos")
+}
+
+// =============================================================================
+// MOBILE COMPANION APP
+// =============================================================================
+
+// Native push destination for the companion app. Separate from PushSubscription
+// (Web Push / VAPID): an Expo push token is a single opaque string with no
+// p256dh/auth keys, and it is delivered through the Expo push gateway (which
+// fans out to FCM and APNs) rather than by the web-push protocol.
+model MobilePushToken {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  token      String   @unique @db.VarChar(255)
+  platform   String   @db.VarChar(20) // 'ios' | 'android'
+  deviceName String?  @map("device_name") @db.VarChar(200)
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("mobile_push_tokens")
+}
+
+// One background GPS fix recorded by the companion app. Per user: collaborators
+// on the same trip each have their own trail. The unique key makes batch
+// uploads idempotent, which the phone's retrying outbox depends on.
+// Plain lat/lng columns rather than a PostGIS LineString: points arrive in
+// out-of-order batches over days, and every consumer (day map, photo-location
+// inference, stop detection) needs the per-point timestamps.
+model TripTrackPoint {
+  id         Int      @id @default(autoincrement())
+  tripId     Int      @map("trip_id")
+  userId     Int      @map("user_id")
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
+  accuracy   Float? // horizontal accuracy, metres
+  altitude   Float? // metres
+  speed      Float? // metres/second
+  recordedAt DateTime @map("recorded_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId, recordedAt])
+  @@index([tripId, recordedAt])
+  @@index([userId])
+  @@map("trip_track_points")
 }

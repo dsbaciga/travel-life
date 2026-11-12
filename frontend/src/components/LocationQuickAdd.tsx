@@ -15,7 +15,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
   const [searchResults, setSearchResults] = useState<GeocodingResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
-  const searchTimeoutRef = useRef<number | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (searchQuery.trim().length < 3) {

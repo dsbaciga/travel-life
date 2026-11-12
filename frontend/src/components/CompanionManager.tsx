@@ -8,7 +8,7 @@ import CompanionAvatar from './CompanionAvatar';
 import Modal from './Modal';
 import EmptyState from './EmptyState';
 import DietaryTagSelector from './DietaryTagSelector';
-import DietaryBadges from './DietaryBadges';
+import DietaryBadges, { DietaryBadgesExpanded } from './DietaryBadges';
 
 interface CompanionFormData {
   name: string;
@@ -370,7 +370,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                             <div>
                               <span className="font-medium text-gray-600 dark:text-gray-400">Dietary Needs: </span>
                               <div className="mt-1">
-                                <DietaryBadges tags={companion.dietaryPreferences} maxDisplay={12} size="sm" />
+                                <DietaryBadgesExpanded tags={companion.dietaryPreferences} />
                               </div>
                             </div>
                           )}

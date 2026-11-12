@@ -11,6 +11,8 @@ interface ImmichBrowserProps {
   tripStartDate?: string;
   tripEndDate?: string;
   excludeAssetIds?: Set<string>;
+  /** Hide videos and keep them out of "select all", for callers that only accept still photos. */
+  imagesOnly?: boolean;
 }
 
 interface ThumbnailCache {
@@ -57,6 +59,7 @@ export default function ImmichBrowser({
   tripStartDate,
   tripEndDate,
   excludeAssetIds,
+  imagesOnly = false,
 }: ImmichBrowserProps) {
   const [assets, setAssets] = useState<ImmichAsset[]>([]);
   const [albums, setAlbums] = useState<ImmichAlbum[]>([]);
@@ -95,13 +98,14 @@ export default function ImmichBrowser({
     );
   }, [albums, albumSearchTerm]);
 
-  // Filter assets to exclude already-linked photos
+  // Filter assets to exclude already-linked photos (and videos, when imagesOnly)
   const displayAssets = useMemo(() => {
+    const candidates = imagesOnly ? assets.filter((asset) => asset.type !== "VIDEO") : assets;
     if (!excludeAssetIds || excludeAssetIds.size === 0) {
-      return assets;
+      return candidates;
     }
-    return assets.filter((asset) => !excludeAssetIds.has(asset.id));
-  }, [assets, excludeAssetIds]);
+    return candidates.filter((asset) => !excludeAssetIds.has(asset.id));
+  }, [assets, excludeAssetIds, imagesOnly]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -338,9 +342,11 @@ export default function ImmichBrowser({
       console.log(`[ImmichBrowser] Loaded ${allAssets.length} total assets for selection`);
 
       // Filter out already-linked assets
-      const assetsToSelect = excludeAssetIds
-        ? allAssets.filter((asset) => !excludeAssetIds.has(asset.id))
-        : allAssets;
+      const assetsToSelect = allAssets.filter(
+        (asset) =>
+          !(excludeAssetIds && excludeAssetIds.has(asset.id)) &&
+          !(imagesOnly && asset.type === "VIDEO")
+      );
 
       console.log(`[ImmichBrowser] After filtering already-linked: ${assetsToSelect.length} assets to select (excluded ${allAssets.length - assetsToSelect.length})`);
 

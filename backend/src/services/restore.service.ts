@@ -681,7 +681,7 @@ export async function restoreFromBackup(
           // Import food log entries. Activity/location links are remapped through the
           // old-id -> new-id maps; a link missing from the backup is dropped, not the entry.
           for (const foodData of tripData.foodLogEntries || []) {
-            await tx.foodLogEntry.create({
+            const foodEntry = await tx.foodLogEntry.create({
               data: {
                 tripId: trip.id,
                 restaurantName: foodData.restaurantName,
@@ -693,6 +693,22 @@ export async function restoreFromBackup(
                 locationId: foodData.locationId ? locationMap.get(foodData.locationId) ?? null : null,
               },
             });
+
+            // Re-attach photos through the old-id -> new-id map; only possible when
+            // photos were imported, and a photo missing from the backup is skipped.
+            if (options.importPhotos) {
+              for (const photoRef of foodData.photos || []) {
+                const newPhotoId = photoMap.get(photoRef.photoId);
+                if (!newPhotoId) continue;
+                await tx.foodLogEntryPhoto.create({
+                  data: {
+                    entryId: foodEntry.id,
+                    photoId: newPhotoId,
+                    sortOrder: photoRef.sortOrder ?? 0,
+                  },
+                });
+              }
+            }
           }
 
           // Import journal entries

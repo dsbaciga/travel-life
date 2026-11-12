@@ -50,6 +50,7 @@ import bookingDeadlineRoutes, { upcomingDeadlinesRouter } from './routes/booking
 import foodLogRoutes, { foodLogSearchRouter } from './routes/foodLog.routes';
 import savedLinkRoutes, { tripSavedLinksRouter } from './routes/savedLink.routes';
 import pushRoutes from './routes/push.routes';
+import mobileRoutes from './routes/mobile.routes';
 import emergencyInfoRoutes from './routes/emergencyInfo.routes';
 import { pdfImportService } from './services/pdfImport.service';
 import emailIngestService from './services/emailIngest.service';
@@ -438,6 +439,9 @@ app.get('/api/version', (_req, res) => {
 // API route handlers
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+// Before the generic /api/trips router and the per-resource trip routers, so
+// its exact paths (e.g. /expenses/parse-receipt) are matched first.
+app.use('/api/trips/:tripId', mobileRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/photos', photoRoutes);

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "noEmit": true
+  },
+  "include": [
+    "src/test/**/*.ts",
+    "src/**/__tests__/**/*.ts",
+    "src/db/**/*.ts",
+    "src/sync/**/*.ts",
+    "src/domain/**/*.ts",
+    "src/lib/apiClient.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

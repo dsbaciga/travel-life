@@ -6,6 +6,7 @@ import { FOOD_RATINGS } from "../types/foodLog";
 import { ratingStars } from "../utils/foodLog";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
+import FoodLogPhotoStrip from "../components/FoodLogPhotoStrip";
 import { ListItemSkeleton } from "../components/SkeletonLoader";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -104,6 +105,7 @@ export default function FoodLogPage() {
               {entry.notes && (
                 <p className="text-sm text-gray-500 dark:text-gray-400">{entry.notes}</p>
               )}
+              <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
             </li>
           ))}
         </ul>

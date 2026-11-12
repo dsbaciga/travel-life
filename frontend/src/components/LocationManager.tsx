@@ -425,7 +425,11 @@ export default function LocationManager({
     return manager.items.filter((loc) => loc.parentId === parentId);
   };
 
-  const renderLocation = (location: Location, isChild = false, index = 0) => {
+  // Visible order (parent followed by its children) for range selection
+  const flatLocations = topLevelLocations.flatMap((loc) => [loc, ...getChildren(loc.id)]);
+
+  const renderLocation = (location: Location, isChild = false) => {
+    const index = flatLocations.findIndex((l) => l.id === location.id);
     const children = getChildren(location.id);
     const isSelected = bulkSelection.isSelected(location.id);
 
@@ -433,18 +437,18 @@ export default function LocationManager({
       <div key={location.id} className={isChild ? "" : "space-y-2"}>
         <div
           data-entity-id={`location-${location.id}`}
-          role={bulkSelection.selectionMode && !isChild ? "button" : undefined}
-          tabIndex={bulkSelection.selectionMode && !isChild ? 0 : undefined}
-          onClick={bulkSelection.selectionMode && !isChild ? (e) => {
+          role={bulkSelection.selectionMode ? "button" : undefined}
+          tabIndex={bulkSelection.selectionMode ? 0 : undefined}
+          onClick={bulkSelection.selectionMode ? (e) => {
             e.stopPropagation();
-            bulkSelection.toggleItemSelection(location.id, index, e.shiftKey, topLevelLocations);
+            bulkSelection.toggleItemSelection(location.id, index, e.shiftKey, flatLocations);
           } : undefined}
-          onKeyDown={bulkSelection.selectionMode && !isChild ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulkSelection.toggleItemSelection(location.id, index, false, topLevelLocations); } } : undefined}
+          onKeyDown={bulkSelection.selectionMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulkSelection.toggleItemSelection(location.id, index, false, flatLocations); } } : undefined}
           className={`border border-primary-100 dark:border-gold/20 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow ${
             isChild
               ? "bg-parchment/50 dark:bg-navy-800/50"
               : "bg-white dark:bg-navy-800"
-          } ${bulkSelection.selectionMode && !isChild ? "cursor-pointer" : ""} ${isSelected && !isChild ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
+          } ${bulkSelection.selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
         >
           {/* Header row: Title + badge on mobile, with actions on larger screens */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
@@ -452,7 +456,7 @@ export default function LocationManager({
               {/* Title row with hierarchical display */}
               <div className="flex items-start gap-2 flex-wrap">
                 {/* Selection checkbox */}
-                {bulkSelection.selectionMode && !isChild && (
+                {bulkSelection.selectionMode && (
                   <div className="flex items-center justify-center w-6 h-6 mr-1">
                     <input
                       type="checkbox"
@@ -460,7 +464,7 @@ export default function LocationManager({
                       onChange={() => {}} // Selection handled by onClick to support shiftKey
                       onClick={(e) => {
                         e.stopPropagation();
-                        bulkSelection.toggleItemSelection(location.id, index, e.shiftKey, topLevelLocations);
+                        bulkSelection.toggleItemSelection(location.id, index, e.shiftKey, flatLocations);
                       }}
                       aria-label="Select location"
                       className="w-5 h-5 rounded border-primary-200 dark:border-gold/30 text-primary-600 dark:text-gold focus:ring-primary-500 dark:focus:ring-gold/50"
@@ -634,12 +638,16 @@ export default function LocationManager({
           Locations
         </h2>
         <div className="flex items-center gap-2">
-          {topLevelLocations.length > 0 && !bulkSelection.selectionMode && (
+          {topLevelLocations.length > 0 && (
             <button
-              onClick={bulkSelection.enterSelectionMode}
+              onClick={
+                bulkSelection.selectionMode
+                  ? bulkSelection.exitSelectionMode
+                  : bulkSelection.enterSelectionMode
+              }
               className="btn btn-secondary text-sm whitespace-nowrap"
             >
-              Select
+              {bulkSelection.selectionMode ? "Cancel" : "Select"}
             </button>
           )}
           {!bulkSelection.selectionMode && (
@@ -944,7 +952,7 @@ export default function LocationManager({
             onAction={openCreateForm}
           />
         ) : (
-          topLevelLocations.map((location, index) => renderLocation(location, false, index))
+          topLevelLocations.map((location) => renderLocation(location, false))
         )}
       </div>
 
@@ -971,8 +979,8 @@ export default function LocationManager({
         <BulkActionBar
           entityType="location"
           selectedCount={bulkSelection.selectedCount}
-          totalCount={topLevelLocations.length}
-          onSelectAll={() => bulkSelection.selectAll(topLevelLocations)}
+          totalCount={flatLocations.length}
+          onSelectAll={() => bulkSelection.selectAll(flatLocations)}
           onDeselectAll={bulkSelection.deselectAll}
           onExitSelectionMode={bulkSelection.exitSelectionMode}
           onBulkDelete={handleBulkDelete}

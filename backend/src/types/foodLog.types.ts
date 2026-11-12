@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { optionalNullable, requiredStringWithMax } from '../validation/zodHelpers';
+import {
+  optionalNullable,
+  requiredStringWithMax,
+  optionalDatetime,
+  optionalLatitude,
+  optionalLongitude,
+} from '../validation/zodHelpers';
 
 const ratingSchema = z.number().int().min(1).max(5);
 
@@ -25,6 +31,33 @@ export const updateFoodLogEntrySchema = z.object({
   locationId: z.number().int().positive().nullable().optional(),
 });
 
+/** Existing photos of the same trip to attach to an entry. */
+export const attachFoodLogPhotosSchema = z.object({
+  photoIds: z.array(z.number().int().positive()).min(1).max(12),
+});
+
+/**
+ * Immich assets to attach to an entry. Each asset is resolved to a trip photo
+ * server-side (reusing the row when the asset is already linked to the trip).
+ * Only photos can be attached to a food log entry, so a video is rejected.
+ */
+export const attachFoodLogImmichSchema = z.object({
+  assets: z
+    .array(
+      z.object({
+        immichAssetId: z.string().min(1).max(255),
+        mediaType: z.literal('image').optional().default('image'),
+        takenAt: optionalDatetime(),
+        latitude: optionalLatitude(),
+        longitude: optionalLongitude(),
+      })
+    )
+    .min(1)
+    .max(12),
+});
+
+export type AttachFoodLogPhotosInput = z.infer<typeof attachFoodLogPhotosSchema>;
+export type AttachFoodLogImmichInput = z.infer<typeof attachFoodLogImmichSchema>;
 export type CreateFoodLogEntryInput = z.infer<typeof createFoodLogEntrySchema>;
 export type UpdateFoodLogEntryInput = z.infer<typeof updateFoodLogEntrySchema>;
 

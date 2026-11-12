@@ -13,6 +13,7 @@ const LlmSettings = lazy(() => import("../LlmSettings"));
 const LinkIngestSettings = lazy(() => import("../LinkIngestSettings"));
 const SmtpSettings = lazy(() => import("../SmtpSettings"));
 const CalendarFeedSettings = lazy(() => import("../CalendarFeedSettings"));
+const MobilePairingSettings = lazy(() => import("../MobilePairingSettings"));
 const PushNotificationSettings = lazy(
   () => import("../PushNotificationSettings")
 );
@@ -52,6 +53,9 @@ export default function IntegrationsSection() {
 
           {/* Calendar Feed (iCal subscription) */}
           <CalendarFeedSettings />
+
+          {/* Mobile companion app pairing (QR code) */}
+          <MobilePairingSettings />
 
           {/* Push Notification Settings */}
           <PushNotificationSettings />

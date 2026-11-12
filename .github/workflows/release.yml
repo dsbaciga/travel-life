@@ -145,3 +145,124 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # The Android companion app. Independent of the images: if this job fails the
+  # images and the GitHub Release are still published, just without an APK.
+  # Skipped (not failed) until the signing secrets exist - see
+  # docs/guides/BUILD_AND_PUSH.md, "Android companion app".
+  build-android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      built: ${{ steps.gate.outputs.enabled }}
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
+
+    steps:
+      - name: Check signing secrets
+        id: gate
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] \
+            && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ] \
+            && [ -n "$GOOGLE_MAPS_ANDROID_API_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Android secrets are not configured - skipping the APK build"
+          fi
+
+      - name: Checkout repository
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Set up JDK
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: mobile
+        run: npm ci
+
+      # app.json is git-ignored (it holds the Maps key); build it from the example.
+      - name: Write app.json
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: mobile
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then export APP_VERSION="${GITHUB_REF_NAME}"; fi
+          node scripts/write-app-config.mjs
+          echo "APK_VERSION=$(node -p "require('./app.json').expo.version")" >> "$GITHUB_ENV"
+
+      - name: Generate the Android project
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Build the release APK
+        if: steps.gate.outputs.enabled == 'true'
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a,armeabi-v7a --console=plain
+
+      # Gradle signs release builds with the template's public debug key. Replace
+      # that signature with the real one, so only this repository can ship an
+      # update that installs over an existing copy of the app.
+      - name: Sign the APK
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          APK="$RUNNER_TEMP/travel-life-${APK_VERSION}.apk"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$KEYSTORE" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+            --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "$APK" \
+            mobile/android/app/build/outputs/apk/release/app-release.apk
+          rm -f "$KEYSTORE"
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$APK"
+          echo "APK_PATH=$APK" >> "$GITHUB_ENV"
+
+      - name: Upload the APK as a workflow artifact
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+
+  attach-android:
+    needs: [create-release, build-android]
+    if: github.ref_type == 'tag' && needs.build-android.outputs.built == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: apk
+
+      - name: Attach the APK to the GitHub Release
+        run: gh release upload "$GITHUB_REF_NAME" apk/*.apk --clobber --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

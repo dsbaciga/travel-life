@@ -117,6 +117,10 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       orderAgain: f.orderAgain as boolean,
       activityId: f.activityId as number | null,
       locationId: f.locationId as number | null,
+      photos: ((f.photos ?? []) as Array<{ photoId: number; sortOrder?: number }>).map((p) => ({
+        photoId: p.photoId,
+        sortOrder: p.sortOrder ?? 0,
+      })),
     })),
     journalEntries: journalEntries.map((j) => ({
       date: j.date as string | null,
@@ -326,6 +330,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           orderAgain: true,
           activityId: true,
           locationId: true,
+          photos: { select: { photoId: true, sortOrder: true } },
         },
       },
       journalEntries: true,

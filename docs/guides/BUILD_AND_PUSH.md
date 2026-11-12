@@ -188,6 +188,71 @@ Let CI build the images from the tagged commit, and read the workflow run as the
 
 ---
 
+## Android companion app
+
+The same tag push builds the Android app and attaches `travel-life-X.Y.Z.apk` to the GitHub
+Release. Two jobs in `release.yml` do it: `build-android` builds and signs the APK, and
+`attach-android` uploads it once the release exists. They are independent of the images — a
+failed APK build leaves the images and the release published, just without the APK.
+
+There is nothing extra to run at release time. The APK's version is the tag, and its Android
+`versionCode` is derived from it (`6.3.1` -> `6003001`), so each release installs over the
+previous one.
+
+### One-time setup
+
+Until these five repository secrets exist, `build-android` logs a warning and skips itself.
+
+| Secret | Value |
+| ------ | ----- |
+| `ANDROID_KEYSTORE_BASE64` | The release keystore file, base64-encoded |
+| `ANDROID_KEYSTORE_PASSWORD` | The keystore password |
+| `ANDROID_KEY_ALIAS` | The key alias (`travel-life` below) |
+| `ANDROID_KEY_PASSWORD` | The key password |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | The Maps SDK for Android key (`mobile/app.json` is git-ignored) |
+
+1. Create the keystore, outside the repository. `keytool` ships with the JDK
+   (Android Studio's is at `C:\Program Files\Android\Android Studio\jbr\bin`):
+
+   ```bash
+   keytool -genkeypair -v -keystore travel-life-release.jks -alias travel-life -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+2. Add the secrets. Each command prompts for the value, so nothing lands in shell history:
+
+   ```bash
+   base64 -w0 travel-life-release.jks | gh secret set ANDROID_KEYSTORE_BASE64
+   gh secret set ANDROID_KEYSTORE_PASSWORD
+   gh secret set ANDROID_KEY_ALIAS
+   gh secret set ANDROID_KEY_PASSWORD
+   gh secret set GOOGLE_MAPS_ANDROID_API_KEY
+   ```
+
+3. Allow the release key to use the Maps key. Print its SHA-1 and add it, with package
+   `dev.travellife.companion`, to the key's Android app restrictions in Google Cloud:
+
+   ```bash
+   keytool -list -v -keystore travel-life-release.jks -alias travel-life
+   ```
+
+**Back up the keystore and its passwords somewhere safe.** Android only installs an update
+signed with the same key as the installed app. Lose the key and every phone has to uninstall
+(losing its offline data) before it can install a newer build.
+
+### Trying the build without releasing
+
+Run "Build and Release" from the Actions tab on any branch (`workflow_dispatch`) and download
+the `android-apk` artifact from the run. Off a tag the version comes from
+`mobile/package.json`. Note that a manual run also runs the image jobs.
+
+### Installing
+
+Download the `.apk` from the release page on the phone and open it; Android asks once to
+allow installs from the browser. A debug build installed from a development machine is signed
+with a different key and must be uninstalled first.
+
+---
+
 ## Post-Release
 
 - [ ] **Bump the `APP_VERSION` default in the TrueNAS compose files**

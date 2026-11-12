@@ -53,7 +53,7 @@ export default function EmptyState({
     if (!actionLabel) return null;
 
     const buttonClasses =
-      'mt-4 px-6 py-3 rounded-lg font-semibold font-body bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 text-white shadow-lg shadow-primary-500/20 dark:shadow-accent-400/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200';
+      'px-6 py-3 rounded-lg font-semibold font-body bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 text-white shadow-lg shadow-primary-500/20 dark:shadow-accent-400/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200';
 
     if (actionHref) {
       return (
@@ -96,7 +96,11 @@ export default function EmptyState({
           {subMessage}
         </p>
       )}
-      <ActionButton />
+      {actionLabel && (actionHref || onAction) && (
+        <div className="mt-6">
+          <ActionButton />
+        </div>
+      )}
     </div>
   );
 }

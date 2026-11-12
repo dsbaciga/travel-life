@@ -1963,6 +1963,24 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 **Features**:
 - Attach to restaurant-type activities/locations
 - Searchable best-meals view; feeds #107 semantic search later
+- Photos on an entry (up to 12): uploaded as ordinary trip photos and attached through a
+  `food_log_entry_photos` join (migration `20261112000000_add_food_log_entry_photos`).
+  `POST /api/trips/:tripId/food-log/:id/photos` (`{ photoIds }`, photos must belong to the
+  same trip, duplicates ignored) and `DELETE .../photos/:photoId`. Detaching, or deleting
+  the entry, never deletes the photo; deleting the photo drops only the link. Entries are
+  returned with `photos: Photo[]` in display order; backup/restore carry the links through
+  the photo id map (only when photos are imported). Only still images can be attached;
+  `attachPhotos` filters to `mediaType = image`.
+- Immich photos: the entry form has "Add from Immich" (shown only when Immich is configured),
+  which opens the existing browser in `imagesOnly` mode. Picks are staged and sent on Save to
+  `POST /api/trips/:tripId/food-log/:id/photos/immich` (`{ assets: [{ immichAssetId, takenAt?,
+  latitude?, longitude? }] }`). The server resolves each asset to a trip photo, reusing the row
+  when the asset is already linked (the public link endpoints 409 or silently skip those and
+  do not return the row id) and linking the rest through the batch linker, then attaches them.
+  The 12-photo cap is checked before anything is linked, so a rejected request leaves no stray
+  gallery photos, and videos are rejected server-side too. Linked photos also appear in the
+  trip gallery. Immich thumbnails load through the authenticated proxy (`useImmichThumbnail`);
+  they show without a click-through link because the original needs an authenticated fetch
 
 **Status**: ✅ Shipped (not yet run against a live database). New `FoodLogEntry` table (migration `20260811000000_add_food_log`, rating 1-5 enforced by a CHECK, optional activity/location links with ON DELETE SET NULL, cascade with the trip), trip CRUD at `/api/trips/:tripId/food-log`, cross-trip best-meals search at `/api/food-log` (minRating, orderAgain, q), backup/restore support (links remapped on restore), a Food Log tab on the trip page and a Best Meals page at `/food-log`. Not done: restricting the link picker to dining-category activities, and the semantic-search hookup (#107).
 

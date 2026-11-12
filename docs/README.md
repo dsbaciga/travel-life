@@ -44,6 +44,7 @@ docs/
 │   ├── TESTING_GUIDE.md
 │   └── ROUTING_SETUP.md
 ├── plans/                    # Future planning documents
+│   ├── COMPANION_APP_PLAN.md
 │   ├── GOOGLE_MAPS_INTEGRATION_PLAN.md
 │   ├── GOOGLE_PHOTOS_INTEGRATION_PLAN.md
 │   ├── PHOTO_MAP_VIEW_PLAN.md

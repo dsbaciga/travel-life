@@ -2,6 +2,7 @@ import axios from '../lib/axios';
 import type {
   FoodLogEntry,
   FoodLogEntryWithTrip,
+  FoodLogImmichAssetInput,
   FoodLogSearchFilters,
   CreateFoodLogEntryInput,
   UpdateFoodLogEntryInput,
@@ -29,6 +30,36 @@ export const foodLogService = {
 
   async deleteEntry(tripId: number, entryId: number): Promise<void> {
     await axios.delete(`/trips/${tripId}/food-log/${entryId}`);
+  },
+
+  /** Attaches existing photos of the trip to an entry; returns the entry with its photos. */
+  async attachPhotos(tripId: number, entryId: number, photoIds: number[]): Promise<FoodLogEntry> {
+    const response = await axios.post<FoodLogEntry>(
+      `/trips/${tripId}/food-log/${entryId}/photos`,
+      { photoIds }
+    );
+    return response.data;
+  },
+
+  /**
+   * Attaches Immich photos to an entry. The server links each asset to the trip first
+   * (reusing the photo if it is already linked). Photos only; videos are rejected.
+   */
+  async attachImmichAssets(
+    tripId: number,
+    entryId: number,
+    assets: FoodLogImmichAssetInput[]
+  ): Promise<FoodLogEntry> {
+    const response = await axios.post<FoodLogEntry>(
+      `/trips/${tripId}/food-log/${entryId}/photos/immich`,
+      { assets }
+    );
+    return response.data;
+  },
+
+  /** Detaches a photo from an entry. The photo stays in the trip gallery. */
+  async removePhoto(tripId: number, entryId: number, photoId: number): Promise<void> {
+    await axios.delete(`/trips/${tripId}/food-log/${entryId}/photos/${photoId}`);
   },
 
   /** Best-meals search across all of the user's trips. */

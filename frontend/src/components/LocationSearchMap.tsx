@@ -66,7 +66,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
   );
   const [selectedName, setSelectedName] = useState('');
   const [selectedAddress, setSelectedAddress] = useState('');
-  const searchTimeoutRef = useRef<number | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tileConfig = useMapTiles();
 
   // On touch devices the map is locked until tapped, so scrolling the form past

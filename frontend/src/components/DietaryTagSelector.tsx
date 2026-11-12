@@ -7,6 +7,8 @@ interface DietaryTagSelectorProps {
   className?: string;
   compact?: boolean;
   id?: string;
+  /** Show the "Select all" shortcut. Defaults to true. */
+  showSelectAll?: boolean;
 }
 
 /**
@@ -20,6 +22,7 @@ export default function DietaryTagSelector({
   className = "",
   compact = false,
   id,
+  showSelectAll = true,
 }: DietaryTagSelectorProps) {
   const toggleTag = (tagId: DietaryTagId) => {
     if (selectedTags.includes(tagId)) {
@@ -56,7 +59,7 @@ export default function DietaryTagSelector({
               Clear
             </button>
           )}
-          {selectedTags.length < DIETARY_TAGS.length && (
+          {showSelectAll && selectedTags.length < DIETARY_TAGS.length && (
             <button
               type="button"
               onClick={selectAll}

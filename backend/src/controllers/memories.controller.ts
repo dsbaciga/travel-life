@@ -40,7 +40,11 @@ export const memoriesController = {
     if (!Number.isInteger(year)) {
       throw new AppError('Invalid year: must be an integer', 400);
     }
-    const review = await memoriesService.getYearInReview(userId, year);
+    const review = await memoriesService.getYearInReview(
+      userId,
+      year,
+      req.query.includePlanning === 'true'
+    );
     res.json({
       status: 'success',
       data: review,

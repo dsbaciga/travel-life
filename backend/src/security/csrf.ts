@@ -93,6 +93,18 @@ export const clearCsrfCookie = (res: Response): void => {
 };
 
 /**
+ * True when the request authenticates purely by bearer token: a non-empty
+ * `Authorization: Bearer <token>` header and no refresh-token cookie.
+ */
+export const isBearerOnlyRequest = (req: Request): boolean => {
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return false;
+  if (authHeader.substring(7).trim().length === 0) return false;
+  const cookies: Record<string, unknown> | undefined = req.cookies;
+  return !cookies || !cookies[REFRESH_COOKIE_NAME];
+};
+
+/**
  * Middleware to validate CSRF token.
  * Compares the token in the cookie with the token in the request header.
  * Skips validation for safe HTTP methods (GET, HEAD, OPTIONS).
@@ -122,7 +134,25 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   // Skip CSRF validation for auth routes (these bootstrap the CSRF token)
   // Login, register, refresh, and silent-refresh set the CSRF cookie
   // Use exact path matching to prevent bypass via crafted path prefixes
-  const AUTH_CSRF_EXEMPT = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/silent-refresh'];
+  // The two mobile endpoints are unauthenticated token exchanges: the single-use
+  // pairing token / exchange code in the body is the credential, and no cookie
+  // is read or set, so there is no ambient authority for a forged request to ride.
+  // `/auth/oidc/mobile-confirm` is the plain HTML form on the mobile sign-in
+  // confirmation page. It cannot send an `x-csrf-token` header (the page runs
+  // no script) and the browser may hold no session at all. The single-use nonce
+  // in the form body, readable only from the page the server just rendered, is
+  // the credential; the handler reads no cookie. A cross-site page cannot guess
+  // a victim's nonce, and replaying the attacker's OWN nonce only yields a code
+  // bound to the attacker's challenge for the attacker's account.
+  const AUTH_CSRF_EXEMPT = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/refresh',
+    '/auth/silent-refresh',
+    '/auth/mobile/pair',
+    '/auth/oidc/mobile-exchange',
+    '/auth/oidc/mobile-confirm',
+  ];
   if (AUTH_CSRF_EXEMPT.includes(normalizedPath)) {
     return next();
   }
@@ -136,6 +166,17 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   // Use exact path matching to prevent bypass attacks (e.g., /user-invitations/accept-malicious)
   if (normalizedPath === '/user-invitations/accept' ||
       /^\/user-invitations\/decline\/[a-f0-9]{64}$/.test(normalizedPath)) {
+    return next();
+  }
+
+  // Native clients authenticate with an explicit `Authorization: Bearer` header
+  // and carry no session cookie. CSRF exploits credentials the browser attaches
+  // on its own; a cross-site page cannot make a browser send an Authorization
+  // header it does not possess. BOTH conditions are required: a request that
+  // still carries the refresh cookie is a browser session and gets the full
+  // double-submit check even if it also sends a bearer token (which the web app
+  // always does).
+  if (isBearerOnlyRequest(req)) {
     return next();
   }
 

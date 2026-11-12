@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { TripStatus, type TripStatusType } from '../../types/trip';
+import { useTimezoneResolver } from '../../hooks/useTimezoneResolver';
+import { convertDateTimeLocalToISO } from '../../utils/timezone';
 
 interface CountdownTimerWidgetProps {
   tripStartDate: string | null;
   tripEndDate: string | null;
   tripStatus: TripStatusType;
-  tripTimezone: string;
   className?: string;
 }
 
@@ -416,77 +417,43 @@ export default function CountdownTimerWidget({
   tripStartDate,
   tripEndDate,
   tripStatus,
-  tripTimezone,
   className = '',
 }: CountdownTimerWidgetProps) {
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null);
   const [tripProgress, setTripProgress] = useState<TripProgress | null>(null);
 
-  // Parse dates with timezone consideration
+  // The countdown runs on the user's home clock, not the destination's: a trip
+  // "starts" at midnight of its start date wherever the user lives.
+  const resolveTz = useTimezoneResolver();
+  const homeTimezone = resolveTz();
+
   const { startDate, endDate } = useMemo(() => {
-    // Parse dates - they come as ISO strings or date strings
-    // We need to interpret them in the trip timezone for correct countdown
-    const parseInTimezone = (dateStr: string, isEndOfDay: boolean): Date => {
-      // Create a date string that represents the start/end of day in the trip timezone
-      const datePart = dateStr.split('T')[0]; // Get just the date part (YYYY-MM-DD)
-      const timePart = isEndOfDay ? '23:59:59' : '00:00:00';
-
-      // Create a formatter to get the timezone offset for the trip timezone
+    const toInstant = (dateStr: string, isEndOfDay: boolean): Date => {
+      const datePart = dateStr.split('T')[0]; // YYYY-MM-DD
       try {
-        const formatter = new Intl.DateTimeFormat('en-US', {
-          timeZone: tripTimezone,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        });
-
-        // Parse the date as if it's in the trip timezone
-        const baseDate = new Date(`${datePart}T${timePart}`);
-
-        // Get current offset difference between local and trip timezone
-        const localTime = new Date();
-        const localOffset = localTime.getTimezoneOffset();
-
-        // Format a test date in trip timezone to calculate offset
-        const parts = formatter.formatToParts(localTime);
-        // A missing part would build a nonsense date string ("0-0-0T0:0:0") and
-        // silently yield an Invalid Date. Throw instead so the catch below falls
-        // back to plain local-date parsing.
-        const getPart = (type: string) => {
-          const part = parts.find(p => p.type === type);
-          if (!part) {
-            throw new Error(`Missing "${type}" when formatting a date in ${tripTimezone}`);
-          }
-          return part.value;
-        };
-        const tripTimeStr = `${getPart('year')}-${getPart('month')}-${getPart('day')}T${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
-        const tripTimeAsLocal = new Date(tripTimeStr);
-        const tripOffset = (localTime.getTime() - tripTimeAsLocal.getTime()) / 60000;
-
-        // Adjust the base date by the timezone difference
-        const offsetDiff = tripOffset - localOffset;
-        return new Date(baseDate.getTime() + offsetDiff * 60000);
+        const start = new Date(convertDateTimeLocalToISO(`${datePart}T00:00`, homeTimezone));
+        if (Number.isNaN(start.getTime())) throw new Error('Invalid date');
+        // Last millisecond of the day = next midnight - 1ms (handles 23/25-hour DST days)
+        if (!isEndOfDay) return start;
+        const [y, m, d] = datePart.split('-').map(Number);
+        const next = new Date(Date.UTC(y, m - 1, d + 1));
+        const nextDate = next.toISOString().split('T')[0];
+        return new Date(
+          new Date(convertDateTimeLocalToISO(`${nextDate}T00:00`, homeTimezone)).getTime() - 1
+        );
       } catch {
-        // Fallback to simple parsing if timezone handling fails
-        // Parse date string directly to avoid UTC interpretation issues
         const [year, month, day] = datePart.split('-').map(Number);
         const date = new Date(year, month - 1, day);
-        if (isEndOfDay) {
-          date.setHours(23, 59, 59, 999);
-        }
+        if (isEndOfDay) date.setHours(23, 59, 59, 999);
         return date;
       }
     };
 
-    const start = tripStartDate ? parseInTimezone(tripStartDate, false) : null;
-    const end = tripEndDate ? parseInTimezone(tripEndDate, true) : null;
-
-    return { startDate: start, endDate: end };
-  }, [tripStartDate, tripEndDate, tripTimezone]);
+    return {
+      startDate: tripStartDate ? toInstant(tripStartDate, false) : null,
+      endDate: tripEndDate ? toInstant(tripEndDate, true) : null,
+    };
+  }, [tripStartDate, tripEndDate, homeTimezone]);
 
   // Determine display mode based on status and dates
   const displayMode = useMemo(() => {
@@ -597,9 +564,9 @@ export default function CountdownTimerWidget({
                 : 'Trip Status'}
           </h3>
         </div>
-        {tripTimezone && displayMode === 'countdown' && (
+        {displayMode === 'countdown' && (
           <span className="text-xs text-slate dark:text-warm-gray/50">
-            {tripTimezone}
+            {homeTimezone}
           </span>
         )}
       </div>

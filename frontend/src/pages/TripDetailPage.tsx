@@ -902,7 +902,11 @@ export default function TripDetailPage() {
                         <LoadingSpinner.FullPage message="Loading food log..." />
                       }
                     >
-                      <FoodLogManager tripId={trip.id} />
+                      <FoodLogManager
+                        tripId={trip.id}
+                        tripStartDate={trip.startDate || undefined}
+                        tripEndDate={trip.endDate || undefined}
+                      />
                     </Suspense>
                   </ErrorBoundary>
                 </div>

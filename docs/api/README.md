@@ -48,6 +48,55 @@ short exempt list rather than a blanket auth-routes exemption:
 
 Everything else — including every other authenticated route — requires the `x-csrf-token` header to match the `csrf-token` cookie on any non-safe method.
 
+**Native clients.** A request that carries an `Authorization: Bearer <token>` header **and no
+`refreshToken` cookie** skips CSRF validation: CSRF abuses credentials a browser attaches on its
+own, and a cross-site page cannot make a browser send an `Authorization` header. Both conditions
+are required, so every browser session (which always has the cookie) is still fully validated.
+`POST /api/auth/mobile/pair` and `POST /api/auth/oidc/mobile-exchange` are also exempt — they are
+unauthenticated exchanges where the single-use token in the body is the credential.
+`POST /api/auth/oidc/mobile-confirm` is exempt for the same reason: it is a plain HTML form post
+from the server-rendered confirmation page, which cannot send an `x-csrf-token` header, and the
+single-use nonce in the form body is the credential. The handler reads no cookie.
+
+### Native (mobile) clients
+
+Send `X-Client-Platform: mobile` on `/auth/login`, `/auth/register` and `/auth/refresh`. The
+response then includes `refreshToken` in the JSON body and **no cookies are set**; the client
+stores both tokens in the OS keystore and sends its refresh token in the body of `/auth/refresh`
+(and `/auth/logout`). Refresh tokens stay single-use and rotate on every refresh.
+
+#### Mobile single sign-on
+
+1. The app generates a random verifier, keeps it, and opens
+   `GET /api/auth/oidc/login?client=mobile&code_challenge=<sha256 hex of the verifier>` in a system
+   browser session.
+2. After the identity provider round trip, `GET /api/auth/oidc/callback` does **not** redirect to
+   the app. It renders a confirmation page — "Sign in to the Travel Life app?", naming the account
+   email — with **Continue** and **Cancel**. At this point no exchange code exists; the sign-in is
+   only pending.
+3. The page's form posts `nonce` and `action` (`continue` or `cancel`) to
+   `POST /api/auth/oidc/mobile-confirm` as `application/x-www-form-urlencoded`.
+   - `continue` mints the one-time exchange code and answers `303` to
+     `travellife://auth/oidc?code=<code>`.
+   - `cancel` discards the pending sign-in and answers `303` to
+     `travellife://auth/oidc?error=cancelled`.
+   - An unknown, reused or expired nonce renders an HTML error page (`401`; `400` for a malformed
+     form) and redirects nowhere.
+4. The app posts `{ code, codeVerifier }` to `POST /api/auth/oidc/mobile-exchange` and receives
+   `{ user, accessToken, refreshToken }`.
+
+The confirmation step exists because the code travels over a custom URL scheme that any installed
+app can register for. The verifier binds a code to whoever *started* the flow, but another app
+could start it too; with an existing identity-provider session the whole round trip would complete
+without the user seeing anything. Requiring a tap on a page that names the account closes that.
+
+Lifetimes: the nonce is single-use and valid for five minutes from the callback; the exchange code
+is single-use and valid for five minutes from confirmation. Both live in server memory, so a
+restart in between means signing in again. The confirmation page is sent with
+`Cache-Control: no-store`, `X-Frame-Options: DENY` and a `default-src 'none'`
+Content-Security-Policy (`frame-ancestors 'none'`, no script), so it can be neither cached nor
+framed.
+
 ## API Endpoints
 
 ### Authentication (`/api/auth`)
@@ -58,6 +107,11 @@ Everything else — including every other authenticated route — requires the `
 | POST | `/login` | Authenticate user, returns tokens | No |
 | POST | `/refresh` | Refresh access token (reads refresh token cookie) | No |
 | POST | `/silent-refresh` | Restore auth state from httpOnly cookie on page load | No |
+| POST | `/mobile/pairing-token` | Mint a 5-minute, single-use token for the "Pair Mobile App" QR code; returns `{ pairingToken, expiresAt, serverUrl }` | Yes |
+| POST | `/mobile/pair` | Redeem a pairing token (`{ pairingToken }`) for `{ user, accessToken, refreshToken }` | No |
+| GET | `/oidc/login?client=mobile&code_challenge=<sha256 hex>` | Start SSO from the native app; the callback renders a confirmation page instead of redirecting (see [Mobile single sign-on](#mobile-single-sign-on)) | No |
+| POST | `/oidc/mobile-confirm` | Form post from the confirmation page (`nonce`, `action`); `continue` redirects to `travellife://auth/oidc?code=…`, `cancel` to `travellife://auth/oidc?error=cancelled` | No (single-use nonce) |
+| POST | `/oidc/mobile-exchange` | Exchange that code plus the verifier (`{ code, codeVerifier }`) for tokens | No |
 | GET | `/me` | Get current authenticated user | Yes |
 | POST | `/logout` | Clear refresh token cookie (works even with an expired token) | No |
 
@@ -374,6 +428,27 @@ Web push via VAPID. Endpoints return `503` when push is not configured on the se
 | POST | `/subscribe` | Register a web push subscription for the current user (upserts by `endpoint`) | Yes |
 | DELETE | `/subscribe` | Remove a web push subscription (`{ endpoint }` in body) | Yes |
 | POST | `/test` | Send a test push notification to the caller's active subscriptions | Yes |
+| POST | `/mobile-token` | Register the companion app's Expo push token (`{ token, platform, deviceName? }`, upserts by token) | Yes |
+| DELETE | `/mobile-token` | Remove a native push token (`{ token }`) | Yes |
+
+Native tokens are delivered through the Expo push gateway and need no VAPID configuration:
+`sendToUser` reaches a user's phones whether or not web push is set up.
+
+### Mobile Companion (`/api/trips/:tripId`)
+
+Endpoints added for the native companion app. All require authentication.
+
+| Method | Endpoint | Description | Permission |
+|--------|----------|-------------|------------|
+| GET | `/mobile-sync?since=<ISO instant>` | Every entity of the trip plus its entity-link graph in one response. With `since`, only rows changed after it; `ids` and `linkIds` always list every current row so deletions can be detected. Rows use database column names (`scheduledStart`, not `departureTime`) | view |
+| POST | `/tracks/batch` | Ingest up to 2000 background GPS points (`{ points: [{ latitude, longitude, recordedAt, accuracy?, altitude?, speed? }] }`). Idempotent per `(trip, user, recordedAt)` | edit |
+| GET | `/tracks?date=YYYY-MM-DD&timezone=<IANA>` | The caller's own trail for one day as a GeoJSON `LineString` feature. The day is resolved in `timezone`, else the trip's zone, else the user's | view |
+| POST | `/photos/infer-locations` | Match un-geotagged photos to the caller's trail by `takenAt` and propose `TAKEN_AT` links. Read-only unless `{ apply: true }` | view (edit to apply) |
+| POST | `/expenses/parse-receipt` | Parse OCR text (`{ text, defaultCurrency?, dateOrder?, useLlm? }`) into `{ amount, currency, merchant, date, category, confidence, source }`. Deterministic parsing always runs; an LLM refines it when configured. Saves nothing | edit |
+
+Two existing update schemas gained fields the app writes: `PUT /api/activities/:id` accepts
+`manualOrder`, and `PUT /api/transportation/:id` accepts `actualDepartureTime`,
+`actualArrivalTime`, `status`, `delayMinutes` and `seatNumber`.
 
 ### Search (`/api/search`)
 

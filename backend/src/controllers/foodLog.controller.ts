@@ -1,5 +1,12 @@
 import foodLogService from '../services/foodLog.service';
-import { createFoodLogEntrySchema, updateFoodLogEntrySchema } from '../types/foodLog.types';
+import {
+  createFoodLogEntrySchema,
+  updateFoodLogEntrySchema,
+  attachFoodLogPhotosSchema,
+  attachFoodLogImmichSchema,
+  type AttachFoodLogPhotosInput,
+  type AttachFoodLogImmichInput,
+} from '../types/foodLog.types';
 import { createCrudController } from '../prisma/crudHelpers';
 import { parseId } from '../http/parseId';
 
@@ -42,6 +49,35 @@ export const foodLogController = createCrudController({
         userId,
         parseId(req.params.tripId, 'tripId'),
         parseId(req.params.id),
+      ],
+    },
+    attachPhotos: {
+      method: 'attachPhotos',
+      bodySchema: attachFoodLogPhotosSchema,
+      buildArgs: (userId, req, body) => [
+        userId,
+        parseId(req.params.tripId, 'tripId'),
+        parseId(req.params.id),
+        (body as AttachFoodLogPhotosInput).photoIds,
+      ],
+    },
+    attachImmichAssets: {
+      method: 'attachImmichAssets',
+      bodySchema: attachFoodLogImmichSchema,
+      buildArgs: (userId, req, body) => [
+        userId,
+        parseId(req.params.tripId, 'tripId'),
+        parseId(req.params.id),
+        body as AttachFoodLogImmichInput,
+      ],
+    },
+    removePhoto: {
+      method: 'removePhoto',
+      buildArgs: (userId, req) => [
+        userId,
+        parseId(req.params.tripId, 'tripId'),
+        parseId(req.params.id),
+        parseId(req.params.photoId, 'photoId'),
       ],
     },
     searchEntries: {

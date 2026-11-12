@@ -417,6 +417,11 @@ class TransportationService {
       cost: data.cost,
       currency: data.currency,
       notes: data.notes,
+      actualStart: data.actualDepartureTime,
+      actualEnd: data.actualArrivalTime,
+      status: data.status,
+      delayMinutes: data.delayMinutes,
+      seatNumber: data.seatNumber,
     };
 
     // Transformer for datetime fields: convert string to Date, or null if empty/falsy
@@ -426,6 +431,8 @@ class TransportationService {
       transformers: {
         scheduledStart: dateTimeTransformer,
         scheduledEnd: dateTimeTransformer,
+        actualStart: dateTimeTransformer,
+        actualEnd: dateTimeTransformer,
       },
     });
 
