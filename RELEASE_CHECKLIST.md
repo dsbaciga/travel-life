@@ -8,13 +8,17 @@ Comprehensive checklist for releasing new versions of Travel Life.
 `.github/workflows/release.yml`, which builds from a clean checkout of the tagged commit,
 pushes to `ghcr.io`, and creates the GitHub Release from the matching `CHANGELOG.md` section.
 
-`release.ps1` / `release.sh` bump the version, verify the builds, commit, tag and push the
-tag. They build Docker images locally as a last verification but **never push them**. Do not
-push images by hand. See [docs/guides/BUILD_AND_PUSH.md](docs/guides/BUILD_AND_PUSH.md) for
-the reasoning.
+**Never push to `main`.** `main` is protected: every change, including the release version
+bump, reaches it through a pull request (squash or rebase merge; merge commits are rejected).
 
-The manual steps below are ordered to match what `release.ps1` actually does:
-version bump → build verification → commit → local Docker build → tag → push tag → CI publishes.
+`release.ps1` therefore releases in two phases. Phase 1 opens a `release/vX.Y.Z` PR with the
+version bump; once it is merged, phase 2 (`-Tag`) tags the merged commit on `main` and pushes
+**only the tag**. The scripts never build or push images, and you must not push images by
+hand. See [docs/guides/BUILD_AND_PUSH.md](docs/guides/BUILD_AND_PUSH.md) for the reasoning.
+
+The steps below are ordered to match the script:
+release PR (version bump, changelog, compose defaults, build check) → merge PR → tag main →
+CI publishes.
 
 ## Pre-Release
 
@@ -53,110 +57,73 @@ version bump → build verification → commit → local Docker build → tag �
 - **MINOR** (x.1.0): New features, backwards compatible
 - **MAJOR** (1.0.0): Breaking changes, major refactors
 
-### Update Version Numbers
+### Phase 1: open the release PR
 
-Using automated script (recommended):
-
-```powershell
-.\release.ps1 -Version patch -NoConfirm
-```
-
-Or manually update:
-
-- [ ] `backend/package.json` - version field
-- [ ] `frontend/package.json` - version field
-
-The version is tracked only in these two `package.json` files; there is no separate `VERSION` file. The `release.ps1` script updates both automatically, and both release scripts read the current version from `backend/package.json`.
-
-- [ ] `CHANGELOG.md` - move the `[Unreleased]` entries under a `## [X.Y.Z] - YYYY-MM-DD`
-      heading (the release scripts insert this heading for you; fill in the entries as you work)
-
-On Linux/Mac the equivalent script is:
-
-```bash
-./release.sh patch          # or minor / major / 5.6.2 / v5.6.2
-```
-
-## Build Verification
-
-### Backend
-
-```bash
-cd backend
-npm run build
-```
-
-- [ ] Build completes successfully
-- [ ] No TypeScript errors
-- [ ] No critical warnings
-
-### Frontend
-
-```bash
-cd frontend
-npm run build
-```
-
-- [ ] Build completes successfully
-- [ ] No TypeScript errors
-- [ ] Bundle size is reasonable
-
-## Git Operations
-
-The version bump is committed **before** the Docker build (this is the order `release.ps1`
-uses — build verification above already passed at this point).
-
-```bash
-# Commit version changes
-git add -A
-git commit -m "Bump version to vX.X.X"
-```
-
-- [ ] Changes committed
-
-## Docker Build (local verification only)
-
-### Build Images
+Start from a clean `main` that matches `origin/main` (merge feature branches through their
+own PRs first). Make sure `CHANGELOG.md` has entries under `## [Unreleased]` — CI uses that
+section as the GitHub Release body.
 
 ```powershell
-# Windows
-.\build.truenas.ps1 -Version vX.X.X -Registry ghcr.io/dsbaciga
-
-# Linux/Mac
-DOCKER_REGISTRY=ghcr.io/dsbaciga ./build.sh vX.X.X
+.\release.ps1 -Version patch -NoConfirm      # or minor / major / vX.Y.Z
 ```
 
-- [ ] Backend image builds successfully
-- [ ] Frontend image builds successfully
-- [ ] Images are **not** pushed (CI publishes them)
+The script, in order:
 
-### Test Images Locally
+- [ ] Creates the branch `release/vX.Y.Z`
+- [ ] Bumps `backend/package.json` and `frontend/package.json` (the only places the version
+      lives; there is no `VERSION` file)
+- [ ] Promotes `[Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`
+- [ ] Bumps the `APP_VERSION` default in both TrueNAS compose files
+- [ ] Builds backend and frontend — a failing build aborts the release
+- [ ] Commits only those files, pushes the branch and opens a PR titled `Release vX.Y.Z`
+
+`release.sh` is disabled until it is ported to this flow; use `release.ps1` (PowerShell 7
+runs on Linux/Mac too).
+
+### Build Verification
+
+The script runs these for you; run them yourself when releasing manually.
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+cd backend && npm run build
+cd ../frontend && npm run build
 ```
 
-- [ ] All containers start
-- [ ] Backend health check passes
-- [ ] Frontend loads correctly
-- [ ] Database migrations run
+- [ ] Backend builds with no TypeScript errors
+- [ ] Frontend builds with no TypeScript errors and a reasonable bundle size
+
+## Merge the Release PR
+
+- [ ] PR checks are green
+- [ ] Merge with **squash or rebase** (merge commits are rejected on `main`)
+- [ ] Update local `main`:
+
+```bash
+git switch main
+git pull --ff-only origin main
+```
 
 ## Publish
 
-### Tag and Push (this is what publishes)
+### Phase 2: tag main (this is what publishes)
 
-```bash
-# Create annotated tag
-git tag -a vX.X.X -m "vX.X.X - Brief description"
-
-# Push to remote - pushing the tag triggers the release workflow
-git push origin main
-git push origin vX.X.X
+```powershell
+.\release.ps1 -Tag
 ```
 
-- [ ] Tag created
-- [ ] Tag pushed to remote
-- [ ] Verify tag on GitHub
+The script fast-forwards `main`, checks that `backend` and `frontend` agree on the merged
+version, refuses if the tag already exists (it never deletes or recreates one), creates the
+annotated tag and pushes **only the tag**. That push triggers CI.
+
+- [ ] Tag created and pushed
+- [ ] Verify the tag on GitHub
+
+Manual equivalent, from an up-to-date `main`:
+
+```bash
+git tag -a vX.X.X -m "vX.X.X - Brief description"
+git push origin vX.X.X
+```
 
 ### Watch CI Publish
 
@@ -164,6 +131,9 @@ git push origin vX.X.X
       (<https://github.com/dsbaciga/travel-life/actions>)
 - [ ] Images `X.X.X`, `vX.X.X` and `latest` appear on GitHub Packages
 - [ ] GitHub Release created with the `CHANGELOG.md` notes for this version
+- [ ] `travel-life-X.Y.Z.apk` is attached to the release (the Android build is the slowest
+      job and runs independently of the images; a failed APK build leaves the images and the
+      release published without it)
 
 ## Post-Release
 
@@ -173,6 +143,8 @@ git push origin vX.X.X
 - [ ] Verify staging deployment
 - [ ] Deploy to production
 - [ ] Run database migrations in production
+      (`docker exec travel-life-backend npx prisma migrate deploy`) — new images do not apply
+      them, and the release notes list any new migrations
 - [ ] Verify production deployment
 
 ### Verification
@@ -228,24 +200,30 @@ docker exec -i travel-life-db psql -U travel_life_user travel_life < backup.sql
 
 ## Automation Options
 
-### Fully Automated Release
+### Phase 1 (non-interactive)
 
 ```powershell
-# Non-interactive release with all steps
 .\release.ps1 -Version patch -NoConfirm
+```
+
+### Phase 2 (after the PR is merged)
+
+```powershell
+.\release.ps1 -Tag
 ```
 
 ### Dry Run (Preview)
 
 ```powershell
-# See what would happen without making changes
+# Preview either phase without changing anything
 .\release.ps1 -Version patch -DryRun
+.\release.ps1 -Tag -DryRun
 ```
 
 ### Skip Build Verification
 
 ```powershell
-# If you've already verified builds
+# Only if you have already verified the builds; CI will still build the images
 .\release.ps1 -Version patch -NoConfirm -SkipBuild
 ```
 
@@ -257,28 +235,26 @@ docker exec -i travel-life-db psql -U travel_life_user travel_life < backup.sql
 - Verify all dependencies are installed
 - Clear node_modules and reinstall
 
-### Docker Push Authentication
-
-```bash
-# Re-authenticate with GitHub Container Registry
-echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
-```
-
 ### Tag Already Exists
 
-Prefer bumping to the next version. Only delete a tag if it was never published — deleting a
-shipped tag removes it for everyone, and CI has already built images from it.
+`-Tag` refuses when the tag exists locally or on `origin`. Prefer releasing the next patch
+version. Only delete a tag if it was never published — deleting a shipped tag removes it for
+everyone, and CI has already built images from it. Do it by hand, deliberately:
 
 ```bash
-# Delete and recreate tag
 git tag -d vX.X.X
 git push origin :refs/tags/vX.X.X
-git tag -a vX.X.X -m "Description"
-git push origin vX.X.X
 ```
 
-`release.ps1` prompts before doing this (and skips the prompt only with `-NoConfirm`);
-`release.sh` refuses outright and asks you to pick another version.
+### The Release PR Cannot Be Merged
+
+Do not push to `main` to work around it. `main` rejects merge commits and requires a PR, so
+fix the failing check on the `release/vX.Y.Z` branch, or squash/rebase-merge instead.
+
+### Pushed a Release Branch But the PR Did Not Open
+
+The branch is already on `origin`. Open the PR by hand:
+`gh pr create --base main --head release/vX.Y.Z --title "Release vX.Y.Z" --fill`.
 
 ## Related Documentation
 
