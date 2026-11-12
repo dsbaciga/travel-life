@@ -25,6 +25,10 @@ Before building, set a Google Maps Android API key in `app.json` under
 `expo.android.config.googleMaps.apiKey`; without one the Map tab renders a blank grid.
 Push notifications additionally need an EAS project id (`expo.extra.eas.projectId`).
 
+Release APKs are built and signed by CI on every version tag and attached to the GitHub
+Release; see [Build and Push](../docs/guides/BUILD_AND_PUSH.md#android-companion-app). CI
+writes its own `app.json` from the example with `scripts/write-app-config.mjs`.
+
 The Maps key is compiled into the APK, so anyone with the APK can read it. Restrict it in the
 Google Cloud console to the Maps SDK for Android, the package `dev.travellife.companion` and
 your signing certificate's SHA-1.
