@@ -367,6 +367,7 @@ export default function AccountSettingsSection({
           selectedTags={dietaryPreferences}
           onChange={onDietaryPreferencesChange}
           showLabels={true}
+          showSelectAll={false}
         />
         <div className="mt-4">
           <button
