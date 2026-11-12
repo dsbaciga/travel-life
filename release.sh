@@ -18,6 +18,13 @@
 
 set -euo pipefail
 
+# main is protected: all changes go through a pull request, and this script pushes
+# main directly. It has not been updated for the two-phase PR flow, so it refuses to
+# run. Use release.ps1 (see docs/guides/BUILD_AND_PUSH.md).
+echo "release.sh is disabled: releases go through a PR. Use release.ps1 (see docs/guides/BUILD_AND_PUSH.md)." >&2
+exit 1
+
+
 # Must run from the repository root
 if [ ! -f backend/package.json ] || [ ! -f frontend/package.json ]; then
     echo "ERROR: run this script from the travel-life root directory" >&2

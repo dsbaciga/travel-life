@@ -58,8 +58,12 @@
 #>
 
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$Version,
+    # patch|minor|major or an explicit version. Required for phase 1; optional with -Tag
+    # (the version is then read from package.json).
+    [string]$Version = "",
+
+    # Phase 2: after the release PR is merged, tag the merged commit on main and push the tag.
+    [switch]$Tag,
 
     [switch]$SkipBuild,
 
@@ -102,11 +106,25 @@ $Major = [int]$VersionParts[0]
 $Minor = [int]$VersionParts[1]
 $Patch = [int]$VersionParts[2]
 
-$NumericVersion = switch ($Version.ToLower()) {
-    "patch" { "$Major.$Minor.$($Patch + 1)" }
-    "minor" { "$Major.$($Minor + 1).0" }
-    "major" { "$($Major + 1).0.0" }
-    default { $Version.TrimStart("v") }
+if ($Tag) {
+    # Phase 2 never bumps: the version was already bumped by the merged release PR.
+    $NumericVersion = $CurrentVersion
+    if ($Version -and $Version.TrimStart("v") -ne $CurrentVersion) {
+        Write-Err "-Tag tags the version already in package.json ($CurrentVersion), but -Version is $Version."
+        Write-Err "Is the release PR merged and main up to date?"
+        exit 1
+    }
+} else {
+    if (-not $Version) {
+        Write-Err "-Version is required (patch|minor|major or an explicit version)."
+        exit 1
+    }
+    $NumericVersion = switch ($Version.ToLower()) {
+        "patch" { "$Major.$Minor.$($Patch + 1)" }
+        "minor" { "$Major.$($Minor + 1).0" }
+        "major" { "$($Major + 1).0.0" }
+        default { $Version.TrimStart("v") }
+    }
 }
 
 # Ensure Version variable has 'v' prefix for tags
@@ -115,8 +133,12 @@ $Version = "v$NumericVersion"
 Write-Host "`n==========================================" -ForegroundColor Magenta
 Write-Host "  Travel Life Release Script" -ForegroundColor Magenta
 Write-Host "==========================================" -ForegroundColor Magenta
-Write-Host "Current version: $CurrentVersion"
-Write-Host "New version:     $NumericVersion"
+if ($Tag) {
+    Write-Host "Tagging version: $NumericVersion (phase 2: tag merged main)"
+} else {
+    Write-Host "Current version: $CurrentVersion"
+    Write-Host "New version:     $NumericVersion (phase 1: release PR)"
+}
 Write-Host "Registry:        $Registry"
 if ($DryRun) { Write-Warn "DRY RUN MODE - No changes will be made" }
 Write-Host ""
@@ -132,23 +154,109 @@ if (-not $NoConfirm) {
     Write-Info "Skipping confirmation (NoConfirm mode)"
 }
 
-# Step 1: Check for uncommitted changes
-Write-Step "Checking git status"
-$gitStatus = git status --porcelain
-if ($gitStatus) {
-    Write-Warn "You have uncommitted changes:"
-    $gitStatus | ForEach-Object { Write-Info $_ }
-    if (-not $NoConfirm) {
-        $response = Read-Host "These will be included in the release commit. Continue? (y/N)"
-        if ($response -ne "y" -and $response -ne "Y") {
-            Write-Err "Aborted"
-            exit 1
-        }
-    } else {
-        Write-Info "Proceeding with uncommitted changes (NoConfirm mode)"
+# ---------------------------------------------------------------------------
+# Phase 2 (-Tag): tag the merged release commit on main and push ONLY the tag.
+#
+# main is protected: every change reaches it through a pull request, so this script
+# never pushes main. Pushing the tag is what triggers CI to build and publish.
+# ---------------------------------------------------------------------------
+if ($Tag) {
+    Write-Step "Preparing to tag $Version"
+
+    $currentBranch = git branch --show-current
+    if ($currentBranch -ne "main") {
+        Write-Err "Tag from main (currently on '$currentBranch'). Merge the release PR, then: git switch main"
+        exit 1
     }
+    if (git status --porcelain) {
+        Write-Err "Working tree is not clean. Commit or stash before tagging."
+        exit 1
+    }
+
+    git fetch origin main --tags --quiet
+    if ($LASTEXITCODE -ne 0) { Write-Err "git fetch failed"; exit 1 }
+
+    if ([int](git rev-list --count "origin/main..HEAD") -gt 0) {
+        Write-Err "Local main has commits that are not on origin/main. Refusing to tag unpushed work."
+        exit 1
+    }
+    if ([int](git rev-list --count "HEAD..origin/main") -gt 0) {
+        Write-Info "Fast-forwarding local main to origin/main"
+        if (-not $DryRun) {
+            git merge --ff-only origin/main
+            if ($LASTEXITCODE -ne 0) { Write-Err "Could not fast-forward main"; exit 1 }
+        }
+    }
+
+    # Re-read after the fast-forward: the merged PR is what carries the version bump.
+    $backendNow = (Get-Content "backend/package.json" -Raw | ConvertFrom-Json).version
+    $frontendNow = (Get-Content "frontend/package.json" -Raw | ConvertFrom-Json).version
+    if ($Version -and $Version.TrimStart("v") -ne $backendNow) {
+        Write-Err "main is at version $backendNow, not $($Version.TrimStart('v')). Is the release PR merged?"
+        exit 1
+    }
+    if ($frontendNow -ne $backendNow) {
+        Write-Err "backend ($backendNow) and frontend ($frontendNow) versions differ on main."
+        exit 1
+    }
+    $NumericVersion = $backendNow
+    $Version = "v$NumericVersion"
+
+    # Never delete or recreate a tag here: a published release tag is history.
+    if (git tag -l $Version) { Write-Err "Tag $Version already exists locally."; exit 1 }
+    if (git ls-remote --tags origin "refs/tags/$Version") { Write-Err "Tag $Version already exists on origin."; exit 1 }
+
+    $tagMessage = if ($Description) { "$Version - $Description" } else { "$Version - Release" }
+    Write-Info "Tagging $(git rev-parse --short HEAD): $tagMessage"
+
+    if (-not $DryRun) {
+        git tag -a $Version -m $tagMessage
+        if ($LASTEXITCODE -ne 0) { Write-Err "Failed to create tag"; exit 1 }
+        git push origin $Version
+        if ($LASTEXITCODE -ne 0) { Write-Err "Failed to push tag"; exit 1 }
+        Write-Success "Tag $Version pushed"
+    } else {
+        Write-Info "Would create and push tag $Version"
+    }
+
+    Write-Host ""
+    Write-Host "CI is now building and PUBLISHING the images (this script does not push them):" -ForegroundColor White
+    Write-Host "  - $Registry/${BackendImage}:$Version  (and :$NumericVersion, :latest)" -ForegroundColor Cyan
+    Write-Host "  - $Registry/${FrontendImage}:$Version  (and :$NumericVersion, :latest)" -ForegroundColor Cyan
+    Write-Host "Watch the run: https://github.com/dsbaciga/travel-life/actions" -ForegroundColor Yellow
+    Write-Host "Wait for it to go green BEFORE deploying." -ForegroundColor Yellow
+    exit 0
 }
-Write-Success "Git status checked"
+
+# Step 1: Preconditions for the release PR
+Write-Step "Checking git status"
+$currentBranch = git branch --show-current
+if ($currentBranch -ne "main") {
+    Write-Err "Start from main (currently on '$currentBranch'). Merge your feature branch through a PR first."
+    exit 1
+}
+if (git status --porcelain) {
+    Write-Err "Working tree is not clean. The release PR must contain only the version bump - commit or stash first."
+    exit 1
+}
+git fetch origin main --quiet
+if ($LASTEXITCODE -ne 0) { Write-Err "git fetch failed"; exit 1 }
+if ((git rev-parse HEAD) -ne (git rev-parse origin/main)) {
+    Write-Err "Local main is not identical to origin/main. Run: git pull --ff-only origin main"
+    exit 1
+}
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    Write-Err "The GitHub CLI (gh) is required to open the release PR."
+    exit 1
+}
+$releaseBranch = "release/$Version"
+if (git branch --list $releaseBranch) { Write-Err "Branch $releaseBranch already exists locally."; exit 1 }
+if (git ls-remote --heads origin $releaseBranch) { Write-Err "Branch $releaseBranch already exists on origin."; exit 1 }
+if (-not $DryRun) {
+    git switch -c $releaseBranch
+    if ($LASTEXITCODE -ne 0) { Write-Err "Could not create $releaseBranch"; exit 1 }
+}
+Write-Success "Git status checked (release branch: $releaseBranch)"
 
 # Step 2: Update version in package.json files
 Write-Step "Updating version to $NumericVersion"
@@ -190,8 +298,18 @@ if (-not $DryRun) {
     } else {
         Write-Warn "CHANGELOG.md not found - the GitHub Release body will use a generic note"
     }
+
+    # TrueNAS compose files pin ${APP_VERSION:-vX.Y.Z}; bump the default in the same PR
+    # so no separate commit to main is needed after the release.
+    foreach ($composeFile in @("docker-compose.truenas.yml", "docker-compose.truenas.optimized.yml")) {
+        if (Test-Path $composeFile) {
+            $composeContent = Get-Content $composeFile -Raw -Encoding UTF8
+            $composeContent = $composeContent -replace 'APP_VERSION:-v[0-9][^}]*\}', "APP_VERSION:-v$NumericVersion}"
+            [System.IO.File]::WriteAllText("$PWD/$composeFile", $composeContent)
+        }
+    }
 }
-Write-Success "Version updated in package.json files"
+Write-Success "Version updated in package.json and compose files"
 
 # Helper: run "npm run build" in a package directory and return the real exit code.
 # NOTE: `$ErrorActionPreference = "Stop"` plus `2>&1` on a native command turns any
@@ -290,143 +408,53 @@ if (-not $SkipBuild) {
     Write-Warn "Skipping build verification"
 }
 
-# Step 4: Commit version bump and any staged changes
+# Step 4: Commit the version bump on the release branch
 Write-Step "Committing changes"
 
-# Build commit message
 if ($CommitMessage) {
     $finalCommitMessage = "$CommitMessage`n`nBump version to $Version"
 } else {
     $finalCommitMessage = "Bump version to $Version"
 }
 
+# Explicit paths: the PR must contain only the release bump.
+$releaseFiles = @("backend/package.json", "frontend/package.json", "CHANGELOG.md",
+                  "docker-compose.truenas.yml", "docker-compose.truenas.optimized.yml")
+
+# NOTE: there is deliberately no local Docker build here. CI builds the real images
+# from the tagged commit (see docs/guides/BUILD_AND_PUSH.md); a local build proves nothing.
+
 if (-not $DryRun) {
-    git add -A
+    git add -- ($releaseFiles | Where-Object { Test-Path $_ })
     git commit -m $finalCommitMessage
-    if ($LASTEXITCODE -eq 0) {
-        Write-Success "Changes committed"
-    } else {
-        Write-Info "Nothing new to commit"
-    }
+    if ($LASTEXITCODE -ne 0) { Write-Err "Nothing to commit - version bump produced no changes"; exit 1 }
+    Write-Success "Version bump committed"
 } else {
     Write-Info "Would commit: $finalCommitMessage"
 }
 
-# NOTE: there is deliberately no local Docker build here.
-#
-# This step used to run build.truenas.ps1 as "final verification". It was worse
-# than useless: it built DIFFERENT images from the ones CI publishes. The local
-# script builds the frontend from Dockerfile.prod.truenas (which hardcodes
-# VITE_API_URL=/api), while release.yml builds Dockerfile.prod and passes
-# VITE_API_URL as a build-arg. In 6.0.0 that arg defaulted to
-# http://localhost:5000/api, so the local build passed while the published image
-# was broken for every user - the verification's success actively hid the bug.
-#
-# CI builds the real images from a clean checkout of the tagged commit, so a
-# failing workflow run is the actual gate. Watch it after the tag push.
-
-# Step 5: Create and push git tag
-Write-Step "Creating git tag"
-
-# Build tag message
-if ($Description) {
-    $tagMessage = "$Version - $Description"
-} else {
-    # Try to get description from recent commit
-    $recentCommit = git log -1 --pretty=format:"%s" 2>$null
-    if ($recentCommit -and $recentCommit -ne "Bump version to $Version") {
-        $tagMessage = "$Version - $recentCommit"
-    } else {
-        $tagMessage = "$Version - Release"
-    }
-}
-
-Write-Info "Tag message: $tagMessage"
-
+# Step 5: Push the release branch and open the PR. main is never pushed to directly.
+Write-Step "Opening release PR"
 if (-not $DryRun) {
-    # Check if tag already exists (destructive path - always confirm unless -NoConfirm)
-    $existingTag = git tag -l $Version
-    if ($existingTag) {
-        Write-Warn "Tag $Version ALREADY EXISTS."
-        Write-Warn "Recreating it deletes the tag locally AND on origin - if $Version was"
-        Write-Warn "already published, this destroys a shipped release tag."
-        if (-not $NoConfirm) {
-            $tagResponse = Read-Host "Delete and recreate tag $Version (local + origin)? (y/N)"
-            if ($tagResponse -ne 'y' -and $tagResponse -ne 'Y') {
-                Write-Err "Aborted. Choose a different -Version, or delete the tag yourself."
-                exit 1
-            }
-        } else {
-            Write-Warn "NoConfirm mode: deleting and recreating tag $Version"
-        }
+    git push -u origin $releaseBranch
+    if ($LASTEXITCODE -ne 0) { Write-Err "Failed to push $releaseBranch"; exit 1 }
 
-        git tag -d $Version
-        if ($LASTEXITCODE -ne 0) {
-            Write-Err "Failed to delete local tag $Version"
-            exit 1
-        }
-
-        # Only try the remote deletion if the tag actually exists on origin,
-        # so a missing remote tag is not treated as a failure.
-        $remoteTag = git ls-remote --tags origin "refs/tags/$Version"
-        if ($remoteTag) {
-            git push origin ":refs/tags/$Version"
-            if ($LASTEXITCODE -ne 0) {
-                Write-Err "Failed to delete remote tag $Version - aborting before recreating it"
-                Write-Info "The local tag has been deleted; the remote tag still exists."
-                exit 1
-            }
-            Write-Success "Deleted remote tag $Version"
-        } else {
-            Write-Info "Tag $Version does not exist on origin - nothing to delete remotely"
-        }
-    }
-
-    git tag -a $Version -m $tagMessage
-    if ($LASTEXITCODE -ne 0) {
-        Write-Err "Failed to create tag"
-        exit 1
-    }
-    Write-Success "Git tag created"
+    $prBody = "Release $Version. Bumps backend/frontend to $NumericVersion, promotes the CHANGELOG [Unreleased] section and bumps the TrueNAS APP_VERSION defaults.`n`nAfter merging (squash or rebase - main rejects merge commits), tag it with: ``.\release.ps1 -Tag``"
+    gh pr create --base main --head $releaseBranch --title "Release $Version" --body $prBody
+    if ($LASTEXITCODE -ne 0) { Write-Err "Failed to open the PR (branch $releaseBranch is pushed)"; exit 1 }
+    Write-Success "Release PR opened"
 } else {
-    Write-Info "Would create tag: $Version"
+    Write-Info "Would push $releaseBranch and open a PR titled 'Release $Version'"
 }
 
-Write-Step "Pushing to remote"
-if (-not $DryRun) {
-    git push origin main
-    if ($LASTEXITCODE -ne 0) {
-        Write-Warn "Failed to push main branch (may already be up to date)"
-    }
-
-    git push origin $Version
-    if ($LASTEXITCODE -ne 0) {
-        Write-Err "Failed to push tag"
-        exit 1
-    }
-    Write-Success "Pushed to remote"
-} else {
-    Write-Info "Would push: main branch and $Version tag"
-}
-
-# Summary
 Write-Host "`n==========================================" -ForegroundColor Green
-Write-Host "  Release $Version tagged and pushed!" -ForegroundColor Green
+Write-Host "  Release PR for $Version is open" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Git tag: $Version" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "CI is now building and PUBLISHING the images (this script does not push):" -ForegroundColor White
-Write-Host "  - $Registry/${BackendImage}:$Version  (and :$NumericVersion, :latest)" -ForegroundColor Cyan
-Write-Host "  - $Registry/${FrontendImage}:$Version  (and :$NumericVersion, :latest)" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Watch the run: https://github.com/dsbaciga/travel-life/actions" -ForegroundColor Yellow
-Write-Host "Wait for it to go green BEFORE deploying." -ForegroundColor Yellow
-Write-Host ""
-Write-Host "To deploy on TrueNAS (pin the version you just released):" -ForegroundColor White
-Write-Host "  export APP_VERSION=$Version" -ForegroundColor Yellow
-Write-Host "  docker-compose -f docker-compose.truenas.yml pull" -ForegroundColor Yellow
-Write-Host "  docker-compose -f docker-compose.truenas.yml up -d" -ForegroundColor Yellow
+Write-Host "Next:" -ForegroundColor White
+Write-Host "  1. Get the PR merged (squash or rebase; no merge commits)." -ForegroundColor Yellow
+Write-Host "  2. git switch main; git pull --ff-only origin main" -ForegroundColor Yellow
+Write-Host "  3. .\release.ps1 -Tag     # tags main and pushes the tag; CI publishes" -ForegroundColor Yellow
 Write-Host ""
 
 if ($DryRun) {

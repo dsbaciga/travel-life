@@ -8,9 +8,8 @@ This checklist outlines the proper steps to build, tag, and publish a new versio
 every `v*` tag push and is the only thing that pushes to `ghcr.io` or creates a GitHub
 Release.
 
-`release.ps1` / `release.sh` bump the version, verify the builds, commit, tag, and push the
-tag. They build Docker images **locally as a final verification and deliberately do not push
-them**.
+`release.ps1` bumps the version, verifies the builds and opens a release PR; after the PR
+is merged, `release.ps1 -Tag` tags main and pushes the tag. They never build or push images.
 
 Why: the scripts used to push `:vX.Y.Z` from a developer machine, and the tag push then made
 CI build the same commit again and publish it as `:X.Y.Z`, `:X.X`, `:X` and `:latest`. Two
@@ -55,18 +54,30 @@ The easiest way to release a new version is using the automated release script:
 .\release.ps1 -Version patch -NoConfirm
 ```
 
-The script does the following, **in this order** (this matches `release.ps1` exactly — build
-verification happens *before* the commit):
+## Never push to main — releases go through a PR
 
-1. Checks git status (prompts if there are uncommitted changes)
-2. Updates version in `backend/package.json` and `frontend/package.json`, and promotes the
-   `[Unreleased]` section of `CHANGELOG.md` to the new version
+`main` is protected: every change, including the release version bump, reaches it through a
+pull request (squash or rebase merge; merge commits are rejected). `release.ps1` therefore
+works in two phases and **never pushes `main`**:
+
+**Phase 1 — `.\release.ps1 -Version patch -NoConfirm`** (from a clean `main` that matches
+`origin/main`; merge feature branches via their own PRs first):
+
+1. Creates the branch `release/vX.Y.Z`
+2. Updates `backend/package.json` and `frontend/package.json`, promotes `[Unreleased]` in
+   `CHANGELOG.md`, and bumps the `APP_VERSION` defaults in both TrueNAS compose files
 3. Builds and verifies backend and frontend — **a failing build aborts the release**
-   (with `-NoConfirm` it exits immediately; interactively it requires an explicit override)
-4. Commits the version bump
-5. Creates the annotated git tag (prompts before deleting/recreating an existing tag;
-   `-NoConfirm` skips that prompt, so double-check the version in automated runs)
-6. Pushes the commit and the tag to GitHub
+4. Commits only those files, pushes the branch and opens a PR titled `Release vX.Y.Z`
+
+Get the PR merged, then:
+
+**Phase 2 — `git switch main; git pull --ff-only origin main; .\release.ps1 -Tag`**
+
+Fast-forwards main, checks the merged version, creates the annotated tag (refusing if it
+already exists — it never deletes or recreates a tag) and pushes **only the tag**. That push
+triggers CI to build and publish.
+
+`-DryRun` previews either phase. `-Description` sets the tag message in phase 2.
 
 **The release scripts no longer build Docker images.** They used to, as a final
 verification, but the local build used *different* Dockerfiles than CI publishes —
@@ -80,12 +91,8 @@ clean checkout is the only real gate — watch the run.**
 `build.truenas.ps1` still exists for building images locally by hand, but a successful run
 of it says nothing about what CI will publish.
 
-On Linux/Mac use `release.sh`, which follows the same order:
-
-```bash
-./release.sh patch          # or minor / major
-./release.sh v1.12.6        # explicit version; a leading "v" is stripped for package.json
-```
+`release.sh` has not been updated for the PR flow and now refuses to run; use `release.ps1`
+(PowerShell 7 runs it on Linux/Mac too).
 
 Pushing the tag triggers `release.yml`, which builds and **publishes** the images and creates
 the GitHub Release. Watch <https://github.com/dsbaciga/travel-life/actions> and wait for it to
@@ -151,20 +158,19 @@ Let CI build the images from the tagged commit, and read the workflow run as the
 - [ ] **Commit the version bump**
 
   ```bash
+  git switch -c release/vX.X.X
   git add -A
   git commit -m "Bump version to vX.X.X"
   ```
 
-- [ ] **Create annotated git tag**
+- [ ] **Push the branch, open a PR, merge it, then tag main**
 
   ```bash
+  git push -u origin release/vX.X.X
+  gh pr create --base main --title "Release vX.X.X" --fill
+  # merge the PR (squash/rebase), then:
+  git switch main && git pull --ff-only origin main
   git tag -a vX.X.X -m "vX.X.X - Brief description of changes"
-  ```
-
-- [ ] **Push the commit and the tag**
-
-  ```bash
-  git push origin main
   git push origin vX.X.X
   ```
 
@@ -255,7 +261,8 @@ with a different key and must be uninstalled first.
 
 ## Post-Release
 
-- [ ] **Bump the `APP_VERSION` default in the TrueNAS compose files**
+- [ ] **Bump the `APP_VERSION` default in the TrueNAS compose files** (`release.ps1` now does
+  this inside the release PR; only do it by hand for a manual release)
 
   `docker-compose.truenas.yml` and `docker-compose.truenas.optimized.yml` pin
   `${APP_VERSION:-vX.Y.Z}`. That default is what a deploy uses when `APP_VERSION` is not
@@ -341,7 +348,8 @@ Follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ```powershell
 # Full automated release
-.\release.ps1 -Version vX.X.X
+.\release.ps1 -Version vX.X.X        # phase 1: release PR
+.\release.ps1 -Tag                   # phase 2: after the PR is merged, tag main
 
 # Non-interactive release (skip confirmations)
 .\release.ps1 -Version vX.X.X -NoConfirm
@@ -366,10 +374,14 @@ Follow semantic versioning (MAJOR.MINOR.PATCH):
 cd backend && npm run build
 cd ../frontend && npm run build
 cd ..
+git switch -c release/vX.X.X
 git add -A
 git commit -m "Bump version to vX.X.X"
+git push -u origin release/vX.X.X
+gh pr create --base main --title "Release vX.X.X" --fill
+# after the PR is merged:
+git switch main && git pull --ff-only origin main
 git tag -a vX.X.X -m "vX.X.X - Description"
-git push origin main
 git push origin vX.X.X   # <- this is what publishes the images, via CI
 ```
 
