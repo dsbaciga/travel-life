@@ -105,9 +105,11 @@
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-lg border-2
-           border-primary-100 dark:border-gold/20
-           bg-white dark:bg-navy-800
+    /* A quiet hairline at rest; the accent colour is kept for focus, so a
+       form full of fields does not read as a wall of gold boxes. */
+    @apply w-full px-3.5 py-2.5 rounded-lg border
+           border-primary-500/20 dark:border-navy-600
+           bg-white dark:bg-navy-900/40
            text-charcoal dark:text-warm-gray font-body
            placeholder:text-slate/50 dark:placeholder:text-warm-gray/40
            focus:outline-none

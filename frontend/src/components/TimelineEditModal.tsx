@@ -136,6 +136,8 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
   const [originalActivityLocationId, setOriginalActivityLocationId] = useState<
     number | null
   >(null);
+  // True when the stay being edited already has an address saved on it.
+  const [hadLodgingAddress, setHadLodgingAddress] = useState(false);
   const [originalLodgingLocationId, setOriginalLodgingLocationId] = useState<
     number | null
   >(null);
@@ -391,6 +393,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         setOriginalLodgingLocationId(null);
       }
 
+      setHadLodgingAddress(!!lodging.address);
       setLodgingForm({
         type: lodging.type,
         name: lodging.name,
@@ -1459,21 +1462,26 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         )}
       </div>
 
-      {/* Address */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-          Address
-        </label>
-        <input
-          type="text"
-          value={lodgingForm.address}
-          onChange={(e) =>
-            setLodgingForm((prev) => ({ ...prev, address: e.target.value }))
-          }
-          className="input"
-          placeholder="Street address"
-        />
-      </div>
+      {/* Address is no longer collected here; the linked Place carries it.
+          An address saved on an older stay is still shown. */}
+      {hadLodgingAddress && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
+            Address
+          </label>
+          <input
+            type="text"
+            value={lodgingForm.address}
+            onChange={(e) =>
+              setLodgingForm((prev) => ({ ...prev, address: e.target.value }))
+            }
+            className="input"
+          />
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+            Kept from before. New stays take their address from the linked Place.
+          </p>
+        </div>
+      )}
 
       {/* Check-in/Check-out */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

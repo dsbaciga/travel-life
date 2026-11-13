@@ -126,6 +126,8 @@ export default function UnscheduledItems({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Track original lodging location ID when editing to detect changes (for entity linking)
+  // True when the stay being edited already has an address saved on it.
+  const [hadLodgingAddress, setHadLodgingAddress] = useState(false);
   const [originalLodgingLocationId, setOriginalLodgingLocationId] = useState<number | null>(null);
 
   // Activity-specific state for shared form
@@ -476,6 +478,7 @@ export default function UnscheduledItems({
     }
 
     lodgingForm.handleChange("address", lodgingItem.address || "");
+    setHadLodgingAddress(!!lodgingItem.address);
     lodgingForm.handleChange("timezone", lodgingItem.timezone || "");
     lodgingForm.handleChange(
       "confirmationNumber",
@@ -1296,23 +1299,30 @@ export default function UnscheduledItems({
               </select>
             </div>
 
-            <div>
-              <label
-                htmlFor="unscheduled-lodging-address"
-                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
-              >
-                Address
-              </label>
-              <input
-                type="text"
-                id="unscheduled-lodging-address"
-                value={lodgingForm.values.address}
-                onChange={(e) =>
-                  lodgingForm.handleChange("address", e.target.value)
-                }
-                className="input"
-              />
-            </div>
+            {/* Address is no longer collected here; the linked Place carries
+                it. An address saved on an older stay is still shown. */}
+            {hadLodgingAddress && (
+              <div>
+                <label
+                  htmlFor="unscheduled-lodging-address"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
+                >
+                  Address
+                </label>
+                <input
+                  type="text"
+                  id="unscheduled-lodging-address"
+                  value={lodgingForm.values.address}
+                  onChange={(e) =>
+                    lodgingForm.handleChange("address", e.target.value)
+                  }
+                  className="input"
+                />
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                  Kept from before. New stays take their address from the linked Place.
+                </p>
+              </div>
+            )}
           </FormSection>
 
           <FormSection title="Schedule">

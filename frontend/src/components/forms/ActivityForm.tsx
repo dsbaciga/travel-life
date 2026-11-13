@@ -502,16 +502,6 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
             </select>
           </div>
         </div>
-
-        {!isEditMode && !values.locationId && (
-          <AlsoCreatePlaceOption
-            id={`${formId}-also-create-place`}
-            name={values.name}
-            checked={alsoCreatePlace}
-            onChange={setAlsoCreatePlace}
-            disabled={isSubmitting}
-          />
-        )}
       </FormSection>
 
       {/* SECTION: Dietary Options - shown prominently when category is Dining */}
@@ -723,13 +713,66 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         )}
       </FormSection>
 
+      {/* Place: linked through the entity link system */}
+      <FormSection title="Place" icon="📍">
+        {showLocationQuickAdd ? (
+          <LocationQuickAdd
+            tripId={tripId}
+            onLocationCreated={handleLocationCreated}
+            onCancel={() => setShowLocationQuickAdd(false)}
+          />
+        ) : (
+          <div className="flex gap-2">
+            <select
+              id={`${formId}-location`}
+              name="location"
+              autoComplete="off"
+              value={values.locationId || ""}
+              onChange={(e) =>
+                handleChange(
+                  "locationId",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
+              className="input flex-1"
+              disabled={isSubmitting}
+            >
+              <option value="">No place linked</option>
+              {localLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowLocationQuickAdd(true)}
+              className="btn btn-secondary whitespace-nowrap"
+              disabled={isSubmitting}
+            >
+              + New
+            </button>
+          </div>
+        )}
+
+        {!isEditMode && !values.locationId && !showLocationQuickAdd && (
+          <AlsoCreatePlaceOption
+            id={`${formId}-also-create-place`}
+            name={values.name}
+            checked={alsoCreatePlace}
+            onChange={setAlsoCreatePlace}
+            disabled={isSubmitting}
+          />
+        )}
+      </FormSection>
+
       {/* COLLAPSIBLE: More Options */}
       <CollapsibleSection
         title="More Options"
         icon="⚙️"
         isExpanded={showMoreOptions}
         onToggle={() => setShowMoreOptions(!showMoreOptions)}
-        badge="description, location, cost"
+        badge="description, booking, cost"
       >
         {/* Description */}
         <MarkdownEditor
@@ -741,49 +784,6 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
           label="Description"
           compact
         />
-
-        {/* Location Section */}
-        <FormSection title="Location" icon="📍">
-          {showLocationQuickAdd ? (
-            <LocationQuickAdd
-              tripId={tripId}
-              onLocationCreated={handleLocationCreated}
-              onCancel={() => setShowLocationQuickAdd(false)}
-            />
-          ) : (
-            <div className="flex gap-2">
-              <select
-                id={`${formId}-location`}
-                name="location"
-                autoComplete="off"
-                value={values.locationId || ""}
-                onChange={(e) =>
-                  handleChange(
-                    "locationId",
-                    e.target.value ? parseInt(e.target.value) : undefined
-                  )
-                }
-                className="input flex-1"
-                disabled={isSubmitting}
-              >
-                <option value="">-- Select Location --</option>
-                {localLocations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowLocationQuickAdd(true)}
-                className="btn btn-secondary whitespace-nowrap"
-                disabled={isSubmitting}
-              >
-                + New
-              </button>
-            </div>
-          )}
-        </FormSection>
 
         {/* Organization */}
         {topLevelActivities.length > 0 && (

@@ -378,6 +378,12 @@ export default function LodgingManager({
 
   useCreateFromUrlParam(openCreateForm);
 
+  // The stay being edited, if any. Used to decide whether a legacy address
+  // field is shown.
+  const editingLodging = manager.editingId
+    ? manager.items.find((item) => item.id === manager.editingId) ?? null
+    : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -452,7 +458,7 @@ export default function LodgingManager({
         // A place picked from the list wins over creating a new one.
         let newLocationId = values.locationId || null;
         if (alsoCreatePlace && !newLocationId) {
-          const place = await createPlaceNamed(values.name, values.address);
+          const place = await createPlaceNamed(values.name);
           if (place) {
             newLocationId = place.id;
             // Select it in the form too, so a retry after a failed save links
@@ -705,15 +711,6 @@ export default function LodgingManager({
                 />
               </div>
             </div>
-
-            {!manager.editingId && !values.locationId && (
-              <AlsoCreatePlaceOption
-                id="lodging-also-create-place"
-                name={values.name}
-                checked={alsoCreatePlace}
-                onChange={setAlsoCreatePlace}
-              />
-            )}
           </FormSection>
 
           {/* SECTION 2: Stay Dates */}
@@ -778,54 +775,58 @@ export default function LodgingManager({
             />
           </FormSection>
 
-          {/* COLLAPSIBLE: More Options (Location, Address, Booking, Cost, Notes) */}
-          <CollapsibleSection
-            title="More Options"
-            icon="⚙️"
-            isExpanded={showMoreOptions}
-            onToggle={() => setShowMoreOptions(!showMoreOptions)}
-            badge="location, booking, cost"
-          >
-            {/* Location Section */}
-            <FormSection title="Location" icon="📍">
-              {showLocationQuickAdd ? (
-                <LocationQuickAdd
-                  tripId={tripId}
-                  onLocationCreated={handleLocationCreated}
-                  onCancel={() => setShowLocationQuickAdd(false)}
-                />
-              ) : (
-                <div className="flex gap-2">
-                  <select
-                    id="lodging-location"
-                    name="location"
-                    autoComplete="off"
-                    value={values.locationId || ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "locationId",
-                        e.target.value ? parseInt(e.target.value) : undefined
-                      )
-                    }
-                    className="input flex-1"
-                  >
-                    <option value="">-- Select Location --</option>
-                    {localLocations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowLocationQuickAdd(true)}
-                    className="btn btn-secondary whitespace-nowrap"
-                  >
-                    + New
-                  </button>
-                </div>
-              )}
+          {/* Place: the linked Place carries the address and map position */}
+          <FormSection title="Place" icon="📍">
+            {showLocationQuickAdd ? (
+              <LocationQuickAdd
+                tripId={tripId}
+                onLocationCreated={handleLocationCreated}
+                onCancel={() => setShowLocationQuickAdd(false)}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  id="lodging-location"
+                  name="location"
+                  autoComplete="off"
+                  value={values.locationId || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      "locationId",
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
+                  className="input flex-1"
+                >
+                  <option value="">No place linked</option>
+                  {localLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationQuickAdd(true)}
+                  className="btn btn-secondary whitespace-nowrap"
+                >
+                  + New
+                </button>
+              </div>
+            )}
 
+            {!manager.editingId && !values.locationId && !showLocationQuickAdd && (
+              <AlsoCreatePlaceOption
+                id="lodging-also-create-place"
+                name={values.name}
+                checked={alsoCreatePlace}
+                onChange={setAlsoCreatePlace}
+              />
+            )}
+
+            {/* Address is no longer collected here. An address saved on an
+                older stay is still shown so it can be read or cleared. */}
+            {editingLodging?.address && (
               <div>
                 <label
                   htmlFor="lodging-address"
@@ -841,11 +842,22 @@ export default function LodgingManager({
                   value={values.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   className="input"
-                  placeholder="123 Main St, City, Country"
                 />
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                  Kept from before. New stays take their address from the linked Place.
+                </p>
               </div>
-            </FormSection>
+            )}
+          </FormSection>
 
+          {/* COLLAPSIBLE: More Options (Booking, Cost, Notes) */}
+          <CollapsibleSection
+            title="More Options"
+            icon="⚙️"
+            isExpanded={showMoreOptions}
+            onToggle={() => setShowMoreOptions(!showMoreOptions)}
+            badge="booking, cost, notes"
+          >
             {/* Booking Section */}
             <FormSection title="Booking Details" icon="🎫">
               <BookingFields
