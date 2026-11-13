@@ -347,7 +347,7 @@ export default function TripSeriesPage() {
           ) : (
             <ul className="divide-y divide-gray-200 dark:divide-dusk-700">
               {sortedTrips.map((trip, index) => (
-                <li key={trip.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-dusk-750 transition-colors">
+                <li key={trip.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-dusk-700 transition-colors">
                   {/* Order number */}
                   <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-navy-700 flex items-center justify-center text-sm font-bold text-primary-700 dark:text-gold flex-shrink-0">
                     {index + 1}

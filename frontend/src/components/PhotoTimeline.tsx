@@ -374,7 +374,7 @@ export default function PhotoTimeline({
                 onClick={() => toggleDay(dayGroup.rawDate)}
                 {...{ 'aria-expanded': isExpanded }}
                 aria-controls={dayContentId}
-                className="w-full bg-gradient-to-r from-gray-50 to-gray-100 dark:from-dusk-800 dark:to-dusk-700 border-b border-gray-200 dark:border-dusk-700 px-4 py-3 text-left hover:from-gray-100 hover:to-gray-150 dark:hover:from-dusk-750 dark:hover:to-dusk-700 transition-colors"
+                className="w-full bg-gradient-to-r from-gray-50 to-gray-100 dark:from-dusk-800 dark:to-dusk-700 border-b border-gray-200 dark:border-dusk-700 px-4 py-3 text-left hover:from-gray-100 hover:to-gray-150 dark:hover:from-dusk-700 dark:hover:to-dusk-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div>

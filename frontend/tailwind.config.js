@@ -119,11 +119,18 @@ export default {
         },
         // Accent - Warm Gold/Orange tones
         accent: {
+          // 50-200 and 800-900 were referenced by ~40 classes (bg-accent-50,
+          // to-accent-900, ...) before they existed, so those emitted no CSS.
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
           500: '#f59e0b',
           600: '#D97706',
           700: '#B45309',
+          800: '#92400e',
+          900: '#78350f',
         },
         // Neutrals
         cream: '#f8fafc',
@@ -136,15 +143,11 @@ export default {
         // surface tokens below read from this one ramp, so the warmth of the
         // whole dark theme is tuned here.
         dusk: DUSK,
-        // Dark Mode surfaces. The token is still called `navy` for history:
-        // ~800 usages depend on the name. 950 is the darkest chrome (top bar,
-        // bottom nav).
-        navy: {
-          950: DUSK[950],
-          900: DUSK[900],
-          800: DUSK[800],
-          700: DUSK[700],
-        },
+        // Dark Mode surfaces. `navy` is an alias of `dusk`, kept for history:
+        // ~800 usages depend on the name. It carries the whole ramp because
+        // components already used steps such as `navy-600` and `navy-100`
+        // that did not exist and so emitted no CSS.
+        navy: DUSK,
         // Gold accent for dark mode
         gold: '#fbbf24',
         // Sky accent for dark mode - sky-300 for better contrast on navy-700 (WCAG AA).

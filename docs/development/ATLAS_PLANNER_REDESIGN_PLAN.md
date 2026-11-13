@@ -66,8 +66,14 @@ the notes below, which are kept as the original reasoning:
   grey one third of the way from `zinc` to `slate`.
 - The teal link, urgent and page-background tokens were not added; `teal-300` and `red-300`
   already exist and nothing uses them until later phases.
-- Not done: about 100 usages of colour steps that do not exist (`navy-600`, `navy-500`,
-  `cream-50`, `dusk-750` and others) still emit no CSS.
+- About 140 usages of colour steps that did not exist emitted no CSS. They now work:
+  `navy` carries the whole `dusk` ramp (so `navy-600`, `navy-100` and the rest resolve),
+  `accent` gained 50, 100, 200, 800 and 900, and the `cream-N` / `slate-N` / `dusk-750`
+  usages were rewritten to real tokens. The visible effect is mostly dark-mode borders and
+  hover states that were silently missing, and light amber tints in light mode.
+- Checked in the browser in dark mode: login, dashboard, trips list, trip detail, a trip
+  map. Checked in light mode: dashboard and trips list.
+- `docs/architecture/STYLE_GUIDE.md` colour tables are updated.
 
 The dark palette is already tokenised: `navy-900`, `navy-800`, `navy-700` and `gold` account
 for roughly 800 class usages across about 120 files. Changing the token values recolours the
@@ -105,6 +111,23 @@ Those are per-component changes and land with each screen in Phases 3 to 6.
 ## Phase 2: Map appearance
 
 Size: small for option A.
+
+**Status: done, as a smaller change than planned.** With the cool grey from Phase 1 the
+CARTO dark tiles already sit well, so no recolouring filter was needed. What was done, all
+in `index.css` under `@media screen` and `.dark`:
+
+- The Leaflet container background follows `navy-900`, removing the light-grey flash while
+  tiles load.
+- The dark basemap's tile pane is set to 86% opacity so the themed background lifts its
+  near-black toward the page surface. It is scoped with `:has(img[src*='dark_all'])`, so
+  the OpenStreetMap fallback is not dimmed. Tile URLs are unchanged, so the offline tile
+  cache is unaffected.
+- Zoom controls and the attribution strip are styled for dark mode.
+- Popups and tooltips stay light on purpose: their contents are written for a white card
+  (`text-gray-900` with no dark variant, in 8 components). Darkening them needs dark
+  variants on every popup body first.
+
+The options below are kept as the original reasoning; B and C were not needed.
 
 This phase was written for the warm charcoal palette, which needed the dark map to stop
 being blue-grey. With the cool grey that Phase 1 settled on, the CARTO dark tiles may

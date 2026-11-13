@@ -140,10 +140,10 @@ export default function AcceptInvitePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900">
+      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-cream-200">Loading invitation...</p>
+          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation...</p>
         </div>
       </div>
     );
@@ -151,7 +151,7 @@ export default function AcceptInvitePage() {
 
   if (error || !invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900 px-4">
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -162,7 +162,7 @@ export default function AcceptInvitePage() {
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               Invalid Invitation
             </h1>
-            <p className="text-navy-600 dark:text-cream-300 mb-6">
+            <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {error || 'This invitation is no longer valid.'}
             </p>
             <Link
@@ -179,7 +179,7 @@ export default function AcceptInvitePage() {
 
   if (!invitation.isValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900 px-4">
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -190,7 +190,7 @@ export default function AcceptInvitePage() {
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               {invitation.status === 'EXPIRED' ? 'Invitation Expired' : 'Invitation Already Used'}
             </h1>
-            <p className="text-navy-600 dark:text-cream-300 mb-6">
+            <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {invitation.status === 'EXPIRED'
                 ? 'This invitation has expired. Please ask the person who invited you to send a new invitation.'
                 : invitation.status === 'ACCEPTED'
@@ -210,7 +210,7 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900 px-4 py-12">
       <div className="max-w-md w-full">
         <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
           {/* Header */}
@@ -224,15 +224,15 @@ export default function AcceptInvitePage() {
               You're Invited!
             </h1>
             {invitation.invitedBy && (
-              <p className="text-navy-600 dark:text-cream-300">
+              <p className="text-navy-600 dark:text-dusk-300">
                 <span className="font-semibold">{invitation.invitedBy.username}</span> invited you to join Travel Life
               </p>
             )}
           </div>
 
           {/* Description */}
-          <div className="bg-cream-50 dark:bg-navy-700 rounded-lg p-4 mb-6">
-            <p className="text-sm text-navy-700 dark:text-cream-200">
+          <div className="bg-cream dark:bg-navy-700 rounded-lg p-4 mb-6">
+            <p className="text-sm text-navy-700 dark:text-dusk-200">
               Travel Life helps you document your adventures. Track trips, locations, photos, transportation, lodging, and create beautiful travel journals.
             </p>
           </div>
@@ -268,7 +268,7 @@ export default function AcceptInvitePage() {
                 className="input w-full bg-gray-100 dark:bg-navy-600"
                 disabled
               />
-              <p className="text-xs text-navy-500 dark:text-cream-400 mt-1">
+              <p className="text-xs text-navy-500 dark:text-dusk-400 mt-1">
                 Your account will be created with this email address
               </p>
             </div>
@@ -287,7 +287,7 @@ export default function AcceptInvitePage() {
                 minLength={8}
                 required
               />
-              <p className="text-xs text-navy-500 dark:text-cream-400 mt-1">
+              <p className="text-xs text-navy-500 dark:text-dusk-400 mt-1">
                 Must be at least 8 characters
               </p>
             </div>
@@ -348,15 +348,15 @@ export default function AcceptInvitePage() {
             <button
               type="button"
               onClick={handleDecline}
-              className="text-sm text-navy-500 dark:text-cream-400 hover:text-navy-700 dark:hover:text-cream-200"
+              className="text-sm text-navy-500 dark:text-dusk-400 hover:text-navy-700 dark:hover:text-dusk-200"
             >
               No thanks, decline invitation
             </button>
           </div>
 
           {/* Login Link */}
-          <div className="mt-6 pt-6 border-t border-cream-200 dark:border-navy-600 text-center">
-            <p className="text-sm text-navy-600 dark:text-cream-300">
+          <div className="mt-6 pt-6 border-t border-warm-gray dark:border-navy-600 text-center">
+            <p className="text-sm text-navy-600 dark:text-dusk-300">
               Already have an account?{' '}
               <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
                 Log in
