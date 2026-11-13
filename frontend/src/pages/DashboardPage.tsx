@@ -3,12 +3,8 @@ import { Link, useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
 import UpcomingTripsWidget from '../components/widgets/UpcomingTripsWidget';
-import TravelStatsWidget from '../components/widgets/TravelStatsWidget';
-import RecentPhotosWidget from '../components/widgets/RecentPhotosWidget';
-import QuickActionsWidget from '../components/widgets/QuickActionsWidget';
 import OnThisDayWidget from '../components/widgets/OnThisDayWidget';
 import DeadlinesWidget from '../components/widgets/DeadlinesWidget';
-import TripCalendarWidget from '../components/widgets/TripCalendarWidget';
 import YearInReviewWidget from '../components/widgets/YearInReviewWidget';
 import PendingInvitations from '../components/PendingInvitations';
 import AgendaList from '../components/agenda/AgendaList';
@@ -36,8 +32,8 @@ function daysUntil(startDate: string | null | undefined, now: Date = new Date())
  *
  * On large screens a work column sits beside a map; each agenda row carries
  * the number of its pin. Below `lg` the map is a short strip above the
- * agenda that can be expanded. The memory and statistics widgets that used
- * to make up the dashboard follow underneath.
+ * agenda that can be expanded. On This Day and Year in Review follow
+ * underneath.
  */
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -279,19 +275,12 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* The former dashboard widgets. None of them is about today, so they
-            sit below the split view. Several render nothing when empty. */}
-        <div key={refreshKey} className="mt-8 flex flex-col gap-6">
+        {/* Memories. Both render nothing when they have no content, and the
+            wrapper collapses with them. Travel stats and the trip calendar
+            have their own pages under Library. */}
+        <div key={refreshKey} className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden">
+          <OnThisDayWidget />
           <YearInReviewWidget />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-6">
-              <OnThisDayWidget />
-              <TravelStatsWidget />
-              <QuickActionsWidget />
-            </div>
-            <RecentPhotosWidget />
-          </div>
-          <TripCalendarWidget />
         </div>
       </div>
     </div>

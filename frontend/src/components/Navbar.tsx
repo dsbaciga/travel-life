@@ -177,31 +177,33 @@ const Navbar = memo(function Navbar() {
     ? "true"
     : "false";
 
-  // Five destinations. Every route that used to have its own top-level link
-  // still exists; the ones that are collections of things sit under Library,
-  // and trip series are reached from the Trips page.
+  // Four destinations. Every route that used to have its own top-level link
+  // still exists; everything that is a collection or a look back sits under
+  // Library.
   const navLinks: NavLinkEntry[] = [
     { path: "/dashboard", label: "Today" },
     {
       path: "/trips",
       label: "Trips",
       onClick: () => clearPosition('trips-page'),
-      alsoActiveFor: ["/trip-series"],
     },
     {
       path: "/library",
       label: "Library",
-      alsoActiveFor: ["/year-in-review"],
       children: [
         { path: "/albums", label: "Albums" },
         { path: "/places-visited", label: "Places" },
         { path: "/food-log", label: "Food log" },
         { path: "/checklists", label: "Checklists" },
+        { path: "/travel-stats", label: "Travel stats" },
+        { path: "/trip-calendar", label: "Trip calendar" },
+        { path: "/year-in-review", label: "Year in review" },
+        { path: "/trip-series", label: "Trip series" },
+        { path: "/companions", label: "People" },
       ],
     },
     // Saved links waiting to be filed plus parsed bookings waiting for review.
     { path: "/saved-links", label: "Inbox", badge: savedLinksInboxCount + pendingCount },
-    { path: "/companions", label: "People" },
   ];
 
   return (
