@@ -271,7 +271,7 @@ export default function TripHeroHeader({
                     homeTimezone={userTimezone}
                     tripTimezone={trip.timezone}
                     variant="overlay"
-                    className="mt-3"
+                    className="mt-3 md:w-1/2"
                   />
                 )}
             </div>
@@ -422,7 +422,7 @@ export default function TripHeroHeader({
               <JetLagCalculator
                 homeTimezone={userTimezone}
                 tripTimezone={trip.timezone}
-                className="mt-4"
+                className="mt-4 md:w-1/2"
               />
             )}
         </div>
