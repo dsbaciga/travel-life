@@ -17,6 +17,7 @@ const GlobalAlbumsPage = React.lazy(() => import('./pages/GlobalAlbumsPage'));
 const CompanionsPage = React.lazy(() => import('./pages/CompanionsPage'));
 const PlacesVisitedPage = React.lazy(() => import('./pages/PlacesVisitedPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const LibraryPage = React.lazy(() => import('./pages/LibraryPage'));
 const ChecklistsPage = React.lazy(() => import('./pages/ChecklistsPage'));
 const SavedLinksInboxPage = React.lazy(() => import('./pages/SavedLinksInboxPage'));
 const FoodLogPage = React.lazy(() => import('./pages/FoodLogPage'));
@@ -261,6 +262,16 @@ function App() {
                   <ProtectedRoute>
                     <ErrorBoundary>
                       <PlacesVisitedPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/library"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <LibraryPage />
                     </ErrorBoundary>
                   </ProtectedRoute>
                 }

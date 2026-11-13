@@ -150,7 +150,7 @@ export default function SettingsPage() {
           to="/dashboard"
           className="text-blue-600 dark:text-blue-400 hover:underline mb-6 inline-block"
         >
-          ← Back to Dashboard
+          ← Back to Today
         </Link>
 
         <div className="flex justify-between items-center mb-8">

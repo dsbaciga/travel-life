@@ -14,6 +14,7 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useBulkSelection } from "../hooks/useBulkSelection";
 import BulkActionBar from "../components/BulkActionBar";
 import PageHeader from "../components/PageHeader";
+import PendingImportsPanel from "../components/PendingImportsPanel";
 import EmptyState from "../components/EmptyState";
 import { ListItemSkeleton } from "../components/SkeletonLoader";
 
@@ -184,9 +185,11 @@ export default function SavedLinksInboxPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <PageHeader
-        title="Saved Links"
-        subtitle="Pages you've saved that aren't attached to a trip yet"
+        title="Inbox"
+        subtitle="Saved links and imported bookings that aren't on a trip yet"
       />
+
+      <PendingImportsPanel />
 
       {/* Quick add */}
       <div className="card mb-8 space-y-4">

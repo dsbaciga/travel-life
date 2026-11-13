@@ -529,6 +529,12 @@ export default function TripsPage() {
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <h2 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">My Trips</h2>
           <div className="flex items-center gap-3">
+            <Link
+              to="/trip-series"
+              className="px-3 py-1.5 text-sm font-medium rounded-lg text-primary-600 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors"
+            >
+              Trip series
+            </Link>
             {/* View Mode Toggle */}
             <div className="flex rounded-lg border border-primary-200 dark:border-gold/30 overflow-hidden">
               <button
