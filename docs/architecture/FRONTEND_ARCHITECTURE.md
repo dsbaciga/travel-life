@@ -92,7 +92,8 @@ frontend/src/
     Timeline.tsx
     ...
   pages/               # Route-level components
-    DashboardPage.tsx
+    DashboardPage.tsx    # "Today": agenda and map split view
+    LibraryPage.tsx      # Hub for collection pages
     TripDetailPage.tsx
     TripsPage.tsx
     SettingsPage.tsx
@@ -643,8 +644,59 @@ for protected pages — each protected route is individually wrapped in a
   {/*   /trips/:tripId/albums/:albumId, /albums, /companions      */}
   {/*   /places-visited, /checklists, /checklists/:id             */}
   {/*   /trip-series, /trip-series/:id, /settings                 */}
+  {/*   /library, /travel-stats, /trip-calendar, /year-in-review  */}
+  {/*   /food-log, /saved-links                                   */}
 </Routes>
 ```
+
+### App Shell
+
+`Navbar` (top bar) and `MobileBottomNav` (below `md`) are rendered once in
+`App.tsx`, outside `<Routes>`. There are four destinations: Today
+(`/dashboard`), Trips, Library and Inbox (`/saved-links`). Library is a
+dropdown on desktop and the `/library` hub page on mobile; both list the same
+collection pages. See "App Navigation" in the
+[Style Guide](STYLE_GUIDE.md) for the table and for what to touch when adding
+a page.
+
+### Today (`pages/DashboardPage.tsx`)
+
+The landing page pairs a work column with a map.
+
+- `useActiveTrip` picks the trip (in progress, else the soonest upcoming).
+- `hooks/useTripAgendaData.ts` loads that trip's activities, transportation,
+  lodging, locations and location links. It uses the same query keys as
+  `useTripDetailQueries`, so the trip page and Today share a cache.
+- `utils/dayAgenda.ts` `buildDayAgenda()` turns those lists into one day's
+  ordered, numbered items. Each timestamp is bucketed onto a calendar day with
+  `dayKeyInTimezone()` in its resolved zone (entity, trip, user). An item gets
+  a map point from its linked location (activities, lodging) or its endpoints
+  (transportation); items without one keep their number and have no pin.
+- `components/agenda/AgendaList.tsx` and `AgendaMap.tsx` render the list and
+  the Leaflet map; the row number and the pin number are the same value.
+- `components/today/TodayMap.tsx` adds the scope switch (Today, This trip,
+  All trips) and lazy-loads the map components.
+
+### Trip Detail Sections
+
+`components/trip-detail/tripDetailTabs.tsx` defines the sections and their
+views. `TabId` values are what `?tab=` carries; group ids exist only to group
+sub-tabs.
+
+| Section | Views (`TabId`) |
+| ------- | --------------- |
+| Overview | `dashboard` |
+| Itinerary | `itinerary` (Day Plan), `timeline`, `daily`, `trip-map`, `activities`, `unscheduled` |
+| Places | `locations` |
+| Photos | `photos`, `photo-map`, `photo-timeline` |
+| Bookings | `transportation`, `lodging` |
+| Budget | `budget` |
+| Journal | `journal`, `food-log` |
+| Prep | `deadlines`, `links`, `custom`, `companions`, `emergency`, `local-norms` |
+
+Day Plan (`components/agenda/ItineraryDayView.tsx`) reuses `buildDayAgenda`,
+`AgendaList` and `AgendaMap` with a day picker. The Overview is
+`components/trip-dashboard/TripDashboard.tsx`.
 
 ### Protected Routes
 

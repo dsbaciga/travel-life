@@ -557,6 +557,15 @@ Always pair light/dark classes:
 | Borders | `border-primary-100` | `border-gold/20` |
 | Shadows | Standard shadows | Gold glow shadows |
 | Focus rings | `ring-primary-500` | `ring-gold` |
+| Text links and text-only actions | `text-primary-600` | `dark:text-teal-300` |
+| Hairline borders on new surfaces | `border-primary-500/10` | `dark:border-navy-700` |
+
+**Where gold goes in dark mode.** Gold is for the brand mark, the active
+navigation item or tab, numbered map pins, and one primary action per screen
+(`btn-primary`). It is not a link colour: text links and text-only actions use
+`dark:text-teal-300`, and hover on inactive navigation goes to white, not gold.
+Older screens still use gold for links and `border-gold/20` for card borders;
+move them over when you are working in that area rather than in a sweep.
 
 ### Gold Glow Effects
 
@@ -736,10 +745,45 @@ Using Tailwind's mobile-first breakpoints:
 
 | Component | Mobile | Desktop |
 |-----------|--------|---------|
-| Navigation | Hamburger + drawer | Horizontal nav |
-| Tabs | Dropdown select | Horizontal tabs |
+| Navigation | Bottom bar (below `md`) + drawer | Horizontal nav (from `lg`) |
+| Tabs | Horizontally scrolling strip | Horizontal tabs |
+| Today | Short map above the agenda, expandable | Work column beside a sticky map |
+| Trip Day Plan | List / Map switch | List beside a sticky map |
 | Pagination | "Page X of Y" | Full page numbers |
 | Grids | 1 column | 2-4 columns |
+
+### App Navigation
+
+The shell has four destinations. Nothing else gets a top-level slot; a new
+collection-style page goes under Library.
+
+| Item | Route | Also active for |
+|------|-------|-----------------|
+| Today | `/dashboard` | |
+| Trips | `/trips` | |
+| Library | `/library` (dropdown on desktop) | `/albums`, `/places-visited`, `/food-log`, `/checklists`, `/travel-stats`, `/trip-calendar`, `/year-in-review`, `/trip-series`, `/companions` |
+| Inbox | `/saved-links` | |
+
+- Desktop (`Navbar.tsx`): Library is a dropdown listing its pages, with
+  "All of Library" linking to the hub.
+- Mobile (`MobileBottomNav.tsx`): Today, Trips, **Log**, Library, Inbox. Log is
+  the capture action and keeps the centre slot. Library opens the hub page.
+- The Inbox badge is saved links waiting to be filed plus imported bookings
+  waiting for review.
+- When you add a page under Library, add it in three places: the `children`
+  of the Library entry in `Navbar.tsx`, `LIBRARY_PATHS` in
+  `MobileBottomNav.tsx`, and `ENTRIES` in `pages/LibraryPage.tsx`.
+
+### Logo
+
+Use `components/BrandLogo.tsx` (`variant="full"` or `"mark"`). It renders the
+light and on-dark artwork and lets the theme class choose. The source files
+are in `branding/logo`; the copies the app serves are in
+`frontend/src/assets/brand` and `frontend/public`. The app copies differ from
+the source in one path: the dotted bar is `M14 22H70.2` instead of `M14 22H70`,
+because browsers do not draw a zero-length dash that lands exactly on the end
+of a path and the last dot went missing. Keep that change when refreshing the
+artwork.
 
 ---
 

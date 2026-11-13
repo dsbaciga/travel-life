@@ -1,6 +1,8 @@
 # Atlas Planner Redesign: Frontend Implementation Plan
 
-Status: proposal, nothing implemented. Written 2026-11-13.
+Status: all seven phases implemented on branch `feat/dark-neutral-palette` (2026-11-13). Each
+phase below opens with a status note saying what was built and where it differs from the plan;
+the original reasoning is kept underneath. "What was left out" at the end lists the gaps.
 
 Mockups: <https://claude.ai/artifact/9PqoTCruPut7AEZj5pMsTF> (private canvas; the "Atlas Planner"
 artboards with the warm palette are the target).
@@ -118,10 +120,9 @@ in `index.css` under `@media screen` and `.dark`:
 
 - The Leaflet container background follows `navy-900`, removing the light-grey flash while
   tiles load.
-- The dark basemap's tile pane is set to 86% opacity so the themed background lifts its
-  near-black toward the page surface. It is scoped with `:has(img[src*='dark_all'])`, so
-  the OpenStreetMap fallback is not dimmed. Tile URLs are unchanged, so the offline tile
-  cache is unaffected.
+- The dark basemap tiles are shown exactly as CARTO serves them. An 86% blend toward the
+  page surface was shipped first and then removed: it lowered label contrast and made the
+  map hard to read.
 - Zoom controls and the attribution strip are styled for dark mode.
 - Popups and tooltips stay light on purpose: their contents are written for a white card
   (`text-gray-900` with no dark variant, in 8 components). Darkening them needs dark
@@ -154,6 +155,22 @@ tiles.
 
 Size: medium. One PR.
 
+**Status: done, and then reduced further at the owner's request.**
+
+- The top bar is four items: Today, Trips, Library, Inbox. People was first kept as a fifth
+  item and then moved under Library.
+- Library is a dropdown on desktop and the `/library` hub page on mobile. It lists Albums,
+  Places, Food log, Checklists, Travel stats, Trip calendar, Year in review, Trip series and
+  People. Travel stats and Trip calendar are new pages (`/travel-stats`, `/trip-calendar`)
+  wrapping widgets that used to be on the dashboard.
+- Mobile bottom bar: Today, Trips, Log, Library, Inbox. Log kept the centre slot.
+- Inbox badge is saved links plus pending imports. The plan assumed the import review UI lived
+  in Settings; it did not exist anywhere as a list. The Inbox page now lists imports with
+  pending items (`PendingImportsPanel`) and opens the existing `PdfReviewModal`.
+- The new logo from `branding/logo` replaced the globe badge and text title
+  (`BrandLogo`), plus the favicon and PWA icons.
+- No route was removed or renamed.
+
 Current: `Navbar.tsx` has nine links (Dashboard, Trips, Albums, Companions, Places,
 Checklists, Series, Food, Links). `MobileBottomNav.tsx` has Home, Trips, Log (capture),
 Albums, Places and Lists.
@@ -183,6 +200,21 @@ Target mapping:
 ## Phase 4: Today screen
 
 Size: large. Split into two PRs: layout with existing widgets, then the agenda-to-map link.
+
+**Status: done in one change rather than two.**
+
+- Work column beside a sticky map from `lg`; below that, a short map strip above the agenda
+  with a control to enlarge it.
+- The agenda is built by `utils/dayAgenda.ts` (unit tested) rather than by reusing
+  `TodaysItinerary`, whose logic was tied to its timeline layout and bucketed days with the
+  trip zone only. No new endpoint: `useTripAgendaData` reuses the trip detail query keys.
+- Map scopes are Today, This trip and All trips. **Photos was not built.**
+- No trip in progress: the column leads with the next trip and a countdown; no trip at all
+  shows a prompt to plan one.
+- Deadlines are the existing widget, not restyled as a checklist.
+- Displaced widgets: at the owner's request Quick actions and Recent photos were removed (and
+  the two components deleted), and Travel stats and Trip calendar moved to pages under
+  Library. On This Day and Year in Review sit below the split view.
 
 File: `pages/DashboardPage.tsx`.
 
@@ -214,6 +246,17 @@ File: `pages/DashboardPage.tsx`.
 ## Phase 5: Trip detail
 
 Size: large. Three PRs: regroup, Overview, Itinerary split view.
+
+**Status: done.**
+
+- 5a: the eight sections as tabled below. `TabGroup` and `TripSidebar` needed no change.
+- 5b: Overview re-laid out: stats, route map and Next up beside a new Day by day list, then
+  Needs attention (`TripHealthCheck`, which existed but was mounted nowhere), budget,
+  checklists, companions, recent activity, then the status-dependent widgets. **Not done:**
+  the travelled / remaining split on the route map, and extending `NextUpCard` to three items.
+- 5c: built as a new view, Day Plan (`TabId` `itinerary`), first in the Itinerary section,
+  rather than by promoting `DayMiniMap`. Unscheduled items are listed under the day with a
+  link to the Unscheduled view; there is no drag-to-schedule.
 
 ### 5a. Regroup the sections
 
@@ -269,6 +312,10 @@ they are status-dependent and already hide themselves when not relevant.
 
 Size: medium. Lands with Phases 3 to 5 rather than after them.
 
+**Status: done with those phases.** Today has the short expandable map; Day Plan has the
+List / Map switch; the Overview is the desktop blocks in one column. The trip section row
+already scrolled horizontally instead of using a dropdown, so nothing changed there.
+
 - Today: short map above the agenda with an expand control.
 - Trip detail: sections as a horizontally scrolling tab row (replacing the dropdown),
   List / Map toggle in Itinerary, and the existing floating add button.
@@ -276,6 +323,14 @@ Size: medium. Lands with Phases 3 to 5 rather than after them.
 - Touch targets stay at 44px minimum.
 
 ## Phase 7: Documentation and checks
+
+**Status: done, with limits.** The style guide and frontend architecture doc are updated.
+There were no `Navbar`, `MobileBottomNav`, `TabGroup` or dashboard tests to update; the new
+agenda builder has its own. Checked in the browser in dark mode at desktop and phone widths:
+Today, the Library menu and hub, trip Overview and Day Plan. **Not checked:** light mode for
+the new screens, a contrast pass over every text pair, print output, and the agenda with real
+scheduled items (the local data has no trip in progress and no scheduled items, so numbered
+pins are covered by unit tests only).
 
 - Update `docs/architecture/STYLE_GUIDE.md`: palette tables, gold usage rule, link colour,
   dark mode conventions, and the navigation table under Responsive Design.
@@ -300,6 +355,17 @@ Size: medium. Lands with Phases 3 to 5 rather than after them.
 7. Phase 7 throughout, finalised at the end.
 
 Each step is its own PR against `main`.
+
+## What was left out
+
+- The Photos map scope on Today.
+- The travelled / remaining split on the Overview route map; three items in Next up.
+- Drag-to-schedule in Day Plan.
+- Deadlines restyled as a checklist.
+- Moving every existing link from gold to teal. New and reworked screens follow the rule; the
+  rest are to be moved as they are touched (see the style guide).
+- A designed light theme (decision 1). Light mode works but was not redesigned.
+- Renaming the `navy` token.
 
 ## Risks
 
