@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LIBRARY_BACK_LINK } from '../components/LibraryBackLink';
 import { Link } from 'react-router';
 import type { Checklist, DefaultChecklistStatus, ChecklistType } from '../types/checklist';
 import type { Trip } from '../types/trip';
@@ -217,8 +218,8 @@ export default function ChecklistsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
+      <div className="min-h-screen bg-cream dark:bg-navy-900">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
           <LoadingSpinner.FullPage message="Loading checklists..." />
         </div>
       </div>
@@ -226,11 +227,12 @@ export default function ChecklistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <PageHeader
           title="Checklists"
           subtitle="Track your travel achievements"
+          backLink={LIBRARY_BACK_LINK}
           action={{
             label: showCreateForm ? 'Cancel' : '+ Create Custom List',
             onClick: () => setShowCreateForm(!showCreateForm),

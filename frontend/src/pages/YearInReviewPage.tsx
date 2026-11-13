@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
+import LibraryBackLink from '../components/LibraryBackLink';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import memoriesService from '../services/memories.service';
@@ -131,7 +132,8 @@ export default function YearInReviewPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream to-parchment dark:from-navy-900 dark:to-navy-800">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <LibraryBackLink />
         {/* Hero */}
         <div className="mb-8 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">

@@ -203,8 +203,8 @@ export default function TripSeriesPage() {
 
   if (!series) {
     return (
-      <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
-        <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+      <div className="min-h-screen bg-cream dark:bg-navy-900">
+        <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
           <div className="text-center py-12">
             <p className="text-lg text-gray-600 dark:text-dusk-400">Series not found</p>
             <Link to="/trip-series" className="btn btn-primary mt-4 inline-block">
@@ -217,9 +217,9 @@ export default function TripSeriesPage() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
       <ConfirmDialogComponent />
-      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs
           items={[
             { label: 'Trip Series', href: '/trip-series' },

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { LIBRARY_BACK_LINK } from "../components/LibraryBackLink";
 import { Link } from "react-router";
 import companionService from "../services/companion.service";
 import tripService from "../services/trip.service";
@@ -342,6 +343,7 @@ export default function CompanionsPage() {
       <PageHeader
         title="Travel Companions"
         subtitle="Manage your travel companions and add them to trips"
+        backLink={LIBRARY_BACK_LINK}
         action={{
           label: showForm ? "Cancel" : "+ Add Companion",
           onClick: () => setShowForm(!showForm),

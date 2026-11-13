@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LIBRARY_BACK_LINK } from '../components/LibraryBackLink';
 import { Link } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import tripSeriesService from '../services/tripSeries.service';
@@ -7,7 +8,7 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import Modal from '../components/Modal';
-import Breadcrumbs from '../components/Breadcrumbs';
+import PageHeader from '../components/PageHeader';
 
 /**
  * Compute a date range string from a series' trips.
@@ -73,30 +74,14 @@ export default function TripSeriesListPage() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
-      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
-        <Breadcrumbs items={[{ label: 'Trip Series' }]} />
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-charcoal dark:text-warm-gray">
-              Trip Series
-            </h1>
-            <p className="text-slate dark:text-warm-gray/70 font-body mt-1">
-              Group related trips together into a series
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Create Series
-          </button>
-        </div>
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
+        <PageHeader
+          title="Trip Series"
+          subtitle="Group related trips together into a series"
+          backLink={LIBRARY_BACK_LINK}
+          action={{ label: '+ Create Series', onClick: () => setShowCreateModal(true) }}
+        />
 
         {/* Content */}
         {seriesList.length === 0 ? (
@@ -108,7 +93,7 @@ export default function TripSeriesListPage() {
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {seriesList.map((series) => (
               <Link
                 key={series.id}

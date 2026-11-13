@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import LibraryBackLink from "../components/LibraryBackLink";
 import locationService from "../services/location.service";
 import transportationService from "../services/transportation.service";
 import type { Location } from "../types/location";
@@ -88,6 +89,7 @@ export default function PlacesVisitedPage() {
   if (locations.length === 0) {
     return (
       <div className="max-w-[1600px] mx-auto px-4 py-8">
+        <LibraryBackLink />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           Places Visited
         </h1>
@@ -112,6 +114,8 @@ export default function PlacesVisitedPage() {
       {/* Header — compact on mobile so the map keeps the screen */}
       <div className="bg-white dark:bg-dusk-800 border-b border-gray-200 dark:border-dusk-700 px-4 py-2 md:py-4">
         <div className="max-w-[1600px] mx-auto">
+          {/* Small and tight here: this header is kept short so the map keeps the screen. */}
+          <LibraryBackLink className="text-sm !mb-0 md:!mb-1" />
           <div className="flex justify-between items-center gap-3">
             <div className="min-w-0">
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">

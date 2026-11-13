@@ -1,4 +1,5 @@
 import PageHeader from '../components/PageHeader';
+import { LIBRARY_BACK_LINK } from '../components/LibraryBackLink';
 import TravelStatsWidget from '../components/widgets/TravelStatsWidget';
 
 /** Lifetime travel statistics. Reached from Library. */
@@ -9,7 +10,7 @@ export default function TravelStatsPage() {
         <PageHeader
           title="Travel stats"
           subtitle="Totals across all of your trips"
-          backLink={{ label: '← Library', href: '/library' }}
+          backLink={LIBRARY_BACK_LINK}
         />
         <TravelStatsWidget />
       </div>

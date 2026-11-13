@@ -1,4 +1,5 @@
 import PageHeader from '../components/PageHeader';
+import { LIBRARY_BACK_LINK } from '../components/LibraryBackLink';
 import TripCalendarWidget from '../components/widgets/TripCalendarWidget';
 
 /** Every trip laid out on a calendar. Reached from Library. */
@@ -9,7 +10,7 @@ export default function TripCalendarPage() {
         <PageHeader
           title="Trip calendar"
           subtitle="When you have travelled and when you will"
-          backLink={{ label: '← Library', href: '/library' }}
+          backLink={LIBRARY_BACK_LINK}
         />
         <TripCalendarWidget />
       </div>
