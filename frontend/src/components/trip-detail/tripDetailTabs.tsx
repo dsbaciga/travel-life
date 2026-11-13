@@ -75,10 +75,12 @@ interface TripTabCounts {
 }
 
 /**
- * The eight trip sections. Group ids ("bookings", "prep" and the "-group"
- * ones) only name a group of sub-tabs; they are never a `TabId` and
- * never appear in `?tab=`. Sections with a single view use that view's
- * `TabId` directly.
+ * The six trip sections. Itinerary holds the views of the trip over
+ * time; Plans holds the lists of what is in it (places, activities and
+ * the unscheduled ones, transport, lodging, links, custom items). Group ids ("plans",
+ * "essentials" and the "-group" ones) only name a group of sub-tabs; they
+ * are never a `TabId` and never appear in `?tab=`. Sections with a single
+ * view use that view's `TabId` directly.
  */
 export function useTripTabGroups({
   activitiesCount,
@@ -178,59 +180,7 @@ export function useTripTabGroups({
               </svg>
             ),
           },
-          {
-            id: "activities",
-            label: "Activities",
-            count: activitiesCount,
-            icon: (
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                />
-              </svg>
-            ),
-          },
-          {
-            id: "unscheduled",
-            label: "Unscheduled",
-            count: unscheduledCount,
-            excludeFromGroupCount: true,
-            icon: (
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            ),
-          },
         ],
-      },
-      {
-        id: "locations",
-        label: "Places",
-        icon: (
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-        ),
-        count: locationsCount,
       },
       {
         id: "photos-group",
@@ -292,8 +242,8 @@ export function useTripTabGroups({
         ],
       },
       {
-        id: "bookings",
-        label: "Bookings",
+        id: "plans",
+        label: "Plans",
         icon: (
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -305,6 +255,58 @@ export function useTripTabGroups({
           </svg>
         ),
         subTabs: [
+          {
+            id: "locations",
+            label: "Places",
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            ),
+            count: locationsCount,
+          },
+          {
+            id: "activities",
+            label: "Activities",
+            count: activitiesCount,
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                />
+              </svg>
+            ),
+          },
+          {
+            id: "unscheduled",
+            label: "Unscheduled",
+            count: unscheduledCount,
+            excludeFromGroupCount: true,
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            ),
+          },
           {
             id: "transportation",
             label: "Transport",
@@ -335,21 +337,37 @@ export function useTripTabGroups({
               </svg>
             ),
           },
+          {
+            id: "links",
+            label: "Links",
+            count: savedLinksCount,
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m4.5-4.5l1.5-1.5a4 4 0 115.656 5.656l-3 3a4 4 0 01-5.656 0"
+                />
+              </svg>
+            ),
+          },
+          {
+            id: "custom",
+            label: "Custom",
+            count: customItemsCount,
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
+              </svg>
+            ),
+          },
         ],
-      },
-      {
-        id: "budget",
-        label: "Budget",
-        icon: (
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-            />
-          </svg>
-        ),
       },
       {
         id: "journal-group",
@@ -397,8 +415,8 @@ export function useTripTabGroups({
         ],
       },
       {
-        id: "prep",
-        label: "Prep",
+        id: "essentials",
+        label: "Essentials",
         icon: (
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -411,6 +429,20 @@ export function useTripTabGroups({
         ),
         subTabs: [
           {
+            id: "budget",
+            label: "Budget",
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
+              </svg>
+            ),
+          },
+          {
             id: "deadlines",
             label: "Deadlines",
             icon: (
@@ -420,36 +452,6 @@ export function useTripTabGroups({
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-            ),
-          },
-          {
-            id: "links",
-            label: "Links",
-            count: savedLinksCount,
-            icon: (
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m4.5-4.5l1.5-1.5a4 4 0 115.656 5.656l-3 3a4 4 0 01-5.656 0"
-                />
-              </svg>
-            ),
-          },
-          {
-            id: "custom",
-            label: "Custom",
-            count: customItemsCount,
-            icon: (
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                 />
               </svg>
             ),

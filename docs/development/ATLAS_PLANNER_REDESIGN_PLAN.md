@@ -275,6 +275,19 @@ File: `components/trip-detail/tripDetailTabs.tsx` (`useTripTabGroups`).
 | Journal | `journal`, `food-log` |
 | Prep | `deadlines`, `links`, `custom`, `companions`, `emergency`, `local-norms` |
 
+**Regrouped at review.** The table above is the plan as first built. After review the sections
+became six: Itinerary keeps only the views over time, and the lists of what is in the trip
+sit together under Plans. Prep was renamed Essentials and took in Budget.
+
+| Section | Tab ids |
+| ------- | ------- |
+| Overview | `dashboard` |
+| Itinerary | `itinerary` (Day Plan), `timeline`, `daily`, `trip-map` |
+| Photos | `photos`, `photo-map`, `photo-timeline` |
+| Plans | `locations` (Places), `activities`, `unscheduled`, `transportation`, `lodging`, `links`, `custom` |
+| Journal | `journal`, `food-log` |
+| Essentials | `budget`, `deadlines`, `companions`, `emergency`, `local-norms` |
+
 Keep the `TabId` values unchanged so `?tab=` deep links, `isTabId` and
 `onNavigateToTab` callers keep working. Only the grouping and labels change. Check that
 `TabGroup` and `TripSidebar` both render eight groups acceptably, including the mobile

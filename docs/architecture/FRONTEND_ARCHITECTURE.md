@@ -686,13 +686,11 @@ sub-tabs.
 | Section | Views (`TabId`) |
 | ------- | --------------- |
 | Overview | `dashboard` |
-| Itinerary | `itinerary` (Day Plan), `timeline`, `daily`, `trip-map`, `activities`, `unscheduled` |
-| Places | `locations` |
+| Itinerary | `itinerary` (Day Plan), `timeline`, `daily`, `trip-map` |
 | Photos | `photos`, `photo-map`, `photo-timeline` |
-| Bookings | `transportation`, `lodging` |
-| Budget | `budget` |
+| Plans | `locations` (Places), `activities`, `unscheduled`, `transportation`, `lodging`, `links`, `custom` |
 | Journal | `journal`, `food-log` |
-| Prep | `deadlines`, `links`, `custom`, `companions`, `emergency`, `local-norms` |
+| Essentials | `budget`, `deadlines`, `companions`, `emergency`, `local-norms` |
 
 Day Plan (`components/agenda/ItineraryDayView.tsx`) reuses `buildDayAgenda`,
 `AgendaList` and `AgendaMap` with a day picker. The Overview is
