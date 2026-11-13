@@ -12,7 +12,6 @@ import { TripStatus } from '../../types/trip';
 import TripStats from '../TripStats';
 import RecentActivityCard from './RecentActivityCard';
 import NextUpCard from './NextUpCard';
-import QuickActionsBar from './QuickActionsBar';
 import TodaysItinerary from './TodaysItinerary';
 import ChecklistsWidget from './ChecklistsWidget';
 import CompanionsWidget from './CompanionsWidget';
@@ -80,8 +79,6 @@ interface TripDashboardProps {
   checklists: Checklist[];
   companions: Companion[];
   onNavigateToTab: (tab: string, options?: { action?: string; scrollToDate?: string }) => void;
-  onStatusChange: (newStatus: string) => Promise<void>;
-  onPrintItinerary: () => void;
   onToggleChecklistItem: (checklistId: number, itemId: number, completed: boolean) => Promise<void>;
   onNavigateToEntity: (entityType: string, entityId: string) => void;
   // Optional data for enhanced widgets
@@ -106,7 +103,6 @@ interface TripDashboardProps {
  * - Countdown timer (for planning/planned trips with dates)
  * - Local time widget (for international trips with different timezone)
  * - Trip statistics (at a glance)
- * - Quick actions based on trip status
  * - Recent activity
  * - Companions widget
  * - Map preview with locations
@@ -119,11 +115,12 @@ interface TripDashboardProps {
  *
  * Layout (the trip Overview):
  * - Trip at a Glance stats (full width)
- * - Route map and today's itinerary (2/3) beside Day by day and Next up (1/3)
- * - Needs attention, Budget and checklists, Companions and recent activity
- * - Countdown / local time, weather and flights, each only when relevant
- * - Quick Actions Bar
- * - Mobile: single column in the same order
+ * - Two independent stacks, so a tall card never opens a gap beside it:
+ *   - Wide (2/3): route map, Next up, today's itinerary, then the smaller
+ *     cards (needs attention, budget, checklists, recent activity, weather,
+ *     flights) flowed into two packed columns
+ *   - Narrow (1/3): Day by day, Next bookings, countdown, local time, companions
+ * - Mobile: single column, wide stack first
  */
 export default function TripDashboard({
   trip,
@@ -137,8 +134,6 @@ export default function TripDashboard({
   checklists,
   companions,
   onNavigateToTab,
-  onStatusChange,
-  onPrintItinerary,
   onToggleChecklistItem,
   onNavigateToEntity,
   weatherForecast,
@@ -298,49 +293,107 @@ export default function TripDashboard({
         />
       </div>
 
-      {/* Route map beside the day-by-day list */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Map Preview Widget */}
+      {/* Two independent stacks. Cards pack upward in each, so one tall card
+          never leaves a hole beside it the way aligned rows did. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {locations.length > 0 && (
-            <div >
-              <MapPreviewWidget
-                locations={mapLocations}
-                legs={routeLegs}
-                onNavigateToMap={() => onNavigateToTab('locations')}
-                onLocationClick={handleLocationClick}
-              />
-            </div>
+            <MapPreviewWidget
+              locations={mapLocations}
+              legs={routeLegs}
+              onNavigateToMap={() => onNavigateToTab('locations')}
+              onLocationClick={handleLocationClick}
+            />
           )}
-          {/* Next Up Card */}
-          <div >
-            <NextUpCard
+          <NextUpCard
+            activities={activities}
+            transportation={transportation}
+            lodging={lodging}
+            tripStatus={trip.status}
+            tripStartDate={trip.startDate}
+            tripEndDate={trip.endDate}
+            tripTimezone={tripTimezone}
+            photosCount={photosCount}
+            onNavigateToTab={onNavigateToTab}
+          />
+          {/* Today's Itinerary - Only show for in-progress trips */}
+          {trip.status === TripStatus.IN_PROGRESS && (
+            <TodaysItinerary
               activities={activities}
               transportation={transportation}
               lodging={lodging}
-              tripStatus={trip.status}
-              tripStartDate={trip.startDate}
-              tripEndDate={trip.endDate}
               tripTimezone={tripTimezone}
-              photosCount={photosCount}
-              onNavigateToTab={onNavigateToTab}
+              onEventClick={handleEventClick}
+              onNavigateToTimeline={(date) => onNavigateToTab('timeline', { scrollToDate: date })}
             />
-          </div>
-          {/* Today's Itinerary - Only show for in-progress trips */}
-          {trip.status === TripStatus.IN_PROGRESS && (
-            <div >
-              <TodaysItinerary
+          )}
+
+          {/* Smaller cards, flowed into two packed columns. Each wrapper
+              hides itself when its widget renders nothing. The negative
+              margin cancels the last row's bottom margin. */}
+          <div className="md:columns-2 gap-6 -mb-6 [&>*]:mb-6 [&>*]:break-inside-avoid [&>*:empty]:hidden">
+            <div>
+              <TripHealthCheck tripId={trip.id} onQuickAction={handleHealthAction} />
+            </div>
+            <div>
+              {budgetData && (
+                <BudgetSummaryWidget
+                  budget={budgetData.budget}
+                  spent={budgetData.spent}
+                  breakdown={budgetData.breakdown}
+                  currency={budgetData.currency}
+                  onNavigateToBudget={() => onNavigateToTab('budget')}
+                />
+              )}
+            </div>
+            <div>
+              {checklists.length > 0 && (
+                <ChecklistsWidget
+                  checklists={checklists}
+                  onToggleItem={onToggleChecklistItem}
+                  onNavigateToChecklists={() => onNavigateToTab('checklists')}
+                />
+              )}
+            </div>
+            <div>
+              <RecentActivityCard
                 activities={activities}
                 transportation={transportation}
                 lodging={lodging}
-                tripTimezone={tripTimezone}
-                onEventClick={handleEventClick}
-                onNavigateToTimeline={(date) => onNavigateToTab('timeline', { scrollToDate: date })}
+                locations={locations}
+                journal={journalEntries}
+                photos={photos}
+                onNavigateToEntity={onNavigateToEntity}
               />
             </div>
-          )}
+            <div>
+              {(weatherForecast || weatherLoading) && (
+                <WeatherForecastWidget
+                  forecast={weatherForecast || null}
+                  location={weatherLocation || trip.title}
+                  temperatureUnit={temperatureUnit}
+                  isLoading={weatherLoading}
+                  error={weatherError || null}
+                  onRefresh={onRefreshWeather}
+                />
+              )}
+            </div>
+            <div>
+              {(flightStatus || flightStatusLoading) && (
+                <FlightStatusWidget
+                  flights={flightStatus || []}
+                  tripTimezone={tripTimezone}
+                  onNavigateToFlight={handleFlightClick}
+                  onNavigateToTransportation={handleNavigateToTransportation}
+                  onRefreshStatus={onRefreshFlightStatus}
+                  isLoading={flightStatusLoading}
+                />
+              )}
+            </div>
+          </div>
         </div>
-        <div className="lg:col-span-1 space-y-6">
+
+        <div className="lg:col-span-1 space-y-6 min-w-0">
           <TripDayByDay
             tripStartDate={trip.startDate}
             tripEndDate={trip.endDate}
@@ -356,67 +409,7 @@ export default function TripDashboard({
             tripTimezone={trip.timezone}
             onOpenTab={onNavigateToTab}
           />
-        </div>
-      </div>
-
-      {/* Needs attention, budget, people */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <TripHealthCheck tripId={trip.id} onQuickAction={handleHealthAction} />
-        </div>
-        <div className="lg:col-span-1 space-y-6">
-          {/* Budget Summary Widget - show if budget data provided */}
-          {budgetData && (
-            <div >
-              <BudgetSummaryWidget
-                budget={budgetData.budget}
-                spent={budgetData.spent}
-                breakdown={budgetData.breakdown}
-                currency={budgetData.currency}
-                onNavigateToBudget={() => onNavigateToTab('budget')}
-              />
-            </div>
-          )}
-          {/* Checklists Widget */}
-          {checklists.length > 0 && (
-            <div >
-              <ChecklistsWidget
-                checklists={checklists}
-                onToggleItem={onToggleChecklistItem}
-                onNavigateToChecklists={() => onNavigateToTab('checklists')}
-              />
-            </div>
-          )}
-        </div>
-        <div className="lg:col-span-1 space-y-6">
-          {/* Companions Widget */}
-          <div >
-            <CompanionsWidget
-              companions={companions}
-              onNavigateToCompanions={() => onNavigateToTab('companions')}
-              onInviteCompanion={() => onNavigateToTab('companions', { action: 'add' })}
-            />
-          </div>
-          {/* Recent Activity Card */}
-          <div >
-            <RecentActivityCard
-              activities={activities}
-              transportation={transportation}
-              lodging={lodging}
-              locations={locations}
-              journal={journalEntries}
-              photos={photos}
-              onNavigateToEntity={onNavigateToEntity}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Status-dependent widgets. Each hides itself when it does not apply. */}
-      {/* Top Row: Countdown Timer and/or Local Time Widget */}
-      {(showCountdown || isInternationalTrip) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Countdown Timer - for planning/planned trips */}
+          {/* Countdown - for planning/planned trips */}
           {showCountdown && (
             <CountdownTimerWidget
               tripStartDate={trip.startDate}
@@ -424,8 +417,7 @@ export default function TripDashboard({
               tripStatus={trip.status}
             />
           )}
-
-          {/* Local Time Widget - for international trips */}
+          {/* Local time - for trips in another timezone */}
           {isInternationalTrip && (
             <LocalTimeWidget
               tripTimezone={tripTimezone}
@@ -433,46 +425,12 @@ export default function TripDashboard({
               locationName={trip.title}
             />
           )}
+          <CompanionsWidget
+            companions={companions}
+            onNavigateToCompanions={() => onNavigateToTab('companions')}
+            onInviteCompanion={() => onNavigateToTab('companions', { action: 'add' })}
+          />
         </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden">
-          {/* Weather Forecast Widget - show if data provided */}
-          {(weatherForecast || weatherLoading) && (
-            <div >
-              <WeatherForecastWidget
-                forecast={weatherForecast || null}
-                location={weatherLocation || trip.title}
-                temperatureUnit={temperatureUnit}
-                isLoading={weatherLoading}
-                error={weatherError || null}
-                onRefresh={onRefreshWeather}
-              />
-            </div>
-          )}
-          {/* Flight Status Widget - show if flight data provided */}
-          {(flightStatus || flightStatusLoading) && (
-            <div >
-              <FlightStatusWidget
-                flights={flightStatus || []}
-                tripTimezone={tripTimezone}
-                onNavigateToFlight={handleFlightClick}
-                onNavigateToTransportation={handleNavigateToTransportation}
-                onRefreshStatus={onRefreshFlightStatus}
-                isLoading={flightStatusLoading}
-              />
-            </div>
-          )}
-      </div>
-
-      {/* Quick Actions Bar - Full Width */}
-      <div >
-        <QuickActionsBar
-          tripStatus={trip.status}
-          onNavigateToTab={onNavigateToTab}
-          onStatusChange={onStatusChange}
-          onPrintItinerary={onPrintItinerary}
-        />
       </div>
     </div>
   );

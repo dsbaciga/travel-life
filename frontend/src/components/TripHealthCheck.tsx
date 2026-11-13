@@ -136,7 +136,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
+      <div className="card">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
           <span className="text-gray-600 dark:text-dusk-400">Checking trip health...</span>
@@ -147,7 +147,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
 
   if (!validation) {
     return (
-      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
+      <div className="card">
         <p className="text-gray-600 dark:text-dusk-400">Unable to check trip health</p>
         <button
           onClick={fetchValidation}
@@ -162,7 +162,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
   const isOkay = validation.status === 'okay';
 
   return (
-    <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 overflow-hidden">
+    <div className="card p-0 overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-navy-700">
         <div className="flex items-center justify-between">

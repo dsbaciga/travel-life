@@ -265,7 +265,7 @@ export default function MapPreviewWidget({
 
       {/* Map Preview Area */}
       <div
-        className="relative h-40 rounded-xl overflow-hidden mb-4 cursor-pointer group"
+        className="relative h-80 rounded-xl overflow-hidden mb-4 cursor-pointer group"
         onClick={onNavigateToMap}
         role="button"
         tabIndex={0}

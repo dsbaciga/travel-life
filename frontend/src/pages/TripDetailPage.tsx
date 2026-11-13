@@ -6,7 +6,6 @@ import {
 } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import tripService from "../services/trip.service";
 import photoService from "../services/photo.service";
 import userService from "../services/user.service";
 import checklistService from "../services/checklist.service";
@@ -33,7 +32,6 @@ import TripPhotosTab from "../components/trip-detail/TripPhotosTab";
 import {
   type TabId,
   isTabId,
-  isTripStatusType,
   useTripTabGroups,
 } from "../components/trip-detail/tripDetailTabs";
 import { useTripDetailQueries } from "../components/trip-detail/useTripDetailQueries";
@@ -340,21 +338,6 @@ export default function TripDetailPage() {
     albumPhotosPagination.items,
   ]);
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!isTripStatusType(newStatus)) {
-      toast.error("Invalid trip status");
-      return;
-    }
-    try {
-      await tripService.updateTrip(tripId, { status: newStatus });
-      toast.success(`Trip status updated to ${newStatus}`);
-      queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
-    } catch (error) {
-      console.error("Failed to update trip status:", error);
-      toast.error("Failed to update trip status");
-    }
-  };
-
   const handleToggleChecklistItem = async (
     _checklistId: number,
     itemId: number,
@@ -401,16 +384,6 @@ export default function TripDetailPage() {
         }
       }, 100);
     }
-  };
-
-  const handlePrintItinerary = () => {
-    changeTab("timeline");
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("tab", "timeline");
-      newParams.set("action", "print");
-      return newParams;
-    });
   };
 
   if (isTripLoading) {
@@ -545,8 +518,6 @@ export default function TripDetailPage() {
                             // Handle specific actions if needed
                           }
                         }}
-                        onStatusChange={handleStatusChange}
-                        onPrintItinerary={handlePrintItinerary}
                         onToggleChecklistItem={handleToggleChecklistItem}
                         onNavigateToEntity={handleNavigateToEntity}
                         budgetData={budgetData}

@@ -13,7 +13,6 @@
  * - LocalTimeWidget: Shows current time at destination vs home timezone
  * - NextUpCard: Shows the next upcoming event based on trip status
  * - EventPreview: Reusable component to display any event type
- * - QuickActionsBar: Context-sensitive quick actions based on trip status
  * - ChecklistsWidget: Quick view of checklist progress
  * - TodaysItinerary: Today's schedule for in-progress trips
  * - RecentActivityCard: Recent changes to the trip
@@ -31,7 +30,6 @@ export { default as NextUpCard } from './NextUpCard';
 export { default as EventPreview } from './EventPreview';
 export { EventIcon } from './eventHelpers';
 export { getEventTypeColors } from './eventStyles';
-export { default as QuickActionsBar } from './QuickActionsBar';
 export { default as ChecklistsWidget } from './ChecklistsWidget';
 export { default as TodaysItinerary } from './TodaysItinerary';
 export { default as RecentActivityCard } from './RecentActivityCard';
