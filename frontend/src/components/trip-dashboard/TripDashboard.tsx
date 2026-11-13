@@ -23,6 +23,8 @@ import BudgetSummaryWidget from './BudgetSummaryWidget';
 import WeatherForecastWidget from './WeatherForecastWidget';
 import FlightStatusWidget from './FlightStatusWidget';
 import TripDayByDay from './TripDayByDay';
+import UpcomingBookings from './UpcomingBookings';
+import type { MapPreviewLeg } from './MapPreviewWidget';
 import TripHealthCheck from '../TripHealthCheck';
 import type { ValidationIssue } from '../../types/trip';
 import { useTimezoneResolver } from '../../hooks/useTimezoneResolver';
@@ -198,6 +200,27 @@ export default function TripDashboard({
     [locations]
   );
 
+  // Transport legs for the route map. A leg counts as travelled once it has
+  // arrived (or, with no arrival time, once it has departed).
+  const routeLegs = useMemo<MapPreviewLeg[]>(() => {
+    const now = Date.now();
+    const point = (
+      place: { latitude?: number | null; longitude?: number | null } | null | undefined
+    ): [number, number] | null => {
+      if (place?.latitude == null || place.longitude == null) return null;
+      const latitude = Number(place.latitude);
+      const longitude = Number(place.longitude);
+      return Number.isFinite(latitude) && Number.isFinite(longitude) ? [latitude, longitude] : null;
+    };
+    return transportation.flatMap((leg) => {
+      const from = point(leg.route?.from) ?? point(leg.fromLocation);
+      const to = point(leg.route?.to) ?? point(leg.toLocation);
+      const finished = leg.arrivalTime ?? leg.departureTime;
+      if (!from || !to || !finished) return [];
+      return [{ id: leg.id, from, to, travelled: Date.parse(finished) <= now }];
+    });
+  }, [transportation]);
+
   // Handle event click from TodaysItinerary
   const handleEventClick = useCallback((eventType: string, eventId: string) => {
     // Map event type to tab name
@@ -283,6 +306,7 @@ export default function TripDashboard({
             <div >
               <MapPreviewWidget
                 locations={mapLocations}
+                legs={routeLegs}
                 onNavigateToMap={() => onNavigateToTab('locations')}
                 onLocationClick={handleLocationClick}
               />
@@ -325,6 +349,12 @@ export default function TripDashboard({
             transportation={transportation}
             lodging={lodging}
             onOpenDay={(dayKey) => onNavigateToTab('itinerary', { scrollToDate: dayKey })}
+          />
+          <UpcomingBookings
+            transportation={transportation}
+            lodging={lodging}
+            tripTimezone={trip.timezone}
+            onOpenTab={onNavigateToTab}
           />
         </div>
       </div>

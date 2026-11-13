@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../../utils/mapUtils';
@@ -15,9 +15,23 @@ interface MapPreviewWidgetProps {
     /** When true, the location is kept in the list but hidden from the map preview. */
     excludeFromMap?: boolean;
   }[];
+  /**
+   * Transport legs to draw between places. Legs already travelled are a
+   * solid line; legs still ahead are dashed.
+   */
+  legs?: MapPreviewLeg[];
   onNavigateToMap: () => void;
   onLocationClick?: (locationId: number) => void;
 }
+
+export interface MapPreviewLeg {
+  id: number;
+  from: [latitude: number, longitude: number];
+  to: [latitude: number, longitude: number];
+  travelled: boolean;
+}
+
+const LEG_COLOR = '#D97706';
 
 /**
  * Map icon for the empty state
@@ -137,6 +151,7 @@ function LocationListItem({ name, category, onClick }: LocationListItemProps) {
  */
 export default function MapPreviewWidget({
   locations,
+  legs = [],
   onNavigateToMap,
   onLocationClick,
 }: MapPreviewWidgetProps) {
@@ -150,6 +165,19 @@ export default function MapPreviewWidget({
       ),
     [locations]
   );
+
+  // Fit to the route as well as the places, so a leg never runs off the edge.
+  const boundsPoints = useMemo(
+    () => [
+      ...locationsWithCoords.map((loc) => ({ latitude: loc.latitude, longitude: loc.longitude })),
+      ...legs.flatMap((leg) => [
+        { latitude: leg.from[0], longitude: leg.from[1] },
+        { latitude: leg.to[0], longitude: leg.to[1] },
+      ]),
+    ],
+    [locationsWithCoords, legs]
+  );
+  const travelledCount = legs.filter((leg) => leg.travelled).length;
 
   // Get locations to display in list (first 4)
   const displayLocations = locations.slice(0, 4);
@@ -266,7 +294,18 @@ export default function MapPreviewWidget({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapBounds locations={locationsWithCoords} />
+              <MapBounds locations={boundsPoints} />
+              {legs.map((leg) => (
+                <Polyline
+                  key={leg.id}
+                  positions={[leg.from, leg.to]}
+                  pathOptions={
+                    leg.travelled
+                      ? { color: LEG_COLOR, weight: 3, opacity: 0.95 }
+                      : { color: LEG_COLOR, weight: 2, opacity: 0.8, dashArray: '4 8', lineCap: 'round' }
+                  }
+                />
+              ))}
               {locationsWithCoords.slice(0, 20).map((location) => (
                 <Marker
                   key={location.id}
@@ -303,6 +342,19 @@ export default function MapPreviewWidget({
           </div>
         )}
       </div>
+
+      {legs.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-slate dark:text-dusk-400">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-5 border-t-[3px] border-accent-600" aria-hidden="true" />
+            Travelled ({travelledCount})
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-5 border-t-2 border-dashed border-accent-600" aria-hidden="true" />
+            Still ahead ({legs.length - travelledCount})
+          </span>
+        </p>
+      )}
 
       {/* Location List */}
       <div className="space-y-0.5">

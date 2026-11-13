@@ -9,8 +9,9 @@ import type { Transportation } from '../../types/transportation';
 // Leaflet is large; keep it out of the landing page's first chunk.
 const AgendaMap = lazy(() => import('../agenda/AgendaMap'));
 const PlacesVisitedMapContainer = lazy(() => import('../PlacesVisitedMapContainer'));
+const PhotosMapView = lazy(() => import('../PhotosMapView'));
 
-export type MapScope = 'today' | 'trip' | 'all';
+export type MapScope = 'today' | 'trip' | 'photos' | 'all';
 
 interface TodayMapProps {
   /** Today's agenda on the current trip. Empty when no trip is under way. */
@@ -23,11 +24,14 @@ interface TodayMapProps {
   tripLocations: Location[];
   tripTransportation: Transportation[];
   hasTrip: boolean;
+  /** The current or next trip, for the "Photos" scope. */
+  tripId: number | null;
 }
 
 const SCOPE_LABELS: Record<MapScope, string> = {
   today: 'Today',
   trip: 'This trip',
+  photos: 'Photos',
   all: 'All trips',
 };
 
@@ -48,7 +52,8 @@ function EmptyMap({ message }: { message: string }) {
 /**
  * The map half of the Today screen, with a scope switch. It opens on the
  * narrowest scope that has something to show: today's pins during a trip,
- * otherwise the trip, otherwise everywhere the user has been.
+ * otherwise the trip, otherwise everywhere the user has been. Photos
+ * shows where the trip's photos were taken.
  */
 export default function TodayMap({
   agenda,
@@ -58,10 +63,12 @@ export default function TodayMap({
   tripLocations,
   tripTransportation,
   hasTrip,
+  tripId,
 }: TodayMapProps) {
   const scopes: MapScope[] = [
     ...(hasToday ? (['today'] as const) : []),
     ...(hasTrip ? (['trip'] as const) : []),
+    ...(tripId != null ? (['photos'] as const) : []),
     'all',
   ];
   const todayHasPins = agenda.some((item) => item.point !== null);
@@ -127,6 +134,13 @@ export default function TodayMap({
             ) : (
               <EmptyMap message="This trip has no places with coordinates yet." />
             ))}
+
+          {scope === 'photos' && tripId != null && (
+            // PhotosMapView sizes its own map and says so when no photo has a place.
+            <div className="h-full overflow-y-auto">
+              <PhotosMapView tripId={tripId} fetchAllPhotos showLegend={false} />
+            </div>
+          )}
 
           {scope === 'all' &&
             (!allPlaces ? (

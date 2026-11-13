@@ -576,6 +576,11 @@ export default function TripDetailPage() {
                         locations={locations}
                         initialDay={itineraryDay}
                         onOpenTab={changeTab}
+                        onEditItem={(tab, itemId) => {
+                          // Same deep link the Timeline and Day By Day edit buttons write.
+                          setActiveTab(tab);
+                          setSearchParams({ tab, edit: String(itemId) });
+                        }}
                       />
                     </Suspense>
                   </ErrorBoundary>

@@ -675,7 +675,7 @@ The landing page pairs a work column with a map.
 - `components/agenda/AgendaList.tsx` and `AgendaMap.tsx` render the list and
   the Leaflet map; the row number and the pin number are the same value.
 - `components/today/TodayMap.tsx` adds the scope switch (Today, This trip,
-  All trips) and lazy-loads the map components.
+  Photos, All trips) and lazy-loads the map components.
 
 ### Trip Detail Sections
 

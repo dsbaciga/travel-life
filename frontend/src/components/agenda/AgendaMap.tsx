@@ -57,6 +57,7 @@ function FitToPoints({ points }: { points: [number, number][] }) {
 function InvalidateOnResize() {
   const map = useMap();
   useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
     const container = map.getContainer();
     const observer = new ResizeObserver(() => map.invalidateSize());
     observer.observe(container);

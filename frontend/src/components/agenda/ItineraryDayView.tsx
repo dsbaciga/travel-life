@@ -24,10 +24,14 @@ interface ItineraryDayViewProps {
   initialDay?: string | null;
   /** Open one of the trip's editing tabs. */
   onOpenTab: (tab: 'activities' | 'transportation' | 'lodging' | 'unscheduled') => void;
+  /** Open one item for editing, which is where it is given a date and time. */
+  onEditItem: (tab: 'activities' | 'transportation' | 'lodging', id: number) => void;
 }
 
 interface UnscheduledRow {
   key: string;
+  id: number;
+  tab: 'activities' | 'transportation' | 'lodging';
   title: string;
   kind: string;
 }
@@ -49,6 +53,7 @@ export default function ItineraryDayView({
   locations,
   initialDay,
   onOpenTab,
+  onEditItem,
 }: ItineraryDayViewProps) {
   const resolveTz = useTimezoneResolver();
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -114,11 +119,13 @@ export default function ItineraryDayView({
     () => [
       ...activities
         .filter((item) => !item.startTime && !item.allDay)
-        .map((item) => ({ key: `a-${item.id}`, title: item.name, kind: 'Activity' })),
+        .map((item) => ({ key: `a-${item.id}`, id: item.id, tab: 'activities' as const, title: item.name, kind: 'Activity' })),
       ...transportation
         .filter((item) => !item.departureTime)
         .map((item) => ({
           key: `t-${item.id}`,
+          id: item.id,
+          tab: 'transportation' as const,
           title:
             [item.fromLocation?.name || item.fromLocationName, item.toLocation?.name || item.toLocationName]
               .filter(Boolean)
@@ -127,7 +134,7 @@ export default function ItineraryDayView({
         })),
       ...lodging
         .filter((item) => !item.checkInDate)
-        .map((item) => ({ key: `l-${item.id}`, title: item.name, kind: 'Stay' })),
+        .map((item) => ({ key: `l-${item.id}`, id: item.id, tab: 'lodging' as const, title: item.name, kind: 'Stay' })),
     ],
     [activities, transportation, lodging]
   );
@@ -240,18 +247,28 @@ export default function ItineraryDayView({
                   onClick={() => onOpenTab('unscheduled')}
                   className="min-h-[44px] px-2 text-sm font-medium text-primary-600 dark:text-teal-300 hover:underline"
                 >
-                  Schedule
+                  See all
                 </button>
               </div>
-              <ul className="text-sm text-slate dark:text-dusk-300 space-y-1">
+              <ul className="text-sm divide-y divide-primary-500/10 dark:divide-navy-700">
                 {unscheduled.slice(0, 6).map((row) => (
-                  <li key={row.key} className="flex gap-2 min-w-0">
-                    <span className="flex-none text-slate dark:text-dusk-400">{row.kind}</span>
-                    <span className="truncate">{row.title}</span>
+                  <li key={row.key} className="flex items-center gap-2 min-w-0">
+                    <span className="flex-none w-16 text-slate dark:text-dusk-400">{row.kind}</span>
+                    <span className="min-w-0 flex-1 truncate text-charcoal dark:text-warm-gray">
+                      {row.title}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onEditItem(row.tab, row.id)}
+                      aria-label={`Schedule ${row.title}`}
+                      className="flex-none min-h-[44px] px-2 font-medium text-primary-600 dark:text-teal-300 hover:underline"
+                    >
+                      Schedule
+                    </button>
                   </li>
                 ))}
                 {unscheduled.length > 6 && (
-                  <li className="text-slate dark:text-dusk-400">and {unscheduled.length - 6} more</li>
+                  <li className="py-2 text-slate dark:text-dusk-400">and {unscheduled.length - 6} more</li>
                 )}
               </ul>
             </section>

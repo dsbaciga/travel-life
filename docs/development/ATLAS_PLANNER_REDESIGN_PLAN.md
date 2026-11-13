@@ -208,7 +208,7 @@ Size: large. Split into two PRs: layout with existing widgets, then the agenda-t
 - The agenda is built by `utils/dayAgenda.ts` (unit tested) rather than by reusing
   `TodaysItinerary`, whose logic was tied to its timeline layout and bucketed days with the
   trip zone only. No new endpoint: `useTripAgendaData` reuses the trip detail query keys.
-- Map scopes are Today, This trip and All trips. **Photos was not built.**
+- Map scopes are Today, This trip, Photos (the trip's photo map) and All trips.
 - No trip in progress: the column leads with the next trip and a countdown; no trip at all
   shows a prompt to plan one.
 - Deadlines are the existing widget, not restyled as a checklist.
@@ -252,11 +252,13 @@ Size: large. Three PRs: regroup, Overview, Itinerary split view.
 - 5a: the eight sections as tabled below. `TabGroup` and `TripSidebar` needed no change.
 - 5b: Overview re-laid out: stats, route map and Next up beside a new Day by day list, then
   Needs attention (`TripHealthCheck`, which existed but was mounted nowhere), budget,
-  checklists, companions, recent activity, then the status-dependent widgets. **Not done:**
-  the travelled / remaining split on the route map, and extending `NextUpCard` to three items.
+  checklists, companions, recent activity, then the status-dependent widgets. The route map
+  draws transport legs, solid once travelled and dashed while still ahead. The next three
+  bookings are a separate list (`UpcomingBookings`) rather than an extension of `NextUpCard`.
 - 5c: built as a new view, Day Plan (`TabId` `itinerary`), first in the Itinerary section,
-  rather than by promoting `DayMiniMap`. Unscheduled items are listed under the day with a
-  link to the Unscheduled view; there is no drag-to-schedule.
+  rather than by promoting `DayMiniMap`. The Unscheduled view has no drag-and-drop, so, as the
+  plan allowed, each unscheduled item under the day has a Schedule action that opens it for
+  editing through the existing `?edit=` deep link.
 
 ### 5a. Regroup the sections
 
@@ -327,10 +329,13 @@ already scrolled horizontally instead of using a dropdown, so nothing changed th
 **Status: done, with limits.** The style guide and frontend architecture doc are updated.
 There were no `Navbar`, `MobileBottomNav`, `TabGroup` or dashboard tests to update; the new
 agenda builder has its own. Checked in the browser in dark mode at desktop and phone widths:
-Today, the Library menu and hub, trip Overview and Day Plan. **Not checked:** light mode for
-the new screens, a contrast pass over every text pair, print output, and the agenda with real
-scheduled items (the local data has no trip in progress and no scheduled items, so numbered
-pins are covered by unit tests only).
+Today, the Library menu and hub, trip Overview and Day Plan; and the same screens in light
+mode at desktop width. Print: the print stylesheet hides every child of `body` except the
+print wrappers, which have their own colours, so nothing here reaches paper; that was
+confirmed by reading the rules, not by printing. **Not checked:** a contrast pass over every
+text pair, and the agenda in the browser with real scheduled items. The local data has no
+trip in progress and nothing scheduled, so the numbered list and pins are covered by unit and
+component tests (`dayAgenda.test.ts`, `agenda.test.tsx`), which render real Leaflet markers.
 
 - Update `docs/architecture/STYLE_GUIDE.md`: palette tables, gold usage rule, link colour,
   dark mode conventions, and the navigation table under Responsive Design.
@@ -358,13 +363,11 @@ Each step is its own PR against `main`.
 
 ## What was left out
 
-- The Photos map scope on Today.
-- The travelled / remaining split on the Overview route map; three items in Next up.
-- Drag-to-schedule in Day Plan.
-- Deadlines restyled as a checklist.
+- Deadlines restyled as a checklist; the existing widget is used as it was.
 - Moving every existing link from gold to teal. New and reworked screens follow the rule; the
   rest are to be moved as they are touched (see the style guide).
-- A designed light theme (decision 1). Light mode works but was not redesigned.
+- A designed light theme (decision 1). Light mode works and was checked, but was not
+  redesigned.
 - Renaming the `navy` token.
 
 ## Risks

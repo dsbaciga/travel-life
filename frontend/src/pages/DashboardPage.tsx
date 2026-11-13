@@ -151,6 +151,7 @@ export default function DashboardPage() {
                 onSelect={setActiveKey}
                 hasToday={inProgress}
                 hasTrip={activeTrip != null}
+                tripId={activeTrip?.id ?? null}
                 tripLocations={tripData.locations}
                 tripTransportation={tripData.transportation}
               />
