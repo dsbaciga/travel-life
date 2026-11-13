@@ -44,5 +44,7 @@ export function getMapTileConfig(
   // Without a CARTO key every themed tile would be the "API KEY REQUIRED"
   // placeholder, so fall back to OpenStreetMap rather than show a broken map.
   if (!useCustomStyle || !CARTO_API_KEY) return MAP_TILES.standard;
-  return isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
+  // Dark mode uses the standard map on purpose: the CARTO dark tiles were
+  // hard to read, so a dark page still gets a full-colour map.
+  return isDarkMode ? MAP_TILES.standard : MAP_TILES.light;
 }

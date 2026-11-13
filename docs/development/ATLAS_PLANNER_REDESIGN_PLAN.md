@@ -120,9 +120,10 @@ in `index.css` under `@media screen` and `.dark`:
 
 - The Leaflet container background follows `navy-900`, removing the light-grey flash while
   tiles load.
-- The dark basemap tiles are shown exactly as CARTO serves them. An 86% blend toward the
-  page surface was shipped first and then removed: it lowered label contrast and made the
-  map hard to read.
+- Dark mode no longer uses a dark basemap at all. The CARTO dark tiles were hard to read,
+  first with an 86% blend toward the page surface and then as served, so `getMapTileConfig`
+  now returns the standard OpenStreetMap tiles in dark mode. Light mode keeps the CARTO
+  light tiles when Custom Map Style is on.
 - Zoom controls and the attribution strip are styled for dark mode.
 - Popups and tooltips stay light on purpose: their contents are written for a white card
   (`text-gray-900` with no dark variant, in 8 components). Darkening them needs dark
