@@ -183,7 +183,8 @@ export default function SavedLinksInboxPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
       <PageHeader
         title="Inbox"
         subtitle="Saved links and imported bookings that aren't on a trip yet"
@@ -382,6 +383,7 @@ export default function SavedLinksInboxPage() {
       )}
 
       <ConfirmDialogComponent />
+    </div>
     </div>
   );
 }
