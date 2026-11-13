@@ -743,6 +743,35 @@ export default function LocationManager({
         />
 
         <form id="location-form" onSubmit={handleSubmit} className="space-y-6">
+          {/* Name always leads. Picking a search result below fills it in. */}
+          <div>
+            <label
+              htmlFor="location-name"
+              className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
+            >
+              Name *
+            </label>
+            <input
+              type="text"
+              id="location-name"
+              name="name"
+              autoComplete="off"
+              value={values.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              onBlur={(e) => locationFieldErrors.handleBlur("name", e.target.value)}
+              className={`input ${locationFieldErrors.inputErrorClass("name")}`}
+              aria-invalid={locationFieldErrors.touched.name && !!locationFieldErrors.errors.name}
+              aria-describedby={locationFieldErrors.errors.name ? "location-name-error" : undefined}
+              required
+              placeholder="Eiffel Tower"
+            />
+            {locationFieldErrors.touched.name && locationFieldErrors.errors.name && (
+              <p id="location-name-error" className="text-red-600 dark:text-red-400 text-xs mt-1">
+                {locationFieldErrors.errors.name}
+              </p>
+            )}
+          </div>
+
           {/* Map Search Section */}
           <FormSection title="Search & Select Location" icon="🗺️">
             <LocationSearchMap
@@ -757,34 +786,6 @@ export default function LocationManager({
 
           {/* Basic Info Section */}
           <FormSection title="Location Details" icon="📍">
-            <div>
-              <label
-                htmlFor="location-name"
-                className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
-              >
-                Location Name *
-              </label>
-              <input
-                type="text"
-                id="location-name"
-                name="name"
-                autoComplete="off"
-                value={values.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                onBlur={(e) => locationFieldErrors.handleBlur("name", e.target.value)}
-                className={`input ${locationFieldErrors.inputErrorClass("name")}`}
-                aria-invalid={locationFieldErrors.touched.name && !!locationFieldErrors.errors.name}
-                aria-describedby={locationFieldErrors.errors.name ? "location-name-error" : undefined}
-                required
-                placeholder="Eiffel Tower"
-              />
-              {locationFieldErrors.touched.name && locationFieldErrors.errors.name && (
-                <p id="location-name-error" className="text-red-600 dark:text-red-400 text-xs mt-1">
-                  {locationFieldErrors.errors.name}
-                </p>
-              )}
-            </div>
-
             {/* Create mode: bring an activity or lodging of the same name along */}
             {!manager.editingId && (
               <div>

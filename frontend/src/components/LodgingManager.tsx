@@ -661,9 +661,29 @@ export default function LodgingManager({
         />
 
         <form id="lodging-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* SECTION 1: Basic Info (Type & Name) */}
+          {/* SECTION 1: Basic Info (Name & Type) */}
           <FormSection title="Basic Info" icon="🏨">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="lodging-name"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
+                >
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  id="lodging-name"
+                  name="name"
+                  autoComplete="off"
+                  value={values.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  className="input"
+                  required
+                  placeholder="e.g., Marriott Hotel"
+                />
+              </div>
+
               <div>
                 <label
                   htmlFor="lodging-type"
@@ -689,26 +709,6 @@ export default function LodgingManager({
                   <option value="resort">🏖️ Resort</option>
                   <option value="other">🛏️ Other</option>
                 </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="lodging-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
-                >
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  id="lodging-name"
-                  name="name"
-                  autoComplete="off"
-                  value={values.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  className="input"
-                  required
-                  placeholder="e.g., Marriott Hotel"
-                />
               </div>
             </div>
           </FormSection>

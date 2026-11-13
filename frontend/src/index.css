@@ -109,13 +109,23 @@
        form full of fields does not read as a wall of gold boxes. */
     @apply w-full px-3.5 py-2.5 rounded-lg border
            border-primary-500/20 dark:border-navy-600
-           bg-white dark:bg-navy-900/40
+           bg-white dark:bg-navy-900
            text-charcoal dark:text-warm-gray font-body
            placeholder:text-slate/50 dark:placeholder:text-warm-gray/40
            focus:outline-none
            focus:border-primary-500 dark:focus:border-gold
            focus:ring-4 focus:ring-primary-500/10 dark:focus:ring-gold/20
            transition-colors duration-200;
+  }
+
+  /* The option list of a native select takes its colours from the select.
+     They must be opaque and set explicitly: with a translucent background
+     the browser draws the list light and keeps the light text. */
+  .dark select.input,
+  .dark select.input option,
+  .dark select.input optgroup {
+    background-color: theme('colors.navy.900');
+    color: theme('colors.warm-gray');
   }
 
   /* Enhanced gold glow on focus in dark mode */

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { timezoneOptionsFor } from '../utils/timezone';
 import { useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
@@ -546,21 +547,11 @@ export default function TripFormPage() {
                 className="input"
               >
                 <option value="">Use my default timezone</option>
-                <option value="UTC">UTC (Coordinated Universal Time)</option>
-                <option value="America/New_York">Eastern Time (US & Canada)</option>
-                <option value="America/Chicago">Central Time (US & Canada)</option>
-                <option value="America/Denver">Mountain Time (US & Canada)</option>
-                <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
-                <option value="America/Anchorage">Alaska</option>
-                <option value="Pacific/Honolulu">Hawaii</option>
-                <option value="Europe/London">London</option>
-                <option value="Europe/Paris">Paris</option>
-                <option value="Europe/Berlin">Berlin</option>
-                <option value="Asia/Tokyo">Tokyo</option>
-                <option value="Asia/Shanghai">Shanghai</option>
-                <option value="Asia/Dubai">Dubai</option>
-                <option value="Australia/Sydney">Sydney</option>
-                <option value="Pacific/Auckland">Auckland</option>
+                {timezoneOptionsFor(timezone).map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
               <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 If not specified, your default timezone from settings will be used

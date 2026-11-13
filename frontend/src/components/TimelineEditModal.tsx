@@ -1374,6 +1374,21 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       {/* Type and Name */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
+            Name *
+          </label>
+          <input
+            type="text"
+            value={lodgingForm.name}
+            onChange={(e) =>
+              setLodgingForm((prev) => ({ ...prev, name: e.target.value }))
+            }
+            className="input"
+            required
+            placeholder="Hotel name"
+          />
+        </div>
+        <div>
           <label
             htmlFor="lodging-type"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
@@ -1397,21 +1412,6 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             <option value="resort">🏖️ Resort</option>
             <option value="other">🛏️ Other</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-            Name *
-          </label>
-          <input
-            type="text"
-            value={lodgingForm.name}
-            onChange={(e) =>
-              setLodgingForm((prev) => ({ ...prev, name: e.target.value }))
-            }
-            className="input"
-            required
-            placeholder="Hotel name"
-          />
         </div>
       </div>
 

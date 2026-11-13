@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { commonTimezones } from '../utils/timezone';
+import { timezoneOptionsFor } from '../utils/timezone';
 
 interface TimezoneSelectProps {
   value: string;
@@ -38,7 +38,7 @@ export default function TimezoneSelect({
         className="input"
       >
         <option value="">-- Use Trip Timezone --</option>
-        {commonTimezones.map(({ value: tzValue, label: tzLabel }) => (
+        {timezoneOptionsFor(value).map(({ value: tzValue, label: tzLabel }) => (
           <option key={tzValue} value={tzValue}>
             {tzLabel}
           </option>
