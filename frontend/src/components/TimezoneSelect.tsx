@@ -23,7 +23,8 @@ export default function TimezoneSelect({
   const fieldId = providedId || generatedId;
 
   return (
-    <div>
+    // Capped: a timezone name never needs the full width of a form.
+    <div className="max-w-sm">
       <label
         htmlFor={fieldId}
         className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
