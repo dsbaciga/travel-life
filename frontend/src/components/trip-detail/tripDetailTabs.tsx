@@ -4,6 +4,7 @@ import { TripStatus, type TripStatusType } from "../../types/trip";
 
 export type TabId =
   | "dashboard"
+  | "itinerary"
   | "timeline"
   | "daily"
   | "trip-map"
@@ -27,6 +28,7 @@ export type TabId =
 
 const VALID_TAB_IDS = new Set<string>([
   "dashboard",
+  "itinerary",
   "timeline",
   "daily",
   "trip-map",
@@ -73,8 +75,8 @@ interface TripTabCounts {
 }
 
 /**
- * The eight trip sections. Group ids ("itinerary", "bookings", "prep" and the
- * "-group" ones) only name a group of sub-tabs; they are never a `TabId` and
+ * The eight trip sections. Group ids ("bookings", "prep" and the "-group"
+ * ones) only name a group of sub-tabs; they are never a `TabId` and
  * never appear in `?tab=`. Sections with a single view use that view's
  * `TabId` directly.
  */
@@ -107,7 +109,7 @@ export function useTripTabGroups({
         ),
       },
       {
-        id: "itinerary",
+        id: "itinerary-group",
         label: "Itinerary",
         icon: (
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,6 +122,20 @@ export function useTripTabGroups({
           </svg>
         ),
         subTabs: [
+          {
+            id: "itinerary",
+            label: "Day Plan",
+            icon: (
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h10M4 12h10M4 18h6m8-9.5c0 2.5-3 5.5-3 5.5s-3-3-3-5.5a3 3 0 116 0z"
+                />
+              </svg>
+            ),
+          },
           {
             id: "timeline",
             label: "Timeline",

@@ -43,6 +43,7 @@ const PhotosMapView = lazy(() => import("../components/PhotosMapView"));
 const Timeline = lazy(() => import("../components/Timeline"));
 const DailyView = lazy(() => import("../components/daily-view/DailyView"));
 const TripMap = lazy(() => import("../components/TripMap"));
+const ItineraryDayView = lazy(() => import("../components/agenda/ItineraryDayView"));
 const PhotoTimeline = lazy(() => import("../components/PhotoTimeline"));
 const ActivityManager = lazy(() => import("../components/ActivityManager"));
 const UnscheduledItems = lazy(() => import("../components/UnscheduledItems"));
@@ -84,6 +85,8 @@ export default function TripDetailPage() {
   const editItemId =
     editParam != null && /^\d+$/.test(editParam) ? Number(editParam) : null;
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  // Day the Day Plan view should open on, set when arriving from the Overview.
+  const [itineraryDay, setItineraryDay] = useState<string | null>(null);
 
   // Sync activeTab with URL when tab parameter changes externally (e.g., from EntityDetailModal navigation)
   useEffect(() => {
@@ -535,6 +538,9 @@ export default function TripDetailPage() {
                             return;
                           }
                           if (isTabId(tab)) changeTab(tab);
+                          if (tab === "itinerary") {
+                            setItineraryDay(options?.scrollToDate ?? null);
+                          }
                           if (options?.action === "add") {
                             // Handle specific actions if needed
                           }
@@ -544,6 +550,32 @@ export default function TripDetailPage() {
                         onToggleChecklistItem={handleToggleChecklistItem}
                         onNavigateToEntity={handleNavigateToEntity}
                         budgetData={budgetData}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              )}
+
+              {/* Day Plan Tab: one day as a numbered list beside a map */}
+              {activeTab === "itinerary" && (
+                <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-navy-700 p-4 sm:p-6 animate-fadeIn">
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <LoadingSpinner.FullPage message="Loading day plan..." />
+                      }
+                    >
+                      <ItineraryDayView
+                        tripId={tripId}
+                        tripStartDate={trip.startDate}
+                        tripEndDate={trip.endDate}
+                        tripTimezone={trip.timezone}
+                        activities={activitiesData || []}
+                        transportation={transportationData || []}
+                        lodging={lodgingData || []}
+                        locations={locations}
+                        initialDay={itineraryDay}
+                        onOpenTab={changeTab}
                       />
                     </Suspense>
                   </ErrorBoundary>
