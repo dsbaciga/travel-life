@@ -122,7 +122,8 @@ export const locationController = {
     const userId = requireUserId(req);
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(500, Math.max(1, parseInt(req.query.limit as string) || 200));
-    const result = await locationService.getAllVisitedLocations(userId, page, limit);
+    const scope = req.query.scope === 'all' ? 'all' : 'visited';
+    const result = await locationService.getAllVisitedLocations(userId, page, limit, scope);
     res.json({
       status: 'success',
       data: result,

@@ -52,7 +52,7 @@ function EmptyMap({ message }: { message: string }) {
 /**
  * The map half of the Today screen, with a scope switch. It opens on the
  * narrowest scope that has something to show: today's pins during a trip,
- * otherwise the trip, otherwise everywhere the user has been. Photos
+ * otherwise the trip, otherwise the places of every trip. Photos
  * shows where the trip's photos were taken.
  */
 export default function TodayMap({
@@ -82,7 +82,7 @@ export default function TodayMap({
     queryKey: ['today-map', 'all-places'],
     queryFn: async () => {
       const [locations, transportation] = await Promise.all([
-        locationService.getAllVisitedLocations(),
+        locationService.getAllTripLocations(),
         transportationService.getAllTransportation(),
       ]);
       return { locations, transportation };

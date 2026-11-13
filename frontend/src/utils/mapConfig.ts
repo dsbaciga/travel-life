@@ -35,16 +35,32 @@ export const MAP_TILES = {
     attribution: CARTO_ATTRIBUTION,
     maxZoom: 20,
   },
+  /** CARTO Voyager: full colour like the standard map, with English labels. */
+  voyager: {
+    url: withCartoKey('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'),
+    attribution: CARTO_ATTRIBUTION,
+    maxZoom: 20,
+  },
 } as const;
 
+/**
+ * Which tiles a map uses.
+ *
+ * - Labels are in English wherever possible. OpenStreetMap's own tiles label
+ *   each place in its local language, so they are only the fallback.
+ * - Dark mode does not get a dark basemap: CARTO's dark tiles were hard to
+ *   read. It uses Voyager, which is full colour.
+ * - Without a CARTO key every CARTO tile is an "API KEY REQUIRED"
+ *   placeholder, so fall back to OpenStreetMap rather than show a broken map.
+ *   That fallback is the one case where labels are not in English.
+ * - `useCustomStyle` (the Custom Map Style setting) picks the softer grey
+ *   style in light mode; switched off, light mode uses Voyager too.
+ */
 export function getMapTileConfig(
   isDarkMode: boolean,
   useCustomStyle: boolean
 ): MapTileConfig {
-  // Without a CARTO key every themed tile would be the "API KEY REQUIRED"
-  // placeholder, so fall back to OpenStreetMap rather than show a broken map.
-  if (!useCustomStyle || !CARTO_API_KEY) return MAP_TILES.standard;
-  // Dark mode uses the standard map on purpose: the CARTO dark tiles were
-  // hard to read, so a dark page still gets a full-colour map.
-  return isDarkMode ? MAP_TILES.standard : MAP_TILES.light;
+  if (!CARTO_API_KEY) return MAP_TILES.standard;
+  if (isDarkMode || !useCustomStyle) return MAP_TILES.voyager;
+  return MAP_TILES.light;
 }

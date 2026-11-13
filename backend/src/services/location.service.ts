@@ -272,7 +272,17 @@ export class LocationService {
     return convertDecimals(locations);
   }
 
-  async getAllVisitedLocations(userId: number, page = 1, limit = 200) {
+  /**
+   * Mappable places across the user's trips. By default only completed
+   * trips count ("places visited"); `scope: 'all'` returns the places of
+   * every trip except cancelled ones, for maps that show plans as well.
+   */
+  async getAllVisitedLocations(
+    userId: number,
+    page = 1,
+    limit = 200,
+    scope: 'visited' | 'all' = 'visited'
+  ) {
     const skip = (page - 1) * limit;
 
     const where = {
@@ -282,7 +292,7 @@ export class LocationService {
       // so it kept showing places from trips that are still being planned.
       trip: {
         userId,
-        status: TripStatus.COMPLETED,
+        status: scope === 'all' ? { not: TripStatus.CANCELLED } : TripStatus.COMPLETED,
       },
       AND: [
         { latitude: { not: null } },

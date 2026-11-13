@@ -428,7 +428,7 @@ export default function AccountSettingsSection({
                 Custom Map Style
               </h3>
               <p className="text-sm text-gray-500 dark:text-dusk-400">
-                Use softer themed map tiles in light mode. Dark mode always uses the standard map.
+                Use softer grey map tiles in light mode. Dark mode always uses the full-colour map.
               </p>
             </div>
             <button

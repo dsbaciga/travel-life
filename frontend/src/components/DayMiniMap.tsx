@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import AppTileLayer from './AppTileLayer';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils';
@@ -116,10 +117,7 @@ export default function DayMiniMap({ locations, defaultExpanded = false }: DayMi
               style={{ height: '100%', width: '100%' }}
               className="z-0"
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <AppTileLayer />
               <MapBounds locations={locations} />
               {locations.map((location, index) => (
                 <Marker

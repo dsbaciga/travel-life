@@ -1377,7 +1377,7 @@ textarea:focus-visible:not(.input) {
     background: theme('colors.navy.900');
   }
 
-  /* There is no dark basemap: dark mode shows the standard map tiles
+  /* There is no dark basemap: dark mode shows full-colour map tiles
      (see utils/mapConfig.ts). Only the chrome around the map is darkened. */
 
   .dark .leaflet-bar,

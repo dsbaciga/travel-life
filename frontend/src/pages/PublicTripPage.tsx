@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AppTileLayer from '../components/AppTileLayer';
 import { useParams } from 'react-router';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils';
@@ -235,10 +236,7 @@ function TripMap({ trip }: { trip: PublicTrip }) {
           style={{ height: '100%', width: '100%' }}
           className="z-0"
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <AppTileLayer />
           {points.map((location) => (
             <Marker
               key={location.id}

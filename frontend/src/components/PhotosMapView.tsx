@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import AppTileLayer from './AppTileLayer';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import { LatLngBounds, LatLng, DivIcon } from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
@@ -388,10 +389,7 @@ export default function PhotosMapView({
 
       <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-navy-700">
         <MapContainer center={[centerLat, centerLng]} zoom={10} className="h-full w-full" scrollWheelZoom={true}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <AppTileLayer />
           <MapBoundsHandler photos={geotaggedPhotos} />
 
           <MarkerClusterGroup chunkedLoading>
