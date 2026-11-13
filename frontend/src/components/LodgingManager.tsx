@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import LocationQuickAdd from "./LocationQuickAdd";
+import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
+import { useLinkedCreate } from "../hooks/useLinkedCreate";
 import FormModal from "./FormModal";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
@@ -156,6 +158,9 @@ export default function LodgingManager({
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
 
   const [showLocationQuickAdd, setShowLocationQuickAdd] = useState(false);
+  // Create mode only: also create a Place with the lodging's name and link it.
+  const [alsoCreatePlace, setAlsoCreatePlace] = useState(false);
+  const { createPlaceNamed } = useLinkedCreate(tripId);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -359,6 +364,7 @@ export default function LodgingManager({
     setShowMoreOptions(false);
     setOriginalLocationId(null);
     setShowDraftPrompt(false);
+    setAlsoCreatePlace(false);
     draft.clearDraft();
   }, [baseResetForm, draft, setShowDraftPrompt]);
 
@@ -443,6 +449,19 @@ export default function LodgingManager({
       };
 
       try {
+        // A place picked from the list wins over creating a new one.
+        let newLocationId = values.locationId || null;
+        if (alsoCreatePlace && !newLocationId) {
+          const place = await createPlaceNamed(values.name, values.address);
+          if (place) {
+            newLocationId = place.id;
+            // Select it in the form too, so a retry after a failed save links
+            // this place instead of creating a second one.
+            handleLocationCreated(place.id, place.name);
+            setAlsoCreatePlace(false);
+          }
+        }
+
         // Call service directly to get the created lodging ID for linking
         const createdLodging = await lodgingService.createLodging(createData);
         toast.success('Lodging added successfully');
@@ -453,7 +472,7 @@ export default function LodgingManager({
           tripId,
           sourceType: 'LODGING',
           sourceId: createdLodging.id,
-          newLocationId: values.locationId || null,
+          newLocationId,
           originalLocationId: null,
           entityLabel: 'Lodging',
           invalidateLinkSummary,
@@ -686,6 +705,15 @@ export default function LodgingManager({
                 />
               </div>
             </div>
+
+            {!manager.editingId && !values.locationId && (
+              <AlsoCreatePlaceOption
+                id="lodging-also-create-place"
+                name={values.name}
+                checked={alsoCreatePlace}
+                onChange={setAlsoCreatePlace}
+              />
+            )}
           </FormSection>
 
           {/* SECTION 2: Stay Dates */}

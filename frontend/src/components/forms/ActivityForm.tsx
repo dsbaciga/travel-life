@@ -13,6 +13,8 @@ import TimezoneSelect from "../TimezoneSelect";
 import CostCurrencyFields from "../CostCurrencyFields";
 import BookingFields from "../BookingFields";
 import LocationQuickAdd from "../LocationQuickAdd";
+import AlsoCreatePlaceOption from "./AlsoCreatePlaceOption";
+import { useLinkedCreate } from "../../hooks/useLinkedCreate";
 import {
   convertISOToDateTimeLocal,
   convertDateTimeLocalToISO,
@@ -125,6 +127,9 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 }: ActivityFormProps, ref) {
   const resolveTz = useTimezoneResolver();
   const [showLocationQuickAdd, setShowLocationQuickAdd] = useState(false);
+  // Create mode only: also create a Place with the activity's name and link it.
+  const [alsoCreatePlace, setAlsoCreatePlace] = useState(false);
+  const { createPlaceNamed } = useLinkedCreate(tripId);
   const [showMoreOptions, setShowMoreOptions] = useState(showMoreOptionsDefault);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -399,7 +404,20 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         saveLastUsedCurrency(values.currency);
       }
 
-      await onSubmit(formData, values.locationId || null);
+      // A place picked from the list wins over creating a new one.
+      let locationId = values.locationId || null;
+      if (alsoCreatePlace && !isEditMode && !locationId) {
+        const place = await createPlaceNamed(values.name);
+        if (place) {
+          locationId = place.id;
+          // Select it in the form too, so a retry after a failed save links
+          // this place instead of creating a second one.
+          handleLocationCreated(place.id, place.name);
+          setAlsoCreatePlace(false);
+        }
+      }
+
+      await onSubmit(formData, locationId);
 
       // Mark form as saved to suppress unsaved changes warning
       markSaved();
@@ -484,6 +502,16 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
             </select>
           </div>
         </div>
+
+        {!isEditMode && !values.locationId && (
+          <AlsoCreatePlaceOption
+            id={`${formId}-also-create-place`}
+            name={values.name}
+            checked={alsoCreatePlace}
+            onChange={setAlsoCreatePlace}
+            disabled={isSubmitting}
+          />
+        )}
       </FormSection>
 
       {/* SECTION: Dietary Options - shown prominently when category is Dining */}

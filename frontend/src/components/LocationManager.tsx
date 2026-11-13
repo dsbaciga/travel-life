@@ -23,6 +23,7 @@ import { useCreateFromUrlParam } from "../hooks/useCreateFromUrlParam";
 import { useEntityLinking } from "../hooks/useEntityLinking";
 import { useAutoSaveDraft } from "../hooks/useAutoSaveDraft";
 import { useBulkSelection } from "../hooks/useBulkSelection";
+import { useLinkedCreate, type PlaceCompanion } from "../hooks/useLinkedCreate";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import LocationSearchMap from "./LocationSearchMap";
@@ -123,6 +124,9 @@ export default function LocationManager({
 
   const [categories, setCategories] = useState<LocationCategory[]>([]);
   const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Create mode only: also create an activity or lodging with the place's name.
+  const [alsoCreate, setAlsoCreate] = useState<PlaceCompanion>("none");
+  const { createCompanionForPlace } = useLinkedCreate(tripId);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
   // Bulk selection state
@@ -213,6 +217,7 @@ export default function LocationManager({
     manager.setEditingId(null);
     setKeepFormOpenAfterSave(false);
     setShowDraftPrompt(false);
+    setAlsoCreate("none");
     draft.clearDraft();
   }, [reset, locationFieldErrors, manager, draft]);
 
@@ -290,8 +295,28 @@ export default function LocationManager({
         // Omitted when blank so the backend can populate it from OpenStreetMap.
         openingHours: values.openingHours.trim() || undefined,
       };
-      const success = await manager.handleCreate(createData);
+      let success: boolean;
+      if (alsoCreate === "none") {
+        success = await manager.handleCreate(createData);
+      } else {
+        // The companion needs the new place's id, which handleCreate does not
+        // return, so create the place directly here.
+        try {
+          const created = await locationService.createLocation(createData);
+          toast.success("Location added successfully");
+          await createCompanionForPlace(alsoCreate, created);
+          invalidateLinkSummary();
+          await manager.loadItems();
+          onUpdate?.();
+          success = true;
+        } catch (error) {
+          console.error("Failed to create location:", error);
+          toast.error("Failed to add location");
+          success = false;
+        }
+      }
       if (success) {
+        setAlsoCreate("none");
         if (keepFormOpenAfterSave) {
           // Reset form but keep modal open for quick successive entries
           reset();
@@ -759,6 +784,36 @@ export default function LocationManager({
                 </p>
               )}
             </div>
+
+            {/* Create mode: bring an activity or lodging of the same name along */}
+            {!manager.editingId && (
+              <div>
+                <label
+                  htmlFor="location-also-create"
+                  className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
+                >
+                  Add and Link
+                </label>
+                <select
+                  id="location-also-create"
+                  name="alsoCreate"
+                  value={alsoCreate}
+                  onChange={(e) => setAlsoCreate(e.target.value as PlaceCompanion)}
+                  className="input"
+                >
+                  <option value="none">None</option>
+                  <option value="activity">Activity</option>
+                  <option value="lodging">Lodging</option>
+                </select>
+                {alsoCreate !== "none" && (
+                  <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                    {alsoCreate === "activity"
+                      ? "Adds an activity with the same name, linked to this place. It starts unscheduled."
+                      : "Adds a lodging with the same name, linked to this place. It is set as a hotel with no dates; edit it under Lodging."}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Parent Location - only show if this location doesn't have children */}
             {(() => {
