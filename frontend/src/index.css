@@ -1354,6 +1354,66 @@ textarea:focus-visible:not(.input) {
 }
 
 /* ========================================
+   MAPS (LEAFLET) IN DARK MODE
+   Leaflet ships light-only chrome. Screen only: printed maps stay light.
+   ======================================== */
+
+@media screen {
+  /* Leaflet's default #ddd shows through while tiles load, which flashes
+     light grey on a dark page. */
+  .dark .leaflet-container {
+    background: theme('colors.navy.900');
+  }
+
+  /* CARTO dark tiles are near-black and neutral. Letting a little of the
+     themed container show through lifts the blacks toward the page surface
+     and picks up its hue, so the map follows the DUSK scale. Scoped with
+     :has() to the dark basemap only - the OpenStreetMap fallback (no CARTO
+     key, or custom style off) is a light map and must not be dimmed. The
+     tile URLs are untouched, so the offline tile cache is unaffected. */
+  .dark .leaflet-tile-pane:has(img[src*='dark_all']) {
+    opacity: 0.86;
+  }
+
+  .dark .leaflet-bar,
+  .dark .leaflet-control-layers {
+    border-color: theme('colors.navy.700');
+  }
+
+  .dark .leaflet-bar a,
+  .dark .leaflet-control-layers {
+    background-color: theme('colors.navy.800');
+    color: theme('colors.warm-gray');
+    border-bottom-color: theme('colors.navy.700');
+  }
+
+  .dark .leaflet-bar a:hover,
+  .dark .leaflet-bar a:focus {
+    background-color: theme('colors.navy.700');
+    color: theme('colors.gold');
+  }
+
+  .dark .leaflet-bar a.leaflet-disabled {
+    background-color: theme('colors.navy.800');
+    color: theme('colors.navy.500');
+  }
+
+  .dark .leaflet-container .leaflet-control-attribution {
+    background-color: theme('colors.navy.900 / 80%');
+    color: theme('colors.navy.300');
+  }
+
+  .dark .leaflet-container .leaflet-control-attribution a {
+    color: theme('colors.sky.DEFAULT');
+  }
+
+  /* Popups and tooltips deliberately stay light. Their contents are written
+     for a white card (text-gray-900 with no dark variant, in 8 components),
+     so a dark popup makes that text unreadable. Darkening them means giving
+     every popup body dark variants first. */
+}
+
+/* ========================================
    REDUCED MOTION SUPPORT
    ======================================== */
 
