@@ -1365,15 +1365,9 @@ textarea:focus-visible:not(.input) {
     background: theme('colors.navy.900');
   }
 
-  /* CARTO dark tiles are near-black and neutral. Letting a little of the
-     themed container show through lifts the blacks toward the page surface
-     and picks up its hue, so the map follows the DUSK scale. Scoped with
-     :has() to the dark basemap only - the OpenStreetMap fallback (no CARTO
-     key, or custom style off) is a light map and must not be dimmed. The
-     tile URLs are untouched, so the offline tile cache is unaffected. */
-  .dark .leaflet-tile-pane:has(img[src*='dark_all']) {
-    opacity: 0.86;
-  }
+  /* The dark basemap tiles are deliberately left exactly as CARTO serves
+     them. Blending them toward the page surface was tried and made the map
+     labels harder to read. */
 
   .dark .leaflet-bar,
   .dark .leaflet-control-layers {
