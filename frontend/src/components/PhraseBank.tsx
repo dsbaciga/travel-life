@@ -92,7 +92,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
   return (
     <div className="space-y-6">
       {/* Language tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-dusk-700 pb-3">
         {languages.map((lang) => (
           <button
             key={lang.code}
@@ -100,7 +100,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeLanguage === lang.code
                 ? 'bg-primary-500 dark:bg-gold text-white'
-                : 'bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-600'
+                : 'bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-navy-600'
             }`}
           >
             {lang.name}
@@ -120,7 +120,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
               className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                 activeCategory === cat
                   ? 'bg-accent-400 dark:bg-accent-500 text-white'
-                  : 'bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-600'
+                  : 'bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-navy-600'
               }`}
             >
               <span className="mr-1">{info.emoji}</span>
@@ -146,7 +146,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
               <div className="flex justify-between items-start gap-3">
                 <div className="flex-1 min-w-0">
                   {/* English phrase */}
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-sm text-gray-500 dark:text-dusk-400 mb-1">
                     {phrase.english}
                   </p>
                   {/* Translation */}
@@ -166,7 +166,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
                   className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
                     copiedId === phrase.id
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                      : 'bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-600'
+                      : 'bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-dusk-400 hover:bg-gray-200 dark:hover:bg-navy-600'
                   }`}
                   aria-label={`Copy "${phrase.english}" to clipboard`}
                   title="Copy to clipboard"
@@ -203,8 +203,8 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
                 </button>
               </div>
               {/* Category badge */}
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                <span className="inline-flex items-center text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
+                <span className="inline-flex items-center text-xs text-gray-500 dark:text-dusk-400">
                   <span className="mr-1">{CATEGORY_INFO[phrase.category].emoji}</span>
                   {CATEGORY_INFO[phrase.category].label}
                 </span>
@@ -216,7 +216,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
 
       {/* Phrase count */}
       {filteredPhrases.length > 0 && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-gray-500 dark:text-dusk-400 text-center">
           Showing {filteredPhrases.length} phrase{filteredPhrases.length !== 1 ? 's' : ''}
           {activeCategory !== 'all' && ` in ${CATEGORY_INFO[activeCategory].label}`}
         </p>

@@ -111,7 +111,7 @@ export default function MonthlyCalendarView({ year, month, trips }: MonthlyCalen
         {DAY_NAMES.map((name) => (
           <div
             key={name}
-            className="bg-gray-50 dark:bg-navy-800 py-2 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
+            className="bg-gray-50 dark:bg-navy-800 py-2 text-center text-sm font-medium text-gray-600 dark:text-dusk-400"
           >
             {name}
           </div>
@@ -138,7 +138,7 @@ export default function MonthlyCalendarView({ year, month, trips }: MonthlyCalen
                         inline-flex items-center justify-center w-7 h-7 text-sm rounded-full
                         ${isToday(day)
                           ? 'bg-primary-600 text-white font-bold'
-                          : 'text-gray-700 dark:text-gray-300'
+                          : 'text-gray-700 dark:text-dusk-300'
                         }
                       `}
                     >

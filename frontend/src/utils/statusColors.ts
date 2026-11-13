@@ -46,7 +46,7 @@ export function getTripStatusRibbonColor(status: string): string {
  * @returns Tailwind CSS classes for background and text color
  */
 export function getTripStatusColor(status: string): string {
-  return tripStatusColors[status as TripStatusType] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  return tripStatusColors[status as TripStatusType] ?? 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300';
 }
 
 /**
@@ -61,7 +61,7 @@ export function getTripStatusBadgeClasses(status: string): string {
  */
 export const genericStatusColors = {
   active: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  inactive: 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300',
+  inactive: 'bg-gray-100 text-gray-700 dark:bg-dusk-600 dark:text-dusk-300',
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300',
   completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   error: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
@@ -79,7 +79,7 @@ export function getGenericStatusColor(status: GenericStatus): string {
 export const flightStatusColors = {
   scheduled: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  landed: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  landed: 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   diverted: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
 } as const;
@@ -87,8 +87,8 @@ export const flightStatusColors = {
 export type FlightStatus = keyof typeof flightStatusColors;
 
 export function getFlightStatusColor(status: string | null): string {
-  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-  return flightStatusColors[status as FlightStatus] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+  if (!status) return 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-200';
+  return flightStatusColors[status as FlightStatus] ?? 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-200';
 }
 
 /**
@@ -97,7 +97,7 @@ export function getFlightStatusColor(status: string | null): string {
 export const delayColors = {
   late: 'text-red-600 dark:text-red-400',
   early: 'text-green-600 dark:text-green-400',
-  onTime: 'text-gray-600 dark:text-gray-400',
+  onTime: 'text-gray-600 dark:text-dusk-400',
 } as const;
 
 export function getDelayColor(delay: number | null): string {

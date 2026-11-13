@@ -178,7 +178,7 @@ function TransportationItem({
         e.stopPropagation();
         onToggleSelection?.(transportation.id, index, e.shiftKey);
       } : undefined}
-      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
+      className={`bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
     >
       {/* Route Map - Show for all transportation with route data */}
       {transportation.route && (
@@ -218,12 +218,12 @@ function TransportationItem({
               {transportation.type}
             </h3>
             {transportation.carrier && (
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-gray-600 dark:text-dusk-400">
                 - {transportation.carrier}
               </span>
             )}
             {transportation.vehicleNumber && (
-              <span className="text-xs text-gray-500 dark:text-gray-400 break-all min-w-0">
+              <span className="text-xs text-gray-500 dark:text-dusk-400 break-all min-w-0">
                 #{transportation.vehicleNumber}
               </span>
             )}
@@ -235,7 +235,7 @@ function TransportationItem({
       </div>
 
       {/* Details */}
-      <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-gray-300">
+      <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-dusk-300">
         {/* Route */}
         <div className="flex flex-wrap gap-x-2">
           <span className="font-medium">Route:</span>
@@ -344,10 +344,10 @@ function TransportationItem({
         {transportation.notes && (
           <div className="mt-2">
             <span className="font-medium">Notes:</span>
-            <p className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 sm:hidden">
+            <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
               {stripMarkdown(transportation.notes)}
             </p>
-            <div className="text-gray-600 dark:text-gray-400 mt-1 hidden sm:block">
+            <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
               <MarkdownRenderer content={transportation.notes} compact />
             </div>
           </div>
@@ -363,7 +363,7 @@ function TransportationItem({
       />
 
       {/* Actions - bottom row */}
-      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
         <LinkButton
           tripId={tripId}
           entityType="TRANSPORTATION"
@@ -1040,7 +1040,7 @@ export default function TransportationManager({
       );
     }
     return (
-      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300">
         Completed
       </span>
     );
@@ -1089,13 +1089,13 @@ export default function TransportationManager({
 
       {/* Filter Tabs */}
       {manager.items.length > 0 && (
-        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700" role="tablist" aria-label="Transportation filters">
+        <div className="flex gap-2 border-b border-gray-200 dark:border-dusk-700" role="tablist" aria-label="Transportation filters">
           <button
             onClick={() => setActiveTab("all")}
             className={`px-4 py-2 font-medium text-sm transition-colors ${
               activeTab === "all"
                 ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                : "text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "all" }}
@@ -1108,7 +1108,7 @@ export default function TransportationManager({
             className={`px-4 py-2 font-medium text-sm transition-colors ${
               activeTab === "upcoming"
                 ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                : "text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "upcoming" }}
@@ -1121,7 +1121,7 @@ export default function TransportationManager({
             className={`px-4 py-2 font-medium text-sm transition-colors ${
               activeTab === "historical"
                 ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                : "text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "historical" }}
@@ -1135,7 +1135,7 @@ export default function TransportationManager({
       {/* Sort Control */}
       {manager.items.length > 0 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="transportation-sort" className="text-sm text-gray-600 dark:text-gray-400">
+          <label htmlFor="transportation-sort" className="text-sm text-gray-600 dark:text-dusk-400">
             Sort by:
           </label>
           <select
@@ -1210,7 +1210,7 @@ export default function TransportationManager({
             <div className="space-y-1">
               <label
                 htmlFor="transportation-type"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300"
               >
                 Transportation Type
               </label>
@@ -1243,7 +1243,7 @@ export default function TransportationManager({
             <div>
               <label
                 htmlFor="transportation-from-location"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
                 From
               </label>
@@ -1289,7 +1289,7 @@ export default function TransportationManager({
             <div>
               <label
                 htmlFor="transportation-to-location"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
                 To
               </label>
@@ -1338,7 +1338,7 @@ export default function TransportationManager({
               <div>
                 <label
                   htmlFor="transportation-departure-time"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Departure
                 </label>
@@ -1356,7 +1356,7 @@ export default function TransportationManager({
                     <button
                       type="button"
                       onClick={() => handleChange("departureTime", "")}
-                      className="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300"
                       title="Clear departure time"
                       aria-label="Clear departure time"
                     >
@@ -1377,7 +1377,7 @@ export default function TransportationManager({
               <div>
                 <label
                   htmlFor="transportation-arrival-time"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Arrival
                 </label>
@@ -1395,7 +1395,7 @@ export default function TransportationManager({
                     <button
                       type="button"
                       onClick={() => handleChange("arrivalTime", "")}
-                      className="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="px-2 text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300"
                       title="Clear arrival time"
                       aria-label="Clear arrival time"
                     >
@@ -1427,7 +1427,7 @@ export default function TransportationManager({
                 <div>
                   <label
                     htmlFor="transportation-carrier"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     Carrier/Company
                   </label>
@@ -1446,7 +1446,7 @@ export default function TransportationManager({
                 <div>
                   <label
                     htmlFor="transportation-vehicle-number"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     Flight/Train/Vehicle #
                   </label>
@@ -1482,7 +1482,7 @@ export default function TransportationManager({
                 <div>
                   <label
                     htmlFor="transportation-from-custom"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     From (custom text)
                   </label>
@@ -1503,7 +1503,7 @@ export default function TransportationManager({
                 <div>
                   <label
                     htmlFor="transportation-to-custom"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     To (custom text)
                   </label>
@@ -1559,10 +1559,10 @@ export default function TransportationManager({
         <>
           {/* Scheduled Transportation */}
           {scheduledItems.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span>📅</span> Scheduled Transportation
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({filteredScheduledItems.length})
                 </span>
               </h3>
@@ -1601,10 +1601,10 @@ export default function TransportationManager({
 
           {/* Unscheduled Transportation */}
           {sortedUnscheduledItems.length > 0 && (
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
                 <span>📋</span> Unscheduled Transportation
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledItems.length})
                 </span>
               </h3>

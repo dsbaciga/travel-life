@@ -106,11 +106,11 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
       <span className="label">Cover Photo</span>
 
       <div className="flex flex-col sm:flex-row gap-4 items-start">
-        <div className="w-full sm:w-56 aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+        <div className="w-full sm:w-56 aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 bg-gray-100 dark:bg-dusk-700 flex items-center justify-center shrink-0">
           {previewUrl ? (
             <img src={previewUrl} alt="Trip cover" className="w-full h-full object-cover" />
           ) : (
-            <span className="text-sm text-gray-500 dark:text-gray-400">No cover photo</span>
+            <span className="text-sm text-gray-500 dark:text-dusk-400">No cover photo</span>
           )}
         </div>
 
@@ -146,7 +146,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
             )}
           </div>
 
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sm text-gray-600 dark:text-dusk-400 mt-2">
             {isGalleryPhoto
               ? "This trip's cover comes from a photo in its gallery. Uploading an image here replaces it."
               : 'Uploaded cover images are not added to the trip’s photos or memories. You can swap in a real trip photo later from the Photos tab.'}

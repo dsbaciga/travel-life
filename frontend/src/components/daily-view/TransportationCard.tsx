@@ -76,7 +76,7 @@ export default function TransportationCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
+      className={`bg-white dark:bg-dusk-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
     >
       {/* Header */}
       <div className="p-4">
@@ -94,7 +94,7 @@ export default function TransportationCard({
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                 {typeDisplay}
                 {transportation.carrier && (
-                  <span className="text-gray-500 dark:text-gray-400 font-normal">
+                  <span className="text-gray-500 dark:text-dusk-400 font-normal">
                     {' '}
                     · {transportation.carrier}
                   </span>
@@ -102,7 +102,7 @@ export default function TransportationCard({
               </h3>
 
               {transportation.vehicleNumber && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 font-mono">
+                <div className="text-sm text-gray-500 dark:text-dusk-400 mt-0.5 font-mono">
                   {transportation.vehicleNumber}
                 </div>
               )}
@@ -144,15 +144,15 @@ export default function TransportationCard({
         <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
           {/* From */}
           <div className="flex-1">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
               From
             </div>
             <div className="font-semibold text-gray-900 dark:text-white truncate">{fromName}</div>
             {transportation.departureTime && (
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <div className="mt-1 text-sm text-gray-600 dark:text-dusk-400">
                 {formatTime(transportation.departureTime, startTz)}
                 {startTz && (
-                  <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
+                  <span className="text-gray-400 dark:text-dusk-400 text-xs ml-1">
                     {getTimezoneAbbr(startTz)}
                   </span>
                 )}
@@ -163,7 +163,7 @@ export default function TransportationCard({
           {/* Arrow - horizontal on mobile, vertical on desktop */}
           <div className="flex items-center justify-center gap-2 sm:flex-col sm:gap-0 py-1 sm:py-0">
             <svg
-              className="w-6 h-6 text-gray-400 dark:text-gray-400 rotate-90 sm:rotate-0"
+              className="w-6 h-6 text-gray-400 dark:text-dusk-400 rotate-90 sm:rotate-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -176,7 +176,7 @@ export default function TransportationCard({
               />
             </svg>
             {durationMinutes && durationMinutes > 0 && (
-              <span className="text-xs text-gray-400 dark:text-gray-400 sm:mt-1">
+              <span className="text-xs text-gray-400 dark:text-dusk-400 sm:mt-1">
                 {formatDuration(durationMinutes)}
               </span>
             )}
@@ -184,15 +184,15 @@ export default function TransportationCard({
 
           {/* To */}
           <div className="flex-1 sm:text-right">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
               To
             </div>
             <div className="font-semibold text-gray-900 dark:text-white truncate">{toName}</div>
             {transportation.arrivalTime && (
-              <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <div className="mt-1 text-sm text-gray-600 dark:text-dusk-400">
                 {formatTime(transportation.arrivalTime, endTz)}
                 {endTz && (
-                  <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
+                  <span className="text-gray-400 dark:text-dusk-400 text-xs ml-1">
                     {getTimezoneAbbr(endTz)}
                   </span>
                 )}
@@ -204,7 +204,7 @@ export default function TransportationCard({
         {/* Distance badge */}
         {transportation.calculatedDistance && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -216,7 +216,7 @@ export default function TransportationCard({
               {transportation.calculatedDistance.toFixed(1)} km
             </span>
             {transportation.distanceSource && (
-              <span className="text-xs text-gray-400 dark:text-gray-400">
+              <span className="text-xs text-gray-400 dark:text-dusk-400">
                 ({transportation.distanceSource === 'route' ? 'road distance' : 'straight line'})
               </span>
             )}
@@ -225,7 +225,7 @@ export default function TransportationCard({
 
         {/* Confirmation number */}
         {transportation.confirmationNumber && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-dusk-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -247,7 +247,7 @@ export default function TransportationCard({
 
         {/* Notes */}
         {transportation.notes && (
-          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-dusk-700/50 text-sm text-gray-600 dark:text-dusk-400">
             <div className="flex items-start gap-2">
               <svg
                 className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400"
@@ -291,7 +291,7 @@ export default function TransportationCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -309,7 +309,7 @@ export default function TransportationCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

@@ -117,10 +117,10 @@ function App() {
   // Show loading state while checking auth
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-cream-50 dark:bg-navy-900">
+      <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-cream-200">Loading…</p>
+          <p className="mt-4 text-slate dark:text-warm-gray">Loading…</p>
         </div>
       </div>
     );

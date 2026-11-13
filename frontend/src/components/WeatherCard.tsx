@@ -66,7 +66,7 @@ export default function WeatherCard({
             </span>
             <div className="min-w-0">
               {weather.locationName && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 min-w-0">
+                <div className="text-xs text-gray-500 dark:text-dusk-400 flex items-center gap-1 min-w-0">
                   <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -74,7 +74,7 @@ export default function WeatherCard({
                   <span className="truncate">{weather.locationName}</span>
                 </div>
               )}
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize truncate">
+              <div className="text-sm font-medium text-gray-700 dark:text-dusk-300 capitalize truncate">
                 {weather.conditions || 'No data'}
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white truncate">
@@ -83,7 +83,7 @@ export default function WeatherCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 flex-shrink-0">
+          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-dusk-400 flex-shrink-0">
             {weather.precipitation !== null && (
               <div className="flex items-center gap-1">
                 <span>💧</span>
@@ -119,7 +119,7 @@ export default function WeatherCard({
           <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <div className="text-gray-500 dark:text-gray-400">
+                <div className="text-gray-500 dark:text-dusk-400">
                   Precipitation
                 </div>
                 <div className="font-medium text-gray-900 dark:text-white">
@@ -127,13 +127,13 @@ export default function WeatherCard({
                 </div>
               </div>
               <div>
-                <div className="text-gray-500 dark:text-gray-400">Humidity</div>
+                <div className="text-gray-500 dark:text-dusk-400">Humidity</div>
                 <div className="font-medium text-gray-900 dark:text-white">
                   {formatHumidity(weather.humidity)}
                 </div>
               </div>
               <div>
-                <div className="text-gray-500 dark:text-gray-400">Wind Speed</div>
+                <div className="text-gray-500 dark:text-dusk-400">Wind Speed</div>
                 <div className="font-medium text-gray-900 dark:text-white">
                   {formatWindSpeed(weather.windSpeed)}
                 </div>
@@ -176,7 +176,7 @@ export default function WeatherCard({
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {tempRange}
           </div>
-          <div className="text-lg text-gray-700 dark:text-gray-300 capitalize">
+          <div className="text-lg text-gray-700 dark:text-dusk-300 capitalize">
             {weather.conditions || 'No data'}
           </div>
         </div>
@@ -184,19 +184,19 @@ export default function WeatherCard({
 
       <div className="grid grid-cols-3 gap-4 text-sm">
         <div>
-          <div className="text-gray-500 dark:text-gray-400">Precipitation</div>
+          <div className="text-gray-500 dark:text-dusk-400">Precipitation</div>
           <div className="font-medium text-gray-900 dark:text-white">
             {formatPrecipitation(weather.precipitation)}
           </div>
         </div>
         <div>
-          <div className="text-gray-500 dark:text-gray-400">Humidity</div>
+          <div className="text-gray-500 dark:text-dusk-400">Humidity</div>
           <div className="font-medium text-gray-900 dark:text-white">
             {formatHumidity(weather.humidity)}
           </div>
         </div>
         <div>
-          <div className="text-gray-500 dark:text-gray-400">Wind Speed</div>
+          <div className="text-gray-500 dark:text-dusk-400">Wind Speed</div>
           <div className="font-medium text-gray-900 dark:text-white">
             {formatWindSpeed(weather.windSpeed)}
           </div>

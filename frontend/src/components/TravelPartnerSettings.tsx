@@ -294,19 +294,19 @@ export default function TravelPartnerSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading travel partner settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading travel partner settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
         Travel Partner
       </h2>
 
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+      <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
         Set a default travel partner who will automatically be added as a collaborator
         to all new trips you create. Because it also shares their new trips with you,
         the other person has to accept your request before the partnership starts.
@@ -333,7 +333,7 @@ export default function TravelPartnerSettings() {
                     wants to be your travel partner
                   </p>
                   {request.message && (
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 italic break-words">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-dusk-400 italic break-words">
                       “{request.message}”
                     </p>
                   )}
@@ -349,7 +349,7 @@ export default function TravelPartnerSettings() {
                   <button
                     onClick={() => handleDeclineRequest(request)}
                     disabled={pendingRequestId === request.id}
-                    className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="text-sm text-gray-600 hover:text-gray-800 dark:text-dusk-400 dark:hover:text-dusk-200"
                   >
                     Decline
                   </button>
@@ -359,7 +359,7 @@ export default function TravelPartnerSettings() {
               {/* Each side controls its own history: this checkbox only gives away
                   the current user's trips. Whether the requester's trips come the
                   other way was their choice, shown read-only below. */}
-              <label className="mt-3 flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <label className="mt-3 flex items-start gap-2 text-sm text-gray-700 dark:text-dusk-300">
                 <input
                   type="checkbox"
                   checked={shareOnAccept[request.id] ?? false}
@@ -414,7 +414,7 @@ export default function TravelPartnerSettings() {
 
           {/* Permission Level */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
               Default Permission Level for Shared Trips
             </label>
             <select
@@ -439,7 +439,7 @@ export default function TravelPartnerSettings() {
         // No partner - show search
         <div className="space-y-4">
           <div ref={searchRef} className="relative">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Find a Travel Partner
             </label>
             <input
@@ -452,13 +452,13 @@ export default function TravelPartnerSettings() {
 
             {/* Search Results Dropdown */}
             {showDropdown && (
-              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 max-h-60 overflow-y-auto">
+              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-dusk-700 rounded-lg shadow-lg border border-gray-200 dark:border-dusk-600 max-h-60 overflow-y-auto">
                 {isSearching ? (
-                  <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-3 text-center text-gray-500 dark:text-dusk-400">
                     Searching...
                   </div>
                 ) : searchResults.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-3 text-center text-gray-500 dark:text-dusk-400">
                     No users found
                   </div>
                 ) : (
@@ -467,14 +467,14 @@ export default function TravelPartnerSettings() {
                       key={user.id}
                       onClick={() => handleRequestPartner(user)}
                       disabled={isSaving}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-dusk-600 transition-colors text-left"
                     >
                       <UserAvatar user={user} size="sm" />
                       <div className="min-w-0">
                         <p className="font-medium text-gray-900 dark:text-white truncate">
                           {user.username}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-500 dark:text-dusk-400">
                           Send a partner request
                         </p>
                       </div>
@@ -487,7 +487,7 @@ export default function TravelPartnerSettings() {
 
           {/* Permission Level (for new partner) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
               Permission Level for Auto-Shared Trips
             </label>
             <select
@@ -503,7 +503,7 @@ export default function TravelPartnerSettings() {
               <option value="edit">Edit - Can add and modify trip content</option>
               <option value="admin">Admin - Full access including collaborator management</option>
             </select>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
               This permission level will be applied when trips are automatically shared.
             </p>
           </div>
@@ -511,7 +511,7 @@ export default function TravelPartnerSettings() {
           {/* Opt-in for the request being sent. Only ever shares the current user's
               own trips — the other person decides separately about theirs. */}
           <div>
-            <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-dusk-300">
               <input
                 type="checkbox"
                 checked={shareOnSend}
@@ -523,7 +523,7 @@ export default function TravelPartnerSettings() {
                 Also share <strong>my existing trips</strong> with them if they accept
               </span>
             </label>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
               This shares your own past and current trips only. It does not give you access
               to theirs — they choose that for themselves when they accept. Trips you
               excluded from auto-sharing are skipped.
@@ -541,14 +541,14 @@ export default function TravelPartnerSettings() {
           {requests.outgoing.map((request) => (
             <div
               key={request.id}
-              className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-600 rounded-lg"
+              className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-dusk-700/40 border border-gray-200 dark:border-dusk-600 rounded-lg"
             >
               <UserAvatar user={request.recipient} size="sm" />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 dark:text-white truncate">
                   {request.recipient.username}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-dusk-400">
                   Waiting for them to accept
                   {request.shareExistingTrips
                     ? ' — your existing trips will be shared on acceptance'

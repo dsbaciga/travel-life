@@ -354,7 +354,7 @@ export default function CompanionsPage() {
           onSubmit={
             editingCompanion ? handleUpdateCompanion : handleCreateCompanion
           }
-          className="mb-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+          className="mb-6 p-6 bg-gray-50 dark:bg-dusk-800 rounded-lg border border-gray-200 dark:border-dusk-700"
         >
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
             {editingCompanion ? "Edit Companion" : "Add New Companion"}
@@ -412,7 +412,7 @@ export default function CompanionsPage() {
             </div>
             <div>
               <label htmlFor="companion-dietary" className="label">Dietary Preferences</label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
                 Track dietary restrictions to easily find suitable restaurants when traveling together.
               </p>
               <DietaryTagSelector
@@ -465,7 +465,7 @@ export default function CompanionsPage() {
                     className={`border rounded-lg p-5 hover:shadow-lg transition-shadow relative flex flex-col min-h-[180px] ${
                       companion.isMyself
                         ? "border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        : "border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800"
                     }`}
                   >
                     {/* Add to Trip button in top right corner */}
@@ -512,7 +512,7 @@ export default function CompanionsPage() {
                             )}
                           {companion._count &&
                             companion._count.tripAssignments === 0 && (
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-gray-500 dark:text-dusk-400">
                                 0 trips
                               </p>
                             )}
@@ -538,10 +538,10 @@ export default function CompanionsPage() {
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 text-sm">
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-dusk-700 space-y-2 text-sm">
                               {companion.email && (
                                 <div>
-                                  <span className="font-medium text-gray-600 dark:text-gray-400">
+                                  <span className="font-medium text-gray-600 dark:text-dusk-400">
                                     Email:{" "}
                                   </span>
                                   <a
@@ -554,7 +554,7 @@ export default function CompanionsPage() {
                               )}
                               {companion.phone && (
                                 <div>
-                                  <span className="font-medium text-gray-600 dark:text-gray-400">
+                                  <span className="font-medium text-gray-600 dark:text-dusk-400">
                                     Phone:{" "}
                                   </span>
                                   <a
@@ -567,10 +567,10 @@ export default function CompanionsPage() {
                               )}
                               {companion.notes && (
                                 <div>
-                                  <span className="font-medium text-gray-600 dark:text-gray-400 block mb-1">
+                                  <span className="font-medium text-gray-600 dark:text-dusk-400 block mb-1">
                                     Notes:
                                   </span>
-                                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                  <p className="text-gray-700 dark:text-dusk-300 whitespace-pre-wrap">
                                     {companion.notes}
                                   </p>
                                 </div>
@@ -626,7 +626,7 @@ export default function CompanionsPage() {
             {selectedCompanionTrips.tripAssignments.map((assignment) => (
               <div
                 key={assignment.trip.id}
-                className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-dusk-700 rounded-lg border border-gray-200 dark:border-dusk-600"
               >
                 {/* Trash icon button on left */}
                 <button
@@ -654,7 +654,7 @@ export default function CompanionsPage() {
                       <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
                         {assignment.trip.title}
                       </h4>
-                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
                         <span className={`px-2 py-1 rounded text-xs font-medium ${getTripStatusColor(assignment.trip.status)}`}>
                           {assignment.trip.status}
                         </span>
@@ -700,14 +700,14 @@ export default function CompanionsPage() {
               <button
                 key={trip.id}
                 onClick={() => handleAddToTrip(trip.id)}
-                className="w-full text-left p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
+                className="w-full text-left p-4 bg-gray-50 dark:bg-dusk-700 rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-600 transition-colors border border-gray-200 dark:border-dusk-600"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
                       {trip.title}
                     </h4>
-                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${getTripStatusColor(trip.status)}`}>
                         {trip.status}
                       </span>
@@ -730,7 +730,7 @@ export default function CompanionsPage() {
             <p className="text-gray-900 dark:text-white font-semibold mb-1">
               All caught up!
             </p>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-dusk-400">
               {selectedCompanionForTrip?.name} is already added to all
               your trips
             </p>

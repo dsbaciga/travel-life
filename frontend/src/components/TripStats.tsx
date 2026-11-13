@@ -216,9 +216,9 @@ export default function TripStats({
       {/* Trip Overview Header */}
       <div className="flex flex-wrap items-center gap-4 mb-2">
         {duration && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-dusk-700 rounded-lg">
             <svg
-              className="w-5 h-5 text-gray-600 dark:text-gray-400"
+              className="w-5 h-5 text-gray-600 dark:text-dusk-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -230,7 +230,7 @@ export default function TripStats({
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
               {duration}
             </span>
           </div>
@@ -275,7 +275,7 @@ export default function TripStats({
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stat.value}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200 transition-colors">
+              <p className="text-sm text-gray-600 dark:text-dusk-400 group-hover:text-gray-800 dark:group-hover:text-dusk-200 transition-colors">
                 {stat.label}
               </p>
             </div>

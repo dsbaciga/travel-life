@@ -104,7 +104,7 @@ export default function EntityPickerModal({
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     <span className="text-2xl">{config.emoji}</span>
                     <span className="font-medium text-gray-900 dark:text-white">{config.label}</span>
@@ -120,7 +120,7 @@ export default function EntityPickerModal({
           ) : entities.length === 0 ? (
             // Empty State
             <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-dusk-400">
                 No {selectedType.toLowerCase().replace('_', ' ')}s found in this trip.
               </p>
             </div>
@@ -142,7 +142,7 @@ export default function EntityPickerModal({
                     key={entity.id}
                     onClick={() => handleLinkToEntity(entity.id)}
                     disabled={linking}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left disabled:opacity-50"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left disabled:opacity-50"
                   >
                     <span className="text-lg">
                       {selectedType && ENTITY_TYPE_CONFIG[selectedType].emoji}
@@ -152,7 +152,7 @@ export default function EntityPickerModal({
                         {entity.name}
                       </div>
                       {entity.subtitle && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">
                           {entity.subtitle}
                         </div>
                       )}
@@ -163,7 +163,7 @@ export default function EntityPickerModal({
                   </button>
                 ))}
                 {filteredEntities.length === 0 && searchQuery && (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                  <p className="text-center text-gray-500 dark:text-dusk-400 py-4">
                     No matches for "{searchQuery}"
                   </p>
                 )}

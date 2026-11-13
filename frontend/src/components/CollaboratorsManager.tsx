@@ -19,7 +19,7 @@ interface CollaboratorsManagerProps {
 }
 
 const PERMISSION_LABELS: Record<PermissionLevel, { label: string; color: string }> = {
-  view: { label: 'View Only', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
+  view: { label: 'View Only', color: 'bg-gray-100 text-gray-700 dark:bg-dusk-700 dark:text-dusk-300' },
   edit: { label: 'Can Edit', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   admin: { label: 'Admin', color: 'bg-gold/20 text-gold dark:bg-gold/10 dark:text-gold' },
 };
@@ -159,7 +159,7 @@ export default function CollaboratorsManager({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Collaborators</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-dusk-400">
             {collaborators.length === 0
               ? 'No collaborators yet'
               : `${collaborators.length} collaborator${collaborators.length === 1 ? '' : 's'}`}
@@ -189,10 +189,10 @@ export default function CollaboratorsManager({
               <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="truncate">{owner.username}</span>
                 {user?.id === owner.id && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">(You)</span>
+                  <span className="text-xs text-gray-500 dark:text-dusk-400 shrink-0">(You)</span>
                 )}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{owner.email}</div>
+              <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">{owner.email}</div>
             </div>
             <span className="px-2 py-1 text-xs font-medium bg-gold/20 text-gold rounded shrink-0">Owner</span>
           </div>
@@ -215,10 +215,10 @@ export default function CollaboratorsManager({
                   <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                     {collaborator.user.username}
                     {user?.id === collaborator.userId && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">(You)</span>
+                      <span className="text-xs text-gray-500 dark:text-dusk-400">(You)</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                  <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">
                     {collaborator.user.email}
                   </div>
                 </div>
@@ -264,7 +264,7 @@ export default function CollaboratorsManager({
                   </button>
                 )}
               </div>
-              <div className="mt-2 text-xs text-gray-400 dark:text-gray-400">
+              <div className="mt-2 text-xs text-gray-400 dark:text-dusk-400">
                 Added {formatDate(collaborator.createdAt)}
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function CollaboratorsManager({
       {/* Pending Invitations */}
       {canManageCollaborators && pendingInvitations.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-3">
             Pending Invitations ({pendingInvitations.length})
           </h4>
           <div className="space-y-3">
@@ -299,7 +299,7 @@ export default function CollaboratorsManager({
                     <div className="font-medium text-gray-900 dark:text-white truncate">
                       {invitation.email}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="text-sm text-gray-500 dark:text-dusk-400">
                       Expires {formatDate(invitation.expiresAt)}
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export default function CollaboratorsManager({
       {collaborators.length === 0 && pendingInvitations.length === 0 && (
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-navy-700 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-gray-400 dark:text-dusk-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -361,7 +361,7 @@ export default function CollaboratorsManager({
             </svg>
           </div>
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No collaborators yet</h4>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-gray-500 dark:text-dusk-400 mb-4">
             Invite others to view or help plan this trip
           </p>
           {canManageCollaborators && (

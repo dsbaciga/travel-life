@@ -218,7 +218,7 @@ export default function JetLagCalculator({
     return (
       <div className={`inline-flex items-center gap-2 ${className}`}>
         <ClockIcon className={`w-4 h-4 ${severityStyles.icon}`} />
-        <span className="text-sm text-gray-600 dark:text-gray-300">
+        <span className="text-sm text-gray-600 dark:text-dusk-300">
           {timeDifferenceText}
         </span>
         <span
@@ -258,7 +258,7 @@ export default function JetLagCalculator({
                 {severityStyles.label}
               </span>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-dusk-400">
               {jetLagInfo.direction === 'ahead' ? 'Eastward' : 'Westward'} travel
               {jetLagInfo.adjustmentDays > 0 && (
                 <span className="ml-1">
@@ -269,7 +269,7 @@ export default function JetLagCalculator({
           </div>
         </div>
         <ChevronDownIcon
-          className={`w-5 h-5 text-gray-400 dark:text-gray-400 transition-transform duration-200 ${
+          className={`w-5 h-5 text-gray-400 dark:text-dusk-400 transition-transform duration-200 ${
             isExpanded ? 'rotate-180' : ''
           }`}
         />
@@ -283,7 +283,7 @@ export default function JetLagCalculator({
         >
           <div className="flex items-center gap-2 mt-4 mb-3">
             <MoonIcon className="w-4 h-4 text-primary-500 dark:text-gold" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            <span className="text-sm font-medium text-gray-700 dark:text-dusk-200">
               Sleep Adjustment Recommendations
             </span>
           </div>
@@ -291,7 +291,7 @@ export default function JetLagCalculator({
             {jetLagInfo.recommendations.map((rec, index) => (
               <li
                 key={index}
-                className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300"
+                className="flex items-start gap-2 text-sm text-gray-600 dark:text-dusk-300"
               >
                 <InfoIcon className="w-4 h-4 text-primary-400 dark:text-gold/70 flex-shrink-0 mt-0.5" />
                 <span>{rec}</span>

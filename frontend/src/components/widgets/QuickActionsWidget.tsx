@@ -132,12 +132,12 @@ export default function QuickActionsWidget() {
 
       {/* Keyboard shortcut hint — pointer-based, so desktop only */}
       <div className="hidden md:block mt-4 p-3 rounded-lg bg-gray-50 dark:bg-navy-900/50 border border-gray-200 dark:border-navy-700">
-        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-dusk-400">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>
-            Press <kbd className="px-1.5 py-0.5 bg-white dark:bg-navy-800 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono">⌘K</kbd> for global search
+            Press <kbd className="px-1.5 py-0.5 bg-white dark:bg-navy-800 border border-gray-300 dark:border-dusk-600 rounded text-xs font-mono">⌘K</kbd> for global search
           </span>
         </div>
       </div>

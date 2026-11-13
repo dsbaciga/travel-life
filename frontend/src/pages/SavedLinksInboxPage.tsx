@@ -205,7 +205,7 @@ export default function SavedLinksInboxPage() {
               if (e.key === "Enter" && !saving) handleAdd();
             }}
           />
-          <p className="mt-1 text-xs text-slate dark:text-gray-400">
+          <p className="mt-1 text-xs text-slate dark:text-dusk-400">
             Tracking parameters (utm_*, fbclid, and similar) are stripped
             automatically.
           </p>
@@ -307,24 +307,24 @@ export default function SavedLinksInboxPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="font-medium text-charcoal dark:text-gray-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
+                  className="font-medium text-charcoal dark:text-dusk-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
                 >
                   {savedLinkDisplayTitle(link)}
                 </a>
 
-                <p className="text-xs text-slate dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-slate dark:text-dusk-400 mt-0.5">
                   {savedLinkHostname(link)}
                   {link.source === "EMAIL" && " · from email"}
                 </p>
 
                 {link.description && (
-                  <p className="text-sm text-slate dark:text-gray-400 mt-2 line-clamp-2">
+                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 line-clamp-2">
                     {link.description}
                   </p>
                 )}
 
                 {link.notes && (
-                  <p className="text-sm text-charcoal dark:text-gray-300 mt-2 italic line-clamp-2">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 italic line-clamp-2">
                     {link.notes}
                   </p>
                 )}

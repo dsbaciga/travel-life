@@ -329,8 +329,8 @@ export default function PhotoTimeline({
   return (
     <div className="photo-timeline">
       {/* Controls */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-dusk-700">
+        <div className="text-sm text-gray-600 dark:text-dusk-400">
           {totalWithDates} {totalWithDates === 1 ? 'photo' : 'photos'} across{' '}
           {dayGroups.length} {dayGroups.length === 1 ? 'day' : 'days'}
           {totalWithoutDates > 0 && (
@@ -343,14 +343,14 @@ export default function PhotoTimeline({
           <button
             type="button"
             onClick={expandAllDays}
-            className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
             Expand All
           </button>
           <button
             type="button"
             onClick={collapseAllDays}
-            className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
             Collapse All
           </button>
@@ -366,7 +366,7 @@ export default function PhotoTimeline({
           return (
             <div
               key={dayGroup.rawDate}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="bg-white dark:bg-dusk-800 rounded-xl shadow-sm border border-gray-200 dark:border-dusk-700 overflow-hidden"
             >
               {/* Day Header */}
               <button
@@ -374,7 +374,7 @@ export default function PhotoTimeline({
                 onClick={() => toggleDay(dayGroup.rawDate)}
                 {...{ 'aria-expanded': isExpanded }}
                 aria-controls={dayContentId}
-                className="w-full bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-700 px-4 py-3 text-left hover:from-gray-100 hover:to-gray-150 dark:hover:from-gray-750 dark:hover:to-gray-700 transition-colors"
+                className="w-full bg-gradient-to-r from-gray-50 to-gray-100 dark:from-dusk-800 dark:to-dusk-700 border-b border-gray-200 dark:border-dusk-700 px-4 py-3 text-left hover:from-gray-100 hover:to-gray-150 dark:hover:from-dusk-750 dark:hover:to-dusk-700 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -384,7 +384,7 @@ export default function PhotoTimeline({
                         : ''}
                       {dayGroup.dateKey}
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    <p className="text-sm text-gray-500 dark:text-dusk-400 mt-0.5">
                       {dayGroup.count} {dayGroup.count === 1 ? 'photo' : 'photos'}
                     </p>
                   </div>
@@ -448,13 +448,13 @@ export default function PhotoTimeline({
                             tabIndex={0}
                             onClick={() => handlePhotoClick(photo)}
                             onKeyDown={(e) => handlePhotoKeyDown(e, photo)}
-                            className="group relative aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-transform"
+                            className="group relative aspect-square bg-gray-100 dark:bg-dusk-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-transform"
                             aria-label={photo.caption || `Photo from ${dayGroup.dateKey}${timeDisplay ? ` at ${timeDisplay}` : ''}`}
                           >
                             <img
                               src={hasFailed ? PLACEHOLDER_IMAGE : getPhotoUrl(photo, true)}
                               alt={photo.caption || 'Trip photo'}
-                              className={`w-full h-full object-cover ${hasFailed ? 'p-4 bg-gray-200 dark:bg-gray-600' : ''}`}
+                              className={`w-full h-full object-cover ${hasFailed ? 'p-4 bg-gray-200 dark:bg-dusk-600' : ''}`}
                               width={300}
                               height={300}
                               loading="lazy"
@@ -495,7 +495,7 @@ export default function PhotoTimeline({
                     <button
                       type="button"
                       onClick={() => toggleDay(dayGroup.rawDate)}
-                      className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
                       <svg
                         className="w-4 h-4 rotate-180"

@@ -205,22 +205,22 @@ export default function AddPhotosToAlbumModal({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-dusk-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
               Add Photos to Album
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
               Select photos to add to "{albumName}"
             </p>
           </div>
           <button
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors"
             aria-label="Close"
           >
             <svg
@@ -240,12 +240,12 @@ export default function AddPhotosToAlbumModal({
         </div>
 
         {/* Selection Toolbar */}
-        <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-dusk-700">
           {/* Selection Status Badge */}
           <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
             selectedPhotoIds.size > 0
               ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+              : "bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400"
           }`}>
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -254,20 +254,20 @@ export default function AddPhotosToAlbumModal({
           </span>
 
           {/* Selection Controls */}
-          <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm ml-auto">
+          <div className="inline-flex items-center rounded-lg border border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800 shadow-sm ml-auto">
             <button
               onClick={selectAll}
-              className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-l-lg transition-colors"
+              className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-dusk-300 hover:bg-gray-50 dark:hover:bg-dusk-700 rounded-l-lg transition-colors"
               title={`Select all ${photos.length} photos`}
             >
               All
             </button>
             {selectedPhotoIds.size > 0 && (
               <>
-                <span className="w-px h-6 bg-gray-200 dark:bg-gray-700"></span>
+                <span className="w-px h-6 bg-gray-200 dark:bg-dusk-700"></span>
                 <button
                   onClick={deselectAll}
-                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-r-lg transition-colors"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-dusk-300 hover:bg-gray-50 dark:hover:bg-dusk-700 rounded-r-lg transition-colors"
                   title="Deselect all photos"
                 >
                   None
@@ -284,7 +284,7 @@ export default function AddPhotosToAlbumModal({
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           ) : photos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-dusk-400">
               <svg
                 className="w-16 h-16 mb-4"
                 fill="none"
@@ -314,7 +314,7 @@ export default function AddPhotosToAlbumModal({
                     className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
                       isSelected
                         ? "ring-4 ring-blue-500 dark:ring-blue-400 scale-95"
-                        : "hover:ring-2 hover:ring-gray-300 dark:hover:ring-gray-600"
+                        : "hover:ring-2 hover:ring-gray-300 dark:hover:ring-dusk-600"
                     }`}
                     onClick={(e) => togglePhotoSelection(photo.id, e.shiftKey)}
                   >
@@ -327,7 +327,7 @@ export default function AddPhotosToAlbumModal({
                         rootMargin="200px"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-dusk-700 text-gray-400">
                         <svg
                           className="w-8 h-8"
                           fill="none"
@@ -350,7 +350,7 @@ export default function AddPhotosToAlbumModal({
                         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                           isSelected
                             ? "bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500"
-                            : "bg-white/80 dark:bg-gray-800/80 border-gray-300 dark:border-gray-600 backdrop-blur-sm"
+                            : "bg-white/80 dark:bg-dusk-800/80 border-gray-300 dark:border-dusk-600 backdrop-blur-sm"
                         }`}
                       >
                         {isSelected && (
@@ -385,8 +385,8 @@ export default function AddPhotosToAlbumModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-900/50">
+          <p className="text-sm text-gray-600 dark:text-dusk-400">
             Tip: Hold Shift and click to select a range of photos
           </p>
           <div className="flex gap-2">

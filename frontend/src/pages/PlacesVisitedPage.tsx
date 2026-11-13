@@ -110,14 +110,14 @@ export default function PlacesVisitedPage() {
     // hidden.
     <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-5rem)] flex flex-col">
       {/* Header — compact on mobile so the map keeps the screen */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2 md:py-4">
+      <div className="bg-white dark:bg-dusk-800 border-b border-gray-200 dark:border-dusk-700 px-4 py-2 md:py-4">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex justify-between items-center gap-3">
             <div className="min-w-0">
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
                 Places Visited
               </h1>
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 md:mt-1 truncate">
+              <p className="text-sm md:text-base text-gray-600 dark:text-dusk-400 md:mt-1 truncate">
                 {displayedLocations.length}{" "}
                 {displayedLocations.length === 1 ? "location" : "locations"}{" "}
                 {showFavoritesOnly
@@ -138,7 +138,7 @@ export default function PlacesVisitedPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
                   showFavoritesOnly
                     ? "bg-amber-500 dark:bg-gold text-white dark:text-navy-900"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-gray-600"
+                    : "bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-amber-100 dark:hover:bg-dusk-600"
                 }`}
               >
                 <svg
@@ -159,7 +159,7 @@ export default function PlacesVisitedPage() {
                   {favoritesLoading ? "Loading…" : "Favorites"}
                 </span>
               </button>
-              <div className="hidden sm:block text-sm text-gray-600 dark:text-gray-400">
+              <div className="hidden sm:block text-sm text-gray-600 dark:text-dusk-400">
                 <span className="inline-flex items-center gap-2">
                   <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
                   Click markers to view details
@@ -175,7 +175,7 @@ export default function PlacesVisitedPage() {
         {/* Map */}
         <div className="flex-1 relative z-0">
           {showFavoritesOnly && !favoritesLoading && displayedLocations.length === 0 ? (
-            <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-dusk-900">
               <EmptyState
                 icon="⭐"
                 message="No favorite locations yet"
@@ -192,14 +192,14 @@ export default function PlacesVisitedPage() {
 
         {/* Sidebar - Selected Location Details */}
         {selectedLocation && (
-          <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-y-auto p-6">
+          <div className="w-80 bg-white dark:bg-dusk-800 border-l border-gray-200 dark:border-dusk-700 overflow-y-auto p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Location Details
               </h2>
               <button
                 onClick={() => setSelectedLocation(null)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200"
                 aria-label="Close location details"
               >
                 <CloseIcon />
@@ -212,7 +212,7 @@ export default function PlacesVisitedPage() {
                   {selectedLocation.name}
                 </h3>
                 {selectedLocation.category && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-dusk-400">
                     {selectedLocation.category.icon}{" "}
                     {selectedLocation.category.name}
                   </p>
@@ -221,10 +221,10 @@ export default function PlacesVisitedPage() {
 
               {selectedLocation.address && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                     Address
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-dusk-400">
                     {selectedLocation.address}
                   </p>
                 </div>
@@ -232,10 +232,10 @@ export default function PlacesVisitedPage() {
 
               {selectedLocation.notes && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                     Notes
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                  <p className="text-sm text-gray-600 dark:text-dusk-400 whitespace-pre-wrap">
                     {selectedLocation.notes}
                   </p>
                 </div>
@@ -243,10 +243,10 @@ export default function PlacesVisitedPage() {
 
               {selectedLocation.latitude && selectedLocation.longitude && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                     Coordinates
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                  <p className="text-sm text-gray-600 dark:text-dusk-400 font-mono">
                     {Number(selectedLocation.latitude).toFixed(6)},{" "}
                     {Number(selectedLocation.longitude).toFixed(6)}
                   </p>

@@ -314,12 +314,12 @@ export default function TripHeroHeader({
               the corner it pins to is the hardest to reach one-handed. */}
           <button
             onClick={onDuplicate}
-            className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition-colors hover:shadow-lg"
+            className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-dusk-700 dark:hover:bg-dusk-600 border border-gray-300 dark:border-dusk-600 rounded-lg transition-colors hover:shadow-lg"
             title="Duplicate Trip"
             aria-label="Duplicate Trip"
           >
             <svg
-              className="w-5 h-5 text-gray-700 dark:text-gray-300"
+              className="w-5 h-5 text-gray-700 dark:text-dusk-300"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -334,7 +334,7 @@ export default function TripHeroHeader({
           </button>
 
           {trip.description && (
-            <div className="text-gray-700 dark:text-gray-300 mb-4">
+            <div className="text-gray-700 dark:text-dusk-300 mb-4">
               <MarkdownRenderer content={trip.description} />
             </div>
           )}
@@ -344,7 +344,7 @@ export default function TripHeroHeader({
             <div className="text-gray-900 dark:text-white font-medium">
               {formatTripDates(trip.startDate, trip.endDate)}
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-600 dark:text-dusk-400">
               {formatTripDuration(trip.startDate, trip.endDate) && (
                 <span>{formatTripDuration(trip.startDate, trip.endDate)}</span>
               )}

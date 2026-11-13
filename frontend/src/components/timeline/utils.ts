@@ -237,7 +237,7 @@ export function getTypeTextColor(type: TimelineItemType): string {
     case 'customItem':
       return 'text-indigo-600 dark:text-indigo-400';
     default:
-      return 'text-gray-600 dark:text-gray-400';
+      return 'text-gray-600 dark:text-dusk-400';
   }
 }
 

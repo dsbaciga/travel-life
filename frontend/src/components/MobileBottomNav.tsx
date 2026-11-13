@@ -125,7 +125,7 @@ const MobileBottomNav = memo(function MobileBottomNav() {
                 className={`flex flex-col items-center justify-center flex-1 h-full min-w-[44px] transition-colors duration-200 ${
                   active
                     ? 'text-primary-600 dark:text-sky'
-                    : 'text-gray-600 dark:text-gray-400 active:scale-95'
+                    : 'text-gray-600 dark:text-dusk-400 active:scale-95'
                 }`}
               >
                 <div className={`transition-transform duration-200 ${active ? 'scale-110' : ''}`} aria-hidden="true">

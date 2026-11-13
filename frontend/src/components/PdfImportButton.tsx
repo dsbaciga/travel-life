@@ -12,7 +12,7 @@ interface Props {
 }
 
 const BUTTON_CLASSES =
-  'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors';
+  'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border border-stone-300 dark:border-dusk-600 bg-white dark:bg-dusk-800 text-stone-700 dark:text-dusk-300 hover:bg-stone-50 dark:hover:bg-dusk-700 transition-colors';
 
 const MENU_ITEM_CLASSES =
   'flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-left text-charcoal dark:text-warm-gray hover:bg-parchment dark:hover:bg-navy-700 transition-colors';

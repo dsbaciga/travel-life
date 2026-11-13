@@ -31,7 +31,7 @@ export default function MarkdownEditor({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -56,7 +56,7 @@ export default function MarkdownEditor({
           {value ? (
             <MarkdownRenderer content={value} compact={compact} />
           ) : (
-            <p className="text-gray-400 dark:text-gray-400 italic text-sm">Nothing to preview</p>
+            <p className="text-gray-400 dark:text-dusk-400 italic text-sm">Nothing to preview</p>
           )}
         </div>
       ) : (
@@ -71,7 +71,7 @@ export default function MarkdownEditor({
         />
       )}
 
-      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-xs text-gray-500 dark:text-dusk-400">
         Supports <strong>bold</strong>, <em>italic</em>, <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener noreferrer" className="text-primary-600 dark:text-gold underline">links</a>, lists, and more
       </p>
     </div>

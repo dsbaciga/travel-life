@@ -53,10 +53,10 @@ export default function ChipSelector<T>({
   if (items.length === 0) {
     return (
       <div className={className}>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
           {label}
         </label>
-        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+        <p className="text-sm text-gray-500 dark:text-dusk-400 italic">
           {emptyMessage}
         </p>
       </div>
@@ -66,7 +66,7 @@ export default function ChipSelector<T>({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300">
           {label} ({selectedIds.length} selected)
         </label>
         <div className="flex gap-1">
@@ -74,7 +74,7 @@ export default function ChipSelector<T>({
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline px-2 py-2 min-h-[44px] flex items-center"
+              className="text-xs text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200 underline px-2 py-2 min-h-[44px] flex items-center"
             >
               Clear all
             </button>
@@ -101,9 +101,9 @@ export default function ChipSelector<T>({
         />
       )}
 
-      <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900 max-h-48 overflow-y-auto">
+      <div className="border border-gray-300 dark:border-dusk-600 rounded-lg p-3 bg-gray-50 dark:bg-dusk-900 max-h-48 overflow-y-auto">
         {filteredItems.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 italic text-center py-2">
+          <p className="text-sm text-gray-500 dark:text-dusk-400 italic text-center py-2">
             No items match your search
           </p>
         ) : (
@@ -122,7 +122,7 @@ export default function ChipSelector<T>({
                     ${
                       isSelected
                         ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
-                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow"
+                        : "bg-white dark:bg-dusk-800 text-gray-700 dark:text-dusk-300 border border-gray-300 dark:border-dusk-600 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow"
                     }
                   `}
                 >

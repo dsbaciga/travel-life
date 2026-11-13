@@ -119,10 +119,10 @@ export default function LinkEditModal({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
+        className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-md w-full"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <h3 id="link-edit-title" className="text-lg font-semibold text-gray-900 dark:text-white">
             Edit Link
           </h3>
@@ -130,7 +130,7 @@ export default function LinkEditModal({
             onClick={onClose}
             type="button"
             aria-label="Close"
-            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,10 +141,10 @@ export default function LinkEditModal({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Link visualization */}
-          <div className="flex items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div className="flex items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
             <div className="text-center">
               <span className="text-xl">{sourceConfig.emoji}</span>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 max-w-[100px] truncate">
+              <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {sourceName}
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function LinkEditModal({
             </div>
             <div className="text-center">
               <span className="text-xl">{targetConfig.emoji}</span>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 max-w-[100px] truncate">
+              <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {targetName}
               </div>
             </div>
@@ -163,7 +163,7 @@ export default function LinkEditModal({
 
           {/* Relationship type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Relationship Type
             </label>
             <select
@@ -181,7 +181,7 @@ export default function LinkEditModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Notes (optional)
             </label>
             <textarea
@@ -192,7 +192,7 @@ export default function LinkEditModal({
               maxLength={1000}
               className="input w-full resize-none"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
               {notes.length}/1000 characters
             </p>
           </div>

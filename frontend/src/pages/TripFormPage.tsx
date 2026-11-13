@@ -359,20 +359,20 @@ export default function TripFormPage() {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
       {/* Unsaved changes confirmation dialog for in-app navigation */}
       {blocker.state === 'blocked' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-dusk-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved Changes</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-gray-600 dark:text-dusk-400 mb-4">
               You have unsaved changes. Are you sure you want to leave?
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => blocker.reset?.()}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-600 transition-colors"
               >
                 Stay
               </button>
@@ -411,8 +411,8 @@ export default function TripFormPage() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 border border-gray-200 dark:border-dusk-700">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-dusk-100">
             {isEdit ? 'Edit Trip' : 'New Trip'}
           </h2>
 
@@ -453,7 +453,7 @@ export default function TripFormPage() {
                     className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-medium border-2 transition-colors ${
                       status === s
                         ? 'bg-primary-500 dark:bg-gold border-primary-500 dark:border-gold text-white dark:text-navy-900'
-                        : 'bg-white dark:bg-navy-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-primary-400'
+                        : 'bg-white dark:bg-navy-800 border-gray-300 dark:border-dusk-600 text-gray-700 dark:text-dusk-300 hover:border-primary-400'
                     }`}
                   >
                     {s}
@@ -470,7 +470,7 @@ export default function TripFormPage() {
                 type="button"
                 onClick={() => setShowOptionalFields((shown) => !shown)}
                 aria-expanded={showOptionalFields}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900/40"
+                className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-dusk-700 dark:text-dusk-300 dark:hover:bg-dusk-900/40"
               >
                 <span>
                   {showOptionalFields ? 'Hide' : 'Add'} dates, description and more
@@ -562,7 +562,7 @@ export default function TripFormPage() {
                 <option value="Australia/Sydney">Sydney</option>
                 <option value="Pacific/Auckland">Auckland</option>
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 If not specified, your default timezone from settings will be used
               </p>
             </div>
@@ -590,7 +590,7 @@ export default function TripFormPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                   Categorize your trip. Manage trip types in Settings.
                 </p>
               </div>
@@ -618,7 +618,7 @@ export default function TripFormPage() {
 
             {/* Public share link (owner only, edit mode only) */}
             {isEdit && isOwner && (
-              <div className="p-4 bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 rounded-lg space-y-3">
+              <div className="p-4 bg-gray-50 dark:bg-dusk-900/40 border border-gray-200 dark:border-dusk-700 rounded-lg space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
@@ -627,7 +627,7 @@ export default function TripFormPage() {
                       </svg>
                       Public share link
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                       Anyone with the link can view a read-only version of this trip — no account needed.
                       Costs, confirmation numbers, and booking details are never shown.
                     </p>
@@ -659,7 +659,7 @@ export default function TripFormPage() {
                         type="button"
                         onClick={handleRotateShare}
                         disabled={shareLoading}
-                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                        className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-600 transition-colors disabled:opacity-50"
                       >
                         Regenerate link
                       </button>
@@ -695,13 +695,13 @@ export default function TripFormPage() {
                     id="excludeFromAutoShare"
                     checked={excludeFromAutoShare}
                     onChange={(e) => setExcludeFromAutoShare(e.target.checked)}
-                    className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                    className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-dusk-600 dark:bg-dusk-700"
                   />
                   <div>
                     <label htmlFor="excludeFromAutoShare" className="font-medium text-gray-900 dark:text-white cursor-pointer">
                       Don't share with my travel partner
                     </label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                       This trip will not be automatically shared with{' '}
                       <span className="font-medium">{travelPartnerSettings.travelPartner.username}</span>.
                       You can still manually add them as a collaborator later.
@@ -714,7 +714,7 @@ export default function TripFormPage() {
             {/* Sticky on mobile so the primary action is reachable no matter
                 how far the optional fields push the page down. `bottom-16`
                 clears the bottom nav. */}
-            <div className="flex gap-4 pt-4 sticky bottom-16 md:static bg-white dark:bg-gray-800 pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 border-t border-gray-200 dark:border-gray-700 md:border-0">
+            <div className="flex gap-4 pt-4 sticky bottom-16 md:static bg-white dark:bg-dusk-800 pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 border-t border-gray-200 dark:border-dusk-700 md:border-0">
               <button
                 type="submit"
                 className="flex-1 btn btn-primary mt-4 md:mt-0"

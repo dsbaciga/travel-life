@@ -64,19 +64,19 @@ export default function MapsAppSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading maps settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading maps settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
         Directions &amp; Maps
       </h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Itinerary items show a Directions button that opens your route — with the
         previous stop pre-filled as the starting point — in an external app. Pick
         the app you want listed first.
@@ -102,7 +102,7 @@ export default function MapsAppSettings() {
             </option>
           ))}
         </select>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-sm text-gray-500 dark:text-dusk-400">
           {preferredApp === null
             ? 'Every app that can handle the route is offered, in a fixed order.'
             : MAPS_APP_DESCRIPTIONS[preferredApp]}

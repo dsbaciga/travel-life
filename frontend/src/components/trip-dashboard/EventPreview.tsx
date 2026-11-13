@@ -67,12 +67,12 @@ export default function EventPreview({
             {event.title}
           </p>
           {event.dateTime && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-gray-500 dark:text-dusk-400">
               {relativeTime || formattedDateTime}
             </p>
           )}
         </div>
-        <ChevronRightIcon className="w-4 h-4 text-gray-400 dark:text-gray-400 flex-shrink-0" />
+        <ChevronRightIcon className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0" />
       </button>
     );
   }
@@ -106,7 +106,7 @@ export default function EventPreview({
             {event.title}
           </h4>
           {event.subtitle && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">
+            <p className="text-sm text-gray-500 dark:text-dusk-400 truncate mt-0.5">
               {event.subtitle}
             </p>
           )}
@@ -114,7 +114,7 @@ export default function EventPreview({
           {/* Date/Time */}
           {event.dateTime && (
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="text-sm text-gray-600 dark:text-dusk-300">
                 {formattedDateTime}
               </span>
               {relativeTime && (
@@ -132,7 +132,7 @@ export default function EventPreview({
 
           {/* Location */}
           {event.locationName && (
-            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-dusk-400">
               <MapPinIcon className="w-4 h-4 flex-shrink-0" />
               <span className="truncate">{event.locationName}</span>
             </div>
@@ -141,7 +141,7 @@ export default function EventPreview({
 
         {/* Navigate arrow */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-400" />
+          <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-dusk-400" />
         </div>
       </div>
     </button>

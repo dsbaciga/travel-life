@@ -134,17 +134,17 @@ export default function PushNotificationSettings() {
   let content: React.ReactNode;
   if (!supported) {
     content = (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-gray-500 dark:text-dusk-400">
         Push notifications are not supported in this browser.
       </p>
     );
   } else if (loading) {
     content = (
-      <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+      <p className="text-sm text-gray-500 dark:text-dusk-400">Loading...</p>
     );
   } else if (!serverConfigured) {
     content = (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-gray-500 dark:text-dusk-400">
         Push notifications are not configured on this server. Set the{' '}
         <code className="font-mono">VAPID_PUBLIC_KEY</code>,{' '}
         <code className="font-mono">VAPID_PRIVATE_KEY</code>, and{' '}
@@ -165,11 +165,11 @@ export default function PushNotificationSettings() {
         <div className="flex items-center gap-2 text-sm">
           <span
             className={`inline-block h-2.5 w-2.5 rounded-full ${
-              subscribed ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-500'
+              subscribed ? 'bg-green-500' : 'bg-gray-400 dark:bg-dusk-500'
             }`}
             aria-hidden="true"
           />
-          <span className="text-gray-700 dark:text-gray-300">
+          <span className="text-gray-700 dark:text-dusk-300">
             {subscribed
               ? 'Push notifications are enabled on this device.'
               : 'Push notifications are disabled on this device.'}
@@ -211,11 +211,11 @@ export default function PushNotificationSettings() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
         Push Notifications
       </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+      <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
         Get notified on this device about upcoming trips and tracked flight
         status changes, even when the app is closed.
       </p>

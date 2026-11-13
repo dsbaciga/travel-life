@@ -415,7 +415,7 @@ export default function TripDetailPage() {
       <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
+          <p className="mt-4 text-gray-600 dark:text-dusk-400">
             Loading trip...
           </p>
         </div>

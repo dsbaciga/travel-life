@@ -17,10 +17,10 @@ function getStatusColor(status: string): string {
     Planning: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
     Planned: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
     'In Progress': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    Completed: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    Completed: 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300',
     Cancelled: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+  return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300';
 }
 
 export default function TripSeriesPage() {
@@ -203,10 +203,10 @@ export default function TripSeriesPage() {
 
   if (!series) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
         <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
           <div className="text-center py-12">
-            <p className="text-lg text-gray-600 dark:text-gray-400">Series not found</p>
+            <p className="text-lg text-gray-600 dark:text-dusk-400">Series not found</p>
             <Link to="/trip-series" className="btn btn-primary mt-4 inline-block">
               Back to Series
             </Link>
@@ -217,7 +217,7 @@ export default function TripSeriesPage() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
       <ConfirmDialogComponent />
       <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs
@@ -228,7 +228,7 @@ export default function TripSeriesPage() {
         />
 
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-gray-200 dark:border-dusk-700 mb-6">
           <div className="p-6">
             {/* Name */}
             <div className="mb-4">
@@ -262,7 +262,7 @@ export default function TripSeriesPage() {
                       setNameValue(series.name);
                       setEditingName(true);
                     }}
-                    className="p-2 text-slate dark:text-warm-gray/70 hover:text-primary-600 dark:hover:text-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="p-2 text-slate dark:text-warm-gray/70 hover:text-primary-600 dark:hover:text-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
                     title="Edit name"
                     aria-label="Edit series name"
                   >
@@ -305,7 +305,7 @@ export default function TripSeriesPage() {
                       setDescriptionValue(series.description || '');
                       setEditingDescription(true);
                     }}
-                    className="p-2 text-slate dark:text-warm-gray/70 hover:text-primary-600 dark:hover:text-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex-shrink-0"
+                    className="p-2 text-slate dark:text-warm-gray/70 hover:text-primary-600 dark:hover:text-gold transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700 flex-shrink-0"
                     title="Edit description"
                     aria-label="Edit series description"
                   >
@@ -322,7 +322,7 @@ export default function TripSeriesPage() {
               <span>{sortedTrips.length} trip{sortedTrips.length !== 1 ? 's' : ''}</span>
               {dateRange && (
                 <>
-                  <span className="text-gray-300 dark:text-gray-600">|</span>
+                  <span className="text-gray-300 dark:text-dusk-600">|</span>
                   <span>{dateRange}</span>
                 </>
               )}
@@ -331,8 +331,8 @@ export default function TripSeriesPage() {
         </div>
 
         {/* Trip List */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-gray-200 dark:border-dusk-700 mb-6">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-dusk-700">
             <h2 className="text-lg font-display font-bold text-charcoal dark:text-warm-gray">
               Trips in Series
             </h2>
@@ -345,9 +345,9 @@ export default function TripSeriesPage() {
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            <ul className="divide-y divide-gray-200 dark:divide-dusk-700">
               {sortedTrips.map((trip, index) => (
-                <li key={trip.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <li key={trip.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-dusk-750 transition-colors">
                   {/* Order number */}
                   <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-navy-700 flex items-center justify-center text-sm font-bold text-primary-700 dark:text-gold flex-shrink-0">
                     {index + 1}
@@ -378,7 +378,7 @@ export default function TripSeriesPage() {
                     <button
                       onClick={() => handleMoveUp(index)}
                       disabled={index === 0}
-                      className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate dark:text-warm-gray/70 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate dark:text-warm-gray/70 hover:bg-gray-100 dark:hover:bg-dusk-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Move up"
                       aria-label={`Move ${trip.title} up`}
                     >
@@ -389,7 +389,7 @@ export default function TripSeriesPage() {
                     <button
                       onClick={() => handleMoveDown(index)}
                       disabled={index === sortedTrips.length - 1}
-                      className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate dark:text-warm-gray/70 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-slate dark:text-warm-gray/70 hover:bg-gray-100 dark:hover:bg-dusk-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Move down"
                       aria-label={`Move ${trip.title} down`}
                     >
@@ -417,8 +417,8 @@ export default function TripSeriesPage() {
         </div>
 
         {/* Add Trip Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-gray-200 dark:border-dusk-700 mb-6">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-dusk-700">
             <h2 className="text-lg font-display font-bold text-charcoal dark:text-warm-gray">
               Add Trip to Series
             </h2>
@@ -458,7 +458,7 @@ export default function TripSeriesPage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-red-200 dark:border-red-900/50">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-red-200 dark:border-red-900/50">
           <div className="px-6 py-4 border-b border-red-200 dark:border-red-900/50">
             <h2 className="text-lg font-display font-bold text-red-600 dark:text-red-400">
               Danger Zone

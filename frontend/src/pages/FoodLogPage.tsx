@@ -93,7 +93,7 @@ export default function FoodLogPage() {
               <p className="text-amber-500" aria-label={`${entry.rating} out of 5`}>
                 {ratingStars(entry.rating)}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-dusk-400">
                 {entry.restaurantName} ·{" "}
                 <Link
                   to={`/trips/${entry.trip.id}?tab=food-log`}
@@ -103,7 +103,7 @@ export default function FoodLogPage() {
                 </Link>
               </p>
               {entry.notes && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">{entry.notes}</p>
+                <p className="text-sm text-gray-500 dark:text-dusk-400">{entry.notes}</p>
               )}
               <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
             </li>

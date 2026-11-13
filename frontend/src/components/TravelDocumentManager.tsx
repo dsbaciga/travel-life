@@ -246,7 +246,7 @@ export default function TravelDocumentManager() {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="doc-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="doc-type" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Document Type *
               </label>
               <select
@@ -264,7 +264,7 @@ export default function TravelDocumentManager() {
               </select>
             </div>
             <div>
-              <label htmlFor="doc-country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="doc-country" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Issuing Country *
               </label>
               <input
@@ -287,7 +287,7 @@ export default function TravelDocumentManager() {
           </div>
 
           <div>
-            <label htmlFor="doc-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="doc-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Name / Description *
             </label>
             <input
@@ -303,7 +303,7 @@ export default function TravelDocumentManager() {
           </div>
 
           <div>
-            <label htmlFor="doc-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="doc-number" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Document Number (optional)
             </label>
             <input
@@ -316,7 +316,7 @@ export default function TravelDocumentManager() {
               maxLength={255}
               disabled={formData.clearDocumentNumber}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
               Only the last 4 characters will be displayed for privacy.
             </p>
             {editingDocumentId && (
@@ -331,9 +331,9 @@ export default function TravelDocumentManager() {
                       documentNumber: e.target.checked ? '' : formData.documentNumber,
                     })
                   }
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400"
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-dusk-600 dark:bg-dusk-700 dark:focus:ring-blue-400"
                 />
-                <span className="ml-2 text-xs text-gray-700 dark:text-gray-300">
+                <span className="ml-2 text-xs text-gray-700 dark:text-dusk-300">
                   Remove the saved document number
                 </span>
               </label>
@@ -342,7 +342,7 @@ export default function TravelDocumentManager() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="doc-issue-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="doc-issue-date" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Issue Date
               </label>
               <input
@@ -354,7 +354,7 @@ export default function TravelDocumentManager() {
               />
             </div>
             <div>
-              <label htmlFor="doc-expiry-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="doc-expiry-date" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Expiry Date
               </label>
               <input
@@ -368,7 +368,7 @@ export default function TravelDocumentManager() {
           </div>
 
           <div>
-            <label htmlFor="doc-alert-days" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="doc-alert-days" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Alert Days Before Expiry
             </label>
             <select
@@ -387,7 +387,7 @@ export default function TravelDocumentManager() {
           </div>
 
           <div>
-            <label htmlFor="doc-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="doc-notes" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Notes
             </label>
             <textarea
@@ -407,13 +407,13 @@ export default function TravelDocumentManager() {
                 type="checkbox"
                 checked={formData.isPrimary}
                 onChange={(e) => setFormData({ ...formData, isPrimary: e.target.checked })}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-dusk-600 dark:bg-dusk-700 dark:focus:ring-blue-400"
               />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              <span className="ml-2 text-sm text-gray-700 dark:text-dusk-300">
                 Primary document of this type
               </span>
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1 ml-6">
               Primary documents are used for trip validation checks.
             </p>
           </div>
@@ -432,11 +432,11 @@ export default function TravelDocumentManager() {
       ) : (
         <div className="space-y-6">
           {(Object.entries(groupedDocuments) as [DocumentType, TravelDocument[]][]).map(([type, docs]) => (
-            <div key={type} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+            <div key={type} className="bg-white dark:bg-dusk-800 rounded-lg shadow p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span>{getDocumentTypeIcon(type)}</span>
                 {DOCUMENT_TYPE_LABELS[type]}s
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({docs.length})
                 </span>
               </h3>
@@ -447,7 +447,7 @@ export default function TravelDocumentManager() {
                     className={`border rounded-lg p-4 ${
                       doc.isPrimary
                         ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10'
-                        : 'border-gray-200 dark:border-gray-700'
+                        : 'border-gray-200 dark:border-dusk-700'
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -465,7 +465,7 @@ export default function TravelDocumentManager() {
                             {getExpirationStatusLabel(doc.expirationStatus, doc.daysUntilExpiry)}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <div className="text-sm text-gray-600 dark:text-dusk-400 space-y-1">
                           <p>
                             <span className="font-medium">Country:</span> {doc.issuingCountry}
                           </p>
@@ -481,7 +481,7 @@ export default function TravelDocumentManager() {
                             </p>
                           )}
                           {doc.notes && (
-                            <p className="text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                            <p className="text-gray-500 dark:text-dusk-400 mt-1 line-clamp-2">
                               {doc.notes}
                             </p>
                           )}

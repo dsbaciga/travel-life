@@ -217,7 +217,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
             ${
               index === selectedIndex
                 ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-sky'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                : 'hover:bg-gray-100 dark:hover:bg-dusk-700'
             }
           `}
         >
@@ -228,7 +228,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
               ${
                 index === selectedIndex
                   ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-sky'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400'
               }
             `}
             >
@@ -239,11 +239,11 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                 {result.title}
               </div>
               {result.subtitle && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">
                   {result.subtitle}
                 </div>
               )}
-              <div className="text-xs text-gray-400 dark:text-gray-400 mt-1 capitalize">
+              <div className="text-xs text-gray-400 dark:text-dusk-400 mt-1 capitalize">
                 {result.type}
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg
-            className="w-5 h-5 text-gray-400 dark:text-gray-400"
+            className="w-5 h-5 text-gray-400 dark:text-dusk-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -289,8 +289,8 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           aria-label="Search trips, locations, photos"
           className={`
             w-full pl-10 pr-12 py-3
-            border-2 border-gray-300 dark:border-gray-600
-            bg-white dark:bg-gray-800
+            border-2 border-gray-300 dark:border-dusk-600
+            bg-white dark:bg-dusk-800
             text-gray-900 dark:text-white
             rounded-xl
             focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky
@@ -308,7 +308,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                 setQuery('');
                 setResults([]);
               }}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300"
               aria-label="Clear search"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -321,7 +321,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
               </svg>
             </button>
           ) : (
-            <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">
+            <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 dark:text-dusk-300 bg-gray-100 dark:bg-dusk-700 border border-gray-300 dark:border-dusk-600 rounded">
               ⌘K
             </kbd>
           )}
@@ -332,18 +332,18 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       {showResults && (query || recentSearches.length > 0) && (
         <div
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-[70] animate-slide-in"
+          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-[70] animate-slide-in"
         >
           {/* Recent Searches */}
           {!query && recentSearches.length > 0 && (
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2">
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
                   Recent Searches
                 </span>
                 <button
                   onClick={clearRecentSearches}
-                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-300"
                 >
                   Clear
                 </button>
@@ -352,7 +352,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                 <button
                   key={search}
                   onClick={() => handleRecentSearch(search)}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <svg
@@ -369,7 +369,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{search}</span>
+                    <span className="text-sm text-gray-700 dark:text-dusk-300">{search}</span>
                   </div>
                 </button>
               ))}
@@ -383,7 +383,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
           {query && !isLoading && results.length === 0 && (
             <div className="p-8 text-center">
               <svg
-                className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-400"
+                className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-dusk-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -396,8 +396,8 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p className="text-gray-600 dark:text-gray-400 font-medium">No results found</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+              <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
                 Try different keywords
               </p>
             </div>

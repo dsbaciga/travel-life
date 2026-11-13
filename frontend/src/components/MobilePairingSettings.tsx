@@ -81,10 +81,10 @@ export default function MobilePairingSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mobile App</h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Sign in to the Travel Life companion app by scanning a code — it sets the server address
         and your account in one step, with no password to type on your phone.
       </p>
@@ -100,7 +100,7 @@ export default function MobilePairingSettings() {
 
       {pairing && (
         <div className="mb-6 flex flex-col items-center gap-3">
-          <div className="p-3 bg-white rounded-lg border border-gray-200 dark:border-gray-600">
+          <div className="p-3 bg-white rounded-lg border border-gray-200 dark:border-dusk-600">
             <img
               src={pairing.qrDataUrl}
               alt="Pairing QR code for the Travel Life mobile app"
@@ -108,10 +108,10 @@ export default function MobilePairingSettings() {
               height={280}
             />
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300" aria-live="polite">
+          <p className="text-sm text-gray-700 dark:text-dusk-300" aria-live="polite">
             Expires in <span className="font-mono">{formatRemaining(remainingMs)}</span> · works once
           </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 break-all text-center">
+          <p className="text-sm text-gray-600 dark:text-dusk-400 break-all text-center">
             Server: <span className="font-mono">{pairing.serverUrl}</span>
           </p>
           <div className="w-full p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
@@ -136,7 +136,7 @@ export default function MobilePairingSettings() {
           <button
             type="button"
             onClick={handleHide}
-            className="min-h-[44px] px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="min-h-[44px] px-4 py-2 border border-gray-300 dark:border-dusk-600 text-gray-700 dark:text-dusk-200 hover:bg-gray-50 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
             Hide Code
           </button>

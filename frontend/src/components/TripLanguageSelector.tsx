@@ -170,7 +170,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
 
       {/* Empty state */}
       {tripLanguages.length === 0 && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500 dark:text-dusk-400">
           No languages selected. Add languages to access the phrase bank.
         </p>
       )}

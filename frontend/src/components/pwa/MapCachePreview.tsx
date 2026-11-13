@@ -206,7 +206,7 @@ export function MapCachePreview({
   if (!bounds) {
     return (
       <div className="card p-6">
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        <div className="text-center text-gray-500 dark:text-dusk-400">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
           </svg>
@@ -220,13 +220,13 @@ export function MapCachePreview({
   return (
     <div className="card overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-dusk-700">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-body">
               Offline Map Cache
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
               Download map tiles for offline access during your trip
             </p>
           </div>
@@ -235,7 +235,7 @@ export function MapCachePreview({
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                 Cached
               </span>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 {existingCacheInfo.tileCount} tiles ({formatBytes(existingCacheInfo.size)})
               </p>
             </div>
@@ -276,14 +276,14 @@ export function MapCachePreview({
         </MapContainer>
 
         {/* Overlay badge */}
-        <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 dark:bg-navy-800/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 shadow-sm">
+        <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 dark:bg-navy-800/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-dusk-300 shadow-sm">
           Cache coverage area
         </div>
       </div>
 
       {/* Zoom Level Selection */}
-      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+      <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-3">
           Detail Level
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -303,7 +303,7 @@ export function MapCachePreview({
                 className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all ${
                   isSelected
                     ? 'border-primary-500 dark:border-gold bg-primary-50 dark:bg-gold/10'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    : 'border-gray-200 dark:border-dusk-700 hover:border-gray-300 dark:hover:border-dusk-600'
                 } ${isDownloading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {/* Radio indicator */}
@@ -312,7 +312,7 @@ export function MapCachePreview({
                     className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       isSelected
                         ? 'border-primary-500 dark:border-gold'
-                        : 'border-gray-300 dark:border-gray-600'
+                        : 'border-gray-300 dark:border-dusk-600'
                     }`}
                   >
                     {isSelected && (
@@ -324,7 +324,7 @@ export function MapCachePreview({
                 <span className="font-medium text-gray-900 dark:text-white">
                   {option.label}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                   {option.description}
                 </span>
                 <span className="text-xs font-medium text-primary-600 dark:text-gold mt-2">
@@ -337,7 +337,7 @@ export function MapCachePreview({
 
         {/* Recommended zoom info */}
         {recommendedZoom && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-3">
             Based on your trip area, we recommend zoom levels {recommendedZoom.min}-{recommendedZoom.max}
           </p>
         )}
@@ -345,22 +345,22 @@ export function MapCachePreview({
 
       {/* Tile breakdown */}
       {sizeEstimate && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-navy-900/50">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-navy-900/50">
           <div className="flex flex-wrap gap-4 text-sm">
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Total tiles:</span>{' '}
+              <span className="text-gray-500 dark:text-dusk-400">Total tiles:</span>{' '}
               <span className="font-medium text-gray-900 dark:text-white">
                 {sizeEstimate.totalTiles.toLocaleString()}
               </span>
             </div>
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Estimated size:</span>{' '}
+              <span className="text-gray-500 dark:text-dusk-400">Estimated size:</span>{' '}
               <span className="font-medium text-gray-900 dark:text-white">
                 {sizeEstimate.formattedSize}
               </span>
             </div>
             <div className="hidden sm:block">
-              <span className="text-gray-500 dark:text-gray-400">Tiles by zoom:</span>{' '}
+              <span className="text-gray-500 dark:text-dusk-400">Tiles by zoom:</span>{' '}
               <span className="font-medium text-gray-900 dark:text-white">
                 {Array.from(sizeEstimate.tilesByZoom.entries())
                   .map(([zoom, count]) => `z${zoom}: ${count}`)
@@ -373,22 +373,22 @@ export function MapCachePreview({
 
       {/* Progress bar */}
       {isDownloading && progress && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
               Downloading tiles...
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-gray-500 dark:text-dusk-400">
               {progress.current} / {progress.total} ({progress.percentage}%)
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+          <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-2.5 overflow-hidden">
             <div
               className="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-gold dark:to-accent-500 h-2.5 rounded-full transition-all duration-300"
               style={{ width: `${progress.percentage}%` }}
             />
           </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-dusk-400">
             <span>{formatBytes(progress.bytesDownloaded)} downloaded</span>
             {progress.failed > 0 && (
               <span className="text-amber-600 dark:text-amber-400">
@@ -407,7 +407,7 @@ export function MapCachePreview({
       )}
 
       {/* Action buttons */}
-      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-3">
+      <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700 flex flex-wrap gap-3">
         {isDownloading ? (
           <button
             type="button"

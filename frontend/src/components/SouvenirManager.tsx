@@ -280,7 +280,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Estimated Total */}
           <div className="bg-white/80 dark:bg-navy-900/50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Estimated Budget</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Estimated Budget</p>
             {estimatedEntries.length > 0 ? (
               <div className="space-y-1">
                 {estimatedEntries.map(([currency, amount]) => (
@@ -290,13 +290,13 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
                 ))}
               </div>
             ) : (
-              <p className="text-lg text-gray-400 dark:text-gray-400">-</p>
+              <p className="text-lg text-gray-400 dark:text-dusk-400">-</p>
             )}
           </div>
 
           {/* Actual Spent */}
           <div className="bg-white/80 dark:bg-navy-900/50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Actual Spent</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Actual Spent</p>
             {actualEntries.length > 0 ? (
               <div className="space-y-1">
                 {actualEntries.map(([currency, amount]) => (
@@ -306,7 +306,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
                 ))}
               </div>
             ) : (
-              <p className="text-lg text-gray-400 dark:text-gray-400">-</p>
+              <p className="text-lg text-gray-400 dark:text-dusk-400">-</p>
             )}
           </div>
         </div>
@@ -321,10 +321,10 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       <div
         key={item.id}
         data-entity-id={`souvenir-${item.id}`}
-        className={`bg-white dark:bg-gray-800 border rounded-lg shadow p-4 hover:shadow-md transition-shadow ${
+        className={`bg-white dark:bg-dusk-800 border rounded-lg shadow p-4 hover:shadow-md transition-shadow ${
           metadata.purchased
             ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/20'
-            : 'border-gray-200 dark:border-gray-700'
+            : 'border-gray-200 dark:border-dusk-700'
         }`}
       >
         <div className="flex items-start gap-3">
@@ -354,7 +354,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
 
             {/* Recipient */}
             {metadata.forWhom && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <p className="text-sm text-gray-600 dark:text-dusk-400 mb-2">
                 <span className="font-medium">For:</span> {metadata.forWhom}
               </p>
             )}
@@ -363,15 +363,15 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
             <div className="flex flex-wrap gap-4 text-sm">
               {metadata.estimatedPrice !== undefined && (
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Budget: </span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-gray-500 dark:text-dusk-400">Budget: </span>
+                  <span className="font-medium text-gray-700 dark:text-dusk-300">
                     {formatPrice(metadata.estimatedPrice, metadata.currency)}
                   </span>
                 </div>
               )}
               {metadata.actualPrice !== undefined && (
                 <div>
-                  <span className="text-gray-500 dark:text-gray-400">Actual: </span>
+                  <span className="text-gray-500 dark:text-dusk-400">Actual: </span>
                   <span className="font-medium text-green-600 dark:text-green-400">
                     {formatPrice(metadata.actualPrice, metadata.currency)}
                   </span>
@@ -408,11 +408,11 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
     return (
       <div className="text-center py-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mx-auto mb-4"></div>
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+          <div className="h-8 bg-gray-200 dark:bg-dusk-700 rounded w-48 mx-auto mb-4"></div>
+          <div className="h-32 bg-gray-200 dark:bg-dusk-700 rounded mb-4"></div>
           <div className="space-y-3">
-            <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-24 bg-gray-200 dark:bg-dusk-700 rounded"></div>
+            <div className="h-24 bg-gray-200 dark:bg-dusk-700 rounded"></div>
           </div>
         </div>
       </div>
@@ -479,7 +479,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
         <form id="souvenir-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Item Name */}
           <div>
-            <label htmlFor="souvenir-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="souvenir-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Item Name *
             </label>
             <input
@@ -496,7 +496,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
 
           {/* Recipient */}
           <div>
-            <label htmlFor="souvenir-for-whom" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="souvenir-for-whom" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               For Whom
             </label>
             <input
@@ -512,7 +512,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
 
           {/* Currency */}
           <div>
-            <label htmlFor="souvenir-currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="souvenir-currency" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Currency
             </label>
             <select
@@ -532,11 +532,11 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           {/* Prices */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="souvenir-estimated-price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="souvenir-estimated-price" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Estimated Price
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dusk-400">
                   {getCurrencySymbol(formData.currency)}
                 </span>
                 <input
@@ -553,11 +553,11 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
             </div>
 
             <div>
-              <label htmlFor="souvenir-actual-price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="souvenir-actual-price" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Actual Price
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dusk-400">
                   {getCurrencySymbol(formData.currency)}
                 </span>
                 <input
@@ -583,7 +583,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
               onChange={(e) => setFormData({ ...formData, purchased: e.target.checked })}
               className="w-5 h-5 rounded border-primary-300 dark:border-gold/30 text-primary-600 dark:text-gold focus:ring-primary-500 dark:focus:ring-gold/50"
             />
-            <label htmlFor="souvenir-purchased" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="souvenir-purchased" className="text-sm font-medium text-gray-700 dark:text-dusk-300">
               Already purchased
             </label>
           </div>
@@ -606,7 +606,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                 <span>🛒</span> To Buy
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({unpurchasedItems.length})
                 </span>
               </h3>
@@ -619,9 +619,9 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           {/* Purchased */}
           {purchasedItems.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-3 flex items-center gap-2">
                 <span>✅</span> Purchased
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({purchasedItems.length})
                 </span>
               </h3>

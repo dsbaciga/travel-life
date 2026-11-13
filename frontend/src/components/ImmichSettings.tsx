@@ -113,17 +113,17 @@ export default function ImmichSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading Immich settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading Immich settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Immich Integration</h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Connect your self-hosted Immich instance to browse and link photos to your trips without uploading duplicates.
       </p>
 
@@ -152,7 +152,7 @@ export default function ImmichSettings() {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Immich API URL *
           </label>
           <input
@@ -160,15 +160,15 @@ export default function ImmichSettings() {
             value={apiUrl}
             onChange={(e) => setApiUrl(e.target.value)}
             placeholder="https://immich.example.com/api"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             The base URL of your Immich instance API (e.g., https://immich.example.com/api)
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Immich API Key *
           </label>
           <input
@@ -176,9 +176,9 @@ export default function ImmichSettings() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Enter your Immich API key"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             Your Immich API key (found in Account Settings → API Keys in Immich)
           </p>
         </div>

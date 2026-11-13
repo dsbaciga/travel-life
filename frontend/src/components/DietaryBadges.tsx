@@ -78,7 +78,7 @@ export default function DietaryBadges({
             ${
               tag.isPreference
                 ? "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 ring-1 ring-green-500/50"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                : "bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300"
             }
           `}
         >
@@ -90,7 +90,7 @@ export default function DietaryBadges({
       {remainingCount > 0 && (
         <span
           className={`
-            inline-flex items-center rounded-full text-gray-500 dark:text-gray-400
+            inline-flex items-center rounded-full text-gray-500 dark:text-dusk-400
             ${sizeClasses[size]}
           `}
           title={sortedTags
@@ -129,7 +129,7 @@ export function DietaryBadgesExpanded({
             ${
               tag.isPreference
                 ? "bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 ring-1 ring-green-500/50"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                : "bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300"
             }
           `}
         >

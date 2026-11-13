@@ -1,5 +1,25 @@
 import colors from 'tailwindcss/colors';
 
+// Dark-mode neutral ramp: a cool grey, one third of the way from Tailwind's
+// `zinc` to `slate`. Tried and rejected next to the gold accent: `stone` and
+// anything between stone and `neutral` read as brown (even near-neutral greys
+// pick up the orange); `zinc` was close but still not cool enough; the
+// original `slate` read as blue. To retune the dark theme, change these
+// values - cooler is toward `slate`, flatter is toward `zinc`.
+const DUSK = {
+  50: '#f9fafb',
+  100: '#f3f4f6',
+  200: '#e3e5ea',
+  300: '#d1d4db',
+  400: '#9da2af',
+  500: '#6d7280',
+  600: '#4e5360',
+  700: '#3b404b',
+  800: '#242830',
+  900: '#151820',
+  950: '#0b0d12',
+};
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -108,14 +128,22 @@ export default {
         // Neutrals
         cream: '#f8fafc',
         parchment: '#f1f5f9',
-        'warm-gray': '#e2e8f0',
+        // dusk-200. Dark-mode body text and light-mode hairline borders.
+        'warm-gray': DUSK[200],
         charcoal: '#1e293b',
         slate: '#64748b',
-        // Dark Mode
+        // Dark-mode neutrals. Every `dark:*-dusk-N` class and the `navy`
+        // surface tokens below read from this one ramp, so the warmth of the
+        // whole dark theme is tuned here.
+        dusk: DUSK,
+        // Dark Mode surfaces. The token is still called `navy` for history:
+        // ~800 usages depend on the name. 950 is the darkest chrome (top bar,
+        // bottom nav).
         navy: {
-          900: '#0f172a',
-          800: '#1e293b',
-          700: '#334155',
+          950: DUSK[950],
+          900: DUSK[900],
+          800: DUSK[800],
+          700: DUSK[700],
         },
         // Gold accent for dark mode
         gold: '#fbbf24',

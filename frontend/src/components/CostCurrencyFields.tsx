@@ -29,7 +29,7 @@ export default function CostCurrencyFields({
       <div>
         <label
           htmlFor={costFieldId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           {costLabel}
         </label>
@@ -47,7 +47,7 @@ export default function CostCurrencyFields({
       <div>
         <label
           htmlFor={currencyFieldId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           {currencyLabel}
         </label>

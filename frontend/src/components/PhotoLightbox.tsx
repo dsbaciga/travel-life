@@ -484,22 +484,22 @@ export default function PhotoLightbox({
         <div className="max-w-[1600px] mx-auto">
           {editMode ? (
             /* Edit mode panel */
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-lg mx-auto">
+            <div className="bg-white dark:bg-dusk-800 rounded-lg p-4 max-w-lg mx-auto">
               {/* Caption field */}
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
                 Caption
               </label>
               <textarea
                 value={editCaption}
                 onChange={(e) => onEditCaptionChange?.(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Add a caption..."
                 autoFocus
               />
 
               {/* Date/Time field */}
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2 mt-4">
                 Date & Time Taken
               </label>
               <div className="flex gap-2 items-center">
@@ -507,13 +507,13 @@ export default function PhotoLightbox({
                   type="datetime-local"
                   value={editTakenAt || ""}
                   onChange={(e) => onEditTakenAtChange?.(e.target.value || null)}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
                 {editTakenAt && (
                   <button
                     type="button"
                     onClick={() => onEditTakenAtChange?.(null)}
-                    className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                    className="p-2 text-gray-500 hover:text-red-500 dark:text-dusk-400 dark:hover:text-red-400 transition-colors"
                     title="Clear date"
                     aria-label="Clear date"
                   >
@@ -523,7 +523,7 @@ export default function PhotoLightbox({
                   </button>
                 )}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 Set when this photo was taken for timeline organization
               </p>
 

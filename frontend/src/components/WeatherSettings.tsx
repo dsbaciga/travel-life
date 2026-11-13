@@ -83,17 +83,17 @@ export default function WeatherSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading weather settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading weather settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather Settings</h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure your OpenWeatherMap One Call API 3.0 key to enable weather data for your trips. Weather information will be displayed in the timeline for each day of your trip.
       </p>
 
@@ -129,7 +129,7 @@ export default function WeatherSettings() {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             OpenWeatherMap API Key *
           </label>
           <input
@@ -137,9 +137,9 @@ export default function WeatherSettings() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={settings?.weatherApiKeySet ? "Enter new API key to update" : "Enter your API key"}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             Your OpenWeatherMap API key (free tier is sufficient)
           </p>
         </div>

@@ -91,11 +91,11 @@ export interface ColorClasses {
 const COLOR_MAP: Record<string, ColorClasses> = {
   gray: {
     bg: 'bg-gray-100',
-    bgHover: 'hover:bg-gray-200 dark:hover:bg-gray-600',
-    bgDark: 'dark:bg-gray-700',
+    bgHover: 'hover:bg-gray-200 dark:hover:bg-dusk-600',
+    bgDark: 'dark:bg-dusk-700',
     text: 'text-gray-800',
-    textDark: 'dark:text-gray-200',
-    border: 'border-gray-300 dark:border-gray-600',
+    textDark: 'dark:text-dusk-200',
+    border: 'border-gray-300 dark:border-dusk-600',
     ring: 'ring-gray-400',
     focus: 'focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 focus:outline-none',
   },

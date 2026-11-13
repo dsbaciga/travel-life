@@ -33,7 +33,7 @@ describe('Status Colors', () => {
 
     it('should return default color for invalid status', () => {
       const color = getTripStatusColor('INVALID_STATUS');
-      expect(color).toBe('bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300');
+      expect(color).toBe('bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300');
     });
 
     it('should handle all trip statuses', () => {

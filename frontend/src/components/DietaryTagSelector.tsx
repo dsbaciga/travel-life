@@ -44,7 +44,7 @@ export default function DietaryTagSelector({
     <div className={className}>
       {/* Header with count and actions */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+        <span className="text-sm text-gray-600 dark:text-dusk-400">
           {selectedTags.length > 0
             ? `${selectedTags.length} selected`
             : "None selected"}
@@ -54,7 +54,7 @@ export default function DietaryTagSelector({
             <button
               type="button"
               onClick={clearAll}
-              className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 underline"
+              className="text-xs text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200 underline"
             >
               Clear
             </button>
@@ -96,7 +96,7 @@ export default function DietaryTagSelector({
                 ${
                   isSelected
                     ? "bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500 dark:border-gold"
-                    : "bg-gray-50 dark:bg-gray-800 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                    : "bg-gray-50 dark:bg-dusk-800 border-2 border-transparent hover:border-gray-300 dark:hover:border-dusk-600"
                 }
               `}
             >
@@ -112,7 +112,7 @@ export default function DietaryTagSelector({
                   className={`text-sm truncate ${
                     isSelected
                       ? "text-primary-800 dark:text-gold font-medium"
-                      : "text-gray-700 dark:text-gray-300"
+                      : "text-gray-700 dark:text-dusk-300"
                   }`}
                 >
                   {tag.label}

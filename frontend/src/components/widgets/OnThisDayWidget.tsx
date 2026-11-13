@@ -73,7 +73,7 @@ export default function OnThisDayWidget() {
           <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
             On This Day
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{todayLabel}, in years past</p>
+          <p className="text-xs text-gray-500 dark:text-dusk-400">{todayLabel}, in years past</p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ export default function OnThisDayWidget() {
               <span className="text-lg font-display font-bold text-primary-600 dark:text-gold">
                 {group.year}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-dusk-400">
                 {yearsAgoLabel(group.year)}
               </span>
             </div>
@@ -106,12 +106,12 @@ export default function OnThisDayWidget() {
                       <p className="font-medium text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-gold transition-colors">
                         You were on “{trip.title}”
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-dusk-400">
                         {formatTripDates(trip.startDate, trip.endDate)}
                       </p>
                     </div>
                     <svg
-                      className="w-4 h-4 text-gray-400 dark:text-gray-400 flex-shrink-0"
+                      className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -146,7 +146,7 @@ export default function OnThisDayWidget() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <svg
-                            className="w-6 h-6 text-gray-300 dark:text-gray-600"
+                            className="w-6 h-6 text-gray-300 dark:text-dusk-600"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -178,9 +178,9 @@ export default function OnThisDayWidget() {
                   >
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {entry.title || 'Journal entry'}
-                      <span className="font-normal text-gray-500 dark:text-gray-400"> · {entry.tripTitle}</span>
+                      <span className="font-normal text-gray-500 dark:text-dusk-400"> · {entry.tripTitle}</span>
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mt-1 italic">
+                    <p className="text-xs text-gray-600 dark:text-dusk-400 line-clamp-2 mt-1 italic">
                       “{entry.excerpt}”
                     </p>
                   </Link>

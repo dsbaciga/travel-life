@@ -102,7 +102,7 @@ export default function LinkIngestSettings() {
   if (loading) {
     return (
       <div className="card">
-        <div className="animate-pulse h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="animate-pulse h-5 w-40 bg-gray-200 dark:bg-dusk-700 rounded" />
       </div>
     );
   }
@@ -112,10 +112,10 @@ export default function LinkIngestSettings() {
   return (
     <div className="card space-y-4">
       <div>
-        <h3 className="text-lg font-display font-semibold text-charcoal dark:text-gray-100">
+        <h3 className="text-lg font-display font-semibold text-charcoal dark:text-dusk-100">
           Link Ingest
         </h3>
-        <p className="text-sm text-slate dark:text-gray-400 mt-1">
+        <p className="text-sm text-slate dark:text-dusk-400 mt-1">
           Forward a link to the ingest mailbox and it appears in your saved-links
           inbox.
         </p>
@@ -131,10 +131,10 @@ export default function LinkIngestSettings() {
         </div>
       ) : (
         <div className="rounded-lg bg-parchment dark:bg-navy-900/50 p-3">
-          <p className="text-xs uppercase tracking-wide text-slate dark:text-gray-400">
+          <p className="text-xs uppercase tracking-wide text-slate dark:text-dusk-400">
             Forward links to
           </p>
-          <p className="font-mono text-sm text-charcoal dark:text-gray-100 mt-1 break-all">
+          <p className="font-mono text-sm text-charcoal dark:text-dusk-100 mt-1 break-all">
             {settings.ingestMailbox}
           </p>
         </div>
@@ -142,7 +142,7 @@ export default function LinkIngestSettings() {
 
       <div>
         <p className="label">Trusted senders</p>
-        <p className="text-xs text-slate dark:text-gray-400 mb-2">
+        <p className="text-xs text-slate dark:text-dusk-400 mb-2">
           Mail is only accepted from these addresses. Your account address (
           <span className="font-mono break-all">{settings.accountEmail}</span>) is always
           trusted.
@@ -155,7 +155,7 @@ export default function LinkIngestSettings() {
                 key={address}
                 className="flex items-center justify-between gap-3 rounded-lg border border-primary-100 dark:border-gold/20 px-3 py-2"
               >
-                <span className="font-mono text-sm text-charcoal dark:text-gray-200 break-all">
+                <span className="font-mono text-sm text-charcoal dark:text-dusk-200 break-all">
                   {address}
                 </span>
                 <button
@@ -196,7 +196,7 @@ export default function LinkIngestSettings() {
         </div>
       </div>
 
-      <p className="text-xs text-slate dark:text-gray-400">
+      <p className="text-xs text-slate dark:text-dusk-400">
         A From address can be forged, so treat the mailbox address itself as the
         real secret and avoid sharing it.
       </p>

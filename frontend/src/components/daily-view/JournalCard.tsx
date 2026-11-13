@@ -49,7 +49,7 @@ export default function JournalCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
+      className={`bg-white dark:bg-dusk-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
     >
       {/* Header */}
       <div className="p-4">
@@ -68,12 +68,12 @@ export default function JournalCard({
                 {journal.title || 'Untitled Entry'}
               </h3>
 
-              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500 dark:text-dusk-400">
                 <span>{entryTypeDisplay}</span>
 
                 {journal.mood && (
                   <>
-                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span className="text-gray-300 dark:text-dusk-600">·</span>
                     <span className="inline-flex items-center gap-1">
                       {moodEmoji} {journal.mood}
                     </span>
@@ -105,7 +105,7 @@ export default function JournalCard({
 
         {/* Weather notes */}
         {journal.weatherNotes && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-dusk-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -125,7 +125,7 @@ export default function JournalCard({
               <MarkdownRenderer content={journal.content} />
             ) : (
               <p
-                className={`text-gray-700 dark:text-gray-300 ${
+                className={`text-gray-700 dark:text-dusk-300 ${
                   isLongContent ? 'line-clamp-6' : ''
                 }`}
               >
@@ -148,7 +148,7 @@ export default function JournalCard({
         {/* Linked locations */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -166,7 +166,7 @@ export default function JournalCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

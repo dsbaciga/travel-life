@@ -42,13 +42,13 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
+      className={`bg-white dark:bg-dusk-700 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-600 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
         isDragging ? 'shadow-lg ring-2 ring-blue-500' : ''
       }`}
     >
       {/* Cover photo thumbnail */}
       {coverPhotoUrl && (
-        <div className="h-20 bg-gray-100 dark:bg-gray-600 rounded-t-lg overflow-hidden">
+        <div className="h-20 bg-gray-100 dark:bg-dusk-600 rounded-t-lg overflow-hidden">
           <img
             src={coverPhotoUrl}
             alt=""
@@ -72,7 +72,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
 
         {/* Trip Type Badge */}
         {trip.tripType && (
-          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary-50 dark:bg-gray-600 text-primary-700 dark:text-primary-200">
+          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary-50 dark:bg-dusk-600 text-primary-700 dark:text-primary-200">
             {trip.tripTypeEmoji && <span>{trip.tripTypeEmoji}</span>}
             {trip.tripType}
           </span>
@@ -80,7 +80,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
 
         {/* Dates */}
         {(trip.startDate || trip.endDate) && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
             {formatTripDates(trip.startDate, trip.endDate)}
           </p>
         )}
@@ -91,7 +91,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
             className={`text-xs mt-1 ${
               isActive
                 ? 'text-green-600 dark:text-green-400 font-medium'
-                : 'text-gray-400 dark:text-gray-400'
+                : 'text-gray-400 dark:text-dusk-400'
             }`}
           >
             {dateStatus}
@@ -114,7 +114,7 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
               </span>
             ))}
             {trip.tagAssignments.length > 2 && (
-              <span className="px-1.5 py-0.5 text-[10px] rounded bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
+              <span className="px-1.5 py-0.5 text-[10px] rounded bg-gray-100 dark:bg-dusk-600 text-gray-500 dark:text-dusk-400">
                 +{trip.tagAssignments.length - 2}
               </span>
             )}

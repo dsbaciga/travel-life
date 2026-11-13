@@ -472,7 +472,7 @@ export default function LocationManager({
                   </div>
                 )}
                 {isChild && (
-                  <span className="text-gray-400 dark:text-gray-400 mt-0.5">
+                  <span className="text-gray-400 dark:text-dusk-400 mt-0.5">
                     {String.fromCharCode(8627)}
                   </span>
                 )}
@@ -496,14 +496,14 @@ export default function LocationManager({
               {location.notes && (
                 <>
                   <p
-                    className={`text-gray-700 dark:text-gray-300 text-sm mt-2 line-clamp-2 sm:hidden ${
+                    className={`text-gray-700 dark:text-dusk-300 text-sm mt-2 line-clamp-2 sm:hidden ${
                       isChild ? "ml-6" : ""
                     }`}
                   >
                     {stripMarkdown(location.notes)}
                   </p>
                   <div
-                    className={`text-gray-700 dark:text-gray-300 text-sm mt-2 hidden sm:block ${
+                    className={`text-gray-700 dark:text-dusk-300 text-sm mt-2 hidden sm:block ${
                       isChild ? "ml-6" : ""
                     }`}
                   >
@@ -541,7 +541,7 @@ export default function LocationManager({
                 className={`p-1 rounded transition-colors ${
                   location.isFavorite
                     ? "text-amber-500 dark:text-gold hover:text-amber-600 dark:hover:text-gold/80"
-                    : "text-gray-400 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gold"
+                    : "text-gray-400 dark:text-dusk-400 hover:text-amber-500 dark:hover:text-gold"
                 }`}
               >
                 <svg
@@ -779,7 +779,7 @@ export default function LocationManager({
                       <input
                         id="location-parent"
                         type="text"
-                        className="input bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                        className="input bg-gray-100 dark:bg-dusk-700 cursor-not-allowed"
                         value="Cannot set parent - this location has children"
                         disabled
                       />
@@ -811,7 +811,7 @@ export default function LocationManager({
                             </option>
                           ))}
                       </select>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                         Group places by selecting a parent city or region
                       </p>
                     </>
@@ -888,7 +888,7 @@ export default function LocationManager({
               />
               <p
                 id="location-opening-hours-help"
-                className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                className="text-xs text-gray-500 dark:text-dusk-400 mt-1"
               >
                 Leave blank to pull the hours from OpenStreetMap automatically. Uses the OSM
                 format, e.g. <code className="font-mono">Mo-Fr 09:00-17:00; Su off</code> or{" "}
@@ -913,7 +913,7 @@ export default function LocationManager({
             />
 
             {/* Exclude from map toggle */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
               <input
                 type="checkbox"
                 id="location-exclude-from-map"
@@ -929,7 +929,7 @@ export default function LocationManager({
                 >
                   Exclude from map
                 </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                   Hide this location from trip maps so a far-off spot like home or your origin
                   doesn&apos;t zoom the map out to span the whole journey.
                 </p>

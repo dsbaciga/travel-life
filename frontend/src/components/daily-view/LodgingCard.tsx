@@ -79,7 +79,7 @@ export default function LodgingCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
+      className={`bg-white dark:bg-dusk-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
     >
       {/* Header */}
       <div className="p-4">
@@ -98,7 +98,7 @@ export default function LodgingCard({
                 {lodging.name}
               </h3>
 
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              <div className="text-sm text-gray-500 dark:text-dusk-400 mt-0.5">
                 {typeDisplay}
               </div>
 
@@ -127,7 +127,7 @@ export default function LodgingCard({
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
                 {formatCurrency(lodging.cost, lodging.currency)}
                 {totalNights && totalNights > 1 && (
-                  <span className="text-sm text-gray-500 dark:text-gray-400 font-normal">
+                  <span className="text-sm text-gray-500 dark:text-dusk-400 font-normal">
                     {' '}
                     / {totalNights} nights
                   </span>
@@ -165,7 +165,7 @@ export default function LodgingCard({
         <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-4">
           {/* Check-in */}
           <div className={showCheckIn ? '' : 'opacity-50'}>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
               Check-in
             </div>
             {lodging.checkInDate ? (
@@ -177,23 +177,23 @@ export default function LodgingCard({
                     timeZone: timezone,
                   })}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600 dark:text-dusk-400">
                   {formatTime(lodging.checkInDate, timezone)}
                   {timezone && (
-                    <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
+                    <span className="text-gray-400 dark:text-dusk-400 text-xs ml-1">
                       {getTimezoneAbbr(timezone)}
                     </span>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-400 dark:text-gray-400">Not set</div>
+              <div className="text-gray-400 dark:text-dusk-400">Not set</div>
             )}
           </div>
 
           {/* Check-out */}
           <div className={showCheckOut ? '' : 'opacity-50'}>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
               Check-out
             </div>
             {lodging.checkOutDate ? (
@@ -205,24 +205,24 @@ export default function LodgingCard({
                     timeZone: timezone,
                   })}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600 dark:text-dusk-400">
                   {formatTime(lodging.checkOutDate, timezone)}
                   {timezone && (
-                    <span className="text-gray-400 dark:text-gray-400 text-xs ml-1">
+                    <span className="text-gray-400 dark:text-dusk-400 text-xs ml-1">
                       {getTimezoneAbbr(timezone)}
                     </span>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="text-gray-400 dark:text-gray-400">Not set</div>
+              <div className="text-gray-400 dark:text-dusk-400">Not set</div>
             )}
           </div>
         </div>
 
         {/* Address */}
         {lodging.address && (
-          <div className="mt-3 flex items-start gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 flex items-start gap-1.5 text-sm text-gray-600 dark:text-dusk-400">
             <svg
               className="w-4 h-4 flex-shrink-0 mt-0.5"
               fill="none"
@@ -248,7 +248,7 @@ export default function LodgingCard({
 
         {/* Confirmation number */}
         {showConfirmation && lodging.confirmationNumber && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-dusk-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -285,7 +285,7 @@ export default function LodgingCard({
 
         {/* Notes */}
         {lodging.notes && (
-          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-dusk-700/50 text-sm text-gray-600 dark:text-dusk-400">
             <div className="flex items-start gap-2">
               <svg
                 className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400"
@@ -308,7 +308,7 @@ export default function LodgingCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -326,7 +326,7 @@ export default function LodgingCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

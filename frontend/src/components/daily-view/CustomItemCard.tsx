@@ -61,7 +61,7 @@ export default function CustomItemCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
+      className={`bg-white dark:bg-dusk-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
     >
       <div className="p-4">
         <div className="flex items-start justify-between gap-4">
@@ -79,19 +79,19 @@ export default function CustomItemCard({
                 {item.name}
               </h3>
 
-              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500 dark:text-dusk-400">
                 {item.type?.name && <span>{item.type.name}</span>}
                 {timeLabel && (
                   <>
                     {item.type?.name && (
-                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      <span className="text-gray-300 dark:text-dusk-600">·</span>
                     )}
                     <span>{timeLabel}</span>
                   </>
                 )}
                 {item.cost != null && (
                   <>
-                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span className="text-gray-300 dark:text-dusk-600">·</span>
                     <span>{formatCurrency(item.cost, item.currency)}</span>
                   </>
                 )}
@@ -122,7 +122,7 @@ export default function CustomItemCard({
         {/* Location */}
         {item.location?.name && (
           <div className="mt-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 min-w-0">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-dusk-400 min-w-0">
               <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -147,7 +147,7 @@ export default function CustomItemCard({
 
         {/* Confirmation number */}
         {item.confirmationNumber && (
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-2 text-sm text-gray-600 dark:text-dusk-400">
             Confirmation: <span className="font-mono">{item.confirmationNumber}</span>
           </div>
         )}
@@ -168,7 +168,7 @@ export default function CustomItemCard({
 
         {/* Notes */}
         {item.notes && (
-          <div className="mt-3 text-gray-700 dark:text-gray-300">
+          <div className="mt-3 text-gray-700 dark:text-dusk-300">
             <MarkdownRenderer content={item.notes} compact />
           </div>
         )}

@@ -89,7 +89,7 @@ export default function DuplicateTripModal({
           <div className="mb-6">
             <label
               htmlFor="duplicate-trip-title"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2"
             >
               New Trip Title
             </label>
@@ -98,7 +98,7 @@ export default function DuplicateTripModal({
               type="text"
               value={duplicateTripTitle}
               onChange={(e) => setDuplicateTripTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-dusk-700 dark:text-white"
               placeholder="Enter title for duplicated trip"
             />
           </div>
@@ -120,7 +120,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Locations</strong> - All locations and points of interest
                 </span>
               </label>
@@ -137,7 +137,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Photos</strong> - All trip photos (local uploads and Immich references)
                 </span>
               </label>
@@ -154,7 +154,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Activities</strong> - Planned and completed activities (dates will be cleared)
                 </span>
               </label>
@@ -171,7 +171,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Transportation</strong> - Flights, trains, buses (dates will be cleared)
                 </span>
               </label>
@@ -188,7 +188,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Lodging</strong> - Hotels, Airbnb, camping (dates will be cleared)
                 </span>
               </label>
@@ -205,7 +205,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Journal Entries</strong> - All journal entries with their associations
                 </span>
               </label>
@@ -222,7 +222,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Photo Albums</strong> - Album organization (requires photos to be copied)
                 </span>
               </label>
@@ -239,7 +239,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Tags</strong> - Trip tags and categories
                 </span>
               </label>
@@ -256,7 +256,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Companions</strong> - Travel companions (defaults to "Myself" if unchecked)
                 </span>
               </label>
@@ -273,7 +273,7 @@ export default function DuplicateTripModal({
                   }
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-dusk-300">
                   <strong>Checklists</strong> - Packing lists and todo items (checked state will be reset)
                 </span>
               </label>
@@ -290,7 +290,7 @@ export default function DuplicateTripModal({
           <div className="flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
             >
               Cancel
             </button>

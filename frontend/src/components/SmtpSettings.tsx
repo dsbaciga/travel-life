@@ -264,17 +264,17 @@ export default function SmtpSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading email settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading email settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Email (SMTP) Settings</h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure SMTP to send invitation emails. Choose your email provider for automatic setup, or select "Other" for custom SMTP servers.
       </p>
 
@@ -305,13 +305,13 @@ export default function SmtpSettings() {
       <div className="space-y-4">
         {/* Provider selector */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Email Provider
           </label>
           <select
             value={provider}
             onChange={(e) => handleProviderChange(e.target.value as SmtpProvider)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           >
             {Object.entries(PROVIDER_PRESETS).map(([key, p]) => (
               <option key={key} value={key}>{p.label}</option>
@@ -322,7 +322,7 @@ export default function SmtpSettings() {
         {/* Host (only for "Other") */}
         {isOther && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               SMTP Host *
             </label>
             <input
@@ -330,7 +330,7 @@ export default function SmtpSettings() {
               value={host}
               onChange={(e) => setHost(e.target.value)}
               placeholder="smtp.example.com"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
             />
           </div>
         )}
@@ -339,7 +339,7 @@ export default function SmtpSettings() {
         {isOther && (
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Port *
               </label>
               <input
@@ -348,11 +348,11 @@ export default function SmtpSettings() {
                 onChange={(e) => setPort(parseInt(e.target.value, 10) || 587)}
                 min={1}
                 max={65535}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Use SSL/TLS
               </label>
               <div className="flex items-center h-[42px]">
@@ -360,7 +360,7 @@ export default function SmtpSettings() {
                   type="button"
                   onClick={() => setSecure(!secure)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    secure ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                    secure ? 'bg-blue-600' : 'bg-gray-300 dark:bg-dusk-600'
                   }`}
                   role="switch"
                   aria-checked={secure}
@@ -371,7 +371,7 @@ export default function SmtpSettings() {
                     }`}
                   />
                 </button>
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                <span className="ml-2 text-sm text-gray-600 dark:text-dusk-400">
                   {secure ? 'On (port 465)' : 'Off (port 587)'}
                 </span>
               </div>
@@ -382,7 +382,7 @@ export default function SmtpSettings() {
         {/* Username (hidden for SendGrid which uses fixed "apikey") */}
         {!preset.fixedUser && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               {preset.userLabel} *
             </label>
             <input
@@ -390,14 +390,14 @@ export default function SmtpSettings() {
               value={user}
               onChange={(e) => setUser(e.target.value)}
               placeholder={preset.userPlaceholder}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
             />
           </div>
         )}
 
         {/* Password / API Key */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             {preset.passwordLabel} *
           </label>
           <input
@@ -405,13 +405,13 @@ export default function SmtpSettings() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={settings?.smtpPasswordSet ? `Enter new ${preset.passwordLabel.toLowerCase()} to update` : `Enter your ${preset.passwordLabel.toLowerCase()}`}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
         </div>
 
         {/* From address (always shown) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             From Address
           </label>
           <input
@@ -419,9 +419,9 @@ export default function SmtpSettings() {
             value={from}
             onChange={(e) => setFrom(e.target.value)}
             placeholder='Travel Life <noreply@example.com>'
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             The "From" address shown on sent emails. Leave blank to use your SMTP username.
           </p>
         </div>

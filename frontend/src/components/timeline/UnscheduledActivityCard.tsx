@@ -12,7 +12,7 @@ export default function UnscheduledActivityCard({
 }: UnscheduledActivityCardProps) {
   return (
     <div
-      className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg ${
+      className={`bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg ${
         isCompact ? 'p-2.5' : 'p-3'
       } shadow-sm hover:shadow-md transition-shadow`}
     >
@@ -40,7 +40,7 @@ export default function UnscheduledActivityCard({
               </h5>
               {activity.category && (
                 <p
-                  className={`text-gray-500 dark:text-gray-400 ${
+                  className={`text-gray-500 dark:text-dusk-400 ${
                     isCompact ? 'text-xs' : 'text-sm'
                   }`}
                 >
@@ -50,7 +50,7 @@ export default function UnscheduledActivityCard({
             </div>
             {activity.cost !== null && activity.cost > 0 && activity.currency && (
               <div
-                className={`font-medium text-gray-700 dark:text-gray-300 ${
+                className={`font-medium text-gray-700 dark:text-dusk-300 ${
                   isCompact ? 'text-xs' : 'text-sm'
                 }`}
               >
@@ -62,7 +62,7 @@ export default function UnscheduledActivityCard({
           {/* Linked Location(s) */}
           {activity.linkedLocations && activity.linkedLocations.length > 0 && (
             <div
-              className={`flex items-center gap-1.5 text-gray-600 dark:text-gray-400 ${
+              className={`flex items-center gap-1.5 text-gray-600 dark:text-dusk-400 ${
                 isCompact ? 'mt-1 text-xs' : 'mt-1.5 text-sm'
               }`}
             >
@@ -75,14 +75,14 @@ export default function UnscheduledActivityCard({
 
           {/* Description */}
           {activity.description && !isCompact && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 line-clamp-2">
+            <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1.5 line-clamp-2">
               {activity.description}
             </p>
           )}
 
           {/* Notes */}
           {activity.notes && !isCompact && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic line-clamp-1">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1 italic line-clamp-1">
               {activity.notes}
             </p>
           )}

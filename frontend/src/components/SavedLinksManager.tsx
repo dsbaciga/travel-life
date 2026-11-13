@@ -43,7 +43,7 @@ const EMPTY_FORM: LinkFormState = { url: "", title: "", notes: "" };
 function MetadataBadge({ link }: { link: SavedLink }) {
   if (link.metadataStatus === "PENDING") {
     return (
-      <span className="text-xs text-slate dark:text-gray-400 italic">
+      <span className="text-xs text-slate dark:text-dusk-400 italic">
         Loading preview…
       </span>
     );
@@ -219,10 +219,10 @@ export default function SavedLinksManager({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-display font-semibold text-charcoal dark:text-gray-100">
+          <h2 className="text-xl font-display font-semibold text-charcoal dark:text-dusk-100">
             Links
           </h2>
-          <p className="text-sm text-slate dark:text-gray-400">
+          <p className="text-sm text-slate dark:text-dusk-400">
             Reference pages for this trip — attach them to activities, lodging,
             or anywhere else.
           </p>
@@ -263,7 +263,7 @@ export default function SavedLinksManager({
               value={form.url}
               onChange={(e) => setForm({ ...form, url: e.target.value })}
             />
-            <p className="mt-1 text-xs text-slate dark:text-gray-400">
+            <p className="mt-1 text-xs text-slate dark:text-dusk-400">
               Tracking parameters (utm_*, fbclid, and similar) are stripped
               automatically.
             </p>
@@ -374,23 +374,23 @@ export default function SavedLinksManager({
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="font-medium text-charcoal dark:text-gray-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
+                  className="font-medium text-charcoal dark:text-dusk-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
                 >
                   {savedLinkDisplayTitle(link)}
                 </a>
 
-                <p className="text-xs text-slate dark:text-gray-400 mt-0.5 truncate">
+                <p className="text-xs text-slate dark:text-dusk-400 mt-0.5 truncate">
                   {savedLinkHostname(link)}
                 </p>
 
                 {link.description && (
-                  <p className="text-sm text-slate dark:text-gray-400 mt-2 line-clamp-2">
+                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 line-clamp-2">
                     {link.description}
                   </p>
                 )}
 
                 {link.notes && (
-                  <p className="text-sm text-charcoal dark:text-gray-300 mt-2 line-clamp-2 italic">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 line-clamp-2 italic">
                     {link.notes}
                   </p>
                 )}
@@ -410,7 +410,7 @@ export default function SavedLinksManager({
                   />
                   <button
                     type="button"
-                    className="text-xs px-2 py-1 text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+                    className="text-xs px-2 py-1 text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
                     onClick={() => startEdit(link)}
                   >
                     Edit
@@ -418,7 +418,7 @@ export default function SavedLinksManager({
                   {link.metadataStatus !== "FETCHED" && (
                     <button
                       type="button"
-                      className="text-xs px-2 py-1 text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+                      className="text-xs px-2 py-1 text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
                       onClick={() => handleRefreshMetadata(link)}
                     >
                       Retry preview
@@ -426,7 +426,7 @@ export default function SavedLinksManager({
                   )}
                   <button
                     type="button"
-                    className="text-xs px-2 py-1 text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+                    className="text-xs px-2 py-1 text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
                     onClick={() => handleUnassign(link)}
                   >
                     Move to inbox

@@ -9,7 +9,7 @@ interface FoodLogThumbProps {
 }
 
 const DEFAULT_CLASS =
-  "h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700";
+  "h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-dusk-700";
 
 /**
  * A food photo thumbnail for either kind of photo. Immich thumbnails need an
@@ -29,7 +29,7 @@ export default function FoodLogThumb({
       <div
         role="img"
         aria-label={`${alt} (not loaded)`}
-        className={`${className} bg-gray-100 dark:bg-gray-800`}
+        className={`${className} bg-gray-100 dark:bg-dusk-800`}
       />
     );
   }

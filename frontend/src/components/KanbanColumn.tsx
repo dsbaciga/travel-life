@@ -47,13 +47,13 @@ export default function KanbanColumn({
       {/* Column body */}
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-[400px] p-2 bg-gray-100 dark:bg-gray-800 rounded-b-lg space-y-2 overflow-y-auto transition-colors ${
+        className={`flex-1 min-h-[400px] p-2 bg-gray-100 dark:bg-dusk-800 rounded-b-lg space-y-2 overflow-y-auto transition-colors ${
           isOver ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-400 ring-inset' : ''
         }`}
       >
         <SortableContext items={tripIds} strategy={verticalListSortingStrategy}>
           {trips.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-gray-400 dark:text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-32 text-gray-400 dark:text-dusk-400 text-sm">
               Drop trips here
             </div>
           ) : (

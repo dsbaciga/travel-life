@@ -642,7 +642,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-type"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Type *
                 </label>
@@ -669,7 +669,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Name *
                 </label>
@@ -694,7 +694,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-check-in"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-in *
                 </label>
@@ -719,7 +719,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-check-out"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-out *
                 </label>
@@ -801,7 +801,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-address"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Address
                 </label>
@@ -856,7 +856,7 @@ export default function LodgingManager({
       {/* Sort Control */}
       {manager.items.length > 0 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="lodging-sort" className="text-sm text-gray-600 dark:text-gray-400">
+          <label htmlFor="lodging-sort" className="text-sm text-gray-600 dark:text-dusk-400">
             Sort by:
           </label>
           <select
@@ -897,7 +897,7 @@ export default function LodgingManager({
                 e.stopPropagation();
                 bulk.selection.toggleItemSelection(lodging.id, index, e.shiftKey, sortedLodging);
               } : undefined}
-              className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${bulk.selection.selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
+              className={`bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${bulk.selection.selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
             >
               {/* Header with title and type */}
               <div className="flex items-start gap-2 mb-3 flex-wrap">
@@ -922,7 +922,7 @@ export default function LodgingManager({
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words">
                     {lodging.name}
                   </h3>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                  <span className="text-sm text-gray-500 dark:text-dusk-400 capitalize">
                     ({lodging.type.replace("_", " ")})
                   </span>
                 </div>
@@ -930,7 +930,7 @@ export default function LodgingManager({
 
               {/* Details grid - more compact on mobile */}
               {/* Note: Location is shown via LinkedEntitiesDisplay below */}
-              <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-dusk-300">
                 {/* Address */}
                 {lodging.address && (
                   <div className="flex flex-wrap gap-x-2">
@@ -992,10 +992,10 @@ export default function LodgingManager({
                 {lodging.notes && (
                   <div className="mt-2">
                     <span className="font-medium">Notes:</span>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 sm:hidden">
+                    <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
                       {stripMarkdown(lodging.notes)}
                     </p>
-                    <div className="text-gray-600 dark:text-gray-400 mt-1 hidden sm:block">
+                    <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
                       <MarkdownRenderer content={lodging.notes} compact />
                     </div>
                   </div>
@@ -1011,7 +1011,7 @@ export default function LodgingManager({
               />
 
               {/* Actions - always at bottom on mobile */}
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
                 <LinkButton
                   tripId={tripId}
                   entityType="LODGING"

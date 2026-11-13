@@ -26,7 +26,7 @@ export default function TimezoneSelect({
     <div>
       <label
         htmlFor={fieldId}
-        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
       >
         {label}
       </label>
@@ -44,7 +44,7 @@ export default function TimezoneSelect({
         ))}
       </select>
       {helpText && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
           {helpText}
         </p>
       )}

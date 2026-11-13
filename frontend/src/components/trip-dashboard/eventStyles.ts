@@ -33,9 +33,9 @@ export function getEventTypeColors(type: NormalizedEvent['type']): {
       };
     default:
       return {
-        bg: 'bg-gray-50 dark:bg-gray-800',
-        text: 'text-gray-600 dark:text-gray-400',
-        border: 'border-gray-200 dark:border-gray-700',
+        bg: 'bg-gray-50 dark:bg-dusk-800',
+        text: 'text-gray-600 dark:text-dusk-400',
+        border: 'border-gray-200 dark:border-dusk-700',
       };
   }
 }

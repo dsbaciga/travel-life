@@ -188,7 +188,7 @@ function OfflineIndicator({ lastIndexed }: { lastIndexed?: number | null }) {
 function SearchingIndicator() {
   return (
     <div className="p-6 flex items-center justify-center">
-      <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-3 text-gray-500 dark:text-dusk-400">
         <div className="w-5 h-5 border-2 border-primary-500 dark:border-gold border-t-transparent rounded-full animate-spin" />
         <span className="text-sm">Searching...</span>
       </div>
@@ -229,7 +229,7 @@ function EmptyState({ query }: { query: string }) {
   return (
     <div className="p-8 text-center">
       <svg
-        className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-400"
+        className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-dusk-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -241,11 +241,11 @@ function EmptyState({ query }: { query: string }) {
           d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p className="text-gray-600 dark:text-gray-400 font-medium">No results found</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+      <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
         No offline data matches "{query}"
       </p>
-      <p className="text-xs text-gray-400 dark:text-gray-600 mt-3">
+      <p className="text-xs text-gray-400 dark:text-dusk-600 mt-3">
         Try different keywords or check your downloaded trips
       </p>
     </div>
@@ -276,7 +276,7 @@ function ResultItem({
         ${
           isSelected
             ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 dark:border-gold'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+            : 'hover:bg-gray-100 dark:hover:bg-dusk-700'
         }
       `}
     >
@@ -287,7 +287,7 @@ function ResultItem({
             ${
               isSelected
                 ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-gold'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                : 'bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400'
             }
           `}
         >
@@ -310,12 +310,12 @@ function ResultItem({
             <HighlightText text={result.title} query={query} />
           </div>
           {result.subtitle && (
-            <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+            <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">
               <HighlightText text={result.subtitle} query={query} />
             </div>
           )}
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-gray-400 dark:text-gray-400 capitalize">
+            <span className="text-xs text-gray-400 dark:text-dusk-400 capitalize">
               {getTypeLabel(result.type)}
             </span>
             {result.isOfflineResult && result.score && (
@@ -344,9 +344,9 @@ function GroupHeader({
   const iconPath = ENTITY_TYPE_ICONS[entityType];
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+    <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-800/50">
       <svg
-        className="w-4 h-4 text-gray-500 dark:text-gray-400"
+        className="w-4 h-4 text-gray-500 dark:text-dusk-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -358,10 +358,10 @@ function GroupHeader({
           d={iconPath}
         />
       </svg>
-      <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+      <span className="text-xs font-semibold text-gray-600 dark:text-dusk-300 uppercase tracking-wide">
         {label}
       </span>
-      <span className="text-xs text-gray-400 dark:text-gray-400">
+      <span className="text-xs text-gray-400 dark:text-dusk-400">
         ({count})
       </span>
     </div>
@@ -470,7 +470,7 @@ export default function OfflineSearchResults({
                   );
                 })}
                 {hasMore && (
-                  <div className="px-3 py-2 text-xs text-center text-gray-500 dark:text-gray-400">
+                  <div className="px-3 py-2 text-xs text-center text-gray-500 dark:text-dusk-400">
                     +{group.results.length - maxPerGroup} more results
                   </div>
                 )}
@@ -480,8 +480,8 @@ export default function OfflineSearchResults({
         })}
 
         {/* Total results footer */}
-        <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="px-3 py-2 border-t border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-800/50">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-dusk-400">
             <span>{groupedResults.total} results found</span>
             {lastIndexed && (
               <span>Indexed: {formatTimestamp(lastIndexed)}</span>
@@ -509,8 +509,8 @@ export default function OfflineSearchResults({
       </div>
 
       {/* Results count footer */}
-      <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+      <div className="px-3 py-2 border-t border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-800/50">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-dusk-400">
           <span>{results.length} results</span>
           {lastIndexed && (
             <span>Indexed: {formatTimestamp(lastIndexed)}</span>

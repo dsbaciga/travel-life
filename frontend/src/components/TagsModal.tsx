@@ -102,9 +102,9 @@ export default function TagsModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Manage Tags
           </h2>
@@ -112,7 +112,7 @@ export default function TagsModal({
             onClick={onClose}
             type="button"
             aria-label="Close"
-            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
             <svg
               className="w-6 h-6"
@@ -134,7 +134,7 @@ export default function TagsModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {loading ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-gray-500 dark:text-dusk-400">
                 Loading tags...
               </p>
             </div>
@@ -146,7 +146,7 @@ export default function TagsModal({
                   Current Tags
                 </h3>
                 {tripTags.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  <p className="text-gray-500 dark:text-dusk-400 text-sm">
                     No tags added to this trip yet.
                   </p>
                 ) : (
@@ -208,7 +208,7 @@ export default function TagsModal({
                     <div className="flex-1">
                       <label
                         htmlFor="tag-background-color"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                       >
                         Background Color
                       </label>
@@ -217,13 +217,13 @@ export default function TagsModal({
                         id="tag-background-color"
                         value={newTagColor}
                         onChange={(e) => setNewTagColor(e.target.value)}
-                        className="h-10 w-full rounded border border-gray-300 dark:border-gray-600"
+                        className="h-10 w-full rounded border border-gray-300 dark:border-dusk-600"
                       />
                     </div>
                     <div className="flex-1">
                       <label
                         htmlFor="tag-text-color"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                        className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                       >
                         Text Color
                       </label>
@@ -232,7 +232,7 @@ export default function TagsModal({
                         id="tag-text-color"
                         value={newTagTextColor}
                         onChange={(e) => setNewTagTextColor(e.target.value)}
-                        className="h-10 w-full rounded border border-gray-300 dark:border-gray-600"
+                        className="h-10 w-full rounded border border-gray-300 dark:border-dusk-600"
                       />
                     </div>
                   </div>
@@ -255,7 +255,7 @@ export default function TagsModal({
                   className="input mb-3"
                 />
                 {filteredAvailableTags.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  <p className="text-gray-500 dark:text-dusk-400 text-sm">
                     {searchQuery
                       ? "No tags found matching your search."
                       : "All tags are already added to this trip."}
@@ -265,7 +265,7 @@ export default function TagsModal({
                     {filteredAvailableTags.map((tag) => (
                       <div
                         key={tag.id}
-                        className="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        className="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-dusk-700 rounded-lg"
                       >
                         <span
                           className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium min-w-0 max-w-full truncate"
@@ -294,7 +294,7 @@ export default function TagsModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end p-6 border-t border-gray-200 dark:border-dusk-700">
           <button onClick={onClose} className="btn btn-primary">
             Done
           </button>

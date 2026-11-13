@@ -82,7 +82,7 @@ export default function InviteUserModal({
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-navy-700 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-600 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-gray-700 dark:text-dusk-300 bg-gray-100 dark:bg-navy-700 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-600 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -105,13 +105,13 @@ export default function InviteUserModal({
       }
     >
       <form id="invite-form" onSubmit={handleSubmit} className="space-y-5">
-        <p className="text-sm text-gray-600 dark:text-gray-400 -mt-2">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 -mt-2">
           Invite someone to collaborate on <span className="font-medium">{tripTitle}</span>
         </p>
 
         {/* Email */}
         <div>
-          <label htmlFor={emailId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor={emailId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Email Address *
           </label>
           <input
@@ -128,7 +128,7 @@ export default function InviteUserModal({
 
         {/* Permission Level */}
         <div>
-          <label htmlFor={permissionId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={permissionId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
             Permission Level
           </label>
           <div className="space-y-2">
@@ -151,7 +151,7 @@ export default function InviteUserModal({
                 />
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">{option.label}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">{option.description}</div>
+                  <div className="text-sm text-gray-500 dark:text-dusk-400">{option.description}</div>
                 </div>
               </label>
             ))}
@@ -160,7 +160,7 @@ export default function InviteUserModal({
 
         {/* Personal Message */}
         <div>
-          <label htmlFor={messageId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor={messageId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Personal Message (Optional)
           </label>
           <textarea
@@ -172,7 +172,7 @@ export default function InviteUserModal({
             maxLength={1000}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gold/30 rounded-lg bg-white dark:bg-navy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gold focus:border-transparent resize-none"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
             {message.length}/1000 characters
           </p>
         </div>

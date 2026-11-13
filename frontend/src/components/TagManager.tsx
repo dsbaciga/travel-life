@@ -222,7 +222,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
           className="space-y-4"
         >
           <div>
-            <label htmlFor={tagNameId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor={tagNameId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Tag Name *
             </label>
             <input
@@ -239,7 +239,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
             />
           </div>
           <div>
-            <label htmlFor={tagColorId} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor={tagColorId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Color
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -249,7 +249,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
                   className={`w-10 h-10 rounded-full border-2 ${
-                    formData.color === color ? "border-gray-900 dark:border-white" : "border-gray-300 dark:border-gray-600"
+                    formData.color === color ? "border-gray-900 dark:border-white" : "border-gray-300 dark:border-dusk-600"
                   }`}
                   aria-label={`Select color ${color}`}
                   title={`Select color ${color}`}
@@ -275,7 +275,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Tags on this trip</h3>
         {manager.items.length === 0 ? (
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-dusk-400 text-sm">
             No tags added yet
           </p>
         ) : (
@@ -332,13 +332,13 @@ export default function TagManager({ tripId }: TagManagerProps) {
 
       {/* All User Tags */}
       {tags.length > 0 && (
-        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-dusk-700">
           <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">All your tags</h3>
           <div className="space-y-2">
             {tags.map((tag) => (
               <div
                 key={tag.id}
-                className="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                className="flex items-center justify-between gap-2 p-3 bg-gray-50 dark:bg-dusk-800 rounded-lg"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span
@@ -348,7 +348,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
                     {tag.name}
                   </span>
                   {tag._count && (
-                    <span className="text-sm text-gray-600 dark:text-gray-400 shrink-0 whitespace-nowrap">
+                    <span className="text-sm text-gray-600 dark:text-dusk-400 shrink-0 whitespace-nowrap">
                       ({tag._count.assignments}{" "}
                       {tag._count.assignments === 1 ? "trip" : "trips"})
                     </span>

@@ -130,7 +130,7 @@ export default function DayHeader({
   const statsString = statParts.length > 0 ? statParts.join(' · ') : 'No events';
 
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-700 px-4 py-3 rounded-t-xl">
+    <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-dusk-800 dark:to-dusk-700 border-b border-gray-200 dark:border-dusk-700 px-4 py-3 rounded-t-xl">
       <div className="flex items-center justify-between">
         {/* Left side: Date and stats */}
         <div className="flex-1 min-w-0">
@@ -155,17 +155,17 @@ export default function DayHeader({
           </div>
 
           {/* Stats row */}
-          <div className="mt-1 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-1 flex items-center gap-4 text-sm text-gray-500 dark:text-dusk-400">
             <span>{statsString}</span>
 
             {/* Dual timezone indicator - desktop only */}
             {showDualTimezone && (
               <span className="hidden lg:flex items-center gap-2 text-xs">
-                <span className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700">
+                <span className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-dusk-700">
                   {getTimezoneAbbr(tripTimezone)}
                 </span>
                 <span className="text-gray-400">/</span>
-                <span className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700">
+                <span className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-dusk-700">
                   {getTimezoneAbbr(userTimezone)}
                 </span>
               </span>
@@ -177,7 +177,7 @@ export default function DayHeader({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-200 dark:hover:bg-dusk-700 transition-colors"
         >
           <span className="text-sm font-medium">
             {eventCount} {eventCount === 1 ? 'event' : 'events'}

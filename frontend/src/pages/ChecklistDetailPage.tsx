@@ -127,7 +127,7 @@ export default function ChecklistDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
         <div className="max-w-[1600px] mx-auto px-6 py-8 text-gray-900 dark:text-white">
           Loading
         </div>
@@ -137,7 +137,7 @@ export default function ChecklistDetailPage() {
 
   if (!checklist) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
         <div className="max-w-[1600px] mx-auto px-6 py-8 text-gray-900 dark:text-white">
           Checklist not found
         </div>
@@ -167,7 +167,7 @@ export default function ChecklistDetailPage() {
       className={`flex items-start gap-3 p-4 rounded-lg transition-colors ${
         isChecked
           ? "bg-blue-50 dark:bg-blue-900/20"
-          : "bg-white dark:bg-gray-700"
+          : "bg-white dark:bg-dusk-700"
       } hover:shadow-md`}
     >
       <input
@@ -182,12 +182,12 @@ export default function ChecklistDetailPage() {
           {item.name}
         </div>
         {item.description && (
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
             {item.description}
           </div>
         )}
         {item.checkedAt && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
             Checked: {new Date(item.checkedAt).toLocaleDateString()}
           </div>
         )}
@@ -205,7 +205,7 @@ export default function ChecklistDetailPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         <div className="mb-8">
           <Breadcrumbs
@@ -249,7 +249,7 @@ export default function ChecklistDetailPage() {
                   {!checklist.isDefault && (
                     <button
                       onClick={() => setEditingName(true)}
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 shrink-0"
+                      className="text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 shrink-0"
                     >
                       ✏️
                     </button>
@@ -257,7 +257,7 @@ export default function ChecklistDetailPage() {
                 </div>
               )}
               {checklist.description && (
-                <p className="text-gray-600 dark:text-gray-400 mt-2">
+                <p className="text-gray-600 dark:text-dusk-400 mt-2">
                   {checklist.description}
                 </p>
               )}
@@ -265,8 +265,8 @@ export default function ChecklistDetailPage() {
           </div>
 
           {checklist.stats && (
-            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <div className="mt-4 bg-white dark:bg-dusk-800 rounded-lg shadow p-4">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-dusk-400 mb-2">
                 <span>
                   {checklist.stats.checked} / {checklist.stats.total} completed
                 </span>
@@ -274,7 +274,7 @@ export default function ChecklistDetailPage() {
                   {checklist.stats.percentage}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-3">
                 <div
                   className="bg-blue-600 dark:bg-blue-500 h-3 rounded-full transition-all"
                   style={{ width: `${checklist.stats.percentage}%` }}
@@ -284,7 +284,7 @@ export default function ChecklistDetailPage() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-6">
           <div className="flex gap-4 mb-4">
             <input
               type="text"
@@ -317,10 +317,10 @@ export default function ChecklistDetailPage() {
           {showAddForm && !isAirports && (
             <form
               onSubmit={handleAddItem}
-              className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+              className="mb-6 p-4 bg-gray-50 dark:bg-dusk-700 rounded-lg"
             >
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Item Name*
                 </label>
                 <input
@@ -333,7 +333,7 @@ export default function ChecklistDetailPage() {
                 />
               </div>
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Description
                 </label>
                 <input
@@ -360,7 +360,7 @@ export default function ChecklistDetailPage() {
           )}
 
           {unchecked.length === 0 && checked.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
               {searchQuery
                 ? "No items match your search"
                 : "No items in this checklist yet"}
@@ -374,7 +374,7 @@ export default function ChecklistDetailPage() {
                 </h2>
                 <div className="space-y-3">
                   {unchecked.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
                       All items checked!
                     </div>
                   ) : (
@@ -390,7 +390,7 @@ export default function ChecklistDetailPage() {
                 </h2>
                 <div className="space-y-3">
                   {checked.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
                       No completed items yet
                     </div>
                   ) : (

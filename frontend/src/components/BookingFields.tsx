@@ -32,7 +32,7 @@ export default function BookingFields({
       <div>
         <label
           htmlFor={confirmationFieldId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           {confirmationLabel}
         </label>
@@ -53,7 +53,7 @@ export default function BookingFields({
       <div>
         <label
           htmlFor={urlFieldId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           {bookingUrlLabel}
         </label>
@@ -70,7 +70,7 @@ export default function BookingFields({
       <div>
         <label
           htmlFor={confirmationFieldId}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           {confirmationLabel}
         </label>

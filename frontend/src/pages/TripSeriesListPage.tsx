@@ -73,7 +73,7 @@ export default function TripSeriesListPage() {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div className="bg-gray-50 dark:bg-dusk-900 min-h-screen">
       <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs items={[{ label: 'Trip Series' }]} />
 

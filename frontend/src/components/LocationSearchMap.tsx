@@ -172,17 +172,17 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
 
         {/* Search Results Dropdown */}
         {searchResults.length > 0 && (
-          <div className="absolute z-[1000] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+          <div className="absolute z-[1000] w-full mt-1 bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow-xl max-h-64 overflow-y-auto">
             {searchResults.map((result) => (
               <button
                 key={result.place_id}
                 onClick={() => handleSearchResultClick(result)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-dusk-700 border-b border-gray-100 dark:border-dusk-700 last:border-b-0 transition-colors"
               >
                 <div className="font-medium text-gray-900 dark:text-white">
                   {result.display_name.split(',')[0]}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{result.display_name}</div>
+                <div className="text-sm text-gray-600 dark:text-dusk-400">{result.display_name}</div>
               </button>
             ))}
           </div>
@@ -205,7 +205,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
       )}
 
       {/* Map */}
-      <div className="h-56 sm:h-72 md:h-80 lg:h-[400px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 relative z-0">
+      <div className="h-56 sm:h-72 md:h-80 lg:h-[400px] rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 relative z-0">
         <MapContainer
           center={[mapCenter.lat, mapCenter.lng]}
           zoom={selectedPosition ? 13 : 2}
@@ -243,7 +243,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
         )}
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-dusk-400">
         💡 Search for a place above or tap on the map to select a location
       </p>
     </div>

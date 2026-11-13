@@ -94,7 +94,7 @@ export function CollapsibleSection({
 
       {/* Optional Description */}
       {description && !isExpanded && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
+        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-2 px-1">
           {description}
         </p>
       )}

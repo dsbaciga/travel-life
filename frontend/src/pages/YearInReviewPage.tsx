@@ -49,8 +49,8 @@ function StatCard({ label, value, subtext, gradient, icon }: StatCardProps) {
       <div className="text-2xl sm:text-3xl font-display font-bold text-gray-900 dark:text-white leading-none">
         {value}
       </div>
-      {subtext && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtext}</div>}
-      <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">{label}</div>
+      {subtext && <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">{subtext}</div>}
+      <div className="text-xs sm:text-sm text-gray-600 dark:text-dusk-400 font-medium mt-1">{label}</div>
     </div>
   );
 }
@@ -144,7 +144,7 @@ export default function YearInReviewPage() {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-dusk-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includePlanning}
@@ -243,7 +243,7 @@ export default function YearInReviewPage() {
             {/* Top tags */}
             {review.topTags.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 animate-fade-in">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Top tags:</span>
+                <span className="text-sm font-medium text-gray-600 dark:text-dusk-400">Top tags:</span>
                 {review.topTags.map((tag) => (
                   <span
                     key={tag.id}
@@ -269,7 +269,7 @@ export default function YearInReviewPage() {
               <div className="grid grid-cols-12 gap-1.5 sm:gap-2 items-end h-32">
                 {review.monthlyTripDays.map((days, index) => (
                   <div key={MONTH_LABELS[index]} className="flex flex-col items-center justify-end h-full gap-1">
-                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-dusk-400">
                       {days > 0 ? days : ''}
                     </span>
                     <div
@@ -281,7 +281,7 @@ export default function YearInReviewPage() {
                       style={{ height: days > 0 ? `${Math.max(8, (days / maxMonthlyDays) * 100)}%` : '4px' }}
                       title={`${MONTH_LABELS[index]}: ${days} travel day${days !== 1 ? 's' : ''}`}
                     />
-                    <span className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-medium">
+                    <span className="text-[10px] sm:text-xs text-gray-600 dark:text-dusk-400 font-medium">
                       {MONTH_LABELS[index]}
                     </span>
                   </div>
@@ -316,7 +316,7 @@ export default function YearInReviewPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <svg className="w-8 h-8 text-gray-300 dark:text-dusk-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
@@ -371,13 +371,13 @@ export default function YearInReviewPage() {
                         <h3 className="font-display font-bold text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-gold transition-colors">
                           {trip.title}
                         </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                           {formatTripDates(trip.startDate, trip.endDate)}
                         </p>
                         <span
                           className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                             STATUS_BADGE_CLASSES[trip.status] ??
-                            'bg-gray-100 text-gray-700 dark:bg-navy-700 dark:text-gray-300'
+                            'bg-gray-100 text-gray-700 dark:bg-navy-700 dark:text-dusk-300'
                           }`}
                         >
                           {trip.status}

@@ -214,7 +214,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
           className="space-y-4"
         >
           <div>
-            <label htmlFor="companion-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="companion-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Name *
             </label>
             <input
@@ -232,7 +232,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="companion-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="companion-email" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Email
               </label>
               <input
@@ -248,7 +248,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               />
             </div>
             <div>
-              <label htmlFor="companion-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="companion-phone" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Phone
               </label>
               <input
@@ -265,7 +265,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
             </div>
           </div>
           <div>
-            <label htmlFor="companion-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="companion-notes" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Notes
             </label>
             <textarea
@@ -281,10 +281,10 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
             />
           </div>
           <div>
-            <label htmlFor="dietary-preferences" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="dietary-preferences" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
               Dietary Preferences
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
               Track dietary restrictions to easily find suitable restaurants when traveling together.
             </p>
             <DietaryTagSelector
@@ -318,7 +318,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                 <div key={companion.id} data-entity-id={`companion-${companion.id}`} className={`border rounded-lg p-4 ${
                   companion.isMyself
                     ? 'border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+                    : 'border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800'
                 }`}>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                     <div className="flex-1 min-w-0">
@@ -346,7 +346,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                         <div className="mt-3 space-y-2 text-sm">
                           {companion.email && (
                             <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Email: </span>
+                              <span className="font-medium text-gray-600 dark:text-dusk-400">Email: </span>
                               <a href={`mailto:${companion.email}`} className="text-blue-600 dark:text-blue-400 hover:underline break-all">
                                 {companion.email}
                               </a>
@@ -354,7 +354,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                           )}
                           {companion.phone && (
                             <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Phone: </span>
+                              <span className="font-medium text-gray-600 dark:text-dusk-400">Phone: </span>
                               <a href={`tel:${companion.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline break-all">
                                 {companion.phone}
                               </a>
@@ -362,13 +362,13 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                           )}
                           {companion.notes && (
                             <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Notes: </span>
-                              <p className="text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">{companion.notes}</p>
+                              <span className="font-medium text-gray-600 dark:text-dusk-400">Notes: </span>
+                              <p className="text-gray-700 dark:text-dusk-300 mt-1 whitespace-pre-wrap">{companion.notes}</p>
                             </div>
                           )}
                           {companion.dietaryPreferences && companion.dietaryPreferences.length > 0 && (
                             <div>
-                              <span className="font-medium text-gray-600 dark:text-gray-400">Dietary Needs: </span>
+                              <span className="font-medium text-gray-600 dark:text-dusk-400">Dietary Needs: </span>
                               <div className="mt-1">
                                 <DietaryBadgesExpanded tags={companion.dietaryPreferences} />
                               </div>
@@ -432,7 +432,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                     className={`flex items-center justify-between p-3 rounded-lg border ${
                       companion.isMyself
                         ? 'bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border-blue-300 dark:border-blue-700'
-                        : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700'
+                        : 'bg-gray-50 dark:bg-dusk-800 hover:bg-gray-100 dark:hover:bg-dusk-700 border-gray-200 dark:border-dusk-700'
                     }`}
                   >
                     <div className="flex items-center gap-2 flex-wrap">
@@ -460,7 +460,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                <div className="text-center py-4 text-gray-500 dark:text-dusk-400 text-sm">
                   No companions found matching "{searchQuery}"
                 </div>
               )}

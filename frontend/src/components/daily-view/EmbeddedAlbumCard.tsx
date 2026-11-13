@@ -97,10 +97,10 @@ export default function EmbeddedAlbumCard({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       aria-label={`View album: ${album.name}`}
-      className={`p-3 rounded-lg border ${colors.bg} ${colors.border} cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800`}
+      className={`p-3 rounded-lg border ${colors.bg} ${colors.border} cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-dusk-800`}
     >
       {label && (
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+        <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
           {label}
         </div>
       )}
@@ -131,12 +131,12 @@ export default function EmbeddedAlbumCard({
             {album.name}
           </h4>
 
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+          <div className="text-sm text-gray-600 dark:text-dusk-400 mt-0.5">
             {photoCount} photo{photoCount !== 1 ? 's' : ''}
           </div>
 
           {album.description && (
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+            <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400 line-clamp-2">
               {stripMarkdown(album.description)}
             </p>
           )}

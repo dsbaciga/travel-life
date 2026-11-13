@@ -85,7 +85,7 @@ export function toastProgress({ message, progress = 0 }: ProgressToastOptions) {
           <span className="text-sm text-gray-500">{progress}%</span>
         </div>
         {progress > 0 && (
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+          <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-1.5">
             {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
             <div
               className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"
@@ -114,7 +114,7 @@ export function updateProgressToast(toastId: string, message: string, progress: 
           <span className="flex-1">{message}</span>
           <span className="text-sm text-gray-500">{progress}%</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+        <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-1.5">
           {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
           <div
             className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"
@@ -249,7 +249,7 @@ export function updateBatchToast(toastId: string, current: number, total: number
             {operation} ({current}/{total})
           </span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+        <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-1.5">
           {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
           <div
             className="bg-primary-500 dark:bg-sky h-1.5 rounded-full transition-all duration-300 progress-bar"

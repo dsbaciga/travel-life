@@ -49,7 +49,7 @@ export default function UpcomingTripsWidget() {
       case 'Planning':
         return 'bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800';
       default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600';
+        return 'bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 border-gray-200 dark:border-dusk-600';
     }
   };
 
@@ -109,7 +109,7 @@ export default function UpcomingTripsWidget() {
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             Your Adventures Await
           </h4>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 max-w-xs mx-auto">
+          <p className="text-gray-500 dark:text-dusk-400 text-sm mb-4 max-w-xs mx-auto">
             "The world is a book, and those who do not travel read only one page." - Saint Augustine
           </p>
           <Link
@@ -141,7 +141,7 @@ export default function UpcomingTripsWidget() {
                         {trip.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-dusk-400">
                       <span className="flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

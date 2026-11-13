@@ -160,7 +160,7 @@ export default function RecentPhotosWidget() {
         </div>
         <div className="text-center py-12">
           <svg
-            className="w-16 h-16 mx-auto mb-3 text-gray-300 dark:text-gray-600"
+            className="w-16 h-16 mx-auto mb-3 text-gray-300 dark:text-dusk-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -172,7 +172,7 @@ export default function RecentPhotosWidget() {
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <p className="text-gray-500 dark:text-gray-400">No photos yet</p>
+          <p className="text-gray-500 dark:text-dusk-400">No photos yet</p>
         </div>
       </div>
     );
@@ -205,13 +205,13 @@ export default function RecentPhotosWidget() {
             Recent Photos
           </h3>
         </div>
-        <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0">
+        <span className="text-sm text-gray-500 dark:text-dusk-400 whitespace-nowrap flex-shrink-0">
           {currentIndex + 1} / {photos.length}
         </span>
       </div>
 
       {/* Carousel */}
-      <div className="relative flex-1 min-h-[200px] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 group">
+      <div className="relative flex-1 min-h-[200px] rounded-xl overflow-hidden bg-gray-100 dark:bg-dusk-700 group">
         {photoUrl ? (
           <img
             src={photoUrl}
@@ -302,7 +302,7 @@ export default function RecentPhotosWidget() {
               className={`w-2 h-2 rounded-full transition-all flex-shrink-0 ${
                 index === currentIndex
                   ? "bg-primary-600 dark:bg-sky w-6"
-                  : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+                  : "bg-gray-300 dark:bg-dusk-600 hover:bg-gray-400 dark:hover:bg-dusk-500"
               }`}
               aria-label={`Go to photo ${index + 1}`}
             />

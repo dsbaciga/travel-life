@@ -27,7 +27,7 @@ export default function AssociatedJournalEntries({
 
   return (
     <div className="mt-4">
-      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <h4 className="text-sm font-semibold text-gray-700 dark:text-dusk-300 mb-2">
         {title}
       </h4>
       <div className="space-y-2">
@@ -35,7 +35,7 @@ export default function AssociatedJournalEntries({
           <Link
             key={journal.id}
             to={`/trips/${tripId}?tab=journal`}
-            className="block p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            className="block p-3 bg-gray-50 dark:bg-dusk-700 hover:bg-gray-100 dark:hover:bg-dusk-600 rounded-lg transition-colors"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
@@ -44,11 +44,11 @@ export default function AssociatedJournalEntries({
                     {journal.title}
                   </div>
                 )}
-                <div className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-1">
+                <div className="text-sm text-gray-600 dark:text-dusk-400 line-clamp-2 mt-1">
                   {stripMarkdown(journal.content)}
                 </div>
               </div>
-              <div className="ml-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              <div className="ml-3 text-xs text-gray-500 dark:text-dusk-400 whitespace-nowrap">
                 {formatDate(journal.date, 'medium', 'Trip Journal')}
               </div>
             </div>
