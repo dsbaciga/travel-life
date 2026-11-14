@@ -215,9 +215,16 @@ interface ChipProps {
   selected?: boolean;
   onPress?: () => void;
   tone?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  /**
+   * Text after the label in a normal weight, for a name in another script
+   * ("Hindi" + "(हिन्दी)"). Complex scripts fall back to a font the phone may only
+   * fake the bold of, which makes the drawn text wider than the measured text and
+   * wraps it out of the chip; normal weight needs no faking.
+   */
+  detail?: string;
 }
 
-export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) {
+export function Chip({ label, selected, onPress, tone = 'default', detail }: ChipProps) {
   const palette = usePalette();
   const toneColor =
     tone === 'success'
@@ -234,6 +241,7 @@ export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) 
   const body = (
     <Text style={[styles.chipLabel, { color: selected ? palette.onPrimary : idleLabel }]}>
       {label}
+      {detail ? <Text style={styles.chipDetail}> {detail}</Text> : null}
     </Text>
   );
   const chipStyle = [
@@ -247,7 +255,7 @@ export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={detail ? `${label} ${detail}` : label}
       accessibilityState={{ selected: Boolean(selected) }}
       onPress={onPress}
       hitSlop={6}
@@ -380,6 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipLabel: { fontSize: 13, fontWeight: '600' },
+  chipDetail: { fontWeight: 'normal' },
   field: { gap: spacing.xs },
   input: {
     minHeight: TOUCH_TARGET,
