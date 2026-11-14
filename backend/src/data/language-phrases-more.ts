@@ -339,7 +339,7 @@ export const LANGUAGE_PHRASES_MORE: LanguageWithPhrases[] = [
       { id: 'nl-d4', english: 'The bill, please', translation: 'De rekening, alstublieft', pronunciation: 'duh RAY-kuh-ning, ahl-stew-BLEEFT', category: 'dining' },
       { id: 'nl-d5', english: 'Delicious!', translation: 'Heerlijk!', pronunciation: 'HAYR-luhk', category: 'dining' },
       { id: 'nl-d6', english: 'Water, please', translation: 'Water, alstublieft', pronunciation: 'VAH-ter, ahl-stew-BLEEFT', category: 'dining' },
-      { id: 'nl-d7', english: 'I am vegetarian', translation: 'Ik ben vegetarier', pronunciation: 'ik ben vay-khuh-TAH-ree-er', category: 'dining' },
+      { id: 'nl-d7', english: 'I am vegetarian', translation: 'Ik ben vegetariër', pronunciation: 'ik ben vay-khuh-TAH-ree-er', category: 'dining' },
       { id: 'nl-d8', english: 'No meat, please', translation: 'Zonder vlees, alstublieft', pronunciation: 'ZON-der vlays, ahl-stew-BLEEFT', category: 'dining' },
       { id: 'nl-d9', english: 'Is this spicy?', translation: 'Is dit pittig?', pronunciation: 'is dit PIT-ikh', category: 'dining' },
       { id: 'nl-d10', english: 'Cheers!', translation: 'Proost!', pronunciation: 'PROHST', category: 'dining' },

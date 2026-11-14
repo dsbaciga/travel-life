@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Icelandic** phrase book (60 phrases), available in Edit Trip on the web and in the mobile Vault.
 - **Pronunciation guides** for the Latin-script phrase books (French, Spanish, Italian, German, Portuguese, Dutch, Vietnamese and Icelandic): an English-style respelling under each phrase, with capitals marking the stressed syllable. Portuguese follows Brazilian speech. The guides are approximate, and Vietnamese does not show tones.
 
+### Fixed
+
+- **Phrase books had their accents stripped** in French, Spanish, Italian, Portuguese, German, Dutch and Vietnamese ("Si" for "Sí", "Xin chao" for "Xin chào", "Francais" for "Français"). They are restored, along with Spanish inverted punctuation, and the language names now read Français, Español, Português and Tiếng Việt. Phones pick this up on their next sync.
+
 ## [7.1.0] - 2026-11-14
 
 ### Added
