@@ -7,6 +7,7 @@
  * - LANGDATA-003: Phrase ids are unique across all languages and start with the language code
  * - LANGDATA-004: Every language has the same English phrases, so banks stay comparable
  * - LANGDATA-005: Icelandic is available
+ * - LANGDATA-006: Every phrase has a pronunciation guide, with no stray characters
  */
 import languagePhraseService from '../languagePhrase.service';
 import { LanguageCodeSchema, PhraseCategorySchema } from '../../types/languagePhrase.types';
@@ -53,6 +54,25 @@ describe('phrase bank data', () => {
     const reference = first.phrases.map((p) => p.english).sort();
     for (const { code, phrases } of rest) {
       expect({ code, english: phrases.map((p) => p.english).sort() }).toEqual({ code, english: reference });
+    }
+  });
+
+  it('LANGDATA-006: every phrase has a pronunciation guide', () => {
+    for (const { code, phrases } of banks) {
+      for (const phrase of phrases) {
+        const guide = phrase.pronunciation;
+        expect({ id: phrase.id, hasGuide: typeof guide === 'string' && guide.trim().length > 0 }).toEqual({
+          id: phrase.id,
+          hasGuide: true,
+        });
+        // A respelling is plain letters, hyphens, spaces and light punctuation; markup or
+        // an unescaped quote here would be a data-entry slip.
+        expect({ code, id: phrase.id, ok: /^[\p{L}\s,.()/?!'-]+$/u.test(guide as string) }).toEqual({
+          code,
+          id: phrase.id,
+          ok: true,
+        });
+      }
     }
   });
 

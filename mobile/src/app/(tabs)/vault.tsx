@@ -351,6 +351,11 @@ export default function VaultScreen() {
               </Row>
             </Card>
           ) : null}
+          {(phrases ?? []).some((phrase) => phrase.pronunciation) ? (
+            <AppText variant="caption" muted>
+              Pronunciation is an English-style respelling: capital letters mark the stressed syllable, and the guide is approximate.
+            </AppText>
+          ) : null}
           {(phrases ?? []).length === 0 ? (
             <EmptyState
               title="No phrasebook yet"
