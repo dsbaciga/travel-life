@@ -120,9 +120,17 @@ export async function getTrip(db: SqlDriver, tripId: number): Promise<TripDto | 
   return row ? (JSON.parse(row.data) as TripDto) : null;
 }
 
+/**
+ * Trips still ahead (Dream, Planning, Planned, In Progress) come before
+ * Completed ones, then Cancelled, whatever their dates: an undated Planning trip
+ * must not sink below finished trips just because it has no date to sort by.
+ * Within each group, soonest start first and undated last.
+ */
 export async function listTrips(db: SqlDriver): Promise<TripDto[]> {
   const rows = await db.all<{ data: string }>(
-    'SELECT data FROM trips ORDER BY start_date IS NULL, start_date ASC'
+    `SELECT data FROM trips
+     ORDER BY CASE status WHEN 'Completed' THEN 1 WHEN 'Cancelled' THEN 2 ELSE 0 END,
+              start_date IS NULL, start_date ASC`
   );
   return rows.map((row) => JSON.parse(row.data) as TripDto);
 }

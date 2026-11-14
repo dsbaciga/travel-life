@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Trips in Planning (or any open status) now list before Completed ones, even with no dates.** "Newest First" and "Oldest First" put Dream, Planning, Planned and In Progress trips first, then Completed, then Cancelled, with dated trips ahead of undated ones inside each group. "By Status" now runs In Progress, Planned, Planning, Dream, Completed, Cancelled instead of alphabetically. The mobile Trips list and its choice of current trip follow the same rule.
+
 ### Fixed
 
 - **The mobile menu was unusable on phones.** The drawer opened as a short strip with its navigation links squashed away and no dimming over the page, so Settings and the other pages were hard to reach. The drawer and its overlay now fill the screen.

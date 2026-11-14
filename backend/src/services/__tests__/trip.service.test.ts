@@ -1534,8 +1534,15 @@ describe('Trip Service', () => {
     });
 
     it('should handle pagination correctly', async () => {
-      mockPrisma.trip.findMany.mockResolvedValue([]);
-      mockPrisma.trip.count.mockResolvedValue(50);
+      // Date sorts read the ordering columns for every matching trip, then load
+      // full rows for just the requested page.
+      const candidates = Array.from({ length: 50 }, (_, i) => ({
+        id: i + 1,
+        status: TripStatus.PLANNING,
+        startDate: new Date(Date.UTC(2027, 0, i + 1)),
+        createdAt: new Date(Date.UTC(2026, 0, i + 1)),
+      }));
+      mockPrisma.trip.findMany.mockResolvedValueOnce(candidates).mockResolvedValueOnce([]);
 
       // The controller's Zod schema coerces these query params to numbers, so
       // the service is only ever handed numbers.
@@ -1544,15 +1551,84 @@ describe('Trip Service', () => {
         limit: 10,
       });
 
-      expect(mockPrisma.trip.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 10,
-          take: 10,
-        })
+      // Newest start first: page 1 is ids 50..41, page 2 is ids 40..31.
+      expect(mockPrisma.trip.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({ where: { id: { in: [40, 39, 38, 37, 36, 35, 34, 33, 32, 31] } } })
       );
       expect(result.page).toBe(2);
       expect(result.limit).toBe(10);
+      expect(result.total).toBe(50);
       expect(result.totalPages).toBe(5);
+    });
+
+    it('TRIP-ORDER-001: open trips come before Completed ones even when they have no dates', async () => {
+      const row = (id: number, status: string, start: string | null, created: string) => ({
+        id,
+        status,
+        startDate: start ? new Date(start) : null,
+        createdAt: new Date(created),
+      });
+      const candidates = [
+        row(1, TripStatus.COMPLETED, '2025-06-01', '2025-01-01'),
+        row(2, TripStatus.PLANNING, null, '2026-03-01'),
+        row(3, TripStatus.PLANNED, '2027-05-01', '2026-01-01'),
+        row(4, TripStatus.IN_PROGRESS, '2026-11-10', '2026-02-01'),
+        row(5, TripStatus.CANCELLED, '2028-01-01', '2026-04-01'),
+        row(6, TripStatus.DREAM, null, '2026-02-01'),
+      ];
+      mockPrisma.trip.findMany
+        .mockResolvedValueOnce(candidates)
+        // The page query returns rows in whatever order the database likes.
+        .mockResolvedValueOnce([6, 1, 5, 2, 4, 3].map((id) => ({ ...mockTripWithIncludes, id })));
+
+      const result = await tripService.getTrips(mockUserId, {});
+
+      // Open trips by start date (newest first, undated last), then Completed, then Cancelled.
+      expect(result.trips.map((t) => t.id)).toEqual([3, 4, 2, 6, 1, 5]);
+      expect(result.total).toBe(6);
+    });
+
+    it('TRIP-ORDER-002: "Oldest First" also keeps open trips ahead of Completed ones', async () => {
+      const row = (id: number, status: string, start: string | null) => ({
+        id,
+        status,
+        startDate: start ? new Date(start) : null,
+        createdAt: new Date('2026-01-01'),
+      });
+      mockPrisma.trip.findMany
+        .mockResolvedValueOnce([
+          row(1, TripStatus.COMPLETED, '2024-01-01'),
+          row(2, TripStatus.PLANNING, null),
+          row(3, TripStatus.PLANNED, '2027-05-01'),
+        ])
+        .mockResolvedValueOnce([1, 2, 3].map((id) => ({ ...mockTripWithIncludes, id })));
+
+      const result = await tripService.getTrips(mockUserId, { sort: 'startDate-asc' });
+
+      expect(result.trips.map((t) => t.id)).toEqual([3, 2, 1]);
+    });
+
+    it('TRIP-ORDER-003: "By Status" groups from closest-to-now to finished', async () => {
+      const row = (id: number, status: string) => ({
+        id,
+        status,
+        startDate: null,
+        createdAt: new Date('2026-01-01'),
+      });
+      mockPrisma.trip.findMany
+        .mockResolvedValueOnce([
+          row(1, TripStatus.COMPLETED),
+          row(2, TripStatus.DREAM),
+          row(3, TripStatus.PLANNING),
+          row(4, TripStatus.IN_PROGRESS),
+          row(5, TripStatus.PLANNED),
+          row(6, TripStatus.CANCELLED),
+        ])
+        .mockResolvedValueOnce([1, 2, 3, 4, 5, 6].map((id) => ({ ...mockTripWithIncludes, id })));
+
+      const result = await tripService.getTrips(mockUserId, { sort: 'status' });
+
+      expect(result.trips.map((t) => t.id)).toEqual([4, 5, 3, 2, 1, 6]);
     });
 
     it('should handle search query in title and description', async () => {

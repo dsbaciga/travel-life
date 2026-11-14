@@ -8,6 +8,7 @@ import { toSafePermissionLevel } from '../services/_shared/tripPermissions';
 import { buildConditionalUpdateData, tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { resolveTimezone } from '../services/_shared/timezoneResolution';
+import { compareTripsForList } from '../services/_shared/tripListOrder';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -204,60 +205,62 @@ export class TripService {
       }
     }
 
-    // Build orderBy based on sort option (database-level sorting)
-    let orderBy: Prisma.TripOrderByWithRelationInput[];
-    if (sortOption === 'startDate-desc') {
-      // Newest first: nulls last, then by date desc, then by createdAt desc
-      orderBy = [
-        { startDate: { sort: 'desc', nulls: 'last' } },
-        { createdAt: 'desc' },
-      ];
-    } else if (sortOption === 'startDate-asc') {
-      // Oldest first: nulls last, then by date asc
-      orderBy = [
-        { startDate: { sort: 'asc', nulls: 'last' } },
-        { createdAt: 'asc' },
-      ];
-    } else if (sortOption === 'title-asc') {
-      orderBy = [{ title: 'asc' }];
-    } else if (sortOption === 'title-desc') {
-      orderBy = [{ title: 'desc' }];
-    } else if (sortOption === 'status') {
-      orderBy = [{ status: 'asc' }, { createdAt: 'desc' }];
-    } else {
-      // Default fallback
-      orderBy = [{ startDate: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    // What a list row carries besides the trip itself.
+    const include = {
+      coverPhoto: true,
+      series: {
+        select: { id: true, name: true },
+      },
+      tagAssignments: {
+        include: {
+          tag: true,
+        },
+      },
+      _count: {
+        select: {
+          locations: true,
+          photos: true,
+          transportation: true,
+          activities: true,
+          lodging: true,
+          journalEntries: true,
+        },
+      },
+    } satisfies Prisma.TripInclude;
+
+    // Date and status sorts put open trips (Dream, Planning, Planned, In Progress)
+    // ahead of Completed and Cancelled ones whatever their dates, so an undated
+    // Planning trip is never buried under finished ones. SQL can only order a
+    // status alphabetically, so these sort in memory: read the few columns that
+    // decide the order, sort, page, then load full rows for just that page.
+    if (sortOption === 'startDate-desc' || sortOption === 'startDate-asc' || sortOption === 'status') {
+      const candidates = await prisma.trip.findMany({
+        where,
+        select: { id: true, status: true, startDate: true, createdAt: true },
+      });
+      candidates.sort(compareTripsForList(sortOption));
+
+      const total = candidates.length;
+      const pageIds = candidates.slice(skip, skip + limit).map((trip) => trip.id);
+      const rows = pageIds.length > 0 ? await prisma.trip.findMany({ where: { id: { in: pageIds } }, include }) : [];
+      const byId = new Map(rows.map((row) => [row.id, row]));
+      const trips = pageIds.map((id) => byId.get(id)).filter((trip): trip is NonNullable<typeof trip> => trip !== undefined);
+
+      return {
+        trips: trips.map((trip) => convertDecimals(trip)),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
     }
 
-    // Fetch trips with database-level pagination and sorting
+    // Title sorts have no status grouping: database-level sorting and pagination.
+    const orderBy: Prisma.TripOrderByWithRelationInput[] =
+      sortOption === 'title-desc' ? [{ title: 'desc' }] : [{ title: 'asc' }];
+
     const [trips, total] = await Promise.all([
-      prisma.trip.findMany({
-        where,
-        orderBy,
-        skip,
-        take: limit,
-        include: {
-          coverPhoto: true,
-          series: {
-            select: { id: true, name: true },
-          },
-          tagAssignments: {
-            include: {
-              tag: true,
-            },
-          },
-          _count: {
-            select: {
-              locations: true,
-              photos: true,
-              transportation: true,
-              activities: true,
-              lodging: true,
-              journalEntries: true,
-            },
-          },
-        },
-      }),
+      prisma.trip.findMany({ where, orderBy, skip, take: limit, include }),
       prisma.trip.count({ where }),
     ]);
 
