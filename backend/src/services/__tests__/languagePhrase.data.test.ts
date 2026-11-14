@@ -7,6 +7,7 @@
  * - LANGDATA-003: Phrase ids are unique across all languages and start with the language code
  * - LANGDATA-004: Every language has the same English phrases, so banks stay comparable
  * - LANGDATA-005: Icelandic is available
+ * - LANGDATA-007: Accents are kept (a sample per language) and native names are spelled properly
  * - LANGDATA-006: Every phrase has a pronunciation guide, with no stray characters
  */
 import languagePhraseService from '../languagePhrase.service';
@@ -74,6 +75,34 @@ describe('phrase bank data', () => {
         });
       }
     }
+  });
+
+  it('LANGDATA-007: accents are kept and native names are spelled properly', () => {
+    const text = (id: string): string | undefined => {
+      const code = id.split('-')[0];
+      return banks.find((b) => b.code === code)?.phrases.find((p) => p.id === id)?.translation;
+    };
+    expect(text('fr-d9')).toBe("C'est épicé?");
+    expect(text('es-g5')).toBe('¿Cómo estás?');
+    expect(text('es-c5')).toBe('Sí');
+    expect(text('es-e9')).toBe('Llame a una ambulancia');
+    // Gendered greetings show both forms, like the rest of the bank.
+    expect(text('es-g10')).toBe('Bienvenido/a');
+    expect(text('it-g10')).toBe('Benvenuto/a');
+    expect(text('pt-g10')).toBe('Bem-vindo/a');
+    expect(text('pt-g6')).toBe('Prazer em conhecê-lo(a)');
+    expect(text('it-c5')).toBe('Sì');
+    expect(text('de-s10')).toBe('Größe');
+    expect(text('nl-d7')).toBe('Ik ben vegetariër');
+    expect(text('vi-g2')).toBe('Chào buổi sáng');
+
+    const nativeNames = Object.fromEntries(available.map((l) => [l.code, l.nativeName]));
+    expect(nativeNames).toMatchObject({
+      fr: 'Français',
+      es: 'Español',
+      pt: 'Português',
+      vi: 'Tiếng Việt',
+    });
   });
 
   it('LANGDATA-005: Icelandic is available', () => {
