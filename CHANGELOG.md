@@ -22,8 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Icelandic** phrase book (60 phrases), available in Edit Trip on the web and in the mobile Vault.
 - **Pronunciation guides** for the Latin-script phrase books (French, Spanish, Italian, German, Portuguese, Dutch, Vietnamese and Icelandic): an English-style respelling under each phrase, with capitals marking the stressed syllable. Portuguese follows Brazilian speech. The guides are approximate, and Vietnamese does not show tones.
 
+### Changed
+
+- **Mobile times are AM/PM.** The Today clock, timeline rows, Next Up, camera-roll groups, sync times and the home-screen widget now read `2:05 PM` instead of `14:05`, and the Android time picker in forms is 12-hour to match.
+- **The web app shows AM/PM everywhere it formats a time.** Eight places (the custom item card and manager, the entity detail modal, photo details, the public trip page, the flight "Updated" time, map transport popups and the sync conflict dialog) followed the browser's regional setting and showed 24-hour time in some regions. The browser's own date and time form inputs still follow the operating system.
+
 ### Fixed
 
+- **Mobile: the system navigation buttons covered the bottom of screens** such as Quick capture and every form. Screens outside the tab bar now leave room for them.
+- **Mobile: some text rendered blank or clipped on a Samsung phone.** The Phrasebook button showed only its emoji and the Hindi language chip lost its native name. A button's leading emoji is now drawn separately from its words, and chip detail text uses a normal weight.
 - **Phrase books had their accents stripped** in French, Spanish, Italian, Portuguese, German, Dutch and Vietnamese ("Si" for "Sí", "Xin chao" for "Xin chào", "Francais" for "Français"). They are restored, along with Spanish inverted punctuation, and the language names now read Français, Español, Português and Tiếng Việt. Phones pick this up on their next sync.
 - **Phrase book wording:** Spanish "Call an ambulance" now reads "Llame a una ambulancia", and the Spanish, Italian and Portuguese "Welcome" and the Portuguese "Nice to meet you" show both gendered forms, like the rest of those banks.
 
