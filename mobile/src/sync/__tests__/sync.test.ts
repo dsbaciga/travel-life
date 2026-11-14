@@ -26,6 +26,7 @@
  * - SYNC-035: Discarding a failed create removes the local row and its links
  * - SYNC-040: Unlink hides immediately and deletes on the server; re-linking cancels a queued unlink
  * - SYNC-041: Delete of a synced entity removes it and its links locally and remotely
+ * - SYNC-051: Offline meal + photos sync in order and the photos end up attached to the meal
  * - SYNC-050: The plan's E2E flow — offline create + link, reschedule existing, reconnect, verify server
  * - SYNC-060: sameValue / detectConflicts semantics
  * - SYNC-061: Migrations are idempotent and wipe() empties every table
@@ -751,6 +752,78 @@ describe('sync engine', () => {
     expect(localIds.every((id) => typeof id === 'number')).toBe(true);
   });
 
+  it('SYNC-051: an offline meal with photos uploads them and attaches them to the meal', async () => {
+    server.offline = true;
+    const meal = await createEntity(db, 'FOOD_LOG', TRIP, {
+      activityId: null,
+      locationId: null,
+      restaurantName: 'Trattoria',
+      dish: 'Cacio e pepe',
+      rating: 5,
+      notes: null,
+      orderAgain: true,
+    });
+    for (const uri of ['file:///a.jpg', 'file:///b.jpg']) {
+      await createEntity(db, 'PHOTO', TRIP, {
+        source: 'local',
+        mediaType: 'image',
+        localPath: null,
+        thumbnailPath: null,
+        caption: null,
+        latitude: null,
+        longitude: null,
+        takenAt: '2026-06-02T12:00:00.000Z',
+        pendingUri: uri,
+        foodLogId: meal.id,
+      });
+    }
+    expect((await syncTrip(db, server, TRIP)).interrupted).toBe(true);
+
+    server.offline = false;
+    const result = await syncTrip(db, server, TRIP);
+
+    expect(result).toMatchObject({ failed: 0, blocked: 0, interrupted: false });
+    const serverMeal = server.all('FOOD_LOG')[0];
+    const photoIds = server.all('PHOTO').map((p) => p.id);
+    expect(photoIds).toHaveLength(2);
+    // Both photos hang off the meal's real id, not a local one.
+    expect(new Set(server.mealPhotos.get(serverMeal.id as number))).toEqual(new Set(photoIds as number[]));
+    // The photo create must not leak the device-only reference to the server.
+    expect(server.log.some((r) => r.path === '/photos/upload' && r.body && 'foodLogId' in r.body)).toBe(false);
+    expect(await listOutbox(db)).toHaveLength(0);
+  });
+
+  it('SYNC-052: photos added to an already-synced meal are attached on the next sync', async () => {
+    const meal = server.seed('FOOD_LOG', {
+      activityId: null,
+      locationId: null,
+      restaurantName: 'Bar',
+      dish: 'Spritz',
+      rating: 4,
+      notes: null,
+      orderAgain: false,
+    });
+    await syncTrip(db, server, TRIP);
+
+    await createEntity(db, 'PHOTO', TRIP, {
+      source: 'local',
+      mediaType: 'image',
+      localPath: null,
+      thumbnailPath: null,
+      caption: null,
+      latitude: null,
+      longitude: null,
+      takenAt: '2026-06-02T12:00:00.000Z',
+      pendingUri: 'file:///c.jpg',
+      foodLogId: meal.id as number,
+    });
+    const result = await syncTrip(db, server, TRIP);
+
+    expect(result).toMatchObject({ failed: 0, blocked: 0 });
+    expect(server.mealPhotos.get(meal.id as number)).toEqual([server.all('PHOTO')[0].id]);
+    expect(await listOutbox(db)).toHaveLength(0);
+  });
+
   // ---------------------------------------------------------------------------
   // UNITS
   // ---------------------------------------------------------------------------
@@ -773,7 +846,7 @@ describe('sync engine', () => {
   });
 
   it('SYNC-061: migrations are idempotent and wipe() empties every table', async () => {
-    expect(await migrate(db)).toBe(1);
+    expect(await migrate(db)).toBe(2);
     server.seed('ACTIVITY', activityInput());
     await pullTrip(db, server, TRIP);
     await createEntity(db, 'ACTIVITY', TRIP, activityInput());

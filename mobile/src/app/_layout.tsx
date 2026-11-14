@@ -64,9 +64,14 @@ export default function RootLayout() {
     const unsubscribeNet = NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable !== false) void syncNow();
     });
+    // Collaborators' edits only arrive on a pull, so pull while the app is open.
+    const poll = setInterval(() => {
+      if (AppState.currentState === 'active') void syncNow();
+    }, 60000);
     return () => {
       appState.remove();
       unsubscribeNet();
+      clearInterval(poll);
     };
   }, [signedIn]);
 

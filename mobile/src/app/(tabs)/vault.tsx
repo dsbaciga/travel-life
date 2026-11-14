@@ -17,7 +17,18 @@ import { formatDateOnly, getCountryFacts, resolveCountryFromAddress } from '@tra
 import { showActionSheet } from '@/components/ActionSheet';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen, SectionHeader } from '@/components/ui';
 import { getDb } from '@/lib/db';
-import { emergencyKey, phrasesKey, type EmergencyCard, type Phrase } from '@/lib/extras';
+import {
+  addTripLanguage,
+  emergencyKey,
+  fetchAvailableLanguages,
+  languagesKey,
+  phrasesKey,
+  removeTripLanguage,
+  type AvailableLanguage,
+  type EmergencyCard,
+  type Phrase,
+  type TripLanguage,
+} from '@/lib/extras';
 import { useActiveTrip, useKv } from '@/lib/hooks';
 import { notifyLocalChange, useSync } from '@/lib/sync';
 import { TOUCH_TARGET, usePalette } from '@/lib/theme';
@@ -61,6 +72,27 @@ export default function VaultScreen() {
   const { data: lockEnabled } = useKv<boolean>('vaultLock');
   const { data: card } = useKv<EmergencyCard>(trip ? emergencyKey(trip.id) : 'emergency:none');
   const { data: phrases } = useKv<Phrase[]>(trip ? phrasesKey(trip.id) : 'phrases:none');
+  const { data: tripLanguages } = useKv<TripLanguage[]>(trip ? languagesKey(trip.id) : 'languages:none');
+  const [picking, setPicking] = useState(false);
+  const [languageError, setLanguageError] = useState<string | null>(null);
+  const { data: available, isFetching: loadingLanguages } = useQuery({
+    queryKey: ['available-languages'],
+    enabled: picking,
+    staleTime: 3600000,
+    queryFn: fetchAvailableLanguages,
+  });
+
+  const changeLanguage = async (work: () => Promise<void>) => {
+    setLanguageError(null);
+    try {
+      await work();
+      await notifyLocalChange();
+      setPicking(false);
+    } catch (error) {
+      // Languages are edited on the server, so this needs a connection.
+      setLanguageError(error instanceof Error ? error.message : 'Could not update languages');
+    }
+  };
   const { data: documents = [] } = useQuery({
     queryKey: ['vault', trip?.id, version],
     queryFn: async () => listVaultDocuments(await getDb(), trip?.id ?? null),
@@ -274,23 +306,71 @@ export default function VaultScreen() {
         )
       ) : null}
 
-      {section === 'phrases' ? (
-        (phrases ?? []).length === 0 ? (
-          <EmptyState title="No phrasebook cached" message="Add a language to the trip in the web app, then sync while online." />
-        ) : (
-          (phrases ?? []).map((phrase, index) => (
-            <Card key={`${phrase.english}-${index}`}>
-              <AppText variant="label" muted>
-                {[phrase.languageName, phrase.category].filter(Boolean).join(' · ')}
-              </AppText>
-              <AppText>{phrase.english}</AppText>
-              <AppText variant="heading" selectable>
-                {phrase.translation}
-              </AppText>
-              {phrase.pronunciation ? <AppText muted>{phrase.pronunciation}</AppText> : null}
+      {section === 'phrases' && trip ? (
+        <>
+          <Row>
+            {(tripLanguages ?? []).map((language) => (
+              <Chip
+                key={language.languageCode}
+                label={`${language.language} ✕`}
+                selected
+                onPress={() =>
+                  showActionSheet(`Remove ${language.language}?`, [
+                    {
+                      label: 'Remove from this trip',
+                      destructive: true,
+                      onPress: () => changeLanguage(() => removeTripLanguage(trip.id, language.languageCode)),
+                    },
+                  ])
+                }
+              />
+            ))}
+            <Chip label={picking ? 'Cancel' : '+ Add language'} onPress={() => setPicking(!picking)} />
+          </Row>
+          {languageError ? <Banner tone="danger" text={languageError} /> : null}
+          {picking ? (
+            <Card>
+              <AppText variant="heading">Choose a language</AppText>
+              {loadingLanguages && !available ? <AppText muted>Loading…</AppText> : null}
+              {!loadingLanguages && !available ? (
+                <AppText muted>Languages are loaded from the server, so you need a connection.</AppText>
+              ) : null}
+              <Row>
+                {(available ?? [])
+                  .filter(
+                    (language: AvailableLanguage) =>
+                      !(tripLanguages ?? []).some((added) => added.languageCode === language.code)
+                  )
+                  .map((language: AvailableLanguage) => (
+                    <Chip
+                      key={language.code}
+                      label={language.name === language.nativeName ? language.name : `${language.name} (${language.nativeName})`}
+                      onPress={() => void changeLanguage(() => addTripLanguage(trip.id, language))}
+                    />
+                  ))}
+              </Row>
             </Card>
-          ))
-        )
+          ) : null}
+          {(phrases ?? []).length === 0 ? (
+            <EmptyState
+              title="No phrasebook yet"
+              message="Tap “+ Add language” to download a phrasebook for this trip. It works offline once added."
+            />
+          ) : (
+            (phrases ?? []).map((phrase, index) => (
+              <Card key={`${phrase.languageName}-${phrase.english}-${index}`}>
+                <AppText variant="label" muted>
+                  {[phrase.languageName, phrase.category].filter(Boolean).join(' · ')}
+                </AppText>
+                <AppText>{phrase.english}</AppText>
+                <AppText variant="heading" selectable>
+                  {phrase.translation}
+                </AppText>
+                {phrase.pronunciation ? <AppText muted>{phrase.pronunciation}</AppText> : null}
+              </Card>
+            ))
+          )}
+        </>
       ) : null}
     </Screen>
   );

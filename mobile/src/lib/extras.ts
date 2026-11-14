@@ -48,6 +48,40 @@ export interface Phrase {
 
 export const emergencyKey = (tripId: number): string => `emergency:${tripId}`;
 export const phrasesKey = (tripId: number): string => `phrases:${tripId}`;
+export const languagesKey = (tripId: number): string => `languages:${tripId}`;
+
+/** A language selected for a trip (the server's `TripLanguage`). */
+export interface TripLanguage {
+  languageCode: string;
+  language: string;
+}
+
+/** A language the server has a phrase bank for. */
+export interface AvailableLanguage {
+  code: string;
+  name: string;
+  nativeName: string;
+  phraseCount: number;
+}
+
+/** Needs a connection: the phrase banks live on the server. */
+export async function fetchAvailableLanguages(): Promise<AvailableLanguage[]> {
+  return (await api.request<AvailableLanguage[]>('/languages', {})) ?? [];
+}
+
+/** Add a language to a trip, then cache its phrases so the book works offline. */
+export async function addTripLanguage(tripId: number, language: AvailableLanguage): Promise<void> {
+  await api.request(`/trips/${tripId}/languages`, {
+    method: 'POST',
+    body: { languageCode: language.code, language: language.name },
+  });
+  await refreshTripExtras(tripId);
+}
+
+export async function removeTripLanguage(tripId: number, languageCode: string): Promise<void> {
+  await api.request(`/trips/${tripId}/languages/${encodeURIComponent(languageCode)}`, { method: 'DELETE' });
+  await refreshTripExtras(tripId);
+}
 
 /** Refresh the cached extras for a trip. Failures leave the previous cache in place. */
 export async function refreshTripExtras(tripId: number): Promise<void> {
@@ -60,6 +94,10 @@ export async function refreshTripExtras(tripId: number): Promise<void> {
     api
       .request<unknown>(`/trips/${tripId}/phrases`)
       .then((phrases) => kvSet(db, phrasesKey(tripId), normalizePhrases(phrases)))
+      .catch(() => undefined),
+    api
+      .request<TripLanguage[]>(`/trips/${tripId}/languages`)
+      .then((languages) => kvSet(db, languagesKey(tripId), languages ?? []))
       .catch(() => undefined),
   ]);
 }

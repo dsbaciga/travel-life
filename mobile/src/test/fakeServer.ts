@@ -61,6 +61,8 @@ export class FakeServer implements SyncApi {
   readonly trip: TripDto;
   readonly entities = new Map<SyncEntityKind, Map<number, Row>>();
   readonly links = new Map<number, EntityLinkDto>();
+  /** Photo ids attached to each food-log entry (the server keeps these in a join table). */
+  readonly mealPhotos = new Map<number, number[]>();
   /** Every request received, in order. */
   readonly log: ApiRequest[] = [];
   /** When true every call fails as if there were no signal. */
@@ -242,6 +244,23 @@ export class FakeServer implements SyncApi {
       const checklistId = Number(itemCreate[1]);
       if (!this.table('CHECKLIST').has(checklistId)) throw new ApiError('Checklist not found', 404);
       return this.seed('CHECKLIST_ITEM', { ...body, checklistId, tripId: undefined }) as T;
+    }
+
+    // ---- photos attach to a food-log entry; a join, not a column ----
+    const attach = /^\/trips\/\d+\/food-log\/(\d+)\/photos$/.exec(path);
+    if (attach && method === 'POST') {
+      const entryId = Number(attach[1]);
+      if (!this.table('FOOD_LOG').has(entryId)) throw new ApiError('Food log entry not found', 404);
+      const photoIds = body.photoIds as number[];
+      for (const photoId of photoIds) {
+        if (typeof photoId !== 'number' || !this.table('PHOTO').has(photoId)) {
+          throw new ApiError('One or more photos were not found in this trip', 404);
+        }
+      }
+      const have = new Set(this.mealPhotos.get(entryId) ?? []);
+      for (const photoId of photoIds) have.add(photoId);
+      this.mealPhotos.set(entryId, [...have]);
+      return null as T;
     }
 
     for (const [pattern, kind] of COLLECTIONS) {

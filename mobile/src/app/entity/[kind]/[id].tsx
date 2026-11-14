@@ -19,6 +19,7 @@ import {
 
 import EntityForm from '@/components/EntityForm';
 import EntityLinkSection from '@/components/EntityLinkSection';
+import PhotoAttachments, { type PickedPhoto } from '@/components/PhotoAttachments';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import { parseIdKey } from '@/db/repository';
 import {
@@ -48,6 +49,30 @@ interface Params extends Record<string, string | undefined> {
   withLocation?: string;
   /** JSON object of initial field values (receipt scan, share sheet). */
   preset?: string;
+}
+
+/** Queue each chosen photo for upload, attached to its meal once both reach the server. */
+async function queueMealPhotos(
+  db: Parameters<typeof createEntity>[0],
+  tripId: number,
+  mealId: EntityId,
+  photos: readonly PickedPhoto[]
+): Promise<void> {
+  for (const photo of photos) {
+    const input: Omit<SyncEntityMap['PHOTO'], 'id' | 'tripId'> = {
+      source: 'local',
+      mediaType: 'image',
+      localPath: null,
+      thumbnailPath: null,
+      caption: null,
+      latitude: photo.latitude,
+      longitude: photo.longitude,
+      takenAt: photo.takenAt,
+      pendingUri: photo.uri,
+      foodLogId: mealId,
+    };
+    await createEntity(db, 'PHOTO', tripId, input);
+  }
 }
 
 function parsePreset(raw: string | undefined): Values {
@@ -87,6 +112,8 @@ export default function EntityScreen() {
   const [suggestions, setSuggestions] = useState<LinkSuggestion[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
   const [suggestionsLoaded, setSuggestionsLoaded] = useState(false);
+  // Meal photos chosen in this form; queued for upload when it saves.
+  const [photos, setPhotos] = useState<PickedPhoto[]>([]);
 
   const presetLatitude = params.latitude ? Number(params.latitude) : null;
   const presetLongitude = params.longitude ? Number(params.longitude) : null;
@@ -196,16 +223,18 @@ export default function EntityScreen() {
             );
             links.push({ targetType: 'LOCATION', targetId: place.id });
           }
-          await createEntity(
+          const created = await createEntity(
             tx,
             kind,
             tripId,
             completeEntity(kind, checked.data) as Omit<SyncEntityMap[typeof kind], 'id' | 'tripId'>,
             isLinkableKind(kind) ? links : []
           );
+          if (kind === 'FOOD_LOG') await queueMealPhotos(tx, tripId, created.id, photos);
         });
       } else if (entityId !== undefined) {
         await updateEntity(db, kind, entityId, checked.data as Partial<SyncEntityMap[typeof kind]>);
+        if (kind === 'FOOD_LOG') await queueMealPhotos(db, tripId, entityId, photos);
       }
       await notifyLocalChange();
       void syncNow();
@@ -276,6 +305,8 @@ export default function EntityScreen() {
           locations={locations}
           onChange={(key, value) => setEdits((prev) => ({ ...prev, [key]: value }))}
         />
+
+        {kind === 'FOOD_LOG' ? <PhotoAttachments photos={photos} onChange={setPhotos} /> : null}
 
         {isNew && suggestions.length > 0 ? (
           <Card>

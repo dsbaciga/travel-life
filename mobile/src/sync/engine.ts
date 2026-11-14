@@ -52,6 +52,7 @@ import {
   buildDeleteRequest,
   buildLinkCreateRequest,
   buildLinkDeleteRequest,
+  buildAttachPhotosRequest,
   buildLinkUpdateRequest,
   buildPostCreatePatch,
   buildUpdateRequest,
@@ -393,6 +394,25 @@ async function runEntityCreate(db: SqlDriver, api: SyncApi, entry: OutboxEntry):
     if (followUp) {
       await enqueueUpdate(db, entry.tripId, kind, created.id, followUp, {});
     }
+    // A meal photo is attached to its meal in a second request; queue it here so
+    // it survives losing signal between the upload and the attach.
+    const mealId = entry.payload.foodLogId;
+    if (kind === 'PHOTO' && mealId !== null && mealId !== undefined && !isLocalId(mealId)) {
+      const waiting = (await listOutbox(db, { tripId: entry.tripId, status: 'pending' })).find(
+        (e) => e.kind === 'FOOD_LOG' && e.op === 'update' && String(e.entityId) === String(mealId)
+      );
+      const prior = Array.isArray(waiting?.payload.attachPhotoIds)
+        ? (waiting?.payload.attachPhotoIds as number[])
+        : [];
+      await enqueueUpdate(
+        db,
+        entry.tripId,
+        'FOOD_LOG',
+        mealId as EntityId,
+        { attachPhotoIds: [...prior, created.id] },
+        {}
+      );
+    }
   });
 }
 
@@ -412,13 +432,20 @@ async function runEntityUpdate(
   }
 
   const request = buildUpdateRequest(kind, entry.tripId, id, entry.payload);
-  if (request) {
+  // Photos to attach to a meal travel in their own request, not as a field.
+  const attachIds =
+    kind === 'FOOD_LOG' && Array.isArray(entry.payload.attachPhotoIds)
+      ? (entry.payload.attachPhotoIds as number[])
+      : [];
+  for (const next of [request, attachIds.length > 0 ? buildAttachPhotosRequest(entry.tripId, id, attachIds) : null]) {
+    if (!next) continue;
     try {
-      await api.request<unknown>(request);
+      await api.request<unknown>(next);
     } catch (error) {
       // Deleted on another device while this edit waited: nothing to update.
       // The next pull removes the local row.
       if (!(error instanceof ApiError) || error.status !== 404) throw error;
+      break;
     }
   }
 
@@ -444,8 +471,10 @@ async function runEntityUpdate(
       }
     }
     if (server) {
+      const { attachPhotoIds: _sent, ...settled } = entry.payload;
+      void _sent;
       await db.run('UPDATE entities SET server_data = ? WHERE kind = ? AND id = ?', [
-        JSON.stringify({ ...server, ...entry.payload }),
+        JSON.stringify({ ...server, ...settled }),
         kind,
         entry.entityId,
       ]);

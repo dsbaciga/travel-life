@@ -13,7 +13,7 @@ import {
   addDaysToDayKey,
   dayKeyInTimezone,
   haversineMeters,
-  isUsableCoordinate,
+  isMappableLocation,
   openingHoursService,
   resolveTimezone,
   startOfDayInTimezone,
@@ -93,7 +93,7 @@ export default function MapScreen() {
   });
 
   const located = useMemo(
-    () => locations.filter((l): l is Located => isUsableCoordinate(l)),
+    () => locations.filter((l): l is Located => isMappableLocation(l)),
     [locations]
   );
 
