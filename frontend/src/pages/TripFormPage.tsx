@@ -722,10 +722,10 @@ export default function TripFormPage() {
             {/* Sticky on mobile so the primary action is reachable no matter
                 how far the optional fields push the page down. `bottom-16`
                 clears the bottom nav. */}
-            <div className="flex gap-4 pt-4 sticky bottom-16 md:static bg-white dark:bg-dusk-800 pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 border-t border-gray-200 dark:border-dusk-700 md:border-0">
+            <div className="flex gap-3 md:gap-4 pt-4 sticky bottom-16 md:static bg-white dark:bg-dusk-800 pb-4 md:pb-0 -mx-6 px-6 md:mx-0 md:px-0 border-t border-gray-200 dark:border-dusk-700 md:border-0">
               <button
                 type="submit"
-                className="flex-1 btn btn-primary mt-4 md:mt-0"
+                className="flex-auto md:flex-1 btn btn-primary !px-4 md:!px-6 whitespace-normal md:whitespace-nowrap text-center mt-4 md:mt-0"
                 disabled={loading}
               >
                 {loading ? 'Saving...' : isEdit ? 'Update Trip' : 'Begin Your Journey'}
@@ -733,7 +733,7 @@ export default function TripFormPage() {
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="flex-1 btn btn-secondary mt-4 md:mt-0"
+                className="flex-none md:flex-1 btn btn-secondary !px-4 md:!px-6 mt-4 md:mt-0"
               >
                 Cancel
               </button>

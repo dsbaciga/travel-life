@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **The mobile menu was unusable on phones.** The drawer opened as a short strip with its navigation links squashed away and no dimming over the page, so Settings and the other pages were hard to reach. The drawer and its overlay now fill the screen.
+- **The New Trip form's "Begin Your Journey" button overflowed on narrow screens.** The two buttons now size to their labels, and the label wraps rather than spilling out of the button on the narrowest phones.
 
 ## [7.1.1] - 2026-11-14
 
