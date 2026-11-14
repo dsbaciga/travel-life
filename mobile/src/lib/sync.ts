@@ -70,6 +70,25 @@ export function shouldMirrorTrip(
   return end >= cutoff;
 }
 
+/**
+ * Every trip this account can open: its own plus trips shared with it.
+ * `complete` is false when the shared list could not be read, so callers must
+ * not conclude that a missing trip was deleted or un-shared.
+ */
+export async function fetchRemoteTrips(): Promise<{ trips: TripDto[]; complete: boolean }> {
+  const response = await api.request<{ trips?: TripDto[] } | TripDto[]>('/trips', {
+    query: { limit: '100' },
+  });
+  const own = Array.isArray(response) ? response : (response?.trips ?? []);
+  try {
+    const shared = await api.request<TripDto[] | null>('/collaboration/trips/shared');
+    const known = new Set(own.map((trip) => trip.id));
+    return { trips: [...own, ...(shared ?? []).filter((trip) => !known.has(trip.id))], complete: true };
+  } catch {
+    return { trips: own, complete: false };
+  }
+}
+
 let inFlight: Promise<SyncResult | null> | null = null;
 
 /**
@@ -100,12 +119,11 @@ async function run(): Promise<SyncResult | null> {
   try {
     const todayKey = new Date().toISOString().slice(0, 10);
     let remote: TripDto[] | null = null;
+    let listComplete = true;
     try {
-      // The trip list endpoint is paginated; the companion only needs recent trips.
-      const response = await api.request<{ trips?: TripDto[] } | TripDto[]>('/trips', {
-        query: { limit: '100' },
-      });
-      remote = Array.isArray(response) ? response : (response?.trips ?? []);
+      const fetched = await fetchRemoteTrips();
+      remote = fetched.trips;
+      listComplete = fetched.complete;
     } catch (error) {
       if (error instanceof ApiError && error.status !== null && error.status < 500 && error.status !== 401) {
         throw error;
@@ -123,7 +141,7 @@ async function run(): Promise<SyncResult | null> {
       for (const local of await listTrips(db)) {
         // Deleted, access revoked, or aged out — but never while it is pinned
         // or still has unsynced (pending, conflict, or failed) work queued.
-        if (!wantedIds.has(local.id) && !pinnedTripIds.has(local.id)) {
+        if (listComplete && !wantedIds.has(local.id) && !pinnedTripIds.has(local.id)) {
           const outbox = await countOutbox(db, local.id);
           const hasUnsyncedWork = outbox.pending > 0 || outbox.conflict > 0 || outbox.failed > 0;
           if (!hasUnsyncedWork) {
