@@ -124,6 +124,11 @@ const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX IF NOT EXISTS vault_trip ON vault_documents (trip_id, needed_at);
   `,
+  // Locations now carry excludeFromMap. Delta pulls only send changed rows, so
+  // force one full pull per trip to fill the field in on everything mirrored before.
+  `
+  UPDATE trips SET last_synced_at = NULL;
+  `,
 ];
 
 /** Apply any migrations the database has not seen. Safe to call on every launch. */

@@ -54,6 +54,13 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/** A place that belongs on a map: usable coordinates and not marked "exclude from map". */
+export function isMappableLocation<T extends { latitude?: number | null; longitude?: number | null; excludeFromMap?: boolean }>(
+  location: T
+): location is T & LatLng {
+  return !location.excludeFromMap && isUsableCoordinate(location);
+}
+
 /** True when lat/lng are finite and in range. Guards against `0,0` "null island" too. */
 export function isUsableCoordinate(
   point: { latitude?: number | null; longitude?: number | null } | null | undefined

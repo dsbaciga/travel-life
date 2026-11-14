@@ -33,6 +33,8 @@ export const REFERENCE_FIELDS: Readonly<
   TRANSPORTATION: { startLocationId: 'LOCATION', endLocationId: 'LOCATION' },
   CUSTOM_ITEM: { locationId: 'LOCATION' },
   FOOD_LOG: { activityId: 'ACTIVITY', locationId: 'LOCATION' },
+  // A meal photo uploads only once its meal has a server id, then gets attached to it.
+  PHOTO: { foodLogId: 'FOOD_LOG' },
   CHECKLIST_ITEM: { checklistId: 'CHECKLIST' },
   // A link's endpoints name their own kinds in sourceType / targetType.
   LINK: { sourceId: 'BY_TYPE_FIELD', targetId: 'BY_TYPE_FIELD' },
@@ -302,6 +304,11 @@ export function buildUpdateRequest(
     path: itemPath(kind, tripId, id, patch),
     body: toWire(kind, body),
   };
+}
+
+/** Attach already-uploaded trip photos to a food-log entry (a join, not a field of the entry). */
+export function buildAttachPhotosRequest(tripId: number, entryId: EntityId, photoIds: readonly number[]): ApiRequest {
+  return { method: 'POST', path: `/trips/${tripId}/food-log/${entryId}/photos`, body: { photoIds: [...photoIds] } };
 }
 
 export function buildDeleteRequest(kind: SyncEntityKind, tripId: number, id: EntityId): ApiRequest {

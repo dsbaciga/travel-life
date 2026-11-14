@@ -86,6 +86,8 @@ export interface LocationDto extends Timestamps {
   isFavorite: boolean;
   openingHours: string | null;
   timezone: string | null;
+  /** Hidden from maps (the "exclude from map" setting). Absent on rows mirrored before it was synced. */
+  excludeFromMap?: boolean;
 }
 
 export interface ActivityDto extends Timestamps {
@@ -279,6 +281,8 @@ export interface PhotoDto extends Timestamps {
   takenAt: string | null;
   /** Device-only: file URI of a capture still waiting to upload. */
   pendingUri?: string | null;
+  /** Device-only: the food-log entry this photo is waiting to be attached to. */
+  foodLogId?: EntityId | null;
 }
 
 export interface PhotoAlbumDto extends Timestamps {
