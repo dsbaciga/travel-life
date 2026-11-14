@@ -108,7 +108,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
           </option>
           {unselectedLanguages.map((lang) => (
             <option key={lang.code} value={lang.code}>
-              {lang.name} - {lang.phraseCount} phrases
+              {lang.name} ({lang.nativeName}) - {lang.phraseCount} phrases
             </option>
           ))}
         </select>
@@ -131,12 +131,18 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
       {tripLanguages.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tripLanguages.map((lang) => {
+            const fullLang = availableLanguages.find((l) => l.code === lang.languageCode);
             return (
               <div
                 key={lang.id}
                 className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 rounded-full text-sm"
               >
                 <span className="font-medium">{lang.languageName}</span>
+                {fullLang && (
+                  <span className="text-primary-600 dark:text-primary-400">
+                    ({fullLang.nativeName})
+                  </span>
+                )}
                 <button
                   onClick={() => handleRemoveLanguage(lang.languageCode)}
                   className="ml-1 p-0.5 hover:bg-primary-200 dark:hover:bg-primary-800 rounded-full transition-colors"

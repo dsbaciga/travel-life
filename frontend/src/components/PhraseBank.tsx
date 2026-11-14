@@ -104,6 +104,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
             }`}
           >
             {lang.name}
+            <span className="ml-1 text-xs opacity-75">({lang.nativeName})</span>
           </button>
         ))}
       </div>
