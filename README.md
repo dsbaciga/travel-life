@@ -90,7 +90,7 @@ All of these are optional — the related feature simply stays off when unconfig
 ## Prerequisites
 
 - Docker and Docker Compose
-- Node.js 20+ (for local development)
+- Node.js 26 LTS (for local development)
 - npm or yarn
 
 ## Quick Start

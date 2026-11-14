@@ -2,7 +2,7 @@
 # This version uses nginx proxy to route /api and /uploads to the backend container
 # No need for VITE_API_URL or VITE_UPLOAD_URL env vars - uses relative URLs
 
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 

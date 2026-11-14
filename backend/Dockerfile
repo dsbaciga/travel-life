@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:26-alpine
 
 # Install OpenSSL libraries required by Prisma, PostgreSQL client tools, and ffmpeg for video thumbnails
 RUN apk add --no-cache openssl libc6-compat postgresql-client ffmpeg
