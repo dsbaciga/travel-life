@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-11-13
+
 ### Changed
 
 - **Atlas Planner redesign.** The whole app has a new look and layout: a darker neutral palette, a new logo, and calmer forms.
