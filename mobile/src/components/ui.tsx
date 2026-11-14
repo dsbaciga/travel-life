@@ -15,11 +15,18 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { splitLeadingEmoji } from '../lib/labels';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
 
 /** True inside a hero card, where text and controls switch to the on-dark colours. */
 const HeroContext = createContext(false);
+
+/**
+ * True under the bottom tab bar, which already sits above the system navigation
+ * buttons. Every other screen has to clear them itself.
+ */
+export const TabBarContext = createContext(false);
 
 interface ScreenProps {
   children: ReactNode;
@@ -30,7 +37,16 @@ interface ScreenProps {
 
 export function Screen({ children, scroll = true, padded = true }: ScreenProps) {
   const palette = usePalette();
-  const content = padded ? { padding: spacing.lg, gap: spacing.md } : undefined;
+  const insets = useSafeAreaInsets();
+  const underTabBar = useContext(TabBarContext);
+  // Screens outside the tab bar run to the bottom edge of the display, where
+  // Android's navigation buttons (or gesture bar) would cover the last row.
+  const clearance = underTabBar ? 0 : insets.bottom;
+  const content = padded
+    ? { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.lg + clearance }
+    : clearance > 0
+      ? { paddingBottom: clearance }
+      : undefined;
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: palette.background }]} edges={['top']}>
       {scroll ? (
@@ -165,10 +181,11 @@ export function Button({
           : palette.text;
   const outline =
     variant === 'ghost' || variant === 'secondary' ? (onHero ? HERO_WASH : palette.border) : background;
+  const { icon, text: words } = splitLeadingEmoji(label);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={words}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: Boolean(disabled || loading), busy: Boolean(loading) }}
       disabled={disabled || loading}
@@ -183,7 +200,11 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={foreground} />
       ) : (
-        <Text style={[styles.buttonLabel, { color: foreground }]}>{label}</Text>
+        <View style={styles.buttonContent}>
+          {/* The icon is its own Text: a bad emoji glyph must not take the words down with it. */}
+          {icon ? <Text style={styles.buttonIcon}>{icon}</Text> : null}
+          <Text style={[styles.buttonLabel, { color: foreground }]}>{words}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -194,9 +215,16 @@ interface ChipProps {
   selected?: boolean;
   onPress?: () => void;
   tone?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  /**
+   * Text after the label in a normal weight, for a name in another script
+   * ("Hindi" + "(हिन्दी)"). Complex scripts fall back to a font the phone may only
+   * fake the bold of, which makes the drawn text wider than the measured text and
+   * wraps it out of the chip; normal weight needs no faking.
+   */
+  detail?: string;
 }
 
-export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) {
+export function Chip({ label, selected, onPress, tone = 'default', detail }: ChipProps) {
   const palette = usePalette();
   const toneColor =
     tone === 'success'
@@ -213,6 +241,7 @@ export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) 
   const body = (
     <Text style={[styles.chipLabel, { color: selected ? palette.onPrimary : idleLabel }]}>
       {label}
+      {detail ? <Text style={styles.chipDetail}> {detail}</Text> : null}
     </Text>
   );
   const chipStyle = [
@@ -226,7 +255,7 @@ export function Chip({ label, selected, onPress, tone = 'default' }: ChipProps) 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={detail ? `${label} ${detail}` : label}
       accessibilityState={{ selected: Boolean(selected) }}
       onPress={onPress}
       hitSlop={6}
@@ -348,6 +377,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonCompact: { paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
+  buttonContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  buttonIcon: { fontSize: 16, fontWeight: 'normal' },
   buttonLabel: { fontSize: 16, fontWeight: '600' },
   chip: {
     minHeight: 32,
@@ -357,6 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipLabel: { fontSize: 13, fontWeight: '600' },
+  chipDetail: { fontWeight: 'normal' },
   field: { gap: spacing.xs },
   input: {
     minHeight: TOUCH_TARGET,

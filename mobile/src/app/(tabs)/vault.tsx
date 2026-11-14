@@ -344,7 +344,8 @@ export default function VaultScreen() {
                   .map((language: AvailableLanguage) => (
                     <Chip
                       key={language.code}
-                      label={language.name === language.nativeName ? language.name : `${language.name} (${language.nativeName})`}
+                      label={language.name}
+                      detail={language.name === language.nativeName ? undefined : `(${language.nativeName})`}
                       onPress={() => void changeLanguage(() => addTripLanguage(trip.id, language))}
                     />
                   ))}
