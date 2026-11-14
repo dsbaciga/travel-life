@@ -111,6 +111,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
       return date.toLocaleString(undefined, {
         dateStyle: 'medium',
         timeStyle: 'short',
+        hour12: true,
       });
     } catch {
       return dateStr;

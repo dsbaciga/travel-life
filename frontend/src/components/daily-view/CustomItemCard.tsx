@@ -41,6 +41,7 @@ export default function CustomItemCard({
     return new Date(value).toLocaleTimeString(undefined, {
       hour: 'numeric',
       minute: '2-digit',
+      hour12: true,
       timeZone: effectiveTz,
     });
   };

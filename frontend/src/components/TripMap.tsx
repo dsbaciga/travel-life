@@ -187,7 +187,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
                       <strong>From:</strong> {from.name}
                       {transportation.departureTime && (
                         <div className="text-gray-600">
-                          {new Date(transportation.departureTime).toLocaleString()}
+                          {new Date(transportation.departureTime).toLocaleString(undefined, { hour12: true })}
                         </div>
                       )}
                     </div>
@@ -204,7 +204,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
                       <strong>To:</strong> {to.name}
                       {transportation.arrivalTime && (
                         <div className="text-gray-600">
-                          {new Date(transportation.arrivalTime).toLocaleString()}
+                          {new Date(transportation.arrivalTime).toLocaleString(undefined, { hour12: true })}
                         </div>
                       )}
                     </div>
