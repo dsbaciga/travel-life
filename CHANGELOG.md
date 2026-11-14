@@ -17,6 +17,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Atlas Planner redesign.** The whole app has a new look and layout: a darker neutral palette, a new logo, and calmer forms.
+- **Navigation** is now Today, Trips, Library and Inbox. Library gathers Albums, Places, Food log, Checklists, Travel stats, Trip calendar, Year in review, Trip series and People, and every Library page has the same layout and a link back.
+- **Today** is a split view: the day's numbered agenda beside a map with matching pins. The map can show today, the current trip, photos, or the places of every trip.
+- **Trip pages** have six sections: Overview, Itinerary, Photos, Plans, Journal and Essentials. Plans holds Places, Activities, Unscheduled, Transport, Lodging, Links and Custom; Essentials holds Budget, Deadlines, Companions, Emergency and Local Norms. Existing `?tab=` links still work.
+- **Trip Overview** has a taller route map, a day-by-day list and the next bookings. The Start Planning, Start Trip and Print shortcuts are gone: change status from Edit Trip or the Trips board, and print from the Timeline.
+- **Forms** put Name first and give Place its own section. Lodging no longer asks for an address; the linked Place carries it. A stay that already has an address keeps it.
+- **Maps** no longer use a dark basemap. Every map shares one full-colour style with English labels where the map data has them.
+- **Places visited** now lists the places of trips marked Completed, instead of relying on a per-trip flag that was never cleared when a trip left Completed.
+
+### Added
+
+- **Day Plan** view on a trip: one day's numbered list beside its map, with unscheduled items and a Schedule action.
+- **Add and Link**: a new activity or lodging can create and link a Place of the same name, and a new Place can create and link an activity or lodging.
+- **Inbox** for saved links and imported bookings waiting for review.
+- `GET /locations/visited` accepts `scope=all` to return the places of every trip except cancelled ones.
+
+### Fixed
+
+- The trip Overview showed a lodging check-in at the wrong hour when the stay was in another timezone.
+- Dropdown lists in dark mode were white text on light grey.
+
 ## [6.2.2] - 2026-11-12
 
 ### Fixed
