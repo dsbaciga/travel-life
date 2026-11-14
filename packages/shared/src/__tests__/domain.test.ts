@@ -193,7 +193,14 @@ describe('timezone', () => {
       '2026-11-30T23:00:00.000Z'
     );
     expect(timezoneOffsetMinutes('Asia/Kolkata', new Date('2026-01-01T00:00:00Z'))).toBe(330);
-    expect(formatTimeInTimezone('2026-06-01T12:05:00Z', 'Europe/Rome')).toBe('14:05');
+    expect(formatTimeInTimezone('2026-06-01T12:05:00Z', 'Europe/Rome')).toBe('2:05 PM');
+    expect(formatTimeInTimezone('2026-06-01T12:05:00Z', 'Europe/Rome', { hour12: false })).toBe('14:05');
+    // Midnight and noon are the classic 12-hour mistakes.
+    expect(formatTimeInTimezone('2026-06-01T00:00:00Z', 'UTC')).toBe('12:00 AM');
+    expect(formatTimeInTimezone('2026-06-01T12:00:00Z', 'UTC')).toBe('12:00 PM');
+    expect(formatTimeInTimezone('2026-06-01T23:59:00Z', 'UTC')).toBe('11:59 PM');
+    // A plain space, not the narrow no-break space newer ICU emits.
+    expect(formatTimeInTimezone('2026-06-01T12:05:00Z', 'UTC')).not.toMatch(/ /);
   });
 
   it('SH-TZ-005: formatCountdown', () => {
@@ -226,7 +233,7 @@ describe('time shift', () => {
     const moved = moveByDays(before, 1, 'Europe/Rome');
     expect(moved.startTime).toBe('2026-10-25T08:00:00.000Z');
     expect(moved.endTime).toBe('2026-10-25T09:00:00.000Z');
-    expect(formatTimeInTimezone(moved.startTime, 'Europe/Rome')).toBe('09:00');
+    expect(formatTimeInTimezone(moved.startTime, 'Europe/Rome')).toBe('9:00 AM');
   });
 
   it('SH-SHIFT-003: convertToAllDay / moveToDay', () => {
