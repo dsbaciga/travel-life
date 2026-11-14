@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { commonTimezones } from '../utils/timezone';
+import { timezoneOptionsFor } from '../utils/timezone';
 
 interface TimezoneSelectProps {
   value: string;
@@ -23,10 +23,11 @@ export default function TimezoneSelect({
   const fieldId = providedId || generatedId;
 
   return (
-    <div>
+    // Capped: a timezone name never needs the full width of a form.
+    <div className="max-w-sm">
       <label
         htmlFor={fieldId}
-        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
       >
         {label}
       </label>
@@ -37,14 +38,14 @@ export default function TimezoneSelect({
         className="input"
       >
         <option value="">-- Use Trip Timezone --</option>
-        {commonTimezones.map(({ value: tzValue, label: tzLabel }) => (
+        {timezoneOptionsFor(value).map(({ value: tzValue, label: tzLabel }) => (
           <option key={tzValue} value={tzValue}>
             {tzLabel}
           </option>
         ))}
       </select>
       {helpText && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
           {helpText}
         </p>
       )}

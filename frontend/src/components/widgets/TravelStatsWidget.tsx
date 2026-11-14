@@ -275,11 +275,11 @@ export default function TravelStatsWidget() {
                   {stat.valueDisplay}
                 </div>
                 {stat.subtext && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                  <div className="text-xs text-gray-500 dark:text-dusk-400 mb-0.5">
                     {stat.subtext}
                   </div>
                 )}
-                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                <div className="text-xs text-gray-600 dark:text-dusk-400 font-medium">
                   {stat.label}
                 </div>
               </div>
@@ -319,7 +319,7 @@ export default function TravelStatsWidget() {
             {stats.inProgressTrips > 0 && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-gray-700 dark:text-dusk-300">
                   <span className="font-semibold">{stats.inProgressTrips}</span> in progress
                 </span>
               </div>
@@ -327,7 +327,7 @@ export default function TravelStatsWidget() {
             {stats.plannedTrips > 0 && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-gray-700 dark:text-gray-300">
+                <span className="text-gray-700 dark:text-dusk-300">
                   <span className="font-semibold">{stats.plannedTrips}</span> planned
                 </span>
               </div>

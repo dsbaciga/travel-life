@@ -134,21 +134,21 @@ export default function InlineEdit({
     'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-colors';
   const inputClasses = error
     ? `${baseInputClasses} border-red-500 dark:border-red-400 ${editClassName}`
-    : `${baseInputClasses} border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${editClassName}`;
+    : `${baseInputClasses} border-gray-300 dark:border-dusk-600 bg-white dark:bg-dusk-700 text-gray-900 dark:text-white ${editClassName}`;
 
   if (!isEditing) {
     return (
       <div className={className}>
         <button
           onClick={() => setIsEditing(true)}
-          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group ${displayClassName}`}
+          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700/50 transition-colors group ${displayClassName}`}
           title="Click to edit"
           aria-label="Edit"
         >
-          <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-400'}>
+          <span className={value ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-dusk-400'}>
             {value || placeholder}
           </span>
-          <span className="ml-2 text-gray-400 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
             ✏️
           </span>
         </button>
@@ -191,7 +191,7 @@ export default function InlineEdit({
       )}
 
       {/* Helper text */}
-      <div className="flex items-center justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-between mt-1 text-xs text-gray-500 dark:text-dusk-400">
         <div className="flex items-center gap-4">
           {error && <span className="text-red-500 dark:text-red-400">{error}</span>}
           {isSaving && (
@@ -204,11 +204,11 @@ export default function InlineEdit({
         <div className="flex gap-2">
           {multiline && (
             <span>
-              <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+Enter</kbd> to save
+              <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dusk-700 rounded text-xs">Ctrl+Enter</kbd> to save
             </span>
           )}
           <span>
-            <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Esc</kbd> to cancel
+            <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dusk-700 rounded text-xs">Esc</kbd> to cancel
           </span>
         </div>
       </div>
@@ -285,14 +285,14 @@ export function InlineEditNumber({
       <div className={className}>
         <button
           onClick={() => setIsEditing(true)}
-          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors group ${displayClassName}`}
+          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700/50 transition-colors group ${displayClassName}`}
           title="Click to edit"
           aria-label="Edit"
         >
-          <span className={value !== null ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-400'}>
+          <span className={value !== null ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-dusk-400'}>
             {value !== null ? `${prefix}${value}${suffix}` : placeholder}
           </span>
-          <span className="ml-2 text-gray-400 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
             ✏️
           </span>
         </button>
@@ -324,7 +324,7 @@ export function InlineEditNumber({
         step={step}
         placeholder={placeholder}
         disabled={isSaving}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky"
+        className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 bg-white dark:bg-dusk-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky"
       />
     </div>
   );

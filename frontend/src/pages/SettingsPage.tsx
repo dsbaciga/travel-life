@@ -144,20 +144,20 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         <Link
           to="/dashboard"
           className="text-blue-600 dark:text-blue-400 hover:underline mb-6 inline-block"
         >
-          ← Back to Dashboard
+          ← Back to Today
         </Link>
 
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Settings
           </h1>
-          <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
+          <div className="text-sm text-gray-500 dark:text-dusk-400 text-right">
             <div>
               Frontend: <span className="font-mono">{__APP_VERSION__}</span>
             </div>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Desktop Tabs - hidden on small screens */}
-        <div className="mb-8 border-b border-gray-200 dark:border-gray-700 hidden md:block">
+        <div className="mb-8 border-b border-gray-200 dark:border-dusk-700 hidden md:block">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
               type="button"
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "account"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "tags-categories"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "documents"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "integrations"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -257,7 +257,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "invites"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -271,7 +271,7 @@ export default function SettingsPage() {
                 ${
                   activeTab === "backup"
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dusk-400 dark:hover:text-dusk-300"
                 }
               `}
             >
@@ -316,7 +316,7 @@ export default function SettingsPage() {
 
         {/* Travel Documents Tab */}
         {activeTab === "documents" && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
             <ErrorBoundary>
               <Suspense
                 fallback={

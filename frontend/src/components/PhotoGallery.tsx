@@ -896,14 +896,14 @@ export default function PhotoGallery({
       <div className="mb-4 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
           {/* View Toggle */}
-          <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <div className="flex items-center bg-gray-100 dark:bg-dusk-700 rounded-lg p-1">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
               className={`px-3 py-2 rounded-md transition-colors duration-200 ${
                 viewMode === "grid"
-                  ? "bg-white dark:bg-gray-800 text-primary-600 dark:text-sky shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  ? "bg-white dark:bg-dusk-800 text-primary-600 dark:text-sky shadow-sm"
+                  : "text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
               }`}
               title="Grid view"
               aria-label="Grid view"
@@ -929,8 +929,8 @@ export default function PhotoGallery({
               onClick={() => setViewMode("list")}
               className={`px-3 py-2 rounded-md transition-colors duration-200 ${
                 viewMode === "list"
-                  ? "bg-white dark:bg-gray-800 text-primary-600 dark:text-sky shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  ? "bg-white dark:bg-dusk-800 text-primary-600 dark:text-sky shadow-sm"
+                  : "text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
               }`}
               title="List view"
               aria-label="List view"
@@ -960,7 +960,7 @@ export default function PhotoGallery({
               const [newSortBy, newSortOrder] = e.target.value.split("-");
               handleSortChange(newSortBy, newSortOrder);
             }}
-            className="px-3 py-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all"
+            className="px-3 py-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-lg text-sm font-medium text-gray-700 dark:text-dusk-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all"
             aria-label="Sort photos"
           >
             <option value="date-desc">Latest First</option>
@@ -974,7 +974,7 @@ export default function PhotoGallery({
 
         {/* Photo Count and Failed Thumbnails Info */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-gray-600 dark:text-dusk-400">
             {photos.length} photo{photos.length !== 1 ? "s" : ""}
           </span>
 
@@ -1024,7 +1024,7 @@ export default function PhotoGallery({
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
             {/* Selection hint */}
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-gray-600 dark:text-dusk-400">
               Click photos to select. Hold Shift for range selection.
             </span>
             {/* Quick select all if more photos available */}
@@ -1184,7 +1184,7 @@ export default function PhotoGallery({
                         rootMargin="400px"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-dusk-700 text-gray-400">
                         <svg
                           className="w-10 h-10"
                           fill="none"
@@ -1212,7 +1212,7 @@ export default function PhotoGallery({
                             {photo.caption}
                           </p>
                         )}
-                        <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
                           {photo.takenAt && (
                             <span className="flex items-center gap-1">
                               <svg
@@ -1255,7 +1255,7 @@ export default function PhotoGallery({
                             Cover
                           </span>
                         )}
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-dusk-700 rounded text-xs text-gray-600 dark:text-dusk-400">
                           {photo.source === "local" ? "Uploaded" : "Immich"}
                         </span>
                       </div>
@@ -1327,7 +1327,7 @@ export default function PhotoGallery({
           }}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-dusk-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
             style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1344,7 +1344,7 @@ export default function PhotoGallery({
                 }}
                 type="button"
                 aria-label="Close"
-                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
@@ -1352,7 +1352,7 @@ export default function PhotoGallery({
 
             {!showCreateAlbumForm ? (
               <>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
                   Add {selectedPhotoIds.size} selected photo
                   {selectedPhotoIds.size !== 1 ? "s" : ""} to:
                 </p>
@@ -1388,17 +1388,17 @@ export default function PhotoGallery({
                       key={album.id}
                       onClick={() => handleAddToAlbum(album.id)}
                       disabled={isAddingToAlbum}
-                      className="w-full text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full text-left p-4 rounded-lg border-2 border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="font-medium text-gray-900 dark:text-white">
                         {album.name}
                       </div>
                       {album.description && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        <div className="text-sm text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2">
                           {stripMarkdown(album.description)}
                         </div>
                       )}
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                         {album._count?.photoAssignments || 0} photos
                       </div>
                     </button>
@@ -1408,14 +1408,14 @@ export default function PhotoGallery({
             ) : (
               <>
                 {/* Create Album Form */}
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
                   Create a new album with {selectedPhotoIds.size} selected
                   photo
                   {selectedPhotoIds.size !== 1 ? "s" : ""}
                 </p>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                       Album Name *
                     </label>
                     <input
@@ -1423,12 +1423,12 @@ export default function PhotoGallery({
                       value={newAlbumName}
                       onChange={(e) => setNewAlbumName(e.target.value)}
                       placeholder="Enter album name"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       autoFocus
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                       Description (Optional)
                     </label>
                     <textarea
@@ -1436,7 +1436,7 @@ export default function PhotoGallery({
                       onChange={(e) => setNewAlbumDescription(e.target.value)}
                       placeholder="Enter album description"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>

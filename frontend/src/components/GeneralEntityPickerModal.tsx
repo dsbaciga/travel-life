@@ -254,10 +254,10 @@ export default function GeneralEntityPickerModal({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h3 id="entity-picker-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               Link to...
@@ -275,7 +275,7 @@ export default function GeneralEntityPickerModal({
             onClick={onClose}
             type="button"
             aria-label="Close"
-            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -299,7 +299,7 @@ export default function GeneralEntityPickerModal({
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 p-4 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     <span className="text-2xl">{config.emoji}</span>
                     <span className="font-medium text-gray-900 dark:text-white text-center sm:text-left">{config.label}</span>
@@ -315,10 +315,10 @@ export default function GeneralEntityPickerModal({
           ) : availableEntities.length === 0 ? (
             // Empty State
             <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-dusk-400">
                 No available {ENTITY_TYPE_CONFIG[selectedType].pluralLabel.toLowerCase()} to link.
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
                 All items may already be linked or none exist yet.
               </p>
             </div>
@@ -348,7 +348,7 @@ export default function GeneralEntityPickerModal({
                       className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         multiSelectMode
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-gray-100 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-600'
                       }`}
                       title={multiSelectMode ? 'Switch to single select' : 'Switch to multi-select'}
                     >
@@ -360,7 +360,7 @@ export default function GeneralEntityPickerModal({
                 {/* Multi-select controls */}
                 {multiSelectMode && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-gray-600 dark:text-dusk-400">
                       {selectedIds.size} selected
                     </span>
                     <div className="flex gap-2">
@@ -373,7 +373,7 @@ export default function GeneralEntityPickerModal({
                       {selectedIds.size > 0 && (
                         <button
                           onClick={clearSelection}
-                          className="text-gray-600 dark:text-gray-400 hover:underline"
+                          className="text-gray-600 dark:text-dusk-400 hover:underline"
                         >
                           Clear
                         </button>
@@ -384,7 +384,7 @@ export default function GeneralEntityPickerModal({
 
                 {/* Show count for photos with pagination */}
                 {selectedType === 'PHOTO' && total > 0 && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-dusk-400">
                     Showing {entities.length} of {total} photos
                   </p>
                 )}
@@ -409,7 +409,7 @@ export default function GeneralEntityPickerModal({
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left disabled:opacity-50 ${
                         isSelected
                           ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
                       }`}
                     >
                       {/* Checkbox for multi-select mode */}
@@ -418,7 +418,7 @@ export default function GeneralEntityPickerModal({
                           className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                             isSelected
                               ? 'bg-blue-600 border-blue-600'
-                              : 'border-gray-300 dark:border-gray-600'
+                              : 'border-gray-300 dark:border-dusk-600'
                           }`}
                         >
                           {isSelected && (
@@ -444,7 +444,7 @@ export default function GeneralEntityPickerModal({
                           />
                         ) : entity.thumbnailPath.includes('/api/immich/') ? (
                           // Immich photo loading placeholder
-                          <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 animate-pulse" />
+                          <div className="w-12 h-12 bg-gray-200 dark:bg-dusk-700 rounded flex-shrink-0 animate-pulse" />
                         ) : (
                           // Local photo - use direct URL
                           <img
@@ -463,7 +463,7 @@ export default function GeneralEntityPickerModal({
                           {entity.name}
                         </div>
                         {entity.subtitle && (
-                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          <div className="text-sm text-gray-500 dark:text-dusk-400 truncate">
                             {entity.subtitle}
                           </div>
                         )}
@@ -475,7 +475,7 @@ export default function GeneralEntityPickerModal({
                   );
                 })}
                 {filteredEntities.length === 0 && searchQuery && (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                  <p className="text-center text-gray-500 dark:text-dusk-400 py-4">
                     No matches for "{searchQuery}"
                   </p>
                 )}
@@ -484,7 +484,7 @@ export default function GeneralEntityPickerModal({
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="w-full py-3 text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 transition-colors disabled:opacity-50"
+                    className="w-full py-3 text-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-dashed border-gray-300 dark:border-dusk-600 transition-colors disabled:opacity-50"
                   >
                     {loadingMore ? (
                       <span className="flex items-center justify-center gap-2">
@@ -502,7 +502,7 @@ export default function GeneralEntityPickerModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-gray-200 dark:border-dusk-700">
           {multiSelectMode && selectedIds.size > 0 ? (
             <div className="flex gap-3">
               <button onClick={onClose} className="btn btn-secondary flex-1">

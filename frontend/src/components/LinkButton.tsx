@@ -59,7 +59,7 @@ export default function LinkButton({
         className={`relative ${buttonPadding} ${minSize} rounded-md transition-all flex items-center justify-center ${
           hasLinks
             ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50'
-            : 'text-gray-400 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+            : 'text-gray-400 dark:text-dusk-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-dusk-700'
         } ${className}`}
         aria-label={`${totalLinks} linked ${totalLinks === 1 ? 'item' : 'items'}`}
         title={getTooltip()}

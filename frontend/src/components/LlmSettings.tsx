@@ -164,17 +164,17 @@ export default function LlmSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading LLM settings...</p>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
+        <p className="text-gray-600 dark:text-dusk-400">Loading LLM settings...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">LLM (AI) Settings</h2>
 
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure an OpenAI-compatible endpoint to enable AI features: PDF booking import, journal
         summaries and title/mood suggestions, and smart entity link suggestions. Works with OpenAI,
         OpenRouter, Ollama, LM Studio, or any other OpenAI-compatible server.
@@ -205,14 +205,14 @@ export default function LlmSettings() {
       )}
 
       <div className="mb-6">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quick presets</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">Quick presets</p>
         <div className="flex flex-wrap gap-2">
           {PRESETS.map((preset) => (
             <button
               key={preset.label}
               type="button"
               onClick={() => applyPreset(preset)}
-              className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-dusk-700 dark:hover:bg-dusk-600 text-gray-900 dark:text-white rounded-lg transition-colors"
             >
               {preset.label}
             </button>
@@ -222,7 +222,7 @@ export default function LlmSettings() {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor={baseUrlId}>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1" htmlFor={baseUrlId}>
             Base URL
           </label>
           <input
@@ -231,15 +231,15 @@ export default function LlmSettings() {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             placeholder="https://api.openai.com/v1"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             OpenAI-compatible endpoint. Must include the <code>/v1</code> path suffix.
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor={modelId}>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1" htmlFor={modelId}>
             Model
           </label>
           <input
@@ -248,16 +248,16 @@ export default function LlmSettings() {
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="gpt-4o-mini"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             Model identifier (e.g., <code>gpt-4o-mini</code>, <code>llama3.1:8b</code>, <code>qwen2.5:7b-instruct</code>).
             For Ollama, must match a model you have pulled.
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor={apiKeyId}>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1" htmlFor={apiKeyId}>
             API Key {settings?.llmApiKeySet && <span className="text-green-600 dark:text-green-400">(currently set)</span>}
           </label>
           <input
@@ -266,9 +266,9 @@ export default function LlmSettings() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={settings?.llmApiKeySet ? 'Enter a new key to replace, or leave blank to keep' : 'Leave blank for local LLMs with no auth (e.g., Ollama)'}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
           />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
             Optional for local LLMs that don't require authentication. Required for OpenAI, OpenRouter, etc.
           </p>
         </div>

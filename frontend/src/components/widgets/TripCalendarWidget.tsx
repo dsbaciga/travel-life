@@ -152,7 +152,7 @@ export default function TripCalendarWidget() {
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 viewMode === 'monthly'
                   ? 'bg-white dark:bg-navy-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  : 'text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Monthly
@@ -162,7 +162,7 @@ export default function TripCalendarWidget() {
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 viewMode === 'yearly'
                   ? 'bg-white dark:bg-navy-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  : 'text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
               Yearly
@@ -175,7 +175,7 @@ export default function TripCalendarWidget() {
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={handlePrevious}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700 text-gray-600 dark:text-gray-400 transition-colors"
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-700 text-gray-600 dark:text-dusk-400 transition-colors"
           aria-label="Previous"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,8 +202,8 @@ export default function TripCalendarWidget() {
           disabled={!canGoNext}
           className={`p-2 rounded-lg transition-colors ${
             canGoNext
-              ? 'hover:bg-gray-100 dark:hover:bg-navy-700 text-gray-600 dark:text-gray-400'
-              : 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              ? 'hover:bg-gray-100 dark:hover:bg-navy-700 text-gray-600 dark:text-dusk-400'
+              : 'text-gray-300 dark:text-dusk-600 cursor-not-allowed'
           }`}
           aria-label="Next"
           title={!canGoNext ? `Cannot navigate beyond ${maxYear}` : undefined}
@@ -223,7 +223,7 @@ export default function TripCalendarWidget() {
 
       {/* Legend - only show trips visible in current view */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-navy-700">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-dusk-400">
           <span className="font-medium">Trips:</span>
           {legendTrips.slice(0, 6).map((trip) => (
             <div key={trip.id} className="flex items-center gap-1.5">

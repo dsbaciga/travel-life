@@ -58,7 +58,7 @@ export default function BatchPhotoToolbar({
       }`}
     >
       {/* Backdrop blur effect */}
-      <div className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-gray-700 shadow-lg">
+      <div className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-dusk-700 shadow-lg">
         <div className="max-w-[1600px] mx-auto px-4 py-3 sm:px-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Left section: Selection info */}
@@ -85,7 +85,7 @@ export default function BatchPhotoToolbar({
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
                   {selectedCount} photo{selectedCount !== 1 ? 's' : ''} selected
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 dark:text-dusk-400">
                   of {totalCount} total
                 </span>
               </div>
@@ -103,7 +103,7 @@ export default function BatchPhotoToolbar({
                 {selectedCount > 0 && (
                   <button
                     onClick={onDeselectAll}
-                    className="px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+                    className="px-2 py-1 text-xs font-medium text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 rounded transition-colors"
                   >
                     Deselect
                   </button>
@@ -149,7 +149,7 @@ export default function BatchPhotoToolbar({
                   {hasAlbums && (
                     <button
                       onClick={onAddToAlbum}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors min-w-[44px] justify-center"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-100 dark:bg-dusk-800 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-700 transition-colors min-w-[44px] justify-center"
                       title="Add to album"
                       aria-label="Add to album"
                     >
@@ -199,7 +199,7 @@ export default function BatchPhotoToolbar({
               {/* Close / Done button */}
               <button
                 onClick={onExitSelectionMode}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-1"
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 transition-colors ml-1"
                 title="Exit selection mode"
                 aria-label="Exit selection mode"
               >

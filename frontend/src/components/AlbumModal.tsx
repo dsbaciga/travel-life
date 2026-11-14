@@ -112,10 +112,10 @@ export default function AlbumModal({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
+        className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-md w-full"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
           <h2 id="album-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
             {isEdit ? "Edit Album" : "Create Album"}
           </h2>
@@ -123,7 +123,7 @@ export default function AlbumModal({
             onClick={onClose}
             type="button"
             aria-label="Close"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
             <svg
               className="w-6 h-6"
@@ -146,7 +146,7 @@ export default function AlbumModal({
           <div>
             <label
               htmlFor="album-name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
               Album Name *
             </label>
@@ -174,7 +174,7 @@ export default function AlbumModal({
           {/* Entity Linking Section */}
           {isEdit ? (
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
                 Links
               </label>
               <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export default function AlbumModal({
                   }}
                   size="md"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-gray-600 dark:text-dusk-400">
                   Link this album to locations, activities, photos, and more
                 </span>
               </div>

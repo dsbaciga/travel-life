@@ -102,9 +102,9 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
 
   if (groundTransportations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-dusk-400">
         <svg
-          className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600"
+          className="w-16 h-16 mb-4 text-gray-300 dark:text-dusk-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -138,14 +138,14 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
               className="w-4 h-1 rounded"
               style={{ backgroundColor: getRouteColor(type) }}
             />
-            <span className="capitalize text-gray-700 dark:text-gray-300">{type}</span>
+            <span className="capitalize text-gray-700 dark:text-dusk-300">{type}</span>
           </div>
         ))}
       </div>
 
       {/* Map */}
       <div
-        className="map-container-dynamic rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 w-full relative z-0"
+        className="map-container-dynamic rounded-lg overflow-hidden border border-gray-300 dark:border-dusk-600 w-full relative z-0"
         style={{ "--map-height": height }}
       >
         <MapContainer
@@ -245,7 +245,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
       </div>
 
       {/* Route summary */}
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="text-sm text-gray-600 dark:text-dusk-400">
         Showing {groundTransportations.length} route
         {groundTransportations.length !== 1 ? "s" : ""} (excludes flights)
       </div>

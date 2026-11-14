@@ -13,6 +13,8 @@ import TimezoneSelect from "../TimezoneSelect";
 import CostCurrencyFields from "../CostCurrencyFields";
 import BookingFields from "../BookingFields";
 import LocationQuickAdd from "../LocationQuickAdd";
+import AlsoCreatePlaceOption from "./AlsoCreatePlaceOption";
+import { useLinkedCreate } from "../../hooks/useLinkedCreate";
 import {
   convertISOToDateTimeLocal,
   convertDateTimeLocalToISO,
@@ -125,6 +127,9 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 }: ActivityFormProps, ref) {
   const resolveTz = useTimezoneResolver();
   const [showLocationQuickAdd, setShowLocationQuickAdd] = useState(false);
+  // Create mode only: also create a Place with the activity's name and link it.
+  const [alsoCreatePlace, setAlsoCreatePlace] = useState(false);
+  const { createPlaceNamed } = useLinkedCreate(tripId);
   const [showMoreOptions, setShowMoreOptions] = useState(showMoreOptionsDefault);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -399,7 +404,20 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         saveLastUsedCurrency(values.currency);
       }
 
-      await onSubmit(formData, values.locationId || null);
+      // A place picked from the list wins over creating a new one.
+      let locationId = values.locationId || null;
+      if (alsoCreatePlace && !isEditMode && !locationId) {
+        const place = await createPlaceNamed(values.name);
+        if (place) {
+          locationId = place.id;
+          // Select it in the form too, so a retry after a failed save links
+          // this place instead of creating a second one.
+          handleLocationCreated(place.id, place.name);
+          setAlsoCreatePlace(false);
+        }
+      }
+
+      await onSubmit(formData, locationId);
 
       // Mark form as saved to suppress unsaved changes warning
       markSaved();
@@ -462,7 +480,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
           <div>
             <label
               htmlFor={`${formId}-category`}
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
               Category
             </label>
@@ -489,7 +507,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
       {/* SECTION: Dietary Options - shown prominently when category is Dining */}
       {values.category.toLowerCase() === "dining" && (
         <FormSection title="Dietary Options" icon="🍽️">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+          <p className="text-sm text-gray-600 dark:text-dusk-400 mb-3">
             Select dietary accommodations available at this restaurant.
           </p>
           <DietaryTagSelector
@@ -504,7 +522,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
       {/* SECTION 2: Schedule */}
       <FormSection title="Schedule" icon="🕐">
         {/* Unscheduled Toggle */}
-        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
           <input
             type="checkbox"
             id={`${formId}-unscheduled`}
@@ -524,7 +542,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
           />
           <label
             htmlFor={`${formId}-unscheduled`}
-            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+            className="text-sm font-medium text-gray-700 dark:text-dusk-300"
           >
             Keep unscheduled (no date/time)
           </label>
@@ -546,7 +564,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
               />
               <label
                 htmlFor={`${formId}-allDay`}
-                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="text-sm font-medium text-gray-700 dark:text-dusk-300"
               >
                 All-day activity
               </label>
@@ -558,7 +576,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                 <div>
                   <label
                     htmlFor={`${formId}-start-date`}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     Start Date
                   </label>
@@ -582,7 +600,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                 <div>
                   <label
                     htmlFor={`${formId}-end-date`}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
                     End Date
                   </label>
@@ -610,7 +628,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                   <div>
                     <label
                       htmlFor={`${formId}-start-date-time`}
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                     >
                       Start Time
                     </label>
@@ -646,7 +664,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                   <div>
                     <label
                       htmlFor={`${formId}-end-date-time`}
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                     >
                       End Time
                     </label>
@@ -680,7 +698,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                     </div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                <p className="text-xs text-gray-500 dark:text-dusk-400 -mt-2">
                   Time defaults to 12:00 PM if not specified
                 </p>
               </>
@@ -695,13 +713,66 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         )}
       </FormSection>
 
+      {/* Place: linked through the entity link system */}
+      <FormSection title="Place" icon="📍">
+        {showLocationQuickAdd ? (
+          <LocationQuickAdd
+            tripId={tripId}
+            onLocationCreated={handleLocationCreated}
+            onCancel={() => setShowLocationQuickAdd(false)}
+          />
+        ) : (
+          <div className="flex gap-2">
+            <select
+              id={`${formId}-location`}
+              name="location"
+              autoComplete="off"
+              value={values.locationId || ""}
+              onChange={(e) =>
+                handleChange(
+                  "locationId",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
+              className="input flex-1"
+              disabled={isSubmitting}
+            >
+              <option value="">No place linked</option>
+              {localLocations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setShowLocationQuickAdd(true)}
+              className="btn btn-secondary whitespace-nowrap"
+              disabled={isSubmitting}
+            >
+              + New
+            </button>
+          </div>
+        )}
+
+        {!isEditMode && !values.locationId && !showLocationQuickAdd && (
+          <AlsoCreatePlaceOption
+            id={`${formId}-also-create-place`}
+            name={values.name}
+            checked={alsoCreatePlace}
+            onChange={setAlsoCreatePlace}
+            disabled={isSubmitting}
+          />
+        )}
+      </FormSection>
+
       {/* COLLAPSIBLE: More Options */}
       <CollapsibleSection
         title="More Options"
         icon="⚙️"
         isExpanded={showMoreOptions}
         onToggle={() => setShowMoreOptions(!showMoreOptions)}
-        badge="description, location, cost"
+        badge="description, booking, cost"
       >
         {/* Description */}
         <MarkdownEditor
@@ -714,56 +785,13 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
           compact
         />
 
-        {/* Location Section */}
-        <FormSection title="Location" icon="📍">
-          {showLocationQuickAdd ? (
-            <LocationQuickAdd
-              tripId={tripId}
-              onLocationCreated={handleLocationCreated}
-              onCancel={() => setShowLocationQuickAdd(false)}
-            />
-          ) : (
-            <div className="flex gap-2">
-              <select
-                id={`${formId}-location`}
-                name="location"
-                autoComplete="off"
-                value={values.locationId || ""}
-                onChange={(e) =>
-                  handleChange(
-                    "locationId",
-                    e.target.value ? parseInt(e.target.value) : undefined
-                  )
-                }
-                className="input flex-1"
-                disabled={isSubmitting}
-              >
-                <option value="">-- Select Location --</option>
-                {localLocations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
-                    {loc.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => setShowLocationQuickAdd(true)}
-                className="btn btn-secondary whitespace-nowrap"
-                disabled={isSubmitting}
-              >
-                + New
-              </button>
-            </div>
-          )}
-        </FormSection>
-
         {/* Organization */}
         {topLevelActivities.length > 0 && (
           <FormSection title="Organization" icon="📂">
             <div>
               <label
                 htmlFor={`${formId}-parent`}
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
                 Parent Activity
               </label>
@@ -788,7 +816,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 Group this activity under another activity
               </p>
             </div>
@@ -821,7 +849,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         {/* Dietary Options - in More Options for non-dining activities */}
         {values.category.toLowerCase() !== "dining" && (
           <FormSection title="Dietary Options" icon="🍽️">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            <p className="text-sm text-gray-600 dark:text-dusk-400 mb-3">
               If this activity involves food, select available dietary accommodations.
             </p>
             <DietaryTagSelector

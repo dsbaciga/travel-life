@@ -272,7 +272,7 @@ export default function TripDayIndicator({
       case TripStatus.CANCELLED:
         return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
       default:
-        return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30';
+        return 'text-gray-600 dark:text-dusk-400 bg-gray-100 dark:bg-dusk-900/30';
     }
   };
 
@@ -300,13 +300,13 @@ export default function TripDayIndicator({
       {/* Progress bar for in-progress trips */}
       {content.progress !== undefined && (
         <div className="mt-2 w-full">
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-gray-200 dark:bg-dusk-700 rounded-full overflow-hidden">
             <div
               className={`h-full ${getProgressBarColor()} rounded-full transition-all duration-500 ease-out`}
               style={{ width: `${content.progress}%` }}
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1 text-right">
             {Math.round(content.progress)}% complete
           </p>
         </div>

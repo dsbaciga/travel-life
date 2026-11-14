@@ -245,7 +245,7 @@ export default function DragDropUpload({
           ${
             isDragging
               ? "border-primary-500 dark:border-accent-400 bg-primary-50 dark:bg-accent-900/20 scale-105"
-              : "border-gray-300 dark:border-gray-600 hover:border-primary-400 dark:hover:border-accent-500 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              : "border-gray-300 dark:border-dusk-600 hover:border-primary-400 dark:hover:border-accent-500 hover:bg-gray-50 dark:hover:bg-dusk-800/50"
           }
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
@@ -273,7 +273,7 @@ export default function DragDropUpload({
         ) : (
           <>
             <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-400"
+              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-dusk-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -286,14 +286,14 @@ export default function DragDropUpload({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <p className="text-lg font-medium text-gray-700 dark:text-dusk-300 mb-2">
               {text}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-dusk-400">
               {subtext}
             </p>
             {maxSize && (
-              <p className="text-xs text-gray-400 dark:text-gray-400 mt-2">
+              <p className="text-xs text-gray-400 dark:text-dusk-400 mt-2">
                 Max file size: {(maxSize / 1024 / 1024).toFixed(1)}MB
               </p>
             )}

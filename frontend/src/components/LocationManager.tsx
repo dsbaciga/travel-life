@@ -23,6 +23,7 @@ import { useCreateFromUrlParam } from "../hooks/useCreateFromUrlParam";
 import { useEntityLinking } from "../hooks/useEntityLinking";
 import { useAutoSaveDraft } from "../hooks/useAutoSaveDraft";
 import { useBulkSelection } from "../hooks/useBulkSelection";
+import { useLinkedCreate, type PlaceCompanion } from "../hooks/useLinkedCreate";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import LocationSearchMap from "./LocationSearchMap";
@@ -123,6 +124,9 @@ export default function LocationManager({
 
   const [categories, setCategories] = useState<LocationCategory[]>([]);
   const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Create mode only: also create an activity or lodging with the place's name.
+  const [alsoCreate, setAlsoCreate] = useState<PlaceCompanion>("none");
+  const { createCompanionForPlace } = useLinkedCreate(tripId);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
   // Bulk selection state
@@ -213,6 +217,7 @@ export default function LocationManager({
     manager.setEditingId(null);
     setKeepFormOpenAfterSave(false);
     setShowDraftPrompt(false);
+    setAlsoCreate("none");
     draft.clearDraft();
   }, [reset, locationFieldErrors, manager, draft]);
 
@@ -290,8 +295,28 @@ export default function LocationManager({
         // Omitted when blank so the backend can populate it from OpenStreetMap.
         openingHours: values.openingHours.trim() || undefined,
       };
-      const success = await manager.handleCreate(createData);
+      let success: boolean;
+      if (alsoCreate === "none") {
+        success = await manager.handleCreate(createData);
+      } else {
+        // The companion needs the new place's id, which handleCreate does not
+        // return, so create the place directly here.
+        try {
+          const created = await locationService.createLocation(createData);
+          toast.success("Location added successfully");
+          await createCompanionForPlace(alsoCreate, created);
+          invalidateLinkSummary();
+          await manager.loadItems();
+          onUpdate?.();
+          success = true;
+        } catch (error) {
+          console.error("Failed to create location:", error);
+          toast.error("Failed to add location");
+          success = false;
+        }
+      }
       if (success) {
+        setAlsoCreate("none");
         if (keepFormOpenAfterSave) {
           // Reset form but keep modal open for quick successive entries
           reset();
@@ -472,7 +497,7 @@ export default function LocationManager({
                   </div>
                 )}
                 {isChild && (
-                  <span className="text-gray-400 dark:text-gray-400 mt-0.5">
+                  <span className="text-gray-400 dark:text-dusk-400 mt-0.5">
                     {String.fromCharCode(8627)}
                   </span>
                 )}
@@ -496,14 +521,14 @@ export default function LocationManager({
               {location.notes && (
                 <>
                   <p
-                    className={`text-gray-700 dark:text-gray-300 text-sm mt-2 line-clamp-2 sm:hidden ${
+                    className={`text-gray-700 dark:text-dusk-300 text-sm mt-2 line-clamp-2 sm:hidden ${
                       isChild ? "ml-6" : ""
                     }`}
                   >
                     {stripMarkdown(location.notes)}
                   </p>
                   <div
-                    className={`text-gray-700 dark:text-gray-300 text-sm mt-2 hidden sm:block ${
+                    className={`text-gray-700 dark:text-dusk-300 text-sm mt-2 hidden sm:block ${
                       isChild ? "ml-6" : ""
                     }`}
                   >
@@ -541,7 +566,7 @@ export default function LocationManager({
                 className={`p-1 rounded transition-colors ${
                   location.isFavorite
                     ? "text-amber-500 dark:text-gold hover:text-amber-600 dark:hover:text-gold/80"
-                    : "text-gray-400 dark:text-gray-400 hover:text-amber-500 dark:hover:text-gold"
+                    : "text-gray-400 dark:text-dusk-400 hover:text-amber-500 dark:hover:text-gold"
                 }`}
               >
                 <svg
@@ -718,6 +743,35 @@ export default function LocationManager({
         />
 
         <form id="location-form" onSubmit={handleSubmit} className="space-y-6">
+          {/* Name always leads. Picking a search result below fills it in. */}
+          <div>
+            <label
+              htmlFor="location-name"
+              className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
+            >
+              Name *
+            </label>
+            <input
+              type="text"
+              id="location-name"
+              name="name"
+              autoComplete="off"
+              value={values.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              onBlur={(e) => locationFieldErrors.handleBlur("name", e.target.value)}
+              className={`input ${locationFieldErrors.inputErrorClass("name")}`}
+              aria-invalid={locationFieldErrors.touched.name && !!locationFieldErrors.errors.name}
+              aria-describedby={locationFieldErrors.errors.name ? "location-name-error" : undefined}
+              required
+              placeholder="Eiffel Tower"
+            />
+            {locationFieldErrors.touched.name && locationFieldErrors.errors.name && (
+              <p id="location-name-error" className="text-red-600 dark:text-red-400 text-xs mt-1">
+                {locationFieldErrors.errors.name}
+              </p>
+            )}
+          </div>
+
           {/* Map Search Section */}
           <FormSection title="Search & Select Location" icon="🗺️">
             <LocationSearchMap
@@ -732,33 +786,35 @@ export default function LocationManager({
 
           {/* Basic Info Section */}
           <FormSection title="Location Details" icon="📍">
-            <div>
-              <label
-                htmlFor="location-name"
-                className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
-              >
-                Location Name *
-              </label>
-              <input
-                type="text"
-                id="location-name"
-                name="name"
-                autoComplete="off"
-                value={values.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                onBlur={(e) => locationFieldErrors.handleBlur("name", e.target.value)}
-                className={`input ${locationFieldErrors.inputErrorClass("name")}`}
-                aria-invalid={locationFieldErrors.touched.name && !!locationFieldErrors.errors.name}
-                aria-describedby={locationFieldErrors.errors.name ? "location-name-error" : undefined}
-                required
-                placeholder="Eiffel Tower"
-              />
-              {locationFieldErrors.touched.name && locationFieldErrors.errors.name && (
-                <p id="location-name-error" className="text-red-600 dark:text-red-400 text-xs mt-1">
-                  {locationFieldErrors.errors.name}
-                </p>
-              )}
-            </div>
+            {/* Create mode: bring an activity or lodging of the same name along */}
+            {!manager.editingId && (
+              <div>
+                <label
+                  htmlFor="location-also-create"
+                  className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
+                >
+                  Add and Link
+                </label>
+                <select
+                  id="location-also-create"
+                  name="alsoCreate"
+                  value={alsoCreate}
+                  onChange={(e) => setAlsoCreate(e.target.value as PlaceCompanion)}
+                  className="input"
+                >
+                  <option value="none">None</option>
+                  <option value="activity">Activity</option>
+                  <option value="lodging">Lodging</option>
+                </select>
+                {alsoCreate !== "none" && (
+                  <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                    {alsoCreate === "activity"
+                      ? "Adds an activity with the same name, linked to this place. It starts unscheduled."
+                      : "Adds a lodging with the same name, linked to this place. It is set as a hotel with no dates; edit it under Lodging."}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Parent Location - only show if this location doesn't have children */}
             {(() => {
@@ -779,7 +835,7 @@ export default function LocationManager({
                       <input
                         id="location-parent"
                         type="text"
-                        className="input bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                        className="input bg-gray-100 dark:bg-dusk-700 cursor-not-allowed"
                         value="Cannot set parent - this location has children"
                         disabled
                       />
@@ -811,7 +867,7 @@ export default function LocationManager({
                             </option>
                           ))}
                       </select>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                         Group places by selecting a parent city or region
                       </p>
                     </>
@@ -888,7 +944,7 @@ export default function LocationManager({
               />
               <p
                 id="location-opening-hours-help"
-                className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                className="text-xs text-gray-500 dark:text-dusk-400 mt-1"
               >
                 Leave blank to pull the hours from OpenStreetMap automatically. Uses the OSM
                 format, e.g. <code className="font-mono">Mo-Fr 09:00-17:00; Su off</code> or{" "}
@@ -913,7 +969,7 @@ export default function LocationManager({
             />
 
             {/* Exclude from map toggle */}
-            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
               <input
                 type="checkbox"
                 id="location-exclude-from-map"
@@ -929,7 +985,7 @@ export default function LocationManager({
                 >
                   Exclude from map
                 </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                   Hide this location from trip maps so a far-off spot like home or your origin
                   doesn&apos;t zoom the map out to span the whole journey.
                 </p>

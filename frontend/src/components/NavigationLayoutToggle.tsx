@@ -22,7 +22,7 @@ export default function NavigationLayoutToggle({
       className={`hidden md:flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
         layout === 'sidebar'
           ? 'bg-primary-50 dark:bg-gold/10 text-primary-600 dark:text-gold border-primary-200 dark:border-gold/30'
-          : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+          : 'bg-gray-50 dark:bg-dusk-700 text-gray-600 dark:text-dusk-300 border-gray-200 dark:border-dusk-600 hover:bg-gray-100 dark:hover:bg-dusk-600'
       } ${className}`}
       title={layout === 'tabs' ? 'Switch to sidebar navigation' : 'Switch to tab navigation'}
       aria-label={layout === 'tabs' ? 'Switch to sidebar navigation' : 'Switch to tab navigation'}

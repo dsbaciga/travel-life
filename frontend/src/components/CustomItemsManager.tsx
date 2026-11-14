@@ -293,10 +293,10 @@ export default function CustomItemsManager({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-display font-semibold text-charcoal dark:text-gray-100">
+          <h2 className="text-xl font-display font-semibold text-charcoal dark:text-dusk-100">
             Custom
           </h2>
-          <p className="text-sm text-slate dark:text-gray-400">
+          <p className="text-sm text-slate dark:text-dusk-400">
             Anything that does not fit the other tabs — reservations, contacts,
             reminders. Scheduled items also appear on the timeline.
           </p>
@@ -327,7 +327,7 @@ export default function CustomItemsManager({
       <div>
         <button
           type="button"
-          className="text-sm text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+          className="text-sm text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
           onClick={() => setShowTypeManager((open) => !open)}
         >
           {showTypeManager ? "Hide item types" : "Manage item types"}
@@ -406,7 +406,7 @@ export default function CustomItemsManager({
                 value={form.startTime}
                 onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               />
-              <p className="mt-1 text-xs text-slate dark:text-gray-400">
+              <p className="mt-1 text-xs text-slate dark:text-dusk-400">
                 Leave blank to keep the item off the timeline.
               </p>
             </div>
@@ -489,7 +489,7 @@ export default function CustomItemsManager({
                 value={form.currency}
                 onChange={(e) => setForm({ ...form, currency: e.target.value })}
               />
-              <p className="mt-1 text-xs text-slate dark:text-gray-400">
+              <p className="mt-1 text-xs text-slate dark:text-dusk-400">
                 Required with a cost, so it counts towards the trip budget.
               </p>
             </div>
@@ -594,10 +594,10 @@ export default function CustomItemsManager({
                     📌
                   </span>
                   <div className="min-w-0">
-                    <p className="font-medium text-charcoal dark:text-gray-100 line-clamp-2">
+                    <p className="font-medium text-charcoal dark:text-dusk-100 line-clamp-2">
                       {item.name}
                     </p>
-                    <p className="text-xs text-slate dark:text-gray-400 mt-0.5">
+                    <p className="text-xs text-slate dark:text-dusk-400 mt-0.5">
                       {item.type?.name ? `${item.type.name} · ` : ""}
                       {formatWhen(item)}
                     </p>
@@ -605,19 +605,19 @@ export default function CustomItemsManager({
                 </div>
 
                 {item.location?.name && (
-                  <p className="text-sm text-slate dark:text-gray-400 mt-2 truncate">
+                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 truncate">
                     📍 {item.location.name}
                   </p>
                 )}
 
                 {item.cost != null && (
-                  <p className="text-sm text-charcoal dark:text-gray-300 mt-1">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-1">
                     {formatCurrency(item.cost, item.currency)}
                   </p>
                 )}
 
                 {item.confirmationNumber && (
-                  <p className="text-xs text-slate dark:text-gray-400 mt-1 font-mono truncate">
+                  <p className="text-xs text-slate dark:text-dusk-400 mt-1 font-mono truncate">
                     {item.confirmationNumber}
                   </p>
                 )}
@@ -634,7 +634,7 @@ export default function CustomItemsManager({
                 )}
 
                 {item.notes && (
-                  <p className="text-sm text-charcoal dark:text-gray-300 mt-2 line-clamp-2 italic">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 line-clamp-2 italic">
                     {item.notes}
                   </p>
                 )}
@@ -650,7 +650,7 @@ export default function CustomItemsManager({
                   />
                   <button
                     type="button"
-                    className="text-xs px-2 py-1 text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+                    className="text-xs px-2 py-1 text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
                     onClick={() => startEdit(item)}
                   >
                     Edit

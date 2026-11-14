@@ -137,11 +137,11 @@ export function getTypeColors(type: 'activity' | 'transportation' | 'lodging' | 
       };
     default:
       return {
-        bg: 'bg-gray-50 dark:bg-gray-900/20',
-        border: 'border-gray-200 dark:border-gray-700',
+        bg: 'bg-gray-50 dark:bg-dusk-900/20',
+        border: 'border-gray-200 dark:border-dusk-700',
         accent: 'border-l-gray-500',
-        icon: 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400',
-        text: 'text-gray-700 dark:text-gray-300',
+        icon: 'bg-gray-100 dark:bg-dusk-900/30 text-gray-600 dark:text-dusk-400',
+        text: 'text-gray-700 dark:text-dusk-300',
       };
   }
 }

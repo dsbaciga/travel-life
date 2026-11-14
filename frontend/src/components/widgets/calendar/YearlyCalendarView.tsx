@@ -80,7 +80,7 @@ export default function YearlyCalendarView({ year, trips }: YearlyCalendarViewPr
           className="bg-gray-50 dark:bg-navy-900/50 rounded-lg p-2"
         >
           {/* Month name */}
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-dusk-300 mb-2 text-center">
             {name}
           </h4>
 
@@ -89,7 +89,7 @@ export default function YearlyCalendarView({ year, trips }: YearlyCalendarViewPr
             {DAY_ABBREVS.map((abbrev, i) => (
               <div
                 key={i}
-                className="text-center text-[10px] text-gray-400 dark:text-gray-400"
+                className="text-center text-[10px] text-gray-400 dark:text-dusk-400"
               >
                 {abbrev}
               </div>
@@ -115,7 +115,7 @@ export default function YearlyCalendarView({ year, trips }: YearlyCalendarViewPr
                       : ''
                     }
                     ${!hasTrips && cell.day !== 0
-                      ? 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800'
+                      ? 'text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-navy-800'
                       : ''
                     }
                   `}

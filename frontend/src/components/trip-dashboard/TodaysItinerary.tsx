@@ -155,7 +155,7 @@ function getEventColors(type: string, isCompleted: boolean, isNext: boolean) {
     return {
       ...colors,
       opacity: 'opacity-60',
-      bgIcon: 'bg-gray-400 dark:bg-gray-600',
+      bgIcon: 'bg-gray-400 dark:bg-dusk-600',
     };
   }
 
@@ -227,7 +227,7 @@ function EventItem({
       {/* Event icon with completion indicator */}
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-          ${event.isCompleted ? 'bg-gray-400 dark:bg-gray-600' : colors.bgIcon}
+          ${event.isCompleted ? 'bg-gray-400 dark:bg-dusk-600' : colors.bgIcon}
           text-white shadow-sm
         `}
       >
@@ -241,7 +241,7 @@ function EventItem({
       {/* Event content */}
       <div className="flex-1 min-w-0">
         {/* Time */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-dusk-400">
           <span className={`font-medium ${event.isCompleted ? '' : colors.text}`}>
             {formatEventTime(event.startTime, timezone)}
           </span>
@@ -252,7 +252,7 @@ function EventItem({
             </>
           )}
           {duration && (
-            <span className="text-gray-400 dark:text-gray-400">({duration})</span>
+            <span className="text-gray-400 dark:text-dusk-400">({duration})</span>
           )}
         </div>
 
@@ -260,7 +260,7 @@ function EventItem({
         <h4
           className={`font-semibold text-sm mt-0.5 truncate
             ${event.isCompleted
-              ? 'text-gray-500 dark:text-gray-400 line-through'
+              ? 'text-gray-500 dark:text-dusk-400 line-through'
               : 'text-gray-900 dark:text-white'
             }
           `}
@@ -270,14 +270,14 @@ function EventItem({
 
         {/* Subtitle */}
         {event.subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-dusk-400 truncate mt-0.5">
             {event.subtitle}
           </p>
         )}
 
         {/* Location */}
         {event.location && (
-          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-dusk-400">
             <LocationPinIcon className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">{event.location}</span>
           </div>
@@ -325,7 +325,7 @@ function EmptyState() {
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center mb-3">
         <svg
-          className="w-6 h-6 text-gray-400 dark:text-gray-400"
+          className="w-6 h-6 text-gray-400 dark:text-dusk-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -338,10 +338,10 @@ function EmptyState() {
           />
         </svg>
       </div>
-      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+      <p className="text-sm font-medium text-gray-600 dark:text-dusk-400">
         No events scheduled for today
       </p>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
         Add activities, transportation, or lodging to see them here
       </p>
     </div>
@@ -417,7 +417,7 @@ export default function TodaysItinerary({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Today's Itinerary
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-dusk-400">
             {formatTodayHeader(tripTimezone)}
           </p>
         </div>
@@ -426,7 +426,7 @@ export default function TodaysItinerary({
         {weatherData && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-navy-700 rounded-full">
             <span className="text-lg">{weatherData.icon}</span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
               {weatherData.temp}°
             </span>
           </div>
@@ -436,14 +436,14 @@ export default function TodaysItinerary({
         {!weatherData && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-navy-700 rounded-full">
             <span className="text-lg">☀️</span>
-            <span className="text-xs text-gray-400 dark:text-gray-400">--</span>
+            <span className="text-xs text-gray-400 dark:text-dusk-400">--</span>
           </div>
         )}
       </div>
 
       {/* Event count summary */}
       {events.length > 0 && (
-        <div className="flex items-center gap-3 mb-4 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-3 mb-4 text-xs text-gray-500 dark:text-dusk-400">
           <span>{events.length} event{events.length !== 1 ? 's' : ''}</span>
           {pastEvents.length > 0 && (
             <span className="flex items-center gap-1">
@@ -500,7 +500,7 @@ export default function TodaysItinerary({
 
       {/* Show more link if many events */}
       {events.length > 5 && onNavigateToTimeline && (
-        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-dusk-700">
           <button
             type="button"
             onClick={() => {

@@ -181,7 +181,7 @@ export default function CompanionAvatar({
       className={
         companion.isMyself
           ? "text-blue-600 dark:text-blue-400"
-          : "text-gray-600 dark:text-gray-400"
+          : "text-gray-600 dark:text-dusk-400"
       }
     >
       {getInitials()}
@@ -205,7 +205,7 @@ export default function CompanionAvatar({
           ${
             companion.isMyself && !avatarBlobUrl
               ? "bg-blue-100 dark:bg-blue-900"
-              : "bg-gray-200 dark:bg-gray-700"
+              : "bg-gray-200 dark:bg-dusk-700"
           }
           ${
             editable
@@ -223,11 +223,11 @@ export default function CompanionAvatar({
       </button>
 
       {editable && showMenu && (
-        <div className={`absolute ${verticalClass} ${horizontalClass} bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20 min-w-[160px]`}>
+        <div className={`absolute ${verticalClass} ${horizontalClass} bg-white dark:bg-dusk-800 rounded-lg shadow-lg border border-gray-200 dark:border-dusk-700 py-1 z-20 min-w-[160px]`}>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
           >
             <svg
               className="w-4 h-4"
@@ -249,7 +249,7 @@ export default function CompanionAvatar({
             <button
               type="button"
               onClick={handleImmichSelect}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
             >
               <svg
                 className="w-4 h-4"

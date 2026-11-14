@@ -19,6 +19,13 @@ class LocationService {
     return Array.isArray(data) ? data : data.locations;
   }
 
+  /** Mappable places from every trip except cancelled ones, planned or not. */
+  async getAllTripLocations(): Promise<Location[]> {
+    const response = await axios.get('/locations/visited', { params: { scope: 'all' } });
+    const data = response.data;
+    return Array.isArray(data) ? data : data.locations;
+  }
+
   async getFavoriteLocations(): Promise<Location[]> {
     const response = await axios.get<Location[]>('/locations/favorites');
     return response.data;

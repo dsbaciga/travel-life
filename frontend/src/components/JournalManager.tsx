@@ -428,13 +428,13 @@ export default function JournalManager({
                 label="Content"
                 required={true}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 {formValues.content.length} characters
               </p>
             </div>
 
             {/* Link to other entities note */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   💡 <strong>Tip:</strong> After creating your journal entry, use the link button (🔗) to connect it to locations, activities, lodging, transportation, photos, or albums.
@@ -461,7 +461,7 @@ export default function JournalManager({
               <div
                 key={entry.id}
                 data-entity-id={`journal_entry-${entry.id}`}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow hover:shadow-lg transition-shadow"
               >
                 <div className="p-6">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
@@ -469,7 +469,7 @@ export default function JournalManager({
                       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1 break-words">
                         {entry.title || "Untitled Entry"}
                       </h3>
-                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
                         {entry.date && <span>📅 {formatDate(entry.date, 'full')}</span>}
                       </div>
                     </div>
@@ -504,7 +504,7 @@ export default function JournalManager({
                   {isExpanded ? (
                     <MarkdownRenderer content={entry.content} />
                   ) : (
-                    <p className="text-gray-700 dark:text-gray-300">
+                    <p className="text-gray-700 dark:text-dusk-300">
                       {stripMarkdown(truncateContent(entry.content))}
                     </p>
                   )}
@@ -532,7 +532,7 @@ export default function JournalManager({
                   />
                 </div>
 
-                <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400">
+                <div className="px-6 py-3 bg-gray-50 dark:bg-dusk-700 border-t border-gray-100 dark:border-dusk-600 text-xs text-gray-500 dark:text-dusk-400">
                   {entry.updatedAt !== entry.createdAt
                     ? `Last edited ${new Date(
                         entry.updatedAt

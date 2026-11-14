@@ -154,7 +154,7 @@ export default function TabGroup({
                         className={`ml-1 px-2 py-0.5 text-xs rounded-full transition-colors ${
                           isActive
                             ? "bg-primary-100 dark:bg-gold/20 text-primary-700 dark:text-gold"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                            : "bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400"
                         }`}
                       >
                         {groupCount}

@@ -233,7 +233,7 @@ export default function TripPhotosTab({
               </h2>
               {currentAlbum?.description && (
                 <p
-                  className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
+                  className="text-sm text-gray-600 dark:text-dusk-400 line-clamp-2"
                   title={currentAlbum.description}
                 >
                   {currentAlbum.description}
@@ -403,7 +403,7 @@ export default function TripPhotosTab({
               />
             )}
           {selectedAlbumId === -1 && filteredPhotos.length === 0 && (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
               <p>All photos are sorted into albums!</p>
             </div>
           )}

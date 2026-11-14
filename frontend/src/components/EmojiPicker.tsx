@@ -68,7 +68,7 @@ export default function EmojiPicker({ value, onChange, className = "" }: EmojiPi
         >
           <Suspense
             fallback={
-              <div className="w-[300px] h-[400px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
+              <div className="w-[300px] h-[400px] bg-gray-100 dark:bg-dusk-800 rounded-lg animate-pulse" />
             }
           >
             <EmojiPickerReact

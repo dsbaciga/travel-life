@@ -306,6 +306,21 @@ export function getTimezoneOptions() {
 }
 
 /**
+ * The shared timezone list for a picker, guaranteed to contain `current`.
+ * A zone saved earlier that is not in the common list (or was detected from
+ * the browser) is added at the top, so the select never shows a blank value
+ * and saving does not silently change it.
+ */
+export function timezoneOptionsFor(
+  current: string | null | undefined
+): { value: string; label: string }[] {
+  if (!current || commonTimezones.some((option) => option.value === current)) {
+    return commonTimezones;
+  }
+  return [{ value: current, label: current.replace(/_/g, ' ') }, ...commonTimezones];
+}
+
+/**
  * Calculate duration between two times, accounting for timezones
  */
 export function calculateDuration(

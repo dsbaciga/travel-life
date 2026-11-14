@@ -139,14 +139,14 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           <p className="text-sm text-red-600 dark:text-red-400">
             PDF processing has taken longer than expected and may have stalled.
           </p>
-          <p className="text-sm text-stone-600 dark:text-stone-400">
+          <p className="text-sm text-stone-600 dark:text-dusk-400">
             You can try parsing again or close this dialog.
           </p>
         </div>
         <div className="mt-4 flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700"
+            className="px-4 py-2 text-sm border border-stone-300 dark:border-dusk-600 rounded-lg text-stone-700 dark:text-dusk-300 hover:bg-stone-50 dark:hover:bg-dusk-700"
           >
             Close
           </button>
@@ -168,7 +168,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       <Modal isOpen={isOpen} onClose={onClose} title="Processing PDF" maxWidth="md">
         <div className="flex flex-col items-center py-8 gap-4">
           <LoadingSpinner />
-          <p className="text-sm text-stone-600 dark:text-stone-400">
+          <p className="text-sm text-stone-600 dark:text-dusk-400">
             Extracting travel details from your PDF...
           </p>
         </div>
@@ -184,14 +184,14 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           <p className="text-sm text-red-600 dark:text-red-400">
             {importData.errorMessage || 'Failed to extract entities from the PDF.'}
           </p>
-          <p className="text-sm text-stone-600 dark:text-stone-400">
+          <p className="text-sm text-stone-600 dark:text-dusk-400">
             You can try parsing again or close this dialog.
           </p>
         </div>
         <div className="mt-4 flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm border border-stone-300 dark:border-stone-600 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700"
+            className="px-4 py-2 text-sm border border-stone-300 dark:border-dusk-600 rounded-lg text-stone-700 dark:text-dusk-300 hover:bg-stone-50 dark:hover:bg-dusk-700"
           >
             Close
           </button>
@@ -212,7 +212,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     return (
       <Modal isOpen={isOpen} onClose={onClose} title="No Entities Found" maxWidth="md">
         <div className="py-4">
-          <p className="text-sm text-stone-600 dark:text-stone-400">
+          <p className="text-sm text-stone-600 dark:text-dusk-400">
             No travel entities were found in this PDF. The document may not contain recognizable booking information.
           </p>
         </div>
@@ -248,10 +248,10 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
       {/* Progress */}
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs text-stone-500 dark:text-stone-400 font-medium uppercase tracking-wide">
+        <span className="text-xs text-stone-500 dark:text-dusk-400 font-medium uppercase tracking-wide">
           {ENTITY_TYPE_LABELS[currentEntity.entityType]}
         </span>
-        <span className="text-xs text-stone-500 dark:text-stone-400">
+        <span className="text-xs text-stone-500 dark:text-dusk-400">
           {currentIndex + 1} of {entities.length}
         </span>
       </div>
@@ -276,14 +276,14 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           if (value === undefined || value === null) return null;
           return (
             <div key={field}>
-              <label className="block text-xs font-medium text-stone-600 dark:text-stone-400 mb-1 capitalize">
+              <label className="block text-xs font-medium text-stone-600 dark:text-dusk-400 mb-1 capitalize">
                 {field.replace(/([A-Z])/g, ' $1').trim()}
               </label>
               <input
                 type="text"
                 value={String(value)}
                 onChange={(e) => setEditedData({ ...editedData, [field]: e.target.value })}
-                className="w-full rounded border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded border border-stone-300 dark:border-dusk-600 bg-white dark:bg-dusk-800 text-stone-800 dark:text-dusk-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
           );
@@ -292,11 +292,11 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
 
       {/* Trip selector */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+        <label className="block text-sm font-medium text-stone-700 dark:text-dusk-300 mb-1">
           Add to trip
         </label>
         {noTrips ? (
-          <p className="text-sm text-stone-500 dark:text-stone-400">
+          <p className="text-sm text-stone-500 dark:text-dusk-400">
             No trips yet.{' '}
             <Link to="/trips/new" className="text-amber-600 hover:underline" onClick={onClose}>
               Create a trip first
@@ -306,7 +306,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           <select
             value={selectedTripId ?? ''}
             onChange={(e) => setSelectedTripId(e.target.value ? parseInt(e.target.value) : undefined)}
-            className="w-full rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full rounded-lg border border-stone-300 dark:border-dusk-600 bg-white dark:bg-dusk-800 text-stone-700 dark:text-dusk-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             <option value="">Select a trip</option>
             {trips.map((trip: { id: number; title: string }) => (
@@ -320,7 +320,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       <div className="flex gap-3 justify-between">
         <button
           onClick={() => advance(true)}
-          className="px-3 py-2 text-sm text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"
+          className="px-3 py-2 text-sm text-stone-600 dark:text-dusk-400 hover:text-stone-800 dark:hover:text-dusk-200"
         >
           Skip
         </button>

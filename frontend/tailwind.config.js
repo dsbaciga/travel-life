@@ -1,5 +1,25 @@
 import colors from 'tailwindcss/colors';
 
+// Dark-mode neutral ramp: a cool grey, one third of the way from Tailwind's
+// `zinc` to `slate`. Tried and rejected next to the gold accent: `stone` and
+// anything between stone and `neutral` read as brown (even near-neutral greys
+// pick up the orange); `zinc` was close but still not cool enough; the
+// original `slate` read as blue. To retune the dark theme, change these
+// values - cooler is toward `slate`, flatter is toward `zinc`.
+const DUSK = {
+  50: '#f9fafb',
+  100: '#f3f4f6',
+  200: '#e3e5ea',
+  300: '#d1d4db',
+  400: '#9da2af',
+  500: '#6d7280',
+  600: '#4e5360',
+  700: '#3b404b',
+  800: '#242830',
+  900: '#151820',
+  950: '#0b0d12',
+};
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -99,24 +119,35 @@ export default {
         },
         // Accent - Warm Gold/Orange tones
         accent: {
+          // 50-200 and 800-900 were referenced by ~40 classes (bg-accent-50,
+          // to-accent-900, ...) before they existed, so those emitted no CSS.
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
           500: '#f59e0b',
           600: '#D97706',
           700: '#B45309',
+          800: '#92400e',
+          900: '#78350f',
         },
         // Neutrals
         cream: '#f8fafc',
         parchment: '#f1f5f9',
-        'warm-gray': '#e2e8f0',
+        // dusk-200. Dark-mode body text and light-mode hairline borders.
+        'warm-gray': DUSK[200],
         charcoal: '#1e293b',
         slate: '#64748b',
-        // Dark Mode
-        navy: {
-          900: '#0f172a',
-          800: '#1e293b',
-          700: '#334155',
-        },
+        // Dark-mode neutrals. Every `dark:*-dusk-N` class and the `navy`
+        // surface tokens below read from this one ramp, so the warmth of the
+        // whole dark theme is tuned here.
+        dusk: DUSK,
+        // Dark Mode surfaces. `navy` is an alias of `dusk`, kept for history:
+        // ~800 usages depend on the name. It carries the whole ramp because
+        // components already used steps such as `navy-600` and `navy-100`
+        // that did not exist and so emitted no CSS.
+        navy: DUSK,
         // Gold accent for dark mode
         gold: '#fbbf24',
         // Sky accent for dark mode - sky-300 for better contrast on navy-700 (WCAG AA).

@@ -420,7 +420,7 @@ export default function PhotoUpload({
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Add Photos & Videos
@@ -471,7 +471,7 @@ export default function PhotoUpload({
 
           {selectedFiles.length > 0 && (
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <p className="text-sm font-medium text-gray-700 dark:text-dusk-300">
                 {selectedFiles.length} file(s) ready to upload
               </p>
             </div>
@@ -529,7 +529,7 @@ export default function PhotoUpload({
             <div>
               <label
                 htmlFor="photo-upload-caption"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
                 Caption
               </label>
@@ -548,13 +548,13 @@ export default function PhotoUpload({
           {/* Upload Progress */}
           {isUploading && (
             <div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-[width]"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 text-center">
+              <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1 text-center">
                 Uploading... {Math.round(uploadProgress)}%
               </p>
             </div>
@@ -564,7 +564,7 @@ export default function PhotoUpload({
           <button
             onClick={handleSelectPhotosClick}
             disabled={isUploading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-dusk-600 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
           >
             {isUploading
               ? "Uploading..."

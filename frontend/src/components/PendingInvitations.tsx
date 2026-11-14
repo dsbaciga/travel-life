@@ -125,7 +125,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-dusk-400">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
@@ -143,18 +143,18 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
                   {invitation.trip.title}
                 </h4>
                 {invitation.trip.startDate && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-dusk-400">
                     {formatDate(invitation.trip.startDate)}
                     {invitation.trip.endDate && ` - ${formatDate(invitation.trip.endDate)}`}
                   </p>
                 )}
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
                   Invited by <span className="font-medium">{invitation.invitedBy.username}</span>
                 </p>
               </div>
 
               {/* Permission Badge */}
-              <span className="px-2 py-1 text-xs font-medium bg-white/50 dark:bg-navy-800/50 text-gray-700 dark:text-gray-300 rounded">
+              <span className="px-2 py-1 text-xs font-medium bg-white/50 dark:bg-navy-800/50 text-gray-700 dark:text-dusk-300 rounded">
                 {PERMISSION_LABELS[invitation.permissionLevel]}
               </span>
             </div>
@@ -162,7 +162,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
             {/* Personal Message */}
             {invitation.message && (
               <div className="bg-white/50 dark:bg-navy-800/50 rounded-lg p-3 mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                <p className="text-sm text-gray-600 dark:text-dusk-400 italic">
                   "{invitation.message}"
                 </p>
               </div>
@@ -189,7 +189,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
               <button
                 onClick={() => handleDecline(invitation)}
                 disabled={processingId === invitation.id}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-navy-800/50 rounded-lg hover:bg-white dark:hover:bg-navy-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-gray-700 dark:text-dusk-300 bg-white/50 dark:bg-navy-800/50 rounded-lg hover:bg-white dark:hover:bg-navy-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Decline
               </button>

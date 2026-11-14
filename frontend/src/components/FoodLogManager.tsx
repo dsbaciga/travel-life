@@ -314,7 +314,7 @@ export default function FoodLogManager({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Food Log</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-dusk-400">
             Dishes, ratings and what to order again
           </p>
         </div>
@@ -328,7 +328,7 @@ export default function FoodLogManager({
       </div>
 
       {showForm && (
-        <form onSubmit={handleSave} className="mb-6 space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <form onSubmit={handleSave} className="mb-6 space-y-4 rounded-xl border border-gray-200 dark:border-dusk-700 p-4">
           {linkOptions.length > 0 && (
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="food-link">
@@ -422,7 +422,7 @@ export default function FoodLogManager({
                           alt={photo.caption || "Attached photo"}
                         />
                       ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-xs text-gray-500">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-200 dark:border-dusk-700 text-xs text-gray-500">
                           Photo
                         </div>
                       )}
@@ -503,7 +503,7 @@ export default function FoodLogManager({
                 Add from Immich
               </button>
             )}
-            <span className="ml-3 text-xs text-gray-500 dark:text-gray-400">
+            <span className="ml-3 text-xs text-gray-500 dark:text-dusk-400">
               {photoCount}/{MAX_FOOD_PHOTOS}
             </span>
           </div>
@@ -530,7 +530,7 @@ export default function FoodLogManager({
             <section key={group.restaurantName.toLowerCase()}>
               <h3 className="mb-2 flex items-baseline gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                 {group.restaurantName}
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   avg {group.averageRating.toFixed(1)}
                 </span>
               </h3>
@@ -538,7 +538,7 @@ export default function FoodLogManager({
                 {group.entries.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+                    className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 dark:border-dusk-700 p-4"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 dark:text-white">
@@ -551,7 +551,7 @@ export default function FoodLogManager({
                         {ratingStars(entry.rating)}
                       </p>
                       {entry.notes && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{entry.notes}</p>
+                        <p className="text-sm text-gray-600 dark:text-dusk-400">{entry.notes}</p>
                       )}
                       <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
                     </div>

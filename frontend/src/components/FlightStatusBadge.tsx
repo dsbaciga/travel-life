@@ -65,7 +65,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+    <div className="bg-gray-50 dark:bg-dusk-800 rounded-lg p-3 space-y-2">
       {/* Flight Number and Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
       )}
 
       {/* Gate, Terminal, Baggage */}
-      <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-dusk-400">
         {terminal && (
           <div className="flex items-center gap-1">
             <span className="font-medium">Terminal:</span>
@@ -126,7 +126,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
 
       {/* Last Updated */}
       {flightTracking.lastUpdatedAt && (
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500 dark:text-dusk-400">
           Updated: {new Date(flightTracking.lastUpdatedAt).toLocaleString()}
         </div>
       )}

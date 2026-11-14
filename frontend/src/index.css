@@ -17,7 +17,7 @@
   /* Dark mode with subtle gradient background */
   .dark body {
     @apply text-warm-gray;
-    background: linear-gradient(to bottom, #0f172a 0%, #1e293b 100%);
+    background: linear-gradient(to bottom, theme('colors.navy.900') 0%, theme('colors.navy.800') 100%);
     background-attachment: fixed;
   }
 }
@@ -105,15 +105,27 @@
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-lg border-2
-           border-primary-100 dark:border-gold/20
-           bg-white dark:bg-navy-800
+    /* A quiet hairline at rest; the accent colour is kept for focus, so a
+       form full of fields does not read as a wall of gold boxes. */
+    @apply w-full px-3.5 py-2.5 rounded-lg border
+           border-primary-500/20 dark:border-navy-600
+           bg-white dark:bg-navy-900
            text-charcoal dark:text-warm-gray font-body
            placeholder:text-slate/50 dark:placeholder:text-warm-gray/40
            focus:outline-none
            focus:border-primary-500 dark:focus:border-gold
            focus:ring-4 focus:ring-primary-500/10 dark:focus:ring-gold/20
            transition-colors duration-200;
+  }
+
+  /* The option list of a native select takes its colours from the select.
+     They must be opaque and set explicitly: with a translucent background
+     the browser draws the list light and keeps the light text. */
+  .dark select.input,
+  .dark select.input option,
+  .dark select.input optgroup {
+    background-color: theme('colors.navy.900');
+    color: theme('colors.warm-gray');
   }
 
   /* Enhanced gold glow on focus in dark mode */
@@ -196,7 +208,7 @@
   /* Dark mode card with gradient background and gold accents */
   .dark .card {
     @apply border-gold/20;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);
+    background: linear-gradient(135deg, theme('colors.navy.800 / 90%') 0%, theme('colors.navy.800 / 70%') 100%);
   }
 
   .dark .card:hover {
@@ -361,7 +373,7 @@
   /* Tooltip */
   .tooltip {
     @apply absolute z-20 px-3 py-2 text-sm font-medium text-white
-           bg-gray-900 dark:bg-gray-700 rounded-lg shadow-lg
+           bg-gray-900 dark:bg-dusk-700 rounded-lg shadow-lg
            opacity-0 invisible
            transition-opacity duration-200 pointer-events-none;
   }
@@ -776,11 +788,11 @@ textarea:focus-visible:not(.input) {
 
 .dark .prose {
   --tw-prose-links: #fbbf24;
-  --tw-prose-hr: #334155;
-  --tw-prose-quotes: #e2e8f0;
+  --tw-prose-hr: theme('colors.navy.700');
+  --tw-prose-quotes: theme('colors.warm-gray');
   --tw-prose-quote-borders: #fbbf24;
   --tw-prose-code: #fbbf24;
-  --tw-prose-pre-bg: #1e293b;
+  --tw-prose-pre-bg: theme('colors.navy.800');
 }
 
 /* Ensure prose images don't break card layouts */
@@ -1351,6 +1363,59 @@ textarea:focus-visible:not(.input) {
     margin: 0.5in;
     size: letter;
   }
+}
+
+/* ========================================
+   MAPS (LEAFLET) IN DARK MODE
+   Leaflet ships light-only chrome. Screen only: printed maps stay light.
+   ======================================== */
+
+@media screen {
+  /* Leaflet's default #ddd shows through while tiles load, which flashes
+     light grey on a dark page. */
+  .dark .leaflet-container {
+    background: theme('colors.navy.900');
+  }
+
+  /* There is no dark basemap: dark mode shows full-colour map tiles
+     (see utils/mapConfig.ts). Only the chrome around the map is darkened. */
+
+  .dark .leaflet-bar,
+  .dark .leaflet-control-layers {
+    border-color: theme('colors.navy.700');
+  }
+
+  .dark .leaflet-bar a,
+  .dark .leaflet-control-layers {
+    background-color: theme('colors.navy.800');
+    color: theme('colors.warm-gray');
+    border-bottom-color: theme('colors.navy.700');
+  }
+
+  .dark .leaflet-bar a:hover,
+  .dark .leaflet-bar a:focus {
+    background-color: theme('colors.navy.700');
+    color: theme('colors.gold');
+  }
+
+  .dark .leaflet-bar a.leaflet-disabled {
+    background-color: theme('colors.navy.800');
+    color: theme('colors.navy.500');
+  }
+
+  .dark .leaflet-container .leaflet-control-attribution {
+    background-color: theme('colors.navy.900 / 80%');
+    color: theme('colors.navy.300');
+  }
+
+  .dark .leaflet-container .leaflet-control-attribution a {
+    color: theme('colors.sky.DEFAULT');
+  }
+
+  /* Popups and tooltips deliberately stay light. Their contents are written
+     for a white card (text-gray-900 with no dark variant, in 8 components),
+     so a dark popup makes that text unreadable. Darkening them means giving
+     every popup body dark variants first. */
 }
 
 /* ========================================

@@ -1,4 +1,5 @@
 import { useState, useId, Suspense, lazy } from "react";
+import { timezoneOptionsFor } from "../../utils/timezone";
 import toast from "react-hot-toast";
 import userService from "../../services/user.service";
 import { useUpdateUser } from "../../store/authStore";
@@ -169,11 +170,11 @@ export default function AccountSettingsSection({
   return (
     <div className="space-y-6">
       {/* Name */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Name
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Change your name (must be 3-50 characters).
         </p>
         <form onSubmit={handleUpdateUsername} className="space-y-4">
@@ -186,7 +187,7 @@ export default function AccountSettingsSection({
               id={currentUsernameId}
               value={username}
               disabled
-              className="input w-full max-w-md bg-gray-100 dark:bg-gray-700"
+              className="input w-full max-w-md bg-gray-100 dark:bg-dusk-700"
             />
           </div>
           <div>
@@ -215,11 +216,11 @@ export default function AccountSettingsSection({
       </div>
 
       {/* Password */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Change Password
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Update your password (minimum 8 characters).
         </p>
         <form onSubmit={handleUpdatePassword} className="space-y-4">
@@ -271,11 +272,11 @@ export default function AccountSettingsSection({
       </div>
 
       {/* Timezone Setting */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Timezone
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Set your home timezone to ensure dates are displayed correctly.
         </p>
         <label htmlFor={timezoneSelectId} className="sr-only">
@@ -287,23 +288,11 @@ export default function AccountSettingsSection({
           onChange={(e) => onTimezoneChange(e.target.value)}
           className="input w-full max-w-md"
         >
-          <option value="UTC">UTC (Coordinated Universal Time)</option>
-          <option value="America/New_York">Eastern Time (US & Canada)</option>
-          <option value="America/Chicago">Central Time (US & Canada)</option>
-          <option value="America/Denver">Mountain Time (US & Canada)</option>
-          <option value="America/Los_Angeles">
-            Pacific Time (US & Canada)
-          </option>
-          <option value="America/Anchorage">Alaska</option>
-          <option value="Pacific/Honolulu">Hawaii</option>
-          <option value="Europe/London">London</option>
-          <option value="Europe/Paris">Paris</option>
-          <option value="Europe/Berlin">Berlin</option>
-          <option value="Asia/Tokyo">Tokyo</option>
-          <option value="Asia/Shanghai">Shanghai</option>
-          <option value="Asia/Dubai">Dubai</option>
-          <option value="Australia/Sydney">Sydney</option>
-          <option value="Pacific/Auckland">Auckland</option>
+          {timezoneOptionsFor(timezone).map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </select>
         <div className="mt-4">
           <button
@@ -317,11 +306,11 @@ export default function AccountSettingsSection({
       </div>
 
       {/* Home Currency Setting */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Home Currency
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Trip budgets and expenses recorded in other currencies are converted
           to this currency, using the exchange rate from the day each amount was
           spent. Leave it unset to report each trip in its own budget currency.
@@ -355,11 +344,11 @@ export default function AccountSettingsSection({
       </div>
 
       {/* Dietary Preferences */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Dietary Preferences
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Select your dietary needs. Activities matching these preferences will
           be highlighted when browsing dining options.
         </p>
@@ -392,21 +381,21 @@ export default function AccountSettingsSection({
       </ErrorBoundary>
 
       {/* Appearance */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Appearance
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Customize the visual appearance of the application.
         </p>
         <div className="space-y-4">
           {/* Theme Toggle */}
-          <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-dusk-700">
             <div>
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                 Dark Mode
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500 dark:text-dusk-400">
                 Switch between light and dark color schemes
               </p>
             </div>
@@ -416,7 +405,7 @@ export default function AccountSettingsSection({
               className={`
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
                 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                ${theme === "dark" ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
+                ${theme === "dark" ? "bg-blue-600" : "bg-gray-200 dark:bg-dusk-600"}
               `}
               role="switch"
               aria-checked={theme === "dark" ? "true" : "false"}
@@ -438,8 +427,8 @@ export default function AccountSettingsSection({
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                 Custom Map Style
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Use themed map tiles that match the app's look
+              <p className="text-sm text-gray-500 dark:text-dusk-400">
+                Use softer grey map tiles in light mode. Dark mode always uses the full-colour map.
               </p>
             </div>
             <button
@@ -448,7 +437,7 @@ export default function AccountSettingsSection({
               className={`
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
                 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                ${useCustomMapStyle ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
+                ${useCustomMapStyle ? "bg-blue-600" : "bg-gray-200 dark:bg-dusk-600"}
               `}
               role="switch"
               aria-checked={useCustomMapStyle ? "true" : "false"}

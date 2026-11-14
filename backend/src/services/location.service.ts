@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import axios from 'axios';
 import tzlookup from 'tz-lookup';
 import { AppError } from '../middleware/errorHandler';
+import { TripStatus } from '../types/trip.types';
 import logger from '../config/logger';
 import config from '../config';
 import { CreateLocationInput, UpdateLocationInput, CreateLocationCategoryInput, UpdateLocationCategoryInput, BulkDeleteLocationsInput, BulkUpdateLocationsInput } from '../types/location.types';
@@ -271,13 +272,27 @@ export class LocationService {
     return convertDecimals(locations);
   }
 
-  async getAllVisitedLocations(userId: number, page = 1, limit = 200) {
+  /**
+   * Mappable places across the user's trips. By default only completed
+   * trips count ("places visited"); `scope: 'all'` returns the places of
+   * every trip except cancelled ones, for maps that show plans as well.
+   */
+  async getAllVisitedLocations(
+    userId: number,
+    page = 1,
+    limit = 200,
+    scope: 'visited' | 'all' = 'visited'
+  ) {
     const skip = (page - 1) * limit;
 
     const where = {
+      // A place counts as visited when its trip is completed. The trip's
+      // `addToPlacesVisited` flag is not used: it is set when a trip is
+      // completed but never cleared if the trip moves back out of Completed,
+      // so it kept showing places from trips that are still being planned.
       trip: {
         userId,
-        addToPlacesVisited: true,
+        status: scope === 'all' ? { not: TripStatus.CANCELLED } : TripStatus.COMPLETED,
       },
       AND: [
         { latitude: { not: null } },

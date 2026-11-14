@@ -732,7 +732,7 @@ export default function DailyView({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-400">Loading day view...</span>
+        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view...</span>
       </div>
     );
   }
@@ -746,14 +746,14 @@ export default function DailyView({
           </svg>
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Data</h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md">{error}</p>
+        <p className="text-gray-500 dark:text-dusk-400 max-w-md">{error}</p>
       </div>
     );
   }
 
   if (allDays.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
         <p>No trip dates defined. Please set trip start and end dates.</p>
       </div>
     );
@@ -776,7 +776,7 @@ export default function DailyView({
       {/* Day Content */}
       <div className="space-y-4">
         {currentDay?.items.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-700">
             <EmptyDayPlaceholder
               tripId={tripId}
               dayNumber={currentDay.dayNumber}
@@ -868,7 +868,7 @@ export default function DailyView({
 
         {/* Unscheduled Activities Section */}
         {currentDay?.unscheduledActivities && currentDay.unscheduledActivities.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-700 p-4">
             <div className="flex items-center gap-2 mb-4">
               <svg
                 className="w-5 h-5 text-amber-500"
@@ -883,14 +883,14 @@ export default function DailyView({
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-dusk-300">
                 Unscheduled Activities
               </h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-gray-500 dark:text-dusk-400 bg-gray-100 dark:bg-dusk-700 px-2 py-0.5 rounded-full">
                 {currentDay.unscheduledActivities.length}
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mb-4">
               These activities are linked to locations on this day but don't have scheduled times.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -919,12 +919,12 @@ export default function DailyView({
                       {activity.name}
                     </h4>
                     {activity.category && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                         {activity.category}
                       </p>
                     )}
                     {activity.linkedLocations && activity.linkedLocations.length > 0 && (
-                      <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-600 dark:text-dusk-400">
                         <svg
                           className="w-3 h-3 flex-shrink-0"
                           fill="none"

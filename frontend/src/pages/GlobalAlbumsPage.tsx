@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useId, useCallback, useRef } from "react";
+import LibraryBackLink from "../components/LibraryBackLink";
 import { Link, useNavigate } from "react-router";
 import photoService from "../services/photo.service";
 import tripService from "../services/trip.service";
@@ -387,6 +388,7 @@ export default function GlobalAlbumsPage() {
   return (
     <div className="bg-cream dark:bg-navy-900 min-h-screen">
       <main className="max-w-[1600px] mx-auto px-4 py-8">
+        <LibraryBackLink />
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between gap-3 mb-2">

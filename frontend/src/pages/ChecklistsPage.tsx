@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LIBRARY_BACK_LINK } from '../components/LibraryBackLink';
 import { Link } from 'react-router';
 import type { Checklist, DefaultChecklistStatus, ChecklistType } from '../types/checklist';
 import type { Trip } from '../types/trip';
@@ -217,8 +218,8 @@ export default function ChecklistsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
+      <div className="min-h-screen bg-cream dark:bg-navy-900">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
           <LoadingSpinner.FullPage message="Loading checklists..." />
         </div>
       </div>
@@ -226,11 +227,12 @@ export default function ChecklistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <PageHeader
           title="Checklists"
           subtitle="Track your travel achievements"
+          backLink={LIBRARY_BACK_LINK}
           action={{
             label: showCreateForm ? 'Cancel' : '+ Create Custom List',
             onClick: () => setShowCreateForm(!showCreateForm),
@@ -239,13 +241,13 @@ export default function ChecklistsPage() {
         />
 
         {showCreateForm && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Create Custom Checklist
             </h2>
             <form onSubmit={handleCreateChecklist}>
               <div className="mb-4">
-                <label htmlFor="checklist-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="checklist-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Name*
                 </label>
                 <input
@@ -259,7 +261,7 @@ export default function ChecklistsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="checklist-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="checklist-description" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Description
                 </label>
                 <textarea
@@ -272,7 +274,7 @@ export default function ChecklistsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Associate with Trip (Optional)
                 </label>
                 <select
@@ -288,7 +290,7 @@ export default function ChecklistsPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                   Link this checklist to a specific trip. It will appear in the trip header.
                 </p>
               </div>
@@ -322,7 +324,7 @@ export default function ChecklistsPage() {
               <Link
                 key={checklist.id}
                 to={`/checklists/${checklist.id}`}
-                className="block bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow"
+                className="block bg-white dark:bg-dusk-800 rounded-lg shadow hover:shadow-lg transition-shadow"
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -333,7 +335,7 @@ export default function ChecklistsPage() {
                           {checklist.name}
                         </h3>
                         {checklist.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                             {checklist.description}
                           </p>
                         )}
@@ -357,13 +359,13 @@ export default function ChecklistsPage() {
 
                   {checklist.stats && (
                     <div className="mt-4">
-                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <div className="flex justify-between text-sm text-gray-600 dark:text-dusk-400 mb-2">
                         <span>
                           {checklist.stats.checked} / {checklist.stats.total} completed
                         </span>
                         <span>{checklist.stats.percentage}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-dusk-700 rounded-full h-2">
                         {/* Dynamic progress width requires CSS variable - cannot be moved to static CSS */}
                         <div
                           className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-[width] progress-bar"
@@ -380,10 +382,10 @@ export default function ChecklistsPage() {
 
         {/* Remove Defaults button at bottom of page */}
         {checklists.some(c => c.isDefault) && (
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-dusk-700">
             <button
               onClick={handleOpenRemoveModal}
-              className="text-sm text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+              className="text-sm text-gray-500 dark:text-dusk-400 hover:text-red-600 dark:hover:text-red-400"
             >
               Remove Default Checklist(s)
             </button>

@@ -25,7 +25,7 @@ This document defines the visual design system and UI conventions used throughou
 Travel Life uses a **warm, adventure-inspired design** with these core principles:
 
 - **Compass Gold Theme**: Warm amber/gold tones evoke exploration and adventure
-- **Dual-Mode Excellence**: Both light and dark modes are first-class citizens
+- **Dual-Mode Excellence**: Both light and dark modes are first-class citizens. Dark mode sits on a cool grey that is much less blue than the navy it replaced (the tokens are still named `navy`)
 - **Subtle Depth**: Use shadows, glows, and backdrop effects for depth without heaviness
 - **Smooth Interactions**: Consistent animations make the UI feel polished and responsive
 - **Travel-Centric**: Serif display font (Crimson Pro) adds an elegant, journalistic quality befitting a travel log
@@ -55,10 +55,16 @@ Light mode primary palette - warm amber tones:
 
 | Token | Hex | Usage |
 |-------|-----|-------|
+| `accent-50` | `#fffbeb` | Faintest tinted backgrounds, light text on dark accent fills |
+| `accent-100` | `#fef3c7` | Light tinted backgrounds, gradient ends |
+| `accent-200` | `#fde68a` | Soft highlights, light borders |
 | `accent-300` | `#fcd34d` | Light accents |
 | `accent-400` | `#fbbf24` | Dark mode primary |
 | `accent-500` | `#f59e0b` | Emphasis |
 | `accent-600` | `#D97706` | Dark mode gradients |
+| `accent-700` | `#B45309` | Strong emphasis, text on light tints |
+| `accent-800` | `#92400e` | Dark accent text on light backgrounds |
+| `accent-900` | `#78350f` | Darkest accent, dark-mode tinted backgrounds |
 | `gold` | `#fbbf24` | Dark mode highlights, glows |
 
 ### Neutral Colors
@@ -67,7 +73,7 @@ Light mode primary palette - warm amber tones:
 |-------|-----|-------|
 | `cream` | `#f8fafc` | Light mode background |
 | `parchment` | `#f1f5f9` | Secondary light background |
-| `warm-gray` | `#e2e8f0` | Borders, dividers (light) |
+| `warm-gray` | `#e3e5ea` | Borders, dividers (light). Same value as `dusk-200` |
 | `charcoal` | `#1e293b` | Primary text (light mode) |
 | `slate` | `#64748b` | Secondary text |
 
@@ -75,12 +81,34 @@ Light mode primary palette - warm amber tones:
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `navy-900` | `#0f172a` | Darkest background |
-| `navy-800` | `#1e293b` | Card backgrounds |
-| `navy-700` | `#334155` | Elevated surfaces |
+| `navy-950` | `#0b0d12` | Darkest chrome (top bar, bottom nav) |
+| `navy-900` | `#151820` | Page background |
+| `navy-800` | `#242830` | Card backgrounds |
+| `navy-700` | `#3b404b` | Elevated surfaces, borders |
 | `gold` | `#fbbf24` | Primary accent, highlights |
 | `sky` | `#7dd3fc` | Secondary accent (bare `text-sky`, `border-sky`) |
-| `warm-gray` | `#e2e8f0` | Body text (dark mode) |
+| `warm-gray` | `#e3e5ea` | Body text (dark mode) |
+
+`navy` is no longer navy. It is an alias of the `dusk` ramp, which is defined once as `DUSK`
+at the top of `tailwind.config.js`; `warm-gray` reads from the same ramp. Retuning the dark
+theme means editing that one scale, nothing else.
+
+| Step | Hex | Step | Hex |
+|------|-----|------|-----|
+| `dusk-50` | `#f9fafb` | `dusk-500` | `#6d7280` |
+| `dusk-100` | `#f3f4f6` | `dusk-600` | `#4e5360` |
+| `dusk-200` | `#e3e5ea` | `dusk-700` | `#3b404b` |
+| `dusk-300` | `#d1d4db` | `dusk-800` | `#242830` |
+| `dusk-400` | `#9da2af` | `dusk-900` | `#151820` |
+| | | `dusk-950` | `#0b0d12` |
+
+Raw dark-mode neutrals use `dark:*-dusk-N` (`dark:text-dusk-400`, `dark:border-dusk-700`).
+Never use `dark:*-gray-N`, `stone`, `slate` or `zinc` in a `dark:` variant: those bypass the
+ramp, and the theme then cannot be retuned in one place.
+
+The ramp is a cool grey, one third of the way from Tailwind's `zinc` to `slate`, and that is
+deliberate. Warm greys (`stone`), near-neutral greys and `zinc` were each tried in the app
+and read as brown next to the gold accent. The original `slate` read as blue.
 
 `sky` is both a single accent value and the full Tailwind `sky-50`…`sky-950` scale:
 `tailwind.config.js` spreads the default scale and adds `DEFAULT`. Define any future flat
@@ -88,6 +116,11 @@ accent the same way. A bare `sky: '#7dd3fc'` inside `extend.colors` **replaces**
 rather than adding to it, and every `bg-sky-500` / `text-sky-800` in the app then silently
 emits no CSS — which is exactly how the Planned status badge ended up rendering with no
 background at all.
+
+The related trap: a flat colour token has no numeric steps. `cream`, `parchment`, `charcoal`,
+`slate` and `gold` are single values, so `bg-cream-50` or `text-slate-600` emit no CSS and
+fail silently. Use the bare name (`bg-cream`, `text-slate`), or a `dusk-N` step for a
+neutral. About 100 such dead usages were removed when the dark palette was retuned.
 
 ### Status Colors
 
@@ -518,10 +551,21 @@ Always pair light/dark classes:
 |---------|-------|------|
 | Page background | `bg-cream` | `bg-gradient-to-br from-navy-900 to-navy-800` |
 | Card background | `bg-white/80` | `bg-navy-800/90` |
+| Secondary text | `text-slate` or `text-gray-600` | `dark:text-dusk-400` |
+| Neutral borders | `border-gray-200` | `dark:border-dusk-700` |
 | Primary accent | `text-primary-600` | `text-gold` |
 | Borders | `border-primary-100` | `border-gold/20` |
 | Shadows | Standard shadows | Gold glow shadows |
 | Focus rings | `ring-primary-500` | `ring-gold` |
+| Text links and text-only actions | `text-primary-600` | `dark:text-teal-300` |
+| Hairline borders on new surfaces | `border-primary-500/10` | `dark:border-navy-700` |
+
+**Where gold goes in dark mode.** Gold is for the brand mark, the active
+navigation item or tab, numbered map pins, and one primary action per screen
+(`btn-primary`). It is not a link colour: text links and text-only actions use
+`dark:text-teal-300`, and hover on inactive navigation goes to white, not gold.
+Older screens still use gold for links and `border-gold/20` for card borders;
+move them over when you are working in that area rather than in a sweep.
 
 ### Gold Glow Effects
 
@@ -701,10 +745,45 @@ Using Tailwind's mobile-first breakpoints:
 
 | Component | Mobile | Desktop |
 |-----------|--------|---------|
-| Navigation | Hamburger + drawer | Horizontal nav |
-| Tabs | Dropdown select | Horizontal tabs |
+| Navigation | Bottom bar (below `md`) + drawer | Horizontal nav (from `lg`) |
+| Tabs | Horizontally scrolling strip | Horizontal tabs |
+| Today | Short map above the agenda, expandable | Work column beside a sticky map |
+| Trip Day Plan | List / Map switch | List beside a sticky map |
 | Pagination | "Page X of Y" | Full page numbers |
 | Grids | 1 column | 2-4 columns |
+
+### App Navigation
+
+The shell has four destinations. Nothing else gets a top-level slot; a new
+collection-style page goes under Library.
+
+| Item | Route | Also active for |
+|------|-------|-----------------|
+| Today | `/dashboard` | |
+| Trips | `/trips` | |
+| Library | `/library` (dropdown on desktop) | `/albums`, `/places-visited`, `/food-log`, `/checklists`, `/travel-stats`, `/trip-calendar`, `/year-in-review`, `/trip-series`, `/companions` |
+| Inbox | `/saved-links` | |
+
+- Desktop (`Navbar.tsx`): Library is a dropdown listing its pages, with
+  "All of Library" linking to the hub.
+- Mobile (`MobileBottomNav.tsx`): Today, Trips, **Log**, Library, Inbox. Log is
+  the capture action and keeps the centre slot. Library opens the hub page.
+- The Inbox badge is saved links waiting to be filed plus imported bookings
+  waiting for review.
+- When you add a page under Library, add it in three places: the `children`
+  of the Library entry in `Navbar.tsx`, `LIBRARY_PATHS` in
+  `MobileBottomNav.tsx`, and `ENTRIES` in `pages/LibraryPage.tsx`.
+
+### Logo
+
+Use `components/BrandLogo.tsx` (`variant="full"` or `"mark"`). It renders the
+light and on-dark artwork and lets the theme class choose. The source files
+are in `branding/logo`; the copies the app serves are in
+`frontend/src/assets/brand` and `frontend/public`. The app copies differ from
+the source in one path: the dotted bar is `M14 22H70.2` instead of `M14 22H70`,
+because browsers do not draw a zero-length dash that lands exactly on the end
+of a path and the last dot went missing. Keep that change when refreshing the
+artwork.
 
 ---
 

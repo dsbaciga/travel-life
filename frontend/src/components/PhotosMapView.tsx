@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import AppTileLayer from './AppTileLayer';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from '@changey/react-leaflet-markercluster';
 import { LatLngBounds, LatLng, DivIcon } from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
@@ -70,7 +71,7 @@ function LocationSourceLegend({ stats }: { stats: LocationResolutionStats }) {
   if (!hasAnyLocations) return null;
 
   return (
-    <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 mb-3">
+    <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-dusk-400 mb-3">
       {stats.exif > 0 && (
         <span className="flex items-center gap-1.5">
           <span
@@ -99,7 +100,7 @@ function LocationSourceLegend({ stats }: { stats: LocationResolutionStats }) {
         </span>
       )}
       {stats.noLocation > 0 && (
-        <span className="text-gray-400 dark:text-gray-400">
+        <span className="text-gray-400 dark:text-dusk-400">
           ({stats.noLocation} without location)
         </span>
       )}
@@ -112,7 +113,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
   switch (source) {
     case 'exif':
       return (
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
@@ -127,7 +128,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
       );
     case 'linked_location':
       return (
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
@@ -142,7 +143,7 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
       );
     case 'album_location':
       return (
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path
               strokeLinecap="round"
@@ -344,7 +345,7 @@ export default function PhotosMapView({
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4" />
-        <p className="text-gray-500 dark:text-gray-400">Loading photo locations...</p>
+        <p className="text-gray-500 dark:text-dusk-400">Loading photo locations...</p>
       </div>
     );
   }
@@ -354,7 +355,7 @@ export default function PhotosMapView({
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
         <svg
-          className="w-16 h-16 text-gray-400 dark:text-gray-400 mb-4"
+          className="w-16 h-16 text-gray-400 dark:text-dusk-400 mb-4"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -367,8 +368,8 @@ export default function PhotosMapView({
             d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
           />
         </svg>
-        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">No photos with locations</p>
-        <p className="text-gray-400 dark:text-gray-400 text-sm mt-1 text-center max-w-md px-4">
+        <p className="text-gray-500 dark:text-dusk-400 text-lg font-medium">No photos with locations</p>
+        <p className="text-gray-400 dark:text-dusk-400 text-sm mt-1 text-center max-w-md px-4">
           Photos will appear on the map if they have GPS data, are linked to a location, or belong to an album linked
           to a location.
         </p>
@@ -388,10 +389,7 @@ export default function PhotosMapView({
 
       <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-navy-700">
         <MapContainer center={[centerLat, centerLng]} zoom={10} className="h-full w-full" scrollWheelZoom={true}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <AppTileLayer />
           <MapBoundsHandler photos={geotaggedPhotos} />
 
           <MarkerClusterGroup chunkedLoading>
@@ -430,7 +428,7 @@ export default function PhotosMapView({
                       )}
                       <div className="p-2">
                         {photo.caption && (
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
+                          <p className="text-sm font-medium text-gray-900 dark:text-dusk-100 line-clamp-2">
                             {photo.caption}
                           </p>
                         )}

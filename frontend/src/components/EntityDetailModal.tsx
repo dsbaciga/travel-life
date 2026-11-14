@@ -90,7 +90,7 @@ function DetailRow({ label, value, className = '' }: { label: string; value: Rea
   if (value === null || value === undefined || value === '') return null;
   return (
     <div className={`py-2 ${className}`}>
-      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</dt>
+      <dt className="text-sm font-medium text-gray-500 dark:text-dusk-400">{label}</dt>
       <dd className="mt-1 text-sm text-gray-900 dark:text-white">{value}</dd>
     </div>
   );
@@ -99,7 +99,7 @@ function DetailRow({ label, value, className = '' }: { label: string; value: Rea
 // Entity-specific detail components
 function SavedLinkDetails({ entity }: { entity: SavedLink }) {
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Title" value={savedLinkDisplayTitle(entity)} />
       <DetailRow
         label="URL"
@@ -126,7 +126,7 @@ function SavedLinkDetails({ entity }: { entity: SavedLink }) {
 
 function LocationDetails({ entity }: { entity: Location }) {
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Name" value={entity.name} />
       <DetailRow label="Address" value={entity.address} />
       {entity.category && (
@@ -159,7 +159,7 @@ function LocationDetails({ entity }: { entity: Location }) {
               {/* Hours are wall-clock times where the place is, which is often not where the
                   reader is — say so rather than leaving them to assume their own clock. */}
               {entity.timezone && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                   Local time in {entity.timezone.replace(/_/g, ' ')}
                 </div>
               )}
@@ -180,7 +180,7 @@ function LocationDetails({ entity }: { entity: Location }) {
 
 function CustomItemDetails({ entity }: { entity: CustomItem }) {
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Name" value={entity.name} />
       <DetailRow label="Type" value={entity.type?.name} />
       {entity.allDay ? (
@@ -221,7 +221,7 @@ function CustomItemDetails({ entity }: { entity: CustomItem }) {
 
 function ActivityDetails({ entity }: { entity: Activity }) {
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Name" value={entity.name} />
       <DetailRow label="Description" value={entity.description ? <MarkdownRenderer content={entity.description} compact /> : null} />
       <DetailRow label="Category" value={entity.category} />
@@ -260,7 +260,7 @@ function ActivityDetails({ entity }: { entity: Activity }) {
 function LodgingDetails({ entity }: { entity: Lodging }) {
   const typeIcon = LODGING_ICONS[entity.type] || LODGING_ICONS.other;
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Name" value={entity.name} />
       <DetailRow
         label="Type"
@@ -311,7 +311,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
   };
 
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow
         label="Type"
         value={
@@ -369,7 +369,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
 
 function JournalDetails({ entity }: { entity: JournalEntry }) {
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Title" value={entity.title} />
       <DetailRow label="Date" value={formatDate(entity.date, 'full', '')} />
       <DetailRow
@@ -395,7 +395,7 @@ function PhotoDetails({ entity }: { entity: Photo }) {
   );
 
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       {imageUrl && !imageError && (
         <div className="py-4">
           <img
@@ -408,11 +408,11 @@ function PhotoDetails({ entity }: { entity: Photo }) {
       )}
       {!imageUrl && !imageError && (
         <div className="py-4 flex justify-center">
-          <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          <div className="w-32 h-32 bg-gray-200 dark:bg-dusk-700 rounded-lg animate-pulse" />
         </div>
       )}
       {imageError && (
-        <div className="py-4 text-center text-gray-500 dark:text-gray-400">
+        <div className="py-4 text-center text-gray-500 dark:text-dusk-400">
           <span className="text-4xl">📷</span>
           <p className="mt-2 text-sm">Image could not be loaded</p>
         </div>
@@ -440,7 +440,7 @@ function AlbumPhotoPreview({ photo }: { photo: Photo }) {
 
   if (imageError) {
     return (
-      <div className="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded text-gray-400">
+      <div className="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-dusk-700 rounded text-gray-400">
         📷
       </div>
     );
@@ -448,7 +448,7 @@ function AlbumPhotoPreview({ photo }: { photo: Photo }) {
 
   if (!imageUrl) {
     return (
-      <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+      <div className="w-16 h-16 bg-gray-200 dark:bg-dusk-700 rounded animate-pulse" />
     );
   }
 
@@ -465,19 +465,19 @@ function AlbumPhotoPreview({ photo }: { photo: Photo }) {
 function AlbumDetails({ entity }: { entity: AlbumWithPhotos }) {
   const photoCount = entity.total ?? entity.photos?.length ?? 0;
   return (
-    <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+    <dl className="divide-y divide-gray-200 dark:divide-dusk-700">
       <DetailRow label="Name" value={entity.name} />
       <DetailRow label="Description" value={entity.description ? <MarkdownRenderer content={entity.description} compact /> : null} />
       <DetailRow label="Photos" value={`${photoCount} photos`} />
       {entity.photos && entity.photos.length > 0 && (
         <div className="py-4">
-          <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Preview</dt>
+          <dt className="text-sm font-medium text-gray-500 dark:text-dusk-400 mb-2">Preview</dt>
           <dd className="flex flex-wrap gap-2">
             {entity.photos.slice(0, 6).map((photoAssignment) => (
               <AlbumPhotoPreview key={photoAssignment.photo.id} photo={photoAssignment.photo} />
             ))}
             {photoCount > 6 && (
-              <div className="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-500 dark:text-gray-400">
+              <div className="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-dusk-700 rounded text-sm text-gray-500 dark:text-dusk-400">
                 +{photoCount - 6}
               </div>
             )}
@@ -661,10 +661,10 @@ export default function EntityDetailModal({
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-white dark:bg-dusk-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-dusk-700 flex-shrink-0">
           <h2
             id="entity-detail-modal-title"
             className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
@@ -676,7 +676,7 @@ export default function EntityDetailModal({
             onClick={onClose}
             type="button"
             aria-label="Close"
-            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -705,12 +705,12 @@ export default function EntityDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-dusk-700 flex-shrink-0 bg-gray-50 dark:bg-dusk-800/50">
           <button
             type="button"
             onClick={handleEdit}
             disabled={isNavigating}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-dusk-300 bg-white dark:bg-dusk-700 border border-gray-300 dark:border-dusk-600 rounded-lg hover:bg-gray-50 dark:hover:bg-dusk-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isNavigating ? 'Loading' : 'Edit'}
           </button>

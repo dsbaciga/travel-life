@@ -126,16 +126,16 @@ export default function TimelineEventCard({
   // Format trip time display
   const renderTripTime = () => {
     if (item.isAllDay) {
-      return <span className="text-gray-500 dark:text-gray-400">All Day</span>;
+      return <span className="text-gray-500 dark:text-dusk-400">All Day</span>;
     }
     if (item.showCheckInTime) {
       return (
         <>
-          <span className="font-medium text-gray-700 dark:text-gray-300">
+          <span className="font-medium text-gray-700 dark:text-dusk-300">
             Check-in: {formatTime(item.dateTime, displayTimezone)}
           </span>
           {displayTimezone && (
-            <span className="text-gray-400 dark:text-gray-400 ml-1">
+            <span className="text-gray-400 dark:text-dusk-400 ml-1">
               {getTimezoneAbbr(displayTimezone)}
             </span>
           )}
@@ -145,11 +145,11 @@ export default function TimelineEventCard({
     if (item.showCheckOutTime && item.endDateTime) {
       return (
         <>
-          <span className="font-medium text-gray-700 dark:text-gray-300">
+          <span className="font-medium text-gray-700 dark:text-dusk-300">
             Check-out: {formatTime(item.endDateTime, displayTimezone)}
           </span>
           {displayTimezone && (
-            <span className="text-gray-400 dark:text-gray-400 ml-1">
+            <span className="text-gray-400 dark:text-dusk-400 ml-1">
               {getTimezoneAbbr(displayTimezone)}
             </span>
           )}
@@ -163,12 +163,12 @@ export default function TimelineEventCard({
 
     return (
       <>
-        <span className="font-medium text-gray-700 dark:text-gray-300">
+        <span className="font-medium text-gray-700 dark:text-dusk-300">
           {primaryTime}
           {endTime && ` - ${endTime}`}
         </span>
         {displayTimezone && (
-          <span className="text-gray-400 dark:text-gray-400 ml-1">
+          <span className="text-gray-400 dark:text-dusk-400 ml-1">
             {getTimezoneAbbr(displayTimezone)}
           </span>
         )}
@@ -182,15 +182,15 @@ export default function TimelineEventCard({
       return null;
     }
     if (item.isAllDay) {
-      return <span className="text-gray-500 dark:text-gray-400">All Day</span>;
+      return <span className="text-gray-500 dark:text-dusk-400">All Day</span>;
     }
     if (item.showCheckInTime) {
       return (
         <>
-          <span className="text-gray-500 dark:text-gray-400">
+          <span className="text-gray-500 dark:text-dusk-400">
             Check-in: {formatTime(item.dateTime, userTimezone)}
           </span>
-          <span className="text-gray-400 dark:text-gray-400 ml-1">
+          <span className="text-gray-400 dark:text-dusk-400 ml-1">
             {getTimezoneAbbr(userTimezone)}
           </span>
         </>
@@ -199,10 +199,10 @@ export default function TimelineEventCard({
     if (item.showCheckOutTime && item.endDateTime) {
       return (
         <>
-          <span className="text-gray-500 dark:text-gray-400">
+          <span className="text-gray-500 dark:text-dusk-400">
             Check-out: {formatTime(item.endDateTime, userTimezone)}
           </span>
-          <span className="text-gray-400 dark:text-gray-400 ml-1">
+          <span className="text-gray-400 dark:text-dusk-400 ml-1">
             {getTimezoneAbbr(userTimezone)}
           </span>
         </>
@@ -215,11 +215,11 @@ export default function TimelineEventCard({
 
     return (
       <>
-        <span className="text-gray-500 dark:text-gray-400">
+        <span className="text-gray-500 dark:text-dusk-400">
           {primaryTime}
           {endTime && ` - ${endTime}`}
         </span>
-        <span className="text-gray-400 dark:text-gray-400 ml-1">
+        <span className="text-gray-400 dark:text-dusk-400 ml-1">
           {getTimezoneAbbr(userTimezone)}
         </span>
       </>
@@ -256,7 +256,7 @@ export default function TimelineEventCard({
     }
     if (parts.length === 0) return null;
     return (
-      <span className="text-gray-400 dark:text-gray-400">
+      <span className="text-gray-400 dark:text-dusk-400">
         {' '}· {parts.join(' · ')}
       </span>
     );
@@ -285,9 +285,9 @@ export default function TimelineEventCard({
 
       {/* Content card */}
       <div
-        className={`group flex-1 bg-white dark:bg-gray-800 border-l-4 ${getTypeBorderColor(
+        className={`group flex-1 bg-white dark:bg-dusk-800 border-l-4 ${getTypeBorderColor(
           item.type
-        )} rounded-lg ${isCompact ? 'p-2.5' : 'p-4'} shadow-sm hover:shadow-md transition-shadow relative border border-gray-200 dark:border-gray-700 border-l-4 ${
+        )} rounded-lg ${isCompact ? 'p-2.5' : 'p-4'} shadow-sm hover:shadow-md transition-shadow relative border border-gray-200 dark:border-dusk-700 border-l-4 ${
           connectionInfo ? 'ring-1 ring-green-200 dark:ring-green-800' : ''
         }`}
       >
@@ -299,7 +299,7 @@ export default function TimelineEventCard({
               e.stopPropagation();
               onEdit(item);
             }}
-            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-dusk-700 text-gray-500 hover:text-blue-600 dark:text-dusk-400 dark:hover:text-blue-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Edit"
           >
             <EditIcon />
@@ -310,7 +310,7 @@ export default function TimelineEventCard({
               e.stopPropagation();
               onDelete(item);
             }}
-            className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 dark:text-dusk-400 dark:hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Delete"
           >
             <DeleteIcon />
@@ -318,7 +318,7 @@ export default function TimelineEventCard({
         </div>
 
         {/* Time row */}
-        <div className={`text-sm text-gray-500 dark:text-gray-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16`}>
+        <div className={`text-sm text-gray-500 dark:text-dusk-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16`}>
           {/* Desktop: columnar layout for dual timezone */}
           {showDualTime && userTimezone && displayTimezone !== userTimezone ? (
             <>
@@ -334,11 +334,11 @@ export default function TimelineEventCard({
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                     {renderTripTime()}
                   </div>
-                  <div className="text-gray-400 dark:text-gray-400">{renderDurationDistance()}</div>
+                  <div className="text-gray-400 dark:text-dusk-400">{renderDurationDistance()}</div>
                 </div>
                 <div className="flex items-center gap-1.5">
                   {renderHomeTime()}
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-dusk-500 shrink-0" />
                 </div>
               </div>
             </>
@@ -357,14 +357,14 @@ export default function TimelineEventCard({
               {item.title}
             </h4>
             {item.subtitle && (
-              <p className={`text-gray-600 dark:text-gray-400 break-words ${isCompact ? 'text-xs' : 'text-sm'}`}>
+              <p className={`text-gray-600 dark:text-dusk-400 break-words ${isCompact ? 'text-xs' : 'text-sm'}`}>
                 {item.subtitle}
               </p>
             )}
           </div>
           {/* Cost */}
           {item.cost !== undefined && item.cost > 0 && item.currency && (
-            <div className={`font-medium text-gray-700 dark:text-gray-300 shrink-0 whitespace-nowrap ${isCompact ? 'text-xs' : 'text-sm'}`}>
+            <div className={`font-medium text-gray-700 dark:text-dusk-300 shrink-0 whitespace-nowrap ${isCompact ? 'text-xs' : 'text-sm'}`}>
               {item.currency} {item.cost.toFixed(2)}
             </div>
           )}
@@ -372,7 +372,7 @@ export default function TimelineEventCard({
 
         {/* Booking info */}
         {(item.vehicleNumber || item.confirmationNumber) && (
-          <div className={`flex items-center gap-3 text-gray-500 dark:text-gray-400 font-mono ${isCompact ? 'mt-1 text-xs' : 'mt-2 text-xs'}`}>
+          <div className={`flex items-center gap-3 text-gray-500 dark:text-dusk-400 font-mono ${isCompact ? 'mt-1 text-xs' : 'mt-2 text-xs'}`}>
             {item.vehicleNumber && (
               <span className="inline-flex items-center gap-1">
                 <HashIcon />
@@ -390,12 +390,12 @@ export default function TimelineEventCard({
 
         {/* Location */}
         {item.location && (
-          <div className={`flex items-start gap-1.5 text-gray-600 dark:text-gray-400 ${isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'}`}>
+          <div className={`flex items-start gap-1.5 text-gray-600 dark:text-dusk-400 ${isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'}`}>
             <LocationIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
               <div>{item.location}</div>
               {address && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <div className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                   {address}
                 </div>
               )}
@@ -405,7 +405,7 @@ export default function TimelineEventCard({
 
         {/* Description (for transportation shows route, for others shows description) */}
         {item.description && !isCompact && (
-          <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-2">
+          <p className="text-sm text-gray-700 dark:text-dusk-300 mt-2 line-clamp-2">
             {item.description}
           </p>
         )}
@@ -419,7 +419,7 @@ export default function TimelineEventCard({
                 return (
                   <div
                     key={photo.id}
-                    className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0"
+                    className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 dark:bg-dusk-700 flex-shrink-0"
                   >
                     {photoUrl ? (
                       <img
@@ -441,7 +441,7 @@ export default function TimelineEventCard({
               })}
             </div>
             {photoCount > 3 && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-dusk-400">
                 +{photoCount - 3} more
               </span>
             )}
@@ -481,7 +481,7 @@ export default function TimelineEventCard({
         />
 
         {/* Link + directions buttons */}
-        <div className={`flex items-center gap-2 border-t border-gray-100 dark:border-gray-700 ${isCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}>
+        <div className={`flex items-center gap-2 border-t border-gray-100 dark:border-dusk-700 ${isCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}>
           <LinkButton
             tripId={tripId}
             entityType={entityType}
@@ -513,10 +513,10 @@ function renderChildActivities(
   if (!activity.children || activity.children.length === 0) return null;
 
   return (
-    <div className={`border-t border-gray-200 dark:border-gray-700 ${isCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}>
+    <div className={`border-t border-gray-200 dark:border-dusk-700 ${isCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}>
       <div className="flex items-center gap-2 mb-2">
         <ChecklistIcon className="w-4 h-4 text-blue-500" />
-        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+        <span className="text-xs font-medium text-gray-600 dark:text-dusk-400">
           Sub-activities ({activity.children.length})
         </span>
       </div>
@@ -536,18 +536,18 @@ function renderChildActivities(
               className="text-sm bg-blue-50 dark:bg-blue-900/20 rounded p-2 border-l-2 border-blue-400 dark:border-blue-500"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-gray-800 dark:text-gray-200">
+                <span className="font-medium text-gray-800 dark:text-dusk-200">
                   {child.name}
                 </span>
                 {child.startTime && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500 dark:text-dusk-400">
                     {formatTime(new Date(child.startTime), timezone)}
                     {childDuration && ` · ${childDuration}`}
                   </span>
                 )}
               </div>
               {child.category && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-gray-500 dark:text-dusk-400">
                   {child.category}
                 </span>
               )}
@@ -555,7 +555,7 @@ function renderChildActivities(
           );
         })}
         {activity.children.length > 3 && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 pl-2">
+          <div className="text-xs text-gray-500 dark:text-dusk-400 pl-2">
             +{activity.children.length - 3} more sub-activities
           </div>
         )}

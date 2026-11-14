@@ -51,8 +51,8 @@ const CATEGORY_CONFIG: Record<ValidationIssueCategory, {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    color: 'text-slate-600 dark:text-slate-400',
-    bgColor: 'bg-slate-50 dark:bg-slate-800/50',
+    color: 'text-slate dark:text-dusk-400',
+    bgColor: 'bg-cream dark:bg-navy-800/50',
   },
   DOCUMENTS: {
     label: 'Documents & Visas',
@@ -136,10 +136,10 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
+      <div className="card">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
-          <span className="text-gray-600 dark:text-gray-400">Checking trip health...</span>
+          <span className="text-gray-600 dark:text-dusk-400">Checking trip health...</span>
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
 
   if (!validation) {
     return (
-      <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
-        <p className="text-gray-600 dark:text-gray-400">Unable to check trip health</p>
+      <div className="card">
+        <p className="text-gray-600 dark:text-dusk-400">Unable to check trip health</p>
         <button
           onClick={fetchValidation}
           className="mt-3 text-sm text-primary-600 dark:text-gold hover:underline"
@@ -162,7 +162,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
   const isOkay = validation.status === 'okay';
 
   return (
-    <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 overflow-hidden">
+    <div className="card p-0 overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-navy-700">
         <div className="flex items-center justify-between">
@@ -189,14 +189,14 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
             {validation.dismissedIssues > 0 && (
               <button
                 onClick={() => setShowDismissed(!showDismissed)}
-                className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                className="text-xs text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 transition-colors"
               >
                 {showDismissed ? 'Hide' : 'Show'} {validation.dismissedIssues} dismissed
               </button>
             )}
             <button
               onClick={fetchValidation}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
               title="Refresh"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +217,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
               </svg>
             </div>
             <p className="font-medium text-gray-900 dark:text-white">Looking good!</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No issues found with your trip.</p>
+            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">No issues found with your trip.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -241,7 +241,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
                       <span className={config.color}>{config.icon}</span>
                       <span className="font-medium text-gray-900 dark:text-white">{config.label}</span>
                       {activeCount > 0 && (
-                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-navy-600 text-gray-700 dark:text-gray-300">
+                        <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-navy-600 text-gray-700 dark:text-dusk-300">
                           {activeCount}
                         </span>
                       )}
@@ -268,11 +268,11 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${issue.isDismissed ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                              <p className={`text-sm ${issue.isDismissed ? 'text-gray-500 dark:text-dusk-400' : 'text-gray-700 dark:text-dusk-300'}`}>
                                 {issue.message}
                               </p>
                               {issue.suggestion && !issue.isDismissed && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                                   {issue.suggestion}
                                 </p>
                               )}
@@ -289,14 +289,14 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
                               {issue.isDismissed ? (
                                 <button
                                   onClick={() => handleRestore(issue)}
-                                  className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                  className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-dusk-300 transition-colors"
                                 >
                                   Restore
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handleDismiss(issue)}
-                                  className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
+                                  className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
                                   title="Dismiss"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

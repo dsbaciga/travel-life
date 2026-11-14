@@ -217,8 +217,8 @@ export default function LinkedEntitiesDisplay({
     return (
       <div className={`mt-3 ${className}`}>
         <div className="flex items-center gap-2">
-          <div className="animate-pulse h-4 w-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          <div className="animate-pulse h-4 w-24 bg-gray-300 dark:bg-gray-600 rounded"></div>
+          <div className="animate-pulse h-4 w-4 bg-gray-300 dark:bg-dusk-600 rounded"></div>
+          <div className="animate-pulse h-4 w-24 bg-gray-300 dark:bg-dusk-600 rounded"></div>
         </div>
       </div>
     );
@@ -239,10 +239,10 @@ export default function LinkedEntitiesDisplay({
     <div className={`mt-3 ${className}`}>
       {/* Section header */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+        <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
           Linked Items
         </span>
-        <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+        <div className="flex-1 h-px bg-gray-200 dark:bg-dusk-700"></div>
       </div>
 
       {/* Linked entity cards by type */}
@@ -285,7 +285,7 @@ export default function LinkedEntitiesDisplay({
                       {item.displayName}
                     </span>
                     {!compact && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-500 dark:text-dusk-400">
                         ({getRelationshipLabel(item.link.relationship)})
                       </span>
                     )}
@@ -297,8 +297,8 @@ export default function LinkedEntitiesDisplay({
                   <div
                     className={`
                       inline-flex items-center px-3 py-1.5 rounded-lg border
-                      bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700
-                      text-gray-600 dark:text-gray-400
+                      bg-gray-50 dark:bg-dusk-800 border-gray-200 dark:border-dusk-700
+                      text-gray-600 dark:text-dusk-400
                       ${compact ? 'text-xs' : 'text-sm'}
                     `}
                   >

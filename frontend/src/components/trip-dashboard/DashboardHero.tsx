@@ -42,7 +42,7 @@ export default function DashboardHero({
       case TripStatus.CANCELLED:
         return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        return 'bg-gray-100 text-gray-800 dark:bg-dusk-700 dark:text-dusk-300';
     }
   };
 

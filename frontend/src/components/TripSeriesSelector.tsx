@@ -81,13 +81,13 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
         ))}
         <option value="__create__">+ Create New Series...</option>
       </select>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
         Group related trips together in a series
       </p>
 
       {showCreate && (
-        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <label htmlFor="newSeriesName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="mt-3 p-3 bg-gray-50 dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg">
+          <label htmlFor="newSeriesName" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             New Series Name
           </label>
           <div className="flex gap-2">

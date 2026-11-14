@@ -43,7 +43,7 @@ export default function DeadlinesWidget() {
         <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
           Booking Deadlines
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500 dark:text-dusk-400">
           Due within 30 days, plus anything overdue
         </p>
       </div>
@@ -62,7 +62,7 @@ export default function DeadlinesWidget() {
                     </span>
                   )}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 break-words">
+                <p className="text-sm text-gray-600 dark:text-dusk-400 break-words">
                   <Link
                     to={`/trips/${d.trip.id}`}
                     className="hover:underline text-primary-600 dark:text-gold break-words"
@@ -73,7 +73,7 @@ export default function DeadlinesWidget() {
                   {formatDateTimeInTimezone(d.dueAt, resolveTz(d.trip.timezone))}
                 </p>
                 {d.note && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{d.note}</p>
+                  <p className="text-sm text-gray-500 dark:text-dusk-400 truncate">{d.note}</p>
                 )}
               </div>
               <button
@@ -81,7 +81,7 @@ export default function DeadlinesWidget() {
                 onClick={() => dismiss.mutate(d)}
                 disabled={dismiss.isPending}
                 aria-label={`Mark ${DEADLINE_KIND_LABELS[d.kind]} done`}
-                className="shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 disabled:opacity-50 transition-colors"
+                className="shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-dusk-400 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 disabled:opacity-50 transition-colors"
               >
                 Done
               </button>

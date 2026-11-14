@@ -150,8 +150,8 @@ export default function InviteUsersSection() {
         label: 'Declined',
       },
       EXPIRED: {
-        bg: 'bg-gray-100 dark:bg-gray-700',
-        text: 'text-gray-800 dark:text-gray-200',
+        bg: 'bg-gray-100 dark:bg-dusk-700',
+        text: 'text-gray-800 dark:text-dusk-200',
         label: 'Expired',
       },
     };
@@ -190,11 +190,11 @@ export default function InviteUsersSection() {
       )}
 
       {/* Send Invitation Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Invite Someone to Travel Life
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Send an invitation to someone you'd like to join Travel Life. They'll receive an email with a link to create their account.
         </p>
 
@@ -226,7 +226,7 @@ export default function InviteUsersSection() {
               className="input w-full max-w-md h-24 resize-none"
               maxLength={1000}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
               {message.length}/1000 characters
             </p>
           </div>
@@ -269,7 +269,7 @@ export default function InviteUsersSection() {
       </div>
 
       {/* Sent Invitations List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Sent Invitations
         </h2>
@@ -282,14 +282,14 @@ export default function InviteUsersSection() {
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Loading invitations...</p>
+            <p className="text-gray-500 dark:text-dusk-400 mt-2">Loading invitations...</p>
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-dusk-400">
               No invitations sent yet. Invite someone to get started!
             </p>
           </div>
@@ -298,7 +298,7 @@ export default function InviteUsersSection() {
             {invitations.map((invitation) => (
               <li
                 key={invitation.id}
-                className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4"
+                className="bg-gray-50 dark:bg-dusk-700 rounded-lg p-4"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
@@ -308,7 +308,7 @@ export default function InviteUsersSection() {
                       </span>
                       {getStatusBadge(invitation.status)}
                     </div>
-                    <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="mt-1 text-sm text-gray-500 dark:text-dusk-400">
                       Sent {formatDate(invitation.createdAt)}
                       {invitation.status === 'PENDING' && (
                         <span className="ml-2">
@@ -322,7 +322,7 @@ export default function InviteUsersSection() {
                       )}
                     </div>
                     {invitation.message && (
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 italic">
+                      <p className="mt-2 text-sm text-gray-600 dark:text-dusk-300 italic">
                         "{invitation.message}"
                       </p>
                     )}

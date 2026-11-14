@@ -14,6 +14,7 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useBulkSelection } from "../hooks/useBulkSelection";
 import BulkActionBar from "../components/BulkActionBar";
 import PageHeader from "../components/PageHeader";
+import PendingImportsPanel from "../components/PendingImportsPanel";
 import EmptyState from "../components/EmptyState";
 import { ListItemSkeleton } from "../components/SkeletonLoader";
 
@@ -182,11 +183,14 @@ export default function SavedLinksInboxPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
       <PageHeader
-        title="Saved Links"
-        subtitle="Pages you've saved that aren't attached to a trip yet"
+        title="Inbox"
+        subtitle="Saved links and imported bookings that aren't on a trip yet"
       />
+
+      <PendingImportsPanel />
 
       {/* Quick add */}
       <div className="card mb-8 space-y-4">
@@ -205,7 +209,7 @@ export default function SavedLinksInboxPage() {
               if (e.key === "Enter" && !saving) handleAdd();
             }}
           />
-          <p className="mt-1 text-xs text-slate dark:text-gray-400">
+          <p className="mt-1 text-xs text-slate dark:text-dusk-400">
             Tracking parameters (utm_*, fbclid, and similar) are stripped
             automatically.
           </p>
@@ -307,24 +311,24 @@ export default function SavedLinksInboxPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="font-medium text-charcoal dark:text-gray-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
+                  className="font-medium text-charcoal dark:text-dusk-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
                 >
                   {savedLinkDisplayTitle(link)}
                 </a>
 
-                <p className="text-xs text-slate dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-slate dark:text-dusk-400 mt-0.5">
                   {savedLinkHostname(link)}
                   {link.source === "EMAIL" && " · from email"}
                 </p>
 
                 {link.description && (
-                  <p className="text-sm text-slate dark:text-gray-400 mt-2 line-clamp-2">
+                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 line-clamp-2">
                     {link.description}
                   </p>
                 )}
 
                 {link.notes && (
-                  <p className="text-sm text-charcoal dark:text-gray-300 mt-2 italic line-clamp-2">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 italic line-clamp-2">
                     {link.notes}
                   </p>
                 )}
@@ -379,6 +383,7 @@ export default function SavedLinksInboxPage() {
       )}
 
       <ConfirmDialogComponent />
+    </div>
     </div>
   );
 }

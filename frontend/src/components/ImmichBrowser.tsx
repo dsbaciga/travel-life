@@ -410,9 +410,9 @@ export default function ImmichBrowser({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl h-full sm:h-5/6 flex flex-col" style={{ overscrollBehavior: 'contain' }}>
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl w-full max-w-6xl h-full sm:h-5/6 flex flex-col" style={{ overscrollBehavior: 'contain' }}>
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-dusk-700">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Browse Immich Library
@@ -422,7 +422,7 @@ export default function ImmichBrowser({
               disabled={isLinking}
               type="button"
               aria-label="Close"
-              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg
                 className="w-6 h-6"
@@ -449,7 +449,7 @@ export default function ImmichBrowser({
               className={`px-4 py-2 rounded-lg transition-colors ${
                 view === "assets"
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
               }`}
             >
               All Photos
@@ -460,7 +460,7 @@ export default function ImmichBrowser({
               className={`px-4 py-2 rounded-lg transition-colors ${
                 view === "albums"
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                  : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
               }`}
             >
               Albums
@@ -469,7 +469,7 @@ export default function ImmichBrowser({
               <button
                 onClick={handleBackToAssets}
                 type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors"
               >
                 ← Back to All Photos
               </button>
@@ -487,7 +487,7 @@ export default function ImmichBrowser({
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="Search photos..."
                   aria-label="Search assets"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
                 />
                 <button
                   onClick={handleSearch}
@@ -498,14 +498,14 @@ export default function ImmichBrowser({
                 </button>
               </div>
               {tripStartDate && tripEndDate && (
-                <label className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg cursor-pointer flex-shrink-0">
+                <label className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-dusk-700 rounded-lg cursor-pointer flex-shrink-0">
                   <input
                     type="checkbox"
                     checked={filterByTripDates}
                     onChange={(e) => setFilterByTripDates(e.target.checked)}
                     className="rounded"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  <span className="text-sm text-gray-700 dark:text-dusk-300 whitespace-nowrap">
                     {filterByTripDates ? "Trip dates only" : "Show all photos"}
                   </span>
                 </label>
@@ -520,7 +520,7 @@ export default function ImmichBrowser({
                 onChange={(e) => setAlbumSearchTerm(e.target.value)}
                 placeholder="Search albums..."
                 aria-label="Search albums"
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
               />
             </div>
           )}
@@ -530,19 +530,19 @@ export default function ImmichBrowser({
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
-              <p className="text-gray-600 dark:text-gray-400">Loading</p>
+              <p className="text-gray-600 dark:text-dusk-400">Loading</p>
             </div>
           ) : view === "albums" ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
               {filteredAlbums.map((album) => (
                 <div
                   key={album.id}
-                  className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors flex flex-col"
+                  className="p-4 bg-gray-100 dark:bg-dusk-700 rounded-lg transition-colors flex flex-col"
                 >
                   <div className="font-semibold text-gray-900 dark:text-white mb-1 break-words">
                     {album.albumName}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-3 flex-grow">
+                  <div className="text-sm text-gray-600 dark:text-dusk-400 mb-3 flex-grow">
                     {album.assetCount}{" "}
                     {album.assetCount === 1 ? "photo" : "photos"}
                   </div>
@@ -579,7 +579,7 @@ export default function ImmichBrowser({
                         : handleSelectAllOnPage
                     }
                     type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm"
+                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors text-sm"
                   >
                     {allPageAssetsSelected
                       ? "Deselect All on Page"
@@ -621,18 +621,18 @@ export default function ImmichBrowser({
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-sm text-gray-600 dark:text-dusk-400">
                     Page {currentPage}
                   </span>
                   <button
                     onClick={() => setCurrentPage((p) => p + 1)}
                     disabled={!hasMoreAssets}
                     type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -651,7 +651,7 @@ export default function ImmichBrowser({
                       className={`relative aspect-square rounded-lg overflow-hidden border-4 transition-transform ${
                         selectedAssetsMap.has(asset.id)
                           ? "border-blue-600 shadow-lg scale-105"
-                          : "border-transparent hover:border-gray-300 dark:hover:border-gray-600"
+                          : "border-transparent hover:border-gray-300 dark:hover:border-dusk-600"
                       }`}
                     >
                       {blobUrl ? (
@@ -670,7 +670,7 @@ export default function ImmichBrowser({
                           }
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-dusk-700">
                           <div className="text-gray-400">Loading</div>
                         </div>
                       )}
@@ -717,7 +717,7 @@ export default function ImmichBrowser({
 
           {!isLoading && displayAssets.length === 0 && view === "assets" && (
             <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-dusk-400">
                 {excludeAssetIds && excludeAssetIds.size > 0 && assets.length > 0
                   ? "All photos on this page are already linked to this trip"
                   : "No photos found"}
@@ -727,7 +727,7 @@ export default function ImmichBrowser({
 
           {!isLoading && albums.length === 0 && view === "albums" && (
             <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-dusk-400">
                 No albums found
               </p>
             </div>
@@ -740,18 +740,18 @@ export default function ImmichBrowser({
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-gray-600 dark:text-dusk-400">
                 Page {currentPage}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => p + 1)}
                 disabled={!hasMoreAssets}
                 type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
@@ -760,8 +760,8 @@ export default function ImmichBrowser({
         </div>
 
         {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-dusk-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-600 dark:text-dusk-400 text-center sm:text-left">
             {selectedAssetsMap.size > 0
               ? `${selectedAssetsMap.size} ${
                   selectedAssetsMap.size === 1 ? "photo" : "photos"
@@ -773,7 +773,7 @@ export default function ImmichBrowser({
               onClick={onClose}
               disabled={isLinking}
               type="button"
-              className="flex-1 sm:flex-none px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="flex-1 sm:flex-none px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               Cancel
             </button>

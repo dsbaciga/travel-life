@@ -39,7 +39,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
   const totalTrips = sortedTrips.length;
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm mb-4">
+    <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow-sm mb-4">
       <div className="px-4 py-3">
         {/* Series name and position */}
         <div className="flex items-center justify-center gap-2 mb-2">
@@ -87,7 +87,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
                 className={`rounded-full transition-all ${
                   i === currentIndex
                     ? 'w-2.5 h-2.5 bg-primary-500 dark:bg-gold'
-                    : 'w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600'
+                    : 'w-1.5 h-1.5 bg-gray-300 dark:bg-dusk-600'
                 }`}
                 title={t.title}
               />

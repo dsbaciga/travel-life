@@ -62,7 +62,7 @@ export default function ActivityCard({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
+      className={`bg-white dark:bg-dusk-800 rounded-xl shadow-sm border ${colors.border} border-l-4 ${colors.accent} overflow-hidden hover:shadow-md transition-shadow`}
     >
       {/* Header */}
       <div className="p-4">
@@ -82,13 +82,13 @@ export default function ActivityCard({
               </h3>
 
               {activity.category && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                <div className="text-sm text-gray-500 dark:text-dusk-400 mt-0.5">
                   {activity.category}
                 </div>
               )}
 
               {/* Time info */}
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600 dark:text-dusk-400">
                 {activity.allDay ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
                     All Day
@@ -100,7 +100,7 @@ export default function ActivityCard({
                       {activity.endTime && ` - ${formatTime(activity.endTime, timezone)}`}
                     </span>
                     {timezone && (
-                      <span className="text-gray-400 dark:text-gray-400 text-xs">
+                      <span className="text-gray-400 dark:text-dusk-400 text-xs">
                         {getTimezoneAbbr(timezone)}
                       </span>
                     )}
@@ -109,7 +109,7 @@ export default function ActivityCard({
 
                 {durationMinutes && durationMinutes > 0 && (
                   <>
-                    <span className="text-gray-300 dark:text-gray-600">·</span>
+                    <span className="text-gray-300 dark:text-dusk-600">·</span>
                     <span>{formatDuration(durationMinutes)}</span>
                   </>
                 )}
@@ -153,14 +153,14 @@ export default function ActivityCard({
 
         {/* Description */}
         {activity.description && (
-          <div className="mt-3 text-gray-700 dark:text-gray-300">
+          <div className="mt-3 text-gray-700 dark:text-dusk-300">
             <MarkdownRenderer content={activity.description} compact />
           </div>
         )}
 
         {/* Booking info */}
         {activity.bookingReference && (
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-dusk-400">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -175,7 +175,7 @@ export default function ActivityCard({
 
         {/* Notes */}
         {activity.notes && (
-          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-dusk-700/50 text-sm text-gray-600 dark:text-dusk-400">
             <div className="flex items-start gap-2">
               <svg
                 className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400"
@@ -198,7 +198,7 @@ export default function ActivityCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -216,7 +216,7 @@ export default function ActivityCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">
@@ -244,8 +244,8 @@ export default function ActivityCard({
 
         {/* Sub-activities */}
         {activity.children && activity.children.length > 0 && (
-          <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          <div className="mt-4 border-t border-gray-200 dark:border-dusk-700 pt-4">
+            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-3">
               Sub-activities ({activity.children.length})
             </div>
             <div className="space-y-2">
@@ -259,13 +259,13 @@ export default function ActivityCard({
                       {child.name}
                     </span>
                     {child.startTime && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-sm text-gray-500 dark:text-dusk-400">
                         {formatTime(child.startTime, timezone)}
                       </span>
                     )}
                   </div>
                   {child.description && (
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-dusk-400">
                       {stripMarkdown(child.description)}
                     </p>
                   )}

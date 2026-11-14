@@ -85,25 +85,25 @@ export default function TripSidebar({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 ${
+      className={`bg-white dark:bg-dusk-800 border-r border-gray-200 dark:border-dusk-700 flex flex-col transition-all duration-300 ${
         sidebarCollapsed ? 'w-16' : 'w-48 lg:w-64'
       } ${className}`}
     >
       {/* Collapse Toggle */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-dusk-700">
         {!sidebarCollapsed && (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
             Navigation
           </span>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors"
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg
-            className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${
+            className={`w-5 h-5 text-gray-500 dark:text-dusk-400 transition-transform ${
               sidebarCollapsed ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -137,7 +137,7 @@ export default function TripSidebar({
                 className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
                   isActive
                     ? 'bg-primary-50 dark:bg-gold/10 text-primary-600 dark:text-gold border-r-2 border-primary-500 dark:border-gold'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                    : 'text-gray-700 dark:text-dusk-300 hover:bg-gray-50 dark:hover:bg-dusk-700/50'
                 }`}
                 title={sidebarCollapsed ? tab.label : undefined}
               >
@@ -154,7 +154,7 @@ export default function TripSidebar({
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           isActive
                             ? 'bg-primary-100 dark:bg-gold/20 text-primary-700 dark:text-gold'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                            : 'bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400'
                         }`}
                       >
                         {count}
@@ -184,7 +184,7 @@ export default function TripSidebar({
 
               {/* Sub-tabs (only show when expanded and not collapsed) */}
               {hasSubTabs && isExpanded && !sidebarCollapsed && (
-                <div className="ml-8 border-l border-gray-200 dark:border-gray-700">
+                <div className="ml-8 border-l border-gray-200 dark:border-dusk-700">
                   {subTabs.map((subTab) => {
                     const isSubActive = subTab.id === activeTab;
 
@@ -195,7 +195,7 @@ export default function TripSidebar({
                         className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
                           isSubActive
                             ? 'bg-primary-50 dark:bg-gold/10 text-primary-600 dark:text-gold font-medium'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                            : 'text-gray-600 dark:text-dusk-400 hover:bg-gray-50 dark:hover:bg-dusk-700/50 hover:text-gray-900 dark:hover:text-dusk-200'
                         }`}
                       >
                         {subTab.icon && (
@@ -209,7 +209,7 @@ export default function TripSidebar({
                             className={`px-1.5 py-0.5 text-xs rounded-full ${
                               isSubActive
                                 ? 'bg-primary-100 dark:bg-gold/20 text-primary-700 dark:text-gold'
-                                : 'bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400'
+                                : 'bg-gray-100 dark:bg-dusk-600 text-gray-500 dark:text-dusk-400'
                             }`}
                           >
                             {subTab.count}

@@ -21,11 +21,15 @@ export default function FormSection({
   className = '',
 }: FormSectionProps) {
   return (
-    <div className={`space-y-3 ${className}`}>
-      {/* Section Header */}
+    <div className={`space-y-4 ${className}`}>
+      {/* Section header: a quiet label, not a banner */}
       <div className="flex items-center gap-2">
-        {icon && <span className="text-lg">{icon}</span>}
-        <h3 className="text-sm font-semibold text-charcoal dark:text-warm-gray uppercase tracking-wide">
+        {icon && (
+          <span className="text-base leading-none opacity-80" aria-hidden="true">
+            {icon}
+          </span>
+        )}
+        <h3 className="text-sm font-semibold text-charcoal dark:text-white">
           {title}
         </h3>
       </div>
@@ -69,39 +73,51 @@ export function CollapsibleSection({
   badge,
 }: CollapsibleSectionProps) {
   return (
-    <div className="border-t border-primary-100 dark:border-gold/20 pt-4">
-      {/* Toggle Button */}
+    <div className="border-t border-primary-500/10 dark:border-navy-700 pt-4">
+      {/* Toggle: a plain disclosure row rather than another bordered box */}
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-2 px-3 text-sm font-medium text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-gold/80 bg-primary-50 dark:bg-navy-800 rounded-lg border border-primary-200 dark:border-gold/30 hover:border-primary-300 dark:hover:border-gold/50 transition-colors"
+        className="w-full flex items-center justify-between gap-3 py-2 text-sm font-medium text-charcoal dark:text-white rounded-lg hover:text-primary-700 dark:hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
         {...{ 'aria-expanded': isExpanded }}
         aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
       >
-        <div className="flex items-center gap-2">
-          {icon && <span>{icon}</span>}
-          <span>{isExpanded ? `Hide ${title}` : `Show ${title}`}</span>
-          {badge && !isExpanded && (
-            <span className="text-xs text-slate dark:text-warm-gray/70">
-              ({badge})
+        <span className="flex items-baseline gap-2 min-w-0">
+          {icon && (
+            <span className="leading-none opacity-80" aria-hidden="true">
+              {icon}
             </span>
           )}
-        </div>
-        <span className="transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-          ▼
+          <span>{title}</span>
+          {badge && !isExpanded && (
+            <span className="text-xs font-normal text-slate dark:text-dusk-400 truncate">
+              {badge}
+            </span>
+          )}
         </span>
+        <svg
+          className={`w-4 h-4 flex-shrink-0 text-slate dark:text-dusk-400 transition-transform duration-200 ${
+            isExpanded ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
 
       {/* Optional Description */}
       {description && !isExpanded && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 px-1">
+        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-2 px-1">
           {description}
         </p>
       )}
 
       {/* Collapsible Content */}
       {isExpanded && (
-        <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-4 space-y-6 animate-in slide-in-from-top-2 duration-200">
           {children}
         </div>
       )}

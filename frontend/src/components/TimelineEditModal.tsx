@@ -136,6 +136,8 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
   const [originalActivityLocationId, setOriginalActivityLocationId] = useState<
     number | null
   >(null);
+  // True when the stay being edited already has an address saved on it.
+  const [hadLodgingAddress, setHadLodgingAddress] = useState(false);
   const [originalLodgingLocationId, setOriginalLodgingLocationId] = useState<
     number | null
   >(null);
@@ -391,6 +393,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         setOriginalLodgingLocationId(null);
       }
 
+      setHadLodgingAddress(!!lodging.address);
       setLodgingForm({
         type: lodging.type,
         name: lodging.name,
@@ -816,7 +819,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       {/* Name and Category */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Name *
           </label>
           <input
@@ -834,7 +837,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="activity-category"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Category
           </label>
@@ -858,7 +861,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Description
         </label>
         <textarea
@@ -879,7 +882,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       <div>
         <label
           htmlFor="activity-location"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           Location
         </label>
@@ -935,7 +938,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         />
         <label
           htmlFor="allDay"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="text-sm font-medium text-gray-700 dark:text-dusk-300"
         >
           All-day activity
         </label>
@@ -947,7 +950,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           <div>
             <label
               htmlFor="activity-start-date-allday"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
               Start Date
             </label>
@@ -971,7 +974,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           <div>
             <label
               htmlFor="activity-end-date-allday"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
               End Date
             </label>
@@ -996,7 +999,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Start Time
             </label>
             <div className="flex gap-2">
@@ -1027,7 +1030,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               End Time
             </label>
             <div className="flex gap-2">
@@ -1096,7 +1099,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Notes
         </label>
         <textarea
@@ -1118,7 +1121,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       <div>
         <label
           htmlFor="transportation-type"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           Type *
         </label>
@@ -1150,7 +1153,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="transportation-from-location"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             From Location
           </label>
@@ -1190,7 +1193,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="transportation-to-location"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             To Location
           </label>
@@ -1234,7 +1237,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="transportation-departure-time"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Departure Time
           </label>
@@ -1259,7 +1262,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="transportation-arrival-time"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Arrival Time
           </label>
@@ -1283,7 +1286,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       {/* Carrier and Vehicle Number */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Carrier
           </label>
           <input
@@ -1300,7 +1303,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
             Vehicle/Flight Number
           </label>
           <input
@@ -1347,7 +1350,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Notes
         </label>
         <textarea
@@ -1371,9 +1374,24 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       {/* Type and Name */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
+            Name *
+          </label>
+          <input
+            type="text"
+            value={lodgingForm.name}
+            onChange={(e) =>
+              setLodgingForm((prev) => ({ ...prev, name: e.target.value }))
+            }
+            className="input"
+            required
+            placeholder="Hotel name"
+          />
+        </div>
+        <div>
           <label
             htmlFor="lodging-type"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Type *
           </label>
@@ -1395,28 +1413,13 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             <option value="other">🛏️ Other</option>
           </select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Name *
-          </label>
-          <input
-            type="text"
-            value={lodgingForm.name}
-            onChange={(e) =>
-              setLodgingForm((prev) => ({ ...prev, name: e.target.value }))
-            }
-            className="input"
-            required
-            placeholder="Hotel name"
-          />
-        </div>
       </div>
 
       {/* Location */}
       <div>
         <label
           htmlFor="lodging-location"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           Location
         </label>
@@ -1459,28 +1462,33 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         )}
       </div>
 
-      {/* Address */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Address
-        </label>
-        <input
-          type="text"
-          value={lodgingForm.address}
-          onChange={(e) =>
-            setLodgingForm((prev) => ({ ...prev, address: e.target.value }))
-          }
-          className="input"
-          placeholder="Street address"
-        />
-      </div>
+      {/* Address is no longer collected here; the linked Place carries it.
+          An address saved on an older stay is still shown. */}
+      {hadLodgingAddress && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
+            Address
+          </label>
+          <input
+            type="text"
+            value={lodgingForm.address}
+            onChange={(e) =>
+              setLodgingForm((prev) => ({ ...prev, address: e.target.value }))
+            }
+            className="input"
+          />
+          <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+            Kept from before. New stays take their address from the linked Place.
+          </p>
+        </div>
+      )}
 
       {/* Check-in/Check-out */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label
             htmlFor="lodging-checkin"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Check-in *
           </label>
@@ -1505,7 +1513,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div>
           <label
             htmlFor="lodging-checkout"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
             Check-out *
           </label>
@@ -1565,7 +1573,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Notes
         </label>
         <textarea
@@ -1585,7 +1593,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
     <>
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Title *
         </label>
         <input
@@ -1604,7 +1612,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       <div>
         <label
           htmlFor="journal-entry-date"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
           Entry Date
         </label>
@@ -1621,7 +1629,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
       {/* Content */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
           Content *
         </label>
         <textarea
@@ -1634,13 +1642,13 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           placeholder="Write your journal entry here..."
           required
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
           {journalForm.content.length} characters
         </p>
       </div>
 
       {/* Linking Info */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
           <p className="text-sm text-blue-700 dark:text-blue-300">
             <strong>Tip:</strong> After saving, use the Link button (🔗) on the

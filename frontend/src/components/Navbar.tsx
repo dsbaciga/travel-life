@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUser, useLogout } from "../store/authStore";
 import { useClearPosition } from "../store/scrollStore";
 import GlobalSearch from "./GlobalSearch";
+import BrandLogo from "./BrandLogo";
 import pdfImportService from "../services/pdfImport.service";
 import savedLinkService from "../services/savedLink.service";
 
@@ -15,6 +16,10 @@ interface NavLinkEntry {
   onClick?: () => void;
   /** Optional count pill, e.g. unassigned saved links. Hidden when 0. */
   badge?: number;
+  /** Extra path prefixes that also mark this item active. */
+  alsoActiveFor?: string[];
+  /** Destinations grouped under this item: a dropdown on desktop, an indented list in the drawer. */
+  children?: NavLinkEntry[];
 }
 
 interface NavLinkProps extends NavLinkEntry {
@@ -41,8 +46,9 @@ function NavLink({
       } rounded-lg font-body font-medium relative group transition-colors ${
         isActive
           ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800"
-          : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
+          : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-white hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
       }`}
+      aria-current={isActive ? "page" : undefined}
       onClick={() => {
         onClick?.();
         if (mobile) onCloseMobileMenu?.();
@@ -53,7 +59,7 @@ function NavLink({
         {badge !== undefined && badge > 0 && (
           <span
             className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-semibold rounded-full bg-primary-600 dark:bg-gold text-white dark:text-navy-900"
-            aria-label={`${badge} unassigned`}
+            aria-label={`${badge} waiting`}
           >
             {badge > 99 ? "99+" : badge}
           </span>
@@ -78,6 +84,8 @@ const Navbar = memo(function Navbar() {
   const clearPosition = useClearPosition();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const groupRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +114,12 @@ const Navbar = memo(function Navbar() {
     return location.pathname.startsWith(path);
   };
 
+  /** Active for its own path, any extra prefixes, or any of its children. */
+  const isEntryActive = (entry: NavLinkEntry): boolean =>
+    isActivePath(entry.path) ||
+    (entry.alsoActiveFor?.some(isActivePath) ?? false) ||
+    (entry.children?.some(isEntryActive) ?? false);
+
   const closeMobileMenu = () => setShowMobileMenu(false);
 
   // Close dropdown on outside click
@@ -117,6 +131,13 @@ const Navbar = memo(function Navbar() {
         !dropdownRef.current.contains(event.target)
       ) {
         setShowDropdown(false);
+      }
+      if (
+        groupRef.current &&
+        event.target instanceof Node &&
+        !groupRef.current.contains(event.target)
+      ) {
+        setOpenGroup(null);
       }
       if (
         mobileMenuRef.current &&
@@ -134,6 +155,7 @@ const Navbar = memo(function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setShowMobileMenu(false);
+    setOpenGroup(null);
   }, [location.pathname]);
 
   // Prevent scroll when mobile menu is open
@@ -155,53 +177,116 @@ const Navbar = memo(function Navbar() {
     ? "true"
     : "false";
 
+  // Four destinations. Every route that used to have its own top-level link
+  // still exists; everything that is a collection or a look back sits under
+  // Library.
   const navLinks: NavLinkEntry[] = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/trips", label: "Trips", onClick: () => clearPosition('trips-page') },
-    { path: "/albums", label: "Albums" },
-    { path: "/companions", label: "Companions" },
-    { path: "/places-visited", label: "Places" },
-    { path: "/checklists", label: "Checklists" },
-    { path: "/trip-series", label: "Series" },
-    { path: "/food-log", label: "Food" },
-    { path: "/saved-links", label: "Links", badge: savedLinksInboxCount },
+    { path: "/dashboard", label: "Today" },
+    {
+      path: "/trips",
+      label: "Trips",
+      onClick: () => clearPosition('trips-page'),
+    },
+    {
+      path: "/library",
+      label: "Library",
+      children: [
+        { path: "/albums", label: "Albums" },
+        { path: "/places-visited", label: "Places" },
+        { path: "/food-log", label: "Food log" },
+        { path: "/checklists", label: "Checklists" },
+        { path: "/travel-stats", label: "Travel stats" },
+        { path: "/trip-calendar", label: "Trip calendar" },
+        { path: "/year-in-review", label: "Year in review" },
+        { path: "/trip-series", label: "Trip series" },
+        { path: "/companions", label: "People" },
+      ],
+    },
+    // Saved links waiting to be filed plus parsed bookings waiting for review.
+    { path: "/saved-links", label: "Inbox", badge: savedLinksInboxCount + pendingCount },
   ];
 
   return (
-    <nav className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-md shadow-sm border-b border-primary-500/10 dark:border-gold/20 fixed top-0 left-0 right-0 z-40">
+    <nav className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-md shadow-sm border-b border-primary-500/10 dark:border-navy-700 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo / Brand */}
-          <Link
-            to="/dashboard"
-            className="flex items-center space-x-2 sm:space-x-3 group"
-          >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <span className="text-xl sm:text-2xl font-display font-bold text-primary-600 dark:text-gold tracking-tight">
-              Travel Life
-            </span>
+          <Link to="/dashboard" className="flex items-center flex-none">
+            <BrandLogo className="h-8 sm:h-10" />
           </Link>
 
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-1 ml-8">
-            {navLinks.map((link) => (
-              <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} isActive={isActivePath(link.path)} badge={link.badge} />
-            ))}
+            {navLinks.map((link) => {
+              if (!link.children) {
+                return (
+                  <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} isActive={isEntryActive(link)} badge={link.badge} />
+                );
+              }
+              const groupActive = isEntryActive(link);
+              const groupOpen = openGroup === link.path;
+              return (
+                <div key={link.path} className="relative z-50" ref={groupRef}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenGroup(groupOpen ? null : link.path)}
+                    aria-haspopup="true"
+                    aria-expanded={groupOpen}
+                    className={`px-4 py-2.5 rounded-lg font-body font-medium relative group transition-colors flex items-center gap-1.5 ${
+                      groupActive
+                        ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800"
+                        : "text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-white hover:bg-primary-50/50 dark:hover:bg-navy-800/50"
+                    }`}
+                  >
+                    {link.label}
+                    <svg
+                      className={`w-4 h-4 transition-transform ${groupOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <div
+                      className={`absolute inset-x-2 bottom-1 h-0.5 bg-gradient-to-r from-primary-500 to-accent-400 dark:from-gold dark:to-accent-400 transition-transform origin-left ${
+                        groupActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
+                  </button>
+                  {groupOpen && (
+                    <div className="absolute left-0 mt-2 w-52 bg-white dark:bg-navy-800 rounded-xl shadow-xl py-2 border border-primary-500/10 dark:border-navy-700">
+                      {link.children.map((child) => {
+                        const childActive = isEntryActive(child);
+                        return (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            aria-current={childActive ? "page" : undefined}
+                            onClick={() => setOpenGroup(null)}
+                            className={`block px-4 py-2.5 text-sm font-body transition-colors ${
+                              childActive
+                                ? "text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-700"
+                                : "text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-700 hover:text-primary-600 dark:hover:text-white"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                      <div className="my-1 border-t border-primary-500/10 dark:border-navy-700" />
+                      <Link
+                        to={link.path}
+                        onClick={() => setOpenGroup(null)}
+                        className="block px-4 py-2.5 text-sm font-body text-slate dark:text-warm-gray/70 hover:bg-primary-50 dark:hover:bg-navy-700 hover:text-primary-600 dark:hover:text-white transition-colors"
+                      >
+                        All of {link.label}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Global Search */}
@@ -219,7 +304,7 @@ const Navbar = memo(function Navbar() {
               <button
                 type="button"
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-body font-medium text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-body font-medium text-primary-600 dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
                 {...(dropdownExpanded === "true"
                   ? { "aria-expanded": "true" }
                   : { "aria-expanded": "false" })}
@@ -252,11 +337,6 @@ const Navbar = memo(function Navbar() {
                     onClick={() => setShowDropdown(false)}
                   >
                     Settings
-                    {pendingCount > 0 && (
-                      <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-xs font-bold bg-amber-500 text-white">
-                        {pendingCount}
-                      </span>
-                    )}
                   </Link>
                   <button
                     type="button"
@@ -366,18 +446,33 @@ const Navbar = memo(function Navbar() {
           </div>
 
           {/* Mobile Navigation Links */}
-          <nav className="flex-1 py-4 px-2 space-y-1 bg-white dark:bg-navy-900">
+          <nav className="flex-1 py-4 px-2 space-y-1 bg-white dark:bg-navy-900 overflow-y-auto" aria-label="Menu">
             {navLinks.map((link) => (
-              <NavLink
-                key={link.path}
-                path={link.path}
-                label={link.label}
-                onClick={link.onClick}
-                isActive={isActivePath(link.path)}
-                onCloseMobileMenu={closeMobileMenu}
-                badge={link.badge}
-                mobile
-              />
+              <div key={link.path}>
+                <NavLink
+                  path={link.path}
+                  label={link.label}
+                  onClick={link.onClick}
+                  isActive={link.children ? isActivePath(link.path) : isEntryActive(link)}
+                  onCloseMobileMenu={closeMobileMenu}
+                  badge={link.badge}
+                  mobile
+                />
+                {link.children && (
+                  <div className="ml-4 pl-2 border-l border-primary-500/10 dark:border-navy-700 space-y-1 mt-1">
+                    {link.children.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        path={child.path}
+                        label={child.label}
+                        isActive={isEntryActive(child)}
+                        onCloseMobileMenu={closeMobileMenu}
+                        mobile
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
 
@@ -404,11 +499,6 @@ const Navbar = memo(function Navbar() {
               onClick={() => setShowMobileMenu(false)}
             >
               Settings
-              {pendingCount > 0 && (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-xs font-bold bg-amber-500 text-white">
-                  {pendingCount}
-                </span>
-              )}
             </Link>
             <button
               type="button"

@@ -96,8 +96,8 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
   return (
     <div className="card space-y-4">
       <div>
-        <h3 className="font-medium text-charcoal dark:text-gray-100">Item types</h3>
-        <p className="text-xs text-slate dark:text-gray-400">
+        <h3 className="font-medium text-charcoal dark:text-dusk-100">Item types</h3>
+        <p className="text-xs text-slate dark:text-dusk-400">
           Shared across all your trips. Deleting a type never deletes its items.
         </p>
       </div>
@@ -153,9 +153,9 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-slate dark:text-gray-400">Loading types…</p>
+        <p className="text-sm text-slate dark:text-dusk-400">Loading types…</p>
       ) : !types || types.length === 0 ? (
-        <p className="text-sm text-slate dark:text-gray-400">No types yet.</p>
+        <p className="text-sm text-slate dark:text-dusk-400">No types yet.</p>
       ) : (
         <ul className="flex flex-wrap gap-2">
           {types.map((type) => (
@@ -168,10 +168,10 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
                 style={{ backgroundColor: type.color ?? DEFAULT_COLOR }}
                 aria-hidden="true"
               />
-              <span className="text-sm text-charcoal dark:text-gray-200">{type.name}</span>
+              <span className="text-sm text-charcoal dark:text-dusk-200">{type.name}</span>
               <button
                 type="button"
-                className="text-xs text-slate dark:text-gray-400 hover:text-primary-600 dark:hover:text-gold"
+                className="text-xs text-slate dark:text-dusk-400 hover:text-primary-600 dark:hover:text-gold"
                 onClick={() => startEdit(type)}
               >
                 Edit

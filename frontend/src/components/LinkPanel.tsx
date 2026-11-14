@@ -365,15 +365,15 @@ export default function LinkPanel({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h3 id="link-panel-title" className="text-lg font-semibold text-gray-900 dark:text-white">
               {currentEntityConfig.emoji} Links
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-dusk-400">
               {linksData?.summary.totalLinks ?? 0} linked items
             </p>
           </div>
@@ -390,7 +390,7 @@ export default function LinkPanel({
               onClick={onClose}
               type="button"
               aria-label="Close"
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -417,10 +417,10 @@ export default function LinkPanel({
           ) : linkedEntityTypes.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">🔗</div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-dusk-400">
                 No linked items yet
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
                 Click "Add Link" above to connect this item to photos, locations, or other entities.
               </p>
             </div>
@@ -433,7 +433,7 @@ export default function LinkPanel({
 
                 return (
                   <div key={type}>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2 flex items-center gap-2">
                       <span>{config.emoji}</span>
                       <span>{config.pluralLabel}</span>
                       <span className="text-gray-500">({links.length})</span>
@@ -486,7 +486,7 @@ export default function LinkPanel({
                                   />
                                 ) : (
                                   // Immich photo still loading, or no resolvable URL
-                                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0 animate-pulse" />
+                                  <div className="w-12 h-12 bg-gray-200 dark:bg-dusk-700 rounded flex-shrink-0 animate-pulse" />
                                 )
                               ) : (
                                 <span className="text-lg flex-shrink-0">
@@ -497,10 +497,10 @@ export default function LinkPanel({
                                 <div className={`font-medium truncate ${colors.text} ${colors.textDark} hover:underline`}>
                                   {displayName}
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                <div className="text-xs text-gray-500 dark:text-dusk-400 flex items-center gap-1">
                                   <span>{getRelationshipLabel(link.relationship)}</span>
                                   {link.notes && (
-                                    <span className="text-gray-400 dark:text-gray-400" title={link.notes}>
+                                    <span className="text-gray-400 dark:text-dusk-400" title={link.notes}>
                                       - {link.notes.length > 20 ? link.notes.slice(0, 20) + '...' : link.notes}
                                     </span>
                                   )}
@@ -508,7 +508,7 @@ export default function LinkPanel({
                               </div>
                               {/* Go to icon */}
                               <svg
-                                className="w-4 h-4 text-gray-400 dark:text-gray-400 flex-shrink-0"
+                                className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -529,7 +529,7 @@ export default function LinkPanel({
                                   e.stopPropagation();
                                   setEditingLink(link);
                                 }}
-                                className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-dusk-400 dark:hover:text-blue-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Edit link"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -548,7 +548,7 @@ export default function LinkPanel({
                                   handleDeleteLink(link.id);
                                 }}
                                 disabled={deleteLinkMutation.isPending}
-                                className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                className="p-1.5 text-gray-500 hover:text-red-600 dark:text-dusk-400 dark:hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Remove link"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -573,7 +573,7 @@ export default function LinkPanel({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-t border-gray-200 dark:border-dusk-700">
           <button onClick={onClose} className="btn btn-secondary w-full">
             Close
           </button>

@@ -104,12 +104,12 @@ export default function TripLocationsMap({ locations, transportations = [], show
 
   if (validLocations.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-8">
+      <div className="bg-gray-50 dark:bg-dusk-700 rounded-lg p-8">
         <EmptyState.Compact
           icon="🗺️"
           message="No locations with coordinates to display on the map."
         />
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+        <p className="text-sm text-gray-500 dark:text-dusk-400 mt-2 text-center">
           Add coordinates to your locations to see them on the map.
         </p>
       </div>
@@ -125,12 +125,12 @@ export default function TripLocationsMap({ locations, transportations = [], show
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Location Map
         </h3>
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+        <span className="text-sm text-gray-600 dark:text-dusk-400">
           {validLocations.length} location{validLocations.length !== 1 ? 's' : ''} shown
         </span>
       </div>
 
-      <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg relative z-0">
+      <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 shadow-lg relative z-0">
         <MapContainer
           center={[center.lat, center.lng]}
           zoom={13}
@@ -225,7 +225,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
         </MapContainer>
       </div>
 
-      <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="text-sm text-gray-600 dark:text-dusk-400">
         <p>💡 Click on markers and route lines to see details</p>
         {showRoutes && transportations.length > 0 && (
           <p className="mt-1">🛤️ Routes are color-coded by transportation type (flights shown as dashed arcs)</p>

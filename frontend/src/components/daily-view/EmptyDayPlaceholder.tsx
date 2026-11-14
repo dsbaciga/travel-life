@@ -30,9 +30,9 @@ export default function EmptyDayPlaceholder({
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
       {/* Empty state icon */}
-      <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
+      <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-dusk-700 flex items-center justify-center mb-4">
         <svg
-          className="w-10 h-10 text-gray-400 dark:text-gray-400"
+          className="w-10 h-10 text-gray-400 dark:text-dusk-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -50,7 +50,7 @@ export default function EmptyDayPlaceholder({
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
         No activities scheduled
       </h3>
-      <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
+      <p className="text-gray-500 dark:text-dusk-400 mb-6 max-w-md">
         Day {dayNumber} doesn't have any events yet. Add activities, transportation, lodging, or journal entries to fill your day.
       </p>
 

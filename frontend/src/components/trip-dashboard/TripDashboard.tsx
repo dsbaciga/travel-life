@@ -12,7 +12,6 @@ import { TripStatus } from '../../types/trip';
 import TripStats from '../TripStats';
 import RecentActivityCard from './RecentActivityCard';
 import NextUpCard from './NextUpCard';
-import QuickActionsBar from './QuickActionsBar';
 import TodaysItinerary from './TodaysItinerary';
 import ChecklistsWidget from './ChecklistsWidget';
 import CompanionsWidget from './CompanionsWidget';
@@ -22,6 +21,11 @@ import LocalTimeWidget from './LocalTimeWidget';
 import BudgetSummaryWidget from './BudgetSummaryWidget';
 import WeatherForecastWidget from './WeatherForecastWidget';
 import FlightStatusWidget from './FlightStatusWidget';
+import TripDayByDay from './TripDayByDay';
+import UpcomingBookings from './UpcomingBookings';
+import type { MapPreviewLeg } from './MapPreviewWidget';
+import TripHealthCheck from '../TripHealthCheck';
+import type { ValidationIssue } from '../../types/trip';
 import { useTimezoneResolver } from '../../hooks/useTimezoneResolver';
 
 // Weather forecast data structure
@@ -75,8 +79,6 @@ interface TripDashboardProps {
   checklists: Checklist[];
   companions: Companion[];
   onNavigateToTab: (tab: string, options?: { action?: string; scrollToDate?: string }) => void;
-  onStatusChange: (newStatus: string) => Promise<void>;
-  onPrintItinerary: () => void;
   onToggleChecklistItem: (checklistId: number, itemId: number, completed: boolean) => Promise<void>;
   onNavigateToEntity: (entityType: string, entityId: string) => void;
   // Optional data for enhanced widgets
@@ -101,7 +103,6 @@ interface TripDashboardProps {
  * - Countdown timer (for planning/planned trips with dates)
  * - Local time widget (for international trips with different timezone)
  * - Trip statistics (at a glance)
- * - Quick actions based on trip status
  * - Recent activity
  * - Companions widget
  * - Map preview with locations
@@ -112,14 +113,14 @@ interface TripDashboardProps {
  * - Budget summary (when budget data provided)
  * - Checklists progress
  *
- * Layout:
- * - Top row: Countdown and/or Local Time (responsive 1-2 columns)
+ * Layout (the trip Overview):
  * - Trip at a Glance stats (full width)
- * - Quick Actions Bar (full width)
- * - Main Grid:
- *   - Left column (1/3): Recent Activity, Companions, Map, Checklists
- *   - Right column (2/3): Next Up, Itinerary, Weather, Flights, Budget
- * - Mobile: Single column stacked layout
+ * - Two independent stacks, so a tall card never opens a gap beside it:
+ *   - Wide (2/3): route map, Next up, today's itinerary, then the smaller
+ *     cards (needs attention, budget, checklists, recent activity, weather,
+ *     flights) flowed into two packed columns
+ *   - Narrow (1/3): Day by day, Next bookings, countdown, local time, companions
+ * - Mobile: single column, wide stack first
  */
 export default function TripDashboard({
   trip,
@@ -133,8 +134,6 @@ export default function TripDashboard({
   checklists,
   companions,
   onNavigateToTab,
-  onStatusChange,
-  onPrintItinerary,
   onToggleChecklistItem,
   onNavigateToEntity,
   weatherForecast,
@@ -196,6 +195,27 @@ export default function TripDashboard({
     [locations]
   );
 
+  // Transport legs for the route map. A leg counts as travelled once it has
+  // arrived (or, with no arrival time, once it has departed).
+  const routeLegs = useMemo<MapPreviewLeg[]>(() => {
+    const now = Date.now();
+    const point = (
+      place: { latitude?: number | null; longitude?: number | null } | null | undefined
+    ): [number, number] | null => {
+      if (place?.latitude == null || place.longitude == null) return null;
+      const latitude = Number(place.latitude);
+      const longitude = Number(place.longitude);
+      return Number.isFinite(latitude) && Number.isFinite(longitude) ? [latitude, longitude] : null;
+    };
+    return transportation.flatMap((leg) => {
+      const from = point(leg.route?.from) ?? point(leg.fromLocation);
+      const to = point(leg.route?.to) ?? point(leg.toLocation);
+      const finished = leg.arrivalTime ?? leg.departureTime;
+      if (!from || !to || !finished) return [];
+      return [{ id: leg.id, from, to, travelled: Date.parse(finished) <= now }];
+    });
+  }, [transportation]);
+
   // Handle event click from TodaysItinerary
   const handleEventClick = useCallback((eventType: string, eventId: string) => {
     // Map event type to tab name
@@ -220,6 +240,18 @@ export default function TripDashboard({
     onNavigateToEntity('transportation', String(flightId));
   }, [onNavigateToEntity]);
 
+  // "Needs attention" quick actions open the tab where the fix is made.
+  const handleHealthAction = useCallback((action: ValidationIssue['quickAction']) => {
+    if (!action) return;
+    const tabs: Record<NonNullable<ValidationIssue['quickAction']>['type'], string> = {
+      add_lodging: 'lodging',
+      add_transportation: 'transportation',
+      view_conflict: 'itinerary',
+      edit_activity: 'activities',
+    };
+    onNavigateToTab(tabs[action.type]);
+  }, [onNavigateToTab]);
+
   // Handle navigate to transportation tab
   const handleNavigateToTransportation = useCallback(() => {
     onNavigateToTab('transportation');
@@ -227,31 +259,8 @@ export default function TripDashboard({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Top Row: Countdown Timer and/or Local Time Widget */}
-      {(showCountdown || isInternationalTrip) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-          {/* Countdown Timer - for planning/planned trips */}
-          {showCountdown && (
-            <CountdownTimerWidget
-              tripStartDate={trip.startDate}
-              tripEndDate={trip.endDate}
-              tripStatus={trip.status}
-            />
-          )}
-
-          {/* Local Time Widget - for international trips */}
-          {isInternationalTrip && (
-            <LocalTimeWidget
-              tripTimezone={tripTimezone}
-              homeTimezone={homeTimezone}
-              locationName={trip.title}
-            />
-          )}
-        </div>
-      )}
-
       {/* Trip at a Glance - Full Width */}
-      <div className="card p-6 animate-fade-in stagger-1">
+      <div className="card p-6">
         <h3 className="font-body font-semibold text-lg text-charcoal dark:text-warm-gray mb-4 flex items-center gap-2">
           <svg
             className="w-5 h-5 text-primary-500 dark:text-gold"
@@ -284,136 +293,143 @@ export default function TripDashboard({
         />
       </div>
 
-      {/* Quick Actions Bar - Full Width */}
-      <div className="animate-fade-in stagger-2">
-        <QuickActionsBar
-          tripStatus={trip.status}
-          onNavigateToTab={onNavigateToTab}
-          onStatusChange={onStatusChange}
-          onPrintItinerary={onPrintItinerary}
-        />
-      </div>
-
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Activity, Companions, Map, Checklists */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Recent Activity Card */}
-          <div className="animate-fade-in stagger-2">
-            <RecentActivityCard
-              activities={activities}
-              transportation={transportation}
-              lodging={lodging}
-              locations={locations}
-              journal={journalEntries}
-              photos={photos}
-              onNavigateToEntity={onNavigateToEntity}
-            />
-          </div>
-
-          {/* Companions Widget */}
-          <div className="animate-fade-in stagger-3">
-            <CompanionsWidget
-              companions={companions}
-              onNavigateToCompanions={() => onNavigateToTab('companions')}
-              onInviteCompanion={() => onNavigateToTab('companions', { action: 'add' })}
-            />
-          </div>
-
-          {/* Map Preview Widget */}
+      {/* Two independent stacks. Cards pack upward in each, so one tall card
+          never leaves a hole beside it the way aligned rows did. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           {locations.length > 0 && (
-            <div className="animate-fade-in stagger-4">
-              <MapPreviewWidget
-                locations={mapLocations}
-                onNavigateToMap={() => onNavigateToTab('locations')}
-                onLocationClick={handleLocationClick}
-              />
-            </div>
-          )}
-
-          {/* Checklists Widget */}
-          {checklists.length > 0 && (
-            <div className="animate-fade-in stagger-5">
-              <ChecklistsWidget
-                checklists={checklists}
-                onToggleItem={onToggleChecklistItem}
-                onNavigateToChecklists={() => onNavigateToTab('checklists')}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Next Up, Itinerary, Weather, Flights, Budget */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Next Up Card */}
-          <div className="animate-fade-in stagger-2">
-            <NextUpCard
-              activities={activities}
-              transportation={transportation}
-              lodging={lodging}
-              tripStatus={trip.status}
-              tripStartDate={trip.startDate}
-              tripEndDate={trip.endDate}
-              tripTimezone={tripTimezone}
-              photosCount={photosCount}
-              onNavigateToTab={onNavigateToTab}
+            <MapPreviewWidget
+              locations={mapLocations}
+              legs={routeLegs}
+              onNavigateToMap={() => onNavigateToTab('locations')}
+              onLocationClick={handleLocationClick}
             />
-          </div>
-
+          )}
+          <NextUpCard
+            activities={activities}
+            transportation={transportation}
+            lodging={lodging}
+            tripStatus={trip.status}
+            tripStartDate={trip.startDate}
+            tripEndDate={trip.endDate}
+            tripTimezone={tripTimezone}
+            photosCount={photosCount}
+            onNavigateToTab={onNavigateToTab}
+          />
           {/* Today's Itinerary - Only show for in-progress trips */}
           {trip.status === TripStatus.IN_PROGRESS && (
-            <div className="animate-fade-in stagger-3">
-              <TodaysItinerary
+            <TodaysItinerary
+              activities={activities}
+              transportation={transportation}
+              lodging={lodging}
+              tripTimezone={tripTimezone}
+              onEventClick={handleEventClick}
+              onNavigateToTimeline={(date) => onNavigateToTab('timeline', { scrollToDate: date })}
+            />
+          )}
+
+          {/* Smaller cards, flowed into two packed columns. Each wrapper
+              hides itself when its widget renders nothing. The negative
+              margin cancels the last row's bottom margin. */}
+          <div className="md:columns-2 gap-6 -mb-6 [&>*]:mb-6 [&>*]:break-inside-avoid [&>*:empty]:hidden">
+            <div>
+              <TripHealthCheck tripId={trip.id} onQuickAction={handleHealthAction} />
+            </div>
+            <div>
+              {budgetData && (
+                <BudgetSummaryWidget
+                  budget={budgetData.budget}
+                  spent={budgetData.spent}
+                  breakdown={budgetData.breakdown}
+                  currency={budgetData.currency}
+                  onNavigateToBudget={() => onNavigateToTab('budget')}
+                />
+              )}
+            </div>
+            <div>
+              {checklists.length > 0 && (
+                <ChecklistsWidget
+                  checklists={checklists}
+                  onToggleItem={onToggleChecklistItem}
+                  onNavigateToChecklists={() => onNavigateToTab('checklists')}
+                />
+              )}
+            </div>
+            <div>
+              <RecentActivityCard
                 activities={activities}
                 transportation={transportation}
                 lodging={lodging}
-                tripTimezone={tripTimezone}
-                onEventClick={handleEventClick}
-                onNavigateToTimeline={(date) => onNavigateToTab('timeline', { scrollToDate: date })}
+                locations={locations}
+                journal={journalEntries}
+                photos={photos}
+                onNavigateToEntity={onNavigateToEntity}
               />
             </div>
-          )}
+            <div>
+              {(weatherForecast || weatherLoading) && (
+                <WeatherForecastWidget
+                  forecast={weatherForecast || null}
+                  location={weatherLocation || trip.title}
+                  temperatureUnit={temperatureUnit}
+                  isLoading={weatherLoading}
+                  error={weatherError || null}
+                  onRefresh={onRefreshWeather}
+                />
+              )}
+            </div>
+            <div>
+              {(flightStatus || flightStatusLoading) && (
+                <FlightStatusWidget
+                  flights={flightStatus || []}
+                  tripTimezone={tripTimezone}
+                  onNavigateToFlight={handleFlightClick}
+                  onNavigateToTransportation={handleNavigateToTransportation}
+                  onRefreshStatus={onRefreshFlightStatus}
+                  isLoading={flightStatusLoading}
+                />
+              )}
+            </div>
+          </div>
+        </div>
 
-          {/* Weather Forecast Widget - show if data provided */}
-          {(weatherForecast || weatherLoading) && (
-            <div className="animate-fade-in stagger-4">
-              <WeatherForecastWidget
-                forecast={weatherForecast || null}
-                location={weatherLocation || trip.title}
-                temperatureUnit={temperatureUnit}
-                isLoading={weatherLoading}
-                error={weatherError || null}
-                onRefresh={onRefreshWeather}
-              />
-            </div>
+        <div className="lg:col-span-1 space-y-6 min-w-0">
+          <TripDayByDay
+            tripStartDate={trip.startDate}
+            tripEndDate={trip.endDate}
+            tripTimezone={trip.timezone}
+            activities={activities}
+            transportation={transportation}
+            lodging={lodging}
+            onOpenDay={(dayKey) => onNavigateToTab('itinerary', { scrollToDate: dayKey })}
+          />
+          <UpcomingBookings
+            transportation={transportation}
+            lodging={lodging}
+            tripTimezone={trip.timezone}
+            onOpenTab={onNavigateToTab}
+          />
+          {/* Countdown - for planning/planned trips */}
+          {showCountdown && (
+            <CountdownTimerWidget
+              tripStartDate={trip.startDate}
+              tripEndDate={trip.endDate}
+              tripStatus={trip.status}
+            />
           )}
-
-          {/* Flight Status Widget - show if flight data provided */}
-          {(flightStatus || flightStatusLoading) && (
-            <div className="animate-fade-in stagger-5">
-              <FlightStatusWidget
-                flights={flightStatus || []}
-                tripTimezone={tripTimezone}
-                onNavigateToFlight={handleFlightClick}
-                onNavigateToTransportation={handleNavigateToTransportation}
-                onRefreshStatus={onRefreshFlightStatus}
-                isLoading={flightStatusLoading}
-              />
-            </div>
+          {/* Local time - for trips in another timezone */}
+          {isInternationalTrip && (
+            <LocalTimeWidget
+              tripTimezone={tripTimezone}
+              homeTimezone={homeTimezone}
+              locationName={trip.title}
+            />
           )}
-
-          {/* Budget Summary Widget - show if budget data provided */}
-          {budgetData && (
-            <div className="animate-fade-in stagger-6">
-              <BudgetSummaryWidget
-                budget={budgetData.budget}
-                spent={budgetData.spent}
-                breakdown={budgetData.breakdown}
-                currency={budgetData.currency}
-                onNavigateToBudget={() => onNavigateToTab('budget')}
-              />
-            </div>
-          )}
+          <CompanionsWidget
+            companions={companions}
+            onNavigateToCompanions={() => onNavigateToTab('companions')}
+            onInviteCompanion={() => onNavigateToTab('companions', { action: 'add' })}
+          />
         </div>
       </div>
     </div>

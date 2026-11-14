@@ -123,7 +123,7 @@ export default function AlbumsSidebar({
 
       {/* Sidebar - Desktop fixed, Mobile drawer */}
       <div className={`
-        w-64 md:w-48 lg:w-64 flex-shrink-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto
+        w-64 md:w-48 lg:w-64 flex-shrink-0 bg-white dark:bg-dusk-800 border-r border-gray-200 dark:border-dusk-700 overflow-y-auto
         md:static md:transform-none md:z-auto
         fixed top-0 left-0 h-full z-40 transform transition-transform duration-300 ease-in-out
         ${isMobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -131,11 +131,11 @@ export default function AlbumsSidebar({
       <div className="p-4 space-y-2">
         {/* Close button for mobile */}
         {onCloseMobileDrawer && (
-          <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="md:hidden flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-dusk-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Albums</h3>
             <button
               onClick={onCloseMobileDrawer}
-              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700"
               aria-label="Close albums"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,12 +151,12 @@ export default function AlbumsSidebar({
           className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
             selectedAlbumId === null
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+              : 'hover:bg-gray-100 dark:hover:bg-dusk-700 text-gray-700 dark:text-dusk-300'
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-dusk-700 flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-500 dark:text-dusk-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -173,12 +173,12 @@ export default function AlbumsSidebar({
           className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
             selectedAlbumId === -1
               ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+              : 'hover:bg-gray-100 dark:hover:bg-dusk-700 text-gray-700 dark:text-dusk-300'
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-dusk-700 flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-500 dark:text-dusk-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
@@ -190,7 +190,7 @@ export default function AlbumsSidebar({
         </button>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+        <div className="border-t border-gray-200 dark:border-dusk-700 my-2"></div>
 
         {/* Albums List */}
         <div className="space-y-1">
@@ -208,11 +208,11 @@ export default function AlbumsSidebar({
                   className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                     selectedAlbumId === album.id
                       ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      : 'hover:bg-gray-100 dark:hover:bg-dusk-700 text-gray-700 dark:text-dusk-300'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                    <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-200 dark:bg-dusk-700 overflow-hidden">
                       {thumbnail ? (
                         <img
                           src={thumbnail}
@@ -221,7 +221,7 @@ export default function AlbumsSidebar({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-6 h-6 text-gray-500 dark:text-dusk-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
                         </div>
@@ -244,10 +244,10 @@ export default function AlbumsSidebar({
                       e.stopPropagation();
                       onEditAlbum(album);
                     }}
-                    className="p-1.5 bg-white dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="p-1.5 bg-white dark:bg-dusk-700 rounded hover:bg-gray-100 dark:hover:bg-dusk-600 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
                     title="Edit album"
                   >
-                    <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-gray-600 dark:text-dusk-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
@@ -256,7 +256,7 @@ export default function AlbumsSidebar({
                       e.stopPropagation();
                       onDeleteAlbum(album.id);
                     }}
-                    className="p-1.5 bg-white dark:bg-gray-700 rounded hover:bg-red-100 dark:hover:bg-red-900 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
+                    className="p-1.5 bg-white dark:bg-dusk-700 rounded hover:bg-red-100 dark:hover:bg-red-900 shadow-sm min-w-[44px] min-h-[44px] flex items-center justify-center"
                     title="Delete album"
                   >
                     <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +273,7 @@ export default function AlbumsSidebar({
         {/* Create Album Button */}
         <button
           onClick={onCreateAlbum}
-          className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          className="w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-dusk-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-600 dark:text-dusk-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
           <div className="flex items-center justify-center gap-2">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

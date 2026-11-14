@@ -313,7 +313,7 @@ export default function AlbumsPage() {
 
   if (albumPagination.isLoadingInitial) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
           <LoadingSpinner.FullPage message="Loading albums..." />
         </div>
@@ -322,7 +322,7 @@ export default function AlbumsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         <PageHeader
           title="Photo Albums"
@@ -334,11 +334,11 @@ export default function AlbumsPage() {
         />
 
         {showCreateForm && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create New Album</h2>
             <form onSubmit={handleCreateAlbum} className="space-y-4">
               <div>
-                <label htmlFor="album-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="album-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Album Name *
                 </label>
               <input
@@ -353,7 +353,7 @@ export default function AlbumsPage() {
             </div>
 
             <div>
-              <label htmlFor="album-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label htmlFor="album-description" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                 Description
               </label>
               <textarea
@@ -387,10 +387,10 @@ export default function AlbumsPage() {
           {albumPagination.items.map((album) => (
             <div
               key={album.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white dark:bg-dusk-800 rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div
-                className="h-48 bg-gray-200 dark:bg-gray-700 cursor-pointer relative"
+                className="h-48 bg-gray-200 dark:bg-dusk-700 cursor-pointer relative"
                 role="button"
                 tabIndex={0}
                 onClick={() => navigate(`/trips/${tripId}/albums/${album.id}`)}
@@ -406,16 +406,16 @@ export default function AlbumsPage() {
                     loading="lazy"
                   />
                 ) : failedThumbnails.has(album.id) ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-400 gap-2">
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-dusk-400 gap-2">
                     <PhotoIcon className="w-12 h-12" />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Failed to load</p>
+                    <p className="text-xs text-gray-500 dark:text-dusk-400">Failed to load</p>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRetryThumbnail(album);
                       }}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500 border border-gray-300 dark:border-gray-500 transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-dusk-600 text-gray-700 dark:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-500 border border-gray-300 dark:border-dusk-500 transition-colors"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -428,7 +428,7 @@ export default function AlbumsPage() {
                     <LoadingSpinner size="sm" />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-dusk-400">
                     <PhotoIcon className="w-16 h-16" />
                   </div>
                 )}
@@ -447,11 +447,11 @@ export default function AlbumsPage() {
                   </button>
                 </h3>
                 {album.description && (
-                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2 break-words">
+                  <p className="text-gray-600 dark:text-dusk-400 text-sm mb-2 line-clamp-2 break-words">
                     {stripMarkdown(album.description)}
                   </p>
                 )}
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                <p className="text-gray-500 dark:text-dusk-400 text-sm mb-4">
                   {album._count?.photoAssignments || 0} photos
                 </p>
 
@@ -518,14 +518,14 @@ export default function AlbumsPage() {
       {/* Cover Photo Selector Modal */}
       {showCoverSelector && selectedAlbum && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Set Cover Photo
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                   Select a photo to use as the album cover
                 </p>
               </div>
@@ -537,7 +537,7 @@ export default function AlbumsPage() {
                 }}
                 type="button"
                 aria-label="Close"
-                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
                 <svg
                   className="w-6 h-6"
@@ -559,7 +559,7 @@ export default function AlbumsPage() {
             <div className="flex-1 overflow-y-auto p-6">
               {albumPhotos.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-gray-500 dark:text-dusk-400">
                     No photos in this album.
                   </p>
                 </div>
@@ -596,7 +596,7 @@ export default function AlbumsPage() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <div className="w-full h-full bg-gray-200 dark:bg-dusk-700 flex items-center justify-center">
                             <LoadingSpinner size="sm" />
                           </div>
                         )}
@@ -615,7 +615,7 @@ export default function AlbumsPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end items-center p-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-end items-center p-6 border-t border-gray-200 dark:border-dusk-700">
               <button
                 type="button"
                 onClick={() => {

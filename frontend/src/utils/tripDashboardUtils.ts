@@ -543,32 +543,37 @@ function normalizeTransportation(transport: Transportation): NormalizedEvent {
 }
 
 /**
+ * The moment of a lodging check-in or check-out.
+ *
+ * These are stored as real timestamps, so use the instant as saved. Building
+ * "3 PM" on the viewer's clock instead showed the wrong hour whenever the
+ * stay was in another timezone. Only a bare calendar date, which carries no
+ * time, falls back to the default hour.
+ */
+function lodgingInstant(value: string | null | undefined, defaultHour: number): Date | null {
+  if (!value) return null;
+  if (value.includes('T')) {
+    const instant = new Date(value);
+    return Number.isNaN(instant.getTime()) ? null : instant;
+  }
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return new Date(
+    parseInt(match[1], 10),
+    parseInt(match[2], 10) - 1,
+    parseInt(match[3], 10),
+    defaultHour,
+    0,
+    0
+  );
+}
+
+/**
  * Normalizes a lodging into a common event format (check-in event)
  */
 function normalizeLodging(lodging: Lodging): NormalizedEvent {
-  let dateTime: Date | null = null;
-  if (lodging.checkInDate) {
-    const match = lodging.checkInDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1;
-      const day = parseInt(match[3], 10);
-      // Use default check-in time (3:00 PM) - lodging type doesn't have specific time fields
-      dateTime = new Date(year, month, day, DEFAULT_CHECKIN_HOUR, 0, 0);
-    }
-  }
-
-  let endDateTime: Date | null = null;
-  if (lodging.checkOutDate) {
-    const match = lodging.checkOutDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (match) {
-      const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1;
-      const day = parseInt(match[3], 10);
-      // Use default check-out time (11:00 AM) - lodging type doesn't have specific time fields
-      endDateTime = new Date(year, month, day, DEFAULT_CHECKOUT_HOUR, 0, 0);
-    }
-  }
+  const dateTime = lodgingInstant(lodging.checkInDate, DEFAULT_CHECKIN_HOUR);
+  const endDateTime = lodgingInstant(lodging.checkOutDate, DEFAULT_CHECKOUT_HOUR);
 
   const typeLabel = lodging.type
     .replace(/_/g, ' ')

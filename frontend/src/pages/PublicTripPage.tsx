@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AppTileLayer from '../components/AppTileLayer';
 import { useParams } from 'react-router';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils';
@@ -178,7 +179,7 @@ function EventCard({ event }: { event: ItineraryEvent }) {
   }
 
   return (
-    <div className="flex gap-3 p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div className="flex gap-3 p-3 rounded-xl bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 shadow-sm">
       <div className="text-xl leading-none pt-0.5" aria-hidden="true">
         {EVENT_ICONS[event.kind]}
       </div>
@@ -194,13 +195,13 @@ function EventCard({ event }: { event: ItineraryEvent }) {
               All day
             </span>
           )}
-          <span className="font-medium text-gray-900 dark:text-gray-100 break-words">{title}</span>
+          <span className="font-medium text-gray-900 dark:text-dusk-100 break-words">{title}</span>
         </div>
         {subtitle && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 break-words">{subtitle}</p>
+          <p className="text-sm text-gray-600 dark:text-dusk-400 mt-0.5 break-words">{subtitle}</p>
         )}
         {notes && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap break-words">
+          <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1 whitespace-pre-wrap break-words">
             {notes}
           </p>
         )}
@@ -227,7 +228,7 @@ function TripMap({ trip }: { trip: PublicTrip }) {
   if (points.length === 0 || !bounds) return null;
 
   return (
-    <section aria-label="Trip map" className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+    <section aria-label="Trip map" className="rounded-2xl overflow-hidden border border-gray-200 dark:border-dusk-700 shadow-sm">
       <div className="h-[280px] sm:h-[360px] relative z-0">
         <MapContainer
           bounds={bounds}
@@ -235,10 +236,7 @@ function TripMap({ trip }: { trip: PublicTrip }) {
           style={{ height: '100%', width: '100%' }}
           className="z-0"
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <AppTileLayer />
           {points.map((location) => (
             <Marker
               key={location.id}
@@ -297,7 +295,7 @@ function PhotoGrid({ photos }: { photos: PublicPhoto[] }) {
             key={photo.id}
             type="button"
             onClick={() => setLightboxIndex(index)}
-            className="group relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="group relative aspect-square overflow-hidden rounded-xl bg-gray-100 dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
             aria-label={photo.caption || 'View photo'}
           >
             <img
@@ -374,7 +372,7 @@ function PhotoGrid({ photos }: { photos: PublicPhoto[] }) {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{children}</h2>
+    <h2 className="text-xl font-semibold text-gray-900 dark:text-dusk-100 mb-4">{children}</h2>
   );
 }
 
@@ -421,10 +419,10 @@ export default function PublicTripPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dusk-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading trip…</p>
+          <p className="mt-4 text-gray-600 dark:text-dusk-300">Loading trip…</p>
         </div>
       </div>
     );
@@ -432,15 +430,15 @@ export default function PublicTripPage() {
 
   if (notFound || !trip) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dusk-900 px-4">
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4" aria-hidden="true">
             🔗
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-dusk-100 mb-2">
             Trip not available
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-dusk-400">
             This link is invalid or sharing was disabled.
           </p>
         </div>
@@ -459,7 +457,7 @@ export default function PublicTripPage() {
       : startDate ?? endDate;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-10">
         {/* Header */}
         <header className="text-center space-y-3">
@@ -468,10 +466,10 @@ export default function PublicTripPage() {
               {trip.tripTypeEmoji}
             </div>
           )}
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 break-words">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-dusk-100 break-words">
             {trip.title}
           </h1>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-gray-600 dark:text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-gray-600 dark:text-dusk-400">
             {dateRange && <span>{dateRange}</span>}
             {trip.tripType && (
               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300">
@@ -497,16 +495,16 @@ export default function PublicTripPage() {
               {trip.locations.map((location) => (
                 <li
                   key={location.id}
-                  className="p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                  className="p-3 rounded-xl bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 shadow-sm"
                 >
-                  <div className="font-medium text-gray-900 dark:text-gray-100 break-words">
+                  <div className="font-medium text-gray-900 dark:text-dusk-100 break-words">
                     {location.name}
                   </div>
                   {location.category && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{location.category}</div>
+                    <div className="text-sm text-gray-600 dark:text-dusk-400">{location.category}</div>
                   )}
                   {location.notes && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap break-words">
+                    <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1 whitespace-pre-wrap break-words">
                       {location.notes}
                     </p>
                   )}
@@ -545,21 +543,21 @@ export default function PublicTripPage() {
               {trip.journalEntries.map((entry) => (
                 <article
                   key={entry.id}
-                  className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
+                  className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 shadow-sm"
                 >
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
                     {entry.title && (
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 break-words">
+                      <h3 className="font-semibold text-gray-900 dark:text-dusk-100 break-words">
                         {entry.title}
                       </h3>
                     )}
                     {entry.date && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-sm text-gray-500 dark:text-dusk-400">
                         {formatDateOnly(entry.date)}
                       </span>
                     )}
                     {entry.mood && (
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{entry.mood}</span>
+                      <span className="text-sm text-gray-500 dark:text-dusk-400">{entry.mood}</span>
                     )}
                   </div>
                   <MarkdownRenderer content={entry.content} compact />
@@ -577,7 +575,7 @@ export default function PublicTripPage() {
           </section>
         )}
 
-        <footer className="pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
+        <footer className="pt-6 border-t border-gray-200 dark:border-dusk-700 text-center text-sm text-gray-500 dark:text-dusk-400">
           Shared with Travel Life
         </footer>
       </div>

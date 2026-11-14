@@ -64,7 +64,7 @@ export default function HomeTimezonePrompt() {
         </button>
       }
     >
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+      <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
         Times without a timezone of their own are shown in your home timezone.
         You can change this later in Settings.
       </p>

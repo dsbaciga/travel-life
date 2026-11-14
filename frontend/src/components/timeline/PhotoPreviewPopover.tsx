@@ -148,8 +148,8 @@ export default function PhotoPreviewPopover({
   // Build position classes based on calculated position
   const verticalClass = position.openUpward ? 'bottom-full mb-2' : 'top-full mt-2';
   const arrowClass = position.openUpward
-    ? 'absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 transform rotate-45'
-    : 'absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 transform rotate-45';
+    ? 'absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-dusk-800 border-r border-b border-gray-200 dark:border-dusk-700 transform rotate-45'
+    : 'absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-dusk-800 border-l border-t border-gray-200 dark:border-dusk-700 transform rotate-45';
 
   return (
     <div
@@ -178,7 +178,7 @@ export default function PhotoPreviewPopover({
       {isOpen && (
         <div
           ref={popoverRef}
-          className={`absolute z-20 ${verticalClass} left-1/2 -translate-x-1/2 w-48 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700`}
+          className={`absolute z-20 ${verticalClass} left-1/2 -translate-x-1/2 w-48 p-2 bg-white dark:bg-dusk-800 rounded-lg shadow-lg border border-gray-200 dark:border-dusk-700`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -197,7 +197,7 @@ export default function PhotoPreviewPopover({
                   return (
                     <div
                       key={photo.id}
-                      className="aspect-square rounded overflow-hidden bg-gray-100 dark:bg-gray-700"
+                      className="aspect-square rounded overflow-hidden bg-gray-100 dark:bg-dusk-700"
                     >
                       {photoUrl ? (
                         <img
@@ -243,7 +243,7 @@ export default function PhotoPreviewPopover({
               )}
             </>
           ) : (
-            <div className="text-center text-sm text-gray-500 dark:text-gray-400 py-2">
+            <div className="text-center text-sm text-gray-500 dark:text-dusk-400 py-2">
               No photos available
             </div>
           )}

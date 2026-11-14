@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import LocationQuickAdd from "./LocationQuickAdd";
+import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
+import { useLinkedCreate } from "../hooks/useLinkedCreate";
 import FormModal from "./FormModal";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
@@ -156,6 +158,9 @@ export default function LodgingManager({
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
 
   const [showLocationQuickAdd, setShowLocationQuickAdd] = useState(false);
+  // Create mode only: also create a Place with the lodging's name and link it.
+  const [alsoCreatePlace, setAlsoCreatePlace] = useState(false);
+  const { createPlaceNamed } = useLinkedCreate(tripId);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -359,6 +364,7 @@ export default function LodgingManager({
     setShowMoreOptions(false);
     setOriginalLocationId(null);
     setShowDraftPrompt(false);
+    setAlsoCreatePlace(false);
     draft.clearDraft();
   }, [baseResetForm, draft, setShowDraftPrompt]);
 
@@ -371,6 +377,12 @@ export default function LodgingManager({
   }, [baseOpenCreateForm]);
 
   useCreateFromUrlParam(openCreateForm);
+
+  // The stay being edited, if any. Used to decide whether a legacy address
+  // field is shown.
+  const editingLodging = manager.editingId
+    ? manager.items.find((item) => item.id === manager.editingId) ?? null
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -443,6 +455,19 @@ export default function LodgingManager({
       };
 
       try {
+        // A place picked from the list wins over creating a new one.
+        let newLocationId = values.locationId || null;
+        if (alsoCreatePlace && !newLocationId) {
+          const place = await createPlaceNamed(values.name);
+          if (place) {
+            newLocationId = place.id;
+            // Select it in the form too, so a retry after a failed save links
+            // this place instead of creating a second one.
+            handleLocationCreated(place.id, place.name);
+            setAlsoCreatePlace(false);
+          }
+        }
+
         // Call service directly to get the created lodging ID for linking
         const createdLodging = await lodgingService.createLodging(createData);
         toast.success('Lodging added successfully');
@@ -453,7 +478,7 @@ export default function LodgingManager({
           tripId,
           sourceType: 'LODGING',
           sourceId: createdLodging.id,
-          newLocationId: values.locationId || null,
+          newLocationId,
           originalLocationId: null,
           entityLabel: 'Lodging',
           invalidateLinkSummary,
@@ -636,13 +661,33 @@ export default function LodgingManager({
         />
 
         <form id="lodging-form" onSubmit={handleSubmit} className="space-y-6">
-          {/* SECTION 1: Basic Info (Type & Name) */}
+          {/* SECTION 1: Basic Info (Name & Type) */}
           <FormSection title="Basic Info" icon="🏨">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
+                  htmlFor="lodging-name"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
+                >
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  id="lodging-name"
+                  name="name"
+                  autoComplete="off"
+                  value={values.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  className="input"
+                  required
+                  placeholder="e.g., Marriott Hotel"
+                />
+              </div>
+
+              <div>
+                <label
                   htmlFor="lodging-type"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Type *
                 </label>
@@ -665,26 +710,6 @@ export default function LodgingManager({
                   <option value="other">🛏️ Other</option>
                 </select>
               </div>
-
-              <div>
-                <label
-                  htmlFor="lodging-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  id="lodging-name"
-                  name="name"
-                  autoComplete="off"
-                  value={values.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  className="input"
-                  required
-                  placeholder="e.g., Marriott Hotel"
-                />
-              </div>
             </div>
           </FormSection>
 
@@ -694,7 +719,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-check-in"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-in *
                 </label>
@@ -719,7 +744,7 @@ export default function LodgingManager({
               <div>
                 <label
                   htmlFor="lodging-check-out"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-out *
                 </label>
@@ -750,58 +775,62 @@ export default function LodgingManager({
             />
           </FormSection>
 
-          {/* COLLAPSIBLE: More Options (Location, Address, Booking, Cost, Notes) */}
-          <CollapsibleSection
-            title="More Options"
-            icon="⚙️"
-            isExpanded={showMoreOptions}
-            onToggle={() => setShowMoreOptions(!showMoreOptions)}
-            badge="location, booking, cost"
-          >
-            {/* Location Section */}
-            <FormSection title="Location" icon="📍">
-              {showLocationQuickAdd ? (
-                <LocationQuickAdd
-                  tripId={tripId}
-                  onLocationCreated={handleLocationCreated}
-                  onCancel={() => setShowLocationQuickAdd(false)}
-                />
-              ) : (
-                <div className="flex gap-2">
-                  <select
-                    id="lodging-location"
-                    name="location"
-                    autoComplete="off"
-                    value={values.locationId || ""}
-                    onChange={(e) =>
-                      handleChange(
-                        "locationId",
-                        e.target.value ? parseInt(e.target.value) : undefined
-                      )
-                    }
-                    className="input flex-1"
-                  >
-                    <option value="">-- Select Location --</option>
-                    {localLocations.map((loc) => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowLocationQuickAdd(true)}
-                    className="btn btn-secondary whitespace-nowrap"
-                  >
-                    + New
-                  </button>
-                </div>
-              )}
+          {/* Place: the linked Place carries the address and map position */}
+          <FormSection title="Place" icon="📍">
+            {showLocationQuickAdd ? (
+              <LocationQuickAdd
+                tripId={tripId}
+                onLocationCreated={handleLocationCreated}
+                onCancel={() => setShowLocationQuickAdd(false)}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <select
+                  id="lodging-location"
+                  name="location"
+                  autoComplete="off"
+                  value={values.locationId || ""}
+                  onChange={(e) =>
+                    handleChange(
+                      "locationId",
+                      e.target.value ? parseInt(e.target.value) : undefined
+                    )
+                  }
+                  className="input flex-1"
+                >
+                  <option value="">No place linked</option>
+                  {localLocations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationQuickAdd(true)}
+                  className="btn btn-secondary whitespace-nowrap"
+                >
+                  + New
+                </button>
+              </div>
+            )}
 
+            {!manager.editingId && !values.locationId && !showLocationQuickAdd && (
+              <AlsoCreatePlaceOption
+                id="lodging-also-create-place"
+                name={values.name}
+                checked={alsoCreatePlace}
+                onChange={setAlsoCreatePlace}
+              />
+            )}
+
+            {/* Address is no longer collected here. An address saved on an
+                older stay is still shown so it can be read or cleared. */}
+            {editingLodging?.address && (
               <div>
                 <label
                   htmlFor="lodging-address"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Address
                 </label>
@@ -813,11 +842,22 @@ export default function LodgingManager({
                   value={values.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   className="input"
-                  placeholder="123 Main St, City, Country"
                 />
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                  Kept from before. New stays take their address from the linked Place.
+                </p>
               </div>
-            </FormSection>
+            )}
+          </FormSection>
 
+          {/* COLLAPSIBLE: More Options (Booking, Cost, Notes) */}
+          <CollapsibleSection
+            title="More Options"
+            icon="⚙️"
+            isExpanded={showMoreOptions}
+            onToggle={() => setShowMoreOptions(!showMoreOptions)}
+            badge="booking, cost, notes"
+          >
             {/* Booking Section */}
             <FormSection title="Booking Details" icon="🎫">
               <BookingFields
@@ -856,7 +896,7 @@ export default function LodgingManager({
       {/* Sort Control */}
       {manager.items.length > 0 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="lodging-sort" className="text-sm text-gray-600 dark:text-gray-400">
+          <label htmlFor="lodging-sort" className="text-sm text-gray-600 dark:text-dusk-400">
             Sort by:
           </label>
           <select
@@ -897,7 +937,7 @@ export default function LodgingManager({
                 e.stopPropagation();
                 bulk.selection.toggleItemSelection(lodging.id, index, e.shiftKey, sortedLodging);
               } : undefined}
-              className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${bulk.selection.selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
+              className={`bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${bulk.selection.selectionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary-500 dark:ring-primary-400" : ""}`}
             >
               {/* Header with title and type */}
               <div className="flex items-start gap-2 mb-3 flex-wrap">
@@ -922,7 +962,7 @@ export default function LodgingManager({
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words">
                     {lodging.name}
                   </h3>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                  <span className="text-sm text-gray-500 dark:text-dusk-400 capitalize">
                     ({lodging.type.replace("_", " ")})
                   </span>
                 </div>
@@ -930,7 +970,7 @@ export default function LodgingManager({
 
               {/* Details grid - more compact on mobile */}
               {/* Note: Location is shown via LinkedEntitiesDisplay below */}
-              <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-dusk-300">
                 {/* Address */}
                 {lodging.address && (
                   <div className="flex flex-wrap gap-x-2">
@@ -992,10 +1032,10 @@ export default function LodgingManager({
                 {lodging.notes && (
                   <div className="mt-2">
                     <span className="font-medium">Notes:</span>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 sm:hidden">
+                    <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
                       {stripMarkdown(lodging.notes)}
                     </p>
-                    <div className="text-gray-600 dark:text-gray-400 mt-1 hidden sm:block">
+                    <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
                       <MarkdownRenderer content={lodging.notes} compact />
                     </div>
                   </div>
@@ -1011,7 +1051,7 @@ export default function LodgingManager({
               />
 
               {/* Actions - always at bottom on mobile */}
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
                 <LinkButton
                   tripId={tripId}
                   entityType="LODGING"

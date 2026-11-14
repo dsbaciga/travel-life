@@ -126,6 +126,8 @@ export default function UnscheduledItems({
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Track original lodging location ID when editing to detect changes (for entity linking)
+  // True when the stay being edited already has an address saved on it.
+  const [hadLodgingAddress, setHadLodgingAddress] = useState(false);
   const [originalLodgingLocationId, setOriginalLodgingLocationId] = useState<number | null>(null);
 
   // Activity-specific state for shared form
@@ -476,6 +478,7 @@ export default function UnscheduledItems({
     }
 
     lodgingForm.handleChange("address", lodgingItem.address || "");
+    setHadLodgingAddress(!!lodgingItem.address);
     lodgingForm.handleChange("timezone", lodgingItem.timezone || "");
     lodgingForm.handleChange(
       "confirmationNumber",
@@ -739,15 +742,15 @@ export default function UnscheduledItems({
       {/* Entity Type Chooser Modal */}
       {showAddMenu && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[80] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Add New Item
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddMenu(false)}
-                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -756,7 +759,7 @@ export default function UnscheduledItems({
             </div>
 
             <div className="p-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
                 Choose the type of item to add:
               </p>
 
@@ -764,13 +767,13 @@ export default function UnscheduledItems({
                 <button
                   type="button"
                   onClick={() => handleStartCreate("activity")}
-                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🎯</span>
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Activity</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Things to do, places to visit</div>
+                      <div className="text-sm text-gray-500 dark:text-dusk-400">Things to do, places to visit</div>
                     </div>
                   </div>
                 </button>
@@ -778,13 +781,13 @@ export default function UnscheduledItems({
                 <button
                   type="button"
                   onClick={() => handleStartCreate("transportation")}
-                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">✈️</span>
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Transportation</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Flights, trains, cars, etc.</div>
+                      <div className="text-sm text-gray-500 dark:text-dusk-400">Flights, trains, cars, etc.</div>
                     </div>
                   </div>
                 </button>
@@ -792,20 +795,20 @@ export default function UnscheduledItems({
                 <button
                   type="button"
                   onClick={() => handleStartCreate("lodging")}
-                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                  className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🏨</span>
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Lodging</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Hotels, Airbnb, camping</div>
+                      <div className="text-sm text-gray-500 dark:text-dusk-400">Hotels, Airbnb, camping</div>
                     </div>
                   </div>
                 </button>
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-t border-gray-200 dark:border-dusk-700">
               <button
                 type="button"
                 onClick={() => setShowAddMenu(false)}
@@ -818,19 +821,19 @@ export default function UnscheduledItems({
         </div>
       )}
 
-      <p className="text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-sm text-gray-600 dark:text-dusk-400">
         Items without scheduled dates/times. Add dates to move them to their
         respective tabs.
       </p>
 
       {/* Section Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 border-b border-gray-200 dark:border-dusk-700">
         <button
           onClick={() => setActiveSection("activity")}
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             activeSection === "activity"
               ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
           Activities ({activities.length})
@@ -840,7 +843,7 @@ export default function UnscheduledItems({
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             activeSection === "transportation"
               ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
           Transportation ({transportation.length})
@@ -850,7 +853,7 @@ export default function UnscheduledItems({
           className={`px-4 py-2 font-medium transition-colors border-b-2 ${
             activeSection === "lodging"
               ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
           Lodging ({lodging.length})
@@ -953,7 +956,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-transport-from"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   From Location
                 </label>
@@ -992,7 +995,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-transport-to"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   To Location
                 </label>
@@ -1034,7 +1037,7 @@ export default function UnscheduledItems({
           <FormSection title="Schedule">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Departure Time
                 </label>
                 <div className="flex gap-2">
@@ -1065,7 +1068,7 @@ export default function UnscheduledItems({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
                   Arrival Time
                 </label>
                 <div className="flex gap-2">
@@ -1120,7 +1123,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-transport-carrier"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Carrier
                 </label>
@@ -1138,7 +1141,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-transport-vehicle"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Flight/Train/Bus Number
                 </label>
@@ -1230,7 +1233,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-lodging-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Name *
                 </label>
@@ -1248,7 +1251,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-lodging-type"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Type
                 </label>
@@ -1272,7 +1275,7 @@ export default function UnscheduledItems({
             <div>
               <label
                 htmlFor="unscheduled-lodging-location"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
                 Location
               </label>
@@ -1296,23 +1299,30 @@ export default function UnscheduledItems({
               </select>
             </div>
 
-            <div>
-              <label
-                htmlFor="unscheduled-lodging-address"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Address
-              </label>
-              <input
-                type="text"
-                id="unscheduled-lodging-address"
-                value={lodgingForm.values.address}
-                onChange={(e) =>
-                  lodgingForm.handleChange("address", e.target.value)
-                }
-                className="input"
-              />
-            </div>
+            {/* Address is no longer collected here; the linked Place carries
+                it. An address saved on an older stay is still shown. */}
+            {hadLodgingAddress && (
+              <div>
+                <label
+                  htmlFor="unscheduled-lodging-address"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
+                >
+                  Address
+                </label>
+                <input
+                  type="text"
+                  id="unscheduled-lodging-address"
+                  value={lodgingForm.values.address}
+                  onChange={(e) =>
+                    lodgingForm.handleChange("address", e.target.value)
+                  }
+                  className="input"
+                />
+                <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                  Kept from before. New stays take their address from the linked Place.
+                </p>
+              </div>
+            )}
           </FormSection>
 
           <FormSection title="Schedule">
@@ -1320,7 +1330,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-lodging-checkin"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-in Date
                 </label>
@@ -1341,7 +1351,7 @@ export default function UnscheduledItems({
               <div>
                 <label
                   htmlFor="unscheduled-lodging-checkout"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
                   Check-out Date
                 </label>
@@ -1428,7 +1438,7 @@ export default function UnscheduledItems({
                 activities.map((activity) => (
                   <div
                     key={activity.id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+                    className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -1451,12 +1461,12 @@ export default function UnscheduledItems({
                         </div>
 
                         {activity.description && (
-                          <p className="text-gray-600 dark:text-gray-400 mb-2">
+                          <p className="text-gray-600 dark:text-dusk-400 mb-2">
                             {activity.description}
                           </p>
                         )}
 
-                        <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="space-y-2 text-sm text-gray-700 dark:text-dusk-300">
                           {activity.bookingReference && (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">Reference:</span>
@@ -1490,7 +1500,7 @@ export default function UnscheduledItems({
                           {activity.notes && (
                             <div className="mt-2">
                               <span className="font-medium">Notes:</span>
-                              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                              <p className="text-gray-600 dark:text-dusk-400 mt-1">
                                 {activity.notes}
                               </p>
                             </div>
@@ -1555,7 +1565,7 @@ export default function UnscheduledItems({
                 transportation.map((transport) => (
                   <div
                     key={transport.id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+                    className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -1569,7 +1579,7 @@ export default function UnscheduledItems({
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="space-y-2 text-sm text-gray-700 dark:text-dusk-300">
                           {(transport.fromLocationName ||
                             transport.fromLocation) && (
                             <div className="flex items-center gap-2">
@@ -1624,7 +1634,7 @@ export default function UnscheduledItems({
                           {transport.notes && (
                             <div className="mt-2">
                               <span className="font-medium">Notes:</span>
-                              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                              <p className="text-gray-600 dark:text-dusk-400 mt-1">
                                 {transport.notes}
                               </p>
                             </div>
@@ -1674,7 +1684,7 @@ export default function UnscheduledItems({
                 lodging.map((lodgingItem) => (
                   <div
                     key={lodgingItem.id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+                    className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -1689,7 +1699,7 @@ export default function UnscheduledItems({
                         </div>
 
                         {/* Note: Location is now shown via EntityLink system */}
-                        <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                        <div className="space-y-2 text-sm text-gray-700 dark:text-dusk-300">
                           {lodgingItem.address && (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">Address:</span>
@@ -1730,7 +1740,7 @@ export default function UnscheduledItems({
                           {lodgingItem.notes && (
                             <div className="mt-2">
                               <span className="font-medium">Notes:</span>
-                              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                              <p className="text-gray-600 dark:text-dusk-400 mt-1">
                                 {lodgingItem.notes}
                               </p>
                             </div>

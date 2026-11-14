@@ -116,7 +116,7 @@ export default function FlightRouteMap({
   return (
     // Dynamic height requires CSS variable - cannot be moved to static CSS
     <div
-      className="map-container-dynamic rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 w-full relative z-0"
+      className="map-container-dynamic rounded-lg overflow-hidden border border-gray-300 dark:border-dusk-600 w-full relative z-0"
       style={{ '--map-height': height }}
     >
       <MapContainer

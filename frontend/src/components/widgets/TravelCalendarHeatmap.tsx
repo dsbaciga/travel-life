@@ -256,7 +256,7 @@ export default function TravelCalendarHeatmap() {
               {monthLabels.map((monthLabel, index) => (
                 <div
                   key={index}
-                  className="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap"
+                  className="text-xs text-gray-500 dark:text-dusk-400 font-medium whitespace-nowrap"
                   style={{
                     position: 'absolute',
                     left: `${DAY_LABEL_WIDTH_PX + monthLabel.weekIndex * CELL_SIZE_WITH_GAP_PX}px`,
@@ -272,13 +272,13 @@ export default function TravelCalendarHeatmap() {
           <div className="flex gap-1">
             {/* Day of week labels */}
             <div className="flex flex-col gap-[2px] justify-start w-7">
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400" />
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400">M</div>
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400" />
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400">W</div>
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400" />
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400">F</div>
-              <div className="h-3 text-xs text-gray-500 dark:text-gray-400" />
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400" />
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400">M</div>
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400" />
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400">W</div>
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400" />
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400">F</div>
+              <div className="h-3 text-xs text-gray-500 dark:text-dusk-400" />
             </div>
 
             {/* Calendar grid */}
@@ -317,7 +317,7 @@ export default function TravelCalendarHeatmap() {
 
           {/* Color Legend */}
           <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-dusk-400">
               <span>Less</span>
               {INTENSITY_COLORS.map((colorClass, index) => (
                 <div key={index} className={`w-3 h-3 rounded-sm ${colorClass}`} />
@@ -332,7 +332,7 @@ export default function TravelCalendarHeatmap() {
                 onClick={() => setShowTripLegend(!showTripLegend)}
                 aria-expanded={showTripLegend}
                 aria-controls="trip-legend-panel"
-                className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 rounded px-1 py-0.5 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-dusk-400 hover:text-primary-600 dark:hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 rounded px-1 py-0.5 transition-colors"
               >
                 <span>{visibleTrips.length} trip{visibleTrips.length !== 1 ? 's' : ''}</span>
                 <ChevronDownIcon
@@ -349,7 +349,7 @@ export default function TravelCalendarHeatmap() {
               !showTripLegend || visibleTrips.length === 0 ? 'hidden' : ''
             }`}
           >
-            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="text-xs font-medium text-gray-700 dark:text-dusk-300 mb-2">
               Trips shown on calendar:
             </div>
             <div className="flex flex-wrap gap-2">
@@ -363,7 +363,7 @@ export default function TravelCalendarHeatmap() {
                 </div>
               ))}
               {remainingTripsCount > 0 && (
-                <span className="inline-flex items-center px-2 py-1 text-xs text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center px-2 py-1 text-xs text-gray-500 dark:text-dusk-400">
                   +{remainingTripsCount} more
                 </span>
               )}
@@ -378,10 +378,10 @@ export default function TravelCalendarHeatmap() {
           <div className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
             {formatDate(hoveredDay.date)}
           </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">
+          <div className="text-xs text-gray-600 dark:text-dusk-400">
             {hoveredDay.count} active trip{hoveredDay.count !== 1 ? 's' : ''}:
           </div>
-          <ul className="mt-1 text-xs text-gray-700 dark:text-gray-300 list-disc list-inside">
+          <ul className="mt-1 text-xs text-gray-700 dark:text-dusk-300 list-disc list-inside">
             {hoveredDay.trips.map((tripTitle, index) => (
               <li key={index}>{tripTitle}</li>
             ))}

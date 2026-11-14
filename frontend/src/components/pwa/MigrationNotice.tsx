@@ -123,10 +123,10 @@ export function MigrationNotice({
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <p className="text-sm font-medium text-gray-900 dark:text-dusk-100">
               {result.draftsMigrated} draft{result.draftsMigrated !== 1 ? 's' : ''} migrated
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
               {hasErrors
                 ? 'Moved to offline storage with some errors'
                 : 'Now available offline'
@@ -140,7 +140,7 @@ export function MigrationNotice({
             className={`
               flex-shrink-0 p-1 rounded
               text-gray-400 hover:text-gray-600
-              dark:text-gray-400 dark:hover:text-gray-300
+              dark:text-dusk-400 dark:hover:text-dusk-300
               hover:bg-gray-100 dark:hover:bg-navy-700
               transition-colors
             `}

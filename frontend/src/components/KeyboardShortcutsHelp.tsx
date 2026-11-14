@@ -43,23 +43,23 @@ export default function KeyboardShortcutsHelp() {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-gray-700 p-6 rounded-t-2xl">
+        <div className="sticky top-0 bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-dusk-700 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
                 Keyboard Shortcuts
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                 Boost your productivity with these shortcuts
               </p>
             </div>
             <button
               onClick={() => setShowHelp(false)}
-              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
               aria-label="Close"
             >
               <svg
-                className="w-6 h-6 text-gray-500 dark:text-gray-400"
+                className="w-6 h-6 text-gray-500 dark:text-dusk-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -93,12 +93,12 @@ export default function KeyboardShortcutsHelp() {
                   {categoryShortcuts.map((shortcut, index) => (
                     <div
                       key={`${shortcut.key}-${index}`}
-                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg"
                     >
-                      <span className="text-sm text-gray-700 dark:text-gray-300 font-body">
+                      <span className="text-sm text-gray-700 dark:text-dusk-300 font-body">
                         {shortcut.description}
                       </span>
-                      <kbd className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-mono font-semibold text-gray-900 dark:text-white shadow-sm">
+                      <kbd className="px-3 py-1.5 bg-white dark:bg-dusk-800 border border-gray-300 dark:border-dusk-600 rounded-md text-sm font-mono font-semibold text-gray-900 dark:text-white shadow-sm">
                         {getShortcutDisplay(shortcut)}
                       </kbd>
                     </div>
@@ -111,7 +111,7 @@ export default function KeyboardShortcutsHelp() {
           {/* No shortcuts message */}
           {shortcuts.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-gray-500 dark:text-dusk-400">
                 No page-specific shortcuts available. Navigate to different pages to see more shortcuts.
               </p>
             </div>
@@ -119,10 +119,10 @@ export default function KeyboardShortcutsHelp() {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 p-4 rounded-b-2xl">
-          <p className="text-xs text-center text-gray-600 dark:text-gray-400">
-            Press <kbd className="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono">?</kbd> anytime to show this help,{' '}
-            <kbd className="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs font-mono">Esc</kbd> to close
+        <div className="sticky bottom-0 bg-gray-50 dark:bg-dusk-700/50 border-t border-gray-200 dark:border-dusk-700 p-4 rounded-b-2xl">
+          <p className="text-xs text-center text-gray-600 dark:text-dusk-400">
+            Press <kbd className="px-2 py-1 bg-white dark:bg-dusk-800 border border-gray-300 dark:border-dusk-600 rounded text-xs font-mono">?</kbd> anytime to show this help,{' '}
+            <kbd className="px-2 py-1 bg-white dark:bg-dusk-800 border border-gray-300 dark:border-dusk-600 rounded text-xs font-mono">Esc</kbd> to close
           </p>
         </div>
       </div>

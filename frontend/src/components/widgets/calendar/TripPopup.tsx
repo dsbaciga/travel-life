@@ -101,7 +101,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
       case 'Cancelled':
         return 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300';
       default:
-        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
+        return 'bg-gray-100 dark:bg-dusk-800 text-gray-700 dark:text-dusk-300';
     }
   };
 
@@ -161,7 +161,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
         </h4>
 
         {/* Dates */}
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{formatDateRange()}</p>
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-3">{formatDateRange()}</p>
 
         {/* Status badge */}
         <div className="flex items-center gap-2 mb-3">
@@ -186,7 +186,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
               </span>
             ))}
             {trip.tagAssignments.length > 3 && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-gray-400">
+              <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-dusk-400">
                 +{trip.tagAssignments.length - 3}
               </span>
             )}

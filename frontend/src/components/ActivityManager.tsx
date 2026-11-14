@@ -474,7 +474,7 @@ export default function ActivityManager({
           bulkSelection.toggleItemSelection(activity.id, index, e.shiftKey, orderedActivities);
         } : undefined}
         onKeyDown={bulkSelection.selectionMode ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bulkSelection.toggleItemSelection(activity.id, index, false, orderedActivities); } } : undefined}
-        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${
+        className={`bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg shadow p-3 sm:p-6 hover:shadow-md transition-shadow ${
           isChild
             ? "ml-4 sm:ml-8 mt-3 border-l-4 border-blue-300 dark:border-blue-700"
             : ""
@@ -518,17 +518,17 @@ export default function ActivityManager({
         {/* Description */}
         {activity.description && (
           <>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2 sm:hidden">
+            <p className="text-gray-600 dark:text-dusk-400 text-sm mb-3 line-clamp-2 sm:hidden">
               {stripMarkdown(activity.description)}
             </p>
-            <div className="text-gray-600 dark:text-gray-400 text-sm mb-3 hidden sm:block">
+            <div className="text-gray-600 dark:text-dusk-400 text-sm mb-3 hidden sm:block">
               <MarkdownRenderer content={activity.description} compact />
             </div>
           </>
         )}
 
         {/* Details */}
-        <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-gray-300">
+        <div className="space-y-1.5 sm:space-y-2 text-sm text-gray-700 dark:text-dusk-300">
           {/* Time */}
           {activity.startTime && (
             <div className="flex flex-wrap gap-x-2">
@@ -588,10 +588,10 @@ export default function ActivityManager({
           {activity.notes && (
             <div className="mt-2">
               <span className="font-medium">Notes:</span>
-              <p className="text-gray-600 dark:text-gray-400 mt-1 line-clamp-2 sm:hidden">
+              <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
                 {stripMarkdown(activity.notes)}
               </p>
-              <div className="text-gray-600 dark:text-gray-400 mt-1 hidden sm:block">
+              <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
                 <MarkdownRenderer content={activity.notes} compact />
               </div>
             </div>
@@ -618,7 +618,7 @@ export default function ActivityManager({
         />
 
         {/* Actions - bottom row */}
-        <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
           <LinkButton
             tripId={tripId}
             entityType="ACTIVITY"
@@ -759,7 +759,7 @@ export default function ActivityManager({
       {topLevelActivities.length > 0 && (
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label htmlFor="activity-sort" className="text-sm text-gray-600 dark:text-gray-400">
+            <label htmlFor="activity-sort" className="text-sm text-gray-600 dark:text-dusk-400">
               Sort by:
             </label>
             <select
@@ -775,7 +775,7 @@ export default function ActivityManager({
 
           {/* Dietary Filter */}
           <div className="flex items-center gap-2">
-            <label htmlFor="dietary-filter" className="text-sm text-gray-600 dark:text-gray-400">
+            <label htmlFor="dietary-filter" className="text-sm text-gray-600 dark:text-dusk-400">
               Dietary:
             </label>
             <select
@@ -801,7 +801,7 @@ export default function ActivityManager({
               <button
                 type="button"
                 onClick={() => setDietaryFilter([])}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className="text-xs text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-300"
               >
                 Clear
               </button>
@@ -829,7 +829,7 @@ export default function ActivityManager({
           onAction={handleOpenForm}
         />
       ) : filteredActivities.length === 0 && dietaryFilter.length > 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
           <p className="text-lg mb-2">No activities match the selected dietary filter.</p>
           <button
             type="button"
@@ -843,10 +843,10 @@ export default function ActivityManager({
         <>
           {/* Scheduled Activities */}
           {sortedScheduledActivities.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span>📅</span> Scheduled Activities
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedScheduledActivities.length})
                 </span>
               </h3>
@@ -858,10 +858,10 @@ export default function ActivityManager({
 
           {/* Unscheduled Activities */}
           {sortedUnscheduledActivities.length > 0 && (
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+            <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
                 <span>📋</span> Unscheduled Activities
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledActivities.length})
                 </span>
               </h3>

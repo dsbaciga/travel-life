@@ -84,7 +84,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+          className="text-sm text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-white"
         >
           Cancel
         </button>
@@ -101,25 +101,25 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         />
 
         {searching && (
-          <div className="text-sm text-gray-600 dark:text-gray-400 py-2">
+          <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">
             Searching...
           </div>
         )}
 
         {searchResults.length > 0 && (
-          <div className="max-h-60 overflow-y-auto space-y-1 border border-gray-300 dark:border-gray-600 rounded">
+          <div className="max-h-60 overflow-y-auto space-y-1 border border-gray-300 dark:border-dusk-600 rounded">
             {searchResults.map((result) => (
               <button
                 key={result.place_id}
                 type="button"
                 onClick={() => handleResultClick(result)}
                 disabled={creating}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm disabled:opacity-50"
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-dusk-700 text-sm disabled:opacity-50"
               >
                 <div className="font-medium text-gray-900 dark:text-white">
                   {result.display_name.split(',')[0]}
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                <div className="text-xs text-gray-600 dark:text-dusk-400 truncate">
                   {result.display_name}
                 </div>
               </button>
@@ -128,7 +128,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         )}
 
         {searchQuery.length > 0 && searchQuery.length < 3 && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 py-2">
+          <div className="text-xs text-gray-500 dark:text-dusk-400 py-2">
             Type at least 3 characters to search
           </div>
         )}
@@ -140,7 +140,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         )}
       </div>
 
-      <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-3 text-xs text-gray-500 dark:text-dusk-400">
         💡 Search for a place name, address, or landmark
       </div>
     </div>

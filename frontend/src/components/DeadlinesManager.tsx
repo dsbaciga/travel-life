@@ -178,7 +178,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="min-w-0">
           <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Deadlines</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-dusk-400">
             Cancellation cutoffs, check-in windows and payment due dates
           </p>
         </div>
@@ -194,7 +194,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       </div>
 
       {showForm && (
-        <form onSubmit={handleSave} className="mb-6 space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <form onSubmit={handleSave} className="mb-6 space-y-4 rounded-xl border border-gray-200 dark:border-dusk-700 p-4">
           <div>
             <label className="block text-sm font-medium mb-1" htmlFor="deadline-booking">Booking</label>
             <select
@@ -284,7 +284,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
                 className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 rounded-xl border p-4 ${
                   overdue
                     ? "border-red-300 dark:border-red-500/40"
-                    : "border-gray-200 dark:border-gray-700"
+                    : "border-gray-200 dark:border-dusk-700"
                 }`}
               >
                 <div className="min-w-0">
@@ -292,15 +292,15 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
                     {DEADLINE_KIND_LABELS[d.kind]}
                     {overdue && <span className="ml-2 text-sm text-red-600 dark:text-red-400">Overdue</span>}
                     {d.dismissedAt && (
-                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">Done</span>
+                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-dusk-300">Done</span>
                     )}
                   </p>
                   <div className={d.dismissedAt ? "opacity-60" : undefined}>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-dusk-400">
                       {target?.label ?? "Booking"} ·{" "}
                       {formatDateTimeInTimezone(d.dueAt, resolveTz(target?.timezone, tripTimezone))}
                     </p>
-                    {d.note && <p className="text-sm text-gray-500 dark:text-gray-400">{d.note}</p>}
+                    {d.note && <p className="text-sm text-gray-500 dark:text-dusk-400">{d.note}</p>}
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-3 text-sm">

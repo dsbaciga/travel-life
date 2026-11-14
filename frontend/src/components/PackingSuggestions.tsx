@@ -116,8 +116,8 @@ const PRIORITY_CONFIG: Record<
   },
   optional: {
     label: 'Optional',
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-700',
+    color: 'text-gray-600 dark:text-dusk-400',
+    bgColor: 'bg-gray-100 dark:bg-dusk-700',
   },
 };
 
@@ -219,7 +219,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
       <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
-          <span className="text-gray-600 dark:text-gray-400">
+          <span className="text-gray-600 dark:text-dusk-400">
             Analyzing weather data for packing suggestions...
           </span>
         </div>
@@ -230,7 +230,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
   if (!data) {
     return (
       <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
-        <p className="text-gray-600 dark:text-gray-400">Unable to load packing suggestions</p>
+        <p className="text-gray-600 dark:text-dusk-400">Unable to load packing suggestions</p>
         <button
           onClick={fetchSuggestions}
           className="mt-3 text-sm text-primary-600 dark:text-gold hover:underline"
@@ -261,7 +261,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
           </div>
           <button
             onClick={fetchSuggestions}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors"
             title="Refresh suggestions"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +278,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
         {/* Weather Summary */}
         {data.weatherSummary.minTemp !== null && (
           <div className="mt-3 flex flex-wrap gap-2 text-sm">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-gray-300">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-dusk-300">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -308,7 +308,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
               </span>
             )}
             {data.tripDays > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-gray-300">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-dusk-300">
                 {data.tripDays} day{data.tripDays !== 1 ? 's' : ''}
               </span>
             )}
@@ -320,7 +320,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
       <div className="p-4">
         {!hasAnySuggestions ? (
           <div className="text-center py-8">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-gray-400 mb-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-dusk-400 mb-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -331,7 +331,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
               </svg>
             </div>
             <p className="font-medium text-gray-900 dark:text-white">No suggestions available</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
               Add dates and locations to your trip to get weather-based packing suggestions.
             </p>
           </div>
@@ -360,7 +360,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
                       <span className="font-medium text-gray-900 dark:text-white">
                         {config.label}
                       </span>
-                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-navy-600 text-gray-700 dark:text-gray-300">
+                      <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-medium bg-gray-200 dark:bg-navy-600 text-gray-700 dark:text-dusk-300">
                         {suggestions.length}
                       </span>
                     </div>
@@ -405,7 +405,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
                                     {priorityConfig.label}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                <p className="text-sm text-gray-500 dark:text-dusk-400 mt-0.5">
                                   {suggestion.reason}
                                 </p>
                               </div>

@@ -118,11 +118,11 @@ export default function BackupRestoreSection({
   return (
     <div className="space-y-6">
       {/* Create Backup */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Create Backup
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Download a complete backup of all your travel data including trips,
           photos, locations, activities, journal entries, and more. The backup
           is saved as a JSON file that you can store safely.
@@ -177,11 +177,11 @@ export default function BackupRestoreSection({
       </div>
 
       {/* Restore from Backup */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Restore from Backup
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Upload a backup file to restore your data. You can choose to replace
           all existing data or merge the backup with your current data.
         </p>
@@ -202,7 +202,7 @@ export default function BackupRestoreSection({
         <div className="mb-4">
           <label
             htmlFor="backup-file-input"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2"
           >
             Select Backup File
           </label>
@@ -211,7 +211,7 @@ export default function BackupRestoreSection({
             type="file"
             accept=".json"
             onChange={handleBackupFileSelect}
-            className="block w-full text-sm text-gray-900 dark:text-gray-100
+            className="block w-full text-sm text-gray-900 dark:text-dusk-100
               file:mr-4 file:py-2 file:px-4
               file:rounded-lg file:border-0
               file:text-sm file:font-semibold
@@ -221,7 +221,7 @@ export default function BackupRestoreSection({
               dark:hover:file:bg-blue-800"
           />
           {selectedBackupFile && (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-2 text-sm text-gray-600 dark:text-dusk-400">
               Selected: {selectedBackupFile.name}
             </p>
           )}
@@ -240,9 +240,9 @@ export default function BackupRestoreSection({
                 })
               }
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500
-                dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400"
+                dark:border-dusk-600 dark:bg-dusk-700 dark:focus:ring-blue-400"
             />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            <span className="ml-2 text-sm text-gray-700 dark:text-dusk-300">
               Clear existing data (recommended)
             </span>
           </label>
@@ -257,9 +257,9 @@ export default function BackupRestoreSection({
                 })
               }
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500
-                dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400"
+                dark:border-dusk-600 dark:bg-dusk-700 dark:focus:ring-blue-400"
             />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            <span className="ml-2 text-sm text-gray-700 dark:text-dusk-300">
               Import photo metadata
             </span>
           </label>
@@ -303,11 +303,11 @@ export default function BackupRestoreSection({
       </div>
 
       {/* Backup Tips */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Backup Best Practices
         </h2>
-        <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-2 list-disc list-inside">
+        <ul className="text-sm text-gray-600 dark:text-dusk-400 space-y-2 list-disc list-inside">
           <li>
             Create regular backups, especially before making major changes
           </li>

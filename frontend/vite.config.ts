@@ -28,8 +28,8 @@ export default defineConfig({
         name: 'Travel Life',
         short_name: 'Travel Life',
         description: 'Document your travel adventures with photos, maps, and journals',
-        theme_color: '#1e293b', // navy-800 - matches dark mode header
-        background_color: '#0f172a', // navy-900 - matches dark mode background
+        theme_color: '#242830', // navy-800 - matches dark mode header
+        background_color: '#151820', // navy-900 - matches dark mode background
         display: 'standalone',
         orientation: 'portrait-primary',
         start_url: '/',

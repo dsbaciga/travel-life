@@ -52,7 +52,7 @@ export default function FloatingTripHeader({ trip, observeRef }: FloatingTripHea
 
   return (
     <div
-      className="fixed top-16 sm:top-20 left-0 right-0 z-30 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 shadow-md transform animate-slide-in-down"
+      className="fixed top-16 sm:top-20 left-0 right-0 z-30 bg-white/95 dark:bg-dusk-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-dusk-700 shadow-md transform animate-slide-in-down"
       role="banner"
       aria-label="Trip quick info"
     >
@@ -69,18 +69,18 @@ export default function FloatingTripHeader({ trip, observeRef }: FloatingTripHea
                 {trip.tripType}
               </span>
             )}
-            <span className="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600" />
-            <span className="hidden sm:inline text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            <span className="hidden sm:inline-block h-4 w-px bg-gray-300 dark:bg-dusk-600" />
+            <span className="hidden sm:inline text-xs sm:text-sm text-gray-600 dark:text-dusk-400">
               {formatTripDates(trip.startDate, trip.endDate)}
             </span>
             {dateStatus && (
               <>
-                <span className="hidden md:inline-block h-4 w-px bg-gray-300 dark:bg-gray-600" />
+                <span className="hidden md:inline-block h-4 w-px bg-gray-300 dark:bg-dusk-600" />
                 <span
                   className={`hidden md:inline text-xs sm:text-sm ${
                     isActive
                       ? 'text-green-600 dark:text-green-400 font-medium'
-                      : 'text-gray-500 dark:text-gray-400'
+                      : 'text-gray-500 dark:text-dusk-400'
                   }`}
                 >
                   {dateStatus}

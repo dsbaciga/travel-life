@@ -122,7 +122,7 @@ export default function TimelineDaySection({
   const isCompact = viewMode === 'compact';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
+    <div className="bg-white dark:bg-dusk-800 rounded-xl shadow-sm border border-gray-200 dark:border-dusk-700 overflow-hidden mb-4">
       {/* Day Header */}
       <DayHeader
         date={dateKey}
@@ -139,29 +139,29 @@ export default function TimelineDaySection({
       {/* Day Content - collapsible */}
       <div className={`${isCompact ? 'p-3' : 'p-4'} ${isCollapsed ? 'hidden print:block' : ''} scroll-mt-48`}>
         {items.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
             <p className="text-sm">No events scheduled for this day</p>
           </div>
         ) : (
           <>
             {/* Desktop: Dual timezone header row */}
             {showDualTimezone && (
-              <div className="hidden lg:flex items-center gap-3 mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+              <div className="hidden lg:flex items-center gap-3 mb-4 pb-3 border-b border-gray-200 dark:border-dusk-700">
                 {/* Spacer to match icon column width */}
                 <div className="w-11 shrink-0" />
                 {/* Header row with trip time LEFT and home time RIGHT */}
                 <div className="flex-1 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
                       Trip Time ({tripTimezone && getTimezoneAbbr(tripTimezone)})
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
                       Home Time ({userTimezone && getTimezoneAbbr(userTimezone)})
                     </span>
-                    <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500" />
+                    <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-dusk-500" />
                   </div>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export default function TimelineDaySection({
             {/* Timeline vertical line container */}
             <div className="relative">
               {/* Vertical timeline line */}
-              <div className="absolute left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
+              <div className="absolute left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dusk-700" />
 
               {/* Events list */}
               <div className={isCompact ? 'space-y-3' : 'space-y-4'}>
@@ -207,10 +207,10 @@ export default function TimelineDaySection({
 
             {/* Unscheduled Activities Section */}
             {dayGroup.unscheduledActivities && dayGroup.unscheduledActivities.length > 0 && (
-              <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-gray-700 pt-4`}>
+              <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-dusk-700 pt-4`}>
                 <div className="flex items-center gap-2 mb-3">
                   <svg
-                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
+                    className="w-4 h-4 text-gray-500 dark:text-dusk-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -222,10 +222,10 @@ export default function TimelineDaySection({
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300">
                     Unscheduled Activities
                   </h4>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500 dark:text-dusk-400">
                     ({dayGroup.unscheduledActivities.length})
                   </span>
                 </div>
@@ -243,7 +243,7 @@ export default function TimelineDaySection({
 
             {/* Mini Map */}
             {mapLocations.length > 0 && (
-              <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-gray-700 pt-4`}>
+              <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-dusk-700 pt-4`}>
                 <DayMiniMap locations={mapLocations} defaultExpanded={viewMode === 'standard'} />
               </div>
             )}

@@ -245,7 +245,7 @@ describe("LocationManager", () => {
 
       // Check that form fields are populated
       await waitFor(() => {
-        const nameInput = screen.getByLabelText(/location name/i) as HTMLInputElement;
+        const nameInput = screen.getByLabelText(/^name/i) as HTMLInputElement;
         expect(nameInput.value).toBe("Eiffel Tower");
       });
 
@@ -275,7 +275,7 @@ describe("LocationManager", () => {
       });
 
       // Fill in the name field using fireEvent for reliability
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "New Test Location" } });
 
       // Submit the form
@@ -313,7 +313,7 @@ describe("LocationManager", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Test Location" } });
 
       await user.click(screen.getByRole("button", { name: /^add location$/i }));
@@ -408,7 +408,7 @@ describe("LocationManager", () => {
 
       // Verify form fields are populated
       await waitFor(() => {
-        const nameInput = screen.getByLabelText(/location name/i) as HTMLInputElement;
+        const nameInput = screen.getByLabelText(/^name/i) as HTMLInputElement;
         const addressInput = screen.getByLabelText(/address/i) as HTMLInputElement;
 
         expect(nameInput.value).toBe("Eiffel Tower");
@@ -467,7 +467,7 @@ describe("LocationManager", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const nameInput = screen.getByLabelText(/location name/i) as HTMLInputElement;
+      const nameInput = screen.getByLabelText(/^name/i) as HTMLInputElement;
       expect(nameInput.value).toBe(mockLocation.name);
 
       const addressInput = screen.getByLabelText(/address/i) as HTMLInputElement;
@@ -493,7 +493,7 @@ describe("LocationManager", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Updated Location Name" } });
 
       await user.click(screen.getByRole("button", { name: /update location/i }));
@@ -527,7 +527,7 @@ describe("LocationManager", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Updated Name" } });
 
       await user.click(screen.getByRole("button", { name: /update location/i }));
@@ -762,7 +762,7 @@ describe("LocationManager", () => {
       });
 
       // Fill in name
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Test Location" } });
 
       // Select category
@@ -968,7 +968,7 @@ describe("LocationManager", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Test" } });
 
       await user.click(screen.getByRole("button", { name: /^add location$/i }));
@@ -1004,7 +1004,7 @@ describe("LocationManager", () => {
       });
 
       // Fill in name
-      const nameInput = screen.getByLabelText(/location name/i);
+      const nameInput = screen.getByLabelText(/^name/i);
       fireEvent.change(nameInput, { target: { value: "Eiffel Tower" } });
 
       // Select parent

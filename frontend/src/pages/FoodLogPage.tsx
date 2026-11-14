@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LIBRARY_BACK_LINK } from "../components/LibraryBackLink";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import foodLogService from "../services/foodLog.service";
@@ -34,8 +35,13 @@ export default function FoodLogPage() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <PageHeader title="Best Meals" subtitle="Every dish you have rated across your trips" />
+    <div className="min-h-screen bg-cream dark:bg-navy-900">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
+      <PageHeader
+        title="Best Meals"
+        subtitle="Every dish you have rated across your trips"
+        backLink={LIBRARY_BACK_LINK}
+      />
 
       <div className="card mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="sm:col-span-3">
@@ -93,7 +99,7 @@ export default function FoodLogPage() {
               <p className="text-amber-500" aria-label={`${entry.rating} out of 5`}>
                 {ratingStars(entry.rating)}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-dusk-400">
                 {entry.restaurantName} ·{" "}
                 <Link
                   to={`/trips/${entry.trip.id}?tab=food-log`}
@@ -103,13 +109,14 @@ export default function FoodLogPage() {
                 </Link>
               </p>
               {entry.notes && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">{entry.notes}</p>
+                <p className="text-sm text-gray-500 dark:text-dusk-400">{entry.notes}</p>
               )}
               <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
             </li>
           ))}
         </ul>
       )}
+    </div>
     </div>
   );
 }

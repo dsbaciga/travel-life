@@ -62,10 +62,10 @@ export default function EmbeddedLocationCard({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       aria-label={`View location: ${location.name}`}
-      className={`p-3 rounded-lg border ${colors.bg} ${colors.border} cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800`}
+      className={`p-3 rounded-lg border ${colors.bg} ${colors.border} cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-dusk-800`}
     >
       {label && (
-        <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+        <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
           {label}
         </div>
       )}
@@ -83,13 +83,13 @@ export default function EmbeddedLocationCard({
           </h4>
 
           {categoryName && (
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+            <div className="text-sm text-gray-600 dark:text-dusk-400 mt-0.5">
               {categoryName}
             </div>
           )}
 
           {location.address && (
-            <div className="flex items-start gap-1.5 mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-start gap-1.5 mt-1 text-sm text-gray-500 dark:text-dusk-400">
               <svg
                 className="w-4 h-4 flex-shrink-0 mt-0.5"
                 fill="none"
@@ -114,7 +114,7 @@ export default function EmbeddedLocationCard({
           )}
 
           {'notes' in location && location.notes && (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+            <p className="mt-2 text-sm text-gray-600 dark:text-dusk-400 line-clamp-2">
               {location.notes}
             </p>
           )}
@@ -122,7 +122,7 @@ export default function EmbeddedLocationCard({
           {/* Coordinates badge */}
           {location.latitude && location.longitude && (
             <div className="mt-2 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"

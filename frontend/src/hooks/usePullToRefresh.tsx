@@ -185,7 +185,7 @@ export function PullToRefreshIndicator({
         )}
         {/* Progress text */}
         {!isRefreshing && pullDistance > 20 && (
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-gray-600 dark:text-dusk-400">
             {pullDistance >= threshold ? 'Release to refresh' : 'Pull to refresh'}
           </div>
         )}

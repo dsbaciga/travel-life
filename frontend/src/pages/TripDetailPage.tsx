@@ -6,7 +6,6 @@ import {
 } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import tripService from "../services/trip.service";
 import photoService from "../services/photo.service";
 import userService from "../services/user.service";
 import checklistService from "../services/checklist.service";
@@ -33,7 +32,6 @@ import TripPhotosTab from "../components/trip-detail/TripPhotosTab";
 import {
   type TabId,
   isTabId,
-  isTripStatusType,
   useTripTabGroups,
 } from "../components/trip-detail/tripDetailTabs";
 import { useTripDetailQueries } from "../components/trip-detail/useTripDetailQueries";
@@ -43,6 +41,7 @@ const PhotosMapView = lazy(() => import("../components/PhotosMapView"));
 const Timeline = lazy(() => import("../components/Timeline"));
 const DailyView = lazy(() => import("../components/daily-view/DailyView"));
 const TripMap = lazy(() => import("../components/TripMap"));
+const ItineraryDayView = lazy(() => import("../components/agenda/ItineraryDayView"));
 const PhotoTimeline = lazy(() => import("../components/PhotoTimeline"));
 const ActivityManager = lazy(() => import("../components/ActivityManager"));
 const UnscheduledItems = lazy(() => import("../components/UnscheduledItems"));
@@ -84,6 +83,8 @@ export default function TripDetailPage() {
   const editItemId =
     editParam != null && /^\d+$/.test(editParam) ? Number(editParam) : null;
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+  // Day the Day Plan view should open on, set when arriving from the Overview.
+  const [itineraryDay, setItineraryDay] = useState<string | null>(null);
 
   // Sync activeTab with URL when tab parameter changes externally (e.g., from EntityDetailModal navigation)
   useEffect(() => {
@@ -337,21 +338,6 @@ export default function TripDetailPage() {
     albumPhotosPagination.items,
   ]);
 
-  const handleStatusChange = async (newStatus: string) => {
-    if (!isTripStatusType(newStatus)) {
-      toast.error("Invalid trip status");
-      return;
-    }
-    try {
-      await tripService.updateTrip(tripId, { status: newStatus });
-      toast.success(`Trip status updated to ${newStatus}`);
-      queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
-    } catch (error) {
-      console.error("Failed to update trip status:", error);
-      toast.error("Failed to update trip status");
-    }
-  };
-
   const handleToggleChecklistItem = async (
     _checklistId: number,
     itemId: number,
@@ -400,22 +386,12 @@ export default function TripDetailPage() {
     }
   };
 
-  const handlePrintItinerary = () => {
-    changeTab("timeline");
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set("tab", "timeline");
-      newParams.set("action", "print");
-      return newParams;
-    });
-  };
-
   if (isTripLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
+          <p className="mt-4 text-gray-600 dark:text-dusk-400">
             Loading trip...
           </p>
         </div>
@@ -535,15 +511,47 @@ export default function TripDetailPage() {
                             return;
                           }
                           if (isTabId(tab)) changeTab(tab);
+                          if (tab === "itinerary") {
+                            setItineraryDay(options?.scrollToDate ?? null);
+                          }
                           if (options?.action === "add") {
                             // Handle specific actions if needed
                           }
                         }}
-                        onStatusChange={handleStatusChange}
-                        onPrintItinerary={handlePrintItinerary}
                         onToggleChecklistItem={handleToggleChecklistItem}
                         onNavigateToEntity={handleNavigateToEntity}
                         budgetData={budgetData}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                </div>
+              )}
+
+              {/* Day Plan Tab: one day as a numbered list beside a map */}
+              {activeTab === "itinerary" && (
+                <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-navy-700 p-4 sm:p-6 animate-fadeIn">
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <LoadingSpinner.FullPage message="Loading day plan..." />
+                      }
+                    >
+                      <ItineraryDayView
+                        tripId={tripId}
+                        tripStartDate={trip.startDate}
+                        tripEndDate={trip.endDate}
+                        tripTimezone={trip.timezone}
+                        activities={activitiesData || []}
+                        transportation={transportationData || []}
+                        lodging={lodgingData || []}
+                        locations={locations}
+                        initialDay={itineraryDay}
+                        onOpenTab={changeTab}
+                        onEditItem={(tab, itemId) => {
+                          // Same deep link the Timeline and Day By Day edit buttons write.
+                          setActiveTab(tab);
+                          setSearchParams({ tab, edit: String(itemId) });
+                        }}
                       />
                     </Suspense>
                   </ErrorBoundary>

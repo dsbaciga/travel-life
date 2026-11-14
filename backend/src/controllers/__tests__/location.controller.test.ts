@@ -432,7 +432,8 @@ describe('locationController', () => {
       expect(locationService.getAllVisitedLocations).toHaveBeenCalledWith(
         testUsers.user1.id,
         1,   // default page
-        200  // default limit
+        200, // default limit
+        'visited'
       );
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
@@ -453,7 +454,8 @@ describe('locationController', () => {
       expect(locationService.getAllVisitedLocations).toHaveBeenCalledWith(
         testUsers.user1.id,
         2,
-        50
+        50,
+        'visited'
       );
     });
 
@@ -470,7 +472,8 @@ describe('locationController', () => {
       expect(locationService.getAllVisitedLocations).toHaveBeenCalledWith(
         testUsers.user1.id,
         1,
-        500
+        500,
+        'visited'
       );
     });
 
