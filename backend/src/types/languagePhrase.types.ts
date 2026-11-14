@@ -58,7 +58,7 @@ export interface Phrase {
   id: string;
   english: string;
   translation: string;
-  pronunciation?: string; // Romanization for non-Latin scripts
+  pronunciation?: string; // Romanization for non-Latin scripts; an English-style respelling for Latin-script languages
   category: PhraseCategory;
 }
 

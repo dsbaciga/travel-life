@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Icelandic** phrase book (60 phrases), available in Edit Trip on the web and in the mobile Vault.
+- **Pronunciation guides** for the Latin-script phrase books (French, Spanish, Italian, German, Portuguese, Dutch, Vietnamese and Icelandic): an English-style respelling under each phrase, with capitals marking the stressed syllable. Portuguese follows Brazilian speech. The guides are approximate, and Vietnamese does not show tones.
 
 ## [7.1.0] - 2026-11-14
 

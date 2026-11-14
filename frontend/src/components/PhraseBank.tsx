@@ -109,6 +109,10 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
         ))}
       </div>
 
+      <p className="text-xs text-gray-500 dark:text-dusk-400">
+        Pronunciation is an English-style respelling: capital letters mark the stressed syllable, and the guide is approximate.
+      </p>
+
       {/* Category filters */}
       <div className="flex flex-wrap gap-2">
         {categories.map((cat) => {
