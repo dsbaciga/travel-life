@@ -343,6 +343,10 @@ describe('timeline', () => {
     try {
       for (const t of [finished, cancelled, dream, planned, planning]) await upsertTrip(db, t);
       expect((await listTrips(db)).map((t) => t.id)).toEqual([3, 2, 5, 1, 4]);
+
+      // The current trip leads the list whatever its dates, even an old one.
+      await upsertTrip(db, dto(7, 'In Progress', '2025-01-01', '2025-01-02'));
+      expect((await listTrips(db)).map((t) => t.id)).toEqual([7, 3, 2, 5, 1, 4]);
     } finally {
       await db.close();
     }
@@ -352,6 +356,8 @@ describe('timeline', () => {
     // A dated upcoming trip still wins over an undated one, and Completed never counts as "planning".
     expect(pickActiveTrip([finished, planning, planned], '2026-06-01')?.id).toBe(3);
     expect(pickActiveTrip([finished, dto(6, 'Completed', null, null)], '2026-06-01')?.id).toBe(1);
+    // A trip marked In Progress is current even with no dates, ahead of an upcoming one.
+    expect(pickActiveTrip([planned, dto(8, 'In Progress', null, null)], '2026-06-01')?.id).toBe(8);
   });
 
   it('TL-008: unscheduledItems', () => {

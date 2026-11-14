@@ -3,10 +3,11 @@ import { TripStatus } from '../../types/trip.types';
 /**
  * Ordering for the trip list.
  *
- * Trips that are still ahead of you (Dream, Planning, Planned, In Progress)
- * always come before Completed ones, and Cancelled last, no matter what their
- * dates are. Sorting by date alone put a Planning trip with no dates after
- * every dated Completed trip, because an unset date sorts last.
+ * The trip you are on right now (In Progress) is always first. Trips still
+ * ahead of you (Dream, Planning, Planned) come next, then Completed, and
+ * Cancelled last, no matter what their dates are. Sorting by date alone put a
+ * Planning trip with no dates after every dated Completed trip, because an
+ * unset date sorts last, and let an old In Progress trip fall below future ones.
  *
  * Done in memory, not with Prisma `orderBy`: a status can only be ordered
  * alphabetically in SQL, which would split the open statuses apart (a Planned
@@ -22,11 +23,12 @@ export interface OrderableTrip {
   createdAt: Date;
 }
 
-/** Open trips first, then Completed, then Cancelled. */
+/** Current trip first, then the other open trips, then Completed, then Cancelled. */
 export function tripGroupRank(status: string): number {
-  if (status === TripStatus.COMPLETED) return 1;
-  if (status === TripStatus.CANCELLED) return 2;
-  return 0;
+  if (status === TripStatus.IN_PROGRESS) return 0;
+  if (status === TripStatus.COMPLETED) return 2;
+  if (status === TripStatus.CANCELLED) return 3;
+  return 1;
 }
 
 /** The order the "By Status" sort groups by: closest to now first. */

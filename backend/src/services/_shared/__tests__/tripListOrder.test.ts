@@ -7,6 +7,7 @@
  * - TLO-003: Within a group, newest start first (or oldest first), undated last in both directions
  * - TLO-004: Ties fall back to creation time, then id
  * - TLO-005: "By Status" order, and an unknown status counts as open
+ * - TLO-006: The current (In Progress) trip is first whatever its dates
  */
 import { TripStatus } from '../../../types/trip.types';
 import {
@@ -77,6 +78,18 @@ describe('trip list ordering', () => {
     expect(order(trips, 'startDate-asc')).toEqual([1, 2, 3]);
   });
 
+  it('TLO-006: the current trip is first whatever its dates, in both directions', () => {
+    const trips = [
+      trip(1, TripStatus.PLANNED, '2028-05-01'),
+      trip(2, TripStatus.IN_PROGRESS, '2025-01-10'),
+      trip(3, TripStatus.PLANNING, null),
+      trip(4, TripStatus.COMPLETED, '2029-01-01'),
+    ];
+    expect(order(trips, 'startDate-desc')).toEqual([2, 1, 3, 4]);
+    expect(order(trips, 'startDate-asc')).toEqual([2, 1, 3, 4]);
+    expect(tripGroupRank(TripStatus.IN_PROGRESS)).toBeLessThan(tripGroupRank(TripStatus.PLANNED));
+  });
+
   it('TLO-005: "By Status" runs closest to now first, and an unknown status counts as open', () => {
     expect(
       [
@@ -90,6 +103,8 @@ describe('trip list ordering', () => {
     ).toEqual([0, 1, 2, 3, 4, 5]);
 
     expect(tripStatusRank('Something New')).toBeLessThan(tripStatusRank(TripStatus.COMPLETED));
-    expect(tripGroupRank('Something New')).toBe(0);
+    // Open, but not the current trip: after In Progress, before Completed.
+    expect(tripGroupRank('Something New')).toBeGreaterThan(tripGroupRank(TripStatus.IN_PROGRESS));
+    expect(tripGroupRank('Something New')).toBeLessThan(tripGroupRank(TripStatus.COMPLETED));
   });
 });

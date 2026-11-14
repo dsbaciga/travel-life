@@ -345,6 +345,9 @@ export function pickActiveTrip<T extends Pick<TripDto, 'startDate' | 'endDate' |
     return start !== '' && end !== '' && start <= todayKey && todayKey <= end;
   });
   if (during) return during;
+  // A trip marked In Progress is current even when its dates were never filled in or have slipped.
+  const inProgress = live.find((trip) => /^in progress$/i.test(trip.status));
+  if (inProgress) return inProgress;
   const upcoming = live
     .filter((trip) => dateOnlyKey(trip.startDate) > todayKey)
     .sort((a, b) => dateOnlyKey(a.startDate).localeCompare(dateOnlyKey(b.startDate)));

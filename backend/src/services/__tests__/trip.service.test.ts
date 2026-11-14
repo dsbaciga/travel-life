@@ -1583,9 +1583,35 @@ describe('Trip Service', () => {
 
       const result = await tripService.getTrips(mockUserId, {});
 
-      // Open trips by start date (newest first, undated last), then Completed, then Cancelled.
-      expect(result.trips.map((t) => t.id)).toEqual([3, 4, 2, 6, 1, 5]);
+      // The current trip first, then open trips by start date (newest first, undated
+      // last), then Completed, then Cancelled.
+      expect(result.trips.map((t) => t.id)).toEqual([4, 3, 2, 6, 1, 5]);
       expect(result.total).toBe(6);
+    });
+
+    it('TRIP-ORDER-004: the current (In Progress) trip is first whatever its dates', async () => {
+      const row = (id: number, status: string, start: string | null) => ({
+        id,
+        status,
+        startDate: start ? new Date(start) : null,
+        createdAt: new Date('2026-01-01'),
+      });
+      const candidates = [
+        row(1, TripStatus.PLANNED, '2028-05-01'),
+        row(2, TripStatus.IN_PROGRESS, '2026-01-10'),
+        row(3, TripStatus.IN_PROGRESS, null),
+        row(4, TripStatus.COMPLETED, '2029-01-01'),
+      ];
+      for (const sort of ['startDate-desc', 'startDate-asc'] as const) {
+        mockPrisma.trip.findMany
+          .mockResolvedValueOnce(candidates)
+          .mockResolvedValueOnce([1, 2, 3, 4].map((id) => ({ ...mockTripWithIncludes, id })));
+
+        const result = await tripService.getTrips(mockUserId, { sort });
+
+        // Both In Progress trips lead (dated before undated), then the rest.
+        expect(result.trips.map((t) => t.id)).toEqual([2, 3, 1, 4]);
+      }
     });
 
     it('TRIP-ORDER-002: "Oldest First" also keeps open trips ahead of Completed ones', async () => {
