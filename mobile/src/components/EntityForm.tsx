@@ -108,7 +108,7 @@ function DateTimeField({ label, value, mode, timezone, error, onChange }: DateTi
         DateTimePickerAndroid.open({
           value: date,
           mode: 'time',
-          is24Hour: true,
+          is24Hour: false,
           onChange: (timeEvent, time) => {
             if (timeEvent.type !== 'set' || !time) return;
             const merged = new Date(date);

@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TabBarContext } from '@/components/ui';
 import { usePalette } from '@/lib/theme';
 
 const tabIcon = (glyph: string) =>
@@ -15,6 +16,7 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
 
   return (
+    <TabBarContext.Provider value>
     <View style={styles.flex}>
       <Tabs
         screenOptions={{
@@ -43,6 +45,7 @@ export default function TabsLayout() {
         <Text style={[styles.fabLabel, { color: palette.onPrimary }]}>+</Text>
       </Pressable>
     </View>
+    </TabBarContext.Provider>
   );
 }
 

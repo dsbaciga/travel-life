@@ -127,7 +127,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
       {/* Last Updated */}
       {flightTracking.lastUpdatedAt && (
         <div className="text-xs text-gray-500 dark:text-dusk-400">
-          Updated: {new Date(flightTracking.lastUpdatedAt).toLocaleString()}
+          Updated: {new Date(flightTracking.lastUpdatedAt).toLocaleString(undefined, { hour12: true })}
         </div>
       )}
     </div>
