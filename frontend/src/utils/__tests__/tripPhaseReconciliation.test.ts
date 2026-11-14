@@ -23,7 +23,10 @@ import { TripStatus } from '../../types/trip';
 const daysFromToday = (offset: number): string => {
   const date = new Date();
   date.setDate(date.getDate() + offset);
-  return date.toISOString().split('T')[0];
+  // The local calendar day, not the UTC one: `toISOString()` is already
+  // tomorrow in the evening west of UTC, which made these tests fail at night.
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
 const PAST_START = daysFromToday(-30);
