@@ -491,7 +491,7 @@ describe('smart context', () => {
     expect(buildWidgetSnapshot(trip, findNextUp(items, now), now)).toMatchObject({
       tripTitle: 'Venice',
       title: 'Train: Verona',
-      timeLabel: '14:05',
+      timeLabel: '2:05 PM',
       countdown: 'in 2h 05m',
       detail: 'Delayed 20m · ABC123',
       url: 'travellife://trip/10',

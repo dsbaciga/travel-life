@@ -90,7 +90,10 @@ export function dateOnlyKey(value: string | Date | null | undefined): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** `14:05` (24h) or `2:05 PM` wall-clock time of an instant in a zone. */
+/**
+ * Wall-clock time of an instant in a zone: `2:05 PM` by default, or `14:05`
+ * with `{ hour12: false }`.
+ */
 export function formatTimeInTimezone(
   instant: string | number | Date | null | undefined,
   timezone: string,
@@ -99,12 +102,19 @@ export function formatTimeInTimezone(
   if (instant === null || instant === undefined || instant === '') return '';
   const date = instant instanceof Date ? instant : new Date(instant);
   if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(options.locale ?? 'en-US', {
-    timeZone: timezone,
-    hour: options.hour12 ? 'numeric' : '2-digit',
-    minute: '2-digit',
-    hour12: options.hour12 ?? false,
-  }).format(date);
+  const hour12 = options.hour12 ?? true;
+  return (
+    new Intl.DateTimeFormat(options.locale ?? 'en-US', {
+      timeZone: timezone,
+      hour: hour12 ? 'numeric' : '2-digit',
+      minute: '2-digit',
+      hour12,
+    })
+      .format(date)
+      // Newer ICU puts a narrow no-break space before AM/PM; plain text is easier to
+      // compare, copy and read aloud, and renders the same.
+      .replace(/ /g, ' ')
+  );
 }
 
 /** Short zone label for an instant, e.g. "CEST" or "GMT+2". */
