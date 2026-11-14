@@ -5,7 +5,15 @@
 import { create } from 'zustand';
 import type { TripDto } from '@travel-life/shared';
 import { dateOnlyKey } from '@travel-life/shared';
-import { kvGet, kvSet, listPinnedTripIds, listTrips, removeTrip, upsertTrip } from '../db/repository';
+import {
+  kvGet,
+  kvSet,
+  listPinnedTripIds,
+  listTrips,
+  removeTrip,
+  setTripPinned,
+  upsertTrip,
+} from '../db/repository';
 import { ApiError, syncTrip, type SyncResult } from '../sync/engine';
 import { countOutbox, type OutboxCounts } from '../sync/outbox';
 import { getDb } from './db';
@@ -68,6 +76,46 @@ export function shouldMirrorTrip(
   if (!end) return true;
   const cutoff = new Date(Date.parse(todayKey) - 30 * 86400000).toISOString().slice(0, 10);
   return end >= cutoff;
+}
+
+const DISMISSED_KEY = 'dismissedTrips';
+
+/** Trips the user removed from this phone; sync must not bring them back by itself. */
+export async function listDismissedTripIds(db: Awaited<ReturnType<typeof getDb>>): Promise<Set<number>> {
+  return new Set((await kvGet<number[]>(db, DISMISSED_KEY)) ?? []);
+}
+
+async function setDismissed(tripId: number, dismissed: boolean): Promise<void> {
+  const db = await getDb();
+  const ids = await listDismissedTripIds(db);
+  if (dismissed) ids.add(tripId);
+  else ids.delete(tripId);
+  await kvSet(db, DISMISSED_KEY, [...ids]);
+}
+
+/**
+ * Take a trip off the phone. Refuses (returns false) while edits to it have
+ * not reached the server, so nothing the user typed can be lost.
+ */
+export async function removeTripFromPhone(tripId: number): Promise<boolean> {
+  const db = await getDb();
+  const outbox = await countOutbox(db, tripId);
+  if (outbox.pending + outbox.conflict + outbox.failed > 0) return false;
+  await setDismissed(tripId, true);
+  await setTripPinned(db, tripId, false);
+  await removeTrip(db, tripId);
+  await notifyLocalChange();
+  return true;
+}
+
+/** Bring a removed trip back (undo, or "Download" from the server list). */
+export async function restoreTripToPhone(trip: TripDto, keep: boolean): Promise<void> {
+  const db = await getDb();
+  await setDismissed(trip.id, false);
+  await upsertTrip(db, trip);
+  if (keep) await setTripPinned(db, trip.id, true);
+  await notifyLocalChange();
+  void syncNow();
 }
 
 /**
@@ -133,8 +181,11 @@ async function run(): Promise<SyncResult | null> {
 
     if (remote) {
       const pinnedTripIds = await listPinnedTripIds(db);
-      const wanted = remote.filter((trip) =>
-        shouldMirrorTrip(trip, todayKey, pinnedTripIds.has(trip.id))
+      const dismissed = await listDismissedTripIds(db);
+      const wanted = remote.filter(
+        (trip) =>
+          (!dismissed.has(trip.id) || pinnedTripIds.has(trip.id)) &&
+          shouldMirrorTrip(trip, todayKey, pinnedTripIds.has(trip.id))
       );
       const wantedIds = new Set(wanted.map((trip) => trip.id));
       for (const trip of wanted) await upsertTrip(db, trip);
