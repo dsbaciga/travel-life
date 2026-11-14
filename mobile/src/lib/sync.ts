@@ -20,6 +20,8 @@ interface SyncState {
   lastSyncedAt: string | null;
   lastError: string | null;
   counts: OutboxCounts;
+  /** Queued edits waiting on another edit that could not be delivered. */
+  blocked: number;
   /** Bumped whenever local data changes, so queries re-read SQLite. */
   dataVersion: number;
   activeTripId: number | null;
@@ -33,6 +35,7 @@ export const useSync = create<SyncState>((set) => ({
   lastSyncedAt: null,
   lastError: null,
   counts: { pending: 0, conflict: 0, failed: 0 },
+  blocked: 0,
   dataVersion: 0,
   activeTripId: null,
   bump: () => set((state) => ({ dataVersion: state.dataVersion + 1 })),
@@ -130,8 +133,18 @@ async function run(): Promise<SyncResult | null> {
       }
     }
 
+    const tripProblems: string[] = [];
     for (const trip of await listTrips(db)) {
-      const result = await syncTrip(db, api.syncApi, trip.id);
+      let result: SyncResult;
+      try {
+        result = await syncTrip(db, api.syncApi, trip.id);
+      } catch (error) {
+        // A trip the server refuses (access revoked, deleted) must not stop the
+        // other trips, or their queued edits, from syncing.
+        if (error instanceof ApiError && error.status === 401) throw error;
+        tripProblems.push(`${trip.title}: ${error instanceof Error ? error.message : 'sync failed'}`);
+        continue;
+      }
       total.sent += result.sent;
       total.failed += result.failed;
       total.conflicts += result.conflicts;
@@ -151,6 +164,8 @@ async function run(): Promise<SyncResult | null> {
       syncing: false,
       offline: total.interrupted,
       lastSyncedAt: total.interrupted ? state.lastSyncedAt : new Date().toISOString(),
+      lastError: tripProblems.length > 0 ? tripProblems.join('\n') : null,
+      blocked: total.blocked,
       counts,
       activeTripId: active ?? null,
       dataVersion: state.dataVersion + 1,
@@ -158,9 +173,15 @@ async function run(): Promise<SyncResult | null> {
     void refreshWidget();
     return total;
   } catch (error) {
+    const signedOut = error instanceof ApiError && error.status === 401;
     useSync.setState({
       syncing: false,
-      lastError: error instanceof Error ? error.message : 'Sync failed',
+      offline: false,
+      lastError: signedOut
+        ? 'Your session expired. Sign in again to keep syncing.'
+        : error instanceof Error
+          ? error.message
+          : 'Sync failed',
     });
     return null;
   }
