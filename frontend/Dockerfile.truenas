@@ -2,7 +2,7 @@
 # Uses nginx proxy configuration to avoid hardcoded API URLs
 
 # Multi-stage build
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 

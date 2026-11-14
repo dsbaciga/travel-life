@@ -185,7 +185,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '26'
           cache: 'npm'
           cache-dependency-path: mobile/package-lock.json
 
