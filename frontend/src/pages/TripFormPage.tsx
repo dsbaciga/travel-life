@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { timezoneOptionsFor } from '../utils/timezone';
+import TripLanguageSelector from '../components/TripLanguageSelector';
 import { useNavigate, useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import tripService from '../services/trip.service';
@@ -556,6 +557,22 @@ export default function TripFormPage() {
               <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                 If not specified, your default timezone from settings will be used
               </p>
+            </div>
+
+            <div>
+              <span className="label">Languages</span>
+              {isEdit && id ? (
+                <>
+                  <TripLanguageSelector tripId={Number(id)} />
+                  <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+                    Languages are saved as you add them. They load the phrase book here and in the mobile app.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-dusk-400">
+                  Save the trip first, then edit it to add languages for the phrase book.
+                </p>
+              )}
             </div>
 
             {userTripTypes.length > 0 && (
