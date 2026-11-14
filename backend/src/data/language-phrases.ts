@@ -178,7 +178,7 @@ export const LANGUAGE_PHRASES: LanguageWithPhrases[] = [
       { id: 'es-g7', english: 'My name is...', translation: 'Me llamo...', pronunciation: 'meh YAH-moh', category: 'greetings' },
       { id: 'es-g8', english: 'See you later', translation: 'Hasta luego', pronunciation: 'AHS-tah LWEH-goh', category: 'greetings' },
       { id: 'es-g9', english: 'Good night', translation: 'Buenas noches', pronunciation: 'BWEH-nahs NOH-chehs', category: 'greetings' },
-      { id: 'es-g10', english: 'Welcome', translation: 'Bienvenido', pronunciation: 'byehn-veh-NEE-doh', category: 'greetings' },
+      { id: 'es-g10', english: 'Welcome', translation: 'Bienvenido/a', pronunciation: 'byehn-veh-NEE-doh (-dah)', category: 'greetings' },
       // Dining
       { id: 'es-d1', english: 'A table for two, please', translation: 'Una mesa para dos, por favor', pronunciation: 'OO-nah MEH-sah PAH-rah dohs, pohr fah-VOHR', category: 'dining' },
       { id: 'es-d2', english: 'The menu, please', translation: 'El menú, por favor', pronunciation: 'ehl meh-NOO, pohr fah-VOHR', category: 'dining' },
@@ -210,7 +210,7 @@ export const LANGUAGE_PHRASES: LanguageWithPhrases[] = [
       { id: 'es-e6', english: 'Emergency', translation: 'Emergencia', pronunciation: 'eh-mehr-HEHN-syah', category: 'emergency' },
       { id: 'es-e7', english: 'Fire!', translation: '¡Fuego!', pronunciation: 'FWEH-goh', category: 'emergency' },
       { id: 'es-e8', english: 'I need help', translation: 'Necesito ayuda', pronunciation: 'neh-seh-SEE-toh ah-YOO-dah', category: 'emergency' },
-      { id: 'es-e9', english: 'Call an ambulance', translation: 'Llame una ambulancia', pronunciation: 'YAH-meh OO-nah ahm-boo-LAHN-syah', category: 'emergency' },
+      { id: 'es-e9', english: 'Call an ambulance', translation: 'Llame a una ambulancia', pronunciation: 'YAH-meh ah OO-nah ahm-boo-LAHN-syah', category: 'emergency' },
       { id: 'es-e10', english: 'Pharmacy', translation: 'La farmacia', pronunciation: 'lah fahr-MAH-syah', category: 'emergency' },
       // Shopping
       { id: 'es-s1', english: 'How much is this?', translation: '¿Cuánto cuesta esto?', pronunciation: 'KWAHN-toh KWEHS-tah EHS-toh', category: 'shopping' },
@@ -255,7 +255,7 @@ export const LANGUAGE_PHRASES: LanguageWithPhrases[] = [
       { id: 'it-g7', english: 'My name is...', translation: 'Mi chiamo...', pronunciation: 'mee KYAH-moh', category: 'greetings' },
       { id: 'it-g8', english: 'See you later', translation: 'A dopo', pronunciation: 'ah DOH-poh', category: 'greetings' },
       { id: 'it-g9', english: 'Good night', translation: 'Buonanotte', pronunciation: 'bwoh-nah-NOHT-teh', category: 'greetings' },
-      { id: 'it-g10', english: 'Welcome', translation: 'Benvenuto', pronunciation: 'behn-veh-NOO-toh', category: 'greetings' },
+      { id: 'it-g10', english: 'Welcome', translation: 'Benvenuto/a', pronunciation: 'behn-veh-NOO-toh (-tah)', category: 'greetings' },
       // Dining
       { id: 'it-d1', english: 'A table for two, please', translation: 'Un tavolo per due, per favore', pronunciation: 'oon TAH-voh-loh pehr DOO-eh, pehr fah-VOH-reh', category: 'dining' },
       { id: 'it-d2', english: 'The menu, please', translation: 'Il menu, per favore', pronunciation: 'eel meh-NOO, pehr fah-VOH-reh', category: 'dining' },
@@ -405,11 +405,11 @@ export const LANGUAGE_PHRASES: LanguageWithPhrases[] = [
       { id: 'pt-g3', english: 'Good evening', translation: 'Boa tarde', pronunciation: 'BOH-ah TAR-jee', category: 'greetings' },
       { id: 'pt-g4', english: 'Goodbye', translation: 'Adeus', pronunciation: 'ah-DEH-oos', category: 'greetings' },
       { id: 'pt-g5', english: 'How are you?', translation: 'Como está?', pronunciation: 'KOH-moh ehs-TAH', category: 'greetings' },
-      { id: 'pt-g6', english: 'Nice to meet you', translation: 'Prazer em conhecê-lo', pronunciation: 'prah-ZEHR ayn koh-nyeh-SAY-loo', category: 'greetings' },
+      { id: 'pt-g6', english: 'Nice to meet you', translation: 'Prazer em conhecê-lo(a)', pronunciation: 'prah-ZEHR ayn koh-nyeh-SAY-loo (-lah)', category: 'greetings' },
       { id: 'pt-g7', english: 'My name is...', translation: 'Meu nome é...', pronunciation: 'meh-oo NOH-mee eh', category: 'greetings' },
       { id: 'pt-g8', english: 'See you later', translation: 'Até logo', pronunciation: 'ah-TEH LOH-goo', category: 'greetings' },
       { id: 'pt-g9', english: 'Good night', translation: 'Boa noite', pronunciation: 'BOH-ah NOY-chee', category: 'greetings' },
-      { id: 'pt-g10', english: 'Welcome', translation: 'Bem-vindo', pronunciation: 'bayn-VEEN-doo', category: 'greetings' },
+      { id: 'pt-g10', english: 'Welcome', translation: 'Bem-vindo/a', pronunciation: 'bayn-VEEN-doo (-dah)', category: 'greetings' },
       // Dining
       { id: 'pt-d1', english: 'A table for two, please', translation: 'Uma mesa para dois, por favor', pronunciation: 'OO-mah MEH-zah PAH-rah doysh, poor fah-VOHR', category: 'dining' },
       { id: 'pt-d2', english: 'The menu, please', translation: 'O menu, por favor', pronunciation: 'oo meh-NOO, poor fah-VOHR', category: 'dining' },

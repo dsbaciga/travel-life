@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Phrase books had their accents stripped** in French, Spanish, Italian, Portuguese, German, Dutch and Vietnamese ("Si" for "Sí", "Xin chao" for "Xin chào", "Francais" for "Français"). They are restored, along with Spanish inverted punctuation, and the language names now read Français, Español, Português and Tiếng Việt. Phones pick this up on their next sync.
+- **Phrase book wording:** Spanish "Call an ambulance" now reads "Llame a una ambulancia", and the Spanish, Italian and Portuguese "Welcome" and the Portuguese "Nice to meet you" show both gendered forms, like the rest of those banks.
 
 ## [7.1.0] - 2026-11-14
 
