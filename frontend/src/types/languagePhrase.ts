@@ -14,7 +14,8 @@ export type LanguageCode =
   | 'hi' // Hindi
   | 'ru' // Russian
   | 'el' // Greek
-  | 'nl'; // Dutch
+  | 'nl' // Dutch
+  | 'is'; // Icelandic
 
 // Phrase categories
 export type PhraseCategory =

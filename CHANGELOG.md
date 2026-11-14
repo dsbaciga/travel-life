@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Icelandic** phrase book (60 phrases), available in Edit Trip on the web and in the mobile Vault.
+
 ## [7.1.0] - 2026-11-14
 
 ### Added

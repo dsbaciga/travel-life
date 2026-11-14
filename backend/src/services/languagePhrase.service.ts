@@ -8,12 +8,14 @@ import {
 import { LANGUAGE_PHRASES } from '../data/language-phrases';
 import { LANGUAGE_PHRASES_EXTENDED } from '../data/language-phrases-extended';
 import { LANGUAGE_PHRASES_MORE } from '../data/language-phrases-more';
+import { LANGUAGE_PHRASES_ADDITIONAL } from '../data/language-phrases-additional';
 
 // Combine all language phrases into a single array
 const ALL_LANGUAGE_PHRASES: LanguageWithPhrases[] = [
   ...LANGUAGE_PHRASES,
   ...LANGUAGE_PHRASES_EXTENDED,
   ...LANGUAGE_PHRASES_MORE,
+  ...LANGUAGE_PHRASES_ADDITIONAL,
 ];
 
 // Create a map for quick lookup

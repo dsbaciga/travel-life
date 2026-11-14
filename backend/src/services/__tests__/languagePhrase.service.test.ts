@@ -70,6 +70,10 @@ jest.mock('../../data/language-phrases-more', () => ({
   LANGUAGE_PHRASES_MORE: [],
 }));
 
+jest.mock('../../data/language-phrases-additional', () => ({
+  LANGUAGE_PHRASES_ADDITIONAL: [],
+}));
+
 import languagePhraseService from '../languagePhrase.service';
 
 describe('LanguagePhraseService', () => {

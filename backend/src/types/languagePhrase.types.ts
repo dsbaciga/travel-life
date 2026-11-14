@@ -21,6 +21,7 @@ export const LanguageCodeSchema = z.enum([
   'ru', // Russian
   'el', // Greek
   'nl', // Dutch
+  'is', // Icelandic
 ]);
 
 // Phrase categories
