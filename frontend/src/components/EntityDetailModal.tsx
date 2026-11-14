@@ -47,6 +47,7 @@ function formatDateTime(dateString: string | null | undefined, timezone?: string
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
+      hour12: true,
     };
     if (timezone) {
       options.timeZone = timezone;

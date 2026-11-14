@@ -122,7 +122,7 @@ export default function ConflictResolutionModal({
 
   // Format timestamps
   const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString(undefined, { hour12: true });
   };
 
   const entityTypeLabel = ENTITY_TYPE_LABELS[conflict.entityType];
