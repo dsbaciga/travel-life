@@ -17,6 +17,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Trip languages** can be set from Edit Trip, which loads the phrase book for that trip. Nothing in the web app could set one before.
+- **Mobile: browse any day.** Today has a day strip with previous/next arrows and a Back to today button, so past and future days of the trip can be opened. Unscheduled items are listed under the day, each with an Add to this day button.
+- **Mobile: meal photos.** Logging a meal has a Photos section; Add photo offers the camera or the photo library. Photos queue offline, upload once the meal syncs, and are attached to it.
+- **Mobile: phrasebook languages.** Add or remove a trip's languages from Vault > Phrases; the phrases are cached for offline use.
+- **Mobile: Trips screen** lists every trip on the server, including trips shared with you. Keep any trip on the phone, swipe to remove one with an Undo bar, and restore removed trips from Not on this phone.
+- **Mobile: Travel Life logo** for the app icon, adaptive icon (including the themed icon) and splash screen.
+
+### Changed
+
+- **Node 26 (current LTS)** replaces Node 22 in every Dockerfile and in CI; `@types/node` is `^26` in the backend and frontend. Images must be rebuilt to pick it up (the release does this).
+- **Mobile sync** now also runs every 60 seconds while the app is open, and the Today screen shows how many edits are waiting and when sync has a problem.
+
+### Fixed
+
+- **Mobile: trips shared with you never downloaded**, and trips that ended more than 30 days ago were dropped with no way to keep them.
+- **Mobile: one refused trip stopped every other trip from syncing.** A trip the server refuses (access revoked, deleted) no longer blocks the rest.
+- **Mobile: an expired session was reported as Offline**; it now says to sign in again.
+- **Mobile map** hides places marked Exclude from map. After updating, each trip does one full re-sync to learn the setting.
+
 ## [7.0.0] - 2026-11-13
 
 ### Changed
