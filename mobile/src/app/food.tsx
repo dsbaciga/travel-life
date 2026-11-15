@@ -255,8 +255,6 @@ export default function FoodScreen() {
     if (tel) actions.push({ label: `Call ${place.phone}`, onPress: () => void Linking.openURL(tel) });
     const site = websiteUrl(place.website);
     if (site) actions.push({ label: 'Open website', onPress: () => void Linking.openURL(site) });
-    const yelpUrl = place.yelp?.url;
-    if (yelpUrl) actions.push({ label: 'View on Yelp', onPress: () => void Linking.openURL(yelpUrl) });
     showActionSheet(place.name, actions, describePlace(place));
   };
 
@@ -378,12 +376,6 @@ export default function FoodScreen() {
             />
           ) : null}
 
-          {data.yelpUsed ? (
-            <AppText variant="caption" muted>
-              Diet listings also from Yelp, with ratings from Yelp reviews. Tap a place, then More, to view it on Yelp.
-            </AppText>
-          ) : null}
-
           {groups.map((group) => (
             <View key={group.key} style={styles.group}>
               {group.title ? <AppText variant="label" muted>{group.title}</AppText> : null}
@@ -442,11 +434,6 @@ function PlaceCard({ place, diet, now, zone, saved, onDirections, onMore }: Plac
         ))}
         {status === 'OPEN' ? <Chip label="Open now" tone="success" /> : null}
         {status === 'CLOSED' ? <Chip label="Closed now" tone="danger" /> : null}
-        {place.yelp?.rating ? (
-          <Chip
-            label={`★ ${place.yelp.rating.toFixed(1)}${place.yelp.reviewCount ? ` (${place.yelp.reviewCount})` : ''} on Yelp`}
-          />
-        ) : null}
         {saved ? <Chip label="Saved" tone="info" /> : null}
       </Row>
       {place.address ? <AppText variant="caption" muted>{place.address}</AppText> : null}

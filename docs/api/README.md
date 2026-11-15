@@ -469,7 +469,7 @@ Query parameters for `GET /api/places/food` (`backend/src/types/places.types.ts`
 The data is OpenStreetMap, read through the Overpass API, so dietary information is only as good as the map: places nobody
 has tagged for a diet have `diet: "unknown"` ("not confirmed"). With `diet`, places are ordered best match first
 (`only`, `yes`, `limited`, `unknown`) then nearest, and places that say they do not cater for it are left out and counted in
-`excludedCount`. When `YELP_API_KEY` is set and the diet has a Yelp category, Yelp's businesses for that category are merged in: a place both know keeps the map's details and gains `yelp` (`url`, `rating`, `reviewCount`, `price`) and the better diet match; a place only Yelp knows is added with `id: "yelp/<id>"`; a place the map says does not cater stays excluded. Places carry `sources` (`osm`, `yelp`) and the response has `yelpUsed: true` when Yelp contributed; if the map servers are down but Yelp answers, Yelp's places are returned. Each place also carries `dietary`, everything its tags say about any diet. Results are cached for ten minutes
+`excludedCount`. Each place also carries `dietary`, everything its tags say about any diet. Results are cached for ten minutes
 per area, so changing `diet` does not repeat the upstream request. Errors: `503` when the map servers are busy (retry shortly),
 `502` when they are unavailable.
 
