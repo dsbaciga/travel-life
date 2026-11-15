@@ -19,9 +19,11 @@ import {
   getTrip,
   kvGet,
   listEntities,
+  listLinks,
   listLinksFor,
   listTrips,
 } from '../db/repository';
+import { buildNavTargets, type NavTarget } from '../domain/destination';
 import { buildTimelineItems, pickActiveTrip, type TimelineItem } from '../domain/timeline';
 import { listDirtyKeys, listOutbox, type OutboxEntry } from '../sync/outbox';
 import { getDb } from './db';
@@ -106,6 +108,29 @@ export function useLinks(tripId: number | undefined, type: EntityType, id: Entit
     enabled: tripId !== undefined && id !== undefined,
     queryFn: async (): Promise<EntityLinkDto[]> =>
       listLinksFor(await getDb(), tripId as number, type, id as EntityId),
+  });
+}
+
+/** Where each item in a trip can be navigated to, keyed by `navKey(kind, id)`. */
+export function useNavTargets(tripId: number | undefined) {
+  const version = useSync((state) => state.dataVersion);
+  return useQuery({
+    queryKey: ['nav-targets', tripId, version],
+    enabled: tripId !== undefined,
+    queryFn: async (): Promise<Map<string, NavTarget>> => {
+      const db = await getDb();
+      const id = tripId as number;
+      const [locations, lodging, activities, transportation, customItems, foodLog, links] = await Promise.all([
+        listEntities(db, id, 'LOCATION'),
+        listEntities(db, id, 'LODGING'),
+        listEntities(db, id, 'ACTIVITY'),
+        listEntities(db, id, 'TRANSPORTATION'),
+        listEntities(db, id, 'CUSTOM_ITEM'),
+        listEntities(db, id, 'FOOD_LOG'),
+        listLinks(db, id),
+      ]);
+      return buildNavTargets({ locations, lodging, activities, transportation, customItems, foodLog, links });
+    },
   });
 }
 

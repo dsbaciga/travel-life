@@ -13,6 +13,7 @@ import { dayKeyInTimezone, formatDateOnly, resolveTimezone } from '@travel-life/
 
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
+import MapToButton from '@/components/MapToButton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import {
   adjustTime,
@@ -320,6 +321,9 @@ export default function TripScreen() {
                     {'★'.repeat(Number(row.rating) || 0)} · {String(row.restaurantName ?? '')}
                   </AppText>
                 ) : null}
+                <View style={styles.mapTo}>
+                  <MapToButton tripId={trip.id} kind={typeKind} id={row.id} />
+                </View>
               </Card>
             </View>
           )}
@@ -402,6 +406,7 @@ export default function TripScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  mapTo: { alignSelf: 'flex-start' },
   modeBar: { padding: spacing.lg, gap: spacing.sm },
   chips: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
   list: { paddingBottom: 140 },

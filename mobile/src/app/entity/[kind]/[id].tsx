@@ -19,6 +19,7 @@ import {
 
 import EntityForm from '@/components/EntityForm';
 import EntityLinkSection from '@/components/EntityLinkSection';
+import MapToButton from '@/components/MapToButton';
 import PhotoAttachments, { type PickedPhoto } from '@/components/PhotoAttachments';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import { parseIdKey } from '@/db/repository';
@@ -292,6 +293,8 @@ export default function EntityScreen() {
       <Stack.Screen options={{ title }} />
       <Screen>
         {Object.keys(errors).length > 0 ? <Banner tone="danger" text="Check the highlighted fields." /> : null}
+
+        {!isNew && entityId !== undefined ? <MapToButton tripId={tripId} kind={kind} id={entityId} compact={false} /> : null}
 
         {kind === 'LOCATION' ? (
           <Button label="📍 Use current GPS location" variant="secondary" onPress={() => void fillFromGps()} />
