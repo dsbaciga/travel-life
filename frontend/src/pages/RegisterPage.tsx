@@ -22,6 +22,9 @@ export default function RegisterPage() {
         if (oidcConfig.enabled && oidcConfig.passwordLoginDisabled) {
           toast('Account registration is handled by single sign-on.');
           navigate('/login', { replace: true });
+        } else if (oidcConfig.registrationDisabled) {
+          toast('Registration is closed on this server. Ask an existing user for an invitation.');
+          navigate('/login', { replace: true });
         }
       })
       .catch(() => {

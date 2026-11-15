@@ -43,6 +43,7 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 - `OIDC_TRUST_EMAIL` - Set to `true` to allow linking to an existing account by email when the IdP omits the `email_verified` claim entirely (e.g. some self-hosted providers). An explicit `email_verified: false` is always rejected. Only enable when you fully control the IdP
 - `EXCHANGE_RATE_API_URL` - Base URL for currency conversion rates (defaults to `https://api.frankfurter.dev/v1`). Frankfurter is free and needs no API key, so multi-currency budgets work out of the box; override only to point at a self-hosted instance. Rates are cached per (date, currency pair) in the `exchange_rates` table and never re-fetched, and a lookup that fails leaves the amount unconverted rather than erroring
 - `DISABLE_PASSWORD_LOGIN` - Set to `true` for SSO-only mode: password login and registration are refused and hidden from the login page. Ignored unless OIDC is enabled (lockout guard)
+- `DISABLE_REGISTRATION` - Set to `true` to close self-service sign-up (`POST /api/auth/register` answers 403 and the login page hides the link). Existing users can still sign in and send invitations, and accepting an invitation still creates an account; SSO provisioning is governed by `OIDC_AUTO_PROVISION`. Recommended for any server reachable from the internet
 
 ### Scheduled backups
 

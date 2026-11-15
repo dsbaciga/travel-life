@@ -203,6 +203,11 @@ export const config = {
   // env var can never lock out every way of signing in.
   auth: {
     passwordLoginDisabled: process.env.DISABLE_PASSWORD_LOGIN === 'true',
+    // Closes self-service sign-up (POST /api/auth/register). Without it anyone
+    // who can reach the server can create an account and use its storage and
+    // server-side API keys. Invitations still create accounts, and OIDC
+    // provisioning is governed separately by OIDC_AUTO_PROVISION.
+    registrationDisabled: process.env.DISABLE_REGISTRATION === 'true',
   },
 
   // Security controls for user-configured integration URLs (Immich, LLM, SMTP)

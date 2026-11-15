@@ -71,6 +71,8 @@ export const oidcController = {
         enabled: config.oidc.enabled,
         buttonText: config.oidc.buttonText,
         passwordLoginDisabled: config.auth.passwordLoginDisabled && config.oidc.enabled,
+        // Lets the login page hide "create an account" when sign-up is closed.
+        registrationDisabled: config.auth.registrationDisabled,
       },
     });
   }),

@@ -49,6 +49,7 @@ export default function LoginPage() {
     redirectParam ? `?redirect=${encodeURIComponent(redirectParam)}` : ''
   }`;
   const ssoOnly = oidcConfig?.enabled === true && oidcConfig.passwordLoginDisabled;
+  const registrationClosed = oidcConfig?.registrationDisabled === true;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,7 +180,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            {!ssoOnly && (
+            {!ssoOnly && !registrationClosed && (
             <div className="mt-6 pt-6 border-t border-primary-100 dark:border-navy-700">
               <p className="text-center text-sm text-slate dark:text-warm-gray font-body">
                 Don't have an account?{' '}
