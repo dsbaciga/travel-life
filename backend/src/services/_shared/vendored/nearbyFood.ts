@@ -194,22 +194,9 @@ export function formatDistance(meters: number): string {
   return km < 10 ? `${(Math.round(km * 10) / 10).toFixed(1)} km` : `${Math.round(km)} km`;
 }
 
-/** Where a place's information came from. */
-export type FoodSource = 'osm' | 'yelp';
-
-/** A place's Yelp listing, when Yelp is configured and knows it. */
-export interface YelpListing {
-  url: string;
-  /** 1 to 5, in half steps. */
-  rating: number | null;
-  reviewCount: number | null;
-  /** "$" to "$$$$". */
-  price: string | null;
-}
-
 /** One place from the search. */
 export interface NearbyFoodPlace {
-  /** OpenStreetMap element (`node/123456`), or `yelp/<id>` for a place only Yelp knows. */
+  /** OpenStreetMap element, e.g. `node/123456`. */
   id: string;
   name: string;
   /** The amenity or shop value: `restaurant`, `cafe`, `bakery` ... */
@@ -228,10 +215,6 @@ export interface NearbyFoodPlace {
   diet: DietMatch | null;
   /** Everything the place's tags say about any diet. */
   dietary: Partial<Record<DietaryRestriction, DietMatch>>;
-  /** Who vouches for the place; absent on older servers, meaning OpenStreetMap alone. */
-  sources?: FoodSource[];
-  /** Present when Yelp lists the place. */
-  yelp?: YelpListing;
 }
 
 export interface NearbyFoodResponse {
@@ -241,6 +224,4 @@ export interface NearbyFoodResponse {
   places: NearbyFoodPlace[];
   /** Places left out because they say they do not cater for the diet. */
   excludedCount: number;
-  /** True when Yelp contributed to this search, so the screen can credit it. */
-  yelpUsed?: boolean;
 }
