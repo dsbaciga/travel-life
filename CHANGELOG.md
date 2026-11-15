@@ -33,12 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile app: plain `http` servers are refused unless they are on your local network** (private addresses, `.local` names, `localhost`). This applies to typing a server address and to scanning a pairing code.
 - **Immich asset and album ids are checked before they are sent to the Immich server.**
 - The release workflow's third-party release action is pinned to an exact commit.
-- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and bcrypt 6, node-cron 4 and Nodemailer 10 on the backend.
+- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and Prisma 7.10, bcrypt 6, node-cron 4 and Nodemailer 10 on the backend. The Prisma update needs no database changes.
 
 ### Fixed
 
 - **Share links, the calendar subscription feed and accepting an invitation work again without being signed in.** They were answering "No token provided" because a sign-in check meant for collaboration routes was also applied to them.
 - **The list of trips shared with you loads again.** The request was being read as a trip id.
+- **Restoring a backup no longer fails when the trip has map coordinates or costs.** Backup files store those values as text, and restore refused them with "Validation failed". Existing backup files restore without being re-created.
+- **Creating a checklist for a trip works again.** It was failing with a server error; checklists not attached to a trip were unaffected.
 
 ## [7.2.0] - 2026-11-15
 
