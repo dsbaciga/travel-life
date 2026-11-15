@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Mobile: Food nearby.** A new screen, reached from a button on Today or from Quick capture, searches for restaurants, cafés, bars and bakeries around you, with a dietary restriction to apply (vegetarian, vegan, halal, kosher, gluten-free, lactose-free or pescatarian) and a distance of 500 m, 1 km or 2 km. Results show how well each place fits the diet, whether it is open now and how far away it is, with directions, call, website, **Log a meal here** and **Save to trip**. It remembers your last diet and distance. The data is OpenStreetMap, which records diets only where someone added them, so many places show as "not confirmed" and are listed separately, after the ones that match. It needs a connection. New backend endpoint `GET /api/places/food` and an optional `OVERPASS_URL` setting for the map server(s).
 - **Deadlines no longer need a booking.** In a trip's Deadlines tab, leave Booking on "Not attached to a booking" and give the deadline a title to keep track of something that is not part of the plan, such as renewing a passport. Add Deadline also works on a trip with no lodging, transportation or activities yet. Standalone deadlines show up in the dashboard widget, the trip health check, push reminders, and backups and restores, named by their title.
 
 ### Fixed
