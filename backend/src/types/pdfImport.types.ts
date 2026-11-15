@@ -11,12 +11,12 @@ export type PendingEntityStatus = z.infer<typeof PendingEntityStatusEnum>;
 
 export const acceptPendingEntitySchema = z.object({
   tripId: z.number().int().positive(),
-  overrides: z.record(z.unknown()).optional(),
+  overrides: z.record(z.string(), z.unknown()).optional(),
 });
 export type AcceptPendingEntityInput = z.infer<typeof acceptPendingEntitySchema>;
 
 export const updatePendingEntitySchema = z.object({
-  parsedData: z.record(z.unknown()).optional(),
+  parsedData: z.record(z.string(), z.unknown()).optional(),
   matchedTripId: z.number().int().positive().nullable().optional(),
 });
 export type UpdatePendingEntityInput = z.infer<typeof updatePendingEntitySchema>;

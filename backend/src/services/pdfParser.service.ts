@@ -11,7 +11,7 @@ const MAX_FILENAME_CHARS = 500;
 const normalizedEntitySchema = z.object({
   type: z.enum(['TRANSPORTATION', 'LODGING', 'ACTIVITY', 'LOCATION']),
   confidence: z.number().min(0).max(1).default(0.8),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
 });
 
 const llmResponseSchema = z.object({

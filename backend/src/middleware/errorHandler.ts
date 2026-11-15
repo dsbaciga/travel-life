@@ -106,7 +106,7 @@ export const errorHandler = (
 
   // Zod validation errors - return only field names, not full schema details
   if (err instanceof ZodError) {
-    const fieldNames = err.errors.map(e => e.path.join('.')).filter(Boolean);
+    const fieldNames = err.issues.map(e => e.path.join('.')).filter(Boolean);
     return res.status(400).json({
       status: 'error',
       message: 'Validation failed',

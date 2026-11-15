@@ -48,7 +48,7 @@ const CURRENCY_CODE_PATTERN = /^[A-Z]{3}$/;
 const frankfurterResponseSchema = z.object({
   base: z.string(),
   date: z.string(),
-  rates: z.record(z.number()),
+  rates: z.record(z.string(), z.number()),
 });
 
 /**

@@ -130,7 +130,7 @@ const FlexibleDateSchema = z.union([z.string(), z.date()]).nullable().optional()
 
 // Flexible JSON type that accepts Prisma's JsonValue and plain objects
 const FlexibleJsonSchema = z.union([
-  z.record(z.unknown()),
+  z.record(z.string(), z.unknown()),
   z.string(),
   z.number(),
   z.boolean(),
