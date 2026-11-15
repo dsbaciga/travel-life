@@ -28,7 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The API, database and Nominatim ports are published on the host's loopback address only** in the production and TrueNAS compose files. The frontend reaches the API over the container network, so nothing changes for a standard setup. If another machine connects to one of those ports directly (for example a reverse proxy on a different host pointed at the API port), set `INTERNAL_BIND_ADDRESS=0.0.0.0` before updating.
 - **The web app is served with a Content-Security-Policy** that only allows scripts from the app itself.
 - **Android app: device backup is turned off**, so the offline copy of a trip and the documents in the vault are no longer included in Google backups. Applies to release builds from this version on; a local `mobile/app.json` needs `"allowBackup": false` added under `android`.
-- Updated backend and frontend dependencies with known vulnerabilities to patched versions, including Zod 4, bcrypt 6, node-cron 4 and Nodemailer 10 on the backend.
+- **Signing in with an email that has no account now takes as long as a wrong password**, so response time no longer reveals which emails are registered.
+- **New `TRUST_PROXY` setting** (default `1`) for the number of reverse proxies in front of the backend. Set it to `2` when a TLS proxy or tunnel sits in front of the bundled nginx; otherwise every visitor is rate-limited as one address.
+- **Mobile app: plain `http` servers are refused unless they are on your local network** (private addresses, `.local` names, `localhost`). This applies to typing a server address and to scanning a pairing code.
+- **Immich asset and album ids are checked before they are sent to the Immich server.**
+- The release workflow's third-party release action is pinned to an exact commit.
+- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and bcrypt 6, node-cron 4 and Nodemailer 10 on the backend.
 
 ### Fixed
 

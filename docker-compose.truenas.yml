@@ -89,6 +89,9 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-}
       # Set to true to close self-service sign-up (invitations still work)
       DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-}
+      # Reverse proxies in front of the backend: 1 = bundled nginx only (default),
+      # 2 = a TLS proxy or tunnel in front of nginx as well
+      TRUST_PROXY: ${TRUST_PROXY:-}
       # Saved-link email ingest. Inert unless IMAP_USER and IMAP_PASSWORD are set.
       # IMAP_PASSWORD must be a Gmail App Password, not the account password.
       IMAP_HOST: ${IMAP_HOST:-}

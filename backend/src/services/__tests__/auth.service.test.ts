@@ -316,6 +316,22 @@ describe('AuthService', () => {
       })).rejects.toThrow('Invalid email or password');
     });
 
+    it('does a password comparison even when the email has no account', async () => {
+      // Otherwise "unknown email" answers faster than "wrong password".
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      const { comparePassword } = jest.requireMock('../../auth/password') as {
+        comparePassword: jest.Mock;
+      };
+      comparePassword.mockClear();
+
+      await expect(
+        authService.login({ email: 'nobody@example.com', password: 'whatever-1' })
+      ).rejects.toThrow('Invalid email or password');
+
+      expect(comparePassword).toHaveBeenCalledTimes(1);
+      expect(comparePassword).toHaveBeenCalledWith('whatever-1', expect.any(String));
+    });
+
     // AUTH-007: Reject login with wrong password
     it('AUTH-007: should reject login with wrong password', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);

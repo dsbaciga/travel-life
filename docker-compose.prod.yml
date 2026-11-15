@@ -58,6 +58,9 @@ services:
       OIDC_TRUST_EMAIL: ${OIDC_TRUST_EMAIL:-}
       DISABLE_PASSWORD_LOGIN: ${DISABLE_PASSWORD_LOGIN:-}
       DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-}
+      # Reverse proxies in front of the backend: 1 = bundled nginx only (default),
+      # 2 = a TLS proxy or tunnel in front of nginx as well
+      TRUST_PROXY: ${TRUST_PROXY:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}

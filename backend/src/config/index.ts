@@ -64,6 +64,23 @@ export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   baseUrl: process.env.BASE_URL || 'http://localhost:5000',
 
+  // How many reverse proxies sit between the internet and this process. The
+  // client address used for rate limiting is read that many hops back in
+  // X-Forwarded-For. 1 is the bundled nginx alone. If a TLS proxy or tunnel
+  // sits in front of nginx as well, use 2: with 1 every visitor appears to
+  // come from that proxy and they all share one rate-limit bucket. Never set
+  // it higher than the real number of proxies, or clients can forge their
+  // address.
+  trustProxy: (() => {
+    const raw = process.env.TRUST_PROXY;
+    if (raw === undefined || raw.trim() === '') return 1;
+    const hops = Number(raw);
+    if (!Number.isInteger(hops) || hops < 0 || hops > 10) {
+      throw new Error(`Invalid TRUST_PROXY value "${raw}". Must be a whole number of proxy hops from 0 to 10.`);
+    }
+    return hops;
+  })(),
+
   // Database
   databaseUrl: (() => {
     const url = process.env.DATABASE_URL;

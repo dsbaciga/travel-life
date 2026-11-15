@@ -130,6 +130,23 @@ describe('immich.controller', () => {
     });
   });
 
+  describe('asset and album ids', () => {
+    it.each(['../../users', '..%2F..%2Fusers', 'a/b', 'id?x=1', ''])(
+      'rejects %p before contacting Immich',
+      async (assetId) => {
+        mockUserImmichSettings();
+        const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+          params: { assetId },
+        });
+        immichController.getAssetThumbnail(req, res, next);
+        await flushPromises();
+
+        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
+        expect(immichService.getAssetThumbnailStream).not.toHaveBeenCalled();
+      }
+    );
+  });
+
   describe('getAssets', () => {
     it('should return assets with thumbnail and file URLs', async () => {
       mockUserImmichSettings();

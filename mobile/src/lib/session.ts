@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import type { MobileAuthResponse } from '@travel-life/shared';
 import { pairingQrSchema } from '@travel-life/shared';
 import { wipe } from '../db/schema';
-import { createApiClient, normalizeServerUrl, type Session } from './apiClient';
+import { assertSecureServerUrl, createApiClient, normalizeServerUrl, type Session } from './apiClient';
 import { getDb } from './db';
 
 const SESSION_KEY = 'travel-life.session';
@@ -77,6 +77,7 @@ export const useSession = create<SessionState>((set, get) => {
 
     async signInWithPassword(serverUrl, email, password) {
       const base = normalizeServerUrl(serverUrl);
+      assertSecureServerUrl(base);
       const auth = await api.request<MobileAuthResponse>('/auth/login', {
         method: 'POST',
         anonymous: true,
@@ -98,6 +99,7 @@ export const useSession = create<SessionState>((set, get) => {
         throw new Error('That QR code is not a Travel Life pairing code.');
       }
       const base = normalizeServerUrl(parsed.data.serverUrl);
+      assertSecureServerUrl(base);
       const auth = await api.request<MobileAuthResponse>('/auth/mobile/pair', {
         method: 'POST',
         anonymous: true,
@@ -109,6 +111,7 @@ export const useSession = create<SessionState>((set, get) => {
 
     async signInWithOidcCode(serverUrl, code, codeVerifier) {
       const base = normalizeServerUrl(serverUrl);
+      assertSecureServerUrl(base);
       const auth = await api.request<MobileAuthResponse>('/auth/oidc/mobile-exchange', {
         method: 'POST',
         anonymous: true,
@@ -156,11 +159,14 @@ export const api = createApiClient({
 export async function checkServer(
   serverUrl: string
 ): Promise<{ ok: boolean; oidcEnabled: boolean; oidcButtonText: string; passwordLoginDisabled: boolean }> {
+  const base = normalizeServerUrl(serverUrl);
+  // Checked here too so the user is told before they type a password.
+  assertSecureServerUrl(base);
   const config = await api.request<{
     enabled: boolean;
     buttonText: string;
     passwordLoginDisabled: boolean;
-  }>('/auth/oidc/config', { anonymous: true, serverUrl: normalizeServerUrl(serverUrl) });
+  }>('/auth/oidc/config', { anonymous: true, serverUrl: base });
   return {
     ok: true,
     oidcEnabled: Boolean(config?.enabled),

@@ -291,6 +291,7 @@ always used. Register `<BASE_URL>/api/auth/oidc/callback` with your provider.
 | `OIDC_AUTO_PROVISION` | enabled | `false` requires the account to already exist |
 | `OIDC_TRUST_EMAIL` | `false` | `true` links by email when the IdP omits `email_verified`. Only enable if you control the IdP |
 | `DISABLE_PASSWORD_LOGIN` | `false` | `true` enables SSO-only mode. Ignored unless OIDC is enabled |
+| `TRUST_PROXY` | `1` | Number of reverse proxies between the internet and the backend, used to find the real client address for rate limiting. `1` is the bundled nginx alone; use `2` when a TLS proxy or tunnel sits in front of it, otherwise every visitor shares one rate-limit bucket. Do not set it higher than the real number of proxies |
 | `DISABLE_REGISTRATION` | `false` | `true` closes self-service sign-up, so new accounts come only from invitations (and from SSO, if `OIDC_AUTO_PROVISION` allows it). Recommended for any server reachable from the internet |
 
 ### Push Notifications
@@ -637,6 +638,7 @@ docker-compose -f docker-compose.prod.yml up -d --no-build
 - [ ] Review `MAX_FILE_SIZE` against your nginx body limit (100M)
 - [ ] Rate limits reviewed (`AI_RATE_LIMIT_*`, `BACKUP_RATE_LIMIT_*`)
 - [ ] If SSO-only, confirm `DISABLE_PASSWORD_LOGIN=true` **and** OIDC is working before locking yourself out
+- [ ] `TRUST_PROXY` matches the number of proxies in front of the backend (`2` if a TLS proxy or tunnel sits in front of the bundled nginx)
 - [ ] Once your own account exists, set `DISABLE_REGISTRATION=true` so strangers cannot sign up
 
 ### Operational Security

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../auth/password';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../auth/jwt';
@@ -47,6 +48,17 @@ const pruneRotationMemo = (now: number): void => {
   for (const [key, entry] of recentRotations) {
     if (entry.expiresAt <= now) recentRotations.delete(key);
   }
+};
+
+/**
+ * A real bcrypt hash of a random value nobody knows, computed once per process.
+ * Compared against when a login names an email with no account, so that path
+ * costs the same as checking a real password. It can never match.
+ */
+let dummyPasswordHash: Promise<string> | null = null;
+const getDummyPasswordHash = (): Promise<string> => {
+  dummyPasswordHash ??= hashPassword(randomBytes(32).toString('base64url'));
+  return dummyPasswordHash;
 };
 
 export class AuthService {
@@ -104,6 +116,10 @@ export class AuthService {
     });
 
     if (!user) {
+      // Spend the same bcrypt work as a real check before answering. Returning
+      // straight away makes "no such account" measurably faster than "wrong
+      // password", which lets a caller find out which emails are registered.
+      await comparePassword(data.password, await getDummyPasswordHash());
       throw new AppError('Invalid email or password', 401);
     }
 

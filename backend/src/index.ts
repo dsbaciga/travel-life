@@ -69,8 +69,10 @@ try {
 
 const app: Application = express();
 
-// Trust first proxy (Nginx in Docker) so express-rate-limit reads X-Forwarded-For correctly
-app.set('trust proxy', 1);
+// Number of reverse proxies in front of this process (TRUST_PROXY, default 1 for
+// the bundled nginx) so express-rate-limit reads the client address from the
+// right X-Forwarded-For hop. See config.trustProxy.
+app.set('trust proxy', config.trustProxy);
 
 // Security middleware
 const isProduction = config.nodeEnv === 'production';
