@@ -16,16 +16,21 @@ const targetField = {
   activity: 'activityId',
 } as const satisfies Record<DeadlineEntityType, string>;
 
-/** Adds a derived entityType/entityId so clients don't have to inspect three nullable FKs. */
+/**
+ * Adds a derived entityType/entityId so clients don't have to inspect three nullable
+ * FKs. Both are null for a standalone deadline (no booking), which carries its own title.
+ */
 function withTarget<
   T extends { lodgingId: number | null; transportationId: number | null; activityId: number | null }
 >(row: T) {
-  const entityType: DeadlineEntityType = row.lodgingId
+  const entityType: DeadlineEntityType | null = row.lodgingId
     ? 'lodging'
     : row.transportationId
       ? 'transportation'
-      : 'activity';
-  const entityId = (row.lodgingId ?? row.transportationId ?? row.activityId) as number;
+      : row.activityId
+        ? 'activity'
+        : null;
+  const entityId = row.lodgingId ?? row.transportationId ?? row.activityId ?? null;
   return { ...row, entityType, entityId };
 }
 
@@ -40,12 +45,17 @@ async function findInTrip(deadlineId: number, tripId: number) {
 class BookingDeadlineService {
   async createDeadline(userId: number, tripId: number, data: CreateBookingDeadlineInput) {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
-    await verifyEntityInTrip(data.entityType, data.entityId, tripId);
+    // A deadline with no booking is tracked against the trip alone.
+    if (data.entityType !== undefined && data.entityId !== undefined) {
+      await verifyEntityInTrip(data.entityType, data.entityId, tripId);
+    }
 
     const created = await prisma.bookingDeadline.create({
       data: {
         tripId,
-        [targetField[data.entityType]]: data.entityId,
+        ...(data.entityType !== undefined &&
+          data.entityId !== undefined && { [targetField[data.entityType]]: data.entityId }),
+        title: data.title?.trim() || null,
         kind: data.kind,
         dueAt: new Date(data.dueAt),
         note: data.note ?? null,
@@ -72,12 +82,19 @@ class BookingDeadlineService {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const existing = await findInTrip(deadlineId, tripId);
 
+    // A standalone deadline is named by its title, so it cannot lose it.
+    const standalone = !existing.lodgingId && !existing.transportationId && !existing.activityId;
+    if (standalone && data.title !== undefined && !data.title?.trim()) {
+      throw new AppError('A deadline that is not attached to a booking needs a title', 400);
+    }
+
     const dueChanged =
       data.dueAt !== undefined && new Date(data.dueAt).getTime() !== existing.dueAt.getTime();
 
     const updated = await prisma.bookingDeadline.update({
       where: { id: deadlineId },
       data: {
+        ...(data.title !== undefined && { title: data.title?.trim() || null }),
         ...(data.kind !== undefined && { kind: data.kind }),
         ...(data.dueAt !== undefined && { dueAt: new Date(data.dueAt) }),
         ...(data.note !== undefined && { note: data.note }),

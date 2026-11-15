@@ -451,10 +451,12 @@ class TripValidatorService {
     };
 
     return deadlines.map((d) => {
+      // A deadline's own title names a standalone one (no booking); otherwise the booking does.
       const bookingName =
-        d.lodging?.name ??
-        d.activity?.name ??
-        (d.transportation ? [d.transportation.company, d.transportation.type].filter(Boolean).join(' ') : 'booking');
+        d.title?.trim() ||
+        (d.lodging?.name ??
+          d.activity?.name ??
+          (d.transportation ? [d.transportation.company, d.transportation.type].filter(Boolean).join(' ') : 'booking'));
       const overdue = d.dueAt.getTime() < now.getTime();
       const issueId = this.generateIssueId('booking_deadline', `deadline:${d.id}`);
       const label = kindLabel[d.kind] ?? kindLabel.other;

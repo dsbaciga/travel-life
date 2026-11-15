@@ -20,6 +20,7 @@
  * - MPUSH-004: DeviceNotRegistered tickets prune the token
  * - MPUSH-005: A gateway failure is swallowed and counts as zero sent
  * - MPUSH-006: Deadline reminders do nothing (and stamp nothing) with no destination at all
+ * - MPUSH-007: A deadline reminder uses the deadline's own title, then the note, then the kind
  * - AUTH-ISS-001: issueTokensForUser returns a verifiable pair; unknown user is 404
  * - VEND-001: Vendored shared modules match their packages/shared sources
  */
@@ -421,6 +422,30 @@ describe('PushNotificationService — native tokens', () => {
 
     await expect(pushNotificationService.sendToUser(USER, { title: 't', body: 'b' })).resolves.toBe(0);
     expect(mockPrisma.mobilePushToken.delete).not.toHaveBeenCalled();
+  });
+
+  it("MPUSH-007: a deadline reminder uses the deadline's own title, then the note, then the kind", async () => {
+    mockPrisma.mobilePushToken.count.mockResolvedValue(1 as never);
+    mockPrisma.mobilePushToken.findMany.mockResolvedValue([{ id: 1, token: TOKEN }] as never);
+    mockAxiosPost.mockResolvedValue({ data: { data: [{ status: 'ok' }] } } as never);
+    mockPrisma.bookingDeadline.update.mockResolvedValue({} as never);
+    const trip = { id: 10, title: 'Iceland 2027', userId: USER };
+    mockPrisma.bookingDeadline.findMany.mockResolvedValue([
+      { id: 1, kind: 'other', title: 'Renew passport', note: 'ignored', trip },
+      { id: 2, kind: 'payment', title: null, note: 'Balance at the desk', trip },
+      { id: 3, kind: 'cancellation', title: null, note: null, trip },
+    ] as never);
+
+    await pushNotificationService.sendDeadlineReminders();
+
+    const bodies = mockAxiosPost.mock.calls.map(
+      (call) => (call[1] as Array<{ body: string }>)[0].body
+    );
+    expect(bodies).toEqual([
+      '"Iceland 2027": Renew passport within 24 hours.',
+      '"Iceland 2027": Balance at the desk within 24 hours.',
+      '"Iceland 2027": Free cancellation ends within 24 hours.',
+    ]);
   });
 
   it('MPUSH-006: deadline reminders stamp nothing when there is no destination at all', async () => {

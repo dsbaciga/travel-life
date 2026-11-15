@@ -23,7 +23,11 @@ import LoadingSpinner from "./LoadingSpinner";
 
 /**
  * DeadlinesManager - cancellation cutoffs, check-in windows and payment due
- * dates attached to a lodging, transportation or activity booking.
+ * dates, usually attached to a lodging, transportation or activity booking.
+ *
+ * A deadline does not have to be attached to anything: the user can keep track
+ * of a due date that is not part of the plan ("renew passport") by leaving the
+ * booking blank and giving it a title.
  *
  * A deadline is entered and shown in the booking's own timezone (falling back
  * to the trip's, then the user's), because "free cancellation until 6 PM" means
@@ -44,13 +48,20 @@ interface BookingOption {
 }
 
 interface FormState {
+  /** `lodging:7` etc., or "" for a deadline that is not attached to a booking. */
   booking: string;
+  /** Names a deadline with no booking. */
+  title: string;
   kind: DeadlineKind;
   dueAt: string;
   note: string;
 }
 
-const EMPTY_FORM: FormState = { booking: "", kind: "cancellation", dueAt: "", note: "" };
+const EMPTY_FORM: FormState = { booking: "", title: "", kind: "cancellation", dueAt: "", note: "" };
+
+/** What a deadline is called in lists and prompts: its own title, else what kind it is. */
+const deadlineName = (d: { title: string | null; kind: DeadlineKind }): string =>
+  d.title?.trim() || DEADLINE_KIND_LABELS[d.kind];
 
 export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: DeadlinesManagerProps) {
   const queryClient = useQueryClient();
@@ -111,7 +122,8 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
     onUpdate?.();
   };
 
-  const targetOf = (d: BookingDeadline) => bookingByKey.get(`${d.entityType}:${d.entityId}`);
+  const targetOf = (d: BookingDeadline) =>
+    d.entityType && d.entityId !== null ? bookingByKey.get(`${d.entityType}:${d.entityId}`) : undefined;
 
   const closeForm = () => {
     setShowForm(false);
@@ -120,17 +132,26 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const booking = bookingByKey.get(form.booking);
-    if (!booking || !form.dueAt) {
-      toast.error("Choose a booking and a due date");
+    // No booking chosen is allowed: that is a deadline tracked against the trip alone.
+    const booking = form.booking ? bookingByKey.get(form.booking) : undefined;
+    if (form.booking && !booking) {
+      toast.error("That booking is no longer available");
+      return;
+    }
+    if (!form.dueAt) {
+      toast.error("Choose a due date");
+      return;
+    }
+    if (!booking && !form.title.trim()) {
+      toast.error("Give the deadline a title");
       return;
     }
     setIsSaving(true);
     try {
-      const tz = resolveTz(booking.timezone, tripTimezone);
+      const tz = resolveTz(booking?.timezone, tripTimezone);
       await bookingDeadlineService.createDeadline(tripId, {
-        entityType: booking.entityType,
-        entityId: booking.entityId,
+        ...(booking && { entityType: booking.entityType, entityId: booking.entityId }),
+        ...(!booking && { title: form.title.trim() }),
         kind: form.kind,
         dueAt: convertDateTimeLocalToISO(form.dueAt, tz),
         note: form.note.trim() || null,
@@ -157,7 +178,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
   const handleDelete = async (d: BookingDeadline) => {
     const confirmed = await confirm({
       title: "Delete Deadline",
-      message: `Delete "${DEADLINE_KIND_LABELS[d.kind]}"?`,
+      message: `Delete "${deadlineName(d)}"?`,
       confirmLabel: "Delete",
       variant: "danger",
     });
@@ -179,15 +200,13 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         <div className="min-w-0">
           <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Deadlines</h2>
           <p className="text-sm text-gray-500 dark:text-dusk-400">
-            Cancellation cutoffs, check-in windows and payment due dates
+            Cancellation cutoffs, check-in windows, payment dates, or anything else you want to keep track of
           </p>
         </div>
         <button
           type="button"
           className="btn-primary"
           onClick={() => (showForm ? closeForm() : setShowForm(true))}
-          disabled={bookings.length === 0}
-          title={bookings.length === 0 ? "Add a lodging, transportation or activity first" : undefined}
         >
           {showForm ? "Cancel" : "Add Deadline"}
         </button>
@@ -196,20 +215,38 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       {showForm && (
         <form onSubmit={handleSave} className="mb-6 space-y-4 rounded-xl border border-gray-200 dark:border-dusk-700 p-4">
           <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="deadline-booking">Booking</label>
+            <label className="block text-sm font-medium mb-1" htmlFor="deadline-booking">Booking (optional)</label>
             <select
               id="deadline-booking"
               className="input w-full"
               value={form.booking}
               onChange={(e) => setForm({ ...form, booking: e.target.value })}
-              required
             >
-              <option value="">Select a booking…</option>
+              <option value="">Not attached to a booking</option>
               {bookings.map((b) => (
                 <option key={b.key} value={b.key}>{b.label}</option>
               ))}
             </select>
+            {!form.booking && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-dusk-400">
+                For something you want to keep track of that is not part of the plan.
+              </p>
+            )}
           </div>
+          {!form.booking && (
+            <div>
+              <label className="block text-sm font-medium mb-1" htmlFor="deadline-title">Title</label>
+              <input
+                id="deadline-title"
+                className="input w-full"
+                maxLength={200}
+                placeholder="e.g. Renew passport"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                required
+              />
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="deadline-kind">Type</label>
@@ -226,7 +263,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
             </div>
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor="deadline-due">
-                Due (local time at the booking)
+                {form.booking ? "Due (local time at the booking)" : "Due"}
               </label>
               <input
                 id="deadline-due"
@@ -265,13 +302,9 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         <EmptyState
           icon="⏰"
           message="No deadlines yet"
-          subMessage={
-            bookings.length === 0
-              ? "Add a lodging, transportation or activity first, then track its deadlines"
-              : "Track free-cancellation cutoffs, check-in windows and payment dates"
-          }
-          actionLabel={bookings.length === 0 ? undefined : "Add Deadline"}
-          onAction={bookings.length === 0 ? undefined : () => setShowForm(true)}
+          subMessage="Track free-cancellation cutoffs, check-in windows and payment dates, or anything you want to keep an eye on"
+          actionLabel="Add Deadline"
+          onAction={() => setShowForm(true)}
         />
       ) : (
         <ul className="space-y-3">
@@ -289,7 +322,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {DEADLINE_KIND_LABELS[d.kind]}
+                    {deadlineName(d)}
                     {overdue && <span className="ml-2 text-sm text-red-600 dark:text-red-400">Overdue</span>}
                     {d.dismissedAt && (
                       <span className="ml-2 text-sm font-medium text-gray-600 dark:text-dusk-300">Done</span>
@@ -297,7 +330,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
                   </p>
                   <div className={d.dismissedAt ? "opacity-60" : undefined}>
                     <p className="text-sm text-gray-600 dark:text-dusk-400">
-                      {target?.label ?? "Booking"} ·{" "}
+                      {d.entityType ? (target?.label ?? "Booking") : DEADLINE_KIND_LABELS[d.kind]} ·{" "}
                       {formatDateTimeInTimezone(d.dueAt, resolveTz(target?.timezone, tripTimezone))}
                     </p>
                     {d.note && <p className="text-sm text-gray-500 dark:text-dusk-400">{d.note}</p>}
