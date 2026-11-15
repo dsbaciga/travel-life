@@ -2,6 +2,7 @@ import { describe, it, expect } from '@jest/globals';
 import { httpUrl, optionalUrl, optionalUrlOrEmpty } from '../zodHelpers';
 import { createActivitySchema } from '../../types/activity.types';
 import { createSavedLinkSchema } from '../../types/savedLink.types';
+import { backupLinkUrl } from '../../types/backup.types';
 
 /**
  * URL fields are rendered as link targets (web, mobile, shared trips), so only
@@ -45,5 +46,14 @@ describe('httpUrl', () => {
 
     expect(createSavedLinkSchema.safeParse({ url: 'javascript:alert(1)' }).success).toBe(false);
     expect(createSavedLinkSchema.safeParse({ url: ' https://example.com/a ' }).success).toBe(true);
+  });
+
+  it('drops non-web links when a backup is restored instead of writing them', () => {
+    // Restore bypasses the request schemas, so the backup schema filters too.
+    expect(backupLinkUrl.parse('https://example.com/b')).toBe('https://example.com/b');
+    expect(backupLinkUrl.parse('javascript:alert(1)')).toBeNull();
+    expect(backupLinkUrl.parse('data:text/html,x')).toBeNull();
+    expect(backupLinkUrl.parse(null)).toBeNull();
+    expect(backupLinkUrl.parse(undefined)).toBeUndefined();
   });
 });

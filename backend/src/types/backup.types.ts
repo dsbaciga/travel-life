@@ -16,6 +16,24 @@ export const BACKUP_VERSION = '1.6.0';
 // Shared/Reusable Schemas
 // =============================================================================
 
+const isWebLink = (value: string): boolean => /^https?:\/\//i.test(value);
+
+/**
+ * A link field read back from a backup file.
+ *
+ * Restore writes these straight into the database, bypassing the request
+ * schemas that require http(s) (see `httpUrl` in validation/zodHelpers.ts), and
+ * the values are rendered as link targets. A backup may predate that rule or
+ * come from an instance without it, so anything that is not a plain web link
+ * is dropped rather than restored. Dropped, not rejected: one stale link should
+ * not make a whole backup unrestorable.
+ */
+export const backupLinkUrl = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((value) => (value == null || isWebLink(value) ? value : null));
+
 // Activity category schema (user-defined activity categories)
 const ActivityCategorySchema = z.object({
   name: z.string(),
@@ -260,7 +278,7 @@ const BackupActivitySchema = z.object({
   exchangeRate: FlexibleCoordinateSchema,
   baseAmount: FlexibleCoordinateSchema,
   baseCurrency: z.string().nullable().optional(),
-  bookingUrl: z.string().nullable().optional(),
+  bookingUrl: backupLinkUrl,
   bookingReference: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   manualOrder: z.number().nullable().optional(),
@@ -295,7 +313,7 @@ const BackupTransportationSchema = z.object({
   referenceNumber: z.string().nullable().optional(),
   seatNumber: z.string().nullable().optional(),
   bookingReference: z.string().nullable().optional(),
-  bookingUrl: z.string().nullable().optional(),
+  bookingUrl: backupLinkUrl,
   cost: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
   exchangeRate: FlexibleCoordinateSchema,
@@ -322,7 +340,7 @@ const BackupLodgingSchema = z.object({
   checkOutDate: z.string(), // ISO datetime
   timezone: z.string().nullable().optional(),
   confirmationNumber: z.string().nullable().optional(),
-  bookingUrl: z.string().nullable().optional(),
+  bookingUrl: backupLinkUrl,
   cost: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
   exchangeRate: FlexibleCoordinateSchema,
@@ -427,7 +445,7 @@ const BackupTripLanguageSchema = z.object({
 // Saved link schema (added in v1.4.0)
 const BackupSavedLinkSchema = z.object({
   id: z.number().optional(), // For EntityLink mapping
-  url: z.string(),
+  url: z.string().refine(isWebLink, { message: 'URL must start with http:// or https://' }),
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   siteName: z.string().nullable().optional(),
@@ -465,7 +483,7 @@ const BackupCustomItemSchema = z.object({
   exchangeRate: FlexibleCoordinateSchema,
   baseAmount: FlexibleCoordinateSchema,
   baseCurrency: z.string().nullable().optional(),
-  url: z.string().nullable().optional(),
+  url: backupLinkUrl,
   confirmationNumber: z.string().nullable().optional(),
 });
 
