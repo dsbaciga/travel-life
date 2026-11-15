@@ -18,6 +18,7 @@ import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
 import { formatDateTimeInTimezone, convertISOToDateTimeLocal, convertDateTimeLocalToISO } from "../utils/timezone";
 import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useTimeRangeDefaults } from "../hooks/useTimeRangeDefaults";
 import { splitDateTimeLocal, joinDateTimeLocal } from "../utils/dateTimeDefaults";
 import { useFormFields } from "../hooks/useFormFields";
@@ -773,7 +774,16 @@ export default function TransportationManager({
     setShowToLocationQuickAdd(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performSubmit(e));
+  };
+
+  const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Convert datetime-local values to ISO strings using the specified timezones
@@ -1188,8 +1198,9 @@ export default function TransportationManager({
                 type="submit"
                 form="transportation-form"
                 className="btn btn-primary"
+                disabled={isSubmitting}
               >
-                {manager.editingId ? "Update" : "Add"} Transportation
+                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Transportation`}
               </button>
             </div>
           </div>

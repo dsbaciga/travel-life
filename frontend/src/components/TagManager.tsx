@@ -3,6 +3,7 @@ import tagService from "../services/tag.service";
 import type { Tag, TripTag } from "../types/tag";
 import toast from "react-hot-toast";
 import { useManagerCRUD } from "../hooks/useManagerCRUD";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useFormReset } from "../hooks/useFormReset";
 import Modal from "./Modal";
@@ -77,7 +78,16 @@ export default function TagManager({ tripId }: TagManagerProps) {
     }
   };
 
-  const handleCreateTag = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleCreateTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performCreateTag(e));
+  };
+
+  const performCreateTag = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const newTag = await tagService.createTag({
@@ -210,8 +220,9 @@ export default function TagManager({ tripId }: TagManagerProps) {
               type="submit"
               form="tag-form"
               className="btn btn-primary"
+              disabled={isSubmitting}
             >
-              {editingTagId ? "Update" : "Create"} Tag
+              {isSubmitting ? "Saving..." : `${editingTagId ? "Update" : "Create"} Tag`}
             </button>
           </>
         }

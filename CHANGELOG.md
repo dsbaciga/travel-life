@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Clicking Add twice no longer adds something twice.** After pressing Add on a new location, lodging, transportation, journal entry, travel document, companion or tag, there was a pause (the request, then a reload of the list) before the form closed, and a second click in that window created a duplicate. The button is now disabled and reads "Saving..." until the form closes, and a second submit by any route (Enter, Ctrl+S, Save & Add Another) is ignored.
+
 ## [7.1.2] - 2026-11-14
 
 ### Changed

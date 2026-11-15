@@ -14,6 +14,7 @@ import {
 } from '../types/travelDocument';
 import toast from 'react-hot-toast';
 import { useFormReset } from '../hooks/useFormReset';
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import Modal from './Modal';
 import EmptyState from './EmptyState';
@@ -94,7 +95,16 @@ export default function TravelDocumentManager() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performCreate(e));
+  };
+
+  const performCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const input: CreateTravelDocumentInput = {
@@ -233,8 +243,8 @@ export default function TravelDocumentManager() {
             <button type="button" onClick={resetForm} className="btn btn-secondary">
               Cancel
             </button>
-            <button type="submit" form="document-form" className="btn btn-primary">
-              {editingDocumentId ? 'Update' : 'Add'} Document
+            <button type="submit" form="document-form" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : `${editingDocumentId ? 'Update' : 'Add'} Document`}
             </button>
           </>
         }
