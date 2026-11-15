@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The list of trips shared with you loads again.** The request was being read as a trip id.
 - **Restoring a backup no longer fails when the trip has map coordinates or costs.** Backup files store those values as text, and restore refused them with "Validation failed". Existing backup files restore without being re-created.
 - **Creating a checklist for a trip works again.** It was failing with a server error; checklists not attached to a trip were unaffected.
+- **Offline features no longer stop working after the first visit.** Saved drafts, the offline copy of trips, queued offline edits and the offline map cache share one browser database. It could be upgraded on first load in a way that made every later load fail to open it. Browsers already in that state recover on their own with this version.
+- **Deleting a trip now removes its photo and video files from the server.** Only the database records were removed before, so the files stayed in the uploads folder. Files left behind by trips deleted before this version are not cleaned up.
+- **Album suggestions for a trip that does not exist return "not found"** instead of a server error.
 
 ## [7.2.0] - 2026-11-15
 
