@@ -774,7 +774,20 @@ export async function getDb(): Promise<IDBPDatabase<TravelLifeDB>> {
       },
     };
 
-    let db = await openDB<TravelLifeDB>(DB_NAME, DB_VERSION, callbacks);
+    let db: IDBPDatabase<TravelLifeDB>;
+    try {
+      db = await openDB<TravelLifeDB>(DB_NAME, DB_VERSION, callbacks);
+    } catch (error) {
+      // The repair below (and lib/openIndexedDb.ts) raises the stored version
+      // past DB_VERSION. Asking for DB_VERSION again then fails with
+      // VersionError on every later page load, which took the whole offline
+      // database out of service for that browser. Open what is there instead;
+      // the missing-store check that follows still applies.
+      if (!(error instanceof DOMException) || error.name !== 'VersionError') {
+        throw error;
+      }
+      db = await openDB<TravelLifeDB>(DB_NAME, undefined, callbacks);
+    }
 
     // A browser that created this database from an older store list keeps that
     // list forever: `upgrade` runs only when the version number changes, so a

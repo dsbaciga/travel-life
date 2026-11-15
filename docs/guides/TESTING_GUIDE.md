@@ -551,3 +551,9 @@ jobs:
 - [IMPLEMENTATION_STATUS.md](../development/IMPLEMENTATION_STATUS.md) - Current project status
 - [DEVELOPMENT_WORKFLOWS.md](DEVELOPMENT_WORKFLOWS.md) - Feature development workflows
 - [CLAUDE.md](../../CLAUDE.md) - Development guidelines
+
+## Release verification against a real database
+
+The backend unit tests mock Prisma. Before a release that touches dependencies, Prisma,
+validation or the data path, run the built backend against real PostgreSQL and compare it
+with the current release: see [tools/release-verify](../../tools/release-verify/README.md).

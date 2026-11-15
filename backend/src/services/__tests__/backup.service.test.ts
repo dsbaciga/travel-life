@@ -669,5 +669,34 @@ describe('BackupService', () => {
       // Validate that BackupDataSchema accepts the full v1.6.0 output
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
+
+    it('accepts Decimal columns as the JSON strings they are downloaded as', () => {
+      // Prisma returns Decimal objects, and a Decimal serialises to a string
+      // ("41.8902"), not a number. That is what a backup file really contains,
+      // so restore has to take it: found by restoring a real backup against a
+      // real database, where every coordinate and cost was refused.
+      const location = { name: 'Colosseum', latitude: '41.8902', longitude: '12.4922', children: [{ name: 'Arena', latitude: '41.8901', longitude: '12.4923' }] };
+      const trip = {
+        title: 'Rome',
+        status: 'Planning',
+        privacyLevel: 'Private',
+        locations: [location],
+        activities: [{ name: 'Tour', cost: '22.50' }],
+        transportation: [{ type: 'train', cost: '60', calculatedDistance: '412.30', calculatedDuration: '118.5' }],
+        lodging: [{ type: 'hotel', name: 'Hotel', cost: '480.00' }],
+      };
+
+      const parseTrip = (value: unknown) => BackupDataSchema.shape.trips.element.safeParse(value);
+      const parsed = parseTrip(trip);
+      if (!parsed.success) {
+        // Only the coordinate/cost fields are under test; other required trip
+        // fields may be missing from this minimal fixture.
+        const paths = parsed.error.issues.map((issue) => issue.path.join('.'));
+        expect(paths.filter((path) => /latitude|longitude|cost|calculated/.test(path))).toEqual([]);
+      } else {
+        expect(parsed.data.locations?.[0].latitude).toBe(41.8902);
+        expect(parsed.data.activities?.[0].cost).toBe(22.5);
+      }
+    });
   });
 });

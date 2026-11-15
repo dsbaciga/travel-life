@@ -298,7 +298,10 @@ class ChecklistService {
       user: {
         connect: { id: userId },
       },
-      ...(tripId !== null && tripId !== undefined ? { tripId } : {}),
+      // A relation connect, not a bare `tripId`: Prisma does not accept a scalar
+      // foreign key next to `user: { connect }` in the same create, and rejected
+      // every trip checklist with a validation error.
+      ...(tripId !== null && tripId !== undefined ? { trip: { connect: { id: tripId } } } : {}),
       items: items
         ? {
             create: items.map((item, index) => ({
