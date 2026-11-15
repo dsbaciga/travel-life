@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.2.0] - 2026-11-15
+
 ### Added
 
 - **Mobile: Food nearby.** A new screen, reached from a button on Today or from Quick capture, searches for restaurants, cafés, bars and bakeries around you, with a dietary restriction to apply (vegetarian, vegan, halal, kosher, gluten-free, lactose-free or pescatarian) and a distance of 500 m, 1 km or 2 km. Results show how well each place fits the diet, whether it is open now and how far away it is, with directions, call, website, **Log a meal here** and **Save to trip**. It remembers your last diet and distance. The data is OpenStreetMap, which records diets only where someone added them, so many places show as "not confirmed" and are listed separately, after the ones that match. It needs a connection. New backend endpoint `GET /api/places/food` and an optional `OVERPASS_URL` setting for the map server(s).
