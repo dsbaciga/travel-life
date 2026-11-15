@@ -106,6 +106,7 @@ const mockPrisma = {
   },
   trip: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
   },
 };
 
@@ -324,6 +325,22 @@ describe('ChecklistService', () => {
         include: expect.any(Object),
       });
       expect(result.items).toHaveLength(2);
+    });
+
+    it('attaches a trip checklist through the relation, not a bare tripId', async () => {
+      // Prisma rejects a scalar foreign key next to `user: { connect }` in one
+      // create ("Unknown argument tripId"), so every trip checklist was a 500.
+      // The mocked client cannot catch that; a real database did.
+      mockPrisma.trip.findFirst.mockResolvedValue({ id: 7, userId: 1, title: 'T', privacyLevel: 'Private', collaborators: [] });
+      mockPrisma.checklist.create.mockResolvedValue({ ...mockChecklist, tripId: 7, items: [] });
+      mockPrisma.checklist.findFirst.mockResolvedValue({ ...mockChecklist, tripId: 7, items: [] });
+
+      await checklistService.createChecklist(1, { name: 'Packing', type: 'custom', tripId: 7 } as any);
+
+      const data = mockPrisma.checklist.create.mock.calls.at(-1)?.[0].data;
+      expect(data.trip).toEqual({ connect: { id: 7 } });
+      expect(data).not.toHaveProperty('tripId');
+      expect(data.user).toEqual({ connect: { id: 1 } });
     });
   });
 

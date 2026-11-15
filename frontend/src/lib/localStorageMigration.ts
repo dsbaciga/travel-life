@@ -5,9 +5,10 @@
  * to IndexedDB for better offline support and larger storage capacity.
  */
 
+import { openDatabaseWithStore } from './openIndexedDb';
+
 // IndexedDB configuration
 const DB_NAME = 'travel-life-offline';
-const DB_VERSION = 1;
 const DRAFTS_STORE = 'localDrafts';
 const MIGRATION_FLAG = 'pwa-migration-complete';
 
@@ -49,27 +50,12 @@ export interface MigrationResult {
  * Opens or creates the IndexedDB database with the drafts store
  */
 function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => {
-      reject(new Error(`Failed to open IndexedDB: ${request.error?.message}`));
-    };
-
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      // Create the localDrafts store if it doesn't exist
-      if (!db.objectStoreNames.contains(DRAFTS_STORE)) {
-        const store = db.createObjectStore(DRAFTS_STORE, { keyPath: 'key' });
-        store.createIndex('savedAt', 'savedAt', { unique: false });
-        store.createIndex('expiresAt', 'expiresAt', { unique: false });
-      }
-    };
+  // Never at a fixed version: the database is shared with lib/offlineDb.ts,
+  // which may already have moved it past version 1. See lib/openIndexedDb.ts.
+  return openDatabaseWithStore(DB_NAME, DRAFTS_STORE, (db) => {
+    const store = db.createObjectStore(DRAFTS_STORE, { keyPath: 'key' });
+    store.createIndex('savedAt', 'savedAt', { unique: false });
+    store.createIndex('expiresAt', 'expiresAt', { unique: false });
   });
 }
 

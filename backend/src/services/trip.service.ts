@@ -38,6 +38,9 @@ function mapCopiesByCompositeKey<TOld extends { id: number }, TNew extends { id:
   }
 }
 
+/** Where photo.service.ts stores uploads; the only places trip deletion removes files from. */
+const PHOTO_UPLOAD_PREFIXES = ['/uploads/photos/', '/uploads/videos/', '/uploads/thumbnails/'];
+
 export class TripService {
   /**
    * Verifies a series belongs to the caller before a trip is attached to it.
@@ -466,12 +469,52 @@ export class TripService {
       throw new AppError('Trip not found or you do not have permission to delete it', 404);
     }
 
+    // The database cascade removes the photo rows but knows nothing about the
+    // files they point at. Collect the paths first; otherwise every photo and
+    // video of a deleted trip stays on disk for good, with no row left to find
+    // or remove it by.
+    const photos = await prisma.photo.findMany({
+      where: { tripId, source: 'local' },
+      select: { localPath: true, thumbnailPath: true },
+    });
+    // Only the directories photo uploads are written to. A photo row is data,
+    // and data can be wrong (a restored backup, a bad migration): a row whose
+    // path named a cover image, an avatar or a PDF must never get that file
+    // deleted, since it belongs to something this check knows nothing about.
+    const photoFiles = photos
+      .flatMap((photo) => [photo.localPath, photo.thumbnailPath])
+      .filter(
+        (value): value is string =>
+          typeof value === 'string' &&
+          // No `..`: "/uploads/photos/../covers/x.jpg" has the right prefix
+          // and still resolves to a file in another directory.
+          !value.split('/').includes('..') &&
+          PHOTO_UPLOAD_PREFIXES.some((prefix) => value.startsWith(prefix))
+      );
+
     await prisma.trip.delete({
       where: { id: tripId },
     });
 
-    // Uploaded cover images live outside the photos table, so nothing else cleans them up
+    // A file can be referenced by more than one row (a restored or copied
+    // trip), so only remove the ones nothing points at any more.
+    const stillReferenced = new Set<string>();
+    if (photoFiles.length > 0) {
+      const remaining = await prisma.photo.findMany({
+        where: { OR: [{ localPath: { in: photoFiles } }, { thumbnailPath: { in: photoFiles } }] },
+        select: { localPath: true, thumbnailPath: true },
+      });
+      for (const photo of remaining) {
+        if (photo.localPath) stillReferenced.add(photo.localPath);
+        if (photo.thumbnailPath) stillReferenced.add(photo.thumbnailPath);
+      }
+    }
+
+    // deleteCoverFilesForPaths confines every path to the uploads directory and
+    // ignores files that are already gone, which is what is needed here too.
+    // Cover images live outside the photos table, so they are listed explicitly.
     await tripCoverImageService.deleteCoverFilesForPaths([
+      ...photoFiles.filter((file) => !stillReferenced.has(file)),
       trip.coverImagePath,
       trip.coverImageThumbnailPath,
     ]);

@@ -33,12 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile app: plain `http` servers are refused unless they are on your local network** (private addresses, `.local` names, `localhost`). This applies to typing a server address and to scanning a pairing code.
 - **Immich asset and album ids are checked before they are sent to the Immich server.**
 - The release workflow's third-party release action is pinned to an exact commit.
-- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and bcrypt 6, node-cron 4 and Nodemailer 10 on the backend.
+- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and Prisma 7.10, bcrypt 6, node-cron 4 and Nodemailer 10 on the backend. The Prisma update needs no database changes.
 
 ### Fixed
 
 - **Share links, the calendar subscription feed and accepting an invitation work again without being signed in.** They were answering "No token provided" because a sign-in check meant for collaboration routes was also applied to them.
 - **The list of trips shared with you loads again.** The request was being read as a trip id.
+- **Restoring a backup no longer fails when the trip has map coordinates or costs.** Backup files store those values as text, and restore refused them with "Validation failed". Existing backup files restore without being re-created.
+- **Creating a checklist for a trip works again.** It was failing with a server error; checklists not attached to a trip were unaffected.
+- **Offline features no longer stop working after the first visit.** Saved drafts, the offline copy of trips, queued offline edits and the offline map cache share one browser database. It could be upgraded on first load in a way that made every later load fail to open it. Browsers already in that state recover on their own with this version.
+- **Deleting a trip now removes its photo and video files from the server.** Only the database records were removed before, so the files stayed in the uploads folder. Files left behind by trips deleted before this version are not cleaned up.
+- **Album suggestions for a trip that does not exist return "not found"** instead of a server error.
 
 ## [7.2.0] - 2026-11-15
 
