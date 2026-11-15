@@ -8,6 +8,7 @@ import {
   optionalCurrencyCode,
   optionalUrl,
   optionalNotesWithMax,
+  httpUrl,
 } from '../validation/zodHelpers';
 
 export const LodgingType = {
@@ -73,7 +74,7 @@ export const createLodgingSchema = z.object({
   confirmationNumber: z.string().max(100).optional(),
   cost: z.number().min(0).optional(),
   currency: z.string().length(3).optional(),
-  bookingUrl: z.string().url().max(500).optional(),
+  bookingUrl: httpUrl().pipe(z.string().max(500)).optional(),
   notes: z.string().max(2000).optional(),
 });
 

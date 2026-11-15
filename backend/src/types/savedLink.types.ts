@@ -5,6 +5,7 @@ import {
   optionalNullable,
   optionalNumericId,
   optionalStringWithMax,
+  httpUrl,
 } from '../validation/zodHelpers';
 
 /**
@@ -13,7 +14,7 @@ import {
  */
 export const MAX_URL_LENGTH = 2048;
 
-const urlSchema = z.string().trim().url().max(MAX_URL_LENGTH);
+const urlSchema = z.string().trim().pipe(httpUrl()).pipe(z.string().max(MAX_URL_LENGTH));
 
 /**
  * Create: fields are optional but not nullable.

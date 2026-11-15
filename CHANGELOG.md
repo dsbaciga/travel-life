@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Uploaded photos and videos are stored under the file type the server detected**, not the extension of the name they were uploaded with, and anything in the uploads folder that is not an image, video or PDF is now sent as a download instead of being opened in the browser.
+- **A trip marked Public no longer lets other signed-in users open its photo files directly.** Photos of a shared trip are still available through its share link.
+- **Link fields only accept web links.** Booking links on activities, lodging and custom items, and saved links, must start with `http://` or `https://`.
+- **Immich "Test connection" follows the same address rules as saving the Immich settings**, so it can no longer be pointed at addresses on the server's own network unless `ALLOW_PRIVATE_INTEGRATION_URLS` is on. Immich images proxied through the server are no longer marked as cacheable by shared proxies.
+- **Browser push subscriptions must use a public `https` push service address.**
+- Updated backend and frontend dependencies with known vulnerabilities to patched versions.
+
 ## [7.2.0] - 2026-11-15
 
 ### Added

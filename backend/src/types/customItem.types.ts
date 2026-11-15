@@ -11,6 +11,7 @@ import {
   optionalCurrencyCode,
   optionalUrlOrEmpty,
   optionalNotes,
+  httpUrl,
 } from '../validation/zodHelpers';
 
 // =============================================================================
@@ -60,7 +61,7 @@ export const createCustomItemSchema = z.object({
   cost: optionalPositiveNumber(),
   currency: z.string().length(3).optional(),
   // No max: the column is Text because real booking URLs exceed 500 chars.
-  url: z.string().url().optional().or(z.literal('')),
+  url: httpUrl().optional().or(z.literal('')),
   confirmationNumber: optionalStringWithMax(255),
 });
 

@@ -4,6 +4,7 @@ import { pushSubscribeSchema, pushUnsubscribeSchema } from '../types/push.types'
 import { asyncHandler } from '../http/asyncHandler';
 import { requireUserId } from '../auth/controllerHelpers';
 import { AppError } from '../errors/errors';
+import { validateUrlNotInternal } from '../security/urlValidation';
 
 export const pushController = {
   /**
@@ -28,6 +29,15 @@ export const pushController = {
       throw new AppError('Push notifications are not configured on this server', 503);
     }
     const parsed = pushSubscribeSchema.parse(req.body);
+
+    // The server later POSTs to this endpoint on the user's behalf, so it is an
+    // outbound-request target the client chose. Real push services are public
+    // HTTPS hosts; anything else is someone aiming the server at its own network.
+    if (!/^https:\/\//i.test(parsed.endpoint)) {
+      throw new AppError('Push endpoint must be an https URL', 400);
+    }
+    await validateUrlNotInternal(parsed.endpoint);
+
     const result = await pushNotificationService.saveSubscription(
       userId,
       {

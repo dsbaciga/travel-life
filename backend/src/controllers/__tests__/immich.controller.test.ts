@@ -32,7 +32,18 @@ jest.mock('../../config/database', () => ({
   default: mockPrisma,
 }));
 
+// The connection test validates its target like the settings save does; stub
+// the DNS-backed check so these tests never touch the network.
+jest.mock('../../security/urlValidation', () => {
+  const actual = jest.requireActual<typeof import('../../security/urlValidation')>(
+    '../../security/urlValidation'
+  );
+  return { __esModule: true, ...actual, validateUrlNotInternal: jest.fn() };
+});
+
 import immichService from '../../services/immich.service';
+import { validateUrlNotInternal } from '../../security/urlValidation';
+import { AppError } from '../../errors/errors';
 import { immichController } from '../immich.controller';
 import {
   createAuthenticatedControllerArgs,
@@ -55,16 +66,21 @@ describe('immich.controller', () => {
   beforeEach(() => jest.clearAllMocks());
 
   describe('testConnection', () => {
+    beforeEach(() => {
+      jest.mocked(validateUrlNotInternal).mockResolvedValue(undefined);
+    });
+
     it('should test connection and return success', async () => {
       jest.mocked(immichService.testConnection).mockResolvedValue(true);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
-        body: { apiUrl: 'http://immich:2283', apiKey: 'test-key' },
+        body: { apiUrl: 'https://immich.example.com', apiKey: 'test-key' },
       });
       immichController.testConnection(req, res, next);
       await flushPromises();
 
-      expect(immichService.testConnection).toHaveBeenCalledWith('http://immich:2283', 'test-key');
+      expect(validateUrlNotInternal).toHaveBeenCalledWith('https://immich.example.com');
+      expect(immichService.testConnection).toHaveBeenCalledWith('https://immich.example.com', 'test-key');
       expect(res.json).toHaveBeenCalledWith({
         status: 'success',
         data: {
@@ -76,12 +92,41 @@ describe('immich.controller', () => {
 
     it('should throw error when apiUrl or apiKey missing', async () => {
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
-        body: { apiUrl: 'http://immich:2283' },
+        body: { apiUrl: 'https://immich.example.com' },
       });
       immichController.testConnection(req, res, next);
       await flushPromises();
 
       expect(next).toHaveBeenCalled();
+      expect(immichService.testConnection).not.toHaveBeenCalled();
+    });
+
+    it('refuses a plain-http target that is not on the local network', async () => {
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { apiUrl: 'http://immich:2283', apiKey: 'test-key' },
+      });
+      immichController.testConnection(req, res, next);
+      await flushPromises();
+
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
+      expect(immichService.testConnection).not.toHaveBeenCalled();
+    });
+
+    it('never connects to a target the SSRF check rejects', async () => {
+      // A private address: without ALLOW_PRIVATE_INTEGRATION_URLS the same
+      // validation as the settings save applies, and its verdict is final.
+      jest
+        .mocked(validateUrlNotInternal)
+        .mockRejectedValue(new AppError('URLs pointing to private or internal IP addresses are not allowed', 400));
+
+      const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
+        body: { apiUrl: 'https://192.168.1.10:2283', apiKey: 'test-key' },
+      });
+      immichController.testConnection(req, res, next);
+      await flushPromises();
+
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 400 }));
+      expect(immichService.testConnection).not.toHaveBeenCalled();
     });
   });
 
