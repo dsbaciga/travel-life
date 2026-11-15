@@ -55,7 +55,7 @@ export default function DeadlinesWidget() {
             <li key={d.id} className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {DEADLINE_KIND_LABELS[d.kind]}
+                  {d.title?.trim() || DEADLINE_KIND_LABELS[d.kind]}
                   {overdue && (
                     <span className="ml-2 text-xs font-medium text-red-600 dark:text-red-400">
                       Overdue
@@ -80,7 +80,7 @@ export default function DeadlinesWidget() {
                 type="button"
                 onClick={() => dismiss.mutate(d)}
                 disabled={dismiss.isPending}
-                aria-label={`Mark ${DEADLINE_KIND_LABELS[d.kind]} done`}
+                aria-label={`Mark ${d.title?.trim() || DEADLINE_KIND_LABELS[d.kind]} done`}
                 className="shrink-0 inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-3 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-dusk-400 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50 disabled:opacity-50 transition-colors"
               >
                 Done

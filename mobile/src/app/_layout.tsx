@@ -91,6 +91,7 @@ export default function RootLayout() {
                   <Stack.Screen name="capture" options={{ title: 'Quick capture', presentation: 'modal' }} />
                   <Stack.Screen name="receipt" options={{ title: 'Scan receipt' }} />
                   <Stack.Screen name="parked" options={{ title: 'Where I parked' }} />
+                  <Stack.Screen name="food" options={{ title: 'Food nearby' }} />
                   <Stack.Screen name="camera-roll" options={{ title: 'Trip photos' }} />
                   <Stack.Screen name="share" options={{ title: 'Save to Travel Life', presentation: 'modal' }} />
                   <Stack.Screen name="sync" options={{ title: 'Sync' }} />

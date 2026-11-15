@@ -655,21 +655,27 @@ export async function restoreFromBackup(
 
           // Import booking deadlines. Targets are remapped through the old-id -> new-id
           // maps built above; a deadline whose booking is missing from the backup is skipped.
+          // A standalone deadline (no booking) has nothing to remap and is always restored.
           for (const deadlineData of tripData.bookingDeadlines || []) {
-            const targetMap =
-              deadlineData.entityType === 'lodging'
-                ? lodgingMap
-                : deadlineData.entityType === 'transportation'
-                  ? transportationMap
-                  : activityMap;
-            const newTargetId = targetMap.get(deadlineData.entityId);
-            if (!newTargetId) continue;
+            const hasTarget = !!deadlineData.entityType && deadlineData.entityId != null;
+            let newTargetId: number | undefined;
+            if (hasTarget) {
+              const targetMap =
+                deadlineData.entityType === 'lodging'
+                  ? lodgingMap
+                  : deadlineData.entityType === 'transportation'
+                    ? transportationMap
+                    : activityMap;
+              newTargetId = targetMap.get(deadlineData.entityId as number);
+              if (!newTargetId) continue;
+            }
             await tx.bookingDeadline.create({
               data: {
                 tripId: trip.id,
-                lodgingId: deadlineData.entityType === 'lodging' ? newTargetId : null,
-                transportationId: deadlineData.entityType === 'transportation' ? newTargetId : null,
-                activityId: deadlineData.entityType === 'activity' ? newTargetId : null,
+                lodgingId: deadlineData.entityType === 'lodging' ? (newTargetId ?? null) : null,
+                transportationId: deadlineData.entityType === 'transportation' ? (newTargetId ?? null) : null,
+                activityId: deadlineData.entityType === 'activity' ? (newTargetId ?? null) : null,
+                title: deadlineData.title ?? null,
                 kind: deadlineData.kind,
                 dueAt: new Date(deadlineData.dueAt),
                 note: deadlineData.note ?? null,

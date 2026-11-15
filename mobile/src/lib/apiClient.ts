@@ -71,15 +71,17 @@ export interface RequestOptions {
   anonymous?: boolean;
   /** Override the stored server (onboarding, before a session exists). */
   serverUrl?: string;
+  /** Give up after this long instead of the client's default; for requests that wait on a slow upstream. */
+  timeoutMs?: number;
 }
 
 export function createApiClient(deps: ApiClientDeps) {
   const timeoutMs = deps.timeoutMs ?? 30000;
   let refreshing: Promise<boolean> | null = null;
 
-  async function send(url: string, init: RequestInit): Promise<Response> {
+  async function send(url: string, init: RequestInit, timeout: number = timeoutMs): Promise<Response> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timer = setTimeout(() => controller.abort(), timeout);
     try {
       return await deps.fetch(url, { ...init, signal: controller.signal });
     } catch (error) {
@@ -169,13 +171,14 @@ export function createApiClient(deps: ApiClientDeps) {
     const url = buildUrl(base, path, options.query);
     let response = await send(
       url,
-      buildInit(options, options.anonymous ? null : (session?.accessToken ?? null))
+      buildInit(options, options.anonymous ? null : (session?.accessToken ?? null)),
+      options.timeoutMs
     );
 
     if (response.status === 401 && !options.anonymous) {
       const refreshed = await refreshTokens();
       if (!refreshed) throw new ApiError('Session expired', 401);
-      response = await send(url, buildInit(options, deps.getSession()?.accessToken ?? null));
+      response = await send(url, buildInit(options, deps.getSession()?.accessToken ?? null), options.timeoutMs);
     }
 
     const parsed = await parseBody<T>(response);

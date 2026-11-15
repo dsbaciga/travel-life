@@ -450,6 +450,28 @@ Two existing update schemas gained fields the app writes: `PUT /api/activities/:
 `manualOrder`, and `PUT /api/transportation/:id` accepts `actualDepartureTime`,
 `actualArrivalTime`, `status`, `delayMinutes` and `seatNumber`.
 
+### Places (`/api/places`)
+
+Needs a signed-in user. Rate limited per user (30 searches a minute by default, `NEARBY_FOOD_RATE_LIMIT_MAX`).
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/food` | Food and drink near a point, optionally filtered for a dietary restriction | Yes |
+
+Query parameters for `GET /api/places/food` (`backend/src/types/places.types.ts`):
+
+- `lat` (required, -90..90) and `lng` (required, -180..180)
+- `radius` - metres, 100 to 3000 (default `1000`)
+- `diet` - one of `vegetarian`, `vegan`, `halal`, `kosher`, `gluten_free`, `lactose_free`, `pescetarian`
+- `limit` - 1 to 100 (default `50`)
+
+The data is OpenStreetMap, read through the Overpass API, so dietary information is only as good as the map: places nobody
+has tagged for a diet have `diet: "unknown"` ("not confirmed"). With `diet`, places are ordered best match first
+(`only`, `yes`, `limited`, `unknown`) then nearest, and places that say they do not cater for it are left out and counted in
+`excludedCount`. Each place also carries `dietary`, everything its tags say about any diet. Results are cached for ten minutes
+per area, so changing `diet` does not repeat the upstream request. Errors: `503` when the map servers are busy (retry shortly),
+`502` when they are unavailable.
+
 ### Search (`/api/search`)
 
 The search endpoint is rate limited to 30 requests per minute.

@@ -16,10 +16,15 @@ import { bookingDeadlineController } from '../controllers/bookingDeadline.contro
  *         application/json:
  *           schema:
  *             type: object
- *             required: [entityType, entityId, kind, dueAt]
+ *             required: [kind, dueAt]
+ *             description: >
+ *               Attach the deadline to a booking with entityType and entityId (given together),
+ *               or leave both out for a standalone deadline tracked against the trip only. A
+ *               standalone deadline needs a title.
  *             properties:
  *               entityType: { type: string, enum: [lodging, transportation, activity] }
  *               entityId: { type: integer }
+ *               title: { type: string, maxLength: 200, description: Required when there is no booking }
  *               kind: { type: string, enum: [cancellation, check_in, payment, other] }
  *               dueAt: { type: string, format: date-time }
  *               note: { type: string, maxLength: 500 }

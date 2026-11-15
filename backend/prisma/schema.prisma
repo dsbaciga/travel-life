@@ -667,6 +667,7 @@ model BookingDeadline {
   transportationId Int?      @map("transportation_id")
   activityId       Int?      @map("activity_id")
   kind             String    @db.VarChar(30) // cancellation, check_in, payment, other
+  title            String?   @db.VarChar(200) // names a deadline with no booking; required when lodging/transportation/activity are all null
   dueAt            DateTime  @map("due_at")
   note             String?   @db.VarChar(500)
   dismissedAt      DateTime? @map("dismissed_at")

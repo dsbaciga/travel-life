@@ -99,11 +99,16 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     })),
     lodging: trip.lodging as BackupTrip['lodging'],
     bookingDeadlines: ((trip.bookingDeadlines ?? []) as Array<Record<string, unknown>>).map((d) => ({
-      entityType: (d.lodgingId ? 'lodging' : d.transportationId ? 'transportation' : 'activity') as
-        | 'lodging'
-        | 'transportation'
-        | 'activity',
-      entityId: (d.lodgingId ?? d.transportationId ?? d.activityId) as number,
+      // Null for a standalone deadline (no booking).
+      entityType: (d.lodgingId
+        ? 'lodging'
+        : d.transportationId
+          ? 'transportation'
+          : d.activityId
+            ? 'activity'
+            : null) as 'lodging' | 'transportation' | 'activity' | null,
+      entityId: (d.lodgingId ?? d.transportationId ?? d.activityId ?? null) as number | null,
+      title: (d.title as string | null) ?? null,
       kind: d.kind as string,
       dueAt: (d.dueAt as Date).toISOString(),
       note: d.note as string | null,
@@ -315,6 +320,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           lodgingId: true,
           transportationId: true,
           activityId: true,
+          title: true,
           kind: true,
           dueAt: true,
           note: true,

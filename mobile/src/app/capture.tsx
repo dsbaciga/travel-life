@@ -139,6 +139,7 @@ export default function CaptureScreen() {
     { key: 'camera', icon: '📷', title: 'Snap a photo', detail: 'Auto-linked to the current activity and place', run: () => capturePhoto('camera') },
     { key: 'library', icon: '🖼️', title: 'Add photos from library', detail: 'Uses each photo’s own time and GPS', run: () => capturePhoto('library') },
     { key: 'receipt', icon: '🧾', title: 'Scan receipt / add expense', detail: 'Reads the total, currency and merchant', run: () => router.replace('/receipt') },
+    { key: 'food', icon: '🍽️', title: 'Find food nearby', detail: 'Search around you, with a dietary filter', run: () => router.replace('/food') },
     { key: 'meal', icon: '🍝', title: 'Log a meal', detail: 'Rating, dish and “order again?”', run: () => openForm('FOOD_LOG') },
     { key: 'note', icon: '📝', title: 'Quick journal note', detail: 'Tip: use the keyboard’s microphone to dictate', run: quickNote },
     { key: 'transit', icon: '🚆', title: 'Log transit', detail: 'A train, bus, ferry or taxi you just took', run: () => openForm('TRANSPORTATION') },

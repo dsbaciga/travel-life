@@ -24,6 +24,7 @@ const backendVendored = resolve(here, '../../../backend/src/services/_shared/ven
 export const VENDORED = [
   { from: 'utils/geo.ts', to: 'geo.ts' },
   { from: 'receipt/receiptParser.ts', to: 'receiptParser.ts' },
+  { from: 'food/nearbyFood.ts', to: 'nearbyFood.ts' },
 ];
 
 export const header = (from) =>
