@@ -36,7 +36,8 @@ describe('opening the shared offline database', () => {
     // Next page load. This is the open that used to throw VersionError.
     const reopened = await getDb();
     expect(reopened.version).toBe(repaired.version);
-    expect(reopened.objectStoreNames.contains('mapCacheMetadata')).toBe(true);
+    // The store belongs to another module, so it is not in this module's typed store list.
+    expect(Array.from(reopened.objectStoreNames, String)).toContain('mapCacheMetadata');
     closeDb();
 
     // And the single-store openers must cope with the higher version too.
