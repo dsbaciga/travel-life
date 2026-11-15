@@ -7,8 +7,8 @@ import { tripCoverImageService } from './tripCoverImage.service';
 import { toSafePermissionLevel } from '../services/_shared/tripPermissions';
 import { buildConditionalUpdateData, tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
-import { resolveTimezone } from '../services/_shared/timezoneResolution';
-import { compareTripsForList } from '../services/_shared/tripListOrder';
+import { getUserTimezone, resolveTimezone } from '../services/_shared/timezoneResolution';
+import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tripListOrder';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -236,9 +236,11 @@ export class TripService {
     if (sortOption === 'startDate-desc' || sortOption === 'startDate-asc' || sortOption === 'status') {
       const candidates = await prisma.trip.findMany({
         where,
-        select: { id: true, status: true, startDate: true, createdAt: true },
+        select: { id: true, status: true, startDate: true, endDate: true, createdAt: true },
       });
-      candidates.sort(compareTripsForList(sortOption));
+      // "Today" is the user's today, so a trip's dates are judged on their clock.
+      const todayKey = todayKeyInTimezone(resolveTimezone(await getUserTimezone(userId)));
+      candidates.sort(compareTripsForList(sortOption, todayKey));
 
       const total = candidates.length;
       const pageIds = candidates.slice(skip, skip + limit).map((trip) => trip.id);

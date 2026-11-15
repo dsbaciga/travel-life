@@ -1614,6 +1614,33 @@ describe('Trip Service', () => {
       }
     });
 
+    it('TRIP-ORDER-005: a Planned trip whose dates cover today is ranked as current', async () => {
+      const day = 86_400_000;
+      const midnight = (offsetDays: number) => {
+        const d = new Date(Date.now() + offsetDays * day);
+        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+      };
+      const row = (id: number, status: string, start: Date, end: Date) => ({
+        id,
+        status,
+        startDate: start,
+        endDate: end,
+        createdAt: new Date('2026-01-01'),
+      });
+      mockPrisma.trip.findMany
+        .mockResolvedValueOnce([
+          row(1, TripStatus.PLANNING, midnight(400), midnight(405)),
+          row(2, TripStatus.COMPLETED, midnight(-1), midnight(1)),
+          row(3, TripStatus.PLANNED, midnight(-1), midnight(1)),
+        ])
+        .mockResolvedValueOnce([1, 2, 3].map((id) => ({ ...mockTripWithIncludes, id })));
+
+      const result = await tripService.getTrips(mockUserId, {});
+
+      // Planned but happening now (3) leads; Completed never counts as current, even over the same days.
+      expect(result.trips.map((t) => t.id)).toEqual([3, 1, 2]);
+    });
+
     it('TRIP-ORDER-002: "Oldest First" also keeps open trips ahead of Completed ones', async () => {
       const row = (id: number, status: string, start: string | null) => ({
         id,

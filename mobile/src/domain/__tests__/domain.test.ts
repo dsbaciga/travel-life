@@ -347,6 +347,15 @@ describe('timeline', () => {
       // The current trip leads the list whatever its dates, even an old one.
       await upsertTrip(db, dto(7, 'In Progress', '2025-01-01', '2025-01-02'));
       expect((await listTrips(db)).map((t) => t.id)).toEqual([7, 3, 2, 5, 1, 4]);
+
+      // A Planned trip whose dates cover today is current too, but only when "today" is given;
+      // a Completed trip over the same days never is.
+      await upsertTrip(db, dto(9, 'Planned', '2026-06-08', '2026-06-12'));
+      await upsertTrip(db, dto(10, 'Completed', '2026-06-08', '2026-06-12'));
+      // Both current trips lead (soonest start first), then the other open trips.
+      expect((await listTrips(db, '2026-06-10')).map((t) => t.id).slice(0, 3)).toEqual([7, 9, 3]);
+      expect((await listTrips(db, '2026-06-10')).map((t) => t.id).indexOf(10)).toBeGreaterThan(3);
+      expect((await listTrips(db, '2026-07-01')).map((t) => t.id)[0]).toBe(7);
     } finally {
       await db.close();
     }

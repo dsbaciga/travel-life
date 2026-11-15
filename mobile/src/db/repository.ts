@@ -121,17 +121,28 @@ export async function getTrip(db: SqlDriver, tripId: number): Promise<TripDto | 
 }
 
 /**
- * The current trip (In Progress) is always first, then trips still ahead
- * (Dream, Planning, Planned), then Completed, then Cancelled, whatever their
- * dates: an undated Planning trip must not sink below finished trips just
- * because it has no date to sort by. Within each group, soonest start first and
- * undated last.
+ * The current trip is always first: one marked In Progress, or a Planning/Planned
+ * trip whose dates cover `todayKey` (`YYYY-MM-DD` on the user's clock; omit it to
+ * go by status alone). Then trips still ahead (Dream, Planning, Planned), then
+ * Completed, then Cancelled, whatever their dates: an undated Planning trip must
+ * not sink below finished trips just because it has no date to sort by. Within
+ * each group, soonest start first and undated last.
  */
-export async function listTrips(db: SqlDriver): Promise<TripDto[]> {
+export async function listTrips(db: SqlDriver, todayKey?: string): Promise<TripDto[]> {
+  const today = todayKey ?? null;
   const rows = await db.all<{ data: string }>(
     `SELECT data FROM trips
-     ORDER BY CASE status WHEN 'In Progress' THEN 0 WHEN 'Completed' THEN 2 WHEN 'Cancelled' THEN 3 ELSE 1 END,
-              start_date IS NULL, start_date ASC`
+     ORDER BY CASE
+                WHEN status = 'In Progress' THEN 0
+                WHEN status IN ('Planning', 'Planned')
+                     AND ? IS NOT NULL AND start_date IS NOT NULL AND end_date IS NOT NULL
+                     AND substr(start_date, 1, 10) <= ? AND ? <= substr(end_date, 1, 10) THEN 0
+                WHEN status = 'Completed' THEN 2
+                WHEN status = 'Cancelled' THEN 3
+                ELSE 1
+              END,
+              start_date IS NULL, start_date ASC`,
+    [today, today, today]
   );
   return rows.map((row) => JSON.parse(row.data) as TripDto);
 }
