@@ -24,7 +24,7 @@ import {
 } from '@travel-life/shared';
 
 import { showActionSheet, type SheetAction } from '@/components/ActionSheet';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen, SectionHeader } from '@/components/ui';
+import { AppText, Banner, Button, Card, Chip, EmptyState, Field, Row, Screen, SectionHeader } from '@/components/ui';
 import { kvGet, kvSet } from '@/db/repository';
 import { createEntity } from '@/domain/mutations';
 import {
@@ -43,11 +43,12 @@ import {
 } from '@/domain/food';
 import { getDb } from '@/lib/db';
 import { completeEntity } from '@/lib/entityForms';
-import { useActiveTrip } from '@/lib/hooks';
+import { useActiveTrip, useEntities } from '@/lib/hooks';
 import { api } from '@/lib/session';
 import { notifyLocalChange, syncNow } from '@/lib/sync';
 import { spacing } from '@/lib/theme';
 import { getCurrentPosition, positionFailureMessage } from '@/tasks/location';
+import { isUsableCoordinate } from '@travel-life/shared';
 
 const TONE: Record<DietBadgeTone, 'success' | 'warning' | 'default' | 'danger'> = {
   good: 'success',
@@ -57,6 +58,15 @@ const TONE: Record<DietBadgeTone, 'success' | 'warning' | 'default' | 'danger'> 
 };
 
 type Position = { latitude: number; longitude: number };
+
+/** Somewhere other than the phone to search around. */
+interface SearchPlace extends Position {
+  name: string;
+}
+
+interface PlaceHit extends SearchPlace {
+  description: string;
+}
 
 export default function FoodScreen() {
   const { data: trip } = useActiveTrip();
@@ -68,6 +78,15 @@ export default function FoodScreen() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [saved, setSaved] = useState<ReadonlySet<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
+  // Where to search: the phone's position unless the traveller picks somewhere else. Not remembered:
+  // the next visit starts from where they are.
+  const [custom, setCustom] = useState<SearchPlace | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [placeQuery, setPlaceQuery] = useState('');
+  const [placeHits, setPlaceHits] = useState<PlaceHit[] | null>(null);
+  const [placeSearching, setPlaceSearching] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
+  const { data: tripPlaces = [] } = useEntities(trip?.id, 'LOCATION');
   // Opening hours are the place's own clock, and the phone is at the place, so its zone is the best guess.
   const [deviceZone] = useState(() => getDeviceTimezone());
 
@@ -109,19 +128,55 @@ export default function FoodScreen() {
 
   const searchAgain = async () => {
     setNotice(null);
+    setCustom(null);
+    setPicking(false);
     setLocating(true);
     applyPosition(await getCurrentPosition());
   };
 
+  const choosePlace = (place: SearchPlace) => {
+    setCustom(place);
+    setPicking(false);
+    setNotice(null);
+    setPlaceHits(null);
+    setPlaceQuery('');
+  };
+
+  const findPlace = async () => {
+    const q = placeQuery.trim();
+    if (q.length < 2) return;
+    setPlaceSearching(true);
+    setPlaceError(null);
+    try {
+      const response = await api.request<{ results: PlaceHit[] }>('/places/search', {
+        timeoutMs: 20_000,
+        query: { q, limit: '5' },
+      });
+      setPlaceHits(response.results);
+    } catch (error) {
+      setPlaceHits(null);
+      setPlaceError(foodSearchErrorMessage(error));
+    } finally {
+      setPlaceSearching(false);
+    }
+  };
+
+  // Places already on the trip that have somewhere to go to, as quick picks.
+  const quickPlaces = tripPlaces
+    .filter((place) => isUsableCoordinate(place))
+    .slice(0, 8)
+    .map((place) => ({ name: place.name, latitude: place.latitude as number, longitude: place.longitude as number }));
+
   // Rounded to about 110 m, the same cell the server caches on, so GPS jitter does not re-search.
-  const cell = position ? `${position.latitude.toFixed(3)},${position.longitude.toFixed(3)}` : null;
+  const origin: Position | null = custom ?? position;
+  const cell = origin ? `${origin.latitude.toFixed(3)},${origin.longitude.toFixed(3)}` : null;
   const search = useQuery({
     queryKey: ['food-nearby', cell, radius, diet ?? 'any'],
-    enabled: restored && position !== null,
+    enabled: restored && origin !== null,
     staleTime: 5 * 60 * 1000,
     placeholderData: keepPreviousData,
     queryFn: async (): Promise<NearbyFoodResponse> => {
-      const here = position as Position;
+      const here = origin as Position;
       return api.request<NearbyFoodResponse>('/places/food', {
         // The map server can take a while when it is busy, and the backend may try a second one.
         timeoutMs: 60_000,
@@ -205,15 +260,63 @@ export default function FoodScreen() {
 
   const data = search.data;
   const groups = data ? groupPlaces(data.places, data.diet) : [];
-  const searching = locating || (restored && position !== null && search.isFetching);
+  const searching = (locating && !custom) || (restored && origin !== null && search.isFetching);
   const now = new Date();
 
   return (
     <Screen>
       <AppText muted>
-        Restaurants, cafés and bakeries near you, from OpenStreetMap. Dietary details are only as good as the map:
+        Restaurants, cafés and bakeries near you or anywhere you choose, from OpenStreetMap. Dietary details are only as good as the map:
         places nobody has tagged show as not confirmed. Check with the restaurant, especially for allergies.
       </AppText>
+
+      <SectionHeader title="Where" />
+      <Row>
+        <Chip label="📍 My location" selected={custom === null} onPress={() => void searchAgain()} />
+        {custom ? <Chip label={custom.name} selected /> : null}
+        <Chip label="🔎 Another place" selected={picking} onPress={() => setPicking((open) => !open)} />
+      </Row>
+      {picking ? (
+        <Card>
+          <Field
+            label="City, address or place"
+            value={placeQuery}
+            onChangeText={setPlaceQuery}
+            placeholder="e.g. Akureyri, or 10 Rue de Rivoli, Paris"
+            returnKeyType="search"
+            autoCapitalize="words"
+            onSubmitEditing={() => void findPlace()}
+          />
+          <Button
+            label="Search"
+            variant="secondary"
+            loading={placeSearching}
+            disabled={placeQuery.trim().length < 2}
+            onPress={() => void findPlace()}
+          />
+          {placeError ? <Banner tone="danger" text={placeError} /> : null}
+          {placeHits && placeHits.length === 0 ? <AppText muted>No place found. Try a city or a fuller address.</AppText> : null}
+          {placeHits?.map((hit) => (
+            <Card
+              key={`${hit.latitude},${hit.longitude}`}
+              onPress={() => choosePlace({ name: hit.name, latitude: hit.latitude, longitude: hit.longitude })}
+              accessibilityLabel={`Search around ${hit.description}`}>
+              <AppText variant="heading" numberOfLines={1}>{hit.name}</AppText>
+              <AppText variant="caption" muted numberOfLines={2}>{hit.description}</AppText>
+            </Card>
+          ))}
+          {quickPlaces.length > 0 ? (
+            <>
+              <AppText variant="label" muted>On this trip</AppText>
+              <Row>
+                {quickPlaces.map((place) => (
+                  <Chip key={`${place.name}:${place.latitude}`} label={place.name} onPress={() => choosePlace(place)} />
+                ))}
+              </Row>
+            </>
+          ) : null}
+        </Card>
+      ) : null}
 
       <SectionHeader title="Dietary needs" />
       <Row>
@@ -236,7 +339,7 @@ export default function FoodScreen() {
       </Row>
 
       {notice ? <Banner tone="info" text={notice} /> : null}
-      {locationError && !locating ? (
+      {locationError && !locating && !custom ? (
         <>
           <Banner tone="warning" text={locationError} />
           <Button label="Try again" variant="secondary" onPress={() => void searchAgain()} />
@@ -249,13 +352,14 @@ export default function FoodScreen() {
         </>
       ) : null}
 
-      {locating ? <AppText muted>Finding where you are…</AppText> : null}
-      {!locating && searching && !data ? <AppText muted>Searching nearby…</AppText> : null}
+      {locating && !custom ? <AppText muted>Finding where you are…</AppText> : null}
+      {!(locating && !custom) && searching && !data ? <AppText muted>Searching nearby…</AppText> : null}
 
       {data ? (
         <>
           <AppText variant="heading">
             {data.places.length} {data.places.length === 1 ? 'place' : 'places'} within {formatDistance(data.radiusMeters)}
+            {custom ? ` of ${custom.name}` : ''}
             {searching ? ' · updating…' : ''}
           </AppText>
           {data.excludedCount > 0 && data.diet ? (
@@ -293,9 +397,9 @@ export default function FoodScreen() {
       ) : null}
 
       <Button
-        label="Search again from here"
+        label={custom ? 'Back to my location' : 'Search again from here'}
         variant="secondary"
-        loading={locating}
+        loading={locating && !custom}
         onPress={() => void searchAgain()}
       />
     </Screen>
