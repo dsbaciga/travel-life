@@ -19,4 +19,12 @@ export const nearbyFoodQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
-export type NearbyFoodQuery = z.infer<typeof nearbyFoodQuerySchema>;
+/** Query string of GET /api/places/search. */
+export const placeSearchQuerySchema = z.object({
+  q: z.string().trim().min(2).max(200),
+  limit: z.coerce.number().int().min(1).max(10).default(5),
+});
+
+export type PlaceSearchQuery = z.infer<typeof placeSearchQuerySchema>;
+
+export type NearbyFoodQuery =z.infer<typeof nearbyFoodQuerySchema>;

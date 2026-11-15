@@ -15,6 +15,7 @@ import { getDb } from '../lib/db';
 import { notifyLocalChange } from '../lib/sync';
 import { showActionSheet, type SheetAction } from './ActionSheet';
 import { radius, spacing, usePalette, useTypeColors, type TypeColorKey } from '../lib/theme';
+import MapToButton from './MapToButton';
 import { AppText, Card, Chip, Row } from './ui';
 
 interface TimelineRowProps {
@@ -151,6 +152,9 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
               {item.subtitle}
             </AppText>
           ) : null}
+          <View style={styles.mapTo}>
+            <MapToButton tripId={tripId} kind={item.entityKind} id={item.entityId} />
+          </View>
           {item.confirmation ? (
             <View style={[styles.code, { backgroundColor: palette.surfaceRaised }]}>
               <AppText variant="label" selectable>
@@ -172,5 +176,6 @@ const styles = StyleSheet.create({
   badgeGlyph: { fontSize: 18, lineHeight: 24 },
   body: { flex: 1, gap: spacing.xs },
   header: { justifyContent: 'space-between' },
+  mapTo: { alignSelf: 'flex-start' },
   code: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 6 },
 });

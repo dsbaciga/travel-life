@@ -295,6 +295,80 @@ export function buildGoogleMapsUrl(request: DirectionsRequest): string | null {
 }
 
 /* ------------------------------------------------------------------ */
+/* Google Maps: straight into navigation                               */
+/* ------------------------------------------------------------------ */
+
+/** The links for starting navigation in Google Maps, and what to open if the app is not there. */
+export interface GoogleNavigationLinks {
+  /** The app's own scheme where there is one that starts navigating at once. */
+  primary: string;
+  /** An https directions link, which opens the app if installed and a browser if not. */
+  fallback: string;
+}
+
+/** `google.navigation:` modes: d driving, w walking, b bicycling. It has no transit. */
+function androidNavigationMode(mode: TravelMode): string | null {
+  switch (mode) {
+    case 'driving':
+      return 'd';
+    case 'walking':
+      return 'w';
+    case 'bicycling':
+      return 'b';
+    case 'transit':
+      return null;
+  }
+}
+
+/** The Google Maps iOS app's `directionsmode` values. */
+function iosDirectionsMode(mode: TravelMode): string {
+  return mode;
+}
+
+/**
+ * Links that start navigating to a place in Google Maps with one tap.
+ *
+ * Unlike {@link buildGoogleMapsUrl}, which on Android opens the place on the map and
+ * leaves the user to press Directions, `google.navigation:` begins turn-by-turn at
+ * once, from wherever the phone is. It has no transit mode, so transit uses the https
+ * directions link, which opens Google Maps with the route showing. Callers should try
+ * `primary` and open `fallback` if that fails (Google Maps not installed).
+ *
+ * Returns null when the place has no usable coordinates or address.
+ */
+export function buildGoogleNavigationLinks(request: DirectionsRequest): GoogleNavigationLinks | null {
+  const normalized = normalize({ ...request, origin: null });
+  if (normalized === null) return null;
+
+  const destination = placeToText(normalized.destination);
+  const fallback = `https://www.google.com/maps/dir/?${buildQuery([
+    ['api', '1'],
+    ['destination', destination],
+    ['travelmode', googleTravelMode(normalized.mode)],
+  ])}`;
+
+  if (normalized.platform === 'android') {
+    const mode = androidNavigationMode(normalized.mode);
+    return {
+      primary: mode === null ? fallback : `google.navigation:q=${encodeURIComponent(destination)}&mode=${mode}`,
+      fallback,
+    };
+  }
+
+  if (normalized.platform === 'ios') {
+    return {
+      primary: `comgooglemaps://?${buildQuery([
+        ['daddr', destination],
+        ['directionsmode', iosDirectionsMode(normalized.mode)],
+      ])}`,
+      fallback,
+    };
+  }
+
+  return { primary: fallback, fallback };
+}
+
+/* ------------------------------------------------------------------ */
 /* Citymapper                                                          */
 /* ------------------------------------------------------------------ */
 

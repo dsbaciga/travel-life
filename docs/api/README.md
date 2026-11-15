@@ -457,6 +457,7 @@ Needs a signed-in user. Rate limited per user (30 searches a minute by default, 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/food` | Food and drink near a point, optionally filtered for a dietary restriction | Yes |
+| GET | `/search` | Find a place by name or address (OpenStreetMap Nominatim), to choose where to search | Yes |
 
 Query parameters for `GET /api/places/food` (`backend/src/types/places.types.ts`):
 
@@ -468,9 +469,13 @@ Query parameters for `GET /api/places/food` (`backend/src/types/places.types.ts`
 The data is OpenStreetMap, read through the Overpass API, so dietary information is only as good as the map: places nobody
 has tagged for a diet have `diet: "unknown"` ("not confirmed"). With `diet`, places are ordered best match first
 (`only`, `yes`, `limited`, `unknown`) then nearest, and places that say they do not cater for it are left out and counted in
-`excludedCount`. Each place also carries `dietary`, everything its tags say about any diet. Results are cached for ten minutes
+`excludedCount`. When `YELP_API_KEY` is set and the diet has a Yelp category, Yelp's businesses for that category are merged in: a place both know keeps the map's details and gains `yelp` (`url`, `rating`, `reviewCount`, `price`) and the better diet match; a place only Yelp knows is added with `id: "yelp/<id>"`; a place the map says does not cater stays excluded. Places carry `sources` (`osm`, `yelp`) and the response has `yelpUsed: true` when Yelp contributed; if the map servers are down but Yelp answers, Yelp's places are returned. Each place also carries `dietary`, everything its tags say about any diet. Results are cached for ten minutes
 per area, so changing `diet` does not repeat the upstream request. Errors: `503` when the map servers are busy (retry shortly),
 `502` when they are unavailable.
+
+`GET /api/places/search?q=<text>&limit=5` (`q` 2 to 200 characters, `limit` 1 to 10) returns `{ results: [{ name, description, latitude, longitude }] }`,
+best match first. Answers are cached for an hour per query; `503` when the place search service is unavailable. It shares the
+food search's per-user rate limit.
 
 ### Search (`/api/search`)
 
