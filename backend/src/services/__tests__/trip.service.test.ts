@@ -868,6 +868,10 @@ describe('Trip Service', () => {
           { localPath: '/uploads/photos/a.jpg', thumbnailPath: '/uploads/thumbnails/thumb-a.jpg' },
           { localPath: '/uploads/videos/b.mp4', thumbnailPath: null },
           { localPath: '/uploads/photos/shared.jpg', thumbnailPath: null },
+          // Rows pointing outside the photo directories are never acted on.
+          { localPath: '/uploads/covers/someone-elses-cover.jpg', thumbnailPath: '/uploads/avatars/someone.jpg' },
+          { localPath: '/uploads/pdfs/import.pdf', thumbnailPath: '/etc/passwd' },
+          { localPath: '/uploads/photos/../covers/sneaky.jpg', thumbnailPath: null },
         ])
         // rows left afterwards that point at the same files
         .mockResolvedValueOnce([{ localPath: '/uploads/photos/shared.jpg', thumbnailPath: null }]);

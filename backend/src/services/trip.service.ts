@@ -38,6 +38,9 @@ function mapCopiesByCompositeKey<TOld extends { id: number }, TNew extends { id:
   }
 }
 
+/** Where photo.service.ts stores uploads; the only places trip deletion removes files from. */
+const PHOTO_UPLOAD_PREFIXES = ['/uploads/photos/', '/uploads/videos/', '/uploads/thumbnails/'];
+
 export class TripService {
   /**
    * Verifies a series belongs to the caller before a trip is attached to it.
@@ -474,9 +477,20 @@ export class TripService {
       where: { tripId, source: 'local' },
       select: { localPath: true, thumbnailPath: true },
     });
+    // Only the directories photo uploads are written to. A photo row is data,
+    // and data can be wrong (a restored backup, a bad migration): a row whose
+    // path named a cover image, an avatar or a PDF must never get that file
+    // deleted, since it belongs to something this check knows nothing about.
     const photoFiles = photos
       .flatMap((photo) => [photo.localPath, photo.thumbnailPath])
-      .filter((value): value is string => typeof value === 'string' && value.length > 0);
+      .filter(
+        (value): value is string =>
+          typeof value === 'string' &&
+          // No `..`: "/uploads/photos/../covers/x.jpg" has the right prefix
+          // and still resolves to a file in another directory.
+          !value.split('/').includes('..') &&
+          PHOTO_UPLOAD_PREFIXES.some((prefix) => value.startsWith(prefix))
+      );
 
     await prisma.trip.delete({
       where: { id: tripId },
