@@ -173,7 +173,7 @@ export const duplicateTripSchema = z.object({
     tags: z.boolean().optional().default(false),
     companions: z.boolean().optional().default(false),
     checklists: z.boolean().optional().default(false),
-  }).optional().default({}),
+  }).optional().prefault({}),
 });
 
 export type DuplicateTripInput = z.infer<typeof duplicateTripSchema>;

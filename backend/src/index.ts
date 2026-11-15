@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { config } from './config';
 import logger from './config/logger';
 import { initCronJobs } from './config/cron';
@@ -69,8 +69,10 @@ try {
 
 const app: Application = express();
 
-// Trust first proxy (Nginx in Docker) so express-rate-limit reads X-Forwarded-For correctly
-app.set('trust proxy', 1);
+// Number of reverse proxies in front of this process (TRUST_PROXY, default 1 for
+// the bundled nginx) so express-rate-limit reads the client address from the
+// right X-Forwarded-For hop. See config.trustProxy.
+app.set('trust proxy', config.trustProxy);
 
 // Security middleware
 const isProduction = config.nodeEnv === 'production';
@@ -259,13 +261,14 @@ const uploadAuthCache = new Map<string, number>();
 const UPLOAD_AUTH_TTL_MS = 60_000;
 const UPLOAD_AUTH_CACHE_MAX = 5000;
 
-// Owner, collaborator, or public trip — the same rule verifyTripAccessWithPermission
-// applies to the JSON representation of these entities.
+// Owner or collaborator — the same rule verifyTripAccessWithPermission applies to
+// the JSON representation of these entities. `privacyLevel: 'Public'` grants
+// nothing here either: public exposure belongs to the share-token routes
+// (/api/public/trips/:token/photos/...), which serve only what the share allows.
 const tripReadFilter = (userId: number): Prisma.TripWhereInput => ({
   OR: [
     { userId },
     { collaborators: { some: { userId } } },
-    { privacyLevel: 'Public' },
   ],
 });
 
@@ -391,9 +394,27 @@ const authorizeFileAccess = async (
   next();
 };
 
+// Extensions an upload may be rendered inline as. express.static derives the
+// Content-Type from the extension, and uploads share the app's origin, so a
+// stored file that the browser would treat as a document or script (.html,
+// .svg, .js, ...) is stored XSS. New uploads are named after their detected
+// type (photo.service.ts); this covers files stored before that, and anything
+// placed in the directory by a restore.
+const INLINE_UPLOAD_EXTENSIONS = new Set([
+  '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif', '.tif', '.tiff', '.dng',
+  '.mp4', '.mov', '.m4v', '.avi', '.mkv', '.webm', '.mpg', '.mpeg', '.3gp', '.3g2',
+  '.pdf',
+]);
+
 // Serve uploaded files with authentication and per-file authorization
 app.use('/uploads', authenticateFileAccess, authorizeFileAccess, express.static(config.upload.dir, {
   index: false, // Don't serve directory indexes
+  setHeaders: (res, filePath) => {
+    if (!INLINE_UPLOAD_EXTENSIONS.has(extname(filePath).toLowerCase())) {
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'attachment');
+    }
+  },
 }));
 
 // Catch-all for files not found under /uploads — return 404 without leaking path info
@@ -440,6 +461,11 @@ app.get('/api/version', (_req, res) => {
 // API route handlers
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+// Before /api/trips: that router's GET /:id would otherwise claim
+// /api/trips/shared. Safe at the bare /api prefix because every route in it
+// authenticates itself; it has no router-level middleware to catch requests
+// meant for the routers below.
+app.use('/api', collaborationRoutes);
 // Before the generic /api/trips router and the per-resource trip routers, so
 // its exact paths (e.g. /expenses/parse-receipt) are matched first.
 app.use('/api/trips/:tripId', mobileRoutes);
@@ -471,7 +497,6 @@ app.use('/api/trips/:tripId', budgetSummaryRouter);
 app.use('/api/trips/:tripId/emergency-info', emergencyInfoRoutes);
 app.use('/api/saved-links', savedLinkRoutes);
 app.use('/api/trips/:tripId/saved-links', tripSavedLinksRouter);
-app.use('/api', collaborationRoutes);
 app.use('/api', flightTrackingRoutes);
 app.use('/api', packingSuggestionRoutes);
 app.use('/api/travel-documents', travelDocumentRoutes);

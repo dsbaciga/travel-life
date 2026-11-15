@@ -31,8 +31,13 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable is required}
       POSTGRES_DB: ${DB_NAME:-travel_life}
       PGDATA: /var/lib/postgresql/data/pgdata
+    # Published on the host's loopback interface only. Other containers reach
+    # this service over the compose network and never use the host port, so
+    # nothing in the stack needs it on the LAN. Set INTERNAL_BIND_ADDRESS=0.0.0.0
+    # in the env file to publish it on every interface again (for example to
+    # reach it from another machine), and firewall it if you do.
     ports:
-      - "${DB_PORT:-30603}:5432"
+      - "${INTERNAL_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-30603}:5432"
     volumes:
       # IMPORTANT: Update TRUENAS_DATA_PATH to match your TrueNAS dataset
       - ${TRUENAS_DATA_PATH:-/mnt/main_pool/travel-life}/postgres:/var/lib/postgresql/data
@@ -82,6 +87,11 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-}
       BASE_URL: ${BASE_URL:-}
       FRONTEND_URL: ${FRONTEND_URL:-}
+      # Set to true to close self-service sign-up (invitations still work)
+      DISABLE_REGISTRATION: ${DISABLE_REGISTRATION:-}
+      # Reverse proxies in front of the backend: 1 = bundled nginx only (default),
+      # 2 = a TLS proxy or tunnel in front of nginx as well
+      TRUST_PROXY: ${TRUST_PROXY:-}
       # Saved-link email ingest. Inert unless IMAP_USER and IMAP_PASSWORD are set.
       # IMAP_PASSWORD must be a Gmail App Password, not the account password.
       IMAP_HOST: ${IMAP_HOST:-}
@@ -91,8 +101,13 @@ services:
       IMAP_ARCHIVE_FOLDER: ${IMAP_ARCHIVE_FOLDER:-}
       IMAP_POLL_CRON: ${IMAP_POLL_CRON:-}
       IMAP_MAX_LINKS: ${IMAP_MAX_LINKS:-}
+    # Published on the host's loopback interface only. Other containers reach
+    # this service over the compose network and never use the host port, so
+    # nothing in the stack needs it on the LAN. Set INTERNAL_BIND_ADDRESS=0.0.0.0
+    # in the env file to publish it on every interface again (for example to
+    # reach it from another machine), and firewall it if you do.
     ports:
-      - "${BACKEND_PORT:-30601}:5000"
+      - "${INTERNAL_BIND_ADDRESS:-127.0.0.1}:${BACKEND_PORT:-30601}:5000"
     volumes:
       # IMPORTANT: Update TRUENAS_DATA_PATH to match your TrueNAS dataset
       - ${TRUENAS_DATA_PATH:-/mnt/main_pool/travel-life}/uploads:/app/uploads
@@ -186,8 +201,13 @@ services:
       IMPORT_US_POSTCODES: "false"
       IMPORT_GB_POSTCODES: "false"
       THREADS: "4"
+    # Published on the host's loopback interface only. Other containers reach
+    # this service over the compose network and never use the host port, so
+    # nothing in the stack needs it on the LAN. Set INTERNAL_BIND_ADDRESS=0.0.0.0
+    # in the env file to publish it on every interface again (for example to
+    # reach it from another machine), and firewall it if you do.
     ports:
-      - "${NOMINATIM_PORT:-30602}:8080"
+      - "${INTERNAL_BIND_ADDRESS:-127.0.0.1}:${NOMINATIM_PORT:-30602}:8080"
     volumes:
       # IMPORTANT: Update TRUENAS_DATA_PATH to match your TrueNAS dataset
       - ${TRUENAS_DATA_PATH:-/mnt/main_pool/travel-life}/nominatim:/var/lib/postgresql/14/main

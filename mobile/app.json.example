@@ -18,6 +18,7 @@
     },
     "android": {
       "package": "dev.travellife.companion",
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#D97706",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -105,7 +105,9 @@ const ALLOWED_VIDEO_MIMES = new Set([
  * This is a security measure to prevent malicious files with spoofed extensions
  * Uses the file-type library which is ESM-only, so we use dynamic import
  */
-async function validateFileContent(filePath: string): Promise<{ valid: boolean; mime: string | null; isVideo: boolean }> {
+async function validateFileContent(
+  filePath: string
+): Promise<{ valid: boolean; mime: string | null; ext: string | null; isVideo: boolean }> {
   try {
     // Dynamic import for ESM-only file-type package
     const { fileTypeFromFile } = await import('file-type');
@@ -114,22 +116,26 @@ async function validateFileContent(filePath: string): Promise<{ valid: boolean; 
     if (!fileType) {
       // Could not detect file type - might be a text file or unsupported format
       console.warn('[PhotoService] Could not detect file type from magic bytes');
-      return { valid: false, mime: null, isVideo: false };
+      return { valid: false, mime: null, ext: null, isVideo: false };
     }
 
     const mime = fileType.mime;
     const isImage = ALLOWED_IMAGE_MIMES.has(mime);
     const isVideo = ALLOWED_VIDEO_MIMES.has(mime);
 
-    if (!isImage && !isVideo) {
+    // The detected extension becomes part of the stored filename, so it must be
+    // a plain alphanumeric token whatever the detection library returns.
+    const ext = /^[a-z0-9]{1,8}$/i.test(fileType.ext) ? fileType.ext.toLowerCase() : null;
+
+    if ((!isImage && !isVideo) || ext === null) {
       console.warn(`[PhotoService] File type not allowed: ${mime}`);
-      return { valid: false, mime, isVideo: false };
+      return { valid: false, mime, ext: null, isVideo: false };
     }
 
-    return { valid: true, mime, isVideo };
+    return { valid: true, mime, ext, isVideo };
   } catch (error) {
     console.error('[PhotoService] Error validating file content:', error instanceof Error ? error.message : error);
-    return { valid: false, mime: null, isVideo: false };
+    return { valid: false, mime: null, ext: null, isVideo: false };
   }
 }
 
@@ -287,8 +293,12 @@ class PhotoService {
       const isVideo = validation.isVideo;
       const mediaType = isVideo ? MediaType.VIDEO : MediaType.IMAGE;
 
-      // Generate unique filename
-      const ext = path.extname(file.originalname);
+      // Generate unique filename. The extension comes from the detected content
+      // type, never from the client's filename: express.static picks the
+      // Content-Type from the extension, so a real image uploaded as `x.html`
+      // (or `x.js`) would otherwise be served from the app's own origin as an
+      // HTML page or script — stored XSS for anyone who can open the file.
+      const ext = `.${validation.ext}`;
       const filename = `${crypto.randomUUID()}${ext}`;
 
       // Use appropriate directory based on media type

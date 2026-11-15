@@ -121,18 +121,35 @@ export const optionalLongitude = () => z.number().min(-180).max(180).optional().
 // ============================================================================
 
 /**
+ * A web link: a well-formed URL whose scheme is http or https.
+ *
+ * `z.string().url()` on its own accepts any scheme the URL parser does,
+ * including `javascript:`, `data:` and `file:`. These values are rendered as
+ * link targets in the web app, the mobile app and shared trips, so anything a
+ * user (or a collaborator on a shared trip) stores here must be a plain web
+ * link. Use this for every URL field that ends up in an `href`.
+ */
+export const httpUrl = () =>
+  z
+    .string()
+    .url()
+    .refine((value) => /^https?:\/\//i.test(value), {
+      message: 'URL must start with http:// or https://',
+    });
+
+/**
  * Optional URL with max length, nullable.
  * Common for booking URLs that can be cleared.
  */
 export const optionalUrl = (maxLength = 500) =>
-  z.string().url().max(maxLength).optional().nullable();
+  httpUrl().pipe(z.string().max(maxLength)).optional().nullable();
 
 /**
  * Optional URL that also accepts empty string (for form clearing).
  * Use when the frontend sends empty string instead of null.
  */
 export const optionalUrlOrEmpty = (maxLength = 500) =>
-  z.string().url().max(maxLength).optional().nullable().or(z.literal(''));
+  httpUrl().pipe(z.string().max(maxLength)).optional().nullable().or(z.literal(''));
 
 // ============================================================================
 // Currency Helpers

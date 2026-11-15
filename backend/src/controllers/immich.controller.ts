@@ -3,6 +3,8 @@ import immichService from '../services/immich.service';
 import { AppError } from '../errors/errors';
 import { asyncHandler } from '../http/asyncHandler';
 import { requireUserId } from '../auth/controllerHelpers';
+import { validateUrlNotInternal, isLocalNetworkHostname } from '../security/urlValidation';
+import { config } from '../config';
 
 // Type for getAssets query options
 interface GetAssetsOptions {
@@ -22,6 +24,19 @@ interface PaginationOptions {
 // Delegates to the service layer so the controller does not query Prisma directly.
 async function getUserImmichSettings(userId: number) {
   return immichService.getUserSettings(userId);
+}
+
+/**
+ * Immich identifiers are UUIDs. The value is placed into the path of a request
+ * to the Immich server, and Express decodes %2F in route params, so without
+ * this an id such as `..%2F..%2Fusers` would address a different Immich
+ * endpoint with the stored API key.
+ */
+function requireImmichId(value: string | undefined, label: string): string {
+  if (!value || !/^[A-Za-z0-9_-]{1,100}$/.test(value)) {
+    throw new AppError(`Invalid ${label}`, 400);
+  }
+  return value;
 }
 
 // Helper to add thumbnail and file URLs to assets
@@ -46,13 +61,28 @@ export const immichController = {
 
     const { apiUrl, apiKey } = req.body;
 
-    if (!apiUrl || !apiKey) {
+    if (typeof apiUrl !== 'string' || typeof apiKey !== 'string' || !apiUrl || !apiKey) {
       throw new AppError('API URL and API Key are required', 400);
     }
 
-    // Note: No SSRF validation here. This is a self-hosted app where Immich
-    // typically runs on the same LAN (private IPs). Only authenticated users
-    // can call this endpoint, and they control their own server.
+    // The same rules as saving the URL (user.controller updateImmichSettings).
+    // Without them this endpoint is a way around that check: any signed-in user
+    // could point it at an arbitrary internal host and read "connected or not"
+    // back, i.e. probe the server's network. Private addresses stay reachable
+    // only when the operator opted in with ALLOW_PRIVATE_INTEGRATION_URLS.
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(apiUrl);
+    } catch {
+      throw new AppError('Invalid URL format', 400);
+    }
+    const isLocalHost = isLocalNetworkHostname(parsedUrl.hostname);
+    if (parsedUrl.protocol !== 'https:' && !isLocalHost) {
+      throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
+    }
+    if (!(config.security.allowPrivateIntegrationUrls && isLocalHost)) {
+      await validateUrlNotInternal(apiUrl);
+    }
 
     const isConnected = await immichService.testConnection(apiUrl, apiKey);
 
@@ -108,7 +138,7 @@ export const immichController = {
    */
   getAssetById: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
-    const { assetId } = req.params;
+    const assetId = requireImmichId(req.params.assetId, 'asset ID');
     const { apiUrl, apiKey } = await getUserImmichSettings(userId);
 
     const asset = await immichService.getAssetById(apiUrl, apiKey, assetId);
@@ -154,7 +184,7 @@ export const immichController = {
    */
   getAlbumById: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
-    const { albumId } = req.params;
+    const albumId = requireImmichId(req.params.albumId, 'album ID');
     const { apiUrl, apiKey } = await getUserImmichSettings(userId);
 
     const album = await immichService.getAlbumById(apiUrl, apiKey, albumId);
@@ -207,7 +237,7 @@ export const immichController = {
    */
   getAssetUrls: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
-    const { assetId } = req.params;
+    const assetId = requireImmichId(req.params.assetId, 'asset ID');
     const { apiUrl, apiKey } = await getUserImmichSettings(userId);
 
     const thumbnailUrl = immichService.getAssetThumbnailUrl(apiUrl, assetId, apiKey);
@@ -228,7 +258,7 @@ export const immichController = {
    */
   getAssetThumbnail: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
-    const { assetId } = req.params;
+    const assetId = requireImmichId(req.params.assetId, 'asset ID');
 
     if (process.env.NODE_ENV === 'development') {
       console.log(`[Thumbnail Proxy] Request for asset: ${assetId} from user: ${userId}`);
@@ -247,7 +277,7 @@ export const immichController = {
     }
 
     res.setHeader('Content-Type', thumbnail.contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.setHeader('Cache-Control', 'private, max-age=31536000'); // Per-user content: browser cache only, never a shared proxy
 
     thumbnail.stream.pipe(res);
   }),
@@ -257,13 +287,13 @@ export const immichController = {
    */
   getAssetOriginal: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
-    const { assetId } = req.params;
+    const assetId = requireImmichId(req.params.assetId, 'asset ID');
     const { apiUrl, apiKey } = await getUserImmichSettings(userId);
 
     const file = await immichService.getAssetOriginalStream(apiUrl, apiKey, assetId);
 
     res.setHeader('Content-Type', file.contentType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    res.setHeader('Cache-Control', 'private, max-age=31536000'); // Per-user content: browser cache only, never a shared proxy
 
     file.stream.pipe(res);
   }),

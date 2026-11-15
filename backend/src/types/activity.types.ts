@@ -10,6 +10,7 @@ import {
   optionalCurrencyCode,
   optionalUrlOrEmpty,
   optionalNotes,
+  httpUrl,
 } from '../validation/zodHelpers';
 
 // Note: Location association is handled via EntityLink system, not direct FK
@@ -25,7 +26,7 @@ export const createActivitySchema = z.object({
   timezone: optionalStringWithMax(100),
   cost: optionalPositiveNumber(),
   currency: z.string().length(3).optional(),
-  bookingUrl: z.string().url().max(500).optional().or(z.literal('')),
+  bookingUrl: httpUrl().pipe(z.string().max(500)).optional().or(z.literal('')),
   bookingReference: optionalStringWithMax(255),
   notes: z.string().optional(),
   dietaryTags: z.array(z.string()).nullable().optional(),

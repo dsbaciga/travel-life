@@ -12,7 +12,7 @@ export const ChecklistItemSchema = z.object({
   isChecked: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   sortOrder: z.number().optional(),
-  metadata: nullableOptional(z.record(z.unknown())),
+  metadata: nullableOptional(z.record(z.string(), z.unknown())),
   checkedAt: nullableOptional(z.string()),
 });
 
@@ -39,7 +39,7 @@ export const UpdateChecklistItemSchema = z.object({
   description: nullableOptional(z.string()),
   isChecked: nullableOptional(z.boolean()),
   sortOrder: nullableOptional(z.number()),
-  metadata: nullableOptional(z.record(z.unknown())),
+  metadata: nullableOptional(z.record(z.string(), z.unknown())),
 });
 
 export const BulkUpdateChecklistItemsSchema = z.object({

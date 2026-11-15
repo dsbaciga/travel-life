@@ -235,7 +235,8 @@ database container is not published to the host.
 | Variable | Default | Description |
 | ---------- | --------- | ------------- |
 | `FRONTEND_PORT` | `80` | Host port for the frontend — the reverse proxy target |
-| `BACKEND_PORT` | `5000` | Host port for the API |
+| `BACKEND_PORT` | `5000` | Host port for the API. Published on `INTERNAL_BIND_ADDRESS` only |
+| `INTERNAL_BIND_ADDRESS` | `127.0.0.1` | Host interface the API, database and Nominatim ports are published on. The frontend proxies `/api` and `/uploads` over the compose network, so these ports are not needed from outside the host. Set to `0.0.0.0` only if another machine must reach them directly (for example a reverse proxy on a different host that talks to the API), and firewall them |
 | `BASE_URL` | `http://localhost:5000` | Public backend URL. Used to build OIDC redirect URLs |
 | `FRONTEND_URL` | `http://localhost:3000` | Public app URL. Used for invitation links and post-SSO redirects |
 | `CORS_ORIGIN` | localhost origins | Comma-separated allowed browser origins. Only needed when the frontend and API are on different origins |
@@ -290,6 +291,8 @@ always used. Register `<BASE_URL>/api/auth/oidc/callback` with your provider.
 | `OIDC_AUTO_PROVISION` | enabled | `false` requires the account to already exist |
 | `OIDC_TRUST_EMAIL` | `false` | `true` links by email when the IdP omits `email_verified`. Only enable if you control the IdP |
 | `DISABLE_PASSWORD_LOGIN` | `false` | `true` enables SSO-only mode. Ignored unless OIDC is enabled |
+| `TRUST_PROXY` | `1` | Number of reverse proxies between the internet and the backend, used to find the real client address for rate limiting. `1` is the bundled nginx alone; use `2` when a TLS proxy or tunnel sits in front of it, otherwise every visitor shares one rate-limit bucket. Do not set it higher than the real number of proxies |
+| `DISABLE_REGISTRATION` | `false` | `true` closes self-service sign-up, so new accounts come only from invitations (and from SSO, if `OIDC_AUTO_PROVISION` allows it). Recommended for any server reachable from the internet |
 
 ### Push Notifications
 
@@ -626,6 +629,7 @@ docker-compose -f docker-compose.prod.yml up -d --no-build
 - [ ] Terminate TLS at the reverse proxy
 - [ ] `CORS_ORIGIN` set to your domain only if the frontend and API are on different origins — leave unset when using the bundled nginx proxy
 - [ ] Nominatim (`NOMINATIM_PORT`) not exposed publicly
+- [ ] `INTERNAL_BIND_ADDRESS` left at `127.0.0.1`, so the API, database and Nominatim ports are not reachable from the network. Reaching the API port directly bypasses the frontend proxy, and the API then trusts a client-supplied `X-Forwarded-For` for rate limiting
 
 ### Application Security
 
@@ -634,6 +638,8 @@ docker-compose -f docker-compose.prod.yml up -d --no-build
 - [ ] Review `MAX_FILE_SIZE` against your nginx body limit (100M)
 - [ ] Rate limits reviewed (`AI_RATE_LIMIT_*`, `BACKUP_RATE_LIMIT_*`)
 - [ ] If SSO-only, confirm `DISABLE_PASSWORD_LOGIN=true` **and** OIDC is working before locking yourself out
+- [ ] `TRUST_PROXY` matches the number of proxies in front of the backend (`2` if a TLS proxy or tunnel sits in front of the bundled nginx)
+- [ ] Once your own account exists, set `DISABLE_REGISTRATION=true` so strangers cannot sign up
 
 ### Operational Security
 

@@ -17,6 +17,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Uploaded photos and videos are stored under the file type the server detected**, not the extension of the name they were uploaded with, and anything in the uploads folder that is not an image, video or PDF is now sent as a download instead of being opened in the browser.
+- **A trip marked Public no longer lets other signed-in users open its photo files directly.** Photos of a shared trip are still available through its share link.
+- **Link fields only accept web links.** Booking links on activities, lodging and custom items, and saved links, must start with `http://` or `https://`.
+- **Immich "Test connection" follows the same address rules as saving the Immich settings**, so it can no longer be pointed at addresses on the server's own network unless `ALLOW_PRIVATE_INTEGRATION_URLS` is on. Immich images proxied through the server are no longer marked as cacheable by shared proxies.
+- **Browser push subscriptions must use a public `https` push service address.**
+- **New `DISABLE_REGISTRATION` setting.** Set it to `true` to close self-service sign-up: the Register page and link disappear and the server refuses new sign-ups. Invitations still create accounts, and single sign-on follows `OIDC_AUTO_PROVISION` as before. Recommended for any server reachable from the internet.
+- **The API, database and Nominatim ports are published on the host's loopback address only** in the production and TrueNAS compose files. The frontend reaches the API over the container network, so nothing changes for a standard setup. If another machine connects to one of those ports directly (for example a reverse proxy on a different host pointed at the API port), set `INTERNAL_BIND_ADDRESS=0.0.0.0` before updating.
+- **The web app is served with a Content-Security-Policy** that only allows scripts from the app itself.
+- **Android app: device backup is turned off**, so the offline copy of a trip and the documents in the vault are no longer included in Google backups. Applies to release builds from this version on; a local `mobile/app.json` needs `"allowBackup": false` added under `android`.
+- **Signing in with an email that has no account now takes as long as a wrong password**, so response time no longer reveals which emails are registered.
+- **New `TRUST_PROXY` setting** (default `1`) for the number of reverse proxies in front of the backend. Set it to `2` when a TLS proxy or tunnel sits in front of the bundled nginx; otherwise every visitor is rate-limited as one address.
+- **Mobile app: plain `http` servers are refused unless they are on your local network** (private addresses, `.local` names, `localhost`). This applies to typing a server address and to scanning a pairing code.
+- **Immich asset and album ids are checked before they are sent to the Immich server.**
+- The release workflow's third-party release action is pinned to an exact commit.
+- Updated dependencies with known vulnerabilities to patched versions, including Zod 4 everywhere and bcrypt 6, node-cron 4 and Nodemailer 10 on the backend.
+
+### Fixed
+
+- **Share links, the calendar subscription feed and accepting an invitation work again without being signed in.** They were answering "No token provided" because a sign-in check meant for collaboration routes was also applied to them.
+- **The list of trips shared with you loads again.** The request was being read as a trip id.
+
 ## [7.2.0] - 2026-11-15
 
 ### Added

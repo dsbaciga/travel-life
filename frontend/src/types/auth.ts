@@ -40,4 +40,6 @@ export type OidcConfig = {
   enabled: boolean;
   buttonText: string;
   passwordLoginDisabled: boolean;
+  /** Self-service sign-up is closed (DISABLE_REGISTRATION); absent on older servers. */
+  registrationDisabled?: boolean;
 }

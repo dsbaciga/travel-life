@@ -487,6 +487,23 @@ describe('PhotoService', () => {
         photoService.uploadPhoto(mockUserId, spoofedFile, { tripId: mockTripId })
       ).rejects.toThrow('Invalid file type');
     });
+
+    it('names the stored file after the detected type, never the client filename', async () => {
+      // A genuine image uploaded as "x.html": the content check passes, so the
+      // stored name must not carry the extension the client chose, or the file
+      // would be served from the app origin as an HTML document.
+      mockFileTypeFromFile.mockResolvedValue({ mime: 'image/jpeg', ext: 'jpg' });
+      mockPrisma.photo.create.mockResolvedValue({ ...mockPhoto, mediaType: 'image' });
+
+      await photoService.uploadPhoto(
+        mockUserId,
+        { ...mockMulterFile, mimetype: 'image/jpeg', originalname: 'holiday.html' },
+        { tripId: mockTripId }
+      );
+
+      const stored = mockPrisma.photo.create.mock.calls.at(-1)?.[0].data.localPath;
+      expect(stored).toMatch(/^\/uploads\/photos\/[0-9a-f-]{36}\.jpg$/);
+    });
   });
 
   // ============================================

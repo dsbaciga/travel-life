@@ -46,6 +46,48 @@ export function normalizeServerUrl(input: string): string {
   return /\/api$/i.test(url) ? url : `${url}/api`;
 }
 
+/**
+ * True for a host on the user's own network: loopback, the private IPv4 ranges
+ * (including the 100.64.0.0/10 range VPNs such as Tailscale use), `.local`
+ * names, and bare names with no dot (`truenas`, `nas`).
+ */
+export function isLocalNetworkHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+  if (host === 'localhost' || host === '::1' || host.endsWith('.local')) return true;
+  const octets = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (octets) {
+    const [a, b] = [Number(octets[1]), Number(octets[2])];
+    return (
+      a === 127 ||
+      a === 10 ||
+      (a === 192 && b === 168) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 100 && b >= 64 && b <= 127)
+    );
+  }
+  // A single-label name can only resolve on the local network.
+  return !host.includes('.') && !host.includes(':');
+}
+
+/**
+ * Refuse to sign in to a server over plain http unless it is on the local
+ * network. The password, the pairing token and every later request's bearer
+ * token would otherwise cross the internet readable by anyone on the path.
+ *
+ * @param serverUrl - A URL already passed through `normalizeServerUrl`
+ * @throws {Error} with a message fit to show the user
+ */
+export function assertSecureServerUrl(serverUrl: string): void {
+  const match = /^(https?):\/\/(\[[^\]]+\]|[^/:?#]+)/i.exec(serverUrl);
+  if (!match) throw new Error('That server address is not valid.');
+  if (match[1].toLowerCase() === 'https') return;
+  if (!isLocalNetworkHost(match[2])) {
+    throw new Error(
+      'This server address uses http, which would send your sign-in details unencrypted. Use an https address.'
+    );
+  }
+}
+
 /** Origin for `/uploads/...` paths, which live beside `/api`, not under it. */
 export function assetBaseUrl(serverUrl: string): string {
   return normalizeServerUrl(serverUrl).replace(/\/api$/i, '');

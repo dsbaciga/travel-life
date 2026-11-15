@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 
 import { AppText, Banner, Button, Card, Field, Screen } from '@/components/ui';
-import { normalizeServerUrl } from '@/lib/apiClient';
+import { assertSecureServerUrl, normalizeServerUrl } from '@/lib/apiClient';
 import { checkServer, useSession } from '@/lib/session';
 import { syncNow } from '@/lib/sync';
 
@@ -50,6 +50,8 @@ export default function OnboardingScreen() {
     run(async () => {
       if (!serverUrl.trim()) throw new Error('Enter your server address');
       const url = normalizeServerUrl(serverUrl);
+      // Before the reachability check, so the reason shown is the real one.
+      assertSecureServerUrl(url);
       try {
         const info = await checkServer(url);
         setServer({ url, ...info });

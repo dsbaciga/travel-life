@@ -3,6 +3,8 @@ import axios from 'axios';
 import prisma from '../config/database';
 import config from '../config';
 import logger from '../config/logger';
+import { AppError } from '../errors/errors';
+import { validateUrlNotInternal } from '../security/urlValidation';
 import { resolveTimezone } from './_shared/timezoneResolution';
 import type { RegisterMobilePushTokenInput } from '../types/mobile.types';
 
@@ -245,6 +247,17 @@ class PushNotificationService {
     let sent = mobileSent;
     for (const sub of subscriptions) {
       try {
+        // Checked on every send, not only when the subscription was saved: the
+        // host may resolve somewhere else by now, and rows stored before the
+        // check existed were never validated at all. A rejected endpoint is
+        // skipped, not pruned, so a passing DNS failure cannot delete a
+        // working subscription. (As in linkMetadata.service, the gap between
+        // this lookup and the connection's own lookup remains.)
+        if (!/^https:\/\//i.test(sub.endpoint)) {
+          throw new AppError('Push endpoint must be an https URL', 400);
+        }
+        await validateUrlNotInternal(sub.endpoint);
+
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,

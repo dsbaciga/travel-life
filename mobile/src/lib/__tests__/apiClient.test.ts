@@ -17,7 +17,14 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../sync/engine';
-import { assetBaseUrl, createApiClient, normalizeServerUrl, type Session } from '../apiClient';
+import {
+  assertSecureServerUrl,
+  assetBaseUrl,
+  createApiClient,
+  isLocalNetworkHost,
+  normalizeServerUrl,
+  type Session,
+} from '../apiClient';
 
 interface Call {
   url: string;
@@ -84,6 +91,34 @@ describe('apiClient', () => {
     expect(normalizeServerUrl(' https://travel.example.com/ ')).toBe('https://travel.example.com/api');
     expect(normalizeServerUrl('http://192.168.1.5:5000/api/')).toBe('http://192.168.1.5:5000/api');
     expect(assetBaseUrl('https://travel.example.com/api')).toBe('https://travel.example.com');
+  });
+
+  it('API-002b: plain http is only accepted for servers on the local network', () => {
+    for (const url of [
+      'https://travel.example.com/api',
+      'http://192.168.1.5:5000/api',
+      'http://10.0.2.2:5000/api',
+      'http://172.20.0.4/api',
+      'http://100.101.102.103:5000/api',
+      'http://localhost:5000/api',
+      'http://truenas:30600/api',
+      'http://nas.local/api',
+      'http://[::1]:5000/api',
+    ]) {
+      expect(() => assertSecureServerUrl(url), url).not.toThrow();
+    }
+    for (const url of [
+      'http://travel.example.com/api',
+      'http://8.8.8.8/api',
+      'http://172.32.0.1/api',
+      'http://100.128.0.1/api',
+      'http://192.168.1.5.example.com/api',
+      'ftp://192.168.1.5/api',
+    ]) {
+      expect(() => assertSecureServerUrl(url), url).toThrow();
+    }
+    expect(isLocalNetworkHost('192.168.0.10')).toBe(true);
+    expect(isLocalNetworkHost('example.com')).toBe(false);
   });
 
   it('API-003: a 401 refreshes once and retries with the new token', async () => {

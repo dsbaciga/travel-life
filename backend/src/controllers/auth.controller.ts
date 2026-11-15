@@ -50,6 +50,9 @@ export const authController = {
     if (passwordAuthDisabled()) {
       throw new AppError('Password registration is disabled; use single sign-on', 403);
     }
+    if (config.auth.registrationDisabled) {
+      throw new AppError('Registration is closed on this server. Ask an existing user for an invitation.', 403);
+    }
     const validatedData = registerSchema.parse(req.body);
     const result = await authService.register(validatedData);
 

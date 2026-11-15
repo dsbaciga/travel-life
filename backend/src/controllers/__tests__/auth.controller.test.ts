@@ -146,6 +146,24 @@ describe('AuthController', () => {
   // register
   // =========================================================================
   describe('register', () => {
+    it('refuses sign-up when DISABLE_REGISTRATION is on, before touching the service', async () => {
+      const { config } = require('../../config') as typeof import('../../config');
+      config.auth.registrationDisabled = true;
+      try {
+        const req = createMockRequest({ body: validRegistrationInput });
+        const res = createMockResponse();
+        const next = createMockNext();
+
+        await authController.register(req, res, next);
+
+        expect(next).toHaveBeenCalledWith(expect.objectContaining({ statusCode: 403 }));
+        expect(mockAuthService.register).not.toHaveBeenCalled();
+        expect(mockSetRefreshTokenCookie).not.toHaveBeenCalled();
+      } finally {
+        config.auth.registrationDisabled = false;
+      }
+    });
+
     it('should validate body, call authService.register, set cookies, and return 201', async () => {
       mockAuthService.register.mockResolvedValue(mockAuthResponse);
 

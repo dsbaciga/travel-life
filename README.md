@@ -419,6 +419,8 @@ always used. Register `<BASE_URL>/api/auth/oidc/callback` with your provider.
 | `OIDC_AUTO_PROVISION` | enabled | `false` requires the account to already exist |
 | `OIDC_TRUST_EMAIL` | `false` | `true` links by email when the IdP omits `email_verified` entirely. An explicit `email_verified: false` is still rejected — only enable if you control the IdP |
 | `DISABLE_PASSWORD_LOGIN` | `false` | `true` enables SSO-only mode. Ignored unless OIDC is enabled, so a stray value cannot lock you out |
+| `TRUST_PROXY` | `1` | Number of reverse proxies between the internet and the backend, used to find the real client address for rate limiting. `1` is the bundled nginx alone; use `2` when a TLS proxy or tunnel sits in front of it. Do not set it higher than the real number of proxies |
+| `DISABLE_REGISTRATION` | `false` | `true` closes self-service sign-up, so new accounts come only from invitations (and from SSO, if `OIDC_AUTO_PROVISION` allows it). Recommended for any server reachable from the internet |
 
 ### Push notifications
 
