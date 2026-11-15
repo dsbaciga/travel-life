@@ -10,6 +10,7 @@
  * - TL-006: findNextUp does not let a check-in mask the next real item
  * - TL-007: pickActiveTrip - during, then upcoming, then most recent
  * - TL-008: unscheduledItems
+ * - TL-009: A Planning trip with no dates ranks above Completed ones (list order and active trip)
  * - SM-001: suggestLinks proposes the nearby location with the default relationship
  * - SM-002: suggestLinks proposes the activity happening now; lodging only as a fallback
  * - SM-003: suggestLinks never links an entity to its own kind and ignores 0,0
@@ -33,7 +34,7 @@ import type {
   LodgingDto,
   TransportationDto,
 } from '@travel-life/shared';
-import { getEntity, listEntities, listLinks, putEntity } from '../../db/repository';
+import { getEntity, listEntities, listLinks, listTrips, putEntity, upsertTrip } from '../../db/repository';
 import { listOutbox } from '../../sync/outbox';
 import {
   buildCreateRequest,
@@ -319,6 +320,53 @@ describe('timeline', () => {
     expect(pickActiveTrip(trips, '2026-12-01')?.id).toBe(3);
     expect(pickActiveTrip([trips[0]], '2026-12-01')?.id).toBe(1);
     expect(pickActiveTrip([], '2026-12-01')).toBeNull();
+  });
+
+  it('TL-009: a Planning trip with no dates ranks above Completed ones', async () => {
+    const dto = (id: number, status: string, start: string | null, end: string | null) =>
+      ({
+        id,
+        title: `Trip ${id}`,
+        status,
+        startDate: start ? `${start}T00:00:00.000Z` : null,
+        endDate: end ? `${end}T00:00:00.000Z` : null,
+      }) as unknown as Parameters<typeof upsertTrip>[1];
+
+    const finished = dto(1, 'Completed', '2025-06-01', '2025-06-10');
+    const planning = dto(2, 'Planning', null, null);
+    const planned = dto(3, 'Planned', '2027-05-01', '2027-05-09');
+    const cancelled = dto(4, 'Cancelled', '2027-01-01', '2027-01-05');
+    const dream = dto(5, 'Dream', null, null);
+
+    // The list: open trips by start (undated last), then Completed, then Cancelled.
+    const db = await createTestDb();
+    try {
+      for (const t of [finished, cancelled, dream, planned, planning]) await upsertTrip(db, t);
+      expect((await listTrips(db)).map((t) => t.id)).toEqual([3, 2, 5, 1, 4]);
+
+      // The current trip leads the list whatever its dates, even an old one.
+      await upsertTrip(db, dto(7, 'In Progress', '2025-01-01', '2025-01-02'));
+      expect((await listTrips(db)).map((t) => t.id)).toEqual([7, 3, 2, 5, 1, 4]);
+
+      // A Planned trip whose dates cover today is current too, but only when "today" is given;
+      // a Completed trip over the same days never is.
+      await upsertTrip(db, dto(9, 'Planned', '2026-06-08', '2026-06-12'));
+      await upsertTrip(db, dto(10, 'Completed', '2026-06-08', '2026-06-12'));
+      // Both current trips lead (soonest start first), then the other open trips.
+      expect((await listTrips(db, '2026-06-10')).map((t) => t.id).slice(0, 3)).toEqual([7, 9, 3]);
+      expect((await listTrips(db, '2026-06-10')).map((t) => t.id).indexOf(10)).toBeGreaterThan(3);
+      expect((await listTrips(db, '2026-07-01')).map((t) => t.id)[0]).toBe(7);
+    } finally {
+      await db.close();
+    }
+
+    // The active trip: with nothing running or upcoming, undated Planning beats a finished trip.
+    expect(pickActiveTrip([finished, planning], '2026-06-01')?.id).toBe(2);
+    // A dated upcoming trip still wins over an undated one, and Completed never counts as "planning".
+    expect(pickActiveTrip([finished, planning, planned], '2026-06-01')?.id).toBe(3);
+    expect(pickActiveTrip([finished, dto(6, 'Completed', null, null)], '2026-06-01')?.id).toBe(1);
+    // A trip marked In Progress is current even with no dates, ahead of an upcoming one.
+    expect(pickActiveTrip([planned, dto(8, 'In Progress', null, null)], '2026-06-01')?.id).toBe(8);
   });
 
   it('TL-008: unscheduledItems', () => {

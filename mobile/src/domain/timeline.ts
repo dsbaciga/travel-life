@@ -331,7 +331,8 @@ export function findCurrentContext(
 
 /**
  * Which trip is "the" trip right now: one whose dates contain today, else the
- * soonest upcoming, else the most recently ended.
+ * soonest upcoming, else one still being planned with no dates, else the most
+ * recently ended.
  */
 export function pickActiveTrip<T extends Pick<TripDto, 'startDate' | 'endDate' | 'status'>>(
   trips: readonly T[],
@@ -344,10 +345,18 @@ export function pickActiveTrip<T extends Pick<TripDto, 'startDate' | 'endDate' |
     return start !== '' && end !== '' && start <= todayKey && todayKey <= end;
   });
   if (during) return during;
+  // A trip marked In Progress is current even when its dates were never filled in or have slipped.
+  const inProgress = live.find((trip) => /^in progress$/i.test(trip.status));
+  if (inProgress) return inProgress;
   const upcoming = live
     .filter((trip) => dateOnlyKey(trip.startDate) > todayKey)
     .sort((a, b) => dateOnlyKey(a.startDate).localeCompare(dateOnlyKey(b.startDate)));
   if (upcoming.length > 0) return upcoming[0];
+  // A trip still being planned with no dates yet is more current than one that is over.
+  const undatedOpen = live.filter(
+    (trip) => dateOnlyKey(trip.startDate) === '' && !/^completed$/i.test(trip.status)
+  );
+  if (undatedOpen.length > 0) return undatedOpen[0];
   const past = live
     .filter((trip) => dateOnlyKey(trip.endDate) !== '' && dateOnlyKey(trip.endDate) < todayKey)
     .sort((a, b) => dateOnlyKey(b.endDate).localeCompare(dateOnlyKey(a.endDate)));

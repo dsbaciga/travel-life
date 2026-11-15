@@ -207,6 +207,7 @@ const Navbar = memo(function Navbar() {
   ];
 
   return (
+    <>
     <nav className="bg-white/95 dark:bg-navy-900/95 backdrop-blur-md shadow-sm border-b border-primary-500/10 dark:border-navy-700 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16 sm:h-20">
@@ -398,6 +399,14 @@ const Navbar = memo(function Navbar() {
         </div>
       </div>
 
+    </nav>
+
+      {/*
+        The overlay and drawer are siblings of the <nav>, not children: the nav's
+        backdrop-blur makes it the containing block for position:fixed, so inside it
+        they were sized to the 64px navbar instead of the screen (a short drawer with
+        its link list squashed to nothing, and no dimming over the page).
+      */}
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
         <div
@@ -513,7 +522,7 @@ const Navbar = memo(function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 });
 

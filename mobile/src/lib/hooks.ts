@@ -52,9 +52,12 @@ export function useNow(intervalMs = 30000): Date {
 
 export function useTrips() {
   const version = useSync((state) => state.dataVersion);
+  const userTimezone = useUserTimezone();
+  // The trip happening today leads the list, judged on the user's clock.
+  const todayKey = dayKeyInTimezone(new Date(), userTimezone);
   return useQuery({
-    queryKey: ['trips', version],
-    queryFn: async (): Promise<TripDto[]> => listTrips(await getDb()),
+    queryKey: ['trips', version, todayKey],
+    queryFn: async (): Promise<TripDto[]> => listTrips(await getDb(), todayKey),
   });
 }
 
@@ -73,7 +76,7 @@ export function useActiveTrip() {
         if (trip) return trip;
       }
       const todayKey = dayKeyInTimezone(new Date(), userTimezone);
-      return pickActiveTrip(await listTrips(db), todayKey);
+      return pickActiveTrip(await listTrips(db, todayKey), todayKey);
     },
   });
 }
