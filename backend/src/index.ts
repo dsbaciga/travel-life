@@ -459,6 +459,11 @@ app.get('/api/version', (_req, res) => {
 // API route handlers
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+// Before /api/trips: that router's GET /:id would otherwise claim
+// /api/trips/shared. Safe at the bare /api prefix because every route in it
+// authenticates itself; it has no router-level middleware to catch requests
+// meant for the routers below.
+app.use('/api', collaborationRoutes);
 // Before the generic /api/trips router and the per-resource trip routers, so
 // its exact paths (e.g. /expenses/parse-receipt) are matched first.
 app.use('/api/trips/:tripId', mobileRoutes);
@@ -490,7 +495,6 @@ app.use('/api/trips/:tripId', budgetSummaryRouter);
 app.use('/api/trips/:tripId/emergency-info', emergencyInfoRoutes);
 app.use('/api/saved-links', savedLinkRoutes);
 app.use('/api/trips/:tripId/saved-links', tripSavedLinksRouter);
-app.use('/api', collaborationRoutes);
 app.use('/api', flightTrackingRoutes);
 app.use('/api', packingSuggestionRoutes);
 app.use('/api/travel-documents', travelDocumentRoutes);
