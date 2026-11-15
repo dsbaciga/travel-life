@@ -13,6 +13,7 @@
  * - API-009: Anonymous requests send no token and never trigger a refresh
  * - API-010: Uploads are multipart with form fields and no JSON content type
  * - API-011: syncApi maps ApiRequest and snapshot calls; query values are encoded
+ * - API-012: A request can ask for a longer timeout than the client's default
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../sync/engine';
@@ -202,6 +203,41 @@ describe('apiClient', () => {
     expect(form.has('latitude')).toBe(false);
     expect(form.has('photo')).toBe(true);
     expect(calls[0].headers['Content-Type']).toBeUndefined();
+  });
+
+  it('API-012: a request can ask for a longer timeout than the client default', async () => {
+    vi.useFakeTimers();
+    try {
+      // A server that takes 500 ms to answer, and a fetch that honours the abort signal.
+      const slowFetch = ((_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          const timer = setTimeout(() => resolve(json(200, { status: 'success', data: { ok: true } })), 500);
+          init?.signal?.addEventListener('abort', () => {
+            clearTimeout(timer);
+            reject(new Error('aborted'));
+          });
+        })) as typeof fetch;
+      const slowClient = createApiClient({
+        fetch: slowFetch,
+        getSession: () => session,
+        saveTokens,
+        onSessionExpired,
+        timeoutMs: 100,
+      });
+
+      // The default (100 ms) gives up before the answer arrives...
+      const short = slowClient.request('/slow');
+      const shortResult = short.catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(150);
+      expect(await shortResult).toMatchObject({ status: null });
+
+      // ...but this request asked for longer and gets it.
+      const long = slowClient.request<{ ok: boolean }>('/slow', { timeoutMs: 2000 });
+      await vi.advanceTimersByTimeAsync(600);
+      await expect(long).resolves.toEqual({ ok: true });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('API-011: syncApi maps requests and snapshot calls; query values are encoded', async () => {

@@ -132,6 +132,9 @@ const mockTx = {
   foodLogEntryPhoto: {
     create: jest.fn(),
   },
+  bookingDeadline: {
+    create: jest.fn(),
+  },
   tripExpense: {
     create: jest.fn(),
   },
@@ -358,6 +361,7 @@ describe('RestoreService', () => {
     mockTx.tripLanguage.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntryPhoto.create.mockResolvedValue({ id: 1 });
+    mockTx.bookingDeadline.create.mockResolvedValue({ id: 1 });
     mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
     mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
     mockTx.savedLink.create.mockResolvedValue({ id: 1 });
@@ -521,6 +525,41 @@ describe('RestoreService', () => {
       const second = mockTx.foodLogEntry.create.mock.calls[1][0] as { data: Record<string, unknown> };
       // an unresolvable link is dropped but the entry survives
       expect(second.data).toMatchObject({ activityId: null, locationId: null, orderAgain: false, notes: null });
+    });
+
+    it('RST-017: restores standalone deadlines and remaps booked ones, skipping orphans', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            lodging: [{ id: 1, type: 'hotel', name: 'Hotel Roma', checkInDate: '2024-07-01', checkOutDate: '2024-07-15' }],
+            bookingDeadlines: [
+              // Standalone: nothing to remap, and it carries its own title.
+              { entityType: null, entityId: null, title: 'Renew passport', kind: 'other', dueAt: '2026-12-01T12:00:00.000Z', note: null, dismissedAt: null },
+              // Booked: the old lodging id 1 becomes the freshly created one.
+              { entityType: 'lodging', entityId: 1, kind: 'cancellation', dueAt: '2026-12-02T12:00:00.000Z', note: 'Free until noon' },
+              // Booked, but the hotel is not in the backup: skipped as before.
+              { entityType: 'lodging', entityId: 999, kind: 'payment', dueAt: '2026-12-03T12:00:00.000Z' },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.bookingDeadline.create).toHaveBeenCalledTimes(2);
+      const standalone = mockTx.bookingDeadline.create.mock.calls[0][0] as { data: Record<string, unknown> };
+      expect(standalone.data).toMatchObject({
+        title: 'Renew passport',
+        lodgingId: null,
+        transportationId: null,
+        activityId: null,
+        kind: 'other',
+      });
+      const booked = mockTx.bookingDeadline.create.mock.calls[1][0] as { data: Record<string, unknown> };
+      expect(booked.data).toMatchObject({ lodgingId: 80, title: null, note: 'Free until noon' });
     });
 
     it('RST-016b: re-attaches food log photos through the photo id map', async () => {

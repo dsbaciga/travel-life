@@ -124,6 +124,20 @@ export const config = {
     url: process.env.NOMINATIM_URL || 'http://localhost:8080',
   },
 
+  // Nearby food search reads OpenStreetMap through an Overpass API. The public servers are
+  // shared, rate-limited and sometimes at capacity, so OVERPASS_URL may list several,
+  // comma-separated, tried in order (the one that last worked first). Point it at a
+  // self-hosted instance for heavy use.
+  overpass: {
+    urls: (
+      process.env.OVERPASS_URL ||
+      'https://overpass-api.de/api/interpreter,https://overpass.openstreetmap.fr/api/interpreter'
+    )
+      .split(',')
+      .map((url) => url.trim())
+      .filter(Boolean),
+  },
+
   openRouteService: {
     apiKey: process.env.OPENROUTESERVICE_API_KEY,
     url: process.env.OPENROUTESERVICE_URL,

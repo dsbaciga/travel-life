@@ -412,7 +412,8 @@ class PushNotificationService {
     for (const d of deadlines) {
       const sent = await this.sendToUser(d.trip.userId, {
         title: labels[d.kind] ?? labels.other,
-        body: `"${d.trip.title}": ${d.note ?? labels[d.kind] ?? 'deadline'} within 24 hours.`,
+        // A deadline's own title (a standalone one has nothing else to name it) leads.
+        body: `"${d.trip.title}": ${d.title ?? d.note ?? labels[d.kind] ?? 'deadline'} within 24 hours.`,
         url: `/trips/${d.trip.id}`,
         tag: `deadline-${d.id}`,
       });

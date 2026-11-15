@@ -13,8 +13,11 @@ export type DeadlineEntityType = 'lodging' | 'transportation' | 'activity';
 export type BookingDeadline = {
   id: number;
   tripId: number;
-  entityType: DeadlineEntityType;
-  entityId: number;
+  /** Null for a standalone deadline: tracked against the trip, not a booking. */
+  entityType: DeadlineEntityType | null;
+  entityId: number | null;
+  /** Names a standalone deadline (it has no booking to do so); optional otherwise. */
+  title: string | null;
   kind: DeadlineKind;
   /** ISO instant. */
   dueAt: string;
@@ -29,14 +32,18 @@ export type UpcomingBookingDeadline = BookingDeadline & {
 };
 
 export type CreateBookingDeadlineInput = {
-  entityType: DeadlineEntityType;
-  entityId: number;
+  /** Give entityType and entityId together, or neither for a standalone deadline. */
+  entityType?: DeadlineEntityType;
+  entityId?: number;
+  /** Required when there is no booking. */
+  title?: string | null;
   kind: DeadlineKind;
   dueAt: string;
   note?: string | null;
 };
 
 export type UpdateBookingDeadlineInput = {
+  title?: string | null;
   kind?: DeadlineKind;
   dueAt?: string;
   note?: string | null;

@@ -145,3 +145,24 @@ export const externalApiLimiter = rateLimit({
     message: `Too many refresh requests to external data providers. Please wait before trying again. Limit: ${externalApiMax} requests per hour.`,
   },
 });
+
+/**
+ * Nearby food search. Each search that misses the cache is a request to the public
+ * Overpass service, so this is per user: 30 searches a minute is plenty for someone
+ * flipping diet chips (those are served from the cache) and walking between searches.
+ *
+ * Must be applied AFTER `authenticate`. Override with NEARBY_FOOD_RATE_LIMIT_MAX.
+ */
+const nearbyFoodMax = Number(process.env.NEARBY_FOOD_RATE_LIMIT_MAX) || 30;
+
+export const nearbyFoodLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: nearbyFoodMax,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: userOrIpKey,
+  message: {
+    status: 'error',
+    message: 'Too many nearby searches. Please wait a minute and try again.',
+  },
+});
