@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.2] - 2026-11-14
+
 ### Changed
 
 - **The trip list is ordered by what is current, not just by date.** "Newest First" and "Oldest First" put the current trip first (one marked In Progress, or a Planning/Planned trip whose dates cover today), then Dream, Planning and Planned trips, then Completed, then Cancelled, with dated trips ahead of undated ones inside each group. A Planning trip with no dates no longer sits below finished trips. "By Status" now runs In Progress, Planned, Planning, Dream, Completed, Cancelled instead of alphabetically. The mobile Trips list and its choice of current trip follow the same rule.
