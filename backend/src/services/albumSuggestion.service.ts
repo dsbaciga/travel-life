@@ -1,4 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
+import { AppError } from '../errors/errors';
 import prisma from '../config/database';
 import type { Photo } from '@prisma/client';
 import { getUserTimezone, resolveTimezone } from './_shared/timezoneResolution';
@@ -321,7 +322,7 @@ export const albumSuggestionService = {
     });
 
     if (!trip) {
-      throw new Error('Trip not found');
+      throw new AppError('Trip not found', 404);
     }
 
     // Get all photos for this trip that are not already in an album
@@ -448,7 +449,7 @@ export const albumSuggestionService = {
     });
 
     if (!trip) {
-      throw new Error('Trip not found');
+      throw new AppError('Trip not found', 404);
     }
 
     // Verify all photos belong to this trip (authorization check)
@@ -460,7 +461,7 @@ export const albumSuggestionService = {
     });
 
     if (photosCount !== suggestion.photoIds.length) {
-      throw new Error('Some photos do not belong to this trip');
+      throw new AppError('Some photos do not belong to this trip', 400);
     }
 
     // Create the album

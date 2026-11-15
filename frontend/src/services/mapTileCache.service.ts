@@ -11,6 +11,7 @@
  */
 
 import type { BoundingBox, CoordinateLocation, TileCoord } from '../lib/tileUtils';
+import { openDatabaseWithStore } from '../lib/openIndexedDb';
 import {
   calculateBufferedBounds,
   countTilesByZoom,
@@ -109,20 +110,10 @@ const METADATA_STORE = 'mapCacheMetadata';
  * Open IndexedDB for metadata storage
  */
 async function openMetadataDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      // Create metadata store if it doesn't exist
-      if (!db.objectStoreNames.contains(METADATA_STORE)) {
-        db.createObjectStore(METADATA_STORE, { keyPath: 'tripId' });
-      }
-    };
+  // Never at a fixed version: the database is shared with lib/offlineDb.ts,
+  // which may already have moved it past version 1. See lib/openIndexedDb.ts.
+  return openDatabaseWithStore(DB_NAME, METADATA_STORE, (db) => {
+    db.createObjectStore(METADATA_STORE, { keyPath: 'tripId' });
   });
 }
 
