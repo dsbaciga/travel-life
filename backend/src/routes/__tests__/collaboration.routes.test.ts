@@ -30,9 +30,15 @@ import collaborationRoutes from '../collaboration.routes';
  * calendar feed, invitation acceptance) into 401s.
  */
 describe('collaboration routes mounted at /api', () => {
+  // Real HTTP round trips: give them room when the whole suite runs in parallel.
+  jest.setTimeout(30000);
+
   let server: Server | undefined;
 
   afterEach(async () => {
+    // fetch keeps its connections alive, and close() waits for them to end;
+    // drop them first so teardown cannot run into the test timeout.
+    server?.closeAllConnections();
     await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
     server = undefined;
   });
