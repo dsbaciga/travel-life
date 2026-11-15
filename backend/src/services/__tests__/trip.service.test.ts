@@ -849,6 +849,44 @@ describe('Trip Service', () => {
   // TRIP-013: Delete trip cascades all related data
   // ============================================================================
   describe('TRIP-013: Delete trip cascades all related data', () => {
+    beforeEach(() => {
+      // No uploaded photos unless a test says otherwise.
+      mockPrisma.photo.findMany.mockResolvedValue([]);
+    });
+
+    it('removes photo files of the deleted trip from disk, except ones another row still uses', async () => {
+      // The cascade deletes photo rows only. Found against a real server: the
+      // files of a deleted trip stayed in the uploads folder indefinitely.
+      const { tripCoverImageService } = require('../tripCoverImage.service');
+      const removeFiles = jest.spyOn(tripCoverImageService, 'deleteCoverFilesForPaths').mockResolvedValue(undefined);
+
+      mockPrisma.trip.findFirst.mockResolvedValue({ ...mockTrip, coverImagePath: '/uploads/covers/c.jpg', coverImageThumbnailPath: null });
+      mockPrisma.trip.delete.mockResolvedValue(mockTrip);
+      mockPrisma.photo.findMany
+        // the trip's own photos, read before the delete
+        .mockResolvedValueOnce([
+          { localPath: '/uploads/photos/a.jpg', thumbnailPath: '/uploads/thumbnails/thumb-a.jpg' },
+          { localPath: '/uploads/videos/b.mp4', thumbnailPath: null },
+          { localPath: '/uploads/photos/shared.jpg', thumbnailPath: null },
+        ])
+        // rows left afterwards that point at the same files
+        .mockResolvedValueOnce([{ localPath: '/uploads/photos/shared.jpg', thumbnailPath: null }]);
+
+      await tripService.deleteTrip(mockUserId, mockTripId);
+
+      expect(mockPrisma.photo.findMany.mock.invocationCallOrder[0]).toBeLessThan(
+        mockPrisma.trip.delete.mock.invocationCallOrder[0]
+      );
+      expect(removeFiles).toHaveBeenCalledWith([
+        '/uploads/photos/a.jpg',
+        '/uploads/thumbnails/thumb-a.jpg',
+        '/uploads/videos/b.mp4',
+        '/uploads/covers/c.jpg',
+        null,
+      ]);
+      removeFiles.mockRestore();
+    });
+
     it('should delete trip and return success message', async () => {
       mockPrisma.trip.findFirst.mockResolvedValue(mockTrip);
       mockPrisma.trip.delete.mockResolvedValue(mockTrip);

@@ -466,12 +466,41 @@ export class TripService {
       throw new AppError('Trip not found or you do not have permission to delete it', 404);
     }
 
+    // The database cascade removes the photo rows but knows nothing about the
+    // files they point at. Collect the paths first; otherwise every photo and
+    // video of a deleted trip stays on disk for good, with no row left to find
+    // or remove it by.
+    const photos = await prisma.photo.findMany({
+      where: { tripId, source: 'local' },
+      select: { localPath: true, thumbnailPath: true },
+    });
+    const photoFiles = photos
+      .flatMap((photo) => [photo.localPath, photo.thumbnailPath])
+      .filter((value): value is string => typeof value === 'string' && value.length > 0);
+
     await prisma.trip.delete({
       where: { id: tripId },
     });
 
-    // Uploaded cover images live outside the photos table, so nothing else cleans them up
+    // A file can be referenced by more than one row (a restored or copied
+    // trip), so only remove the ones nothing points at any more.
+    const stillReferenced = new Set<string>();
+    if (photoFiles.length > 0) {
+      const remaining = await prisma.photo.findMany({
+        where: { OR: [{ localPath: { in: photoFiles } }, { thumbnailPath: { in: photoFiles } }] },
+        select: { localPath: true, thumbnailPath: true },
+      });
+      for (const photo of remaining) {
+        if (photo.localPath) stillReferenced.add(photo.localPath);
+        if (photo.thumbnailPath) stillReferenced.add(photo.thumbnailPath);
+      }
+    }
+
+    // deleteCoverFilesForPaths confines every path to the uploads directory and
+    // ignores files that are already gone, which is what is needed here too.
+    // Cover images live outside the photos table, so they are listed explicitly.
     await tripCoverImageService.deleteCoverFilesForPaths([
+      ...photoFiles.filter((file) => !stillReferenced.has(file)),
       trip.coverImagePath,
       trip.coverImageThumbnailPath,
     ]);
