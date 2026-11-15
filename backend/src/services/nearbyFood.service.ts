@@ -4,6 +4,7 @@ import logger from '../config/logger';
 import { AppError } from '../errors/errors';
 import { isAxiosError } from '../types/prisma-helpers';
 import { haversineMeters } from './_shared/vendored/geo';
+import { searchYelp, isYelpEnabled, YELP_DIET_CATEGORIES } from './yelp.service';
 import {
   dietMatch,
   dietMatchRank,
@@ -125,7 +126,57 @@ function toPlace(
     address: addressOf(tags),
     diet: diet ? dietMatch(tags, diet) : null,
     dietary: dietaryProfile(tags),
+    sources: ['osm'],
   };
+}
+
+/** Lower-case, accent-free, letters and digits only, so "Café Loki" and "Cafe Loki!" compare equal. */
+export function normalizeName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+/** Same business: close together, and one name contains the other (or they are equal). */
+function isSamePlace(a: NearbyFoodPlace, b: NearbyFoodPlace): boolean {
+  if (haversineMeters(a, b) > 100) return false;
+  const first = normalizeName(a.name);
+  const second = normalizeName(b.name);
+  if (!first || !second) return false;
+  if (first === second) return true;
+  const [short, long] = first.length <= second.length ? [first, second] : [second, first];
+  return short.length >= 4 && long.includes(short);
+}
+
+/**
+ * Fold Yelp's places into the map's. A place both know keeps the map's details and gains Yelp's
+ * listing and, when Yelp vouches better than the map, its diet match. A map place that says it does
+ * not cater stays out: leaving a place out is the safe way to be wrong for an allergy.
+ */
+export function mergeYelp(
+  osmPlaces: NearbyFoodPlace[],
+  yelpPlaces: readonly NearbyFoodPlace[],
+  diet: DietaryRestriction,
+  radiusMeters: number
+): NearbyFoodPlace[] {
+  const merged = [...osmPlaces];
+  for (const yelp of yelpPlaces) {
+    const match = osmPlaces.find((place) => isSamePlace(place, yelp));
+    if (!match) {
+      if (yelp.distanceMeters <= radiusMeters) merged.push(yelp);
+      continue;
+    }
+    match.sources = [...new Set([...(match.sources ?? ['osm']), 'yelp' as const])];
+    match.yelp = yelp.yelp;
+    match.phone = match.phone ?? yelp.phone;
+    if (match.diet !== 'no' && yelp.diet && (match.diet === null || dietMatchRank(yelp.diet) < dietMatchRank(match.diet))) {
+      match.diet = yelp.diet;
+      match.dietary = { ...match.dietary, [diet]: yelp.diet };
+    }
+  }
+  return merged;
 }
 
 /** Statuses a public Overpass server answers with when it is at capacity: worth retrying shortly. */
@@ -133,13 +184,44 @@ const BUSY_STATUSES = new Set([429, 502, 503, 504]);
 
 class NearbyFoodService {
   private readonly cache = new Map<string, CacheEntry>();
+  private readonly yelpCache = new Map<string, { expires: number; places: Promise<NearbyFoodPlace[]> }>();
   /** The server that answered last, tried first next time so a dead one is not paid for on every search. */
   private preferred = 0;
 
   /** Drops the cache and forgets the preferred server; used by tests. */
   clearCache(): void {
     this.cache.clear();
+    this.yelpCache.clear();
     this.preferred = 0;
+  }
+
+  /** Yelp's places for a diet, cached like the map's. Never rejects: Yelp is a bonus, not a dependency. */
+  private yelpAround(
+    latitude: number,
+    longitude: number,
+    radiusMeters: number,
+    diet: DietaryRestriction
+  ): Promise<NearbyFoodPlace[]> {
+    if (!isYelpEnabled() || !YELP_DIET_CATEGORIES[diet]) return Promise.resolve([]);
+    const lat = Number(latitude.toFixed(CACHE_PRECISION));
+    const lng = Number(longitude.toFixed(CACHE_PRECISION));
+    const key = `${lat},${lng},${radiusMeters},${diet}`;
+    const now = Date.now();
+    const hit = this.yelpCache.get(key);
+    if (hit && hit.expires > now) return hit.places;
+
+    const places = searchYelp({ latitude: lat, longitude: lng }, radiusMeters + ROUNDING_MARGIN_M, diet);
+    this.yelpCache.set(key, { expires: now + CACHE_TTL_MS, places });
+    // searchYelp swallows its errors, so an empty answer may be a failure: do not remember it for long.
+    void places.then((found) => {
+      if (found.length === 0 && this.yelpCache.get(key)?.places === places) this.yelpCache.delete(key);
+    });
+    while (this.yelpCache.size > CACHE_MAX_ENTRIES) {
+      const oldest = this.yelpCache.keys().next().value;
+      if (oldest === undefined) break;
+      this.yelpCache.delete(oldest);
+    }
+    return places;
   }
 
   private async postQuery(url: string, query: string, timeoutMs: number): Promise<OverpassElement[]> {
@@ -226,7 +308,16 @@ class NearbyFoodService {
   async searchNearbyFood(search: NearbyFoodSearch): Promise<NearbyFoodResponse> {
     const { latitude, longitude, radiusMeters, diet, limit } = search;
     const origin = { latitude, longitude };
-    const elements = await this.elementsAround(latitude, longitude, radiusMeters);
+    const [mapResult, yelpPlaces] = await Promise.all([
+      this.elementsAround(latitude, longitude, radiusMeters).then(
+        (elements) => ({ elements }),
+        (error: unknown) => ({ error })
+      ),
+      diet ? this.yelpAround(latitude, longitude, radiusMeters, diet) : Promise.resolve([] as NearbyFoodPlace[]),
+    ]);
+    // The map being down is survivable when Yelp has answers; with neither, report the map's error.
+    if ('error' in mapResult && yelpPlaces.length === 0) throw mapResult.error;
+    const elements = 'elements' in mapResult ? mapResult.elements : [];
 
     const seen = new Set<string>();
     let places: NearbyFoodPlace[] = [];
@@ -235,6 +326,10 @@ class NearbyFoodService {
       if (!place || place.distanceMeters > radiusMeters || seen.has(place.id)) continue;
       seen.add(place.id);
       places.push(place);
+    }
+
+    if (diet && yelpPlaces.length > 0) {
+      places = mergeYelp(places, yelpPlaces, diet, radiusMeters);
     }
 
     // A place that says outright it does not cater for the diet is left out, but counted.
@@ -259,6 +354,7 @@ class NearbyFoodService {
       diet: diet ?? null,
       places: places.slice(0, limit),
       excludedCount,
+      ...(diet && yelpPlaces.length > 0 ? { yelpUsed: true } : {}),
     };
   }
 }

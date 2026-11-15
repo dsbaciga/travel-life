@@ -138,6 +138,13 @@ export const config = {
       .filter(Boolean),
   },
 
+  // Optional second source for the nearby food search: Yelp lists places under diet categories
+  // (gluten-free, vegan, ...) that OpenStreetMap rarely tags. Off unless a key is set.
+  yelp: {
+    apiKey: process.env.YELP_API_KEY || '',
+    url: process.env.YELP_API_URL || 'https://api.yelp.com/v3',
+  },
+
   // Searching for a place by name (the mobile food search's "where"). The bundled Nominatim
   // only holds the regions it was imported with, so this defaults to the public instance,
   // which covers the world. Set PLACE_SEARCH_URL to use your own.
