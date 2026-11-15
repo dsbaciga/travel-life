@@ -714,6 +714,28 @@ describe('TripValidatorService', () => {
       expect(issue?.suggestion).toBe('Balance due at the front desk');
     });
 
+    it('VAL-024: names a standalone deadline (no booking) by its own title', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(planned());
+      mockPrisma.bookingDeadline.findMany.mockResolvedValue([
+        {
+          id: 11,
+          kind: 'other',
+          title: 'Renew passport',
+          dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          note: null,
+          lodging: null,
+          transportation: null,
+          activity: null,
+        },
+      ]);
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+      const issue = result.issuesByCategory.SCHEDULE.find((i) => i.type === 'booking_deadline');
+
+      expect(issue?.message).toContain('"Renew passport"');
+      expect(issue?.message).not.toContain('"booking"');
+    });
+
     it('VAL-023: only queries deadlines that are undismissed and within 3 days', async () => {
       mockPrisma.trip.findFirst.mockResolvedValue(planned());
 

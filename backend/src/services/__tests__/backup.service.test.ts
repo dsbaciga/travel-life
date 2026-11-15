@@ -379,6 +379,49 @@ describe('BackupService', () => {
       ]);
     });
 
+    it('BKP-014: exports standalone deadlines with a null target and their title', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Deadline Trip',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        bookingDeadlines: [
+          {
+            lodgingId: null, transportationId: null, activityId: null, title: 'Renew passport',
+            kind: 'other', dueAt: new Date('2026-12-01T12:00:00Z'), note: null, dismissedAt: null,
+          },
+          {
+            lodgingId: 7, transportationId: null, activityId: null, title: null,
+            kind: 'cancellation', dueAt: new Date('2026-12-02T12:00:00Z'), note: 'Free until noon', dismissedAt: null,
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      expect(result.trips[0].bookingDeadlines).toEqual([
+        {
+          entityType: null, entityId: null, title: 'Renew passport', kind: 'other',
+          dueAt: '2026-12-01T12:00:00.000Z', note: null, dismissedAt: null,
+        },
+        {
+          entityType: 'lodging', entityId: 7, title: null, kind: 'cancellation',
+          dueAt: '2026-12-02T12:00:00.000Z', note: 'Free until noon', dismissedAt: null,
+        },
+      ]);
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 

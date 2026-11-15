@@ -332,10 +332,13 @@ const BackupLodgingSchema = z.object({
 });
 
 // Booking deadline schema within a trip. Targets reference the OLD ids of the
-// lodging/transportation/activity records in the same backup.
+// lodging/transportation/activity records in the same backup. A standalone
+// deadline (no booking) has no target and carries its own title; backups made
+// before standalone deadlines existed always have a target and no title.
 const BackupBookingDeadlineSchema = z.object({
-  entityType: z.enum(['lodging', 'transportation', 'activity']),
-  entityId: z.number(),
+  entityType: z.enum(['lodging', 'transportation', 'activity']).nullable().optional(),
+  entityId: z.number().nullable().optional(),
+  title: z.string().nullable().optional(),
   kind: z.string(),
   dueAt: z.string(), // ISO datetime
   note: z.string().nullable().optional(),
