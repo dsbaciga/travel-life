@@ -23,6 +23,8 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 
 - `IMMICH_API_URL` and `IMMICH_API_KEY` - For Immich integration
 - `OPENWEATHERMAP_API_KEY` - For weather data
+- `OVERPASS_URL` - Overpass API server(s) for the mobile app's nearby food search, comma-separated and tried in order (the one that last worked first). Defaults to the public `overpass-api.de` and `overpass.openstreetmap.fr`. The public servers are shared and are sometimes at capacity or slow (a search can then take 10+ seconds), so point this at a self-hosted Overpass instance for heavy use. Results are cached for 10 minutes per ~110 m cell
+- `NEARBY_FOOD_RATE_LIMIT_MAX` - Nearby food searches per user per minute (defaults to `30`)
 - `AVIATIONSTACK_API_KEY` - For flight tracking
 - `AI_ENABLED` - Enables AI features such as PDF import and AI suggestions (set to `false` to disable; defaults to enabled)
 - `LLM_API_KEY` - API key for the LLM provider (powers PDF import and AI suggestions)

@@ -403,6 +403,7 @@ export default function TodayScreen() {
           compact
           onPress={() => router.push({ pathname: '/(tabs)/vault', params: { section: 'phrases' } })}
         />
+        <Button label="🍽️ Food nearby" variant="secondary" compact onPress={() => router.push('/food')} />
       </Row>
       ) : null}
 
