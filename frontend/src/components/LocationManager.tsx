@@ -14,6 +14,7 @@ import LinkPanel from "./LinkPanel";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
 import { useFormFields } from "../hooks/useFormFields";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useFieldErrors } from "../hooks/useFieldErrors";
 import { useManagerCRUD } from "../hooks/useManagerCRUD";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
@@ -253,7 +254,16 @@ export default function LocationManager({
     manager.openEditForm(location.id);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performSubmit(e));
+  };
+
+  const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!values.name.trim()) {
@@ -726,8 +736,9 @@ export default function LocationManager({
                 type="submit"
                 form="location-form"
                 className="btn btn-primary"
+                disabled={isSubmitting}
               >
-                {manager.editingId ? "Update" : "Add"} Location
+                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Location`}
               </button>
             </div>
           </div>

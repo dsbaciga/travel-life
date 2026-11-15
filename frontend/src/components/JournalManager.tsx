@@ -9,6 +9,7 @@ import FormModal from "./FormModal";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
 import { useFormFields } from "../hooks/useFormFields";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useFieldErrors } from "../hooks/useFieldErrors";
 import { useFormReset } from "../hooks/useFormReset";
 import { useManagerCRUD } from "../hooks/useManagerCRUD";
@@ -222,7 +223,16 @@ export default function JournalManager({
 
   useCreateFromUrlParam(openCreateForm);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performSubmit(e));
+  };
+
+  const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formValues.title.trim() || !formValues.content.trim()) {
@@ -354,8 +364,9 @@ export default function JournalManager({
                 type="submit"
                 form="journal-form"
                 className="btn btn-primary"
+                disabled={isSubmitting}
               >
-                {manager.editingId ? "Update" : "Create"} Entry
+                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Create"} Entry`}
               </button>
             </div>
           </div>

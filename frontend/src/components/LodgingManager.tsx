@@ -9,6 +9,7 @@ import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import LocationQuickAdd from "./LocationQuickAdd";
 import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
 import { useLinkedCreate } from "../hooks/useLinkedCreate";
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import FormModal from "./FormModal";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
@@ -384,7 +385,16 @@ export default function LodgingManager({
     ? manager.items.find((item) => item.id === manager.editingId) ?? null
     : null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performSubmit(e));
+  };
+
+  const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!values.name.trim()) {
@@ -635,6 +645,7 @@ export default function LodgingManager({
           <FormModalFooter
             onCancel={handleCloseForm}
             formId="lodging-form"
+            isSubmitting={isSubmitting}
             submitLabel={`${manager.editingId ? "Update" : "Add"} Lodging`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => {

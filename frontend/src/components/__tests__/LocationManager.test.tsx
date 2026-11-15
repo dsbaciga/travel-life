@@ -8,10 +8,11 @@
  * - MGR-LOC-004: Update location
  * - MGR-LOC-005: Delete location
  * - MGR-LOC-006: Category assignment
+ * - MGR-LOC-007: A second submit during the pause before the modal closes adds nothing
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
 import LocationManager from "../LocationManager";
@@ -1023,6 +1024,53 @@ describe("LocationManager", () => {
           })
         );
       });
+    });
+  });
+
+  // ==========================================================================
+  // MGR-LOC-007: Double submit
+  // ==========================================================================
+  describe("MGR-LOC-007: A second submit during the pause before the modal closes", () => {
+    it("creates the location once and keeps the button disabled until the modal closes", async () => {
+      const user = userEvent.setup();
+      const created = createMockLocation({ name: "Once Only" });
+
+      // The create finishes at once, but the list reload that follows (which the modal
+      // waits for) is held open, which is the pause where a second click used to land.
+      let finishReload!: (locations: Location[]) => void;
+      const reload = new Promise<Location[]>((resolve) => {
+        finishReload = resolve;
+      });
+      vi.mocked(locationService.createLocation).mockResolvedValue(created);
+      vi.mocked(locationService.getLocationsByTrip)
+        .mockResolvedValueOnce([])
+        .mockReturnValueOnce(reload);
+
+      renderLocationManager();
+
+      await user.click(await screen.findByRole("button", { name: /add location/i }));
+      await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+      fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Once Only" } });
+
+      await user.click(screen.getByRole("button", { name: /^add location$/i }));
+      await waitFor(() => expect(locationService.createLocation).toHaveBeenCalledTimes(1));
+
+      // The modal is still open and the button says so.
+      const saving = await screen.findByRole("button", { name: /saving/i });
+      expect(saving).toBeDisabled();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // A second click, and a second submit by another route (Enter / Ctrl+S).
+      await user.click(saving);
+      fireEvent.submit(document.getElementById("location-form") as HTMLFormElement);
+      expect(locationService.createLocation).toHaveBeenCalledTimes(1);
+
+      // The reload finishes, the modal closes, and still only one location was created.
+      await act(async () => {
+        finishReload([created]);
+      });
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(locationService.createLocation).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -3,6 +3,7 @@ import companionService from '../services/companion.service';
 import type { Companion } from '../types/companion';
 import toast from 'react-hot-toast';
 import { useManagerCRUD } from '../hooks/useManagerCRUD';
+import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useFormReset } from '../hooks/useFormReset';
 import CompanionAvatar from './CompanionAvatar';
 import Modal from './Modal';
@@ -69,7 +70,16 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
     }
   };
 
-  const handleCreateCompanion = async (e: React.FormEvent) => {
+  // A second click while the first submit is still running (the request, then a list
+  // reload, happen before the modal closes) would add the same thing twice.
+  const { isSubmitting, run } = useSubmitLock();
+
+  const handleCreateCompanion = (e: React.FormEvent) => {
+    e.preventDefault();
+    return run(() => performCreateCompanion(e));
+  };
+
+  const performCreateCompanion = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const newCompanion = await companionService.createCompanion({
@@ -202,8 +212,9 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               type="submit"
               form="companion-form"
               className="btn btn-primary"
+              disabled={isSubmitting}
             >
-              {editingCompanionId ? 'Update' : 'Add'} Companion
+              {isSubmitting ? 'Saving...' : `${editingCompanionId ? 'Update' : 'Add'} Companion`}
             </button>
           </>
         }
