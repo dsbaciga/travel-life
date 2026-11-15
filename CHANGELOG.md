@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.3.0] - 2026-11-15
+
 ### Security
 
 - **Uploaded photos and videos are stored under the file type the server detected**, not the extension of the name they were uploaded with, and anything in the uploads folder that is not an image, video or PDF is now sent as a download instead of being opened in the browser.
