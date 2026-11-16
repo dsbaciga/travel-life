@@ -16,6 +16,7 @@ const AlbumDetailPage = React.lazy(() => import('./pages/AlbumDetailPage'));
 const GlobalAlbumsPage = React.lazy(() => import('./pages/GlobalAlbumsPage'));
 const CompanionsPage = React.lazy(() => import('./pages/CompanionsPage'));
 const PlacesVisitedPage = React.lazy(() => import('./pages/PlacesVisitedPage'));
+const TripComparisonPage = React.lazy(() => import('./pages/TripComparisonPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
 const LibraryPage = React.lazy(() => import('./pages/LibraryPage'));
 const TravelStatsPage = React.lazy(() => import('./pages/TravelStatsPage'));
@@ -254,6 +255,16 @@ function App() {
                   <ProtectedRoute>
                     <ErrorBoundary>
                       <CompanionsPage />
+                    </ErrorBoundary>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/trips/compare"
+                element={
+                  <ProtectedRoute>
+                    <ErrorBoundary>
+                      <TripComparisonPage />
                     </ErrorBoundary>
                   </ProtectedRoute>
                 }

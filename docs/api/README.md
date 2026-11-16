@@ -477,6 +477,19 @@ per area, so changing `diet` does not repeat the upstream request. Errors: `503`
 best match first. Answers are cached for an hour per query; `503` when the place search service is unavailable. It shares the
 food search's per-user rate limit.
 
+### Trip comparison (`/api/trip-comparison`)
+
+`GET /api/trip-comparison?ids=12,15,19` compares 2 to 8 distinct trips in one request (`400` otherwise). Every id must be
+viewable by the caller (owner or collaborator); if any is not, the whole request is rejected with `404` naming the ids, and
+none are silently dropped. The response is `{ currency, trips, locations }` with `trips` in the requested order: dates and
+inclusive `days`, location, activity, photo and transportation counts, `totalDistanceKm`, and a `cost` object.
+
+Costs reuse the budget summary and are expressed in the caller's base currency (the first trip's reporting currency when
+none is set). A trip whose summary is in another currency (for example one owned by someone with a different base
+currency) is restated with the latest rate using Decimal arithmetic and marked `restated`. Amounts the summary could not
+convert are listed in `cost.unconverted`; a total that cannot be restated has `spent: null` and `cost.excludedTotal`.
+`locations` omits places flagged `excludeFromMap` and places without coordinates.
+
 ### Search (`/api/search`)
 
 The search endpoint is rate limited to 30 requests per minute.
