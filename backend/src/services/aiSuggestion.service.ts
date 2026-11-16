@@ -486,7 +486,8 @@ function suggestNameLinks(entities: TripEntities, existing: ExistingLinkSet): Li
 
 async function suggestLlmLinks(
   entities: TripEntities,
-  existing: ExistingLinkSet
+  existing: ExistingLinkSet,
+  userId: number
 ): Promise<LinkSuggestion[]> {
   const suggestions: LinkSuggestion[] = [];
 
@@ -545,7 +546,7 @@ ${locationList}`;
 
     let raw: string;
     try {
-      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 128 });
+      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 128, userId });
     } catch (err) {
       logger.warn('LLM photo-location suggestion failed; skipping photo', { photoId: photo.id, err });
       continue;
@@ -627,7 +628,7 @@ ${entityList}`;
 
     let raw: string;
     try {
-      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 512 });
+      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 512, userId });
     } catch (err) {
       logger.warn('LLM journal-match suggestion failed; skipping entry', { journalEntryId: entry.id, err });
       continue;
@@ -808,12 +809,12 @@ export const aiSuggestionService = {
       allSuggestions.push(...suggestNameLinks(entities, existing));
     }
     if (strategies.includes('llm')) {
-      if (!(await llmService.isConfigured())) {
+      if (!(await llmService.isConfigured(userId))) {
         logger.warn('LLM strategy requested but LLM not configured — skipping');
         skipped++;
       } else {
         try {
-          allSuggestions.push(...(await suggestLlmLinks(entities, existing)));
+          allSuggestions.push(...(await suggestLlmLinks(entities, existing, userId)));
         } catch (err) {
           logger.error('LLM suggestion strategy failed', err);
         }
