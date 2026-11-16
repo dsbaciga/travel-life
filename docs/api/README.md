@@ -2,7 +2,7 @@
 
 Travel Life API documentation. The backend provides a RESTful API for all application functionality.
 
-> Last updated: 2026-07-25 — Travel Life v5.6.1
+> Last updated: 2026-11-15 — Travel Life v7.3.0. The route files in `backend/src/routes/` (with their Swagger comments) are the authority.
 
 ## Base URL
 
@@ -23,7 +23,18 @@ These endpoints are not authenticated and are useful for monitoring and diagnost
 
 ## Authentication
 
-Most endpoints require JWT authentication.
+Most endpoints require JWT authentication. The exceptions (marked `No` in the tables) are the auth
+bootstrap routes, public invitation lookups, the calendar feed, the public share routes and the
+language phrase data.
+
+Two kinds of client are supported:
+
+- **Browser (cookie + CSRF header)**: an `httpOnly` `refreshToken` cookie plus a readable `csrf-token`
+  cookie. Every non-`GET`/`HEAD`/`OPTIONS` request must echo the CSRF cookie in an `x-csrf-token`
+  header. The token is an HMAC-signed value bound to the session's refresh token
+  (`backend/src/security/csrf.ts`), so a value copied from another session is rejected with `403`.
+- **Native / API clients (Bearer only)**: send `Authorization: Bearer <access_token>` and no
+  `refreshToken` cookie; CSRF validation is skipped (see [CSRF Protection](#csrf-protection)).
 
 ### Headers
 
@@ -105,15 +116,18 @@ framed.
 |--------|----------|-------------|------|
 | POST | `/register` | Create new user account | No |
 | POST | `/login` | Authenticate user, returns tokens | No |
-| POST | `/refresh` | Refresh access token (reads refresh token cookie) | No |
+| POST | `/refresh` | Refresh access token (reads refresh token cookie; native clients send the refresh token in the body) | No |
 | POST | `/silent-refresh` | Restore auth state from httpOnly cookie on page load | No |
 | POST | `/mobile/pairing-token` | Mint a 5-minute, single-use token for the "Pair Mobile App" QR code; returns `{ pairingToken, expiresAt, serverUrl }` | Yes |
 | POST | `/mobile/pair` | Redeem a pairing token (`{ pairingToken }`) for `{ user, accessToken, refreshToken }` | No |
+| GET | `/oidc/config` | Public SSO configuration for the login page (whether SSO is enabled, button text); no secrets | No |
+| GET | `/oidc/login` | Start browser SSO (redirects to the identity provider; PKCE S256) | No |
+| GET | `/oidc/callback` | SSO redirect URI registered with the identity provider. For browsers it completes sign-in; for mobile it renders the confirmation page | No |
 | GET | `/oidc/login?client=mobile&code_challenge=<sha256 hex>` | Start SSO from the native app; the callback renders a confirmation page instead of redirecting (see [Mobile single sign-on](#mobile-single-sign-on)) | No |
 | POST | `/oidc/mobile-confirm` | Form post from the confirmation page (`nonce`, `action`); `continue` redirects to `travellife://auth/oidc?code=…`, `cancel` to `travellife://auth/oidc?error=cancelled` | No (single-use nonce) |
 | POST | `/oidc/mobile-exchange` | Exchange that code plus the verifier (`{ code, codeVerifier }`) for tokens | No |
 | GET | `/me` | Get current authenticated user | Yes |
-| POST | `/logout` | Clear refresh token cookie (works even with an expired token) | No |
+| POST | `/logout` | Clear refresh token cookie (works even with an expired token). CSRF-validated | No |
 
 ### Users (`/api/users`)
 
@@ -122,7 +136,6 @@ All user routes require authentication.
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/me` | Get current user profile | Yes |
-| GET | `/settings` | Get user settings | Yes |
 | PUT | `/settings` | Update user settings | Yes |
 | PUT | `/settings/trip-types/rename` | Rename a custom trip type | Yes |
 | DELETE | `/settings/trip-types/:typeName` | Delete a custom trip type | Yes |
@@ -136,6 +149,11 @@ All user routes require authentication.
 | PUT | `/aviationstack-settings` | Update AviationStack settings | Yes |
 | GET | `/openrouteservice-settings` | Get OpenRouteService (routing) settings | Yes |
 | PUT | `/openrouteservice-settings` | Update OpenRouteService settings | Yes |
+| GET | `/maps-settings` | Get maps settings | Yes |
+| PUT | `/maps-settings` | Update maps settings | Yes |
+| GET | `/me/calendar-token` | Get the current iCal feed token (see [Calendar](#calendar-apicalendar)) | Yes |
+| POST | `/me/calendar-token` | Create or rotate the iCal feed token | Yes |
+| DELETE | `/me/calendar-token` | Revoke the iCal feed token, disabling the feed | Yes |
 | GET | `/smtp-settings` | Get SMTP email settings | Yes |
 | PUT | `/smtp-settings` | Update SMTP email settings | Yes |
 | POST | `/smtp-settings/test` | Send a test email to verify SMTP configuration | Yes |
@@ -205,6 +223,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 |--------|----------|-------------|------|
 | POST | `/` | Create location (requires `tripId` in body) | Yes |
 | GET | `/visited` | Get all locations marked as "Places Visited" across the user's trips | Yes |
+| GET | `/favorites` | List favorite locations across the user's trips (includes trip id/title) | Yes |
 | GET | `/trip/:tripId` | List locations for a trip | Yes |
 | DELETE | `/trip/:tripId/bulk` | Bulk delete locations | Yes |
 | PATCH | `/trip/:tripId/bulk` | Bulk update locations | Yes |
@@ -423,6 +442,8 @@ expense's own date. Amounts that could not be converted are excluded from `spent
 ### Calendar (`/api/calendar`)
 
 Unauthenticated iCal subscription feed — the secret token embedded in the URL is the only credential.
+The token is managed by the signed-in user through `GET/POST/DELETE /api/users/me/calendar-token`
+(see Users).
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
@@ -466,7 +487,9 @@ Native tokens are delivered through the Expo push gateway and need no VAPID conf
 
 ### Mobile Companion (`/api/trips/:tripId`)
 
-Endpoints added for the native companion app. All require authentication.
+Endpoints added for the native companion app. All require authentication (Bearer-only clients skip CSRF).
+Related native-app routes live elsewhere: pairing and SSO under [Authentication](#authentication-apiauth),
+Expo push tokens under [Push Notifications](#push-notifications-apipush).
 
 | Method | Endpoint | Description | Permission |
 |--------|----------|-------------|------------|
@@ -479,6 +502,55 @@ Endpoints added for the native companion app. All require authentication.
 Two existing update schemas gained fields the app writes: `PUT /api/activities/:id` accepts
 `manualOrder`, and `PUT /api/transportation/:id` accepts `actualDepartureTime`,
 `actualArrivalTime`, `status`, `delayMinutes` and `seatNumber`.
+
+### Custom Items (`/api/custom-items`)
+
+User-defined item kinds attached to trips. All routes require authentication.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/types` | List the user's custom item types (seeds a starter set on first call) | Yes |
+| POST | `/types` | Create a custom item type | Yes |
+| PUT | `/types/:id` | Update a type | Yes |
+| DELETE | `/types/:id` | Delete a type | Yes |
+| POST | `/` | Create a custom item | Yes |
+| GET | `/trip/:tripId` | List custom items for a trip | Yes |
+| DELETE | `/trip/:tripId/bulk` | Bulk delete custom items | Yes |
+| PATCH | `/trip/:tripId/bulk` | Bulk update custom items | Yes |
+| GET | `/:id` | Get a custom item | Yes |
+| PUT | `/:id` | Update a custom item | Yes |
+| DELETE | `/:id` | Delete a custom item | Yes |
+
+### Booking Deadlines
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/trips/:tripId/deadlines` | Create a deadline | Yes |
+| GET | `/api/trips/:tripId/deadlines` | List a trip's deadlines | Yes |
+| PUT | `/api/trips/:tripId/deadlines/:id` | Update a deadline | Yes |
+| DELETE | `/api/trips/:tripId/deadlines/:id` | Delete a deadline | Yes |
+| GET | `/api/deadlines/upcoming` | Undismissed deadlines due within `?days` (default 30, max 365) across all the user's trips, including overdue | Yes |
+
+### Food Log
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/trips/:tripId/food-log` | Create a food log entry | Yes |
+| GET | `/api/trips/:tripId/food-log` | List a trip's entries | Yes |
+| PUT | `/api/trips/:tripId/food-log/:id` | Update an entry | Yes |
+| DELETE | `/api/trips/:tripId/food-log/:id` | Delete an entry | Yes |
+| POST | `/api/trips/:tripId/food-log/:id/photos` | Attach uploaded photos to an entry (videos rejected; per-entry cap) | Yes |
+| POST | `/api/trips/:tripId/food-log/:id/photos/immich` | Attach Immich assets to an entry | Yes |
+| DELETE | `/api/trips/:tripId/food-log/:id/photos/:photoId` | Detach a photo (it stays in the trip gallery) | Yes |
+| GET | `/api/food-log` | Best-meals search across all trips (`?minRating=1-5`, `?orderAgain=true\|false`, `?q=`), best first | Yes |
+
+### Emergency Info (`/api/trips/:tripId/emergency-info`)
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | Get the trip's emergency card | Yes |
+| PUT | `/` | Create or replace the trip's emergency info | Yes |
+| DELETE | `/` | Delete the trip's emergency info | Yes |
 
 ### Places (`/api/places`)
 

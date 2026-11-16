@@ -19,7 +19,7 @@ Comprehensive guide for deploying Travel Life to production environments.
 
 ## Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     Reverse Proxy (nginx/Caddy)             │
 │                        (SSL Termination)                    │
@@ -164,13 +164,13 @@ curl -I http://localhost:80
 
 **Backend Container:**
 
-- Image: `ghcr.io/dsbaciga/travel-life-backend:v5.6.1` (use an explicit version tag, not `latest`)
+- Image: `ghcr.io/dsbaciga/travel-life-backend:v7.3.0` (use an explicit version tag, not `latest`)
 - Port: 5000
-- Environment variables: (see above)
+- Environment variables: (see [Environment Configuration](#environment-configuration))
 
 **Frontend Container:**
 
-- Image: `ghcr.io/dsbaciga/travel-life-frontend:v5.6.1` (use an explicit version tag, not `latest`)
+- Image: `ghcr.io/dsbaciga/travel-life-frontend:v7.3.0` (use an explicit version tag, not `latest`)
 - Port: 80
 
 **Database:**
@@ -185,6 +185,13 @@ Use the TrueNAS-specific compose file:
 docker-compose -f docker-compose.truenas.yml up -d
 ```
 
+The TrueNAS compose files use their own default host ports so they do not collide with
+other apps: frontend `30600` (`FRONTEND_PORT`), API `30601` (`BACKEND_PORT`), Nominatim
+`30602` (`NOMINATIM_PORT`) and database `30603` (`DB_PORT`). Like the standard stack, the
+API, Nominatim and database ports are published on `INTERNAL_BIND_ADDRESS` (default
+`127.0.0.1`) only; the frontend port is the one to point your reverse proxy at.
+`TRUST_PROXY` and `DISABLE_REGISTRATION` are passed through here too.
+
 ### Pinning the Deployed Version (`APP_VERSION`)
 
 `docker-compose.truenas.yml` and `docker-compose.truenas.optimized.yml` deploy a pinned
@@ -192,22 +199,22 @@ image version rather than `:latest`, so a deploy is reproducible and a rollback 
 matter of naming the previous tag:
 
 ```yaml
-image: ghcr.io/dsbaciga/travel-life-backend:${APP_VERSION:-v5.6.1}
+image: ghcr.io/dsbaciga/travel-life-backend:${APP_VERSION:-v7.3.0}
 ```
 
 Set `APP_VERSION` per deploy, or put it in your env file:
 
 ```bash
 # Deploy a specific release
-APP_VERSION=v5.6.1 docker-compose -f docker-compose.truenas.yml pull
-APP_VERSION=v5.6.1 docker-compose -f docker-compose.truenas.yml up -d
+APP_VERSION=v7.3.0 docker-compose -f docker-compose.truenas.yml pull
+APP_VERSION=v7.3.0 docker-compose -f docker-compose.truenas.yml up -d
 
 # Roll back to the previous release
-APP_VERSION=v5.6.0 docker-compose -f docker-compose.truenas.yml up -d
+APP_VERSION=v7.2.0 docker-compose -f docker-compose.truenas.yml up -d
 ```
 
-If `APP_VERSION` is unset, the default baked into the compose file is used. Bump that
-default when a release becomes the new baseline. Images are published by CI when a `v*`
+If `APP_VERSION` is unset, the default baked into the compose file is used. The release
+PR bumps that default in both TrueNAS compose files, so it tracks the latest release. Images are published by CI when a `v*`
 tag is pushed, so only tagged versions are available — wait for the release workflow to
 go green before deploying a brand-new version.
 
@@ -346,6 +353,18 @@ Settings. Invitations still work when unset — the inviter shares the link manu
 | `AI_RATE_LIMIT_MAX` / `AI_RATE_LIMIT_WINDOW_MS` | `20` / `3600000` | Per-user AI limit |
 | `BACKUP_RATE_LIMIT_MAX` / `BACKUP_RATE_LIMIT_WINDOW_MS` | `5` / `3600000` | Per-user backup limit |
 
+### Backend-only Settings Not Wired Into the Compose Files
+
+These are read by the backend (see [`backend/CLAUDE.md`](backend/CLAUDE.md)) but the
+bundled compose files do not forward them. To use one, add it to the backend service's
+`environment:` block first.
+
+| Variable | Default | Description |
+| ---------- | --------- | ------------- |
+| `BACKUP_SCHEDULE_ENABLED` | `false` | `true` writes a nightly JSON backup per user to `BACKUP_DIR`. Also see `BACKUP_DIR` (mount a volume there), `BACKUP_CRON` (`0 3 * * *`), `BACKUP_KEEP_DAILY` (`7`) and `BACKUP_KEEP_WEEKLY` (`4`). The files contain users' stored API keys, so protect the directory like the database |
+| `ALLOW_PRIVATE_INTEGRATION_URLS` | `false` | `true` lets Immich/LLM/SMTP URLs point at private-network addresses. Off by default as an SSRF guard; leave it off unless Immich or your LLM runs on a LAN address |
+| `ALLOW_UNSIGNED_BACKUP_RESTORE` | `false` | `true` restores old backup files that have no integrity signature. Restore once, re-export, then unset |
+
 ## Database Management
 
 ### Running Migrations
@@ -389,6 +408,12 @@ your-domain.com {
     reverse_proxy localhost:80
 }
 ```
+
+The bundled nginx sends a Content-Security-Policy on `/index.html` (and HSTS), so your
+proxy does not need to add one. If you add your own CSP header at the proxy it will be
+sent alongside this one, and the browser enforces both, so do not make it stricter than
+the app's (`script-src 'self'`, `connect-src 'self' https:`) unless you test the app.
+Set `TRUST_PROXY=2` if the TLS proxy forwards to the bundled frontend container.
 
 The split configs below route `/api` and `/uploads` straight to the backend
 instead, bypassing the container nginx. Use them only if you have a reason to —
@@ -550,32 +575,29 @@ docker logs -f travel-life-db
 
 ## Updating the Application
 
-### Using Release Script
+### Releasing a New Version
 
-```bash
-# Check current version (version lives in package.json)
-node -p "require('./backend/package.json').version"
+Maintainers only. `main` is protected and is never pushed to directly, so a release goes
+through a pull request. `release.sh` is disabled and refuses to run; use `release.ps1`
+(PowerShell 7 also runs on Linux/Mac):
 
-# Pull latest changes
-git pull origin main
+```powershell
+# Phase 1: opens a release/vX.Y.Z PR (version bump, changelog, TrueNAS APP_VERSION defaults)
+.\release.ps1 -Version patch -NoConfirm    # or minor / major / vX.Y.Z
 
-# Run release script (Linux/Mac)
-./release.sh patch     # or minor / major / an explicit version like 5.6.2 or v5.6.2
-
-# Windows
-.\release.ps1 -Version patch
+# Phase 2: after the PR is squash/rebase-merged, tag main and push only the tag
+git switch main; git pull --ff-only origin main
+.\release.ps1 -Tag
 ```
 
-The release script bumps both `package.json` files, updates `CHANGELOG.md`, verifies the
-builds, commits and creates the tag. **It does not publish images.** Push the tag:
+The scripts do not build or push images. Pushing the tag triggers
+`.github/workflows/release.yml`, which is the single publisher of `ghcr.io` images and of
+the GitHub Release (and builds the Android companion app APK, which it attaches to the
+release). Wait for that workflow to go green, then deploy with `APP_VERSION` set to the new
+tag (see [Pinning the Deployed Version](#pinning-the-deployed-version-app_version)). The
+full procedure is in [docs/guides/BUILD_AND_PUSH.md](docs/guides/BUILD_AND_PUSH.md).
 
-```bash
-git push origin main && git push origin v5.6.2
-```
-
-Pushing the tag triggers `.github/workflows/release.yml`, which is the single publisher of
-`ghcr.io` images and of the GitHub Release. Wait for that workflow to go green, then deploy
-with `APP_VERSION` set to the new tag (see [Pinning the Deployed Version](#pinning-the-deployed-version-app_version)).
+To deploy a release you only need the steps in [Manual Update](#manual-update) below.
 
 ### Manual Update
 

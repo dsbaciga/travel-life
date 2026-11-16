@@ -4,20 +4,56 @@ This guide covers all feature-specific development workflows for the Travel Life
 
 ## Adding a New Feature
 
+The authoritative conventions and copy-paste checklists are in
+[CODE_CONVENTIONS.md](../architecture/CODE_CONVENTIONS.md) (sections 3 and 17). In short:
+
 1. **Update Database Schema**: Modify `backend/prisma/schema.prisma`
-2. **Create Migration**: `cd backend && npm run prisma:migrate`
-3. **Generate Types**: `npm run prisma:generate`
+2. **Create Migration**: `cd backend && npx prisma migrate dev --name <descriptive_name>` (also regenerates the client). Never edit an existing migration file.
+3. **Generate Types** (if only the client is stale): `npm run prisma:generate`
 4. **Backend Implementation**:
-   - Create types in `src/types/<feature>.types.ts` (include Zod schemas)
-   - Create service in `src/services/<feature>.service.ts`
-   - Create controller in `src/controllers/<feature>.controller.ts`
-   - Create routes in `src/routes/<feature>.routes.ts`
-   - Register routes in `src/index.ts`
+   - Create types in `src/types/<feature>.types.ts` (Zod schemas; create: optional fields, update: `.nullable().optional()`)
+   - Create service in `src/services/<feature>.service.ts` - a singleton with `userId` as the first parameter and a permission check (`verifyTripAccessWithPermission`) on the first line; wrap Decimal output with `convertDecimals`
+   - Use `buildConditionalUpdateData` (see below) instead of `if (x !== undefined)` chains for updates
+   - Create controller in `src/controllers/<feature>.controller.ts` as a declarative `createCrudController({ service, handlers })` (see below); hand-write handlers only for uploads, streaming and similar
+   - Create routes in `src/routes/<feature>.routes.ts` with `authenticate` and an `@openapi` block
+   - Mount the router in `src/index.ts`
+   - Add a test file with an ID header and an access-control case (see the [Testing Guide](TESTING_GUIDE.md))
+   - Run `npm run build:strict` in `backend/`
 5. **Frontend Implementation**:
-   - Create TypeScript types in `src/types/<feature>.ts`
-   - Create service in `src/services/<feature>.service.ts`
-   - Create components/pages as needed
+   - Create TypeScript types in `src/types/<feature>.ts` (mirror the unwrapped payload)
+   - Create service in `src/services/<feature>.service.ts` (named + default export; components never call `axios` directly)
+   - Create components/pages as needed, using TanStack Query (`[resource, tripId]` keys) or `useManagerCRUD` for managers, and call `onUpdate?.()` plus `invalidateQueries` after mutations
    - **Follow the Style Guide** for all UI components (see below)
+   - Run `npm run lint` and `npm run build:strict` in `frontend/`
+
+### Controllers: `createCrudController`
+
+```typescript
+// controllers/expense.controller.ts
+import { createCrudController } from '../prisma/crudHelpers';
+import { parseId } from '../http/parseId';
+
+export const expenseController = createCrudController({
+  service: expenseService,
+  handlers: {
+    createExpense: {
+      method: 'createExpense',
+      statusCode: 201,                 // omit for 200
+      bodySchema: createExpenseSchema, // omit when there is no body
+      buildArgs: (userId, req, body) => [userId, parseId(req.params.tripId, 'tripId'), body],
+    },
+  },
+});
+```
+
+Always use `parseId(value, name)` for path params, never `Number()` or `parseInt`.
+
+### Updates: `buildConditionalUpdateData`
+
+`buildConditionalUpdateData(data, ...)` from `backend/src/services/_shared/prismaUpdateData.ts`
+builds a Prisma update object containing only the fields the client sent (it skips `undefined`
+and converts `''` to `null` by default), with per-field `transformers`. Use `tripDateTransformer`
+for `@db.Date` columns. See CODE_CONVENTIONS.md section 6 for the call shape.
 
 ## Working with UI Components
 
@@ -65,6 +101,9 @@ npx prisma migrate dev --name descriptive_migration_name
 npx prisma generate
 ```
 
+In Docker: `docker exec -it travel-life-backend npx prisma migrate dev`. In production use
+`prisma migrate deploy`.
+
 **Reset database** (WARNING: deletes all data):
 
 ```bash
@@ -84,8 +123,8 @@ npm run prisma:studio
 **Protected Backend Routes**:
 
 1. Import middleware: `import { authenticate } from '../middleware/auth';`
-2. Apply to routes: `router.get('/protected', authenticate, controller.method);`
-3. Access user in controller: `req.user.userId`
+2. Apply to routes: `router.use(authenticate);` (or per route: `router.get('/protected', authenticate, controller.method);`)
+3. Access the user id with `requireUserId(req)` from `backend/src/auth/controllerHelpers.ts`. `createCrudController` does this for you and passes `userId` as the first `buildArgs` argument.
 
 **Frontend Authentication**:
 
@@ -97,11 +136,12 @@ npm run prisma:studio
 
 The Entity Linking system (v3.0.0) provides a unified way to connect any trip entity to any other entity.
 
-**Backend - Creating Links**:
+**Backend - Creating Links** (`tripId` is part of the data object, not a separate argument):
 
 ```typescript
 // Single link
-await entityLinkService.createLink(userId, tripId, {
+await entityLinkService.createLink(userId, {
+  tripId,
   sourceType: 'PHOTO',
   sourceId: photoId,
   targetType: 'LOCATION',
@@ -110,8 +150,9 @@ await entityLinkService.createLink(userId, tripId, {
 });
 
 // Bulk link (one source to many targets)
-await entityLinkService.bulkCreateLinks(userId, tripId, {
-  sourceType: 'ALBUM',
+await entityLinkService.bulkCreateLinks(userId, {
+  tripId,
+  sourceType: 'PHOTO_ALBUM',
   sourceId: albumId,
   targets: [
     { targetType: 'LOCATION', targetId: loc1Id },
@@ -123,7 +164,7 @@ await entityLinkService.bulkCreateLinks(userId, tripId, {
 **Backend - Querying Links**:
 
 ```typescript
-// Get all links for an entity (bidirectional)
+// Get all links for an entity (bidirectional): { linksFrom, linksTo, ... }
 const links = await entityLinkService.getAllLinksForEntity(userId, tripId, 'PHOTO', photoId);
 
 // Get trip-wide link summary (for UI badges)
@@ -133,27 +174,30 @@ const summary = await entityLinkService.getTripLinkSummary(userId, tripId);
 **Frontend - UI Components**:
 
 ```typescript
-// LinkButton with count badge
+// LinkButton: shows the count badge from the trip link summary and opens the panel itself
 <LinkButton
-  entityType="PHOTO"
-  entityId={photo.id}
-  linkCount={5}
-  onClick={() => setShowLinkPanel(true)}
-/>
-
-// LinkPanel modal for viewing/managing links
-<LinkPanel
-  isOpen={showLinkPanel}
-  onClose={() => setShowLinkPanel(false)}
   tripId={tripId}
   entityType="PHOTO"
   entityId={photo.id}
+  linkSummary={linkSummary}
+  onUpdate={refetchLinks}
+/>
+
+// LinkPanel for viewing/managing links (rendered by LinkButton; use directly if needed)
+<LinkPanel
+  tripId={tripId}
+  entityType="PHOTO"
+  entityId={photo.id}
+  onClose={() => setShowLinkPanel(false)}
+  onUpdate={refetchLinks}
 />
 ```
 
 **Supported Entity Types**:
 
-- `PHOTO`, `LOCATION`, `ACTIVITY`, `LODGING`, `TRANSPORTATION`, `JOURNAL`, `ALBUM`
+- `PHOTO`, `LOCATION`, `ACTIVITY`, `LODGING`, `TRANSPORTATION`, `JOURNAL_ENTRY`, `PHOTO_ALBUM`, `PDF_IMPORT`, `SAVED_LINK`, `CUSTOM_ITEM` (the Prisma `EntityType` enum)
+
+When deleting an entity that can be linked, clean up its links by deleting through `deleteEntity` / `bulkDeleteEntities` from `backend/src/prisma/crudHelpers.ts` (they verify permission, remove orphaned `EntityLink` rows and run in a transaction) rather than calling `prisma.x.delete()` directly.
 
 **Relationship Types** (auto-detected when appropriate):
 

@@ -6,7 +6,7 @@
  * `packages/shared` at build time. Rather than restructure the production
  * image build, the handful of pure modules the API needs are vendored: this
  * script is the only writer of `backend/src/services/_shared/vendored/`, and a
- * backend test (`vendored.test.ts`) fails if a copy drifts from its source.
+ * backend test (`VEND-001` in `mobileCompanion.service.test.ts`) fails if a copy drifts from its source.
  *
  * Usage:
  *   node packages/shared/scripts/sync-vendored.mjs          # write copies

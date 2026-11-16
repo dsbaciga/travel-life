@@ -79,6 +79,12 @@ triggers CI to build and publish.
 
 `-DryRun` previews either phase. `-Description` sets the tag message in phase 2.
 
+**Releasing from a Claude worktree (`.claude/worktrees/...`).** `release.ps1` must start on `main`, and
+`main` is checked out in the primary working copy, so it cannot run in a worktree. Use the
+[Manual Process](#manual-process) instead: branch `release/vX.Y.Z` off `origin/main`, make the
+script's five-file edit (two `package.json` files, `CHANGELOG.md` promotion, two TrueNAS
+`APP_VERSION` defaults), open and merge the PR, then tag the merged commit **by SHA** and push only the tag.
+
 **The release scripts no longer build Docker images.** They used to, as a final
 verification, but the local build used *different* Dockerfiles than CI publishes —
 `Dockerfile.prod.truenas` for the frontend (which hardcodes `VITE_API_URL=/api`) instead of

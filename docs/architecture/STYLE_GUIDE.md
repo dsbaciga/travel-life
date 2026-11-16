@@ -274,9 +274,13 @@ gold rather than white: white on `primary-500` is 3.19:1 and white on `accent-40
 <button class="btn-secondary">Cancel</button>
 ```
 
-- Light: `bg-parchment` with `text-primary-600` border
-- Dark: `bg-navy-800` with `text-gold` border
-- Hover: background change + subtle lift
+- Light: `bg-parchment`, `text-primary-600`, `border-2 border-primary-100`
+- Dark: `bg-navy-800`, `text-gold`, `border-navy-700`
+- Hover: `bg-primary-50` / `dark:bg-navy-700` + subtle lift
+
+All three variants are `px-6 py-3 rounded-lg`, not `rounded-xl`. A bare `.btn` class
+(`px-4 py-2 rounded-lg`, no colours) is the base for buttons that bring their own
+variant, as in `PageHeader` (`btn btn-primary`).
 
 **Danger Button** (`.btn-danger`):
 
@@ -296,10 +300,12 @@ gold rather than white: white on `primary-500` is 3.19:1 and white on `accent-40
 <input type="text" class="input" placeholder="Trip name" />
 ```
 
-- Border: `border-primary-100` (light) / `border-gold/20` (dark)
-- Background: `bg-white` (light) / `bg-navy-800` (dark)
-- Focus: `border-primary-500` / `border-gold` with ring
+- Border: a quiet hairline at rest, `border-primary-500/20` (light) / `border-navy-600` (dark). The accent colour is kept for focus
+- Background: `bg-white` (light) / `bg-navy-900` (dark)
+- Focus: `border-primary-500` / `border-gold` with a ring
 - Dark mode focus: gold glow effect
+- A native `<select class="input">` gets an opaque `navy-900` option list in dark mode (set in `index.css`); do not override it with a translucent background
+- Currency fields always use `CurrencySelect`, never a free-text `.input` (see [Currency Picker](#currency-picker))
 
 **Labels** (`.label`):
 
@@ -351,9 +357,9 @@ gold rather than white: white on `primary-500` is 3.19:1 and white on `accent-40
 </div>
 ```
 
-- Light: `bg-white/80` with backdrop blur
+- Light: `bg-white/80` with backdrop blur, `rounded-2xl`, `p-6`, `border-2 border-primary-500/10`
 - Dark: gradient background with `border-gold/20`
-- Hover: `shadow-xl` + border opacity increase
+- Hover: `shadow-xl` + border change (`border-accent-400/30` light, `border-gold/40` dark)
 - Dark hover: gold glow
 
 **Interactive Card** (`.card-interactive`):
@@ -365,7 +371,7 @@ gold rather than white: white on `primary-500` is 3.19:1 and white on `accent-40
 ```
 
 - Same as `.card` with `cursor-pointer`
-- Hover: `translate-y` lift effect
+- Hover: `-translate-y-1` lift effect, `active:translate-y-0`
 
 ### Modals
 
@@ -377,16 +383,105 @@ Use the `Modal` component from `src/components/Modal.tsx`:
   onClose={onClose}
   title="Edit Trip"
   icon={<EditIcon />}
-  size="lg"  // sm, md, lg, xl, 2xl, 4xl, 6xl
+  maxWidth="lg"  // sm, md, lg, xl, 2xl, 4xl (default), 6xl
+  footer={<button className="btn btn-primary">Save</button>}
 >
   {/* Modal content */}
 </Modal>
 ```
 
-- Backdrop: `bg-black/50` with blur
-- Body: rounded corners, shadow-2xl
-- Header with icon + title + close button
-- Optional footer with border-top
+| Prop | Default | Notes |
+|------|---------|-------|
+| `maxWidth` | `'4xl'` | `sm` to `6xl`. The prop is `maxWidth`, not `size` |
+| `icon` | none | Any `ReactNode` |
+| `footer` | none | Rendered in a bordered strip below the body |
+| `showCloseButton` | `true` | 44x44 touch target |
+| `closeOnBackdropClick`, `closeOnEscape` | `true` | |
+| `zIndex` | `80` | See the z-index table at the top of `index.css` |
+| `formId` | none | Enables Ctrl+S / Cmd+S to submit that form |
+| `focusFirstInput` | `false` | Focus the first field on open |
+| `animate` | `false` | Zoom-in on desktop, slide-up on phones |
+
+- Backdrop: `bg-black bg-opacity-50 backdrop-blur-sm`
+- Panel: `bg-white dark:bg-navy-800 shadow-2xl`; `.modal-panel` caps height at `92dvh`
+- Below `sm` the panel is a bottom sheet (`rounded-t-2xl`, drag-handle bar); from `sm` up it is `rounded-xl`
+- Focus is trapped while open and returned to the trigger on close; ESC closes the topmost modal
+
+### Form Modals
+
+Add and edit forms use `FormModal` (`src/components/FormModal.tsx`), a thin wrapper over
+`Modal` with `focusFirstInput`, `animate`, backdrop click and ESC all switched on. It
+takes `isOpen`, `onClose`, `title`, `icon` (an emoji **string**, unlike `Modal`),
+`footer`, `maxWidth` (default `4xl`), `formId` and `zIndex`.
+
+Put the buttons in `shared/FormModalFooter` rather than hand-writing them:
+
+```tsx
+<FormModal isOpen={open} onClose={close} title="Add Lodging" formId="lodging-form"
+  footer={
+    <FormModalFooter
+      onCancel={close}
+      formId="lodging-form"
+      isSubmitting={isSubmitting}
+      submitLabel={editingId ? 'Update Lodging' : 'Add Lodging'}
+      isEditMode={!!editingId}
+      onSaveAndAddAnother={handleSaveAndAddAnother}
+      leftContent={<DraftIndicator ... />}
+    />
+  }
+>
+  <form id="lodging-form" onSubmit={handleSubmit}>...</form>
+</FormModal>
+```
+
+- Renders Cancel (`btn btn-secondary`) and a submit button (`btn btn-primary`) wired to the form by `form={formId}`
+- `onSaveAndAddAnother` adds a third button, hidden in edit mode and below `sm`
+- `submittingLabel` defaults to "Saving..."; `leftContent` (such as `DraftIndicator`) switches to a two-column footer
+
+### Confirm Dialogs
+
+Use `ConfirmDialog` (`src/components/ConfirmDialog.tsx`) for destructive or irreversible
+choices instead of `window.confirm`:
+
+```tsx
+<ConfirmDialog
+  isOpen={!!pendingDelete}
+  onClose={() => setPendingDelete(null)}
+  onConfirm={handleDelete}
+  title="Delete trip?"
+  message="This cannot be undone."
+  confirmLabel="Delete"
+  variant="danger"  // danger (default), warning, info
+  isLoading={isDeleting}
+/>
+```
+
+- Fixed `z-[100]`, `max-w-md`, `rounded-2xl` card with a round icon badge (red, amber or primary by variant)
+- Buttons stack full width on phones; `isLoading` disables both
+
+### Page Headers
+
+`PageHeader` (`src/components/PageHeader.tsx`) is the standard page title block:
+`title`, `subtitle`, `backLink` (`{ label, href }`), `action` and `secondaryActions`
+(each `{ label, onClick | href, variant: 'primary' | 'secondary' | 'danger', icon, disabled, title }`)
+and `rightContent`. The title is `text-3xl font-bold`; actions render as
+`btn btn-primary` / `btn-secondary` / `btn-danger`. `PageHeader.Section` is the compact
+variant for cards and sections.
+
+### Breadcrumbs
+
+`Breadcrumbs` (`src/components/Breadcrumbs.tsx`) takes `items: { label, href?, onClick? }[]`.
+The last item is plain text with `aria-current="page"`; earlier items with an `href` are
+links (`text-primary-600 dark:text-sky`). The row scrolls horizontally instead of wrapping.
+`useTripBreadcrumbs(tripId, tripTitle, extraItems)` builds the usual `Trips > Trip > ...` chain.
+
+### Currency Picker
+
+Every currency field is a `CurrencySelect` (`src/components/CurrencySelect.tsx`), never a
+free-text input. Props: `value`, `onChange(code)`, `id`, `className` (default `input`),
+`allowEmpty` (default `true`, shows `emptyLabel`), `disabled`, and `aria-*`. The options
+are `CONVERTIBLE_CURRENCIES`; a stored code outside that list stays selectable as a labelled
+legacy option so editing does not change it. Use `CostCurrencyFields` for amount + currency pairs.
 
 ### Tabs
 
@@ -395,17 +490,24 @@ Use `TabGroup` component for tabbed navigation:
 ```tsx
 <TabGroup
   tabs={[
-    { id: 'details', label: 'Details', count: 0 },
-    { id: 'photos', label: 'Photos', count: 24 },
+    { id: 'details', label: 'Details', icon: <ListIcon /> },
+    {
+      id: 'media',
+      label: 'Media',
+      icon: <PhotoIcon />,
+      subTabs: [{ id: 'photos', label: 'Photos', count: 24 }],
+    },
   ]}
   activeTab={activeTab}
-  onTabChange={setActiveTab}
+  onTabChange={(tabId, subTabId) => setActiveTab(subTabId ?? tabId)}
 />
 ```
 
-- Desktop: horizontal tabs with gradient underline
-- Mobile: dropdown select
-- Active: primary/gold color with animated underline
+- Each tab needs an `icon` (shown from `sm` up); `count` is optional; `subTabs` makes it a group that expands a second row
+- `onTabChange(tabId, subTabId?)` may receive a sub-tab id
+- One horizontally scrolling strip at every width (no dropdown). Tabs are `flex-none` on phones and `md:flex-1` from `md`, with a 44px minimum height
+- Active: `text-primary-600 dark:text-gold` on a tinted background
+- The lower-level `.tab` / `.tab-active` classes in `index.css` give a hover/active gradient underline for hand-built tab rows
 
 ### Empty States
 
@@ -446,9 +548,10 @@ Use `EmptyState` component (`src/components/EmptyState.tsx`):
 - `NoLodging`, `NoJournalEntries`, `NoCompanions`, `NoTags`, `NoLocations`
 
 Features:
+
 - Bouncing icon animation (`animate-bounce-slow`)
-- Centered layout with backdrop blur
-- Optional action button or link
+- Centered layout in a `rounded-2xl` card, `role="status"`
+- The action renders only when `actionLabel` plus `onAction` or `actionHref` is given. `actionHref` renders a plain `<a>` (full page load), so use `onAction` with `navigate()` for in-app routes
 - Compact variant for inline use
 
 ### Loading States
@@ -472,10 +575,10 @@ Features:
 | Prop | Values | Default |
 |------|--------|---------|
 | `size` | `'sm'`, `'md'`, `'lg'`, `'xl'` | `'md'` |
-| `color` | `'primary'`, `'white'`, `'current'` | `'primary'` |
+| `color` | `'primary'`, `'white'`, `'current'` | `'primary'` (`primary-500`, `dark:sky`) |
 | `label` | string | undefined |
 
-**Skeleton Loaders** (`src/components/Skeleton.tsx`):
+**Skeleton Loaders** (`src/components/Skeleton.tsx`). The base `Skeleton` takes `className` and `animate`:
 
 ```tsx
 // Card skeleton with optional image and custom line count
@@ -511,6 +614,12 @@ import Skeleton from '@/components/Skeleton';
 <Skeleton.Grid count={6} columns={3} />
 ```
 
+`Skeleton.Base`, `.Text`, `.Title` and `.Avatar` also exist. A second set in
+`src/components/SkeletonLoader.tsx` offers
+`<SkeletonLoader variant="card | list | grid | text | avatar | image | button | input" />`
+and the ready-made `TripCardSkeleton`, `PhotoGallerySkeleton`, `TimelineEventSkeleton` and
+`ListItemSkeleton`. Prefer whichever already matches the shape you are loading.
+
 ### Floating Action Button
 
 ```html
@@ -519,9 +628,9 @@ import Skeleton from '@/components/Skeleton';
 </button>
 ```
 
-- Fixed bottom-right position
+- Fixed bottom-right position (`bottom-6 right-6`, `z-40`)
 - 56px circular
-- Gradient background
+- Gradient background (`primary-500` to `primary-600`; `accent-400` to `accent-600` in dark mode)
 - Scale + glow on hover
 
 ---
@@ -699,8 +808,9 @@ import { MapPinIcon, CalendarIcon, PhotoIcon } from '@/components/icons';
 
 | Category | Icons |
 |----------|-------|
-| Core | `CloseIcon`, `SearchIcon`, `FilterIcon`, `PlusIcon`, `TrashIcon`, `EditIcon` |
-| Content | `PhotoIcon`, `MapPinIcon`, `CalendarIcon`, `ChevronRightIcon`, `ChevronDownIcon` |
+| Core | `CloseIcon`, `SearchIcon`, `FilterIcon`, `PlusIcon`, `TrashIcon`, `EditIcon`, `PencilIcon`, `ListIcon`, `EllipsisVerticalIcon` |
+| Content | `PhotoIcon`, `CameraIcon`, `MapPinIcon`, `CalendarIcon` |
+| Chevrons | `ChevronRightIcon`, `ChevronDownIcon`, `ChevronUpIcon` |
 | Status | `SpinnerIcon` (includes `animate-spin` automatically) |
 
 ### Icon Colors
@@ -1022,6 +1132,11 @@ All animations respect `prefers-reduced-motion: reduce`:
 | `src/components/icons/index.tsx` | SVG icon components |
 | `src/utils/statusColors.ts` | Status color mappings |
 | `src/components/Modal.tsx` | Modal component |
+| `src/components/FormModal.tsx`, `shared/FormModalFooter.tsx` | Form modal and its standard footer |
+| `src/components/ConfirmDialog.tsx` | Confirmation dialog |
+| `src/components/PageHeader.tsx`, `Breadcrumbs.tsx` | Page title block, breadcrumb trail |
+| `src/components/CurrencySelect.tsx` | Currency picker |
+| `src/components/SkeletonLoader.tsx` | Variant-based skeletons |
 | `src/components/Skeleton.tsx` | Loading skeletons |
 | `src/components/LoadingSpinner.tsx` | Spinner component |
 | `src/components/EmptyState.tsx` | Empty state component |

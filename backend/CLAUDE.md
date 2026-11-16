@@ -46,6 +46,29 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 - `TRUST_PROXY` - Number of reverse proxies in front of the backend (defaults to `1`, the bundled nginx). Rate limiting reads the client address that many hops back in `X-Forwarded-For`. Use `2` when a TLS proxy or tunnel sits in front of nginx, otherwise every visitor shares one rate-limit bucket; never set it higher than the real number of proxies, or clients can forge their address
 - `DISABLE_REGISTRATION` - Set to `true` to close self-service sign-up (`POST /api/auth/register` answers 403 and the login page hides the link). Existing users can still sign in and send invitations, and accepting an invitation still creates an account; SSO provisioning is governed by `OIDC_AUTO_PROVISION`. Recommended for any server reachable from the internet
 
+### Sessions, CORS and cookies
+
+- `JWT_EXPIRES_IN` / `JWT_REFRESH_EXPIRES_IN` - Access and refresh token lifetimes (default `15m` / `7d`)
+- `CORS_ORIGIN` - Comma-separated allowed origins (the dev ports 3000 and 5173 are allowed by default; set this for any other front-end origin)
+- `COOKIE_SAME_SITE` - `strict` (default), `lax` or `none` for the auth cookies
+- `COOKIE_DOMAIN` - Cookie domain, e.g. `.example.com` to share across subdomains (default: host only)
+- `INTERNAL_BIND_ADDRESS` - **Compose-level, not read by the backend.** The production/TrueNAS compose files publish the API, database and Nominatim ports on `127.0.0.1` only; set `INTERNAL_BIND_ADDRESS=0.0.0.0` to expose them on the LAN
+
+### Security escape hatches (leave off unless you know why)
+
+- `ALLOW_PRIVATE_INTEGRATION_URLS` - Set to `true` to let Immich/LLM/SMTP URLs point at private-network addresses (always allowed when `NODE_ENV=development`). Off by default so those settings cannot be used to probe the server's own network (SSRF guard in `security/urlValidation.ts`)
+- `ALLOW_UNSIGNED_BACKUP_RESTORE` - Set to `true` to restore old backup files that carry no HMAC `integrity` signature. Restore once, re-export, then unset
+
+### Rate limits (all optional)
+
+- `BACKUP_RATE_LIMIT_MAX` / `BACKUP_RATE_LIMIT_WINDOW_MS` - Backup export/restore requests per window (default `5` per hour)
+- `EXTERNAL_API_RATE_LIMIT_MAX` / `EXTERNAL_API_RATE_LIMIT_WINDOW_MS` - Calls that fan out to third-party APIs (default `30` per hour)
+- `AI_LINK_SUGGESTION_MAX_ITEMS` - Cap on items sent to the LLM per link-suggestion request (default `25`)
+
+### Web push (VAPID)
+
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` enable browser push notifications; they are disabled gracefully when unset. Generate keys with `npx web-push generate-vapid-keys`.
+
 ### Scheduled backups
 
 Off unless `BACKUP_SCHEDULE_ENABLED=true`. Writes one JSON backup per user to

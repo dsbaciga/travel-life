@@ -45,7 +45,7 @@ OPENROUTESERVICE_API_KEY=your-actual-api-key-here
 3. Restart the backend container:
 
 ```bash
-docker-compose restart backend
+docker-compose up -d backend
 ```
 
 #### For Production (docker-compose.prod.yml)
@@ -57,10 +57,10 @@ docker-compose restart backend
 OPENROUTESERVICE_API_KEY=your-actual-api-key-here
 ```
 
-3. Restart your production services:
+3. Recreate the backend so it picks up the new value (`restart` does not re-read the env file):
 
 ```bash
-docker-compose -f docker-compose.prod.yml --env-file .env.production restart backend
+docker-compose -f docker-compose.prod.yml --env-file .env.production up -d backend
 ```
 
 #### For TrueNAS Scale
@@ -72,16 +72,16 @@ docker-compose -f docker-compose.prod.yml --env-file .env.production restart bac
 OPENROUTESERVICE_API_KEY=your-actual-api-key-here
 ```
 
-3. Restart the backend container:
+3. Recreate the backend container so it picks up the new value:
 
 ```bash
-docker-compose -f docker-compose.truenas.yml --env-file .env restart backend
+docker-compose -f docker-compose.truenas.yml --env-file .env up -d backend
 ```
 
 Or if using the optimized version:
 
 ```bash
-docker-compose -f docker-compose.truenas.optimized.yml --env-file .env restart backend
+docker-compose -f docker-compose.truenas.optimized.yml --env-file .env up -d backend
 ```
 
 ### Step 3: Verify It's Working
@@ -160,7 +160,7 @@ If the OpenRouteService API is unavailable (network error, rate limit, invalid k
 2. Ensure the `.env` file is in the correct location:
    - Development: `/path/to/travel-life/.env`
    - Production: `/path/to/travel-life/.env.production`
-3. Restart the backend container: `docker-compose restart backend`
+3. Recreate the backend container (`docker-compose up -d backend`, with `-f` and `--env-file` for production); a plain `restart` does not re-read env files
 4. Check logs again: `docker logs travel-life-backend | tail -20`
 
 ### "Invalid OpenRouteService API key" error
@@ -172,7 +172,7 @@ If the OpenRouteService API is unavailable (network error, rate limit, invalid k
 2. Check your OpenRouteService dashboard - is the key active?
 3. Try generating a new API key
 4. Update your `.env` file with the new key
-5. Restart backend: `docker-compose restart backend`
+5. Recreate the backend (`docker-compose up -d backend`, with `-f` and `--env-file` for production)
 
 ### "Rate limit exceeded" error
 
@@ -215,13 +215,15 @@ docker logs travel-life-backend --tail 100 | grep "Routing"
 ```
 
 **Good output:**
-```
+
+```text
 [Routing Service] Calculated route distance for transportation 123: 615.42 km
 [Routing Service] Using cached route
 ```
 
 **Bad output:**
-```
+
+```text
 [Routing Service] No API key configured, using Haversine formula
 [Routing Service] Failed to fetch route from API, falling back to Haversine
 ```
@@ -266,7 +268,7 @@ OPENROUTESERVICE_API_KEY=
 
 1. **Get API key:** https://openrouteservice.org/dev/#/signup (2 minutes)
 2. **Add to .env:** `OPENROUTESERVICE_API_KEY=your-key`
-3. **Restart backend:** `docker-compose restart backend`
+3. **Recreate backend:** `docker-compose up -d backend` (add `-f`/`--env-file` for production)
 4. **Verify:** Check logs for successful route calculations
 5. **Recalculate:** Use UI button to update existing transportation
 
