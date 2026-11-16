@@ -33,7 +33,7 @@ export function useDayJournalComposer({
   tripEndDate,
   onSaved,
 }: UseDayJournalComposerOptions) {
-  const canEdit = useTripEditAccess(tripId);
+  const { canEdit } = useTripEditAccess(tripId);
   const queryClient = useQueryClient();
   const [request, setRequest] = useState<JournalOpenRequest | null>(null);
   const requestCount = useRef(0);

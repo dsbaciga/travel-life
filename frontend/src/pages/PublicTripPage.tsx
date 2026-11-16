@@ -568,6 +568,14 @@ export default function PublicTripPage() {
           </section>
         )}
 
+        {/* Highlights: only photos the owner starred, never auto-picked */}
+        {trip.photos.some((p) => p.isFavorite) && (
+          <section aria-label="Highlights">
+            <SectionHeading>Highlights</SectionHeading>
+            <PhotoGrid photos={trip.photos.filter((p) => p.isFavorite)} />
+          </section>
+        )}
+
         {/* Photos */}
         {trip.photos.length > 0 && (
           <section aria-label="Photos">

@@ -480,6 +480,7 @@ export async function restoreFromBackup(
                   latitude: photoData.latitude,
                   longitude: photoData.longitude,
                   takenAt: photoData.takenAt ? new Date(photoData.takenAt) : null,
+                  isFavorite: photoData.isFavorite ?? false,
                 },
               });
               if (photoData.id != null) photoMap.set(photoData.id, photo.id);

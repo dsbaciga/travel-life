@@ -264,6 +264,7 @@ const BackupPhotoSchema = z.object({
   latitude: FlexibleCoordinateSchema,
   longitude: FlexibleCoordinateSchema,
   takenAt: FlexibleDateSchema, // ISO datetime or Date object
+  isFavorite: z.boolean().optional(), // absent in backups made before photo favorites
 });
 
 // Activity schema within a trip

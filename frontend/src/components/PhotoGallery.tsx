@@ -10,6 +10,7 @@ import { getAccessToken } from "../lib/axios";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import PhotoLightbox from "./PhotoLightbox";
 import ProgressiveImage from "./ProgressiveImage";
+import FavoriteStarButton from "./FavoriteStarButton";
 import EntityPickerModal from "./EntityPickerModal";
 import BatchPhotoToolbar from "./BatchPhotoToolbar";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
@@ -121,6 +122,32 @@ interface PhotoGalleryProps {
   currentAlbumId?: number | null;
   onPhotosRemovedFromAlbum?: () => void;
   onSortChange?: (sortBy: string, sortOrder: string) => void;
+  /** Called after a favorite star change has been saved to the server. */
+  onFavoriteChanged?: (photoId: number, isFavorite: boolean) => void;
+  /**
+   * Whether the viewer may star photos. Defaults to false: starred photos show
+   * a non-interactive indicator and no star button is offered. Callers pass
+   * `useCanEditTrip(tripId).canEdit`, which is also false while loading so an
+   * interactive star never flashes in for a view-only user.
+   */
+  canEdit?: boolean;
+  /**
+   * Controlled Favorites filter. When `onFavoritesOnlyChange` is provided the
+   * parent owns the filter and is expected to pass the server-filtered list
+   * (every favorite in the trip or album, paged) as `photos`. Without it the
+   * gallery filters the `photos` it was given on the client, which is what
+   * pre-loaded lists such as the album detail page rely on.
+   */
+  favoritesOnly?: boolean;
+  onFavoritesOnlyChange?: (favoritesOnly: boolean) => void;
+  /** Full favorites count across all pages, shown while the filter is on (controlled mode). */
+  favoritesTotal?: number;
+  /**
+   * Optimistic star state keyed by photo id, owned by the parent so it
+   * survives the gallery being remounted (filter on/off, Highlights view).
+   */
+  favoriteOverrides?: Record<number, boolean>;
+  onFavoriteOverrideChange?: (photoId: number, value: boolean | undefined) => void;
   initialSortBy?: string;
   initialSortOrder?: string;
   tripId?: number;
@@ -197,6 +224,8 @@ function PhotoGridItem({
   coverPhotoId,
   onToggleSelection,
   onSelectPhoto,
+  onToggleFavorite,
+  canEdit,
 }: {
   photo: Photo;
   index: number;
@@ -206,6 +235,8 @@ function PhotoGridItem({
   coverPhotoId?: number | null;
   onToggleSelection: (photoId: number, shiftKey: boolean) => void;
   onSelectPhoto: (photo: Photo) => void;
+  onToggleFavorite: (photo: Photo) => void;
+  canEdit: boolean;
 }) {
   return (
     <div
@@ -294,6 +325,20 @@ function PhotoGridItem({
         </div>
       )}
 
+      {/* Favorite star: always visible when starred, otherwise on hover/focus */}
+      {!selectionMode && (
+        <FavoriteStarButton
+          readOnly={!canEdit}
+          isFavorite={photo.isFavorite === true}
+          onToggle={() => onToggleFavorite(photo)}
+          className={`absolute top-3 right-3 z-20 ${
+            photo.isFavorite
+              ? ""
+              : "opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+          }`}
+        />
+      )}
+
       {/* Selection checkbox */}
       {selectionMode && (
         <div className="absolute top-3 left-3 z-10">
@@ -326,7 +371,7 @@ function PhotoGridItem({
 }
 
 export default function PhotoGallery({
-  photos,
+  photos: photosProp,
   albums,
   onPhotoDeleted,
   onPhotoUpdated,
@@ -338,11 +383,88 @@ export default function PhotoGallery({
   currentAlbumId = null,
   onPhotosRemovedFromAlbum,
   onSortChange,
+  onFavoriteChanged,
+  canEdit = false,
+  favoritesOnly: favoritesOnlyProp,
+  onFavoritesOnlyChange,
+  favoritesTotal,
+  favoriteOverrides: favoriteOverridesProp,
+  onFavoriteOverrideChange,
   initialSortBy = "date",
   initialSortOrder = "desc",
   tripId,
 }: PhotoGalleryProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  // Optimistic favorite state keyed by photo id. The photos prop is owned by
+  // the parent's pagination hook, so a star toggle is layered on top of it
+  // instead of waiting for a refetch.
+  const [internalOverrides, setInternalOverrides] = useState<
+    Record<number, boolean>
+  >({});
+  const favoriteOverrides = favoriteOverridesProp ?? internalOverrides;
+  const setFavoriteOverride = useCallback(
+    (photoId: number, value: boolean | undefined) => {
+      if (onFavoriteOverrideChange) {
+        onFavoriteOverrideChange(photoId, value);
+        return;
+      }
+      setInternalOverrides((prev) => {
+        const next = { ...prev };
+        if (value === undefined) delete next[photoId];
+        else next[photoId] = value;
+        return next;
+      });
+    },
+    [onFavoriteOverrideChange]
+  );
+  const isFavoritesControlled = onFavoritesOnlyChange !== undefined;
+  const [internalFavoritesOnly, setInternalFavoritesOnly] = useState(false);
+  const favoritesOnly = isFavoritesControlled
+    ? favoritesOnlyProp === true
+    : internalFavoritesOnly;
+  // A photo unstarred while open in the lightbox stays in the lightbox's
+  // working list (at its old position) until the viewer navigates away or
+  // closes it, so an accidental unstar can be undone with one more click.
+  const [retained, setRetained] = useState<{ photo: Photo; index: number } | null>(null);
+
+  const withFavorite = useCallback(
+    (photo: Photo): Photo => {
+      const override = favoriteOverrides[photo.id];
+      return override === undefined || override === photo.isFavorite
+        ? photo
+        : { ...photo, isFavorite: override };
+    },
+    [favoriteOverrides]
+  );
+
+  const allPhotos = useMemo(
+    () => photosProp.map(withFavorite),
+    [photosProp, withFavorite]
+  );
+  const loadedFavoriteCount = useMemo(
+    () => allPhotos.filter((p) => p.isFavorite).length,
+    [allPhotos]
+  );
+  // Controlled: the server told us the full count. Client mode: only the
+  // photos handed to us can be counted.
+  const favoriteCount =
+    isFavoritesControlled && favoritesOnly && favoritesTotal !== undefined
+      ? Math.max(0, favoritesTotal - allPhotos.filter((p) => !p.isFavorite).length)
+      : loadedFavoriteCount;
+  // The grid, selection, and the lightbox all page through this list, so with
+  // the Favorites filter on the lightbox only visits favorites.
+  const photos = useMemo(
+    () => (favoritesOnly ? allPhotos.filter((p) => p.isFavorite) : allPhotos),
+    [allPhotos, favoritesOnly]
+  );
+  // What the lightbox pages through: the visible photos plus the one that was
+  // just unstarred (see `retained`), at the position it had.
+  const lightboxPhotos = useMemo(() => {
+    if (!retained || photos.some((p) => p.id === retained.photo.id)) return photos;
+    const list = [...photos];
+    list.splice(Math.min(retained.index, list.length), 0, retained.photo);
+    return list;
+  }, [photos, retained]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editCaption, setEditCaption] = useState("");
   const [editTakenAt, setEditTakenAt] = useState<string | null>(null);
@@ -402,7 +524,7 @@ export default function PhotoGallery({
 
   // Load thumbnails for Immich photos with authentication
   useEffect(() => {
-    const currentPhotoIds = new Set(photos.map((p) => p.id));
+    const currentPhotoIds = new Set(photosProp.map((p) => p.id));
 
     // Only revoke blob URLs for photos that were in the previous set but are NOT in the current set
     // Skip cleanup when current photos is empty - this preserves cache when switching views
@@ -447,7 +569,7 @@ export default function PhotoGallery({
       // Small delay between thumbnail fetches to avoid rate limiting
       const THUMBNAIL_FETCH_DELAY = 50; // 50ms between requests
 
-      for (const photo of photos) {
+      for (const photo of photosProp) {
         // Skip if already cached, currently fetching, or not an Immich photo
         if (
           thumbnailCacheRef.current[photo.id] ||
@@ -537,13 +659,13 @@ export default function PhotoGallery({
       }
     };
 
-    if (photos.length > 0) {
+    if (photosProp.length > 0) {
       loadThumbnails();
     }
     // thumbnailCache/failedThumbnails are read through refs above rather than
     // listed here — see the ref declarations. retryTrigger re-runs the loader
     // for a manual retry of failed thumbnails.
-  }, [photos, retryTrigger]);
+  }, [photosProp, retryTrigger]);
 
   // Cleanup all blob URLs only when component unmounts
   useEffect(() => {
@@ -557,6 +679,26 @@ export default function PhotoGallery({
       currentFetchingPhotos.clear();
     };
   }, []); // Empty array - only run cleanup on unmount
+
+  const handleToggleFavorite = async (photo: Photo) => {
+    const next = !photo.isFavorite;
+    if (!next && favoritesOnly && selectedPhoto?.id === photo.id) {
+      // Remember where the open photo sat before the filter drops it
+      setRetained({ photo: { ...photo, isFavorite: false }, index: photos.findIndex((p) => p.id === photo.id) });
+    }
+    setFavoriteOverride(photo.id, next);
+    try {
+      await photoService.updatePhoto(photo.id, { isFavorite: next });
+      onFavoriteChanged?.(photo.id, next);
+    } catch {
+      // Roll back to whatever the parent last told us
+      setFavoriteOverride(photo.id, undefined);
+      setRetained((r) => (r?.photo.id === photo.id ? null : r));
+      toast.error(
+        next ? "Failed to add to favorites" : "Failed to remove from favorites"
+      );
+    }
+  };
 
   const handleDelete = async (photoId: number) => {
     const confirmed = await confirm({
@@ -878,7 +1020,7 @@ export default function PhotoGallery({
     overscan: VIRTUAL_OVERSCAN,
   });
 
-  if (photos.length === 0) {
+  if (allPhotos.length === 0 && !favoritesOnly) {
     return (
       <EmptyState
         icon={<EmptyIllustrations.NoPhotos />}
@@ -974,8 +1116,39 @@ export default function PhotoGallery({
 
         {/* Photo Count and Failed Thumbnails Info */}
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              isFavoritesControlled
+                ? onFavoritesOnlyChange?.(!favoritesOnly)
+                : setInternalFavoritesOnly((v) => !v)
+            }
+            aria-pressed={favoritesOnly}
+            title={
+              favoriteCount === 0
+                ? "No favorites yet. Star a photo to add it here."
+                : "Show only favorite photos"
+            }
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors ${
+              favoritesOnly
+                ? "bg-amber-100 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-300"
+                : "bg-white dark:bg-dusk-800 border-gray-200 dark:border-dusk-700 text-gray-700 dark:text-dusk-300 hover:border-amber-300"
+            }`}
+          >
+            <svg className="w-4 h-4" fill={favoritesOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+            </svg>
+            Favorites{favoriteCount > 0 && (!isFavoritesControlled || (favoritesOnly && favoritesTotal !== undefined)) ? ` (${favoriteCount})` : ""}
+          </button>
           <span className="text-sm text-gray-600 dark:text-dusk-400">
-            {photos.length} photo{photos.length !== 1 ? "s" : ""}
+            {(() => {
+              // Controlled filter: show the full favorites count, not the page size
+              const count =
+                isFavoritesControlled && favoritesOnly && favoritesTotal !== undefined
+                  ? favoriteCount
+                  : photos.length;
+              return `${count} photo${count !== 1 ? "s" : ""}`;
+            })()}
           </span>
 
           {/* Failed Thumbnails Indicator */}
@@ -1041,6 +1214,12 @@ export default function PhotoGallery({
         )}
       </div>
 
+      {favoritesOnly && photos.length === 0 && (
+        <p className="py-10 text-center text-sm text-gray-600 dark:text-dusk-400">
+          No favorites among these photos yet. Tap the star on a photo to add it.
+        </p>
+      )}
+
       {/* Grid View — 3-up on phones: at 2 columns a 200-photo trip was ~50
           rows of scrolling, and it disagreed with the virtualized path below,
           which has always rendered 4 columns at every width. */}
@@ -1057,6 +1236,8 @@ export default function PhotoGallery({
               coverPhotoId={coverPhotoId}
               onToggleSelection={togglePhotoSelection}
               onSelectPhoto={setSelectedPhoto}
+              onToggleFavorite={handleToggleFavorite}
+              canEdit={canEdit}
             />
           ))}
         </div>
@@ -1104,6 +1285,8 @@ export default function PhotoGallery({
                         coverPhotoId={coverPhotoId}
                         onToggleSelection={togglePhotoSelection}
                         onSelectPhoto={setSelectedPhoto}
+                        onToggleFavorite={handleToggleFavorite}
+                        canEdit={canEdit}
                       />
                     );
                   })}
@@ -1237,6 +1420,14 @@ export default function PhotoGallery({
 
                       {/* Badges */}
                       <div className="flex-shrink-0 flex items-center gap-2">
+                        {!selectionMode && (
+                          <FavoriteStarButton
+                            readOnly={!canEdit}
+                            variant="inline"
+                            isFavorite={photo.isFavorite === true}
+                            onToggle={() => handleToggleFavorite(photo)}
+                          />
+                        )}
                         {photo.mediaType === 'video' && (
                           <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded text-xs">
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -1271,14 +1462,23 @@ export default function PhotoGallery({
       {/* Photo Lightbox */}
       {selectedPhoto && (
         <PhotoLightbox
-          photo={selectedPhoto}
-          photos={photos}
+          photo={withFavorite(selectedPhoto)}
+          photos={lightboxPhotos}
+          onToggleFavorite={
+            canEdit
+              ? () => handleToggleFavorite(withFavorite(selectedPhoto))
+              : undefined
+          }
           getPhotoUrl={getPhotoUrl}
           onClose={() => {
             setSelectedPhoto(null);
+            setRetained(null);
             setIsEditMode(false);
           }}
-          onNavigate={(photo) => setSelectedPhoto(photo)}
+          onNavigate={(photo) => {
+            setRetained(null);
+            setSelectedPhoto(photo);
+          }}
           onEdit={() => {
             setEditCaption(selectedPhoto.caption || "");
             // Format takenAt for datetime-local input (YYYY-MM-DDTHH:mm)

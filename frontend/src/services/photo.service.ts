@@ -62,7 +62,14 @@ class PhotoService {
 
   async getPhotosByTrip(
     tripId: number,
-    options?: { skip?: number; take?: number; sortBy?: string; sortOrder?: string }
+    options?: {
+      skip?: number;
+      take?: number;
+      sortBy?: string;
+      sortOrder?: string;
+      /** Only return starred photos (the trip highlight set). */
+      favoritesOnly?: boolean;
+    }
   ): Promise<{ photos: Photo[]; total: number; hasMore: boolean }> {
     const response = await api.get(`/photos/trip/${tripId}`, {
       params: options,
@@ -72,7 +79,13 @@ class PhotoService {
 
   async getUnsortedPhotosByTrip(
     tripId: number,
-    options?: { skip?: number; take?: number; sortBy?: string; sortOrder?: string }
+    options?: {
+      skip?: number;
+      take?: number;
+      sortBy?: string;
+      sortOrder?: string;
+      favoritesOnly?: boolean;
+    }
   ): Promise<{ photos: Photo[]; total: number; hasMore: boolean }> {
     const response = await api.get(`/photos/trip/${tripId}/unsorted`, {
       params: options,
@@ -129,7 +142,13 @@ class PhotoService {
 
   async getAlbumById(
     albumId: number,
-    options?: { skip?: number; take?: number; sortBy?: string; sortOrder?: string }
+    options?: {
+      skip?: number;
+      take?: number;
+      sortBy?: string;
+      sortOrder?: string;
+      favoritesOnly?: boolean;
+    }
   ): Promise<AlbumWithPhotos> {
     const response = await api.get(`/albums/${albumId}`, {
       params: options,

@@ -585,6 +585,29 @@ describe('PhotoAlbumService', () => {
       expect(result.hasMore).toBe(true);
     });
 
+    it('scopes the page and the total to favorites when favoritesOnly is set', async () => {
+      mockPrisma.photoAlbum.findUnique.mockResolvedValue({
+        ...mockAlbum,
+        trip: { userId: mockUserId },
+        photoAssignments: [{ photo: { ...mockPhoto, id: 1, isFavorite: true } }],
+        _count: { photoAssignments: 1 },
+      });
+
+      const result = await photoAlbumService.getAlbumById(mockUserId, mockAlbumId, {
+        favoritesOnly: true,
+      });
+
+      const favoriteFilter = { photo: { isFavorite: true } };
+      expect(mockPrisma.photoAlbum.findUnique).toHaveBeenCalledWith({
+        where: { id: mockAlbumId },
+        include: expect.objectContaining({
+          photoAssignments: expect.objectContaining({ where: favoriteFilter }),
+          _count: { select: { photoAssignments: { where: favoriteFilter } } },
+        }),
+      });
+      expect(result.total).toBe(1);
+    });
+
     it('should return hasMore = false when all photos loaded', async () => {
       const photoAssignments = [
         { photo: { ...mockPhoto, id: 1 } },

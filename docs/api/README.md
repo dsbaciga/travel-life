@@ -223,7 +223,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | POST | `/upload` | Upload a photo or video (`multipart/form-data`, max 500MB) | Yes |
 | POST | `/immich` | Link a single photo from Immich | Yes |
 | POST | `/immich/batch` | Link multiple photos from Immich in one request | Yes |
-| GET | `/trip/:tripId` | List photos for a trip | Yes |
+| GET | `/trip/:tripId` | List photos for a trip. Query: `skip`, `take`, `sortBy`, `sortOrder`, and `favoritesOnly=true` to return only starred photos (the trip highlight set); `favoritesOnly=true` is also accepted by `/trip/:tripId/unsorted` | Yes |
 | GET | `/trip/:tripId/immich-asset-ids` | List Immich asset IDs already linked to a trip | Yes |
 | GET | `/trip/:tripId/unsorted` | List photos not assigned to any album in a trip | Yes |
 | GET | `/trip/:tripId/date-groupings` | Get date groupings (dates + photo counts) for lazy loading | Yes |
@@ -231,7 +231,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | GET | `/trip/:tripId/suggest-albums` | Get smart album suggestions based on photo clustering | Yes |
 | POST | `/trip/:tripId/accept-suggestion` | Create an album from an album suggestion | Yes |
 | GET | `/:id` | Get a photo by ID | Yes |
-| PUT | `/:id` | Update photo metadata | Yes |
+| PUT | `/:id` | Update photo metadata. Send `{ "isFavorite": true \| false }` to star or unstar a photo (works for uploaded and Immich-linked photos and videos); requires edit permission on the trip | Yes |
 | DELETE | `/:id` | Delete a photo | Yes |
 
 ### Photo Albums (`/api/albums`)
@@ -241,7 +241,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | GET | `/` | List all albums across all trips (supports `skip`/`take` pagination) | Yes |
 | POST | `/` | Create a new album (requires `tripId` in body) | Yes |
 | GET | `/trip/:tripId` | List albums for a specific trip | Yes |
-| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`) | Yes |
+| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`, `sortBy`/`sortOrder`, and `favoritesOnly=true` to page only starred photos) | Yes |
 | PUT | `/:id` | Update an album | Yes |
 | DELETE | `/:id` | Delete an album (does not delete the photos) | Yes |
 | POST | `/:id/photos` | Add photos to an album | Yes |
@@ -429,7 +429,7 @@ token is done by the trip owner via `POST/DELETE /api/trips/:id/share*` (see Tri
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| GET | `/trips/:token` | Get a sanitized, read-only view of a shared trip | No |
+| GET | `/trips/:token` | Get a sanitized, read-only view of a shared trip. Each photo carries an `isFavorite` flag; the public page shows the starred photos as a Highlights set | No |
 | GET | `/trips/:token/photos/:photoId/file` | Stream a shared trip's photo binary (the authenticated `/uploads` route is not reachable without a token) | No |
 | GET | `/trips/:token/photos/:photoId/thumbnail` | Stream a shared trip's photo thumbnail | No |
 

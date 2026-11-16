@@ -192,6 +192,7 @@ interface BackupPhoto {
   latitude: Decimal | null;
   longitude: Decimal | null;
   takenAt: Date | null;
+  isFavorite: boolean;
 }
 
 /**
@@ -215,6 +216,7 @@ async function fetchPhotosInBatches(tripId: number): Promise<BackupPhoto[]> {
         latitude: true,
         longitude: true,
         takenAt: true,
+        isFavorite: true,
       },
       take: PHOTO_BATCH_SIZE,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),

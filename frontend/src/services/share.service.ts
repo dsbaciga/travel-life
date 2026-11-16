@@ -66,6 +66,8 @@ export interface PublicPhoto {
   id: number;
   caption: string | null;
   takenAt: string | null;
+  /** True for photos the owner starred; these form the trip highlights. */
+  isFavorite: boolean;
   /** API path (starts with /api/) that streams the full-size image. */
   url: string;
   /** API path (starts with /api/) that streams the thumbnail. */

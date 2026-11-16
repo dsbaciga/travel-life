@@ -1576,6 +1576,8 @@ Locations that already belong to a trip.
 - "Favorites" filter in the gallery and lightbox
 - Auto-generated highlight reel per trip, shareable via the existing public share
 
+**Status**: ✅ Implemented. `Photo.isFavorite` is toggled through `PUT /api/photos/:id` (edit permission required). The `favoritesOnly=true` query is supported on the trip, unsorted and album photo lists, so the gallery's Favorites filter is server-side and paged across the whole trip or album (the album detail page, which receives a pre-loaded list, filters on the client). The gallery grid, list and lightbox have a star toggle; view-only collaborators see a read-only indicator instead (permission from `GET /api/trips/:id/permission` via `useTripEditAccess`). Unstarring the open photo in a filtered lightbox keeps it in the lightbox until you navigate or close. The Photos tab has a Highlights view (empty state explains how to star photos; nothing is auto-picked), and the public share page shows a Highlights section from starred local photos. `isFavorite` round-trips through backup/restore (defaults to false for older backups). Migration: `20261116020000_add_photo_is_favorite`.
+
 ### 101. Infer Photo Location from Itinerary
 
 **Category**: Photo Management

@@ -5,6 +5,7 @@ import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import PhotoDetailsPanel from "./PhotoDetailsPanel";
+import FavoriteStarButton from "./FavoriteStarButton";
 import { pushModal, popModal } from "../utils/modalStack";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
@@ -76,6 +77,8 @@ interface PhotoLightboxProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onSetCover?: () => void;
+  /** Toggles the favorite star. When omitted the star is read-only (indicator only). */
+  onToggleFavorite?: () => void;
   showCoverButton?: boolean;
   editMode?: boolean;
   editCaption?: string;
@@ -97,6 +100,7 @@ export default function PhotoLightbox({
   onEdit,
   onDelete,
   onSetCover,
+  onToggleFavorite,
   showCoverButton = false,
   editMode = false,
   editCaption = "",
@@ -694,6 +698,13 @@ export default function PhotoLightbox({
                       />
                     </svg>
                   </button>
+                  {/* Editors get a toggle; view-only users only see that the photo is starred */}
+                  <FavoriteStarButton
+                    variant="toolbar"
+                    readOnly={!onToggleFavorite}
+                    isFavorite={photo.isFavorite === true}
+                    onToggle={onToggleFavorite ?? (() => {})}
+                  />
                   {onEdit && (
                     <button
                       type="button"

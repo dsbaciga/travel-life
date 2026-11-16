@@ -146,6 +146,7 @@ Photos associated with trips. Supports local uploads and Immich integration.
 | latitude | Decimal(10,8)? | EXIF latitude |
 | longitude | Decimal(11,8)? | EXIF longitude |
 | takenAt | DateTime? | EXIF timestamp |
+| isFavorite | Boolean | Starred by the user (default `false`); favorites form the trip highlight set |
 
 ### Activity
 
