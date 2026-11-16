@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import tripService from '../../services/trip.service';
-import { getFullAssetUrl } from '../../lib/config';
+import { useImmichThumbnail } from '../../hooks/useImmichThumbnail';
 import { formatDateOnly } from '../../utils/timezone';
 import {
   pruneRecentTrips,
@@ -22,15 +22,33 @@ import type { Trip } from '../../types/trip';
 /** Page size of the shared trips query; a full page means the list may be truncated. */
 const TRIPS_PAGE_SIZE = 50;
 
-/** Cheap cover only: uploaded or local library images. Immich needs an authenticated fetch. */
-function coverUrl(trip: Trip | undefined): string | null {
-  if (!trip) return null;
+/** Path and source to hand to useImmichThumbnail for a trip's cover, if it has one. */
+function coverSource(trip: Trip | undefined): { path: string | null; source: string | null } {
+  if (!trip) return { path: null, source: null };
   if (trip.coverImagePath) {
-    return getFullAssetUrl(trip.coverImageThumbnailPath || trip.coverImagePath);
+    return { path: trip.coverImageThumbnailPath || trip.coverImagePath, source: 'local' };
   }
   const photo = trip.coverPhoto;
-  if (photo?.source === 'local') return getFullAssetUrl(photo.thumbnailPath || photo.localPath);
-  return null;
+  if (!photo) return { path: null, source: null };
+  return { path: photo.thumbnailPath || photo.localPath, source: photo.source };
+}
+
+/**
+ * One row's thumbnail. A component of its own because the hook cannot be called
+ * in a loop. Immich covers go through the authenticated proxy and the hook revokes
+ * the object URL; the placeholder shows while loading, offline, or on failure.
+ */
+function TripThumb({ trip }: { trip: Trip | undefined }) {
+  const { path, source } = coverSource(trip);
+  const url = useImmichThumbnail(path, source);
+  return url ? (
+    <img src={url} alt="" loading="lazy" className="w-10 h-10 flex-none rounded-lg object-cover" />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="w-10 h-10 flex-none rounded-lg bg-primary-100 dark:bg-navy-700"
+    />
+  );
 }
 
 function dateRange(trip: Trip | undefined): string {
@@ -95,7 +113,6 @@ export default function RecentlyViewedWidget() {
       </h3>
       <ul className="space-y-1">
         {visible.map(({ entry, trip }) => {
-          const cover = coverUrl(trip);
           const dates = dateRange(trip);
           return (
             <li key={entry.tripId}>
@@ -103,19 +120,7 @@ export default function RecentlyViewedWidget() {
                 to={`/trips/${entry.tripId}`}
                 className="flex items-center gap-3 min-h-[44px] rounded-lg p-1 hover:bg-gray-50 dark:hover:bg-navy-700 transition-colors"
               >
-                {cover ? (
-                  <img
-                    src={cover}
-                    alt=""
-                    loading="lazy"
-                    className="w-10 h-10 flex-none rounded-lg object-cover"
-                  />
-                ) : (
-                  <span
-                    aria-hidden="true"
-                    className="w-10 h-10 flex-none rounded-lg bg-primary-100 dark:bg-navy-700"
-                  />
-                )}
+                <TripThumb trip={trip} />
                 <span className="min-w-0">
                   <span className="block font-semibold text-gray-900 dark:text-white truncate">
                     {trip?.title ?? entry.title}

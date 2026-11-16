@@ -19,6 +19,12 @@ vi.mock('../../../services/trip.service', () => ({
   default: { getTrips: () => getTrips() },
 }));
 
+const thumb = vi.fn<(path: string | null | undefined, source: string | null | undefined) => string | null>();
+vi.mock('../../../hooks/useImmichThumbnail', () => ({
+  useImmichThumbnail: (path: string | null | undefined, source: string | null | undefined) =>
+    thumb(path, source),
+}));
+
 function renderWidget() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -35,6 +41,37 @@ describe('RecentlyViewedWidget', () => {
     installMemoryLocalStorage();
     mockUser = { id: 1 };
     getTrips.mockReset();
+    thumb.mockReset();
+    thumb.mockReturnValue(null);
+  });
+
+  it('renders an Immich cover through the thumbnail hook, else the placeholder', async () => {
+    const immich = createMockTrip({
+      id: 31,
+      title: 'Immich trip',
+      coverImagePath: null,
+      coverPhoto: {
+        id: 1,
+        localPath: null,
+        thumbnailPath: '/api/immich/assets/abc/thumbnail',
+        source: 'immich',
+        immichAssetId: 'abc',
+      },
+    });
+    writeRecentTrips(1, [{ tripId: 31, viewedAt: 1 }]);
+    getTrips.mockResolvedValue({ trips: [immich] });
+    thumb.mockImplementation((path) => (path ? 'blob:cover-1' : null));
+    const { container, unmount } = renderWidget();
+
+    await waitFor(() => expect(container.querySelector('img')).toHaveAttribute('src', 'blob:cover-1'));
+    expect(thumb).toHaveBeenCalledWith('/api/immich/assets/abc/thumbnail', 'immich');
+    unmount();
+
+    thumb.mockReturnValue(null);
+    const second = renderWidget();
+    await waitFor(() => expect(screen.getByText('Immich trip')).toBeInTheDocument());
+    expect(second.container.querySelector('img')).toBeNull();
+    expect(second.container.querySelector('span[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('renders nothing when there is nothing stored', () => {
