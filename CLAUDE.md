@@ -107,7 +107,7 @@ The backend follows a layered architecture: **Routes -> Controllers -> Services 
 
 - [Backend Architecture](docs/architecture/BACKEND_ARCHITECTURE.md) - Layered architecture, services, middleware, authentication flow, database patterns
 - [Frontend Architecture](docs/architecture/FRONTEND_ARCHITECTURE.md) - Components, hooks, state management, API communication, routing
-- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) - 37 models, relationships, entity linking, design patterns
+- [Database Schema](docs/architecture/DATABASE_SCHEMA.md) - 49 models, relationships, entity linking, design patterns
 
 Cross-cutting backend code lives in dedicated `src/` subdirectories. **There is no `src/utils/` directory** — put shared helpers in the existing topical directory, don't create one.
 

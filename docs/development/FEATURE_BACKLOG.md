@@ -1,6 +1,6 @@
 # Feature Backlog
 
-**Last Updated**: 2026-07-25
+**Last Updated**: 2026-11-16
 
 This document consolidates all feature ideas and future enhancements for Travel Life. Features are organized by priority and category.
 
@@ -191,7 +191,7 @@ Good enhancements that improve the experience.
 
 **Description**: Compare multiple trips side-by-side or view all trips on a single world map.
 
-**Status**: ✅ Completed. Page at `/trips/compare?ids=...` (entry point: "Compare" on the trips list), backed by `GET /api/trip-comparison`. Compares 2 to 8 own or shared trips; costs reuse the budget summary and are shown in the viewer's base currency, with unconvertible amounts reported per trip.
+**Status**: ✅ Completed 2026-11-16. Page at `/trips/compare?ids=...` (entry point: "Compare" on the trips list), backed by `GET /api/trip-comparison`. Compares 2 to 8 own or shared trips in a side-by-side table, a colour-coded map and an overlap timeline. Costs reuse the budget summary and are shown in the viewer's base currency; amounts that cannot be converted are left out and listed per trip. The table has total spend and cost per day (spend divided by the trip's inclusive day count, computed with `Prisma.Decimal`; a dash when the day count is unknown or the spend is unavailable). Total distance follows the user's Units setting (the API stays in km). Not done: a single map of every trip the user has (the map shows the selected trips only).
 
 **Features**:
 - Side-by-side comparison table
@@ -229,7 +229,7 @@ Good enhancements that improve the experience.
 - See distance/travel time between stops
 - Optimize route for minimum travel time
 
-**Status**: ✅ Completed 2026-11-16 — Route Planner sub-tab under Itinerary: ordered `trip_stops` (name, lat/lng, nights) as a drag-and-drop list (pointer, keyboard and move buttons) beside a numbered-marker map with the route line; client-side haversine distance and an estimated travel time per leg, totals, arrival/departure dates from the trip start, nights-over-trip warning; Optimise route (nearest-neighbour + 2-opt, first/last stop optionally fixed) with a saving preview, explicit apply and undo. API: `GET/POST /api/trips/:tripId/stops`, `PUT /stops/reorder`, `PUT/DELETE /stops/:id`; included in backup/restore. Stops can also be made from the trip's saved places (linked, snapshotted name and coordinates, validated server-side). Adds a per-user Units setting (imperial or metric, `users.measurement_system`, in the session payload; `useUnits()` in `frontend/src/hooks/useUnits.ts`, helpers in `frontend/src/utils/units.ts`) used by the planner and the distance/temperature displays listed in the commit.
+**Status**: ✅ Completed 2026-11-16 — Route Planner sub-tab under Itinerary: ordered `trip_stops` (name, lat/lng, nights) as a drag-and-drop list (pointer, keyboard and move buttons) beside a numbered-marker map with the route line; client-side haversine distance and an estimated travel time per leg, totals, arrival/departure dates from the trip start, nights-over-trip warning; Optimise route (nearest-neighbour + 2-opt, first/last stop optionally fixed) with a saving preview, explicit apply and undo. API: `GET/POST /api/trips/:tripId/stops`, `PUT /stops/reorder`, `PUT/DELETE /stops/:id`; included in backup/restore. Stops can also be made from the trip's saved places (linked, snapshotted name and coordinates, validated server-side; a linked stop that is moved must stay within 50 km of its place). View-only collaborators see the list, map, distances, dates and totals but none of the editing controls. Adds a per-user Units setting (imperial or metric, default imperial, `users.measurement_system`, in the session payload; `useUnits()` in `frontend/src/hooks/useUnits.ts`, helpers in `frontend/src/utils/units.ts`) used by the planner, the trip comparison and the distance/temperature displays. Not done: routed (road) distances or times: all distances are straight-line and times are rough estimates. Migration `20261116080000_add_trip_stops`; the Units setting is `20261116120000_add_user_measurement_system`.
 
 ### 14. Recurring Trips
 
@@ -350,7 +350,7 @@ Good enhancements that improve the experience.
 
 **Implementation**: localStorage tracking or database log.
 
-**Status**: ✅ Completed 2026-11-15 (frontend-only: per-user localStorage list, "Recently viewed" dashboard widget, pruned against the cached trips list)
+**Status**: ✅ Completed 2026-11-15 (frontend-only: per-browser, per-user localStorage list of the last viewed trips, a "Recently viewed" dashboard widget pruned against the cached trips list, with the trip's Immich cover shown when it has one). Not done: no sync between devices.
 
 ### 23. Keyboard Shortcuts
 
@@ -424,7 +424,7 @@ Good enhancements that improve the experience.
 - Preview before import
 - Error handling
 
-**Status**: ✅ Completed. Import locations or activities from the trip header (Import CSV): template download, column mapping with auto-match, a server dry-run preview with per-row errors, warnings and duplicate detection, and a result step with a downloadable error report. API: `POST /api/trips/:tripId/import/locations|activities`. See [API Reference](../api/README.md).
+**Status**: ✅ Completed 2026-11-16. Import locations or activities from the trip header (Import CSV): template download, column mapping with auto-match, a server dry-run preview with per-row errors, warnings and duplicate detection, and a result step with a downloadable error report. Costs may only use the currencies the currency picker offers (the backend list is `backend/src/constants/currencies.ts`). API: `POST /api/trips/:tripId/import/locations|activities`. See [API Reference](../api/README.md). Not done: lodging and transportation import.
 
 ---
 
@@ -1085,7 +1085,8 @@ already provides one).
 - Bulk import
 - Album sync
 
-**Status**: ✅ Implemented (not yet run against a live Immich server; HTTP layer mocked in tests)
+**Status**: ✅ Implemented 2026-11-16 (not yet run against a live Immich server; the HTTP layer is mocked in tests). Includes opt-in smart (content) search, which needs Immich machine learning and is not used for bulk import.
+
 - ✅ Advanced filtering: server-side date range (whole local days in the trip timezone, with a "This trip's dates" preset), favourites, media type, Immich album, file-name search or opt-in smart (content) search via `/api/search/smart` (relevance-ordered, needs Immich machine learning, not usable for bulk import); already-linked assets are marked
 - ✅ Bulk import: "Link all matching" with count confirmation, progress and a linked / already linked / failed summary (cap 5,000; re-running never duplicates)
 - ✅ Album sync (Immich to trip): link a trip album to an Immich album and pull new assets with a manual Sync button; assets removed from Immich are left in the trip and only reported
@@ -1536,7 +1537,7 @@ than silently mixed in. Activity/Transportation/Lodging fill in lazily on first 
 
 **Value**: removes the need for a separate Splitwise on every group trip.
 
-**Status**: ✅ Completed
+**Status**: ✅ Completed 2026-11-16 (migration `20261116010000_add_expense_splits`). An expense can record who paid (the trip owner or a companion) and a split between the owner and the trip's companions: equally, by amount or by percentage. Shares are stored per person in the expense's own currency (`TripExpenseSplit`, new `trip_expense_splits` table) and must add up to the expense amount. `GET /api/trips/:tripId/expenses/participants`, `PUT /api/trips/:tripId/expenses/:id/split` (also returned on the expense), and `GET /api/trips/:tripId/settle-up` for per-person paid/owed/net and the fewest payments that settle everyone, in the budget summary's currency. Expenses that cannot be converted are listed rather than guessed at; expenses without a payer or split are listed as unsplit. The payer and split round-trip through backup/restore. Editing an expense whose stored split includes someone who has since left the trip shows a warning naming them, because saving recalculates the shares without them. Not done: recording a settlement payment (settle-up is a calculation, not a ledger).
 
 ### 98. Trip Wishlist / Bucket List
 
@@ -1587,7 +1588,7 @@ Locations that already belong to a trip.
 - "Favorites" filter in the gallery and lightbox
 - Auto-generated highlight reel per trip, shareable via the existing public share
 
-**Status**: ✅ Implemented. `Photo.isFavorite` is toggled through `PUT /api/photos/:id` (edit permission required). The `favoritesOnly=true` query is supported on the trip, unsorted and album photo lists, so the gallery's Favorites filter is server-side and paged across the whole trip or album (the album detail page, which receives a pre-loaded list, filters on the client). The gallery grid, list and lightbox have a star toggle; view-only collaborators see a read-only indicator instead (permission from `GET /api/trips/:id/permission` via `useTripEditAccess`). Unstarring the open photo in a filtered lightbox keeps it in the lightbox until you navigate or close. The Photos tab has a Highlights view (empty state explains how to star photos; nothing is auto-picked), and the public share page shows a Highlights section from starred local photos. `isFavorite` round-trips through backup/restore (defaults to false for older backups). Migration: `20261116020000_add_photo_is_favorite`.
+**Status**: ✅ Implemented 2026-11-16. `Photo.isFavorite` is toggled through `PUT /api/photos/:id` (edit permission required). The `favoritesOnly=true` query is supported on the trip, unsorted and album photo lists, so the gallery's Favorites filter is server-side and paged across the whole trip or album (the album detail page, which receives a pre-loaded list, filters on the client). The gallery grid, list and lightbox have a star toggle; view-only collaborators see no star toggle, only a read-only indicator (permission from `GET /api/trips/:id/permission` via `useTripEditAccess`). Unstarring the open photo in a filtered lightbox keeps it in the lightbox until you navigate or close. The Photos tab has a Highlights view (the empty state explains how to star photos; nothing is auto-picked), and the public share page shows a Highlights section from starred local photos. `isFavorite` round-trips through backup/restore and is carried by trip duplication (defaults to false for older backups). Migration: `20261116020000_add_photo_is_favorite`.
 
 ### 101. Infer Photo Location from Itinerary
 
@@ -1756,14 +1757,7 @@ bookings.
 - Optional manual points balance
 - Sits naturally beside `TravelDocument`
 
-**Status**: Implemented. User-scoped `LoyaltyProgram` model (migration `20261116030000_add_loyalty_programs`)
-with CRUD at `/api/loyalty-programs`, managed in Settings > Travel Documents. Transportation and lodging
-carry a nullable `loyaltyProgramId` (a reference, so the number is never copied onto a booking and never
-reaches collaborators or the public share page). The booking forms offer a one-click suggestion chip when the
-carrier or hotel name matches a program (`frontend/src/utils/loyaltyMatch.ts`: case-insensitive, tolerant of
-"Delta" vs "Delta Air Lines", IATA code from the flight number). Included in backup and restore. Unlike travel
-document numbers, membership numbers are returned in full to their owner and kept in full in backups. Not yet
-wired into the timeline quick-edit modal or trip duplication.
+**Status**: ✅ Implemented 2026-11-16. User-scoped `LoyaltyProgram` model (migration `20261116030000_add_loyalty_programs`) with CRUD at `/api/loyalty-programs`, managed in Settings > Travel Documents. Transportation and lodging carry a nullable `loyaltyProgramId` (a reference, so the number is never copied onto a booking and never reaches collaborators or the public share page). The booking forms offer a one-click suggestion chip when the carrier or hotel name matches a program (`frontend/src/utils/loyaltyMatch.ts`: case-insensitive, tolerant of "Delta" vs "Delta Air Lines", IATA code from the flight number). Included in backup and restore (programs restored in full, bookings re-linked, an existing program with the same details reused), and trip duplication keeps a booking's program link. Unlike travel document numbers, membership numbers are returned in full to their owner and kept in full in backups. Not done: wiring into the timeline quick-edit modal.
 
 ### 110. Travel Day Document Vault
 
@@ -1920,7 +1914,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Dashboard widget + push notification (push infra exists) ahead of each deadline
 - Health Check rule for missed or imminent deadlines
 
-**Status**: ✅ Shipped. New `BookingDeadline` table (migration `20260810000000_add_booking_deadlines`, exactly one of lodging/transportation/activity enforced by a CHECK), CRUD + `/api/deadlines/upcoming`, hourly push reminders for deadlines due within 24h (persisted `notifiedAt`), Health Check rule (overdue or due within 3 days), backup/restore support, Deadlines tab on the trip page, and a dashboard widget. Deadlines are also edited inside the lodging, transportation and activity forms (`BookingDeadlinesSection`; changes are held in the form and written after the booking saves, so a new booking's deadlines are created with its new id). Follow-up: a deadline no longer has to be attached to a booking. A standalone deadline carries its own `title` (migration `20261115000000_add_booking_deadline_title`, which replaces the one-target CHECK with "exactly one booking, or none plus a non-blank title")
+**Status**: ✅ Shipped. New `BookingDeadline` table (migration `20260810000000_add_booking_deadlines`, exactly one of lodging/transportation/activity enforced by a CHECK), CRUD + `/api/deadlines/upcoming`, hourly push reminders for deadlines due within 24h (persisted `notifiedAt`), Health Check rule (overdue or due within 3 days), backup/restore support, Deadlines tab on the trip page, and a dashboard widget. Deadlines are also edited inside the lodging, transportation and activity forms (`BookingDeadlinesSection`; changes are held in the form and written after the booking saves, so a new booking's deadlines are created with its new id; tested for all three forms). A deadline row typed into the form but not committed with "Add deadline" is not lost on save: a complete row is added, an incomplete one (no due date) blocks the save with a message on that row. Follow-up: a deadline no longer has to be attached to a booking. A standalone deadline carries its own `title` (migration `20261115000000_add_booking_deadline_title`, which replaces the one-target CHECK with "exactly one booking, or none plus a non-blank title")
 
 ### 117. Today Mode Enhancements
 
@@ -1935,7 +1929,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Local vs home time side by side
 - Fully usable offline (builds on PWA + offline maps)
 
-**Status**: Done (frontend only: next-up card with live countdown, address, confirmation number and route; local and home clocks; renders from cached data offline)
+**Status**: ✅ Done (frontend only). On an in-progress trip the dashboard Today card shows what is happening now or next with a live countdown, address, confirmation number (one-tap copy) and a route button, plus the local time and the home time side by side (the home clock is left out while both zones read the same). The older Local Time widget is not shown while the Today card is showing its clocks, so there is one clock, not two; it still appears on other international trips. Renders from cached data offline. Not done: no offline caching specific to it beyond what the PWA already holds.
 
 ### 118. Passport & Visa Validity Check
 
@@ -1978,7 +1972,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Reuses `llm.service.ts` and the per-user key handling
 - Result lands as an editable draft only; no direct writes to published entries
 
-**Status**: Complete. `POST /api/trips/:tripId/ai/journal-day-draft` (`{ date }`, needs edit access) returns `{ title, body, date, truncated }` as text only; "Draft with AI" in the journal form pre-fills the editor, marked as an AI draft, and nothing is saved until Create Entry. The date must fall within the trip's dates plus one day either side (travel days), otherwise `422` naming the range; a trip with no dates is not restricted. Trip days in the Timeline and Day By Day views have "Add journal entry" and "Draft with AI" actions (edit access only) that open the same form on that day.
+**Status**: ✅ Complete 2026-11-16 (not yet run against a real LLM; the model call is mocked in tests). `POST /api/trips/:tripId/ai/journal-day-draft` (`{ date }`, needs edit access) returns `{ title, body, date, truncated }` as text only, using the requesting user's own AI configuration; "Draft with AI" in the journal form pre-fills the editor, marked as an AI draft, and nothing is saved until Create Entry. The date must fall within the trip's dates plus one day either side (travel days), otherwise `422` naming the range; a trip with no dates is not restricted. Trip days in the Timeline and Day By Day views have "Add journal entry" and "Draft with AI" actions (edit access only) that open the same form on that day.
 
 ### 121. Food Log
 
@@ -2024,7 +2018,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Feeds `TripExpense` and multi-currency (#96)
 - Result opens in a confirm form before saving
 
-**Status**: ✅ Shipped (not yet run against a live model or database). `POST /api/trips/:tripId/expenses/scan-receipt` takes one photo (JPEG/PNG/WebP/HEIC, 10 MB, type checked from the bytes), downscales it with sharp, and reads it through the user's own LLM via a new `llmService.chatWithImage` (OpenAI-compatible `image_url`; needs a vision-capable model). The reply is validated per field (decimal-string amount, supported ISO currency or null, real calendar date) and returned without creating an expense or storing the image. A Scan Receipt button beside Add Expense opens the camera on phones and opens the normal form pre-filled with scanned fields marked. A receipt with no currency leaves the form default in place with a warning. The photo is kept in memory while the form is open and, once the expense is saved, uploaded to `POST/DELETE /api/trips/:tripId/expenses/:id/receipt` (new nullable `receipt_*` columns on `trip_expenses`, migration `20261116070000_add_expense_receipt_image`); a failed upload keeps the expense and says so. Receipts can also be attached, replaced and removed from the edit form of any expense, show a receipt icon in the list, are stored as 2400 px JPEG files under `uploads/receipts/`, are served only to people who can view the trip, never appear on the public share page, and are deleted with the receipt, expense or trip. Backups carry each receipt's path and metadata (not the image bytes, same as photos); restore re-attaches a receipt only when its file is still on the uploads volume, never lets two expenses share a file, cleans up replaced receipt files, and reports how many receipts could not be re-attached.
+**Status**: ✅ Shipped 2026-11-16 (not yet run against a live vision model or a real database). `POST /api/trips/:tripId/expenses/scan-receipt` takes one photo (JPEG/PNG/WebP/HEIC, 10 MB, type checked from the bytes), downscales it with sharp, and reads it through the user's own LLM via a new `llmService.chatWithImage` (OpenAI-compatible `image_url`; needs a vision-capable model). The reply is validated per field (decimal-string amount, a currency the currency picker offers or null, real calendar date) and returned without creating an expense or storing the image. A Scan Receipt button beside Add Expense opens the camera on phones and opens the normal form pre-filled with scanned fields marked. A receipt with no currency leaves the form default in place with a warning. The photo is kept in memory while the form is open and, once the expense is saved, uploaded to `POST/DELETE /api/trips/:tripId/expenses/:id/receipt` (new nullable `receipt_*` columns on `trip_expenses`, migration `20261116070000_add_expense_receipt_image`); a failed upload keeps the expense and says so. Receipts can also be attached, replaced and removed from the edit form of any expense, show a receipt icon in the list, are stored as 2400 px JPEG files under `uploads/receipts/`, are served only to people who can view the trip, never appear on the public share page, and are deleted with the receipt, expense or trip. Backups carry each receipt's path and metadata, not the image bytes (same as photos; see #127); restore re-attaches a receipt only when its file is still on the uploads volume, never lets two expenses share a file, cleans up replaced receipt files, and reports how many receipts could not be re-attached.
 
 ### 123. Parking & Rental Car Log
 
@@ -2080,6 +2074,23 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Status**: Not started
 
+### 127. Self-contained Backups
+
+**Category**: Data Management
+**Effort**: Medium
+**Impact**: Medium
+
+**Description**: A backup is a single JSON file. It records the upload paths of photos and expense receipts but not the image bytes, so restoring onto a server that has lost its uploads volume leaves photos and receipts without images.
+
+**Features**:
+- Option to include the image files (photos, thumbnails, receipt images) in the backup, for example as a zip archive with the JSON inside
+- Restore writes the files back to the uploads volume and re-attaches them
+- Size estimate before downloading, and a way to leave the images out
+
+**Current State**: restore re-attaches a photo or receipt only when its file is still on the uploads volume, and reports how many it could not.
+
+**Status**: Not started
+
 ---
 
 ## Quick Reference
@@ -2089,7 +2100,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 **Very Low (< 4 hours)**:
 - Smart Lodging Duration (#7) ✅
 - Default Timezone (#21)
-- Recently Viewed Trips (#22)
+- Recently Viewed Trips (#22) ✅
 - Trip Archive (#25)
 - Night Mode Schedule (#30)
 - Transit & Rideshare Deep Links (#112)
@@ -2112,22 +2123,22 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Print Styles (#88)
 - Travel Milestones (#81)
 - Trip Dependencies (#80)
-- Photo Favorites & Highlight Reel (#100)
+- Photo Favorites & Highlight Reel (#100) ✅
 - Public Trip Guestbook (#105)
 - Spending Pace & Cost-per-Day (#106)
 - Post-Trip Retrospective (#108)
-- Loyalty Programs (#109)
+- Loyalty Programs (#109) ✅
 - Emergency Card (#111)
 - Local Norms Card (#113)
 
 **Medium (1-2 weeks)**:
 - Trip Health Check (#2)
 - Travel Time Alerts (#3)
-- Multi-Trip Views (#11)
+- Multi-Trip Views (#11) ✅
 - Recurring Trips (#14)
 - Heatmap (#20)
 - Best Times to Visit (#26)
-- Bulk Import (#27)
+- Bulk Import (#27) ✅
 - Custom Dashboard Widgets (#29)
 - Photo Stories (#35)
 - Photo Comparison (#36)
@@ -2148,7 +2159,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Mobile-Optimized UI (#65) ✅
 - Quick Capture (#66) ✅
 - Push Notifications (#67)
-- Expand Immich (#70)
+- Expand Immich (#70) ✅
 - Flight Tracking (#71)
 - Weather Integration (#72)
 - Mapping Services (#73)
@@ -2157,7 +2168,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Auto-Detect Duplicates (#92)
 - Travel Companions Network (#93)
 - Multi-Currency with Exchange Rates (#96)
-- Expense Splitting & Settle-Up (#97)
+- Expense Splitting & Settle-Up (#97) ✅
 - Trip Wishlist / Bucket List (#98)
 - People in Photos (#99)
 - Infer Photo Location from Itinerary (#101)
@@ -2170,7 +2181,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Timeline Export PDF (#8)
 - Pre-Trip Checklist (#9)
 - Drag & Drop Timeline (#10) ✅
-- Multi-City Planner (#13)
+- Multi-City Planner (#13) ✅
 - Smart Suggestions (#16)
 - Expense Predictions (#17)
 - Local Tips Exchange (#19)
@@ -2237,6 +2248,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 ## Update Log
 
+- **2026-11-16**: Shipped a batch of twelve features built in parallel in isolated worktrees and merged on one integration branch: #11 trip comparison, #13 multi-city route planner (with a new per-user Units setting, imperial or metric, defaulting to imperial), #22 recently viewed trips, #27 CSV import, #70 Immich expansion (filtering, bulk link, album sync, opt-in export, smart search), #97 expense splitting and settle-up, #100 photo favorites, #109 loyalty programs, #116 deadlines inside the booking forms, #117 Today mode, #120 day auto-draft journal, and #122 receipt scan with stored receipt images. Seven new migrations: `20261116010000_add_expense_splits`, `20261116020000_add_photo_is_favorite`, `20261116030000_add_loyalty_programs`, `20261116070000_add_expense_receipt_image`, `20261116080000_add_trip_stops`, `20261116100000_add_immich_album_link`, `20261116120000_add_user_measurement_system`. Verification on the merged branch: backend build and 2,681 Jest tests, frontend `tsc -b` and 1,022 Vitest tests, and a 402-step smoke test against a real database all pass. Nothing was tested against a live Immich server or a real LLM (both are mocked), so Immich sync/export/smart search, receipt scan and the AI day draft are unproven end to end. Pre-existing bugs fixed along the way: activity `timezone` and `allDay` were not saved on create; the AI journal summary, enhance and link suggestions ignored a user's own AI key; trip duplication now carries photo favorites and loyalty links; and a replace-mode restore no longer turns a backup with no timezone into `UTC` (it leaves the user's timezone alone). Cross-feature polish: the route planner is read-only for view-only collaborators, trip comparison distances follow the Units setting, an uncommitted deadline row in a booking form is added or blocks the save instead of vanishing, the expense form warns when a split includes someone who has left the trip, the dashboard shows one clock when the Today card has its own, Escape in the Immich export confirmation closes only that dialog, and the backend keeps one copy of the convertible-currency list. Added #127 (self-contained backups: images are not in the backup file)
 - **2026-11-07**: Added #115–#126 (backups, deadline tracker, Today mode, passport check, packing list, journal auto-draft, food log, receipt scan, parking log, data quality, records, share PINs)
 - **2026-07-25 (evening)**: Shipped #96 (multi-currency with FX rates), #102 (opening hours & closure warnings), and #112 (transit & rideshare deep links). Built in parallel in isolated worktrees. Backend +144 tests, frontend +81, zero new failures against the v5.6.0 baseline of 30 pre-existing ones. Note for future verification: `npx tsc --noEmit` in `frontend/` is a **no-op** — the root `tsconfig.json` has `"files": []` with only project references, so it silently checks nothing. Use `npx tsc -b` (which is what `npm run build:strict` already does); the shortcut hid a real type error in this batch
 - **2026-07-25**: Added #96–#114 from a fresh pass over the schema and services. Ideas that duplicated existing entries were folded into those rather than listed twice — ratings widened in #41, GPX import added to #43, booking-email import updated in #69 (the IMAP transport now exists after the saved-link email ingest work, so it is far cheaper than the 2026-04 attempt). Also added #95 (Technical Debt: `transformTripToBackupFormat` type assertions). Highest-value new items: #96 multi-currency, which fixes a real correctness bug where mixed-currency budget totals are simply summed without conversion; #102 opening hours, which catches the most common itinerary failure; and #97 expense splitting

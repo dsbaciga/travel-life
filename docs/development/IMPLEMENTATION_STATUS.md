@@ -1,6 +1,6 @@
 # Travel Life - Implementation Status
 
-Last Updated: 2026-07-25
+Last Updated: 2026-11-16
 Version: v5.6.1
 
 ## ✅ Completed Features
@@ -443,6 +443,21 @@ conflict resolution) is implemented but not reachable by users — see
 - [x] Trip list excludes archived trips by default; Archived filter on TripsPage; archive/unarchive on TripCard
 - [x] Favorite star on locations; `GET /api/locations/favorites`; Favorites filter on Places Visited page
 - [x] Trip timezone auto-set from the first location's coordinates via `tz-lookup` when unset
+
+### November 2026 Feature Batch (2026-11-16)
+
+Twelve backlog features, merged together. Backend build + 2,681 Jest tests and frontend `tsc -b` + 1,022 Vitest tests pass, and a 402-step real-database smoke test passes. Immich and LLM features were tested against mocks only, never a live Immich server or a real model.
+
+- [x] Expense splitting and settle-up (#97): payer and equal / amount / percentage split per expense, `trip_expense_splits`, `/settle-up` (migration `20261116010000_add_expense_splits`)
+- [x] Photo favorites and Highlights view (#100): `photos.is_favorite`, server-side Favorites filter, star hidden for view-only users (migration `20261116020000_add_photo_is_favorite`)
+- [x] Loyalty programs (#109): `loyalty_programs`, `loyaltyProgramId` on lodging and transportation, suggestion chip in the booking forms (migration `20261116030000_add_loyalty_programs`)
+- [x] Receipt scan and receipt images (#122): `POST .../expenses/scan-receipt`, `receipt_*` columns on `trip_expenses`, stored 2400 px JPEG; backups keep the path, not the image (migration `20261116070000_add_expense_receipt_image`)
+- [x] Multi-city route planner (#13): `trip_stops`, drag-and-drop list with map, optimise with undo, stops from saved places, read-only for view-only users (migration `20261116080000_add_trip_stops`)
+- [x] Units setting: `users.measurement_system` (imperial or metric, default imperial) used by the planner, the trip comparison and the temperature displays (migration `20261116120000_add_user_measurement_system`)
+- [x] Immich expansion (#70): filtering, smart search, bulk link, album sync, opt-in export (migration `20261116100000_add_immich_album_link`); not tested against a live Immich server
+- [x] Trip comparison (#11), recently viewed trips (#22) and CSV import for locations and activities (#27): no schema change
+- [x] Deadlines inside the lodging, transportation and activity forms (#116), Today mode clocks and next-up card (#117), and day auto-draft journal with day-view actions (#120): no schema change
+- [x] Fixed on the way: activity `timezone` / `allDay` not saved on create, AI journal features ignoring a user's own AI key, trip duplication now carries photo favorites and loyalty links, restore no longer invents a UTC timezone
 
 ## 🔌 Built but Not Yet Wired Up
 
