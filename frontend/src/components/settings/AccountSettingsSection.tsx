@@ -5,6 +5,7 @@ import userService from "../../services/user.service";
 import { useUpdateUser } from "../../store/authStore";
 import { useTheme, useToggleTheme } from "../../store/themeStore";
 import DietaryTagSelector from "../DietaryTagSelector";
+import UnitsSetting from "./UnitsSetting";
 import LoadingSpinner from "../LoadingSpinner";
 import ErrorBoundary from "../ErrorBoundary";
 import { CONVERTIBLE_CURRENCIES } from "../../constants/currencies";
@@ -304,6 +305,8 @@ export default function AccountSettingsSection({
           </button>
         </div>
       </div>
+
+      <UnitsSetting />
 
       {/* Home Currency Setting */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">

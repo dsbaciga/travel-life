@@ -17,6 +17,7 @@
  */
 
 import { useMemo } from 'react';
+import { useUnits } from '../../hooks/useUnits';
 
 // Weather condition type
 type WeatherCondition =
@@ -40,7 +41,6 @@ export interface ForecastDay {
 export interface WeatherForecastWidgetProps {
   forecast: ForecastDay[] | null;
   location: string;
-  temperatureUnit: 'celsius' | 'fahrenheit';
   isLoading?: boolean;
   error?: string | null;
   onRefresh?: () => void;
@@ -277,13 +277,6 @@ function getConditionLabel(condition: WeatherCondition): string {
 }
 
 /**
- * Format temperature with unit
- */
-function formatTemperature(temp: number, unit: 'celsius' | 'fahrenheit'): string {
-  return `${Math.round(temp)}°${unit === 'celsius' ? 'C' : 'F'}`;
-}
-
-/**
  * Format date for display (e.g., "Mon", "Tue")
  */
 function formatDayName(dateString: string): string {
@@ -314,14 +307,14 @@ function isToday(dateString: string): boolean {
 
 /**
  * Generate pack recommendations based on weather conditions
- * Note: Temperatures are assumed to be in the same unit as the widget's temperatureUnit
+ * Forecast temperatures are stored in degrees Fahrenheit whatever the user's units, so the
+ * thresholds are Fahrenheit; only the display is converted.
  */
-function getPackRecommendations(forecast: ForecastDay[], temperatureUnit: 'celsius' | 'fahrenheit'): string[] {
+function getPackRecommendations(forecast: ForecastDay[]): string[] {
   const recommendations: Set<string> = new Set();
 
-  // Define temperature thresholds based on unit
-  const coldThreshold = temperatureUnit === 'celsius' ? 10 : 50; // 10°C or 50°F
-  const hotThreshold = temperatureUnit === 'celsius' ? 30 : 86;  // 30°C or 86°F
+  const coldThreshold = 50; // 10°C
+  const hotThreshold = 86; // 30°C
 
   forecast.forEach((day) => {
     // Temperature-based recommendations
@@ -421,11 +414,11 @@ function LocationIcon({ className = 'w-4 h-4' }: { className?: string }) {
  */
 interface ForecastDayCardProps {
   day: ForecastDay;
-  temperatureUnit: 'celsius' | 'fahrenheit';
   isFirst?: boolean;
 }
 
-function ForecastDayCard({ day, temperatureUnit, isFirst = false }: ForecastDayCardProps) {
+function ForecastDayCard({ day, isFirst = false }: ForecastDayCardProps) {
+  const { formatTemperature } = useUnits();
   const today = isToday(day.date);
 
   return (
@@ -457,10 +450,10 @@ function ForecastDayCard({ day, temperatureUnit, isFirst = false }: ForecastDayC
       {/* Temperature range */}
       <div className="flex flex-col items-center gap-0.5">
         <span className="text-base font-bold text-charcoal dark:text-warm-gray">
-          {formatTemperature(day.high, temperatureUnit)}
+          {formatTemperature(day.high)}
         </span>
         <span className="text-sm text-slate dark:text-warm-gray/60">
-          {formatTemperature(day.low, temperatureUnit)}
+          {formatTemperature(day.low)}
         </span>
       </div>
 
@@ -620,7 +613,6 @@ function PackRecommendation({ item }: { item: string }) {
 export default function WeatherForecastWidget({
   forecast,
   location,
-  temperatureUnit,
   isLoading = false,
   error = null,
   onRefresh,
@@ -628,8 +620,8 @@ export default function WeatherForecastWidget({
   // Generate pack recommendations
   const packRecommendations = useMemo(() => {
     if (!forecast || forecast.length === 0) return [];
-    return getPackRecommendations(forecast, temperatureUnit);
-  }, [forecast, temperatureUnit]);
+    return getPackRecommendations(forecast);
+  }, [forecast]);
 
   // Loading state
   if (isLoading) {
@@ -682,7 +674,6 @@ export default function WeatherForecastWidget({
           <ForecastDayCard
             key={day.date}
             day={day}
-            temperatureUnit={temperatureUnit}
             isFirst={index === 0}
           />
         ))}

@@ -529,6 +529,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
         dietaryPreferences: true,
         useCustomMapStyle: true,
         baseCurrency: true,
+        measurementSystem: true,
         preferredMapsApp: true,
         immichApiUrl: true,
         llmBaseUrl: true,
@@ -710,6 +711,10 @@ export async function createBackup(userId: number): Promise<BackupData> {
       dietaryPreferences: (user.dietaryPreferences as string[]) ?? [],
       useCustomMapStyle: user.useCustomMapStyle,
       baseCurrency: user.baseCurrency,
+      measurementSystem:
+        user.measurementSystem === 'imperial' || user.measurementSystem === 'metric'
+          ? user.measurementSystem
+          : null,
       preferredMapsApp: user.preferredMapsApp,
       immichApiUrl: user.immichApiUrl,
       immichApiKey: null,

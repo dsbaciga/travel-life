@@ -12,12 +12,20 @@
  * - RPL-008: A failed reorder rolls the list back and reports it
  * - RPL-009: Adding a stop from a place search appends it
  * - RPL-010: Optimise is disabled with fewer than three stops
+ * - RPL-011: Distances follow the user's units: miles by default and for imperial, km for metric
+ * - RPL-012: The optimise preview is in the chosen unit
+ * - RPL-013: Picking a saved place sends its locationId; the list filters locally
+ * - RPL-014: Saved places without coordinates are disabled, with a reason
+ * - RPL-015: Places that are already stops are marked, and can be added again
+ * - RPL-016: A linked stop links to its saved place, and a repeat shows as a return visit
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { MemoryRouter } from 'react-router';
+import { useAuthStore } from '../../store/authStore';
 
 vi.mock('../../services/tripStop.service', () => ({
   default: {
@@ -42,6 +50,7 @@ import RoutePlanner from '../route-planner/RoutePlanner';
 import tripStopService from '../../services/tripStop.service';
 import geocodingService from '../../services/geocoding.service';
 import type { TripStop } from '../../types/tripStop';
+import type { Location } from '../../types/location';
 
 const TRIP_ID = 1;
 
@@ -69,17 +78,23 @@ const zigzag = (): TripStop[] => [
 
 const mocks = vi.mocked(tripStopService);
 
-function renderPlanner(stops: TripStop[], props: { start?: string | null; end?: string | null } = {}) {
+function renderPlanner(
+  stops: TripStop[],
+  props: { start?: string | null; end?: string | null; locations?: Location[] } = {}
+) {
   mocks.getStopsByTrip.mockResolvedValue(stops);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
+    <MemoryRouter>
     <QueryClientProvider client={client}>
       <RoutePlanner
         tripId={TRIP_ID}
         tripStartDate={props.start === undefined ? '2026-03-10T00:00:00.000Z' : props.start}
         tripEndDate={props.end === undefined ? '2026-03-20T00:00:00.000Z' : props.end}
+        locations={props.locations}
       />
     </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
@@ -96,9 +111,29 @@ const echoReorder = () =>
     return ids.map((id, position) => ({ ...all.find((s) => s.id === id)!, position }));
   });
 
+const setSystem = (measurementSystem: 'imperial' | 'metric' | null | undefined) =>
+  useAuthStore.setState({
+    user: { id: 1, username: 'u', email: 'u@x.y', avatarUrl: null, measurementSystem },
+  });
+
+const place = (over: Partial<Location>): Location =>
+  ({
+    id: 1,
+    tripId: TRIP_ID,
+    parentId: null,
+    name: 'Place',
+    address: null,
+    latitude: 41.9,
+    longitude: 12.5,
+    categoryId: null,
+    excludeFromMap: false,
+    ...over,
+  }) as Location;
+
 describe('RoutePlanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setSystem('metric');
   });
 
   it('RPL-001: lists stops with legs and totals', async () => {
@@ -111,6 +146,7 @@ describe('RoutePlanner', () => {
     expect(screen.getAllByText(/\(est\.\)/).length).toBeGreaterThanOrEqual(4);
     const totals = screen.getByText('Distance').parentElement!;
     expect(totals).toHaveTextContent(/[\d,]+ km/);
+    expect(totals).not.toHaveTextContent(/ mi\b/);
     expect(await screen.findByTestId('route-map')).toHaveTextContent('Lisbon,Warsaw,Madrid,Berlin,Paris');
   });
 
@@ -250,5 +286,139 @@ describe('RoutePlanner', () => {
   it('shows an empty state with no stops', async () => {
     renderPlanner([]);
     expect(await screen.findByText('No stops yet')).toBeInTheDocument();
+  });
+
+  it('RPL-011: shows miles for imperial and for a user who never chose, km for metric', async () => {
+    setSystem('imperial');
+    const { unmount } = renderPlanner(zigzag());
+    await screen.findByText('Lisbon');
+    expect(screen.getByLabelText(/from Lisbon to Warsaw/)).toHaveTextContent(/[\d,]+ mi/);
+    expect(screen.getByText('Distance').parentElement).toHaveTextContent(/[\d,]+ mi/);
+    expect(screen.getByText('Distance').parentElement).not.toHaveTextContent(/ km/);
+    unmount();
+
+    setSystem(null); // a legacy user with no stored choice gets the app default (imperial)
+    renderPlanner(zigzag());
+    await screen.findByText('Lisbon');
+    expect(screen.getByText('Distance').parentElement).toHaveTextContent(/[\d,]+ mi/);
+  });
+
+  it('RPL-011: the same leg is about 0.62 times the number in miles', async () => {
+    const legNumber = (unit: 'km' | 'mi') =>
+      Number(
+        new RegExp(`([\\d,]+) ${unit}`)
+          .exec(screen.getByLabelText(/from Lisbon to Warsaw/).getAttribute('aria-label') ?? '')![1]
+          .replace(/,/g, '')
+      );
+
+    setSystem('metric');
+    const metric = renderPlanner(zigzag());
+    await screen.findByText('Lisbon');
+    const km = legNumber('km');
+    metric.unmount();
+
+    setSystem('imperial');
+    renderPlanner(zigzag());
+    await screen.findByText('Lisbon');
+    const mi = legNumber('mi');
+    expect(mi).toBeGreaterThan(km * 0.62);
+    expect(mi).toBeLessThan(km * 0.625);
+  });
+
+  it('RPL-012: the optimise preview states the saving in the chosen unit', async () => {
+    setSystem('imperial');
+    renderPlanner(zigzag());
+    await screen.findByText('Lisbon');
+    fireEvent.click(screen.getByRole('button', { name: 'Optimise route' }));
+    const proposal = await screen.findByRole('region', { name: 'Proposed route' });
+    expect(proposal).toHaveTextContent(/[\d,]+ mi shorter/);
+    expect(proposal).not.toHaveTextContent(/ km/);
+  });
+
+  it('RPL-013: picking a saved place sends its locationId and snapshot', async () => {
+    mocks.createStop.mockResolvedValue({ ...stop(6, 'Colosseum', 41.89, 12.49), locationId: 7 });
+    renderPlanner(zigzag(), {
+      locations: [place({ id: 7, name: 'Colosseum', latitude: 41.89, longitude: 12.49, address: 'Rome' })],
+    });
+    await screen.findByText('Lisbon');
+
+    fireEvent.click(screen.getByRole('button', { name: "This trip's places" }));
+    fireEvent.click(await screen.findByRole('button', { name: /Colosseum/ }));
+
+    await waitFor(() =>
+      expect(mocks.createStop).toHaveBeenCalledWith(TRIP_ID, {
+        locationId: 7,
+        name: 'Colosseum',
+        latitude: 41.89,
+        longitude: 12.49,
+      })
+    );
+  });
+
+  it('RPL-013: the places list filters locally and shows address or category', async () => {
+    renderPlanner(zigzag(), {
+      locations: [
+        place({ id: 1, name: 'Cafe Roma', address: 'Via Roma 1' }),
+        place({ id: 2, name: 'Cafe Roma', address: 'Corso 9', category: { name: 'Restaurant' } as Location['category'] }),
+        place({ id: 3, name: 'Museum' }),
+      ],
+    });
+    await screen.findByText('Lisbon');
+    fireEvent.click(screen.getByRole('button', { name: "This trip's places" }));
+
+    expect(screen.getByText(/Via Roma 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Restaurant/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Add a stop from this trip/), { target: { value: 'museum' } });
+    expect(screen.queryByText(/Via Roma 1/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Museum/ })).toBeInTheDocument();
+    expect(geocodingService.searchPlaces).not.toHaveBeenCalled();
+  });
+
+  it('RPL-014: places without coordinates are disabled with a reason and never sent', async () => {
+    renderPlanner(zigzag(), {
+      locations: [place({ id: 8, name: 'Secret beach', latitude: null, longitude: null })],
+    });
+    await screen.findByText('Lisbon');
+    fireEvent.click(screen.getByRole('button', { name: "This trip's places" }));
+
+    const button = await screen.findByRole('button', { name: /Secret beach/ });
+    expect(button).toBeDisabled();
+    expect(button).toHaveTextContent(/No coordinates/);
+    fireEvent.click(button);
+    expect(mocks.createStop).not.toHaveBeenCalled();
+  });
+
+  it('RPL-015: places already on the route are marked, and can still be added again', async () => {
+    const linked = { ...stop(1, 'Rome', 41.9, 12.5), locationId: 7 };
+    mocks.createStop.mockResolvedValue({ ...stop(2, 'Rome', 41.9, 12.5), locationId: 7 });
+    renderPlanner([linked, stop(3, 'Paris', 48.86, 2.35)], {
+      locations: [place({ id: 7, name: 'Rome' }), place({ id: 9, name: 'Siena' })],
+    });
+    await screen.findByText('Paris');
+    fireEvent.click(screen.getByRole('button', { name: "This trip's places" }));
+
+    expect(screen.getByText('Already a stop')).toBeInTheDocument();
+    const rome = screen.getByRole('button', { name: /^Rome/ });
+    expect(rome).toBeEnabled();
+    fireEvent.click(rome);
+
+    await waitFor(() =>
+      expect(mocks.createStop).toHaveBeenCalledWith(TRIP_ID, expect.objectContaining({ locationId: 7 }))
+    );
+  });
+
+  it('RPL-016: a linked stop links to its saved place and a repeat is a return visit', async () => {
+    renderPlanner([
+      { ...stop(1, 'Rome', 41.9, 12.5), locationId: 7 },
+      stop(2, 'Paris', 48.86, 2.35),
+      { ...stop(3, 'Rome', 41.9, 12.5), locationId: 7 },
+    ]);
+    await screen.findByText('Paris');
+
+    const links = screen.getAllByRole('link', { name: /Open Rome/ });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute('href', `/trips/${TRIP_ID}?tab=locations&highlight=7`);
+    expect(screen.getAllByText('Return visit')).toHaveLength(1);
   });
 });

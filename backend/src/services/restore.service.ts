@@ -194,6 +194,9 @@ export async function restoreFromBackup(
             ...(backupData.user.baseCurrency !== undefined
               ? { baseCurrency: backupData.user.baseCurrency }
               : {}),
+            ...(backupData.user.measurementSystem !== undefined
+              ? { measurementSystem: backupData.user.measurementSystem }
+              : {}),
             ...(backupData.user.preferredMapsApp !== undefined
               ? { preferredMapsApp: backupData.user.preferredMapsApp }
               : {}),

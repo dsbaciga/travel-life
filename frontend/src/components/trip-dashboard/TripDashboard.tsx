@@ -92,7 +92,6 @@ interface TripDashboardProps {
   flightStatusLoading?: boolean;
   onRefreshFlightStatus?: () => void;
   userHomeTimezone?: string;
-  temperatureUnit?: 'celsius' | 'fahrenheit';
   className?: string;
 }
 
@@ -146,7 +145,6 @@ export default function TripDashboard({
   flightStatusLoading,
   onRefreshFlightStatus,
   userHomeTimezone,
-  temperatureUnit = 'fahrenheit',
   className = '',
 }: TripDashboardProps) {
   // Calculate counts for stats
@@ -371,7 +369,6 @@ export default function TripDashboard({
                 <WeatherForecastWidget
                   forecast={weatherForecast || null}
                   location={weatherLocation || trip.title}
-                  temperatureUnit={temperatureUnit}
                   isLoading={weatherLoading}
                   error={weatherError || null}
                   onRefresh={onRefreshWeather}

@@ -9,6 +9,8 @@ import locationService from '../../services/location.service';
 import transportationService from '../../services/transportation.service';
 import toast from 'react-hot-toast';
 import { Skeleton } from '../Skeleton';
+import { useUnits } from '../../hooks/useUnits';
+import { distanceValue, distanceUnitLabel, otherMeasurementSystem } from '../../utils/units';
 
 interface Stats {
   totalTrips: number;
@@ -21,6 +23,7 @@ interface Stats {
 }
 
 export default function TravelStatsWidget() {
+  const { system } = useUnits();
   const [stats, setStats] = useState<Stats>({
     totalTrips: 0,
     totalPhotos: 0,
@@ -123,20 +126,14 @@ export default function TravelStatsWidget() {
     }
   };
 
-  const formatDistance = (km: number): string => {
-    if (km < 1000) {
-      return `${km.toFixed(0)} km`;
-    }
-    return `${(km / 1000).toFixed(1)}K km`;
+  // Compact ("1.2K mi") total in the given system; `km` is always kilometres.
+  const compactDistance = (km: number, forSystem: typeof system): string => {
+    const value = distanceValue(km, forSystem);
+    const label = distanceUnitLabel(forSystem);
+    return value < 1000 ? `${value.toFixed(0)} ${label}` : `${(value / 1000).toFixed(1)}K ${label}`;
   };
-
-  const formatDistanceSubtext = (km: number): string => {
-    const miles = km * 0.621371;
-    if (miles < 1000) {
-      return `${miles.toFixed(0)} mi`;
-    }
-    return `${(miles / 1000).toFixed(1)}K mi`;
-  };
+  const formatDistance = (km: number): string => compactDistance(km, system);
+  const formatDistanceSubtext = (km: number): string => compactDistance(km, otherMeasurementSystem(system));
 
   const handleRecalculateDistances = async () => {
     setIsRecalculating(true);

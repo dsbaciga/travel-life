@@ -53,6 +53,7 @@ model User {
   // default (apple | google | citymapper | uber | lyft). Null = no preference,
   // the UI then just lists every app that can handle the route.
   preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 

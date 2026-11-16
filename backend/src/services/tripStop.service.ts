@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { AppError } from '../errors/errors';
+import { haversineMeters } from './_shared/vendored/geo';
 import { verifyEntityInTrip, verifyTripAccessWithPermission } from './_shared/tripAccess';
 import {
   CreateTripStopInput,
@@ -15,6 +16,46 @@ async function findInTrip(stopId: number, tripId: number) {
   return stop;
 }
 
+/** A client-supplied position may differ from its saved place by at most this much. */
+const MAX_LINKED_DRIFT_KM = 50;
+
+/**
+ * Loads the saved place a stop is linked to. It must belong to the trip (404 otherwise) and
+ * have coordinates, because a stop with no position cannot be routed.
+ */
+async function loadLinkedLocation(locationId: number, tripId: number) {
+  await verifyEntityInTrip('location', locationId, tripId);
+  const location = await prisma.location.findUnique({
+    where: { id: locationId },
+    select: { name: true, latitude: true, longitude: true },
+  });
+  if (!location) {
+    throw new AppError('Location not found or does not belong to trip', 404);
+  }
+  if (location.latitude == null || location.longitude == null) {
+    throw new AppError('That place has no coordinates, so it cannot be a stop', 400);
+  }
+  return {
+    name: location.name,
+    latitude: Number(location.latitude),
+    longitude: Number(location.longitude),
+  };
+}
+
+/** Rejects coordinates that sit far from the place they claim to be linked to. */
+function assertNearLocation(
+  position: { latitude: number; longitude: number },
+  location: { latitude: number; longitude: number }
+) {
+  const km = haversineMeters(position, location) / 1000;
+  if (km > MAX_LINKED_DRIFT_KM) {
+    throw new AppError(
+      `The coordinates are ${Math.round(km)} km from the linked place; they must be within ${MAX_LINKED_DRIFT_KM} km`,
+      400
+    );
+  }
+}
+
 /**
  * The ordered route plan of a trip (Multi-City Trip Planner). Reads need 'view',
  * every write needs 'edit'. Positions are always 0..n-1 with no gaps.
@@ -27,8 +68,24 @@ class TripStopService {
 
   async createStop(userId: number, tripId: number, data: CreateTripStopInput) {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    // A linked stop snapshots the place's own name and coordinates unless the client sent
+    // its own (for instance a chosen name), which must still agree with the place.
+    let name = data.name;
+    let latitude = data.latitude;
+    let longitude = data.longitude;
     if (data.locationId != null) {
-      await verifyEntityInTrip('location', data.locationId, tripId);
+      const location = await loadLinkedLocation(data.locationId, tripId);
+      if (latitude !== undefined && longitude !== undefined) {
+        assertNearLocation({ latitude, longitude }, location);
+      } else {
+        latitude = location.latitude;
+        longitude = location.longitude;
+      }
+      name = name ?? location.name;
+    }
+    if (name === undefined || latitude === undefined || longitude === undefined) {
+      throw new AppError('name, latitude and longitude are required', 400);
     }
 
     const last = await prisma.tripStop.findFirst({
@@ -40,9 +97,9 @@ class TripStopService {
     return prisma.tripStop.create({
       data: {
         tripId,
-        name: data.name,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        name,
+        latitude,
+        longitude,
         nights: data.nights ?? null,
         locationId: data.locationId ?? null,
         position: last ? last.position + 1 : 0,
@@ -52,9 +109,16 @@ class TripStopService {
 
   async updateStop(userId: number, tripId: number, stopId: number, data: UpdateTripStopInput) {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
-    await findInTrip(stopId, tripId);
+    const existing = await findInTrip(stopId, tripId);
     if (data.locationId != null) {
-      await verifyEntityInTrip('location', data.locationId, tripId);
+      const location = await loadLinkedLocation(data.locationId, tripId);
+      assertNearLocation(
+        {
+          latitude: data.latitude ?? existing.latitude,
+          longitude: data.longitude ?? existing.longitude,
+        },
+        location
+      );
     }
 
     return prisma.tripStop.update({

@@ -19,6 +19,8 @@ import PlacesVisitedMapContainer from '../components/PlacesVisitedMapContainer';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils'; // Runs the leaflet icon setup
 import { formatTripDates } from '../utils/dateFormat';
+import { useUnits } from '../hooks/useUnits';
+import { formatDistance as formatUnits, otherMeasurementSystem } from '../utils/units';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -57,6 +59,7 @@ function StatCard({ label, value, subtext, gradient, icon }: StatCardProps) {
 }
 
 export default function YearInReviewPage() {
+  const { system, formatDistance } = useUnits();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const year = selectedYear ?? currentYear;
@@ -126,7 +129,6 @@ export default function YearInReviewPage() {
   );
 
   const maxMonthlyDays = Math.max(1, ...(review?.monthlyTripDays ?? [0]));
-  const distanceMiles = (review?.totalDistanceKm ?? 0) * 0.621371;
 
   const hasAnyData = !!review && (review.tripCount > 0 || review.availableYears.length > 0);
 
@@ -228,8 +230,8 @@ export default function YearInReviewPage() {
               />
               <StatCard
                 label="Traveled"
-                value={`${review.totalDistanceKm.toLocaleString()} km`}
-                subtext={`${Math.round(distanceMiles).toLocaleString()} mi · ${review.flightCount} flight${review.flightCount !== 1 ? 's' : ''}`}
+                value={formatDistance(review.totalDistanceKm)}
+                subtext={`${formatUnits(review.totalDistanceKm, otherMeasurementSystem(system))} · ${review.flightCount} flight${review.flightCount !== 1 ? 's' : ''}`}
                 gradient="from-cyan-500 to-blue-600"
                 icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />}
               />

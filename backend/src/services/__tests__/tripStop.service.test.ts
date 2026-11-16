@@ -25,6 +25,7 @@ const mockTx = {
 };
 
 const mockPrisma = {
+  location: { findUnique: jest.fn() },
   tripStop: {
     create: jest.fn(),
     findFirst: jest.fn(),
@@ -182,6 +183,92 @@ describe('TripStopService', () => {
     });
     expect(mockPrisma.tripStop.create).not.toHaveBeenCalled();
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  describe('linked saved places', () => {
+    const colosseum = { name: 'Colosseum', latitude: 41.89, longitude: 12.49 };
+    const echoCreate = () =>
+      mockPrisma.tripStop.create.mockImplementation(
+        async (args: { data: Record<string, unknown> }) => ({ id: 9, ...args.data })
+      );
+
+    it('TST-010: a stop made from a saved place takes its name and coordinates from it', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue({
+        name: 'Colosseum',
+        latitude: '41.89000000', // Prisma Decimal arrives as a Decimal/string-like value
+        longitude: '12.49000000',
+      });
+      mockPrisma.tripStop.findFirst.mockResolvedValue(null);
+      echoCreate();
+
+      const created = await tripStopService.createStop(1, 10, { locationId: 4 });
+
+      expect(mockVerifyEntity).toHaveBeenCalledWith('location', 4, 10);
+      expect(created).toMatchObject({ name: 'Colosseum', latitude: 41.89, longitude: 12.49, locationId: 4 });
+    });
+
+    it('TST-011: sent coordinates that agree with the place are accepted (and the chosen name kept)', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(colosseum);
+      mockPrisma.tripStop.findFirst.mockResolvedValue(null);
+      echoCreate();
+
+      const created = await tripStopService.createStop(1, 10, {
+        locationId: 4,
+        name: 'Rome',
+        latitude: 41.9,
+        longitude: 12.5,
+      });
+
+      expect(created).toMatchObject({ name: 'Rome', latitude: 41.9, longitude: 12.5, locationId: 4 });
+    });
+
+    it('TST-012: sent coordinates far from the place are rejected', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(colosseum);
+
+      await expect(
+        tripStopService.createStop(1, 10, { locationId: 4, name: 'Rome', latitude: 48.86, longitude: 2.35 })
+      ).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockPrisma.tripStop.create).not.toHaveBeenCalled();
+    });
+
+    it('TST-013: a place without coordinates cannot become a stop', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue({ name: 'Somewhere', latitude: null, longitude: null });
+
+      await expect(tripStopService.createStop(1, 10, { locationId: 4 })).rejects.toMatchObject({
+        statusCode: 400,
+      });
+      expect(mockPrisma.tripStop.create).not.toHaveBeenCalled();
+    });
+
+    it('TST-014: a location from another trip is rejected before it is read', async () => {
+      mockVerifyEntity.mockRejectedValue(new AppError('Location not found or does not belong to trip', 404));
+
+      await expect(tripStopService.createStop(1, 10, { locationId: 77 })).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      await expect(
+        tripStopService.updateStop(1, 10, 5, { locationId: 77 })
+      ).rejects.toMatchObject({ statusCode: 404 });
+      expect(mockPrisma.location.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.tripStop.create).not.toHaveBeenCalled();
+      expect(mockPrisma.tripStop.update).not.toHaveBeenCalled();
+    });
+
+    it('TST-015: linking an existing stop checks its own coordinates against the place', async () => {
+      mockPrisma.tripStop.findFirst.mockResolvedValue(stop(5, 0)); // lat 1, lng 2
+      mockPrisma.location.findUnique.mockResolvedValue(colosseum);
+
+      await expect(tripStopService.updateStop(1, 10, 5, { locationId: 4 })).rejects.toMatchObject({
+        statusCode: 400,
+      });
+      expect(mockPrisma.tripStop.update).not.toHaveBeenCalled();
+    });
+
+    it('TST-016: the schema needs name and coordinates unless a place is linked', () => {
+      expect(createTripStopSchema.safeParse({ locationId: 4 }).success).toBe(true);
+      expect(createTripStopSchema.safeParse({}).success).toBe(false);
+      expect(createTripStopSchema.safeParse({ name: 'A', latitude: 1 }).success).toBe(false);
+    });
   });
 
   it('TST-009: schemas validate coordinate ranges and nights', () => {

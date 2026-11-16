@@ -626,6 +626,8 @@ export const BackupDataSchema = z.object({
     dietaryPreferences: z.array(z.string()).optional(),
     useCustomMapStyle: z.boolean().optional(),
     baseCurrency: z.string().nullable().optional(),
+    // Older backups omit it; restore then leaves the user's current value.
+    measurementSystem: z.enum(['imperial', 'metric']).nullable().optional(),
     preferredMapsApp: z.string().nullable().optional(),
     immichApiUrl: z.string().nullable(),
     // Secret fields are NEVER serialized as plaintext in v1.3.0+ backups.

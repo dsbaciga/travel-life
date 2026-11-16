@@ -1,5 +1,6 @@
 import { Fragment, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import {
   DndContext,
@@ -19,13 +20,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import tripStopService from '../../services/tripStop.service';
-import geocodingService from '../../services/geocoding.service';
-import type { GeocodingResult } from '../../services/geocoding.service';
+import type { Location } from '../../types/location';
+import { useUnits } from '../../hooks/useUnits';
+import AddStopPanel from './AddStopPanel';
+import type { NewStopFromSearch } from './AddStopPanel';
 import type { TripStop } from '../../types/tripStop';
 import { formatDateOnly } from '../../utils/timezone';
 import {
   computeSchedule,
   estimateTravel,
+  FLIGHT_THRESHOLD_KM,
   formatTravelMinutes,
   haversineKm,
   optimizeRoute,
@@ -41,14 +45,14 @@ interface RoutePlannerProps {
   /** Calendar dates of the trip (date-only; never timezone-converted). */
   tripStartDate: string | null;
   tripEndDate: string | null;
+  /** The trip's saved places, as already loaded by the trip page (no extra request). */
+  locations?: Location[];
 }
 
 /** Stops below this saving are not worth proposing. */
 const MIN_WORTHWHILE_SAVING_KM = 1;
 
 const stopsKey = (tripId: number) => ['tripStops', tripId] as const;
-
-const formatKm = (km: number) => `${Math.round(km).toLocaleString()} km`;
 
 /** Identity of the plan: order plus coordinates, so a proposal is dropped once anything moves. */
 const planSignature = (stops: TripStop[]) =>
@@ -70,7 +74,10 @@ interface UndoState {
 }
 
 interface StopRowProps {
+  tripId: number;
   stop: TripStop;
+  /** An earlier stop is the same saved place: this one returns to it. */
+  returnVisit: boolean;
   index: number;
   count: number;
   active: boolean;
@@ -83,7 +90,9 @@ interface StopRowProps {
 }
 
 function StopRow({
+  tripId,
   stop,
+  returnVisit,
   index,
   count,
   active,
@@ -160,6 +169,22 @@ function StopRow({
         <p className="text-sm text-slate dark:text-dusk-400 truncate">
           {dates ?? (arrival === null ? 'Set trip dates to see arrival dates' : '')}
         </p>
+        {stop.locationId !== null && (
+          <p className="text-xs text-slate dark:text-dusk-400 truncate">
+            <Link
+              to={`/trips/${tripId}?tab=locations&highlight=${stop.locationId}`}
+              className="inline-flex items-center gap-1 underline hover:text-charcoal dark:hover:text-white"
+              aria-label={`Open ${stop.name} in this trip's places`}
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Saved place
+            </Link>
+            {returnVisit && <span className="ml-2 font-medium">Return visit</span>}
+          </p>
+        )}
       </div>
 
       <label className="flex-none flex items-center gap-1 text-sm text-slate dark:text-dusk-300">
@@ -225,101 +250,15 @@ function StopRow({
   );
 }
 
-interface AddStopProps {
-  onAdd: (place: { name: string; latitude: number; longitude: number }) => void;
-  disabled: boolean;
-}
-
-/** Place search backed by the existing geocoding service (Nominatim), debounced like the other pickers. */
-function AddStop({ onAdd, disabled }: AddStopProps) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<GeocodingResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [searched, setSearched] = useState(false);
-
-  useEffect(() => {
-    if (query.trim().length < 3) {
-      setResults([]);
-      setSearched(false);
-      return;
-    }
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      setSearching(true);
-      const found = await geocodingService.searchPlaces(query);
-      if (cancelled) return;
-      setResults(found);
-      setSearched(true);
-      setSearching(false);
-    }, 500);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [query]);
-
-  const choose = (result: GeocodingResult) => {
-    const latitude = parseFloat(result.lat);
-    const longitude = parseFloat(result.lon);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      toast.error('That place has no usable coordinates');
-      return;
-    }
-    onAdd({ name: result.display_name.split(',')[0].trim(), latitude, longitude });
-    setQuery('');
-    setResults([]);
-    setSearched(false);
-  };
-
-  return (
-    <div className="relative">
-      <label htmlFor="route-planner-add-stop" className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1">
-        Add a stop
-      </label>
-      <input
-        id="route-planner-add-stop"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        disabled={disabled}
-        placeholder="Search for a city or place"
-        autoComplete="off"
-        className="w-full min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-3 text-charcoal dark:text-white"
-      />
-      {searching && <p className="mt-1 text-sm text-slate dark:text-dusk-400">Searching...</p>}
-      {searched && !searching && results.length === 0 && (
-        <p className="mt-1 text-sm text-slate dark:text-dusk-400">No places found.</p>
-      )}
-      {results.length > 0 && (
-        <ul
-          aria-label="Search results"
-          className="absolute z-[1000] mt-1 w-full max-h-64 overflow-auto rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-800 shadow-lg"
-        >
-          {results.map((result) => (
-            <li key={result.place_id}>
-              <button
-                type="button"
-                onClick={() => choose(result)}
-                className="w-full min-h-[44px] px-3 py-2 text-left text-sm text-charcoal dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-700"
-              >
-                {result.display_name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 /**
  * Multi-City Trip Planner: the trip's route as an ordered, draggable list of stops beside
  * a map. Distances are great-circle (haversine) and the times beside them are rough
  * estimates from distance alone, all computed in the browser so a drag updates instantly
  * and makes no external request. Only the final order is sent to the server.
  */
-export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: RoutePlannerProps) {
+export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locations }: RoutePlannerProps) {
   const queryClient = useQueryClient();
+  const { formatDistance } = useUnits();
   const key = stopsKey(tripId);
   const { data: stops = [], isLoading, isError } = useQuery({
     queryKey: key,
@@ -415,10 +354,10 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
     void saveOrder(arrayMove(stops, from, to).map((s) => s.id));
   };
 
-  const handleAdd = async (place: { name: string; latitude: number; longitude: number }) => {
+  const createStop = async (input: Parameters<typeof tripStopService.createStop>[1]) => {
     setBusy(true);
     try {
-      const created = await tripStopService.createStop(tripId, place);
+      const created = await tripStopService.createStop(tripId, input);
       queryClient.setQueryData<TripStop[]>(key, (current = []) => [...current, created]);
     } catch {
       toast.error('Could not add the stop');
@@ -535,7 +474,22 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
       {/* The list comes first in the DOM so it sits above the map on a phone. */}
       <div className="lg:grid lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-6">
         <div className="min-w-0">
-          <AddStop onAdd={handleAdd} disabled={busy} />
+          <AddStopPanel
+            locations={locations}
+            stops={stops}
+            onAddFromSearch={(place: NewStopFromSearch) => void createStop(place)}
+            onAddLocation={(location) => {
+              if (location.latitude === null || location.longitude === null) return;
+              // The server takes the position from the saved place; the snapshot is stored on the stop.
+              void createStop({
+                locationId: location.id,
+                name: location.name,
+                latitude: location.latitude,
+                longitude: location.longitude,
+              });
+            }}
+            disabled={busy}
+          />
 
           {stops.length === 0 ? (
             <EmptyState
@@ -559,7 +513,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
                         <Fragment key={stop.id}>
                           {leg && (
                             <li
-                              aria-label={`${formatKm(leg.km)}, about ${formatTravelMinutes(leg.minutes)} ${
+                              aria-label={`${formatDistance(leg.km)}, about ${formatTravelMinutes(leg.minutes)} ${
                                 leg.mode === 'flight' ? 'by air' : 'by road'
                               } from ${stops[index - 1].name} to ${stop.name}`}
                               className="list-none flex items-center gap-2 pl-14 py-1.5 text-sm text-slate dark:text-dusk-300"
@@ -567,7 +521,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
                               <svg className="w-4 h-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                               </svg>
-                              <span className="tabular-nums">{formatKm(leg.km)}</span>
+                              <span className="tabular-nums">{formatDistance(leg.km)}</span>
                               <span aria-hidden="true">·</span>
                               <span title="Estimated from the straight-line distance, not a routed time">
                                 ~{formatTravelMinutes(leg.minutes)} {leg.mode === 'flight' ? 'flight' : 'drive'} (est.)
@@ -575,7 +529,12 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
                             </li>
                           )}
                           <StopRow
+                            tripId={tripId}
                             stop={stop}
+                            returnVisit={
+                              stop.locationId !== null &&
+                              stops.slice(0, index).some((earlier) => earlier.locationId === stop.locationId)
+                            }
                             index={index}
                             count={stops.length}
                             active={stop.id === activeId}
@@ -597,7 +556,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
               <dl className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-primary-500/10 dark:border-navy-700 p-3 text-center">
                 <div>
                   <dt className="text-xs text-slate dark:text-dusk-400">Distance</dt>
-                  <dd className="font-semibold text-charcoal dark:text-white tabular-nums">{formatKm(totalKm)}</dd>
+                  <dd className="font-semibold text-charcoal dark:text-white tabular-nums">{formatDistance(totalKm)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-slate dark:text-dusk-400">Travel (est.)</dt>
@@ -614,7 +573,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
                 </div>
               </dl>
               <p className="mt-2 text-xs text-slate dark:text-dusk-400">
-                Distances are straight-line. Times are rough estimates from distance (driving under 600 km, otherwise
+                Distances are straight-line. Times are rough estimates from distance (driving under {formatDistance(FLIGHT_THRESHOLD_KM)}, otherwise
                 a flight with airport time), not routed times.
               </p>
 
@@ -666,8 +625,8 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
                     className="mt-3 rounded-xl border border-gold/50 bg-gold/10 p-3"
                   >
                     <p className="font-medium text-charcoal dark:text-white">
-                      {formatKm(activeProposal.savedKm)} shorter ({formatKm(activeProposal.optimizedKm)} instead of{' '}
-                      {formatKm(totalKm)})
+                      {formatDistance(activeProposal.savedKm)} shorter ({formatDistance(activeProposal.optimizedKm)} instead of{' '}
+                      {formatDistance(totalKm)})
                     </p>
                     <ol className="mt-2 list-decimal pl-5 text-sm text-charcoal dark:text-warm-gray">
                       {proposedNames.map((name, i) => (
@@ -695,7 +654,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate }: Rou
 
                 {activeUndo && (
                   <p role="status" className="mt-3 flex flex-wrap items-center gap-3 text-sm text-charcoal dark:text-warm-gray">
-                    <span>Route optimised: {formatKm(activeUndo.savedKm)} shorter.</span>
+                    <span>Route optimised: {formatDistance(activeUndo.savedKm)} shorter.</span>
                     <button
                       type="button"
                       onClick={() => void handleUndo()}

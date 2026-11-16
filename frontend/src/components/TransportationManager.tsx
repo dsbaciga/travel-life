@@ -48,6 +48,7 @@ import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
+import { useUnits } from "../hooks/useUnits";
 
 /**
  * TransportationManager handles CRUD operations for trip transportation segments.
@@ -405,6 +406,7 @@ export default function TransportationManager({
   onUpdate,
 }: TransportationManagerProps) {
   const resolveTz = useTimezoneResolver();
+  const units = useUnits();
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date");
 
@@ -1026,8 +1028,7 @@ export default function TransportationManager({
     if (kilometers == null || typeof kilometers !== 'number' || isNaN(kilometers)) {
       return 'Unknown distance';
     }
-    const miles = kilometers * 0.621371;
-    return `${kilometers.toFixed(1)} km (${miles.toFixed(1)} mi)`;
+    return units.formatDistance(kilometers);
   };
 
   // Helper to get location display name - for flights, only show the name without full address

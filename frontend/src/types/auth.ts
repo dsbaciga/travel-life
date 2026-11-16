@@ -12,6 +12,11 @@ export type User = {
   useCustomMapStyle?: boolean;
   /** Home currency (ISO 4217) budget totals are reported in; null = unset. */
   baseCurrency?: string | null;
+  /**
+   * Imperial or metric display units. Carried in the session payload like `timezone`;
+   * null/absent means the user never chose (see DEFAULT_MEASUREMENT_SYSTEM and useUnits).
+   */
+  measurementSystem?: 'imperial' | 'metric' | null;
 }
 
 export type AuthResponse = {

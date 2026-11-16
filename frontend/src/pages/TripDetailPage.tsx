@@ -666,6 +666,7 @@ export default function TripDetailPage() {
                         tripId={trip.id}
                         tripStartDate={trip.startDate}
                         tripEndDate={trip.endDate}
+                        locations={locations}
                       />
                     </Suspense>
                   </ErrorBoundary>
