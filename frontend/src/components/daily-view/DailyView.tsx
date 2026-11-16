@@ -16,6 +16,8 @@ import entityLinkService from '../../services/entityLink.service';
 import weatherService from '../../services/weather.service';
 import { getWeatherIcon } from '../../utils/weatherIcons';
 import { parseDateOnlyAsLocal } from '../../utils/timezone';
+import { tripDayKeys } from '../../utils/dayAgenda';
+import { useDayJournalComposer, DayJournalActions } from '../journal/DayJournalComposer';
 import DayNavigator from './DayNavigator';
 import ActivityCard from './ActivityCard';
 import TransportationCard from './TransportationCard';
@@ -87,6 +89,14 @@ export default function DailyView({
   const [error, setError] = useState<string | null>(null);
   const [allDays, setAllDays] = useState<DayData[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
+  // Bumped after a journal entry is saved from this view, to reload the day's items.
+  const [reloadCount, setReloadCount] = useState(0);
+  const dayJournal = useDayJournalComposer({
+    tripId,
+    tripStartDate,
+    tripEndDate,
+    onSaved: () => setReloadCount((n) => n + 1),
+  });
   const [linkedLocationsMap, setLinkedLocationsMap] = useState<LinkedLocationsMap>({});
   const [linkedAlbumsMap, setLinkedAlbumsMap] = useState<LinkedAlbumsMap>({});
   // Note: These state variables store computed data that may be used in future features
@@ -172,7 +182,8 @@ export default function DailyView({
   // Load all data
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true);
+      // A reload after saving an entry keeps the page in place instead of flashing a spinner.
+      if (reloadCount === 0) setLoading(true);
       setError(null);
       try {
         // Fetch all data including entity links and weather in parallel
@@ -650,10 +661,15 @@ export default function DailyView({
     };
 
     loadData();
-  }, [tripId, generateAllTripDates, getEntityKey, getDateString]);
+  }, [tripId, generateAllTripDates, getEntityKey, getDateString, reloadCount]);
 
   // Current day data
   const currentDay = allDays[currentDayIndex];
+  // The view's days run from the trip start, one per calendar day, so the day's
+  // YYYY-MM-DD comes from its number rather than from a Date in this browser's zone.
+  const currentDayKey = currentDay
+    ? tripDayKeys(tripStartDate, tripEndDate)[currentDay.dayNumber - 1]
+    : undefined;
 
   // Handle day change
   const handleDayChange = (dayNumber: number) => {
@@ -772,6 +788,15 @@ export default function DailyView({
         tripTimezone={tripTimezone}
         onPrint={handlePrint}
       />
+
+      {currentDay && currentDayKey && (
+        <DayJournalActions
+          day={currentDayKey}
+          canEdit={dayJournal.canEdit}
+          canDraftOn={dayJournal.canDraftOn}
+          onOpen={dayJournal.open}
+        />
+      )}
 
       {/* Day Content */}
       <div className="space-y-4">
@@ -956,6 +981,8 @@ export default function DailyView({
           </div>
         )}
       </div>
+
+      {dayJournal.composer}
 
       {/* Print Portal - renders printable day itinerary when printing */}
       {isPrinting &&

@@ -1950,7 +1950,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Reuses `llm.service.ts` and the per-user key handling
 - Result lands as an editable draft only; no direct writes to published entries
 
-**Status**: Complete. `POST /api/trips/:tripId/ai/journal-day-draft` (`{ date }`, needs edit access) returns `{ title, body, date, truncated }` as text only; "Draft with AI" in the journal form pre-fills the editor, marked as an AI draft, and nothing is saved until Create Entry.
+**Status**: Complete. `POST /api/trips/:tripId/ai/journal-day-draft` (`{ date }`, needs edit access) returns `{ title, body, date, truncated }` as text only; "Draft with AI" in the journal form pre-fills the editor, marked as an AI draft, and nothing is saved until Create Entry. The date must fall within the trip's dates plus one day either side (travel days), otherwise `422` naming the range; a trip with no dates is not restricted. Trip days in the Timeline and Day By Day views have "Add journal entry" and "Draft with AI" actions (edit access only) that open the same form on that day.
 
 ### 121. Food Log
 

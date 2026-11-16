@@ -443,6 +443,69 @@ export function gatherDayFacts(raw: DayDraftRawData, date: string): DayFacts {
   };
 }
 
+/**
+ * The calendar days a draft may be written for: the trip's own days plus one
+ * day either side, because a departure flight can leave the evening before the
+ * start date and an arrival can land the morning after the end date. The
+ * timeline and Day Plan views show those neighbouring days, so drafts agree.
+ *
+ * Trip dates are date-only values stored at UTC midnight, so everything here is
+ * `YYYY-MM-DD` string arithmetic in UTC. Never route a trip date through a
+ * timezone: west of UTC that renders the previous day.
+ *
+ * A missing bound is open: a trip with no dates (planning or dream trips) is
+ * not restricted, and a trip with only a start or only an end is bounded on
+ * that one side.
+ */
+export const DRAFT_DATE_GRACE_DAYS = 1;
+
+export interface DraftDateWindow {
+  /** First allowed day (inclusive), or null when the trip has no start date. */
+  from: string | null;
+  /** Last allowed day (inclusive), or null when the trip has no end date. */
+  to: string | null;
+}
+
+const shiftDay = (day: string, delta: number): string =>
+  new Date(Date.parse(`${day}T00:00:00.000Z`) + delta * 86_400_000).toISOString().slice(0, 10);
+
+const toDayString = (value: Date | string | null | undefined): string | null => {
+  if (!value) return null;
+  const day = typeof value === 'string' ? value.slice(0, 10) : value.toISOString().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+};
+
+export function draftDateWindow(
+  tripStart: Date | string | null | undefined,
+  tripEnd: Date | string | null | undefined
+): DraftDateWindow {
+  const start = toDayString(tripStart);
+  const end = toDayString(tripEnd);
+  return {
+    from: start ? shiftDay(start, -DRAFT_DATE_GRACE_DAYS) : null,
+    to: end ? shiftDay(end, DRAFT_DATE_GRACE_DAYS) : null,
+  };
+}
+
+export function isDateInDraftWindow(date: string, window: DraftDateWindow): boolean {
+  // YYYY-MM-DD strings sort the same as the dates they name.
+  if (window.from && date < window.from) return false;
+  if (window.to && date > window.to) return false;
+  return true;
+}
+
+/** The sentence a rejected date gets, naming the trip's own range. */
+export function describeDraftWindow(
+  tripStart: Date | string | null | undefined,
+  tripEnd: Date | string | null | undefined
+): string {
+  const start = toDayString(tripStart);
+  const end = toDayString(tripEnd);
+  if (start && end) return `This trip runs ${start} to ${end}`;
+  if (start) return `This trip starts ${start}`;
+  return `This trip ends ${end}`;
+}
+
 /** A day with nothing to write about; the LLM must not be called for it. */
 export function isEmptyDay(facts: DayFacts): boolean {
   return (

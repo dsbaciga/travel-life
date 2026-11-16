@@ -9,6 +9,8 @@
  * - JAD-005: A 503 shows the "no AI key" guidance with a link to Settings
  * - JAD-006: Other failures show the server's message
  * - JAD-007: Auto-save is paused while the AI text is untouched and resumes once the user edits it
+ * - JAD-008: A date outside the trip (plus a day either side) turns the AI button off with a hint, but a manual entry still saves
+ * - JAD-009: The first day, last day, day before and day after the trip stay draftable; a trip with no end date is open-ended
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -28,7 +30,7 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('../../services/journalEntry.service', () => ({ default: h.journal }));
-vi.mock('react-hot-toast', () => ({ default: h.toast }));
+vi.mock('react-hot-toast', () => ({ default: h.toast, toast: h.toast }));
 vi.mock('../../hooks/useTripLinkSummary', () => ({
   useTripLinkSummary: () => ({ getLinkSummary: () => null, invalidate: vi.fn() }),
 }));
@@ -157,5 +159,59 @@ describe('JournalManager Draft with AI', () => {
 
     fireEvent.change(screen.getByLabelText(/^title/i), { target: { value: 'A day in Alfama, edited' } });
     await waitFor(() => expect(h.autoSaveEnabled[h.autoSaveEnabled.length - 1]).toBe(true));
+  });
+
+  const openTripForm = async (start: string | null, end: string | null) => {
+    render(
+      <MemoryRouter>
+        <JournalManager tripId={7} tripStartDate={start} tripEndDate={end} />
+      </MemoryRouter>
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /new entry/i }));
+    return screen.findByRole('button', { name: /draft with ai/i });
+  };
+  const setEntryDate = (value: string) =>
+    fireEvent.change(screen.getByLabelText(/entry date/i), { target: { value } });
+
+  it('JAD-008: outside the trip the AI button is off, and a manual entry still saves', async () => {
+    h.journal.createJournalEntry.mockResolvedValue({ id: 1 });
+    const button = await openTripForm('2026-06-03T00:00:00.000Z', '2026-06-07T00:00:00.000Z');
+    setEntryDate('2026-06-20');
+
+    expect(button).toBeDisabled();
+    expect(screen.getByText(/draft with ai is off for this date/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/entry date/i)).not.toHaveAttribute('min');
+    expect(screen.getByLabelText(/entry date/i)).not.toHaveAttribute('max');
+    fireEvent.click(button);
+    expect(h.journal.generateDayDraft).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/^title/i), { target: { value: 'Late postcard' } });
+    fireEvent.change(screen.getByPlaceholderText(/write your journal entry/i), { target: { value: 'Written afterwards.' } });
+    fireEvent.click(screen.getByRole('button', { name: /create entry/i }));
+    await waitFor(() =>
+      expect(h.journal.createJournalEntry).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Late postcard', entryDate: '2026-06-20' })
+      )
+    );
+  });
+
+  it('JAD-009: first day, last day, day before and day after are draftable; two days out is not', async () => {
+    const button = await openTripForm('2026-06-03T00:00:00.000Z', '2026-06-07T00:00:00.000Z');
+    for (const day of ['2026-06-03', '2026-06-07', '2026-06-02', '2026-06-08']) {
+      setEntryDate(day);
+      expect(button).toBeEnabled();
+    }
+    setEntryDate('2026-06-01');
+    expect(button).toBeDisabled();
+    setEntryDate('2026-06-09');
+    expect(button).toBeDisabled();
+  });
+
+  it('JAD-009: with only a start date the far future is still draftable', async () => {
+    const button = await openTripForm('2026-06-03T00:00:00.000Z', null);
+    setEntryDate('2030-01-01');
+    expect(button).toBeEnabled();
+    setEntryDate('2026-06-01');
+    expect(button).toBeDisabled();
   });
 });

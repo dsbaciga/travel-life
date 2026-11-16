@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
 import type { Lodging } from '../../types/lodging';
@@ -125,6 +126,8 @@ export interface DayHeaderProps {
   eventCount: number;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  /** Extra per-day actions shown under the stats (e.g. add a journal entry). */
+  actions?: ReactNode;
 }
 
 export interface PhotoPreviewPopoverProps {

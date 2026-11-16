@@ -20,6 +20,8 @@ import {
   dayKeyInTimezone,
   DAY_DRAFT_LIMITS,
   DAY_DRAFT_SYSTEM_PROMPT,
+  draftDateWindow,
+  isDateInDraftWindow,
   gatherDayFacts,
   isEmptyDay,
   parseDayDraftReply,
@@ -268,5 +270,35 @@ describe('parseDayDraftReply', () => {
 
   it('unwraps a code fence', () => {
     expect(parseDayDraftReply('```markdown\nTITLE: T\n\nBody\n```', 'fb')).toEqual({ title: 'T', body: 'Body' });
+  });
+});
+
+describe('draftDateWindow', () => {
+  const start = new Date('2026-03-01T00:00:00.000Z');
+  const end = new Date('2026-03-31T00:00:00.000Z');
+
+  it('widens a trip range by one day each side, across a month boundary', () => {
+    expect(draftDateWindow(start, end)).toEqual({ from: '2026-02-28', to: '2026-04-01' });
+  });
+
+  it('is open on a side that has no date', () => {
+    expect(draftDateWindow(null, null)).toEqual({ from: null, to: null });
+    expect(draftDateWindow(start, null)).toEqual({ from: '2026-02-28', to: null });
+    expect(draftDateWindow(undefined, end)).toEqual({ from: null, to: '2026-04-01' });
+  });
+
+  it('reads the stored UTC calendar day whatever the process timezone is', () => {
+    expect(draftDateWindow('2026-03-01T00:00:00.000Z', '2026-03-31')).toEqual({
+      from: '2026-02-28',
+      to: '2026-04-01',
+    });
+  });
+
+  it('includes both ends of the window and nothing past them', () => {
+    const w = draftDateWindow(start, end);
+    expect(isDateInDraftWindow('2026-02-28', w)).toBe(true);
+    expect(isDateInDraftWindow('2026-04-01', w)).toBe(true);
+    expect(isDateInDraftWindow('2026-02-27', w)).toBe(false);
+    expect(isDateInDraftWindow('2026-04-02', w)).toBe(false);
   });
 });

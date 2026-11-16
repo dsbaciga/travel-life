@@ -5,6 +5,9 @@ import { getUserTimezone } from './_shared/timezoneResolution';
 import {
   gatherDayFacts,
   isEmptyDay,
+  draftDateWindow,
+  isDateInDraftWindow,
+  describeDraftWindow,
   buildDayDraftPrompt,
   parseDayDraftReply,
   type DayDraftRawData,
@@ -40,9 +43,20 @@ class JournalDayDraftService {
 
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      select: { title: true, timezone: true },
+      select: { title: true, timezone: true, startDate: true, endDate: true },
     });
     if (!trip) throw new AppError('Trip not found', 404);
+
+    // Before any day data is read or the LLM is considered: a date outside the
+    // trip is rejected outright. Trips without dates are not restricted.
+    if (!isDateInDraftWindow(date, draftDateWindow(trip.startDate, trip.endDate))) {
+      throw new AppError(
+        `${date} is outside this trip, so there is nothing to draft. ` +
+          `${describeDraftWindow(trip.startDate, trip.endDate)} ` +
+          '(drafts also cover the day before and the day after, for travel days).',
+        422
+      );
+    }
 
     const userTimezone = await getUserTimezone(userId);
 
