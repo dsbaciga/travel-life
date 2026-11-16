@@ -6,6 +6,9 @@
  * Codes outside this list can still be typed into cost fields — they simply
  * cannot be converted, and the budget summary reports them as unconverted
  * rather than folding them into the total.
+ *
+ * This is the source of truth. The backend keeps its own copy of the codes in
+ * `backend/src/constants/currencies.ts` (receipt scan, CSV import); **keep the two in step**.
  */
 export const CONVERTIBLE_CURRENCIES: ReadonlyArray<{ code: string; label: string }> = [
   { code: "AUD", label: "Australian Dollar" },

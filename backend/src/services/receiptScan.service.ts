@@ -4,8 +4,8 @@ import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { llmService, LlmError } from './llm.service';
 import { EXPENSE_CATEGORIES } from '../types/expense.types';
+import { CONVERTIBLE_CURRENCY_CODES } from '../constants/currencies';
 import {
-  RECEIPT_CURRENCIES,
   parseReceiptExtraction,
   type ReceiptScanResult,
 } from '../types/receiptScan.types';
@@ -31,7 +31,7 @@ const SYSTEM_PROMPT = [
   'Respond with a single JSON object and nothing else, with exactly these keys:',
   '"merchant" (the business name, or null),',
   '"amount" (the grand total actually paid, as a plain decimal string like "42.50" with no currency symbol or thousands separator, or null),',
-  `"currency" (ISO 4217 code printed or clearly implied by the receipt, one of ${RECEIPT_CURRENCIES.join(', ')}, or null if the receipt does not show it),`,
+  `"currency" (ISO 4217 code printed or clearly implied by the receipt, one of ${CONVERTIBLE_CURRENCY_CODES.join(', ')}, or null if the receipt does not show it),`,
   '"date" (the transaction date as YYYY-MM-DD, or null),',
   `"category" (one of: ${EXPENSE_CATEGORIES.join(', ')}, or null).`,
   'Use null for anything you cannot read with confidence. Never guess, and never infer the currency from anything other than the receipt.',

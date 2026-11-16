@@ -2,26 +2,17 @@ import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from './expense.types';
 import { sanitizeForPrompt } from '../security/promptSafety';
+import { CONVERTIBLE_CURRENCY_CODES } from '../constants/currencies';
 
-/**
- * Currencies the receipt scan will return. Kept in step with the frontend
- * `CONVERTIBLE_CURRENCIES` list that `CurrencySelect` offers: a code outside
- * it would not be selectable in the form, so it is treated as "not read".
- */
-export const RECEIPT_CURRENCIES = [
-  'AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HUF',
-  'IDR', 'ILS', 'INR', 'ISK', 'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN',
-  'RON', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
-] as const;
-
-const CURRENCY_SET: ReadonlySet<string> = new Set(RECEIPT_CURRENCIES);
+/** Currencies the receipt scan will return: the ones `CurrencySelect` offers, so a code outside it is treated as "not read". */
+const CURRENCY_SET: ReadonlySet<string> = new Set(CONVERTIBLE_CURRENCY_CODES);
 
 /** What the scan returns. Every field is nullable: null means "not read". */
 export interface ReceiptScanResult {
   merchant: string | null;
   /** Positive decimal as a string, at most 2 fraction digits. Never a float. */
   amount: string | null;
-  /** ISO 4217 code from RECEIPT_CURRENCIES. */
+  /** ISO 4217 code from CONVERTIBLE_CURRENCY_CODES. */
   currency: string | null;
   /** Calendar date, YYYY-MM-DD, no timezone. */
   date: string | null;

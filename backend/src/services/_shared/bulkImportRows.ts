@@ -1,4 +1,5 @@
 import { fromZonedTime } from 'date-fns-tz';
+import { CONVERTIBLE_CURRENCY_CODES } from '../../constants/currencies';
 
 /**
  * Pure helpers for the CSV bulk import: cell cleaning, number and date-time parsing, name
@@ -16,15 +17,11 @@ import { fromZonedTime } from 'date-fns-tz';
 export const IMPORT_MAX_ROWS = 500;
 
 /**
- * Currencies a cost may be entered in: the same list the web app's `CurrencySelect` offers
- * (frontend `CONVERTIBLE_CURRENCIES`), i.e. the currencies exchange rates exist for. A cost in
- * any other currency would silently drop out of the trip budget.
+ * Currencies a cost may be entered in: the same list the web app's `CurrencySelect` offers,
+ * i.e. the currencies exchange rates exist for. A cost in any other currency would silently
+ * drop out of the trip budget.
  */
-export const IMPORT_CURRENCY_CODES: ReadonlySet<string> = new Set([
-  'AUD', 'BGN', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HUF',
-  'IDR', 'ILS', 'INR', 'ISK', 'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN',
-  'RON', 'SEK', 'SGD', 'THB', 'TRY', 'USD', 'ZAR',
-]);
+export const IMPORT_CURRENCY_CODES: ReadonlySet<string> = new Set(CONVERTIBLE_CURRENCY_CODES);
 
 /** Documented in the template and in every date error so the user knows what to type. */
 export const ACCEPTED_DATETIME_FORMATS =
