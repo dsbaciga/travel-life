@@ -24,6 +24,11 @@ interface ExpenseSplitFieldsProps {
   total: number;
   /** Currency code shown beside the custom amounts; may be empty. */
   currency: string;
+  /**
+   * Names for people who are no longer participants (for example from the settle-up
+   * summary), so the "removed from the trip" warning can say who. Optional.
+   */
+  formerLabels?: ReadonlyMap<ParticipantKey, string>;
 }
 
 const METHOD_LABELS: Record<SplitMethod, string> = {
@@ -44,8 +49,17 @@ export default function ExpenseSplitFields({
   onChange,
   total,
   currency,
+  formerLabels,
 }: ExpenseSplitFieldsProps) {
   const keys: ParticipantKey[] = participants.map((p) => p.key);
+  // A stored share (or payer) can belong to someone who has since left the trip. They are
+  // not listed above, so saving would silently re-split without them: say so instead.
+  const goneKeys = [
+    ...Object.keys(state.included).filter((key) => state.included[key] && !keys.includes(key)),
+    ...(state.paidBy !== "" && !keys.includes(state.paidBy) ? [state.paidBy] : []),
+  ].filter((key, index, all) => all.indexOf(key) === index);
+  const goneNames = goneKeys.map((key) => formerLabels?.get(key) ?? "A former travel companion");
+  const payerGone = state.paidBy !== "" && !keys.includes(state.paidBy);
   const hasPayer = state.paidBy !== "";
 
   const setPayer = (paidBy: string) => {
@@ -72,6 +86,18 @@ export default function ExpenseSplitFields({
       <legend className="px-1 text-sm font-medium text-slate dark:text-warm-gray/70">
         Split with travel companions
       </legend>
+
+      {goneKeys.length > 0 && (
+        <p
+          role="alert"
+          className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-3 py-2 text-sm text-amber-900 dark:text-amber-200"
+        >
+          {goneNames.join(", ")} {goneKeys.length === 1 ? "is" : "are"} no longer on this trip. When
+          you save, the shares will be recalculated without them
+          {payerGone ? ", and you will need to choose who paid" : ""}. Cancel to leave this expense
+          as it is.
+        </p>
+      )}
 
       <div>
         <label htmlFor="expense-paid-by" className="label">

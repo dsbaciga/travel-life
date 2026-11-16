@@ -134,6 +134,15 @@ export default function BudgetManager({
   });
   const participantLabels = new Map(participants.map((p) => [p.key, p.label]));
 
+  // Settle-up names everyone with a share, including people who have left the trip, so
+  // the split form can say who it is about to drop. Same key as SettleUpPanel: one fetch.
+  const { data: settleUp } = useQuery({
+    queryKey: ["settle-up", tripId],
+    queryFn: () => expenseService.getSettleUp(tripId),
+    enabled: !!tripId,
+  });
+  const formerLabels = new Map((settleUp?.balances ?? []).map((b) => [b.participant, b.label]));
+
   const { data: summary } = useQuery({
     queryKey: ["budget-summary", tripId],
     queryFn: () => expenseService.getBudgetSummary(tripId),
@@ -857,6 +866,7 @@ export default function BudgetManager({
                 onChange={setSplitForm}
                 total={Number(expenseForm.amount) || 0}
                 currency={expenseForm.currency}
+                formerLabels={formerLabels}
               />
             )}
 

@@ -8,6 +8,7 @@
  * - SUP-004: SettleUpPanel renders nothing when no expense is split
  * - SUP-005: ExpenseSplitFields hides the split options until a payer is chosen
  * - SUP-006: ExpenseSplitFields defaults to sharing with everyone, and shows the running gap
+ * - SUP-007: ExpenseSplitFields warns when a stored share belongs to someone no longer on the trip
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -137,5 +138,46 @@ describe('ExpenseSplitFields', () => {
 
     fireEvent.change(screen.getByLabelText('Amount for Alex'), { target: { value: '40' } });
     expect(screen.getByRole('status')).toHaveTextContent('Amounts add up to the total.');
+  });
+
+  it('SUP-007: warns, by name, when a stored share belongs to someone no longer on the trip', () => {
+    const initial: SplitFormState = {
+      paidBy: 'owner',
+      method: 'amount',
+      included: { owner: true, 'companion:5': true, 'companion:9': true },
+      amounts: { owner: '50', 'companion:5': '30', 'companion:9': '20' },
+      percentages: {},
+    };
+    const { rerender } = render(
+      <ExpenseSplitFields
+        participants={participants}
+        state={initial}
+        onChange={() => {}}
+        total={100}
+        currency="EUR"
+        formerLabels={new Map([['companion:9', 'Sam']])}
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Sam is no longer on this trip. When you save, the shares will be recalculated without them'
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Cancel to leave this expense as it is');
+
+    // Without a name it still says so.
+    rerender(
+      <ExpenseSplitFields
+        participants={participants}
+        state={initial}
+        onChange={() => {}}
+        total={100}
+        currency="EUR"
+      />
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('A former travel companion is no longer on this trip');
+  });
+
+  it('SUP-007b: no warning when everyone in the split is still a participant', () => {
+    render(<Harness initial={{ ...emptySplitState(), paidBy: 'owner', included: { owner: true, 'companion:5': true } }} />);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
