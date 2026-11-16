@@ -57,6 +57,9 @@ export type TripExpense = {
   paidBy: ParticipantKey | null;
   splitMethod: SplitMethod | null;
   splits: ExpenseSplitShare[];
+  /** Stored receipt photo ("/uploads/receipts/..."), or null. Load it with getFullAssetUrl. */
+  receiptPath?: string | null;
+  receiptUploadedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };

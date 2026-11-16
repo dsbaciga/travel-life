@@ -332,6 +332,15 @@ const canReadUpload = async (userId: number, relPath: string): Promise<boolean> 
       });
       return self !== null;
     }
+    case 'receipts': {
+      // Receipt photos of expenses: anyone who can read the trip can read them.
+      // Never reachable through the public share routes.
+      const expense = await prisma.tripExpense.findFirst({
+        where: { receiptPath: storedUrl, trip: tripReadFilter(userId) },
+        select: { id: true },
+      });
+      return expense !== null;
+    }
     case 'pdfs': {
       const pdfImport = await prisma.pdfImport.findFirst({
         where: { storedPath: relPath, userId },

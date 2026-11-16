@@ -45,6 +45,25 @@ export const expenseService = {
     return response.data;
   },
 
+  /** Attach or replace the receipt photo of an expense. */
+  async uploadReceipt(tripId: number, expenseId: number, image: File): Promise<TripExpense> {
+    const formData = new FormData();
+    formData.append('image', image);
+    const response = await axios.post<TripExpense>(
+      `/trips/${tripId}/expenses/${expenseId}/receipt`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 }
+    );
+    return response.data;
+  },
+
+  async deleteReceipt(tripId: number, expenseId: number): Promise<TripExpense> {
+    const response = await axios.delete<TripExpense>(
+      `/trips/${tripId}/expenses/${expenseId}/receipt`
+    );
+    return response.data;
+  },
+
   async deleteExpense(tripId: number, expenseId: number): Promise<void> {
     await axios.delete(`/trips/${tripId}/expenses/${expenseId}`);
   },

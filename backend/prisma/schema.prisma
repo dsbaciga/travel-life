@@ -669,6 +669,11 @@ model TripExpense {
   paidByOwner       Boolean   @default(false) @map("paid_by_owner")
   paidByCompanionId Int?      @map("paid_by_companion_id")
   splitMethod       String?   @map("split_method") @db.VarChar(20) // equal, amount, percentage
+  // Receipt photo (backlog #122): "/uploads/receipts/<uuid>.jpg" or null. The file is a normalised copy; never exported by backups.
+  receiptPath       String?   @map("receipt_path") @db.VarChar(255)
+  receiptMimeType   String?   @map("receipt_mime_type") @db.VarChar(50)
+  receiptSizeBytes  Int?      @map("receipt_size_bytes")
+  receiptUploadedAt DateTime? @map("receipt_uploaded_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 

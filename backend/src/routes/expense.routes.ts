@@ -2,11 +2,18 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { expenseController } from '../controllers/expense.controller';
 import { expenseSplitController } from '../controllers/expenseSplit.controller';
+import receiptScanRouter from './receiptScan.routes';
+import expenseReceiptRouter from './expenseReceipt.routes';
 
 // mergeParams to access :tripId from the parent mount path
 const router = Router({ mergeParams: true });
 
 router.use(authenticate);
+
+// Receipt photo -> pre-filled expense fields (read-only; creates nothing)
+router.use('/scan-receipt', receiptScanRouter);
+// Stored receipt photo of one expense (attach / replace / remove)
+router.use('/:id/receipt', expenseReceiptRouter);
 
 /**
  * @openapi

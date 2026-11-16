@@ -393,6 +393,11 @@ Trip-scoped expense tracking, plus a budget-vs-spent summary endpoint mounted al
 | GET | `/api/trips/:tripId/expenses/:id` | Get an expense by ID | Yes |
 | PUT | `/api/trips/:tripId/expenses/:id` | Update an expense | Yes |
 | DELETE | `/api/trips/:tripId/expenses/:id` | Delete an expense | Yes |
+| POST | `/api/trips/:tripId/expenses/scan-receipt` | Read a receipt photo (multipart field `image`; JPEG/PNG/WebP/HEIC, max 10 MB, type checked from the bytes) with the user's AI model. Returns `{ merchant, amount, currency, date, category }`, each nullable (`amount` is a decimal string, `date` is `YYYY-MM-DD`, `currency` is a supported ISO 4217 code or null, never defaulted). Saves nothing and does not keep the image (the client attaches it afterwards through the receipt endpoint). 503 without an AI key, 502 on provider error, 422 when unreadable. Needs edit access; AI rate limit applies | Yes |
+| POST | `/api/trips/:tripId/expenses/:id/receipt` | Attach or replace the receipt photo of an expense (multipart field `image`, same type/size checks as scan). Stores a normalised JPEG (long edge 2400 px, quality 88, EXIF stripped) under `uploads/receipts/` and deletes any previous file. Needs edit access | Yes |
+| DELETE | `/api/trips/:tripId/expenses/:id/receipt` | Remove the receipt photo and delete its file. Needs edit access | Yes |
+
+Expense objects carry `receiptPath`, `receiptMimeType`, `receiptSizeBytes`, `receiptUploadedAt` (all null when none). The file is served by the authenticated `/uploads/receipts/...` route to the trip owner and collaborators only, is never part of the public share payload, and a backup carries only its path, not the image (see Backup & Restore). On restore a receipt is re-attached only if its file is still in `uploads/receipts/`; the restore result reports `receiptsRestored` and `receiptsNotRestored`.
 | GET | `/api/trips/:tripId/budget-summary` | Get budget vs. spent totals with a category breakdown | Yes |
 | GET | `/api/trips/:tripId/expenses/participants` | List who an expense can be paid by or split with: the trip owner (`owner`) and the trip's companions (`companion:<id>`) | Yes |
 | PUT | `/api/trips/:tripId/expenses/:id/split` | Set who paid and how the expense is split. Body: `paidBy` (participant key, or `null` to clear), `method` (`equal`, `amount` or `percentage`), `participants` (`participant` plus `amount` or `percentage`). Amounts must sum to the expense amount, percentages to 100 | Yes (edit) |
@@ -598,7 +603,7 @@ Backup and restore endpoints accept large payloads (up to 100MB). The create/res
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/create` | Create and download a backup (ZIP archive of all user data) | Yes |
+| POST | `/create` | Create and download a backup (a signed JSON file of all user data; it holds file paths, not photo or receipt image bytes) | Yes |
 | POST | `/restore` | Restore user data from a backup file (overwrites existing data) | Yes |
 | GET | `/info` | Get backup info including entity counts and estimated size | Yes |
 

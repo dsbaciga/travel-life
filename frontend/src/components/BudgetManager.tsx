@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CurrencySelect from "./CurrencySelect";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -25,6 +25,11 @@ import {
   splitStateFromExpense,
   type SplitFormState,
 } from "../utils/expenseSplit";
+import ReceiptScanButton, { ScanBadge } from "./ReceiptScanButton";
+import ReceiptViewer from "./ReceiptViewer";
+import { getFullAssetUrl } from "../lib/config";
+import type { ReceiptScanResult } from "../services/receiptScan.service";
+import { receiptToExpenseForm, type ScannedField } from "../utils/receiptPrefill";
 
 /**
  * BudgetManager handles the trip budget and expense tracking tab.
@@ -92,6 +97,28 @@ export default function BudgetManager({
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(EMPTY_EXPENSE_FORM);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
   const [splitForm, setSplitForm] = useState<SplitFormState>(emptySplitState);
+  // Receipt scan: which form fields were pre-filled from the photo (marked for review)
+  const [scannedFields, setScannedFields] = useState<ScannedField[]>([]);
+  const [currencyDefaulted, setCurrencyDefaulted] = useState(false);
+  // Receipt photo: a file picked or scanned and held in memory until the expense is saved,
+  // the receipt already stored on the expense being edited, and whether to remove it.
+  const [pendingReceipt, setPendingReceipt] = useState<File | null>(null);
+  const [pendingReceiptUrl, setPendingReceiptUrl] = useState<string | null>(null);
+  const [existingReceiptPath, setExistingReceiptPath] = useState<string | null>(null);
+  const [removeExistingReceipt, setRemoveExistingReceipt] = useState(false);
+  const [viewingReceipt, setViewingReceipt] = useState<{ path: string; title: string } | null>(null);
+  // A ref, not state: a second click in the same tick must not save (or upload) twice.
+  const submitLock = useRef(false);
+
+  useEffect(() => {
+    if (!pendingReceipt) {
+      setPendingReceiptUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(pendingReceipt);
+    setPendingReceiptUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pendingReceipt]);
 
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ["expenses", tripId],
@@ -236,6 +263,9 @@ export default function BudgetManager({
 
   const openCreateExpenseForm = () => {
     setEditingExpenseId(null);
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
+    resetReceiptState();
     setExpenseForm({ ...EMPTY_EXPENSE_FORM, currency: displayCurrency });
     setSplitForm(emptySplitState());
     setShowExpenseForm(true);
@@ -243,6 +273,10 @@ export default function BudgetManager({
 
   const openEditExpenseForm = (expense: TripExpense) => {
     setEditingExpenseId(expense.id);
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
+    resetReceiptState();
+    setExistingReceiptPath(expense.receiptPath ?? null);
     setExpenseForm({
       description: expense.description,
       category: expense.category,
@@ -260,10 +294,49 @@ export default function BudgetManager({
     setEditingExpenseId(null);
     setExpenseForm(EMPTY_EXPENSE_FORM);
     setSplitForm(emptySplitState());
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
+    resetReceiptState();
   };
+
+  function resetReceiptState() {
+    setPendingReceipt(null);
+    setExistingReceiptPath(null);
+    setRemoveExistingReceipt(false);
+  }
+
+  // Open the normal "Add Expense" form pre-filled from a scanned receipt.
+  // Nothing is saved here; the user reviews and submits as usual.
+  const handleReceiptScanned = (result: ReceiptScanResult, file: File) => {
+    const prefill = receiptToExpenseForm(result, {
+      category: EMPTY_EXPENSE_FORM.category,
+      currency: displayCurrency,
+    });
+    setEditingExpenseId(null);
+    setExpenseForm({
+      ...EMPTY_EXPENSE_FORM,
+      description: prefill.description,
+      category: prefill.category,
+      amount: prefill.amount,
+      currency: prefill.currency,
+      date: prefill.date,
+    });
+    setSplitForm(emptySplitState());
+    setScannedFields(prefill.scanned);
+    setCurrencyDefaulted(prefill.currencyDefaulted);
+    // Keep the photo in memory; it is uploaded only once the expense is saved.
+    resetReceiptState();
+    setPendingReceipt(file);
+    setShowExpenseForm(true);
+  };
+
+  const isScanned = (field: ScannedField) => scannedFields.includes(field);
+  const scannedRing = (field: ScannedField) =>
+    isScanned(field) ? " ring-2 ring-gold/60" : "";
 
   const handleSubmitExpense = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submitLock.current) return;
 
     const amount = Number(expenseForm.amount);
     if (!expenseForm.description.trim()) {
@@ -293,9 +366,15 @@ export default function BudgetManager({
       return;
     }
 
+    // Fixed now: the receipt belongs to the expense saved by THIS submit, even if the
+    // form state is reset (or reused for another expense) before the upload finishes.
+    const receiptFile = pendingReceipt;
+    const removeReceipt = removeExistingReceipt && !receiptFile;
+
+    submitLock.current = true;
     setIsSavingExpense(true);
     try {
-      let savedExpenseId = editingExpenseId;
+      let savedExpenseId: number;
       if (editingExpenseId) {
         const updateData: UpdateExpenseInput = {
           description: expenseForm.description.trim(),
@@ -306,6 +385,7 @@ export default function BudgetManager({
           notes: expenseForm.notes.trim() || null,
         };
         await expenseService.updateExpense(tripId, editingExpenseId, updateData);
+        savedExpenseId = editingExpenseId;
         toast.success("Expense updated");
       } else {
         const createData: CreateExpenseInput = {
@@ -320,11 +400,27 @@ export default function BudgetManager({
         savedExpenseId = created.id;
         toast.success("Expense added");
       }
-      if (splitResult.input && savedExpenseId) {
+      // Each follow-up runs on its own: one failing never skips the other or loses the expense.
+      if (splitResult.input) {
         try {
           await expenseService.setExpenseSplit(tripId, savedExpenseId, splitResult.input);
         } catch {
           toast.error("Expense saved, but the split could not be saved");
+        }
+      }
+      if (receiptFile || removeReceipt) {
+        try {
+          if (receiptFile) {
+            await expenseService.uploadReceipt(tripId, savedExpenseId, receiptFile);
+          } else {
+            await expenseService.deleteReceipt(tripId, savedExpenseId);
+          }
+        } catch {
+          toast.error(
+            receiptFile
+              ? "The expense was saved, but the receipt photo was not attached. Edit the expense and choose Attach receipt to try again."
+              : "The expense was saved, but the receipt photo could not be removed. Edit the expense and try Remove again."
+          );
         }
       }
       closeExpenseForm();
@@ -332,9 +428,26 @@ export default function BudgetManager({
     } catch {
       toast.error(editingExpenseId ? "Failed to update expense" : "Failed to add expense");
     } finally {
+      submitLock.current = false;
       setIsSavingExpense(false);
     }
   };
+
+  const handleReceiptPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setPendingReceipt(file);
+    setRemoveExistingReceipt(false);
+  };
+
+  const handleRemoveReceipt = () => {
+    setPendingReceipt(null);
+    if (existingReceiptPath) setRemoveExistingReceipt(true);
+  };
+
+  const shownReceiptUrl =
+    pendingReceiptUrl ?? (existingReceiptPath && !removeExistingReceipt ? getFullAssetUrl(existingReceiptPath) : null);
 
   const handleDeleteExpense = async (expense: TripExpense) => {
     const confirmed = await confirm({
@@ -370,13 +483,20 @@ export default function BudgetManager({
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Budget &amp; Expenses
         </h2>
-        <button
-          type="button"
-          onClick={showExpenseForm ? closeExpenseForm : openCreateExpenseForm}
-          className="btn-primary"
-        >
-          {showExpenseForm ? "Cancel" : "+ Add Expense"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <ReceiptScanButton
+            tripId={tripId}
+            disabled={editingExpenseId !== null || isSavingExpense}
+            onScanned={handleReceiptScanned}
+          />
+          <button
+            type="button"
+            onClick={showExpenseForm ? closeExpenseForm : openCreateExpenseForm}
+            className="btn-primary"
+          >
+            {showExpenseForm ? "Cancel" : "+ Add Expense"}
+          </button>
+        </div>
       </div>
 
       {/* Budget Overview */}
@@ -627,10 +747,21 @@ export default function BudgetManager({
             {editingExpenseId ? "Edit Expense" : "Add Expense"}
           </h3>
 
+          {scannedFields.length > 0 && (
+            <p
+              role="status"
+              className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-charcoal dark:text-warm-gray"
+            >
+              Filled in from your receipt. Fields marked &quot;From receipt&quot; were read
+              automatically and can be wrong, so check them before saving.
+              {currencyDefaulted && " The receipt showed no currency, so check the currency too."}
+            </p>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label htmlFor="expense-description" className="label label-required">
-                Description
+                Description{isScanned("description") && <ScanBadge />}
               </label>
               <input
                 id="expense-description"
@@ -641,14 +772,14 @@ export default function BudgetManager({
                 onChange={(e) =>
                   setExpenseForm({ ...expenseForm, description: e.target.value })
                 }
-                className="input w-full"
+                className={`input w-full${scannedRing("description")}`}
                 placeholder="e.g. Dinner at trattoria"
               />
             </div>
 
             <div>
               <label htmlFor="expense-category" className="label">
-                Category
+                Category{isScanned("category") && <ScanBadge />}
               </label>
               <select
                 id="expense-category"
@@ -659,7 +790,7 @@ export default function BudgetManager({
                     setExpenseForm({ ...expenseForm, category: value });
                   }
                 }}
-                className="input w-full"
+                className={`input w-full${scannedRing("category")}`}
               >
                 {EXPENSE_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
@@ -672,7 +803,7 @@ export default function BudgetManager({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="expense-amount" className="label label-required">
-                  Amount
+                  Amount{isScanned("amount") && <ScanBadge />}
                 </label>
                 <input
                   id="expense-amount"
@@ -684,19 +815,19 @@ export default function BudgetManager({
                   onChange={(e) =>
                     setExpenseForm({ ...expenseForm, amount: e.target.value })
                   }
-                  className="input w-full"
+                  className={`input w-full${scannedRing("amount")}`}
                   placeholder="0.00"
                 />
               </div>
               <div>
                 <label htmlFor="expense-currency" className="label">
-                  Currency
+                  Currency{isScanned("currency") && <ScanBadge />}
                 </label>
                 <CurrencySelect
                   id="expense-currency"
                   value={expenseForm.currency}
                   onChange={(currency) => setExpenseForm({ ...expenseForm, currency })}
-                  className="input w-full"
+                  className={`input w-full${scannedRing("currency")}`}
                 />
               </div>
             </div>
@@ -704,6 +835,9 @@ export default function BudgetManager({
             <div>
               <label htmlFor="expense-date" className="label">
                 Date
+                {isScanned("date") && (
+                  <ScanBadge detail={formatExpenseDate(expenseForm.date) ?? undefined} />
+                )}
               </label>
               <input
                 id="expense-date"
@@ -712,7 +846,7 @@ export default function BudgetManager({
                 onChange={(e) =>
                   setExpenseForm({ ...expenseForm, date: e.target.value })
                 }
-                className="input w-full"
+                className={`input w-full${scannedRing("date")}`}
               />
             </div>
 
@@ -741,6 +875,39 @@ export default function BudgetManager({
                 placeholder="Optional notes"
               />
             </div>
+          </div>
+
+          <div>
+            <span className="label">Receipt photo</span>
+            <div className="flex items-center gap-3">
+              {shownReceiptUrl && (
+                <img
+                  src={shownReceiptUrl}
+                  alt="Receipt thumbnail"
+                  className="h-16 w-16 rounded-lg border border-primary-100 object-cover dark:border-gold/20"
+                />
+              )}
+              <label className="btn-secondary cursor-pointer">
+                {shownReceiptUrl ? "Replace receipt" : "Attach receipt"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  data-testid="expense-receipt-input"
+                  onChange={handleReceiptPicked}
+                />
+              </label>
+              {shownReceiptUrl && (
+                <button type="button" className="btn-secondary" onClick={handleRemoveReceipt}>
+                  Remove receipt
+                </button>
+              )}
+            </div>
+            {pendingReceipt && (
+              <p className="mt-1 text-xs text-slate dark:text-warm-gray/70">
+                The photo is attached when you save.
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
@@ -829,6 +996,21 @@ export default function BudgetManager({
                       ))}
                   </div>
                   <div className="flex gap-1">
+                    {expense.receiptPath && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewingReceipt({ path: expense.receiptPath as string, title: expense.description })
+                        }
+                        className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors"
+                        aria-label={`View receipt for ${expense.description}`}
+                        title="View receipt"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => openEditExpenseForm(expense)}
@@ -857,6 +1039,13 @@ export default function BudgetManager({
         )}
       </div>
 
+      {viewingReceipt && (
+        <ReceiptViewer
+          path={viewingReceipt.path}
+          title={viewingReceipt.title}
+          onClose={() => setViewingReceipt(null)}
+        />
+      )}
       <ConfirmDialogComponent />
     </div>
   );

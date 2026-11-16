@@ -555,6 +555,18 @@ const BackupExpenseSchema = z.object({
       })
     )
     .optional(),
+  // Receipt photo (optional, additive; older backups simply lack these). Only the
+  // PATH travels, not the image; a tampered path rejects the whole backup like photos.
+  receiptPath: z
+    .string()
+    .refine((v) => /^\/uploads\/receipts\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(v) && !v.includes('..'), {
+      message: 'Invalid receipt path. Expected /uploads/receipts/<filename>.',
+    })
+    .nullable()
+    .optional(),
+  receiptMimeType: z.string().max(50).nullable().optional(),
+  receiptSizeBytes: z.number().int().nonnegative().nullable().optional(),
+  receiptUploadedAt: FlexibleDateSchema,
 });
 
 // Trip emergency info schema (added in v1.6.0)
