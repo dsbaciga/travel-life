@@ -690,6 +690,20 @@ Manage passports, visas, and other travel documents, including expiry alerts.
 | PUT | `/:id` | Update a travel document | Yes |
 | DELETE | `/:id` | Delete a travel document | Yes |
 
+### Loyalty Programs (`/api/loyalty-programs`)
+
+Manage frequent-flyer and hotel-loyalty memberships. User-scoped: every endpoint only sees the caller's own programs, and the membership number is never returned by trip, collaborator or public-share endpoints. Transportation and lodging records reference a program through a nullable `loyaltyProgramId` (the program must belong to the user saving the record); deleting a program clears that reference.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | List the user's loyalty programs | Yes |
+| POST | `/` | Create a program (`name`, `type`, `providerName`, `membershipNumber` required; optional `providerCode`, `alliance`, `aliases`, `tier`, `pointsBalance`, `notes`) | Yes |
+| GET | `/:id` | Get a program by ID | Yes |
+| PUT | `/:id` | Update a program | Yes |
+| DELETE | `/:id` | Delete a program | Yes |
+
+`type` is one of `AIRLINE`, `HOTEL`, `RAIL`, `CAR_RENTAL`, `OTHER`.
+
 ### Language Phrases
 
 Phrase data endpoints are public; trip-language management endpoints require authentication.

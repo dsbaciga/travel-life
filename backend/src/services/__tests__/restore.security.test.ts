@@ -40,7 +40,7 @@ jest.mock('@prisma/client', () => {
 
 const MODELS = [
   'user', 'trip', 'tripTag', 'tripTagAssignment', 'travelCompanion', 'tripCompanion',
-  'locationCategory', 'checklist', 'travelDocument', 'tripSeries', 'location', 'photo',
+  'locationCategory', 'checklist', 'travelDocument', 'loyaltyProgram', 'tripSeries', 'location', 'photo',
   'activity', 'transportation', 'flightTracking', 'lodging', 'journalEntry', 'photoAlbum',
   'photoAlbumAssignment', 'weatherData', 'entityLink', 'tripLanguage', 'savedLink',
 ] as const;

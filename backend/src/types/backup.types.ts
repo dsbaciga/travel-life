@@ -175,6 +175,22 @@ const BackupTravelDocumentSchema = z.object({
   alertDaysBefore: z.number().optional(),
 });
 
+// Loyalty program schema. `id` is the old id that bookings' loyaltyProgramId refers to.
+// The membership number is kept in full (unlike travel documents) so a restore is lossless.
+const BackupLoyaltyProgramSchema = z.object({
+  id: z.number().optional(),
+  name: z.string(),
+  type: z.enum(['AIRLINE', 'HOTEL', 'RAIL', 'CAR_RENTAL', 'OTHER']),
+  providerName: z.string(),
+  providerCode: z.string().nullable().optional(),
+  alliance: z.string().nullable().optional(),
+  aliases: z.array(z.string()).optional(),
+  membershipNumber: z.string(),
+  tier: z.string().nullable().optional(),
+  pointsBalance: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
 // =============================================================================
 // Trip-related Schemas
 // =============================================================================
@@ -318,6 +334,7 @@ const BackupTransportationSchema = z.object({
   referenceNumber: z.string().nullable().optional(),
   seatNumber: z.string().nullable().optional(),
   bookingReference: z.string().nullable().optional(),
+  loyaltyProgramId: z.number().nullable().optional(), // Old id of a backup loyaltyPrograms entry
   bookingUrl: backupLinkUrl,
   cost: FlexibleCoordinateSchema, // Decimal column: arrives as a JSON string
   currency: z.string().nullable().optional(),
@@ -345,6 +362,7 @@ const BackupLodgingSchema = z.object({
   checkOutDate: z.string(), // ISO datetime
   timezone: z.string().nullable().optional(),
   confirmationNumber: z.string().nullable().optional(),
+  loyaltyProgramId: z.number().nullable().optional(), // Old id of a backup loyaltyPrograms entry
   bookingUrl: backupLinkUrl,
   cost: FlexibleCoordinateSchema, // Decimal column: arrives as a JSON string
   currency: z.string().nullable().optional(),
@@ -641,6 +659,8 @@ export const BackupDataSchema = z.object({
   checklists: z.array(BackupChecklistSchema),
   // Travel documents (added in v1.1.0)
   travelDocuments: z.array(BackupTravelDocumentSchema).optional(),
+  // Loyalty programs (additive and optional, so no version bump: older backups simply lack it)
+  loyaltyPrograms: z.array(BackupLoyaltyProgramSchema).optional(),
   // Trip series (added in v1.2.0)
   tripSeries: z.array(z.object({
     id: z.number(),
@@ -662,6 +682,7 @@ export type BackupLocationCategory = z.infer<typeof BackupLocationCategorySchema
 export type BackupChecklist = z.infer<typeof BackupChecklistSchema>;
 export type BackupChecklistItem = z.infer<typeof BackupChecklistItemSchema>;
 export type BackupTravelDocument = z.infer<typeof BackupTravelDocumentSchema>;
+export type BackupLoyaltyProgram = z.infer<typeof BackupLoyaltyProgramSchema>;
 export type BackupTrip = z.infer<typeof BackupTripSchema>;
 export type BackupActivity = z.infer<typeof BackupActivitySchema>;
 export type BackupTransportation = z.infer<typeof BackupTransportationSchema>;

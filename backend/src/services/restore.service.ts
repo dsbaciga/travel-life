@@ -22,6 +22,7 @@ interface RestoreStats {
   tagsImported: number;
   companionsImported: number;
   travelDocumentsImported: number;
+  loyaltyProgramsImported: number;
   tripLanguagesImported: number;
   savedLinksImported: number;
   customItemsImported: number;
@@ -94,6 +95,7 @@ export async function restoreFromBackup(
     tagsImported: 0,
     companionsImported: 0,
     travelDocumentsImported: 0,
+    loyaltyProgramsImported: 0,
     tripLanguagesImported: 0,
     savedLinksImported: 0,
     customItemsImported: 0,
@@ -308,6 +310,42 @@ export async function restoreFromBackup(
               },
             },
           });
+        }
+
+        // Step 6.4: Import loyalty programs. Built before trips so bookings can be re-linked
+        // through the old id -> new id map. A program already present (same type, provider and
+        // membership number) is reused rather than duplicated during a merge.
+        const loyaltyProgramMap = new Map<number, number>(); // old ID -> new ID
+        for (const programData of backupData.loyaltyPrograms || []) {
+          const existingProgram = await tx.loyaltyProgram.findFirst({
+            where: {
+              userId,
+              type: programData.type,
+              providerName: programData.providerName,
+              membershipNumber: programData.membershipNumber,
+            },
+          });
+          const programId = existingProgram
+            ? existingProgram.id
+            : (
+                await tx.loyaltyProgram.create({
+                  data: {
+                    userId,
+                    name: programData.name,
+                    type: programData.type,
+                    providerName: programData.providerName,
+                    providerCode: programData.providerCode ?? null,
+                    alliance: programData.alliance ?? null,
+                    aliases: programData.aliases ?? [],
+                    membershipNumber: programData.membershipNumber,
+                    tier: programData.tier ?? null,
+                    pointsBalance: programData.pointsBalance ?? null,
+                    notes: programData.notes ?? null,
+                  },
+                })
+              ).id;
+          if (!existingProgram) stats.loyaltyProgramsImported++;
+          if (programData.id != null) loyaltyProgramMap.set(programData.id, programId);
         }
 
         // Step 6.5: Import travel documents (added in v1.1.0)
@@ -580,6 +618,9 @@ export async function restoreFromBackup(
                 referenceNumber: transportData.referenceNumber,
                 seatNumber: transportData.seatNumber,
                 bookingReference: transportData.bookingReference,
+                loyaltyProgramId: transportData.loyaltyProgramId
+                  ? (loyaltyProgramMap.get(transportData.loyaltyProgramId) ?? null)
+                  : null,
                 bookingUrl: transportData.bookingUrl,
                 cost: transportData.cost,
                 currency: transportData.currency,
@@ -635,6 +676,9 @@ export async function restoreFromBackup(
                 checkOutDate: new Date(lodgingData.checkOutDate),
                 timezone: lodgingData.timezone,
                 confirmationNumber: lodgingData.confirmationNumber,
+                loyaltyProgramId: lodgingData.loyaltyProgramId
+                  ? (loyaltyProgramMap.get(lodgingData.loyaltyProgramId) ?? null)
+                  : null,
                 bookingUrl: lodgingData.bookingUrl,
                 cost: lodgingData.cost,
                 currency: lodgingData.currency,
@@ -1091,6 +1135,11 @@ async function clearUserData(userId: number, tx: TransactionClient) {
 
   // Delete travel documents (added in v1.1.0)
   await tx.travelDocument.deleteMany({
+    where: { userId },
+  });
+
+  // Delete loyalty programs. Bookings that pointed at them are already gone with the trips.
+  await tx.loyaltyProgram.deleteMany({
     where: { userId },
   });
 
