@@ -1950,7 +1950,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Reuses `llm.service.ts` and the per-user key handling
 - Result lands as an editable draft only; no direct writes to published entries
 
-**Status**: Not started
+**Status**: Complete. `POST /api/trips/:tripId/ai/journal-day-draft` (`{ date }`, needs edit access) returns `{ title, body, date, truncated }` as text only; "Draft with AI" in the journal form pre-fills the editor, marked as an AI draft, and nothing is saved until Create Entry.
 
 ### 121. Food Log
 
