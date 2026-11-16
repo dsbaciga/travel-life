@@ -1,4 +1,5 @@
 import { useState, useId, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { JournalEntry, CreateJournalEntryInput, UpdateJournalEntryInput } from "../types/journalEntry";
 import journalEntryService from "../services/journalEntry.service";
 import toast from "react-hot-toast";
@@ -90,7 +91,8 @@ export default function JournalManager({
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Not React state: the submit handler runs before a state change would be visible.
+  const addAnother = useSaveAndAddAnother();
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
   // Use the new useFormFields hook to manage all form state
@@ -101,7 +103,7 @@ export default function JournalManager({
     entryDate: defaultEntryDate,
   }), [defaultEntryDate]);
 
-  const { values: formValues, setField, resetFields, setAllFields } = useFormFields(initialFormValues);
+  const { values: formValues, setField, setAllFields } = useFormFields(initialFormValues);
 
   const journalFieldErrors = useFieldErrors({
     title: { validate: (v) => v.trim() ? null : 'Title is required' },
@@ -210,7 +212,6 @@ export default function JournalManager({
   // Extended reset that also clears additional local state
   const resetForm = useCallback(() => {
     baseResetForm();
-    setKeepFormOpenAfterSave(false);
     setShowDraftPrompt(false);
     draft.clearDraft();
   }, [baseResetForm, draft]);
@@ -218,7 +219,6 @@ export default function JournalManager({
   // Open create form with clean state
   const openCreateForm = useCallback(() => {
     baseOpenCreateForm();
-    setKeepFormOpenAfterSave(false);
   }, [baseOpenCreateForm]);
 
   useCreateFromUrlParam(openCreateForm);
@@ -229,6 +229,9 @@ export default function JournalManager({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronously, before anything else: records whether this submit came
+    // from "Save & Add Another".
+    addAnother.beginSubmit();
     return run(() => performSubmit(e));
   };
 
@@ -266,11 +269,15 @@ export default function JournalManager({
       if (success) {
         markSaved();
         invalidateLinkSummary(); // Refresh link counts
-        if (keepFormOpenAfterSave) {
+        if (addAnother.keepOpen()) {
           // Reset form but keep modal open for quick successive entries
-          resetFields();
+          // The same starting values a newly opened form gets. They also become
+          // the "nothing changed yet" state, and the entry just saved must not
+          // come back as a draft.
+          setAllFields(initialFormValues);
+          captureInitialValues(initialFormValues);
           journalFieldErrors.resetErrors();
-          setKeepFormOpenAfterSave(false);
+          draft.clearDraft();
           // Focus first input for quick data entry
           setTimeout(() => {
             const firstInput = document.querySelector<HTMLInputElement>(`#${titleFieldId}`);
@@ -344,6 +351,7 @@ export default function JournalManager({
               <button
                 type="button"
                 onClick={handleCloseForm}
+                disabled={isSubmitting}
                 className="btn btn-secondary"
               >
                 Cancel
@@ -351,11 +359,9 @@ export default function JournalManager({
               {!manager.editingId && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setKeepFormOpenAfterSave(true);
-                    (document.getElementById('journal-form') as HTMLFormElement)?.requestSubmit();
-                  }}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block"
+                  disabled={isSubmitting}
+                  onClick={() => addAnother.submit(document.getElementById('journal-form'))}
+                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
                 >
                   Save & Add Another
                 </button>
@@ -363,7 +369,7 @@ export default function JournalManager({
               <button
                 type="submit"
                 form="journal-form"
-                className="btn btn-primary"
+                className="btn btn-primary disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Create"} Entry`}

@@ -17,8 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Currency is now a list to pick from in every form** (activities, lodging, transportation, custom items, the trip budget, expenses and souvenirs), limited to the currencies the app can convert. It used to be a box you typed a three-letter code into. An item saved earlier with a different code keeps it and shows it as "not supported for conversion".
+
 ### Fixed
 
+- **"Save & Add Another" keeps the form open.** For places, activities, lodging, transportation and journal entries it saved the entry and then closed the form, the same as the normal Add button. It now saves, clears the form and leaves it open for the next one, and the buttons are disabled while the save is running.
+- **Closing an untouched Add Lodging or Add Transportation form no longer warns about unsaved changes.** The details pre-filled from your previous entry were being counted as edits.
 - **Import PDF works from the trip menu on a phone.** Choosing it from the ⋮ menu closed the menu and nothing else happened; the upload dialog now opens. On tablets and computers the button was unaffected.
 
 ## [7.3.0] - 2026-11-15

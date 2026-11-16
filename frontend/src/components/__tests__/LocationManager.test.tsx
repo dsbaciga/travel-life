@@ -9,6 +9,7 @@
  * - MGR-LOC-005: Delete location
  * - MGR-LOC-006: Category assignment
  * - MGR-LOC-007: A second submit during the pause before the modal closes adds nothing
+ * - MGR-LOC-008: Save & Add Another keeps the form open and empty
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -1069,6 +1070,98 @@ describe("LocationManager", () => {
       await act(async () => {
         finishReload([created]);
       });
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(locationService.createLocation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ==========================================================================
+  // MGR-LOC-008: Save & Add Another
+  // ==========================================================================
+  describe("MGR-LOC-008: Save & Add Another", () => {
+    const openAddForm = async (user: ReturnType<typeof userEvent.setup>) => {
+      renderLocationManager();
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /add location/i })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole("button", { name: /add location/i }));
+      await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    };
+
+    it("saves, keeps the form open and clears it for the next place", async () => {
+      const user = userEvent.setup();
+      const first = createMockLocation({ id: 51, name: "First Place" });
+      vi.mocked(locationService.createLocation).mockResolvedValue(first);
+      vi.mocked(locationService.getLocationsByTrip).mockResolvedValue([first]);
+
+      await openAddForm(user);
+      fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "First Place" } });
+      await user.click(screen.getByRole("button", { name: /save & add another/i }));
+
+      await waitFor(() => expect(locationService.createLocation).toHaveBeenCalledTimes(1));
+      expect(locationService.createLocation).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "First Place" })
+      );
+
+      // Still open, and empty again. It used to save and then close: the submit
+      // handler ran before the "keep open" state change had been rendered.
+      await waitFor(() => expect(screen.getByLabelText(/^name/i)).toHaveValue(""));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      // The next plain Add closes it: the intent does not carry over.
+      const second = createMockLocation({ id: 52, name: "Second Place" });
+      vi.mocked(locationService.createLocation).mockResolvedValue(second);
+      fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Second Place" } });
+      await user.click(screen.getByRole("button", { name: /^add location$/i }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(locationService.createLocation).toHaveBeenCalledTimes(2);
+    });
+
+    it("disables every footer button while the save is running", async () => {
+      const user = userEvent.setup();
+      const created = createMockLocation({ id: 53, name: "Slow Place" });
+      let finishCreate!: (location: Location) => void;
+      vi.mocked(locationService.createLocation).mockReturnValue(
+        new Promise<Location>((resolve) => {
+          finishCreate = resolve;
+        })
+      );
+
+      await openAddForm(user);
+      fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Slow Place" } });
+      await user.click(screen.getByRole("button", { name: /save & add another/i }));
+
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: /save & add another/i })).toBeDisabled()
+      );
+      expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^cancel$/i })).toBeDisabled();
+
+      await act(async () => {
+        finishCreate(created);
+      });
+
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: /save & add another/i })).toBeEnabled()
+      );
+      expect(locationService.createLocation).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not keep the form open on a later plain Add after an attempt that failed validation", async () => {
+      const user = userEvent.setup();
+      const created = createMockLocation({ id: 54, name: "Named Now" });
+      vi.mocked(locationService.createLocation).mockResolvedValue(created);
+      vi.mocked(locationService.getLocationsByTrip).mockResolvedValue([created]);
+
+      await openAddForm(user);
+      // No name yet: nothing is saved.
+      await user.click(screen.getByRole("button", { name: /save & add another/i }));
+      expect(locationService.createLocation).not.toHaveBeenCalled();
+
+      fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: "Named Now" } });
+      await user.click(screen.getByRole("button", { name: /^add location$/i }));
+
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       expect(locationService.createLocation).toHaveBeenCalledTimes(1);
     });

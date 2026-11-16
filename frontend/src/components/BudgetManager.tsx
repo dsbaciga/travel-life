@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import CurrencySelect from "./CurrencySelect";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { formatCurrency as sharedFormatCurrency } from "../utils/formatCurrency";
@@ -169,7 +170,7 @@ export default function BudgetManager({
     }
     const currency = budgetCurrencyInput.trim().toUpperCase();
     if (parsedAmount !== null && currency.length !== 3) {
-      toast.error("Currency must be a 3-letter code (e.g. USD)");
+      toast.error("Choose a currency");
       return;
     }
 
@@ -254,7 +255,7 @@ export default function BudgetManager({
     }
     const currency = expenseForm.currency.trim().toUpperCase();
     if (currency && currency.length !== 3) {
-      toast.error("Currency must be a 3-letter code (e.g. USD)");
+      toast.error("Choose a currency");
       return;
     }
 
@@ -512,20 +513,15 @@ export default function BudgetManager({
                   placeholder="e.g. 2500"
                 />
               </div>
-              <div className="w-full sm:w-32">
+              <div className="w-full sm:w-56">
                 <label htmlFor="budget-currency" className="label">
                   Currency
                 </label>
-                <input
+                <CurrencySelect
                   id="budget-currency"
-                  type="text"
-                  maxLength={3}
                   value={budgetCurrencyInput}
-                  onChange={(e) =>
-                    setBudgetCurrencyInput(e.target.value.toUpperCase())
-                  }
-                  className="input w-full uppercase"
-                  placeholder="USD"
+                  onChange={setBudgetCurrencyInput}
+                  className="input w-full"
                 />
               </div>
             </div>
@@ -650,19 +646,11 @@ export default function BudgetManager({
                 <label htmlFor="expense-currency" className="label">
                   Currency
                 </label>
-                <input
+                <CurrencySelect
                   id="expense-currency"
-                  type="text"
-                  maxLength={3}
                   value={expenseForm.currency}
-                  onChange={(e) =>
-                    setExpenseForm({
-                      ...expenseForm,
-                      currency: e.target.value.toUpperCase(),
-                    })
-                  }
-                  className="input w-full uppercase"
-                  placeholder="USD"
+                  onChange={(currency) => setExpenseForm({ ...expenseForm, currency })}
+                  className="input w-full"
                 />
               </div>
             </div>

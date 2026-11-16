@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { Location, CreateLocationInput, UpdateLocationInput, LocationCategory } from "../types/location";
 import locationService from "../services/location.service";
 import toast from "react-hot-toast";
@@ -124,7 +125,8 @@ export default function LocationManager({
   });
 
   const [categories, setCategories] = useState<LocationCategory[]>([]);
-  const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Not React state: the submit handler runs before a state change would be visible.
+  const addAnother = useSaveAndAddAnother();
   // Create mode only: also create an activity or lodging with the place's name.
   const [alsoCreate, setAlsoCreate] = useState<PlaceCompanion>("none");
   const { createCompanionForPlace } = useLinkedCreate(tripId);
@@ -216,7 +218,6 @@ export default function LocationManager({
     reset();
     locationFieldErrors.resetErrors();
     manager.setEditingId(null);
-    setKeepFormOpenAfterSave(false);
     setShowDraftPrompt(false);
     setAlsoCreate("none");
     draft.clearDraft();
@@ -260,6 +261,9 @@ export default function LocationManager({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronously, before anything else: records whether this submit came
+    // from "Save & Add Another".
+    addAnother.beginSubmit();
     return run(() => performSubmit(e));
   };
 
@@ -327,10 +331,11 @@ export default function LocationManager({
       }
       if (success) {
         setAlsoCreate("none");
-        if (keepFormOpenAfterSave) {
+        if (addAnother.keepOpen()) {
           // Reset form but keep modal open for quick successive entries
           reset();
-          setKeepFormOpenAfterSave(false);
+          // The place just saved must not come back as a draft.
+          draft.clearDraft();
           // Focus first input for quick data entry
           setTimeout(() => {
             const firstInput = document.querySelector<HTMLInputElement>('#location-name');
@@ -716,6 +721,7 @@ export default function LocationManager({
               <button
                 type="button"
                 onClick={handleCloseForm}
+                disabled={isSubmitting}
                 className="btn btn-secondary"
               >
                 Cancel
@@ -723,11 +729,9 @@ export default function LocationManager({
               {!manager.editingId && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setKeepFormOpenAfterSave(true);
-                    (document.getElementById('location-form') as HTMLFormElement)?.requestSubmit();
-                  }}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block"
+                  disabled={isSubmitting}
+                  onClick={() => addAnother.submit(document.getElementById('location-form'))}
+                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
                 >
                   Save & Add Another
                 </button>
@@ -735,7 +739,7 @@ export default function LocationManager({
               <button
                 type="submit"
                 form="location-form"
-                className="btn btn-primary"
+                className="btn btn-primary disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Location`}

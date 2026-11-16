@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import CurrencySelect from "./CurrencySelect";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import customItemService from "../services/customItem.service";
@@ -481,14 +482,10 @@ export default function CustomItemsManager({
               <label className="label" htmlFor="custom-item-currency">
                 Currency
               </label>
-              <input
+              <CurrencySelect
                 id="custom-item-currency"
-                type="text"
-                maxLength={3}
-                className="input uppercase"
-                placeholder="USD"
                 value={form.currency}
-                onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                onChange={(currency) => setForm({ ...form, currency })}
               />
               <p className="mt-1 text-xs text-slate dark:text-dusk-400">
                 Required with a cost, so it counts towards the trip budget.

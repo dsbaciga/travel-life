@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import CurrencySelect from './CurrencySelect';
 import checklistService from '../services/checklist.service';
 import type { Checklist, ChecklistItem, SouvenirMetadata } from '../types/checklist';
 import toast from 'react-hot-toast';
@@ -45,7 +46,8 @@ const initialFormState: SouvenirFormData = {
   purchased: false,
 };
 
-// Common currency options
+// Symbols for displaying prices. The choices offered in the form come from
+// CurrencySelect (the currencies the app can convert), not from this list.
 const CURRENCY_OPTIONS = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'EUR', symbol: '\u20AC', name: 'Euro' },
@@ -515,18 +517,12 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
             <label htmlFor="souvenir-currency" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
               Currency
             </label>
-            <select
+            <CurrencySelect
               id="souvenir-currency"
               value={formData.currency}
-              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-              className="input"
-            >
-              {CURRENCY_OPTIONS.map(currency => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.symbol} {currency.code} - {currency.name}
-                </option>
-              ))}
-            </select>
+              onChange={(currency) => setFormData({ ...formData, currency })}
+              allowEmpty={false}
+            />
           </div>
 
           {/* Prices */}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { Lodging, LodgingType, CreateLodgingInput, UpdateLodgingInput } from "../types/lodging";
 import type { Location } from "../types/location";
 import lodgingService from "../services/lodging.service";
@@ -101,6 +102,9 @@ interface LodgingFormFields {
   notes: string;
 }
 
+/** How long after the form opens its values are taken as the unchanged baseline. */
+const BASELINE_SETTLE_MS = 100;
+
 const initialFormState: LodgingFormFields = {
   type: "hotel",
   name: "",
@@ -163,7 +167,8 @@ export default function LodgingManager({
   const [alsoCreatePlace, setAlsoCreatePlace] = useState(false);
   const { createPlaceNamed } = useLinkedCreate(tripId);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
-  const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Not React state: the submit handler runs before a state change would be visible.
+  const addAnother = useSaveAndAddAnother();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   // Track original location ID when editing to detect changes (for entity linking)
   const [originalLocationId, setOriginalLocationId] = useState<number | null>(null);
@@ -188,7 +193,7 @@ export default function LodgingManager({
   // Shared date/time formatter (Pattern 12: eliminates duplicated formatDateTime wrapper)
   const formatDateTime = useMemo(() => createDateTimeFormatter(tripTimezone), [tripTimezone]);
 
-  const { values, handleChange, reset, setAllFields } =
+  const { values, handleChange, setAllFields } =
     useFormFields<LodgingFormFields>(getInitialFormState);
 
   // Track unsaved changes for browser close/refresh warning
@@ -230,6 +235,16 @@ export default function LodgingManager({
     setShowForm,
   });
 
+  // The newest form values, for code that runs after the current render: the
+  // dirty-tracking baseline has to be taken once the form has settled (defaults
+  // and "continue from the previous entry" auto-fill included), not from the
+  // values of the render in which the form opened. Otherwise an untouched form
+  // already counted as having unsaved changes.
+  const latestValuesRef = useRef(values);
+  useEffect(() => {
+    latestValuesRef.current = values;
+  });
+
   // Capture initial form values for dirty tracking when form opens or switches mode.
   // Uses a microtask delay so handleChange calls from populate effects have settled.
   const prevFormOpenRef = useRef(false);
@@ -241,14 +256,13 @@ export default function LodgingManager({
     prevEditingIdRef.current = manager.editingId;
 
     if (manager.showForm && (justOpened || editingChanged)) {
-      const timer = setTimeout(() => captureInitialValues(values), 0);
+      // A short wait, so the re-render from any auto-fill has been committed.
+      const timer = setTimeout(() => captureInitialValues(latestValuesRef.current), BASELINE_SETTLE_MS);
       return () => clearTimeout(timer);
     }
-    // `values` is read but deliberately not a dependency: this captures the
-    // baseline for dirty-tracking when the form opens. Re-running on every
-    // keystroke would re-baseline to what the user just typed, so isDirty
-    // would never become true and the unsaved-changes warning would never fire.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Runs only when the form opens or switches entry. The values come from a
+    // ref, not a dependency: re-running on every keystroke would re-baseline to
+    // what the user just typed, and the unsaved-changes warning would never fire.
   }, [manager.showForm, manager.editingId, captureInitialValues]);
 
   // Sync localLocations with locations prop
@@ -361,7 +375,6 @@ export default function LodgingManager({
   // Extended reset that also clears additional local state
   const resetForm = useCallback(() => {
     baseResetForm();
-    setKeepFormOpenAfterSave(false);
     setShowMoreOptions(false);
     setOriginalLocationId(null);
     setShowDraftPrompt(false);
@@ -372,7 +385,6 @@ export default function LodgingManager({
   // Open create form with clean state
   const openCreateForm = useCallback(() => {
     baseOpenCreateForm();
-    setKeepFormOpenAfterSave(false);
     setShowMoreOptions(false);
     setOriginalLocationId(null);
   }, [baseOpenCreateForm]);
@@ -391,6 +403,9 @@ export default function LodgingManager({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronously, before anything else: records whether this submit came
+    // from "Save & Add Another".
+    addAnother.beginSubmit();
     return run(() => performSubmit(e));
   };
 
@@ -503,11 +518,15 @@ export default function LodgingManager({
           saveLastUsedCurrency(values.currency);
         }
 
-        if (keepFormOpenAfterSave) {
+        if (addAnother.keepOpen()) {
           // Reset form but keep modal open for quick successive entries
-          reset();
-          setKeepFormOpenAfterSave(false);
+          // The same starting values a newly opened form gets. They also become
+          // the "nothing changed yet" state, and the entry just saved must not
+          // come back as a draft.
+          setAllFields(getInitialFormState);
+          captureInitialValues(getInitialFormState);
           setOriginalLocationId(null);
+          draft.clearDraft();
           // Focus first input for quick data entry
           setTimeout(() => {
             const firstInput = document.querySelector<HTMLInputElement>('#lodging-name');
@@ -649,8 +668,7 @@ export default function LodgingManager({
             submitLabel={`${manager.editingId ? "Update" : "Add"} Lodging`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => {
-              setKeepFormOpenAfterSave(true);
-              (document.getElementById('lodging-form') as HTMLFormElement)?.requestSubmit();
+              addAnother.submit(document.getElementById('lodging-form'));
             }}
             leftContent={
               <DraftIndicator

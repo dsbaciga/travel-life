@@ -48,10 +48,9 @@ interface FormModalFooterProps {
  *     isSubmitting={isSubmitting}
  *     submitLabel={editingId ? "Update Activity" : "Add Activity"}
  *     isEditMode={!!editingId}
- *     onSaveAndAddAnother={() => {
- *       setKeepFormOpenAfterSave(true);
- *       document.getElementById('activity-form')?.requestSubmit();
- *     }}
+ *     // addAnother comes from useSaveAndAddAnother(); a plain useState flag
+ *     // set here would not be visible to the submit handler it triggers.
+ *     onSaveAndAddAnother={() => addAnother.submit(document.getElementById('activity-form'))}
  *   />
  * }>
  *
