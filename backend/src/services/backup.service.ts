@@ -81,6 +81,7 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       referenceNumber: t.referenceNumber as string | null,
       seatNumber: t.seatNumber as string | null,
       bookingReference: t.bookingReference as string | null,
+      loyaltyProgramId: t.loyaltyProgramId as number | null,
       bookingUrl: t.bookingUrl as string | null,
       cost: t.cost as number | null,
       currency: t.currency as string | null,
@@ -306,6 +307,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           checkOutDate: true,
           timezone: true,
           confirmationNumber: true,
+          loyaltyProgramId: true,
           bookingUrl: true,
           cost: true,
           currency: true,
@@ -599,6 +601,12 @@ export async function createBackup(userId: number): Promise<BackupData> {
       },
     });
 
+    // Fetch loyalty programs (typically small)
+    const loyaltyPrograms = await prisma.loyaltyProgram.findMany({
+      where: { userId },
+      orderBy: { id: 'asc' },
+    });
+
     // Fetch travel documents (typically small)
     const travelDocuments = await prisma.travelDocument.findMany({
       where: { userId },
@@ -735,6 +743,22 @@ export async function createBackup(userId: number): Promise<BackupData> {
         id: s.id,
         name: s.name,
         description: s.description,
+      })),
+      // Loyalty programs. Unlike travel documents the membership number is kept in full:
+      // a backup with it masked could not restore the programs or the booking links.
+      // `id` lets bookings (loyaltyProgramId) be re-linked on restore.
+      loyaltyPrograms: loyaltyPrograms.map((p) => ({
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        providerName: p.providerName,
+        providerCode: p.providerCode,
+        alliance: p.alliance,
+        aliases: p.aliases,
+        membershipNumber: p.membershipNumber,
+        tier: p.tier,
+        pointsBalance: p.pointsBalance,
+        notes: p.notes,
       })),
       // Travel documents with masked document numbers for security
       travelDocuments: travelDocuments.map((doc) => ({

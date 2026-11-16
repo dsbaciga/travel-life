@@ -46,6 +46,7 @@ type TransportationBulkEdit = { type?: string; carrier?: string; notes?: string 
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
 import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
+import LoyaltyProgramField from "./LoyaltyProgramField";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
 
@@ -102,6 +103,7 @@ interface TransportationFormFields {
   carrier: string;
   vehicleNumber: string;
   confirmationNumber: string;
+  loyaltyProgramId: number | null;
   cost: string;
   currency: string;
   notes: string;
@@ -123,6 +125,7 @@ const initialFormState: TransportationFormFields = {
   carrier: "",
   vehicleNumber: "",
   confirmationNumber: "",
+  loyaltyProgramId: null,
   cost: "",
   currency: "USD",
   notes: "",
@@ -583,6 +586,7 @@ export default function TransportationManager({
     handleChange("carrier", transportation.carrier || "");
     handleChange("vehicleNumber", transportation.vehicleNumber || "");
     handleChange("confirmationNumber", transportation.confirmationNumber || "");
+    handleChange("loyaltyProgramId", transportation.loyaltyProgramId ?? null);
     handleChange("cost", transportation.cost?.toString() || "");
     handleChange("currency", transportation.currency || "USD");
     handleChange("notes", transportation.notes || "");
@@ -828,6 +832,7 @@ export default function TransportationManager({
         carrier: values.carrier || null,
         vehicleNumber: values.vehicleNumber || null,
         confirmationNumber: values.confirmationNumber || null,
+        loyaltyProgramId: values.loyaltyProgramId,
         cost: values.cost ? parseFloat(values.cost) : null,
         currency: values.currency || null,
         notes: values.notes || null,
@@ -854,6 +859,7 @@ export default function TransportationManager({
         carrier: values.carrier || undefined,
         vehicleNumber: values.vehicleNumber || undefined,
         confirmationNumber: values.confirmationNumber || undefined,
+        loyaltyProgramId: values.loyaltyProgramId ?? undefined,
         cost: values.cost ? parseFloat(values.cost) : undefined,
         currency: values.currency || undefined,
         notes: values.notes || undefined,
@@ -1503,6 +1509,15 @@ export default function TransportationManager({
                 onBookingUrlChange={() => {}}
                 confirmationLabel="Confirmation Number"
                 hideBookingUrl={true}
+              />
+
+              <LoyaltyProgramField
+                kind="transportation"
+                name={values.carrier}
+                vehicleNumber={values.vehicleNumber}
+                transportType={values.type}
+                value={values.loyaltyProgramId}
+                onChange={(id) => handleChange("loyaltyProgramId", id)}
               />
             </FormSection>
 

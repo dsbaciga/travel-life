@@ -12,6 +12,7 @@ import {
 } from '../services/_shared/tripAccess';
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
+import loyaltyProgramService from './loyaltyProgram.service';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
 
 // Note: Location association is handled via EntityLink system, not direct FK
@@ -20,6 +21,10 @@ class LodgingService {
   async createLodging(userId: number, data: CreateLodgingInput) {
     // Verify user has edit permission on the trip
     await verifyTripAccessWithPermission(userId, data.tripId, 'edit');
+
+    if (data.loyaltyProgramId) {
+      await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
 
     // Note: Location association is handled via EntityLink system after creation
     const lodging = await prisma.lodging.create({
@@ -32,6 +37,7 @@ class LodgingService {
         checkOutDate: data.checkOutDate ? new Date(data.checkOutDate) : new Date(),
         timezone: data.timezone || null,
         confirmationNumber: data.confirmationNumber || null,
+        loyaltyProgramId: data.loyaltyProgramId || null,
         cost: data.cost !== undefined ? data.cost : null,
         currency: data.currency || null,
         bookingUrl: data.bookingUrl || null,
@@ -77,6 +83,10 @@ class LodgingService {
   ) {
     // Verify user has edit permission on the lodging's trip
     await verifyEntityAccessWithPermission('lodging', lodgingId, userId, 'edit');
+
+    if (data.loyaltyProgramId) {
+      await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
 
     // Transformer for date fields: convert to Date if truthy, skip update if null/undefined.
     // This preserves existing dates if not explicitly provided (dates are required for lodging).

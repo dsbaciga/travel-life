@@ -68,6 +68,7 @@ model User {
   checklists              Checklist[]
   invitationsSent         TripInvitation[]   @relation("InvitationsSent")
   travelDocuments         TravelDocument[]
+  loyaltyPrograms         LoyaltyProgram[]
   tripSeries              TripSeries[]
   userInvitationsSent     UserInvitation[]   @relation("UserInvitationsSent")
   userInvitationsAccepted UserInvitation[]   @relation("UserInvitationsAccepted")
@@ -577,6 +578,9 @@ model Transportation {
   calculatedDistance Decimal?  @map("calculated_distance") @db.Decimal(10, 2) // Route distance in kilometers
   calculatedDuration Decimal?  @map("calculated_duration") @db.Decimal(10, 2) // Route duration in minutes
   distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine'
+  // Which of the booking user's loyalty programs this leg was booked under. A reference only:
+  // the membership number itself stays on LoyaltyProgram and is never copied here.
+  loyaltyProgramId   Int?      @map("loyalty_program_id")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -585,8 +589,10 @@ model Transportation {
   endLocation      Location?         @relation("EndLocation", fields: [endLocationId], references: [id], onDelete: SetNull)
   flightTracking   FlightTracking?
   bookingDeadlines BookingDeadline[]
+  loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
 
   @@index([tripId])
+  @@index([loyaltyProgramId])
   @@index([scheduledStart])
   @@index([connectionGroupId])
   @@map("transportation")
@@ -613,14 +619,19 @@ model Lodging {
   baseAmount         Decimal? @map("base_amount") @db.Decimal(12, 2)
   baseCurrency       String?  @map("base_currency") @db.VarChar(3)
   notes              String?  @db.Text
+  // Which of the booking user's loyalty programs this stay was booked under. A reference only:
+  // the membership number itself stays on LoyaltyProgram and is never copied here.
+  loyaltyProgramId   Int?     @map("loyalty_program_id")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
   // Note: Location association is handled via EntityLink system, not direct FK
   bookingDeadlines BookingDeadline[]
+  loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
 
   @@index([tripId])
+  @@index([loyaltyProgramId])
   @@index([checkInDate])
   @@index([checkOutDate])
   @@map("lodging")
@@ -994,6 +1005,45 @@ model TravelDocument {
   @@index([userId])
   @@index([expiryDate])
   @@map("travel_documents")
+}
+
+// =============================================================================
+// LOYALTY PROGRAMS
+// =============================================================================
+// A user's frequent-flyer / hotel-loyalty memberships. User-scoped personal data:
+// never exposed to trip collaborators or the public share page. Bookings reference a
+// program by id (Transportation/Lodging.loyaltyProgramId) rather than copying the number.
+
+enum LoyaltyProgramType {
+  AIRLINE
+  HOTEL
+  RAIL
+  CAR_RENTAL
+  OTHER
+}
+
+model LoyaltyProgram {
+  id               Int                @id @default(autoincrement())
+  userId           Int                @map("user_id")
+  name             String             @db.VarChar(255) // Programme name, e.g. "SkyMiles"
+  type             LoyaltyProgramType
+  providerName     String             @map("provider_name") @db.VarChar(255) // Carrier or brand, e.g. "Delta Air Lines"
+  providerCode     String?            @map("provider_code") @db.VarChar(10) // IATA airline code, e.g. "DL"
+  alliance         String?            @db.VarChar(100) // e.g. "SkyTeam"
+  aliases          String[]           @default([]) // Other names the provider goes by, for matching
+  membershipNumber String             @map("membership_number") @db.VarChar(100)
+  tier             String?            @db.VarChar(100)
+  pointsBalance    Int?               @map("points_balance")
+  notes            String?            @db.Text
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transportation Transportation[]
+  lodging        Lodging[]
+
+  @@index([userId])
+  @@map("loyalty_programs")
 }
 
 // =============================================================================

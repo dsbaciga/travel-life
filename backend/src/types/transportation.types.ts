@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   optionalNumber,
+  optionalNumericId,
   optionalStringWithMax,
   optionalDatetime,
   optionalTimezone,
@@ -37,6 +38,7 @@ export interface Transportation {
   carrier: string | null;
   vehicleNumber: string | null;
   confirmationNumber: string | null;
+  loyaltyProgramId: number | null;
   cost: number | null;
   currency: string | null;
   notes: string | null;
@@ -101,6 +103,7 @@ export const createTransportationSchema = z.object({
   carrier: z.string().max(200).nullable().optional(),
   vehicleNumber: z.string().max(100).nullable().optional(),
   confirmationNumber: z.string().max(100).nullable().optional(),
+  loyaltyProgramId: optionalNumericId(),
   cost: z.number().min(0).nullable().optional(),
   currency: z.string().length(3).nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
@@ -128,6 +131,7 @@ export const updateTransportationSchema = z.object({
   carrier: optionalStringWithMax(200),
   vehicleNumber: optionalStringWithMax(100),
   confirmationNumber: optionalStringWithMax(100),
+  loyaltyProgramId: optionalNumericId(),
   cost: optionalPositiveNumber(),
   currency: optionalCurrencyCode(),
   notes: optionalNotesWithMax(2000),

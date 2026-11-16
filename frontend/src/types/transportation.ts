@@ -60,6 +60,8 @@ export type Transportation = {
   carrier: string | null;
   vehicleNumber: string | null;
   confirmationNumber: string | null;
+  /** The user's loyalty program this leg was booked under; the number itself is never on the booking. */
+  loyaltyProgramId: number | null;
   cost: number | null;
   currency: string | null;
   notes: string | null;
@@ -126,6 +128,7 @@ export type CreateTransportationInput = {
   carrier?: string | null;
   vehicleNumber?: string | null;
   confirmationNumber?: string | null;
+  loyaltyProgramId?: number | null;
   cost?: number | null;
   currency?: string | null;
   notes?: string | null;
@@ -144,6 +147,7 @@ export type UpdateTransportationInput = {
   carrier?: string | null;
   vehicleNumber?: string | null;
   confirmationNumber?: string | null;
+  loyaltyProgramId?: number | null;
   cost?: number | null;
   currency?: string | null;
   notes?: string | null;

@@ -77,6 +77,11 @@ const mockTx = {
     findFirst: jest.fn(),
     deleteMany: jest.fn(),
   },
+  loyaltyProgram: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    deleteMany: jest.fn(),
+  },
   tripSeries: {
     create: jest.fn(),
     deleteMany: jest.fn(),
@@ -313,6 +318,8 @@ describe('RestoreService', () => {
 
     mockTx.travelDocument.findFirst.mockResolvedValue(null); // No existing docs
     mockTx.travelDocument.create.mockResolvedValue({ id: 1 });
+    mockTx.loyaltyProgram.findFirst.mockResolvedValue(null);
+    mockTx.loyaltyProgram.create.mockResolvedValue({ id: 900 });
 
     let seriesIdCounter = 400;
     mockTx.tripSeries.create.mockImplementation(() =>
@@ -380,6 +387,7 @@ describe('RestoreService', () => {
     mockTx.customItemType.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.checklist.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.travelDocument.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.loyaltyProgram.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.tripSeries.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.savedLink.deleteMany.mockResolvedValue({ count: 0 });
   });
@@ -646,6 +654,79 @@ describe('RestoreService', () => {
       expect(result.stats.travelDocumentsImported).toBe(1);
     });
 
+    it('RST-010b: restores loyalty programs in full and re-links bookings to them', async () => {
+      mockTx.loyaltyProgram.create.mockResolvedValue({ id: 901 });
+      const backup = {
+        ...fullBackup,
+        loyaltyPrograms: [
+          {
+            id: 7,
+            name: 'SkyMiles',
+            type: 'AIRLINE' as const,
+            providerName: 'Delta Air Lines',
+            providerCode: 'DL',
+            aliases: ['Delta'],
+            membershipNumber: '9876543210',
+            tier: 'Gold',
+            pointsBalance: 12500,
+          },
+        ],
+        trips: [
+          {
+            ...fullBackup.trips[0],
+            transportation: [{ type: 'flight', company: 'Delta', loyaltyProgramId: 7 }],
+            lodging: [
+              {
+                type: 'hotel',
+                name: 'Hotel',
+                checkInDate: '2024-07-01',
+                checkOutDate: '2024-07-02',
+                loyaltyProgramId: 99, // not in the backup: link is dropped, not invented
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, backup);
+
+      expect(mockTx.loyaltyProgram.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: 1,
+          membershipNumber: '9876543210',
+          aliases: ['Delta'],
+          pointsBalance: 12500,
+        }),
+      });
+      expect(result.stats.loyaltyProgramsImported).toBe(1);
+      expect(mockTx.transportation.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loyaltyProgramId: 901 }),
+      });
+      expect(mockTx.lodging.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loyaltyProgramId: null }),
+      });
+    });
+
+    it('RST-010c: reuses a loyalty program that already exists instead of duplicating it', async () => {
+      mockTx.loyaltyProgram.findFirst.mockResolvedValue({ id: 55 });
+
+      const result = await restoreFromBackup(1, {
+        ...fullBackup,
+        loyaltyPrograms: [
+          {
+            id: 7,
+            name: 'SkyMiles',
+            type: 'AIRLINE' as const,
+            providerName: 'Delta Air Lines',
+            membershipNumber: '9876543210',
+          },
+        ],
+      });
+
+      expect(mockTx.loyaltyProgram.create).not.toHaveBeenCalled();
+      expect(result.stats.loyaltyProgramsImported).toBe(0);
+    });
+
     it('RST-011: imports trip series (v1.2.0)', async () => {
       await restoreFromBackup(1, fullBackup);
 
@@ -697,6 +778,7 @@ describe('RestoreService', () => {
       mockTx.locationCategory.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.checklist.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.travelDocument.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.loyaltyProgram.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.tripSeries.deleteMany.mockResolvedValue({ count: 0 });
 
       const v110Backup: BackupData = { ...minimalBackup, version: '1.1.0' };

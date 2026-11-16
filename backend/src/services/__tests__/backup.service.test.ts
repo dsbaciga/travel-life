@@ -61,6 +61,9 @@ const mockPrisma = {
   travelDocument: {
     findMany: jest.fn(),
   },
+  loyaltyProgram: {
+    findMany: jest.fn(),
+  },
   tripSeries: {
     findMany: jest.fn(),
   },
@@ -190,6 +193,7 @@ describe('BackupService', () => {
     mockPrisma.customItemType.findMany.mockResolvedValue([]);
     mockPrisma.checklist.findMany.mockResolvedValue(mockChecklists);
     mockPrisma.travelDocument.findMany.mockResolvedValue(mockTravelDocuments);
+    mockPrisma.loyaltyProgram.findMany.mockResolvedValue([]);
     mockPrisma.tripSeries.findMany.mockResolvedValue(mockTripSeries);
     mockPrisma.savedLink.findMany.mockResolvedValue(mockUnfiledSavedLinks);
     mockPrisma.trip.findMany.mockResolvedValue([]); // No trips by default
@@ -437,6 +441,38 @@ describe('BackupService', () => {
       expect(result.checklists[0].items).toHaveLength(1);
     });
 
+    it('BKP-007b: includes loyalty programs with the full membership number', async () => {
+      mockPrisma.loyaltyProgram.findMany.mockResolvedValue([
+        {
+          id: 3,
+          userId: 1,
+          name: 'SkyMiles',
+          type: 'AIRLINE',
+          providerName: 'Delta Air Lines',
+          providerCode: 'DL',
+          alliance: 'SkyTeam',
+          aliases: ['Delta'],
+          membershipNumber: '9876543210',
+          tier: 'Gold',
+          pointsBalance: 12500,
+          notes: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const result = await createBackup(1);
+
+      expect(mockPrisma.loyaltyProgram.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 1 } })
+      );
+      expect(result.loyaltyPrograms).toEqual([
+        expect.objectContaining({ id: 3, membershipNumber: '9876543210', providerCode: 'DL' }),
+      ]);
+      // No user id or timestamps leak into the file
+      expect(result.loyaltyPrograms![0]).not.toHaveProperty('userId');
+    });
+
     it('BKP-007: includes travel documents with masked numbers', async () => {
       const result = await createBackup(1);
 
@@ -472,6 +508,7 @@ describe('BackupService', () => {
       mockPrisma.locationCategory.findMany.mockResolvedValue([]);
       mockPrisma.checklist.findMany.mockResolvedValue([]);
       mockPrisma.travelDocument.findMany.mockResolvedValue([]);
+      mockPrisma.loyaltyProgram.findMany.mockResolvedValue([]);
       mockPrisma.tripSeries.findMany.mockResolvedValue([]);
       mockPrisma.savedLink.findMany.mockResolvedValue([]);
 

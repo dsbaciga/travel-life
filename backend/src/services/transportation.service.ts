@@ -17,6 +17,7 @@ import { convertDecimals } from '../services/_shared/decimalConversion';
 import { cleanupEntityLinks } from '../services/_shared/entityLinkCleanup';
 import { locationWithAddressSelect } from '../prisma/prismaIncludes';
 import routingService from './routing.service';
+import loyaltyProgramService from './loyaltyProgram.service';
 
 // Type for transportation with included relations
 type TransportationWithRelations = Prisma.TransportationGetPayload<{
@@ -43,6 +44,7 @@ interface TransportationFrontend {
   carrier: string | null;
   vehicleNumber: string | null;
   confirmationNumber: string | null;
+  loyaltyProgramId: number | null;
   cost: number | null;
   currency: string | null;
   notes: string | null;
@@ -96,6 +98,7 @@ const mapTransportationToFrontend = (t: TransportationWithRelations): Transporta
     carrier: converted.company,
     vehicleNumber: converted.referenceNumber,
     confirmationNumber: converted.bookingReference,
+    loyaltyProgramId: converted.loyaltyProgramId,
     cost: converted.cost,
     currency: converted.currency,
     notes: converted.notes,
@@ -137,6 +140,10 @@ class TransportationService {
       await verifyEntityInTrip('location', data.toLocationId, data.tripId);
     }
 
+    if (data.loyaltyProgramId) {
+      await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
+
     const transportation = await prisma.transportation.create({
       data: {
         tripId: data.tripId,
@@ -152,6 +159,7 @@ class TransportationService {
         company: data.carrier || null,
         referenceNumber: data.vehicleNumber || null,
         bookingReference: data.confirmationNumber || null,
+        loyaltyProgramId: data.loyaltyProgramId || null,
         cost: data.cost !== undefined ? data.cost : null,
         currency: data.currency || null,
         notes: data.notes || null,
@@ -400,6 +408,10 @@ class TransportationService {
       await verifyEntityInTrip('location', data.toLocationId, transportation.tripId);
     }
 
+    if (data.loyaltyProgramId) {
+      await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
+
     // Map frontend field names to database field names
     const mappedData = {
       type: data.type,
@@ -414,6 +426,7 @@ class TransportationService {
       company: data.carrier,
       referenceNumber: data.vehicleNumber,
       bookingReference: data.confirmationNumber,
+      loyaltyProgramId: data.loyaltyProgramId,
       cost: data.cost,
       currency: data.currency,
       notes: data.notes,

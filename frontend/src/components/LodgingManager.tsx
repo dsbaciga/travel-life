@@ -41,6 +41,7 @@ import BulkEditModal from "./BulkEditModal";
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
 import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
+import LoyaltyProgramField from "./LoyaltyProgramField";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
 
@@ -96,6 +97,7 @@ interface LodgingFormFields {
   checkOutDate: string;
   timezone: string;
   confirmationNumber: string;
+  loyaltyProgramId: number | null;
   bookingUrl: string;
   cost: string;
   currency: string;
@@ -114,6 +116,7 @@ const initialFormState: LodgingFormFields = {
   checkOutDate: "",
   timezone: "",
   confirmationNumber: "",
+  loyaltyProgramId: null,
   bookingUrl: "",
   cost: "",
   currency: "USD",
@@ -310,6 +313,7 @@ export default function LodgingManager({
     );
     handleChange("timezone", lodging.timezone || "");
     handleChange("confirmationNumber", lodging.confirmationNumber || "");
+    handleChange("loyaltyProgramId", lodging.loyaltyProgramId ?? null);
     handleChange("bookingUrl", lodging.bookingUrl || "");
     handleChange("cost", lodging.cost?.toString() || "");
     handleChange("currency", lodging.currency || "USD");
@@ -440,6 +444,7 @@ export default function LodgingManager({
         checkOutDate: checkOutDateISO,
         timezone: values.timezone || null,
         confirmationNumber: values.confirmationNumber || null,
+        loyaltyProgramId: values.loyaltyProgramId,
         bookingUrl: values.bookingUrl || null,
         cost: values.cost ? parseFloat(values.cost) : null,
         currency: values.currency || null,
@@ -473,6 +478,7 @@ export default function LodgingManager({
         checkOutDate: checkOutDateISO,
         timezone: values.timezone || undefined,
         confirmationNumber: values.confirmationNumber || undefined,
+        loyaltyProgramId: values.loyaltyProgramId ?? undefined,
         bookingUrl: values.bookingUrl || undefined,
         cost: values.cost ? parseFloat(values.cost) : undefined,
         currency: values.currency || undefined,
@@ -896,6 +902,12 @@ export default function LodgingManager({
                   handleChange("confirmationNumber", value)
                 }
                 onBookingUrlChange={(value) => handleChange("bookingUrl", value)}
+              />
+              <LoyaltyProgramField
+                kind="lodging"
+                name={values.name}
+                value={values.loyaltyProgramId}
+                onChange={(id) => handleChange("loyaltyProgramId", id)}
               />
             </FormSection>
 

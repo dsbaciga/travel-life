@@ -54,6 +54,9 @@ const mockPrisma = {
   entityLink: {
     deleteMany: jest.fn(),
   },
+  loyaltyProgram: {
+    findFirst: jest.fn(),
+  },
 };
 
 jest.mock('../../config/database', () => ({
@@ -570,6 +573,61 @@ describe('LodgingService', () => {
       });
       expect(verifyEntityAccessWithPermission).toHaveBeenCalled();
       expect(result).toEqual(mockLodging);
+    });
+  });
+
+  describe('LODG-008: Loyalty program link', () => {
+    it('stores the program id when the user owns the program', async () => {
+      mockPrisma.loyaltyProgram.findFirst.mockResolvedValue({ id: 5 });
+      mockPrisma.lodging.create.mockResolvedValue({ ...mockLodging, loyaltyProgramId: 5 });
+
+      await lodgingService.createLodging(mockUserId, {
+        tripId: mockTripId,
+        type: LodgingType.HOTEL,
+        name: 'Grand Hotel',
+        loyaltyProgramId: 5,
+      });
+
+      expect(mockPrisma.loyaltyProgram.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 5, userId: mockUserId } })
+      );
+      expect(mockPrisma.lodging.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loyaltyProgramId: 5 }),
+      });
+    });
+
+    it('rejects a program that belongs to someone else, without saving', async () => {
+      mockPrisma.loyaltyProgram.findFirst.mockResolvedValue(null);
+
+      await expect(
+        lodgingService.createLodging(mockUserId, {
+          tripId: mockTripId,
+          type: LodgingType.HOTEL,
+          name: 'Grand Hotel',
+          loyaltyProgramId: 99,
+        })
+      ).rejects.toThrow(AppError);
+      expect(mockPrisma.lodging.create).not.toHaveBeenCalled();
+    });
+
+    it('checks ownership on update too', async () => {
+      mockPrisma.loyaltyProgram.findFirst.mockResolvedValue(null);
+
+      await expect(
+        lodgingService.updateLodging(mockUserId, mockLodgingId, { loyaltyProgramId: 99 })
+      ).rejects.toThrow(AppError);
+      expect(mockPrisma.lodging.update).not.toHaveBeenCalled();
+    });
+
+    it('lets the link be cleared with null without an ownership lookup', async () => {
+      mockPrisma.lodging.update.mockResolvedValue({ ...mockLodging, loyaltyProgramId: null });
+
+      await lodgingService.updateLodging(mockUserId, mockLodgingId, { loyaltyProgramId: null });
+
+      expect(mockPrisma.loyaltyProgram.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.lodging.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ loyaltyProgramId: null }) })
+      );
     });
   });
 });

@@ -1737,6 +1737,15 @@ bookings.
 - Optional manual points balance
 - Sits naturally beside `TravelDocument`
 
+**Status**: Implemented. User-scoped `LoyaltyProgram` model (migration `20261116030000_add_loyalty_programs`)
+with CRUD at `/api/loyalty-programs`, managed in Settings > Travel Documents. Transportation and lodging
+carry a nullable `loyaltyProgramId` (a reference, so the number is never copied onto a booking and never
+reaches collaborators or the public share page). The booking forms offer a one-click suggestion chip when the
+carrier or hotel name matches a program (`frontend/src/utils/loyaltyMatch.ts`: case-insensitive, tolerant of
+"Delta" vs "Delta Air Lines", IATA code from the flight number). Included in backup and restore. Unlike travel
+document numbers, membership numbers are returned in full to their owner and kept in full in backups. Not yet
+wired into the timeline quick-edit modal or trip duplication.
+
 ### 110. Travel Day Document Vault
 
 **Category**: Mobile & PWA

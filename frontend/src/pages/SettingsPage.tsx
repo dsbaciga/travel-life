@@ -19,6 +19,9 @@ import IntegrationsSection from "../components/settings/IntegrationsSection";
 const TravelDocumentManager = lazy(
   () => import("../components/TravelDocumentManager")
 );
+const LoyaltyProgramManager = lazy(
+  () => import("../components/LoyaltyProgramManager")
+);
 const InviteUsersSection = lazy(
   () => import("../components/InviteUsersSection")
 );
@@ -324,6 +327,21 @@ export default function SettingsPage() {
                 }
               >
                 <TravelDocumentManager />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+        )}
+
+        {/* Loyalty Programs (sits beside Travel Documents) */}
+        {activeTab === "documents" && (
+          <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mt-6">
+            <ErrorBoundary>
+              <Suspense
+                fallback={
+                  <LoadingSpinner.FullPage message="Loading loyalty programs..." />
+                }
+              >
+                <LoyaltyProgramManager />
               </Suspense>
             </ErrorBoundary>
           </div>
