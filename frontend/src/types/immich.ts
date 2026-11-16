@@ -72,6 +72,8 @@ export interface ImmichFilters {
   type?: 'IMAGE' | 'VIDEO';
   albumId?: string;
   text?: string;
+  /** 'smart' searches by what is in the photo (needs Immich machine learning); default is file name. */
+  searchMode?: 'filename' | 'smart';
 }
 
 export interface ImmichBulkPreview {

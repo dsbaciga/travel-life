@@ -146,6 +146,7 @@ export default function ImmichBrowser({
   const effectiveFilters = useMemo<ImmichFilters>(() => {
     const next: ImmichFilters = { ...filters };
     if (imagesOnly) next.type = "IMAGE";
+    if (next.searchMode !== "smart") delete next.searchMode;
     if (next.dateFrom || next.dateTo) next.timezone = resolveTz(tripTimezone);
     return next;
   }, [filters, imagesOnly, resolveTz, tripTimezone]);
@@ -392,6 +393,8 @@ export default function ImmichBrowser({
   };
 
   const bulkEnabled = tripId !== undefined && Boolean(onBulkImported) && !imagesOnly;
+  // A smart search ranks the whole library by relevance; it has no bounded match set.
+  const smartActive = filters.searchMode === "smart" && Boolean(filters.text);
   const activeAlbumName = filters.albumId
     ? albums.find((album) => album.id === filters.albumId)?.albumName
     : undefined;
@@ -455,12 +458,28 @@ export default function ImmichBrowser({
           {view === "assets" && (
             <div className="space-y-3" role="search" aria-label="Filter Immich photos">
               <div className="flex gap-2">
+                <select
+                  value={filters.searchMode ?? "filename"}
+                  onChange={(e) =>
+                    updateFilters({ searchMode: e.target.value === "smart" ? "smart" : "filename" })
+                  }
+                  aria-label="Search mode"
+                  className="input w-auto"
+                >
+                  <option value="filename">File name</option>
+                  <option value="smart">Smart</option>
+                </select>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && submitSearch()}
-                  placeholder="Search by file name..."
+                  maxLength={200}
+                  placeholder={
+                    filters.searchMode === "smart"
+                      ? "Describe what is in the photo, e.g. beach sunset..."
+                      : "Search by file name..."
+                  }
                   aria-label="Search assets"
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
                 />
@@ -570,6 +589,11 @@ export default function ImmichBrowser({
                   </button>
                 )}
               </div>
+              {smartActive && (
+                <p className="text-xs text-gray-600 dark:text-dusk-400">
+                  Sorted by relevance. Smart search needs Immich&apos;s machine learning.
+                </p>
+              )}
               {filters.albumId && (
                 <p className="text-xs text-gray-600 dark:text-dusk-400">
                   Showing album {activeAlbumName ? `"${activeAlbumName}"` : "from Immich"}
@@ -660,13 +684,21 @@ export default function ImmichBrowser({
                     {allPageAssetsSelected ? "Deselect All on Page" : "Select All on Page"}
                   </button>
                   {bulkEnabled && (
-                    <button
-                      onClick={() => setShowBulkDialog(true)}
-                      type="button"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                    >
-                      Link all matching...
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setShowBulkDialog(true)}
+                        disabled={smartActive}
+                        type="button"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Link all matching...
+                      </button>
+                      {smartActive && (
+                        <span className="self-center text-xs text-gray-600 dark:text-dusk-400">
+                          Smart search ranks your whole library, so there is no set to link; select photos individually.
+                        </span>
+                      )}
+                    </>
                   )}
                   {selectedAssetsMap.size > 0 && (
                     <>

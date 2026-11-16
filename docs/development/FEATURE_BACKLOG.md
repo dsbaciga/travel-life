@@ -1078,7 +1078,7 @@ already provides one).
 - Album sync
 
 **Status**: ✅ Implemented (not yet run against a live Immich server; HTTP layer mocked in tests)
-- ✅ Advanced filtering: server-side date range (whole local days in the trip timezone, with a "This trip's dates" preset), favourites, media type, Immich album, file-name search; already-linked assets are marked
+- ✅ Advanced filtering: server-side date range (whole local days in the trip timezone, with a "This trip's dates" preset), favourites, media type, Immich album, file-name search or opt-in smart (content) search via `/api/search/smart` (relevance-ordered, needs Immich machine learning, not usable for bulk import); already-linked assets are marked
 - ✅ Bulk import: "Link all matching" with count confirmation, progress and a linked / already linked / failed summary (cap 5,000; re-running never duplicates)
 - ✅ Album sync (Immich to trip): link a trip album to an Immich album and pull new assets with a manual Sync button; assets removed from Immich are left in the trip and only reported
 - ✅ Two-way (trip to Immich): opt-in "Create/Update album in Immich" with a confirmation of what will be written; add-only, uploaded photos are skipped

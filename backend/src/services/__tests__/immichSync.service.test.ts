@@ -58,7 +58,11 @@ const mockImmich = {
   createAlbum: jest.fn(),
   addAssetsToAlbum: jest.fn(),
 };
-jest.mock('../immich.service', () => ({ __esModule: true, default: mockImmich }));
+jest.mock('../immich.service', () => ({
+  __esModule: true,
+  default: mockImmich,
+  isSmartSearch: (f: { smart?: boolean; text?: string }) => f.smart === true && Boolean(f.text?.trim()),
+}));
 
 import immichSyncService, {
   dayRangeToInstants,
@@ -213,6 +217,37 @@ describe('ImmichSyncService', () => {
       expect(mockPrisma.photo.findMany).not.toHaveBeenCalled();
       expect(result.assets[0]).not.toHaveProperty('alreadyLinked');
       expect(result.hasMore).toBe(false);
+    });
+  });
+
+  describe('IMS-016: smart search mode', () => {
+    it('passes smart + query through browse, with the other filters', async () => {
+      mockImmich.searchAssetsPage.mockResolvedValue({ assets: [asset('a')], nextPage: null });
+      await immichSyncService.browse(1, { searchMode: 'smart', text: 'beach sunset', isFavorite: true }, 1, 50);
+      expect(mockImmich.searchAssetsPage).toHaveBeenCalledWith(
+        'https://immich.test',
+        'key',
+        expect.objectContaining({ smart: true, text: 'beach sunset', isFavorite: true }),
+        1,
+        50
+      );
+    });
+
+    it('refuses a smart query for bulk preview and bulk page, before touching Immich', async () => {
+      const filters = { searchMode: 'smart' as const, text: 'beach' };
+      await expect(immichSyncService.previewBulkLink(1, 10, filters)).rejects.toMatchObject({ statusCode: 400 });
+      await expect(immichSyncService.linkBulkPage(1, 10, filters, 1)).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockImmich.collectAssets).not.toHaveBeenCalled();
+      expect(mockImmich.searchAssetsPage).not.toHaveBeenCalled();
+      expect(mockLinkBatch).not.toHaveBeenCalled();
+    });
+
+    it('allows bulk when smart mode has an empty query (it is a plain metadata query)', async () => {
+      mockImmich.collectAssets.mockResolvedValue({ assets: [], capped: false });
+      mockPrisma.photo.findMany.mockResolvedValue([]);
+      await expect(
+        immichSyncService.previewBulkLink(1, 10, { searchMode: 'smart' })
+      ).resolves.toMatchObject({ matching: 0 });
     });
   });
 

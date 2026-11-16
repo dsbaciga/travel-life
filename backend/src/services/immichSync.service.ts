@@ -1,7 +1,7 @@
 import { fromZonedTime } from 'date-fns-tz';
 import prisma from '../config/database';
 import { AppError } from '../errors/errors';
-import immichService, { ImmichAssetFilters, ImmichAssetView } from './immich.service';
+import immichService, { ImmichAssetFilters, ImmichAssetView, isSmartSearch } from './immich.service';
 import photoService from './photo.service';
 import { verifyTripAccessWithPermission, verifyEntityAccessWithPermission } from './_shared/tripAccess';
 import { getUserTimezone, resolveTimezone } from './_shared/timezoneResolution';
@@ -168,7 +168,18 @@ class ImmichSyncService {
       type: filters.type,
       albumId: filters.albumId,
       text: filters.text,
+      smart: filters.searchMode === 'smart',
     };
+  }
+
+  /** A smart search ranks the whole library; "everything matching" is meaningless for it. */
+  private refuseSmart(filters: ImmichFiltersInput): void {
+    if (isSmartSearch({ smart: filters.searchMode === 'smart', text: filters.text })) {
+      throw new AppError(
+        'Smart search cannot be used for bulk import: it ranks the whole library rather than matching a set. Pick photos individually, or use a file-name search.',
+        400
+      );
+    }
   }
 
   private async linkedAssetIds(tripId: number, assetIds: string[]): Promise<Set<string>> {
@@ -206,6 +217,7 @@ class ImmichSyncService {
 
   /** What "link everything matching" would do, so the user can confirm the count. */
   async previewBulkLink(userId: number, tripId: number, filters: ImmichFiltersInput): Promise<BulkPreview> {
+    this.refuseSmart(filters);
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const { apiUrl, apiKey } = await immichService.getUserSettings(userId);
     const resolved = await this.resolveFilters(userId, filters);
@@ -238,6 +250,7 @@ class ImmichSyncService {
     filters: ImmichFiltersInput,
     page: number
   ): Promise<BulkLinkPageResult> {
+    this.refuseSmart(filters);
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const offset = (page - 1) * BULK_LINK_PAGE_SIZE;
     if (offset >= BULK_LINK_CAP) {

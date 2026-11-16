@@ -110,9 +110,19 @@ export interface ImmichAssetFilters {
   isFavorite?: boolean;
   type?: 'IMAGE' | 'VIDEO';
   albumId?: string;
-  /** Matched against the original file name (Immich metadata search). */
+  /** Matched against the original file name, or used as the smart-search query when `smart`. */
   text?: string;
+  /** Search by content (POST /api/search/smart) instead of file name. Needs `text`. */
+  smart?: boolean;
 }
+
+/** True when these filters would call Immich's smart search (a relevance ranking, not a match set). */
+export function isSmartSearch(filters: { smart?: boolean; text?: string }): boolean {
+  return filters.smart === true && Boolean(filters.text?.trim());
+}
+
+const SMART_SEARCH_UNAVAILABLE =
+  "Smart search isn't available on your Immich server; machine learning may be turned off.";
 
 /** Immich caps `size` on the metadata search at 1000. */
 export const IMMICH_MAX_PAGE_SIZE = 1000;
@@ -732,12 +742,14 @@ class ImmichService {
     page: number,
     size: number
   ): Promise<ImmichAssetsPage> {
+    const smart = isSmartSearch(filters);
     const body: Record<string, unknown> = {
       page,
       size: Math.min(Math.max(1, size), IMMICH_MAX_PAGE_SIZE),
       withExif: true,
-      order: 'desc',
     };
+    // Smart results are ranked by relevance; the smart endpoint has no date ordering.
+    if (!smart) body.order = 'desc';
     if (filters.takenAfter) body.takenAfter = filters.takenAfter;
     if (filters.takenBefore) body.takenBefore = filters.takenBefore;
     // Immich treats isFavorite=false as "only non-favourites", which is never
@@ -745,11 +757,18 @@ class ImmichService {
     if (filters.isFavorite === true) body.isFavorite = true;
     if (filters.type) body.type = filters.type;
     if (filters.albumId) body.albumIds = [filters.albumId];
-    if (filters.text?.trim()) body.originalFileName = filters.text.trim();
+    if (smart) {
+      body.query = filters.text?.trim();
+    } else if (filters.text?.trim()) {
+      body.originalFileName = filters.text.trim();
+    }
 
     try {
       const client = this.createClient(apiUrl, apiKey);
-      const response = await client.post('/api/search/metadata', body);
+      // Smart queries compute an ML embedding first, so they get a longer timeout.
+      const response = smart
+        ? await client.post('/api/search/smart', body, { timeout: 60000 })
+        : await client.post('/api/search/metadata', body);
       const parsed = immichSearchPageSchema.safeParse(response.data);
       if (!parsed.success) {
         throw new AppError('Immich returned an unexpected response while searching your library', 502);
@@ -761,6 +780,12 @@ class ImmichService {
         nextPage: Number.isFinite(next) && next > page ? next : null,
       };
     } catch (error: unknown) {
+      // Machine learning off, or a server too old for the endpoint: Immich answers
+      // with 400/404/5xx. Say so plainly; 401/403 keep their own mapping.
+      if (smart && isAxiosError(error) && error.response) {
+        const status = error.response.status;
+        if (status !== 401 && status !== 403) throw new AppError(SMART_SEARCH_UNAVAILABLE, 503);
+      }
       throw toImmichAppError(error, 'search your library');
     }
   }

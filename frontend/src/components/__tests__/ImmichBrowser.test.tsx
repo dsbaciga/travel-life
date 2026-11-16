@@ -198,6 +198,69 @@ describe('ImmichBrowser', () => {
     expect(screen.queryByLabelText('Media type')).not.toBeInTheDocument();
   });
 
+  it('IB-011: smart mode sends the mode and query, shows the relevance hint, and keeps other filters', async () => {
+    renderBrowser();
+    await waitForTiles();
+    expect(screen.getByLabelText('Search mode')).toHaveValue('filename');
+    expect(screen.queryByText(/Sorted by relevance/)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Search mode'), { target: { value: 'smart' } });
+    // No query yet: no text is sent (the server then runs the plain metadata query) and no hint shows.
+    await waitFor(() => expect(h.immich.queryAssets.mock.calls.length).toBeGreaterThan(1));
+    expect(lastQuery().filters.text).toBeUndefined();
+    expect(screen.queryByText(/Sorted by relevance/)).not.toBeInTheDocument();
+
+    const input = screen.getByLabelText('Search assets');
+    fireEvent.change(input, { target: { value: 'beach sunset' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() =>
+      expect(lastQuery().filters).toMatchObject({
+        searchMode: 'smart',
+        text: 'beach sunset',
+        dateFrom: '2026-01-05',
+        dateTo: '2026-01-10',
+      })
+    );
+    expect(await screen.findByText(/Sorted by relevance/)).toBeInTheDocument();
+  });
+
+  it('IB-012: smart mode disables "Link all matching" with a reason', async () => {
+    renderBrowser();
+    await waitForTiles();
+    expect(screen.getByRole('button', { name: 'Link all matching...' })).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText('Search mode'), { target: { value: 'smart' } });
+    const input = screen.getByLabelText('Search assets');
+    fireEvent.change(input, { target: { value: 'beach' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link all matching...' })).toBeDisabled());
+    expect(screen.getByText(/Smart search ranks your whole library/)).toBeInTheDocument();
+  });
+
+  it('IB-013: smart search failing shows the message and file-name search still works', async () => {
+    h.immich.queryAssets.mockImplementation(async (params: { filters: { searchMode?: string } }) => {
+      if (params.filters.searchMode === 'smart') {
+        throw new Error("Smart search isn't available on your Immich server; machine learning may be turned off.");
+      }
+      return { assets: [asset('a')], hasMore: false, page: 1 };
+    });
+    renderBrowser();
+    await waitForTiles();
+
+    fireEvent.change(screen.getByLabelText('Search mode'), { target: { value: 'smart' } });
+    const input = screen.getByLabelText('Search assets');
+    fireEvent.change(input, { target: { value: 'beach' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(await screen.findByRole('alert')).toHaveTextContent("Smart search isn't available");
+
+    fireEvent.change(screen.getByLabelText('Search mode'), { target: { value: 'filename' } });
+    await waitForTiles();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(lastQuery().filters).toMatchObject({ text: 'beach' });
+    expect(lastQuery().filters.searchMode).toBeUndefined();
+  });
+
   it('IB-010: Select All on Page skips linked assets', async () => {
     h.immich.queryAssets.mockResolvedValue({
       assets: [asset('a', { alreadyLinked: true }), asset('b'), asset('c')],

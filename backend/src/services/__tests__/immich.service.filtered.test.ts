@@ -87,6 +87,59 @@ describe('ImmichService filtered calls', () => {
     expect(result.assets.map((a) => a.id)).toEqual(['a']);
   });
 
+  it('IMF-010: smart mode calls /api/search/smart with the query and filters, and no date order', async () => {
+    mockClient.post.mockResolvedValue(page(['a'], '2'));
+    const result = await immichService.searchAssetsPage(
+      URL,
+      KEY,
+      { smart: true, text: ' beach sunset ', takenAfter: 'x', isFavorite: true, type: 'IMAGE', albumId: 'alb' },
+      1,
+      50
+    );
+    expect(mockClient.post).toHaveBeenCalledWith(
+      '/api/search/smart',
+      {
+        page: 1,
+        size: 50,
+        withExif: true,
+        query: 'beach sunset',
+        takenAfter: 'x',
+        isFavorite: true,
+        type: 'IMAGE',
+        albumIds: ['alb'],
+      },
+      { timeout: 60000 }
+    );
+    expect(mockClient.post.mock.calls[0][1]).not.toHaveProperty('order');
+    expect(mockClient.post.mock.calls[0][1]).not.toHaveProperty('originalFileName');
+    expect(result.nextPage).toBe(2);
+  });
+
+  it('IMF-011: smart mode with an empty query falls back to the metadata search', async () => {
+    mockClient.post.mockResolvedValue(page([], null));
+    await immichService.searchAssetsPage(URL, KEY, { smart: true, text: '   ' }, 1, 10);
+    expect(mockClient.post.mock.calls[0][0]).toBe('/api/search/metadata');
+    expect(mockClient.post.mock.calls[0][1]).toMatchObject({ order: 'desc' });
+  });
+
+  it('IMF-012: smart search failures read as unavailable; 401/403 stay permission errors; shape is validated', async () => {
+    for (const status of [400, 404, 500, 503]) {
+      mockClient.post.mockRejectedValueOnce(new MockAxiosError('x', { status }));
+      await expect(
+        immichService.searchAssetsPage(URL, KEY, { smart: true, text: 'beach' }, 1, 10)
+      ).rejects.toMatchObject({ statusCode: 503, message: expect.stringContaining("Smart search isn't available") });
+    }
+    mockClient.post.mockRejectedValueOnce(new MockAxiosError('x', { status: 401 }));
+    await expect(
+      immichService.searchAssetsPage(URL, KEY, { smart: true, text: 'beach' }, 1, 10)
+    ).rejects.toMatchObject({ statusCode: 403 });
+
+    mockClient.post.mockResolvedValueOnce({ data: { assets: 'nope' } });
+    await expect(
+      immichService.searchAssetsPage(URL, KEY, { smart: true, text: 'beach' }, 1, 10)
+    ).rejects.toMatchObject({ statusCode: 502 });
+  });
+
   it('IMF-002: never sends isFavorite=false', async () => {
     mockClient.post.mockResolvedValue(page([], null));
     await immichService.searchAssetsPage(URL, KEY, { isFavorite: false }, 1, 10);

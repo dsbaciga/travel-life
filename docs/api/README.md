@@ -528,7 +528,7 @@ below are grouped under `/api/invitations` and `/api/trips/...`.
 | POST | `/search` | Search Immich assets by metadata | Yes |
 | GET | `/albums` | List the user's Immich albums | Yes |
 | GET | `/albums/:albumId` | Get an Immich album with its assets | Yes |
-| POST | `/assets/query` | Browse the library with server-side filters and paging (`filters`: `dateFrom`/`dateTo` as calendar days read in `timezone`, `isFavorite`, `type`, `albumId`, `text` as file name; `page`, `size` up to 200; optional `tripId` flags `alreadyLinked`) | Yes |
+| POST | `/assets/query` | Browse the library with server-side filters and paging (`filters`: `dateFrom`/`dateTo` as calendar days read in `timezone`, `isFavorite`, `type`, `albumId`, `text` as file name, or as a content query with `searchMode: "smart"` which calls Immich `POST /api/search/smart` (relevance order, no date ordering, query max 200 chars; empty query falls back to the metadata search; 503 "Smart search isn't available..." if Immich ML is off or the endpoint is missing; refused with 400 by both bulk-link endpoints); `page`, `size` up to 200; optional `tripId` flags `alreadyLinked`) | Yes |
 | POST | `/bulk-link/preview` | Count what linking everything a filter matches to a trip would do (`matching`, `alreadyLinked`, `toLink`, capped at 5000) | Yes |
 | POST | `/bulk-link/page` | Link one page (200) of a filter's matches to a trip through the batch linker; returns `nextPage` until finished. Safe to re-run | Yes |
 | PUT | `/photo-albums/:albumId/link` | Link a trip photo album to an Immich album, or `{ "immichAlbumId": null }` to unlink | Yes |

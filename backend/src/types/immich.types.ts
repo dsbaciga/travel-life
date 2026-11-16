@@ -37,6 +37,8 @@ export const immichFiltersSchema = z
     type: z.enum(['IMAGE', 'VIDEO']).optional(),
     albumId: immichIdSchema.optional(),
     text: z.string().trim().max(200).optional(),
+    /** 'smart' searches by content (needs Immich machine learning); the default is file name. */
+    searchMode: z.enum(['filename', 'smart']).optional(),
   })
   .refine((f) => !f.dateFrom || !f.dateTo || f.dateFrom <= f.dateTo, {
     message: 'dateFrom must not be after dateTo',
