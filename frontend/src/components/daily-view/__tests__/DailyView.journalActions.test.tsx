@@ -87,7 +87,8 @@ const renderView = (queryClient = new QueryClient()) => {
   return queryClient;
 };
 
-const dateField = () => screen.findByLabelText(/entry date/i);
+// The form is lazy-loaded; the first open pays the module transform, which can exceed the 1s default.
+const dateField = () => screen.findByLabelText(/entry date/i, undefined, { timeout: 15000 });
 const nextDay = () => fireEvent.click(screen.getByRole('button', { name: /next day/i }));
 
 describe('DailyView journal actions', () => {
@@ -114,7 +115,7 @@ describe('DailyView journal actions', () => {
     expect(screen.getByLabelText(/^title/i)).toHaveValue('');
     expect(screen.queryByTestId('ai-draft-banner')).not.toBeInTheDocument();
     expect(h.journal.generateDayDraft).not.toHaveBeenCalled();
-  });
+  }, 20000);
 
   it('DJA-002: the date follows the navigator', async () => {
     renderView();

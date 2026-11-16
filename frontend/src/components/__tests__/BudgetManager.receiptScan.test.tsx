@@ -180,6 +180,7 @@ describe('Scan receipt on the Budget tab', () => {
     const existing = {
       id: 3, tripId: 7, description: 'Taxi', category: 'transportation', amount: 20, currency: 'EUR',
       exchangeRate: null, baseAmount: null, baseCurrency: null, date: null, notes: null,
+      paidBy: null, splitMethod: null, splits: [],
       receiptPath: '/uploads/receipts/abc.jpg', createdAt: '', updatedAt: '',
     };
 
