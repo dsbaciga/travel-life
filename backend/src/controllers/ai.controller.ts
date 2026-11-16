@@ -4,6 +4,7 @@ import { asyncHandler } from '../http/asyncHandler';
 import { parseId } from '../http/parseId';
 import { requireUserId } from '../auth/controllerHelpers';
 import { journalEntryAiService } from '../services/journalEntryAi.service';
+import { journalDayDraftService } from '../services/journalDayDraft.service';
 import { aiSuggestionService } from '../services/aiSuggestion.service';
 
 const VALID_STRATEGIES = z.enum(['gps', 'temporal', 'name', 'llm']);
@@ -24,6 +25,16 @@ const linkSuggestionsQuerySchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? parseFloat(val) : undefined)),
+});
+
+const dayDraftBodySchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be YYYY-MM-DD')
+    .refine((d) => {
+      const parsed = new Date(`${d}T00:00:00.000Z`);
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === d;
+    }, 'date is not a real calendar date'),
 });
 
 export const aiController = {
@@ -55,6 +66,21 @@ export const aiController = {
     const summary = await journalEntryAiService.generateTripSummary(userId, tripId);
 
     res.json({ status: 'success', data: { summary } });
+  }),
+
+  /**
+   * POST /api/trips/:tripId/ai/journal-day-draft
+   * Drafts a journal entry (title + Markdown body) for one calendar day. Returns text only;
+   * never creates or modifies a journal entry.
+   */
+  generateJournalDayDraft: asyncHandler(async (req: Request, res: Response) => {
+    const userId = requireUserId(req);
+    const tripId = parseId(req.params.tripId, 'tripId');
+    const { date } = dayDraftBodySchema.parse(req.body);
+
+    const draft = await journalDayDraftService.generateDayDraft(userId, tripId, date);
+
+    res.json({ status: 'success', data: draft });
   }),
 
   /**

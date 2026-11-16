@@ -18,6 +18,8 @@ import { getWeatherIcon } from '../utils/weatherIcons';
 import { parseDateOnlyAsLocal } from '../utils/timezone';
 import toast from 'react-hot-toast';
 import { debugLogger } from '../utils/debugLogger';
+import { useDayJournalComposer, DayJournalActions } from './journal/DayJournalComposer';
+import { displayDayKeyToIso } from '../utils/displayDayKey';
 
 // New timeline components
 import {
@@ -256,6 +258,17 @@ const Timeline = ({
   const handleLinkUpdate = () => {
     invalidateLinkSummary();
   };
+
+  // "Add journal entry" per day. Reloads the timeline once the form has closed.
+  const dayJournal = useDayJournalComposer({
+    tripId,
+    tripStartDate,
+    tripEndDate,
+    onSaved: () => {
+      loadTimelineData();
+      onRefresh?.();
+    },
+  });
 
   useEffect(() => {
     loadTimelineData();
@@ -1460,9 +1473,22 @@ const Timeline = ({
             onEdit={handleEdit}
             onDelete={handleDelete}
             onLinkUpdate={handleLinkUpdate}
+            headerActions={(() => {
+              // The group's key is the trip-local day as text; read the calendar day from it.
+              const day = displayDayKeyToIso(dayGroup.dateKey);
+              return day ? (
+                <DayJournalActions
+                  day={day}
+                  canEdit={dayJournal.canEdit}
+                  canDraftOn={dayJournal.canDraftOn}
+                  onOpen={dayJournal.open}
+                />
+              ) : null;
+            })()}
           />
         ))}
       </div>
+      {dayJournal.composer}
 
       {/* Printable Itinerary — always mounted (hidden on screen via
           `.print-itinerary-wrapper`, revealed only under `@media print`).

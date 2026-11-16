@@ -1007,6 +1007,7 @@ export default function TripDetailPage() {
                         <JournalManager
                           tripId={trip.id}
                           tripStartDate={trip.startDate}
+                          tripEndDate={trip.endDate}
                           onUpdate={() =>
                             queryClient.invalidateQueries({
                               queryKey: ["journal", tripId],

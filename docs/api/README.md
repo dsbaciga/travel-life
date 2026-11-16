@@ -585,6 +585,7 @@ AI features are trip-scoped and mounted under `/api/trips/:tripId/ai`. All AI en
 |--------|----------|-------------|------|
 | GET | `/api/trips/:tripId/ai/link-suggestions` | Get AI-suggested entity links for a trip | Yes |
 | POST | `/api/trips/:tripId/ai/journal-summary` | Generate an AI summary of the trip's journal entries | Yes |
+| POST | `/api/trips/:tripId/ai/journal-day-draft` | Draft a journal entry (title + Markdown) for one calendar day. Body `{ "date": "YYYY-MM-DD" }`; needs edit access. The date must be within the trip's dates plus one day either side (open on a side with no date); otherwise `422` naming the trip's range. Returns text only and never creates an entry. `422` if the day has nothing recorded, `503` if no AI key is configured, `502` on provider failure | Yes |
 
 > Related: `POST /api/journal/:id/ai-enhance` (see Journal Entries) also uses AI to enhance a single journal entry.
 
