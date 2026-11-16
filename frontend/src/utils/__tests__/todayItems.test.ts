@@ -49,6 +49,7 @@ const leg = (over: Partial<Transportation> & { id: number }): Transportation => 
   connectionGroupId: null,
   createdAt: '',
   updatedAt: '',
+  loyaltyProgramId: null,
   ...over,
 });
 
@@ -67,6 +68,7 @@ const stay = (over: Partial<Lodging> & { id: number }): Lodging => ({
   notes: null,
   createdAt: '',
   updatedAt: '',
+  loyaltyProgramId: null,
   ...over,
 });
 
