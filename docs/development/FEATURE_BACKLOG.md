@@ -191,6 +191,8 @@ Good enhancements that improve the experience.
 
 **Description**: Compare multiple trips side-by-side or view all trips on a single world map.
 
+**Status**: ✅ Completed. Page at `/trips/compare?ids=...` (entry point: "Compare" on the trips list), backed by `GET /api/trip-comparison`. Compares 2 to 8 own or shared trips; costs reuse the budget summary and are shown in the viewer's base currency, with unconvertible amounts reported per trip.
+
 **Features**:
 - Side-by-side comparison table
 - Unified map showing all trip locations with color coding

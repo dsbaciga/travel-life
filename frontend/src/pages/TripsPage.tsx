@@ -535,6 +535,12 @@ export default function TripsPage() {
             >
               Trip series
             </Link>
+            <Link
+              to="/trips/compare"
+              className="px-3 py-1.5 text-sm font-medium rounded-lg text-primary-600 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors"
+            >
+              Compare
+            </Link>
             {/* View Mode Toggle */}
             <div className="flex rounded-lg border border-primary-200 dark:border-gold/30 overflow-hidden">
               <button
