@@ -1,6 +1,6 @@
 # Feature Backlog
 
-**Last Updated**: 2026-07-25
+**Last Updated**: 2026-11-15
 
 This document consolidates all feature ideas and future enhancements for Travel Life. Features are organized by priority and category.
 
@@ -99,6 +99,8 @@ These features provide significant value and are ready for implementation.
 - Category-specific templates
 - User-defined templates
 
+**Status**: Not started — no template model or UI. (verified 2026-11-15)
+
 ### 6. Auto-Save Drafts
 
 **Category**: UX
@@ -145,6 +147,8 @@ These features provide significant value and are ready for implementation.
 **Status**: ✅ Completed in v4.0.1
 
 **Implementation**: PrintableItinerary component provides day-by-day breakdown with all trip events (activities, transportation, lodging, journal). Print-friendly styling with @media print CSS. Export via browser print dialog saves as PDF.
+
+**Verified 2026-11-15**: The print layout has optional maps but no photos or templates (see #85).
 
 ### 9. Pre-Trip Checklist Manager
 
@@ -197,6 +201,8 @@ Good enhancements that improve the experience.
 - Multi-trip timeline view
 - Cost comparison across trips
 
+**Status**: 🟡 Partial — Places Visited shows every trip's locations on one map (no per-trip colour coding). No comparison table, multi-trip timeline or cost comparison. (verified 2026-11-15)
+
 ### 12. Favorite Places
 
 **Category**: Organization
@@ -227,6 +233,8 @@ Good enhancements that improve the experience.
 - See distance/travel time between stops
 - Optimize route for minimum travel time
 
+**Status**: Not started — groundwork only: per-leg distance (`routing.service.ts`, `Transportation.calculatedDistance`) and polylines for booked legs. Locations have no sort order, so there is no city reordering, and no optimisation. (verified 2026-11-15)
+
 ### 14. Recurring Trips
 
 **Category**: Planning
@@ -239,6 +247,8 @@ Good enhancements that improve the experience.
 - Define recurrence pattern (annually, quarterly)
 - Auto-create trip instances from template
 - Track how trips evolve over time
+
+**Status**: Not started — trip duplication and Trip Series (#80) exist, but neither is a recurrence pattern. (verified 2026-11-15)
 
 ### 15. Custom Trip Types
 
@@ -271,6 +281,8 @@ Good enhancements that improve the experience.
 - Suggest activities based on location, preferences, time available
 - One-click add to itinerary
 
+**Status**: Not started on web — `travelTime.service.ts` classifies transitions as tight or impossible but does not find free gaps. The mobile app has a nearby food search (`GET /api/places/food`) that is not tied to schedule gaps. (verified 2026-11-15)
+
 ### 17. Expense Predictions
 
 **Category**: Analytics
@@ -285,6 +297,8 @@ Good enhancements that improve the experience.
 - Confidence intervals
 - Adjust for inflation, exchange rates
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 18. Travel Journal Privacy Levels
 
 **Category**: Privacy & Sharing
@@ -295,6 +309,8 @@ Good enhancements that improve the experience.
 
 **Current State**: Trip-level privacy only
 **Enhancement**: Section-level privacy controls, "Share this activity" button, privacy preview.
+
+**Status**: Not started — only the trip-level `privacyLevel` exists, and it is stored but grants nothing on read. (verified 2026-11-15)
 
 ### 19. Local Tips Exchange
 
@@ -310,6 +326,8 @@ Good enhancements that improve the experience.
 - Filter by category (food, hidden gems, safety)
 - Moderation system
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 20. Heatmap of Places Visited
 
 **Category**: Visualization
@@ -323,6 +341,8 @@ Good enhancements that improve the experience.
 - Filter by year, trip type
 - Country/city statistics
 - Export as image
+
+**Status**: Not started — marker clustering on Places Visited and a year-scoped map plus country/city lists in Year in Review exist, but there is no frequency heat layer, trip-type filter or image export. `TravelCalendarHeatmap.tsx` is a calendar heatmap and is not mounted anywhere. (verified 2026-11-15)
 
 ### 21. Default Timezone
 
@@ -346,6 +366,8 @@ Good enhancements that improve the experience.
 
 **Implementation**: localStorage tracking or database log.
 
+**Status**: Not started — only recent searches are stored (`GlobalSearch.tsx`), not viewed trips. (verified 2026-11-15)
+
 ### 23. Keyboard Shortcuts
 
 **Category**: Productivity
@@ -361,6 +383,8 @@ Good enhancements that improve the experience.
 - `?` = Show shortcuts help
 
 **Status**: ✅ Completed in UI/UX improvements
+
+**Verified 2026-11-15**: The shortcuts are registered, but `KeyboardShortcutsHelp` is not mounted anywhere, so pressing `?` opens nothing.
 
 ### 24. Markdown Support in Notes
 
@@ -399,6 +423,8 @@ Good enhancements that improve the experience.
 - Compare with other travelers' experiences
 - Seasonal recommendation engine
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 27. Bulk Import
 
 **Category**: Data Management
@@ -417,6 +443,8 @@ Good enhancements that improve the experience.
 - Field mapping interface
 - Preview before import
 - Error handling
+
+**Status**: Not started — no CSV parser or import UI. (verified 2026-11-15)
 
 ---
 
@@ -451,6 +479,8 @@ Good enhancements that improve the experience.
 - Widget size options
 - Save preferences
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 30. Night Mode Schedule
 
 **Category**: UX
@@ -461,6 +491,8 @@ Good enhancements that improve the experience.
 
 **Current State**: Manual toggle
 **Implementation**: Time-based theme switching.
+
+**Status**: Not started — the web theme is a manual light/dark toggle (`themeStore.ts`), with no schedule and no follow-system option. (verified 2026-11-15)
 
 ### 31. Trip Cover Images
 
@@ -486,6 +518,8 @@ Good enhancements that improve the experience.
 **Current State**: Emoji-based categories
 **Enhancement**: Icon library + custom icon picker.
 
+**Status**: Not started — activity categories are still emoji. (verified 2026-11-15)
+
 ---
 
 ## 📸 Photo & Media Features
@@ -502,6 +536,8 @@ Good enhancements that improve the experience.
 - Smart albums (e.g., "All Sunsets", "Food Photos")
 - AI-powered auto-tagging
 
+**Status**: 🟡 Partial — album suggestions by time/location cluster (`albumSuggestion.service.ts`, `AlbumSuggestions.tsx` on the Photos tab; the user accepts each one). No facial recognition, rule-based smart albums or content auto-tagging. (verified 2026-11-15)
+
 ### 34. Video Support
 
 **Category**: Media
@@ -515,6 +551,8 @@ Good enhancements that improve the experience.
 - Thumbnail generation
 - Video player integration
 - Format conversion for web playback
+
+**Status**: 🟡 Mostly built — `Photo.mediaType`/`duration` (migration `20260124_add_video_support`), uploads up to 500MB, ffmpeg thumbnails, a `<video>` player in `PhotoLightbox`, and Immich videos streamed through the proxy. Missing: format conversion, so non-browser formats (AVI, MKV, MPEG, 3GP) are stored and served as-is. (verified 2026-11-15)
 
 ### 35. Photo Stories
 
@@ -530,6 +568,8 @@ Good enhancements that improve the experience.
 - Transition effects
 - Export as video or shareable link
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 36. Photo Comparison Mode
 
 **Category**: Photo Features
@@ -542,6 +582,8 @@ Good enhancements that improve the experience.
 - Side-by-side comparison slider
 - Match photos by location automatically
 - Timeline slider showing place evolution
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 37. Photo Memories
 
@@ -558,6 +600,8 @@ Good enhancements that improve the experience.
 
 **Status**: ✅ Completed 2026-07-19 (in-app) — On This Day dashboard widget backed by `/api/memories/on-this-day`; social sharing not included
 
+**Verified 2026-11-15**: Widget only. There is no Memories page, daily notification or social sharing.
+
 ### 38. Collage Generator
 
 **Category**: Photo Features
@@ -571,6 +615,8 @@ Good enhancements that improve the experience.
 - Auto-select best photos
 - Add trip info overlay
 - Export high-resolution
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 39. Smart Photo Features
 
@@ -586,6 +632,8 @@ Good enhancements that improve the experience.
 - Photo metadata editor
 - Batch EXIF operations
 
+**Status**: 🟡 Partial — date-based album suggestions (accept to create); a count of photos without location on the photo map, but no gallery filter; backend GPS-to-location link suggestions (`aiSuggestion.service.ts`) with no frontend caller; caption and date editing (the API also accepts coordinates, with no UI). Not started: duplicate detection, batch EXIF operations. (verified 2026-11-15)
+
 ---
 
 ## 🗺️ Location & Map Features
@@ -600,6 +648,8 @@ Good enhancements that improve the experience.
 
 **Current State**: Nominatim integration exists, POI suggestions not implemented
 **Enhancement**: Integrate POI database, suggestion engine.
+
+**Status**: 🟡 Partial — nearby food and drink search via Overpass (`nearbyFood.service.ts`, `GET /api/places/food`), used only by the mobile app. No attractions or landmarks, and no web UI. The Current State line above is out of date. (verified 2026-11-15)
 
 ### 41. Location Reviews & Ratings
 
@@ -618,6 +668,8 @@ a short "would I return?" verdict across Location, Lodging, and Activity turns t
 archive into something queryable ("best meals of 2025", "hotels I'd rebook") and gives
 Year in Review (#55) real material. Doing all four at once is barely more work than
 Location alone.
+
+**Status**: Not started for Location, Lodging and Activity. The only rating in the schema is `FoodLogEntry.rating` with `orderAgain` (#121), so the scope note's "no rating field anywhere" is no longer true. (verified 2026-11-15)
 
 ### 42. Offline Maps
 
@@ -656,6 +708,8 @@ line instead of scattered pins, and the timestamps make two other features cheap
 auto-detecting which places were actually visited, and inferring locations for photos
 that have no EXIF GPS (see #101).
 
+**Status**: 🟡 Partial — GPS track ingestion from the mobile app (`TripTrackPoint`, `track.service.ts`, `POST /api/mobile/tracks/batch`) and photo geotagging from the track (#101) exist. Not started: Google Takeout parsing, GPX import, creating locations from a track, showing tracks on the web. Track points are plain lat/lng decimals, not PostGIS geography. (verified 2026-11-15)
+
 ### 44. Route Optimization
 
 **Category**: Planning
@@ -669,6 +723,8 @@ that have no EXIF GPS (see #101).
 - Consider opening hours
 - Account for transportation modes
 - Visual route preview
+
+**Status**: Not started — `routing.service.ts` routes between two points only; nothing orders stops. (verified 2026-11-15)
 
 ### 45. Map Improvements
 
@@ -686,6 +742,8 @@ that have no EXIF GPS (see #101).
 - Location search on map
 
 **Status**: ✅ Route lines completed in v3.1.0
+
+**Verified 2026-11-15**: Also done: marker clustering (Places Visited, photo map, trip locations map) and location search inside the location editor. Not started: category marker icons, fullscreen mode, heat layer, satellite/terrain toggle.
 
 ---
 
@@ -720,6 +778,8 @@ that have no EXIF GPS (see #101).
 - Like/favorite trips
 - Clone public trip as template
 
+**Status**: Not started — `privacyLevel: 'Public'` grants nothing; the only public surface is the per-token share page (#87). (verified 2026-11-15)
+
 ### 48. Trip Templates
 
 **Category**: Sharing
@@ -733,6 +793,8 @@ that have no EXIF GPS (see #101).
 - Categories and tags
 - Usage statistics
 - Attribution to creator
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 49. Social Feed
 
@@ -748,6 +810,8 @@ that have no EXIF GPS (see #101).
 - Comment on posts
 - Share to feed
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 50. Comments & Reactions
 
 **Category**: Community
@@ -761,6 +825,8 @@ that have no EXIF GPS (see #101).
 - Emoji reactions
 - Notifications
 - Moderation tools
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 51. Travel Meetups
 
@@ -776,6 +842,8 @@ that have no EXIF GPS (see #101).
 - In-app messaging
 - Safety features
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 52. Timeline Sharing Widget
 
 **Category**: Sharing
@@ -788,6 +856,8 @@ that have no EXIF GPS (see #101).
 - Generate embed code
 - Responsive iframe
 - Customizable styling
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 53. Live Trip Updates
 
@@ -802,6 +872,8 @@ that have no EXIF GPS (see #101).
 - "Check in" at locations
 - Real-time activity updates
 - Safety features (check-in reminders)
+
+**Status**: 🟡 Partial — background GPS route recording in the mobile app with server storage (see #43). Not started: check-ins, real-time updates to other people, safety reminders, web display. (verified 2026-11-15)
 
 ---
 
@@ -823,6 +895,8 @@ that have no EXIF GPS (see #101).
 - Photos taken
 - Money spent
 - Activities completed
+
+**Status**: 🟡 Partial — the `/travel-stats` page (`TravelStatsWidget`) shows all-time trips, photos, places, countries (address heuristic) and distance as number tiles. Missing: cities, days travelled (per-year only, in Year in Review), money spent, activities completed, and any charts. (verified 2026-11-15)
 
 ### 55. Year in Review
 
@@ -855,6 +929,8 @@ that have no EXIF GPS (see #101).
 - Offset recommendations
 - Trends over time
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 57. Travel Pace Analysis
 
 **Category**: Analytics
@@ -869,6 +945,8 @@ that have no EXIF GPS (see #101).
 - Travel time vs. experience time ratio
 - Rest days vs. active days
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 58. Travel Network Graph
 
 **Category**: Visualization
@@ -882,6 +960,8 @@ that have no EXIF GPS (see #101).
 - Node size = visit frequency
 - Edge thickness = times traveled route
 - Filter by date range, trip type
+
+**Status**: Not started. (verified 2026-11-15)
 
 ---
 
@@ -902,6 +982,8 @@ that have no EXIF GPS (see #101).
 - Comprehensive documentation
 - SDK libraries
 
+**Status**: Not started — REST endpoints, rate limiting and Swagger docs (`/api-docs`) exist, but there are no user API keys or key authentication. (verified 2026-11-15)
+
 ### 60. Webhooks
 
 **Category**: Integration
@@ -915,6 +997,8 @@ that have no EXIF GPS (see #101).
 - Send email when trip published
 - Sync to calendar when trip created
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 61. Custom CSS
 
 **Category**: Customization
@@ -925,6 +1009,8 @@ that have no EXIF GPS (see #101).
 
 **Implementation**: CSS injection with sanitization
 **Security**: Careful sanitization required.
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 62. Version History
 
@@ -940,6 +1026,8 @@ that have no EXIF GPS (see #101).
 - Restore to previous version
 - Audit log
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 63. Regex Search
 
 **Category**: Search
@@ -950,6 +1038,8 @@ that have no EXIF GPS (see #101).
 
 **Use Case**: Power users, complex queries
 **Implementation**: Regex query support in PostgreSQL.
+
+**Status**: Not started — search uses case-insensitive `contains` only. (verified 2026-11-15)
 
 ---
 
@@ -967,9 +1057,9 @@ that have no EXIF GPS (see #101).
 - ✅ Service worker setup (`vite-plugin-pwa` + workbox)
 - ✅ Cache-first strategy for photos
 - ✅ Offline editing with sync queue and conflict resolution UI
-- [ ] Push notifications
+- ✅ Push notifications (web push, see #67)
 
-**Status**: ✅ Substantially completed — only push notifications remain
+**Status**: ✅ Completed — push notifications shipped 2026-07-19 (#67)
 
 ### 65. Mobile-Optimized UI
 
@@ -1001,6 +1091,8 @@ that have no EXIF GPS (see #101).
 
 **Status**: ✅ Camera integration completed in UI/UX improvements
 
+**Verified 2026-11-15**: Caption entry exists for single uploads. Still open on web: GPS tagging at capture time and an offline photo upload queue.
+
 ### 67. Push Notifications
 
 **Category**: Engagement
@@ -1014,6 +1106,8 @@ that have no EXIF GPS (see #101).
 - Photo memories
 
 **Status**: ✅ Completed 2026-07-19 — web push (VAPID) with subscribe/test UI in Settings; "trip starts tomorrow" reminders shipped, other triggers can reuse `pushNotification.service`
+
+**Verified 2026-11-15**: Triggers live today: trip starts tomorrow, booking deadlines (#116), and flight status changes (sent when a flight is refreshed, not polled). Not built: collaboration and photo-memory notifications.
 
 ---
 
@@ -1034,6 +1128,8 @@ that have no EXIF GPS (see #101).
 - Multiple calendar support
 
 **Status**: ✅ Partially completed 2026-07-19 — read-only iCal subscription feed (`/api/calendar/:token.ics`) covers trips/transportation/lodging in any calendar app; two-way sync not planned
+
+**Verified 2026-11-15**: The feed covers trips, transportation and lodging, not activities. No Google Calendar or two-way code exists.
 
 ### 69. Booking Integrations
 
@@ -1064,6 +1160,8 @@ already provides one).
 
 **Status**: ✅ Booking-confirmation import delivered via PDF + AI import
 
+**Verified 2026-11-15**: Confirmed. Booking-email parsing and direct provider APIs are not started; the email ingest still extracts links only.
+
 ### 70. Expand Immich Integration
 
 **Category**: Integration
@@ -1076,6 +1174,8 @@ already provides one).
 - Advanced filtering from Immich library
 - Bulk import
 - Album sync
+
+**Status**: 🟡 Partial — bulk import is done (`POST /api/photos/immich/batch`, select-all in a date range). "Import album" makes a one-time copy of an Immich album. Metadata search exists in the API, but the browser UI offers only text search and trip dates. Not started: two-way sync, ongoing album sync. (verified 2026-11-15)
 
 ### 71. Flight Tracking
 
@@ -1119,6 +1219,8 @@ already provides one).
 - Better POI data
 - Traffic information
 
+**Status**: Not started — Leaflet with OSM/CARTO tiles only; Google Maps appears only as deep links (#112). (verified 2026-11-15)
+
 ### 74. Google Photos Integration
 
 **Category**: Integration
@@ -1132,6 +1234,8 @@ already provides one).
 - Browse Google Photos library
 - Import selected photos
 - Preserve metadata
+
+**Status**: Not started — plan only (`docs/plans/GOOGLE_PHOTOS_INTEGRATION_PLAN.md`). (verified 2026-11-15)
 
 ---
 
@@ -1151,6 +1255,8 @@ already provides one).
 - Skip/dismiss options
 - Tour mode toggle
 
+**Status**: Not started — only a first-login home-timezone prompt exists. (verified 2026-11-15)
+
 ### 76. Contextual Help
 
 **Category**: Documentation
@@ -1165,6 +1271,8 @@ already provides one).
 - Keyboard shortcut reminder
 
 **Status**: ✅ Keyboard shortcuts help completed
+
+**Verified 2026-11-15**: The `?` help dialog is not mounted (see #23). Tooltips are native `title` attributes only. No help icons, video tutorials or FAQ.
 
 ---
 
@@ -1185,6 +1293,8 @@ already provides one).
 - Currency conversion
 - Community translations
 
+**Status**: 🟡 Partial — currency conversion is done (#96). No i18n library, translations or RTL; date formatting mixes the browser locale with hardcoded `en-US`. (verified 2026-11-15)
+
 ### 78. Accessibility (A11y)
 
 **Category**: Accessibility
@@ -1200,6 +1310,8 @@ already provides one).
 - Skip navigation links
 - Accessible form validation
 
+**Status**: 🟡 Partial — skip link and focus-visible styles are done; ARIA labelling is widespread (about 750 `aria-*` uses across 163 of 278 components); the main modals trap focus. Thin spots: `aria-invalid` on only 5 form fields, and no `eslint-plugin-jsx-a11y` or axe tests. Contrast has not been measured. (verified 2026-11-15)
+
 ### 79. Alternative Timelines
 
 **Category**: Advanced
@@ -1214,6 +1326,8 @@ already provides one).
 - Notes on why plans changed
 - Learning insights
 
+**Status**: Not started — `Transportation.actualStart`/`actualEnd` columns exist and the API accepts them, but no UI reads or writes them. (verified 2026-11-15)
+
 ### 80. Trip Dependencies
 
 **Category**: Organization
@@ -1226,6 +1340,8 @@ already provides one).
 - Parent/child trip relationships
 - "Next trip" navigation
 - Aggregate stats across trip series
+
+**Status**: 🟡 Partial — Trip Series (`TripSeries`, migration `20260207_add_trip_series`, `/trip-series` pages) gives ordered grouping and previous/next navigation on the trip page. Missing: parent/child nesting, and cross-trip totals beyond trip count and date range. (verified 2026-11-15)
 
 ---
 
@@ -1245,6 +1361,8 @@ already provides one).
 - "100 Photos Uploaded"
 - "1 Year of Continuous Travel"
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 82. Photo Challenges
 
 **Category**: Gamification
@@ -1257,6 +1375,8 @@ already provides one).
 - "Golden hour shot in every location"
 - "Local food in each city"
 - "Street art collection"
+
+**Status**: Not started. (verified 2026-11-15)
 
 ---
 
@@ -1284,6 +1404,8 @@ already provides one).
 - Spreadsheet import
 - Preserve relationships
 
+**Status**: 🟡 Partial — JSON backup and restore only (#83). No CSV export, spreadsheet import or import from other travel apps. (verified 2026-11-15)
+
 ### 85. PDF Trip Itinerary
 
 **Category**: Export
@@ -1298,6 +1420,8 @@ already provides one).
 - Customizable templates
 - Print optimization
 
+**Status**: 🟡 Partial — the same print-to-PDF mechanism as #8, with optional maps. No photos, no templates, no PDF library. (verified 2026-11-15)
+
 ### 86. Photo Book Layout
 
 **Category**: Export
@@ -1311,6 +1435,8 @@ already provides one).
 - Captions and stories
 - Export for printing services
 - Preview mode
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 87. Shareable Trip Page
 
@@ -1328,6 +1454,8 @@ already provides one).
 
 **Status**: ✅ Completed 2026-07-19 — token-based `/share/:token` public page with sanitized data (token URLs instead of custom slugs)
 
+**Verified 2026-11-15**: Confirmed. Besides custom slugs, social previews are also missing: there are no Open Graph tags.
+
 ### 88. Print-Optimized Styles
 
 **Category**: Print
@@ -1338,6 +1466,8 @@ already provides one).
 
 **Current State**: Timeline print creates blank document (known bug)
 **Fix**: Add print stylesheets.
+
+**Status**: ✅ Fixed per the code (not re-tested in a browser) — commit `415fcba` mounts the print wrapper permanently, and print styles cover Timeline, Daily View and the Emergency Card. The Current State line above is out of date. (verified 2026-11-15)
 
 ---
 
@@ -1357,6 +1487,8 @@ already provides one).
 - User preference learning
 - "Where should I go in December?"
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 90. Destination Recommendations
 
 **Category**: AI/ML
@@ -1371,6 +1503,8 @@ already provides one).
 - Similar traveler recommendations
 - Trending destinations
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 91. AI-Powered Features
 
 **Category**: AI/ML
@@ -1383,6 +1517,8 @@ already provides one).
 - Generate trip summaries
 - Smart album creation
 - Itinerary optimization
+
+**Status**: 🟡 Partial — smart album suggestions are done (clustering, not LLM; see #33). Trip summary generation exists in the backend (`POST /api/trips/:tripId/ai/journal-summary`) but no frontend calls it. Not started: content auto-tagging, journal topic suggestions, itinerary optimisation. (verified 2026-11-15)
 
 ### 92. Auto-Detect Duplicates
 
@@ -1397,6 +1533,8 @@ already provides one).
 - Suggest merges
 - Bulk operations
 - Confidence scoring
+
+**Status**: Not started. (verified 2026-11-15)
 
 ---
 
@@ -1416,6 +1554,8 @@ already provides one).
 - Companion availability calendar
 - Travel compatibility scores
 
+**Status**: Not started — companions and trip links exist; none of the four features is built. (verified 2026-11-15)
+
 ### 94. Trip Questions
 
 **Category**: Community
@@ -1429,6 +1569,8 @@ already provides one).
 - Tag relevant travelers
 - Accept best answer
 - Voting system
+
+**Status**: Not started. (verified 2026-11-15)
 
 ---
 
@@ -1460,6 +1602,8 @@ was the missing named include. The unknown is how many `Date`→`string` / `Deci
 surface as real errors; resolving those means correcting `BackupTrip`'s field types. `FlexibleDateSchema`
 in `backup.types.ts` is existing precedent for accepting both. Touches the backup/restore round-trip,
 so pair it with a full backup → wipe → restore test.
+
+**Status**: Not started — the function now has about 102 lines containing an `as` assertion (73 when this was written). (verified 2026-11-15)
 
 ---
 
@@ -1521,6 +1665,8 @@ than silently mixed in. Activity/Transportation/Lodging fill in lazily on first 
 
 **Value**: removes the need for a separate Splitwise on every group trip.
 
+**Status**: 🟡 Partial, mobile only — `splitExpense()` in `packages/shared` handles equal, custom and percentage splits; the mobile receipt screen offers an equal split and writes "Paid by" into the expense note. No `paidBy` column, settle-up view or per-person totals, and nothing on web. (verified 2026-11-15)
+
 ### 98. Trip Wishlist / Bucket List
 
 **Category**: Travel Planning
@@ -1539,6 +1685,8 @@ Locations that already belong to a trip.
 - "Convert to trip location" when a trip finally gets planned
 - Pairs naturally with the `Dream` trip status that already exists
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 99. People in Photos
 
 **Category**: Photo Management
@@ -1555,6 +1703,8 @@ Locations that already belong to a trip.
 - "Every photo of X" view across all trips
 - Companion avatars on photo cards
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 100. Photo Favorites & Highlight Reel
 
 **Category**: Photo Management
@@ -1569,6 +1719,8 @@ Locations that already belong to a trip.
 - Star toggle on photos, mirroring the location pattern
 - "Favorites" filter in the gallery and lightbox
 - Auto-generated highlight reel per trip, shareable via the existing public share
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 101. Infer Photo Location from Itinerary
 
@@ -1588,6 +1740,8 @@ imported from someone else's camera.
 - Confidence indicator, and never overwrite real EXIF data
 - Bulk "apply suggestions" with review
 - Much stronger once GPX tracks exist (#43)
+
+**Status**: 🟡 Partial, backend only — `aiSuggestion.service.ts` proposes photo links to activities, lodging and transportation by time, and `track.service.ts` `inferPhotoLocations` geotags photos from the GPS track (`POST /api/mobile/photos/infer-locations`). No web UI and no per-item review. Possible bug: a photo missing only one coordinate has both overwritten. (verified 2026-11-15)
 
 ### 102. Opening Hours & Closure Warnings
 
@@ -1636,6 +1790,8 @@ flight numbers to routes and times.
 - Suggest lodging near the arrival airport
 - Prompt for ground transport on both ends
 
+**Status**: Not started — flight lookups only refresh an existing transportation record; nothing creates one from a flight number. (verified 2026-11-15)
+
 ### 104. Activity Proposals & Voting
 
 **Category**: Collaboration
@@ -1654,6 +1810,8 @@ straight into the trip. Group planning has no conflict-free path.
 - Push notification on new proposals (infrastructure already shipped)
 - Distinct from Comments (#50), which discusses rather than decides
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 105. Public Trip Guestbook
 
 **Category**: Social & Sharing
@@ -1669,6 +1827,8 @@ straight into the trip. Group planning has no conflict-free path.
 - Owner approves before anything is visible
 - Rate limited, no accounts required
 - Cheap and high-delight; scope carefully to avoid becoming Comments (#50)
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 106. Spending Pace & Cost-per-Day Benchmarks
 
@@ -1689,6 +1849,8 @@ than money.
 
 **Dependencies**: needs #96 to be trustworthy on mixed-currency trips.
 
+**Status**: 🟡 Partial, mobile only — the mobile home screen shows "Budget X% · trip Y%" (`computeBurnRate`). No web indicator, cross-trip cost-per-day or category-over-time breakdown. (verified 2026-11-15)
+
 ### 107. Semantic Archive Search
 
 **Category**: Search
@@ -1705,6 +1867,8 @@ than money.
 - Answers "that seafood place with the blue door" across a decade of travel
 - Hybrid with the existing keyword search rather than replacing it
 
+**Status**: Not started — no pgvector or embeddings. (verified 2026-11-15)
+
 ### 108. Post-Trip Retrospective
 
 **Category**: Travel Planning
@@ -1719,6 +1883,8 @@ resurface those lessons while planning the next one.
 - Answers stored as a structured trip retrospective
 - Relevant lessons surfaced during planning ("last time you underpacked layers")
 - Feeds packing suggestions, which already exist
+
+**Status**: Not started. (verified 2026-11-15)
 
 ### 109. Loyalty Programs & Membership Numbers
 
@@ -1737,6 +1903,8 @@ bookings.
 - Optional manual points balance
 - Sits naturally beside `TravelDocument`
 
+**Status**: Not started. (verified 2026-11-15)
+
 ### 110. Travel Day Document Vault
 
 **Category**: Mobile & PWA
@@ -1753,6 +1921,8 @@ day-of view, and offline caching is per-query.
 - Explicitly cached for offline, since airports are where connectivity fails
 - Ordered by what's needed next
 - Builds on the PWA work (#64) already shipped
+
+**Status**: Not started — documents are managed only in Settings. There is no day-of screen and no boarding-pass type, and travel documents are not cached offline at all. (verified 2026-11-15)
 
 ### 111. Emergency Card
 
@@ -1857,6 +2027,8 @@ and Brazil's 127/220V mixed grids get explicit per-country notes. 11 tests.
 **Risk**: the removed email import (#69) is the cautionary tale — LLM output that writes
 directly to the itinerary was what failed. Keep the review queue in front of it.
 
+**Status**: Not started. (verified 2026-11-15)
+
 ---
 
 ## 💡 Ideas Review — 2026-11-07
@@ -1879,6 +2051,8 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Status**: ✅ Core shipped (local-directory target, retention, cron). Not yet done: S3 target and last-run status in Settings UI
 
+**Verified 2026-11-15**: Confirmed. Retention is keep-N-daily plus M-weekly. Still open: S3 target and last-run status in Settings (the status is tracked in memory but nothing reads it).
+
 ### 116. Booking Deadline Tracker
 
 **Category**: Planning & Validation
@@ -1894,6 +2068,8 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Status**: ✅ Shipped. New `BookingDeadline` table (migration `20260810000000_add_booking_deadlines`, exactly one of lodging/transportation/activity enforced by a CHECK), CRUD + `/api/deadlines/upcoming`, hourly push reminders for deadlines due within 24h (persisted `notifiedAt`), Health Check rule (overdue or due within 3 days), backup/restore support, Deadlines tab on the trip page, and a dashboard widget. Not done: per-form deadline editing inside the lodging/transportation/activity forms. Follow-up: a deadline no longer has to be attached to a booking. A standalone deadline carries its own `title` (migration `20261115000000_add_booking_deadline_title`, which replaces the one-target CHECK with "exactly one booking, or none plus a non-blank title")
 
+**Verified 2026-11-15**: Confirmed. Still open: editing deadlines inside the lodging, transportation and activity forms.
+
 ### 117. Today Mode Enhancements
 
 **Category**: Mobile & PWA
@@ -1907,7 +2083,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Local vs home time side by side
 - Fully usable offline (builds on PWA + offline maps)
 
-**Status**: Not started
+**Status**: 🟡 Partial — the mobile Today screen has the next-up card with countdown, address, copy-confirmation and Directions. Web has `LocalTimeWidget` (local vs home time) and a simpler `NextUpCard` with no countdown, address or route button. Offline use not verified end to end. (verified 2026-11-15)
 
 ### 118. Passport & Visa Validity Check
 
@@ -1924,6 +2100,8 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Status**: Mostly already built: `tripValidator.service.ts` has `checkPassportValidity` (missing passport, no expiry, expires during trip, 6-month rule) and `checkVisaRequirements`. Remaining gap not yet verified: name mismatch across bookings
 
+**Verified 2026-11-15**: Confirmed. Still open: the name-mismatch check; `TravelDocument.name` is a free-text label, not a legal name.
+
 ### 119. Weather-Aware Packing List
 
 **Category**: Planning
@@ -1936,7 +2114,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Uses existing weather integration and checklist models
 - Suggestions are proposals the user accepts; never auto-written
 
-**Status**: Not started
+**Status**: 🟡 Partial — `packingSuggestion.service.ts` builds suggestions from the forecast and trip length (`GET /api/trips/:tripId/packing-suggestions`), and `PackingSuggestions.tsx` adds accepted items to a checklist one at a time, but that component is not mounted on any page. Missing: activity-type input and a one-shot draft checklist. (verified 2026-11-15)
 
 ### 120. Day Auto-Draft Journal
 
@@ -1950,7 +2128,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Reuses `llm.service.ts` and the per-user key handling
 - Result lands as an editable draft only; no direct writes to published entries
 
-**Status**: Not started
+**Status**: Not started (verified 2026-11-15)
 
 ### 121. Food Log
 
@@ -1984,6 +2162,8 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Status**: ✅ Shipped (not yet run against a live database). New `FoodLogEntry` table (migration `20260811000000_add_food_log`, rating 1-5 enforced by a CHECK, optional activity/location links with ON DELETE SET NULL, cascade with the trip), trip CRUD at `/api/trips/:tripId/food-log`, cross-trip best-meals search at `/api/food-log` (minRating, orderAgain, q), backup/restore support (links remapped on restore), a Food Log tab on the trip page and a Best Meals page at `/food-log`. Not done: restricting the link picker to dining-category activities, and the semantic-search hookup (#107).
 
+**Verified 2026-11-15**: Confirmed. Still open: limiting the link picker to dining activities, and the semantic-search hookup.
+
 ### 122. Receipt Scan to Expense
 
 **Category**: Budget
@@ -1996,7 +2176,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Feeds `TripExpense` and multi-currency (#96)
 - Result opens in a confirm form before saving
 
-**Status**: Not started
+**Status**: 🟡 Built in the mobile app — on-device OCR, a server parser with optional LLM refinement (`receipt.service.ts`, `POST /api/mobile/expenses/parse-receipt`) and a confirm form before saving. No web entry point. (verified 2026-11-15)
 
 ### 123. Parking & Rental Car Log
 
@@ -2010,7 +2190,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Quick action from Today mode
 - Reminder via existing push notifications
 
-**Status**: Not started
+**Status**: 🟡 Partial, mobile only — where-I-parked pin with photo, note and meter reminder (`mobile/src/app/parked.tsx`), stored on the device with a local notification rather than server push. Rental car log not started. (verified 2026-11-15)
 
 ### 124. Data Quality Dashboard
 
@@ -2023,7 +2203,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 **Features**:
 - Complements Trip Health Check, but spans the whole archive
 
-**Status**: Not started
+**Status**: Not started (verified 2026-11-15)
 
 ### 125. Personal Records & Trends
 
@@ -2036,7 +2216,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 **Features**:
 - Extends Year in Review and PlacesVisited stats
 
-**Status**: Not started
+**Status**: Not started (verified 2026-11-15)
 
 ### 126. Share Links with PIN & Expiry
 
@@ -2050,7 +2230,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Optional PIN and expiry date per share link
 - Revoke individual links
 
-**Status**: Not started
+**Status**: Not started (verified 2026-11-15)
 
 ---
 
@@ -2060,42 +2240,52 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Very Low (< 4 hours)**:
 - Smart Lodging Duration (#7) ✅
-- Default Timezone (#21)
+- Default Timezone (#21) ✅
 - Recently Viewed Trips (#22)
-- Trip Archive (#25)
+- Trip Archive (#25) ✅
 - Night Mode Schedule (#30)
-- Transit & Rideshare Deep Links (#112)
+- Transit & Rideshare Deep Links (#112) ✅
+- Regex Search (#63)
 
 **Low (4-8 hours)**:
 - Trip Cloning (#1) ✅
-- Batch Operations (#4)
+- Batch Operations (#4) ✅
 - Activity Templates (#5)
 - Auto-Save Drafts (#6) ✅
-- Favorite Places (#12)
+- Favorite Places (#12) ✅
 - Custom Trip Types (#15) ✅
 - Keyboard Shortcuts (#23) ✅
 - Markdown Support (#24) ✅
 - Compact View Mode (#28) ✅
-- Trip Cover Images (#31)
+- Trip Cover Images (#31) ✅
 - Activity Icons (#32)
 - Location Reviews (#41)
 - Travel Pace Analysis (#57)
 - Export JSON (#83) ✅
-- Print Styles (#88)
+- Print Styles (#88) ✅
 - Travel Milestones (#81)
-- Trip Dependencies (#80)
+- Trip Dependencies (#80) 🟡
 - Photo Favorites & Highlight Reel (#100)
 - Public Trip Guestbook (#105)
-- Spending Pace & Cost-per-Day (#106)
+- Spending Pace & Cost-per-Day (#106) 🟡
 - Post-Trip Retrospective (#108)
 - Loyalty Programs (#109)
-- Emergency Card (#111)
-- Local Norms Card (#113)
+- Emergency Card (#111) ✅
+- Local Norms Card (#113) ✅
+- Photo Memories (#37) ✅
+- Travel Statistics Dashboard (#54) 🟡
+- Scheduled Automatic Backups (#115) 🟡
+- Passport & Visa Validity Check (#118) 🟡
+- Weather-Aware Packing List (#119) 🟡
+- Food Log (#121) ✅
+- Parking & Rental Car Log (#123) 🟡
+- Personal Records & Trends (#125)
+- Share Links with PIN & Expiry (#126)
 
 **Medium (1-2 weeks)**:
-- Trip Health Check (#2)
-- Travel Time Alerts (#3)
-- Multi-Trip Views (#11)
+- Trip Health Check (#2) ✅
+- Travel Time Alerts (#3) ✅
+- Multi-Trip Views (#11) 🟡
 - Recurring Trips (#14)
 - Heatmap (#20)
 - Best Times to Visit (#26)
@@ -2103,73 +2293,81 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Custom Dashboard Widgets (#29)
 - Photo Stories (#35)
 - Photo Comparison (#36)
-- POI Suggestions (#40)
-- Offline Maps (#43)
-- Location History Import (#44)
-- Map Improvements (#45)
-- Trip Collaboration UI (#46)
+- POI Suggestions (#40) 🟡
+- Offline Maps (#42) ✅
+- Location History Import (#43) 🟡
+- Map Improvements (#45) 🟡
+- Trip Collaboration UI (#46) ✅
 - Public Trip Gallery (#47)
 - Trip Templates (#48)
 - Comments & Reactions (#50)
 - Timeline Sharing Widget (#52)
-- Year in Review (#55)
+- Year in Review (#55) ✅
 - Carbon Footprint (#56)
 - API Access (#59)
 - Webhooks (#60)
 - Custom CSS (#61)
 - Mobile-Optimized UI (#65) ✅
-- Quick Capture (#66) ✅
-- Push Notifications (#67)
-- Expand Immich (#70)
-- Flight Tracking (#71)
-- Weather Integration (#72)
+- Quick Capture (#66) 🟡
+- Push Notifications (#67) ✅
+- Expand Immich (#70) 🟡
+- Flight Tracking (#71) ✅
+- Weather Integration (#72) ✅
 - Mapping Services (#73)
-- Contextual Help (#76)
-- Shareable Trip Page (#87)
+- Contextual Help (#76) 🟡
+- Shareable Trip Page (#87) ✅
 - Auto-Detect Duplicates (#92)
 - Travel Companions Network (#93)
-- Multi-Currency with Exchange Rates (#96)
-- Expense Splitting & Settle-Up (#97)
+- Multi-Currency with Exchange Rates (#96) ✅
+- Expense Splitting & Settle-Up (#97) 🟡
 - Trip Wishlist / Bucket List (#98)
 - People in Photos (#99)
-- Infer Photo Location from Itinerary (#101)
-- Opening Hours & Closure Warnings (#102)
+- Infer Photo Location from Itinerary (#101) 🟡
+- Opening Hours & Closure Warnings (#102) ✅
 - Reverse Itinerary from a Flight (#103)
 - Activity Proposals & Voting (#104)
 - Travel Day Document Vault (#110)
+- Travel Journal Privacy Levels (#18)
+- Data Export/Import (#84) 🟡
+- Type `transformTripToBackupFormat` (#95)
+- Booking Deadline Tracker (#116) ✅
+- Today Mode Enhancements (#117) 🟡
+- Day Auto-Draft Journal (#120)
+- Receipt Scan to Expense (#122) 🟡
+- Data Quality Dashboard (#124)
 
 **High (2+ weeks)**:
-- Timeline Export PDF (#8)
-- Pre-Trip Checklist (#9)
+- Timeline Export PDF (#8) ✅
+- Pre-Trip Checklist (#9) ✅
 - Drag & Drop Timeline (#10) ✅
 - Multi-City Planner (#13)
 - Smart Suggestions (#16)
 - Expense Predictions (#17)
 - Local Tips Exchange (#19)
-- Advanced Photo Org (#33)
-- Video Support (#34)
+- Advanced Photo Org (#33) 🟡
+- Video Support (#34) 🟡
 - Collage Generator (#38)
-- Smart Photo Features (#39)
+- Smart Photo Features (#39) 🟡
 - Route Optimization (#44)
 - Social Feed (#49)
 - Travel Meetups (#51)
-- Live Trip Updates (#52)
+- Live Trip Updates (#53) 🟡
 - Travel Network Graph (#58)
 - Version History (#62)
-- PWA (#64)
-- Calendar Sync (#68)
-- Booking Integrations (#69)
+- PWA (#64) ✅
+- Calendar Sync (#68) 🟡
+- Booking Integrations (#69) 🟡
 - Google Photos (#74)
 - Onboarding Flow (#75)
-- Multi-Language (#77)
-- Accessibility (#78)
+- Multi-Language (#77) 🟡
+- Accessibility (#78) 🟡
 - Alternative Timelines (#79)
 - Photo Challenges (#82)
-- PDF Itinerary (#85)
+- PDF Itinerary (#85) 🟡
 - Photo Book (#86)
 - Trip Recommendations (#89)
 - Destination Recommendations (#90)
-- AI Features (#91)
+- AI Features (#91) 🟡
 - Trip Questions (#94)
 - Semantic Archive Search (#107)
 - Conversational Trip Planner (#114)
@@ -2195,7 +2393,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 ## Notes
 
-- Features marked with ✅ have been completed
+- Features marked with ✅ have been completed; 🟡 means partly built (see the item's Status line); no mark means not started
 - This document is a living backlog - priorities may shift based on user feedback
 - See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for current project status
 - Features should be evaluated based on:
@@ -2209,6 +2407,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 ## Update Log
 
+- **2026-11-15**: Full audit of every item without a completed status, checked against the code. Every such item now has a Status line, and partly shipped items have a Verified note listing what is still open. Stale entries corrected: #64 (push shipped), #88 (blank-print bug fixed in `415fcba`), #117, #119, #122 and #123 (were "Not started"; partly built, mostly in the mobile companion app), #34 (video mostly built), #80 (Trip Series), #45 (clustering and location search). Two things found broken rather than missing: the keyboard shortcuts help dialog (#23, #76) and the packing suggestions panel (#119) both exist but are not mounted anywhere. Quick Reference rebuilt: checkmarks match the item statuses, three wrong item numbers fixed, and the missing items added
 - **2026-11-07**: Added #115–#126 (backups, deadline tracker, Today mode, passport check, packing list, journal auto-draft, food log, receipt scan, parking log, data quality, records, share PINs)
 - **2026-07-25 (evening)**: Shipped #96 (multi-currency with FX rates), #102 (opening hours & closure warnings), and #112 (transit & rideshare deep links). Built in parallel in isolated worktrees. Backend +144 tests, frontend +81, zero new failures against the v5.6.0 baseline of 30 pre-existing ones. Note for future verification: `npx tsc --noEmit` in `frontend/` is a **no-op** — the root `tsconfig.json` has `"files": []` with only project references, so it silently checks nothing. Use `npx tsc -b` (which is what `npm run build:strict` already does); the shortcut hid a real type error in this batch
 - **2026-07-25**: Added #96–#114 from a fresh pass over the schema and services. Ideas that duplicated existing entries were folded into those rather than listed twice — ratings widened in #41, GPX import added to #43, booking-email import updated in #69 (the IMAP transport now exists after the saved-link email ingest work, so it is far cheaper than the 2026-04 attempt). Also added #95 (Technical Debt: `transformTripToBackupFormat` type assertions). Highest-value new items: #96 multi-currency, which fixes a real correctness bug where mixed-currency budget totals are simply summed without conversion; #102 opening hours, which catches the most common itinerary failure; and #97 expense splitting
