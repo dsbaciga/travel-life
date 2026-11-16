@@ -135,6 +135,7 @@ interface ViewProps {
   locationLinks?: Array<{ sourceType: string; sourceId: number; targetId: number }>;
   tripStatus?: TripStatusType;
   tripStartDate?: string | null;
+  onClocksShownChange?: (shown: boolean) => void;
 }
 
 function renderView(props: ViewProps = {}) {
@@ -150,6 +151,7 @@ function renderView(props: ViewProps = {}) {
       tripEndDate="2026-06-20"
       tripTimezone={PARIS}
       onNavigateToTab={vi.fn()}
+      onClocksShownChange={props.onClocksShownChange}
     />
   );
 }
@@ -471,6 +473,25 @@ describe('TodayModeCard offline', () => {
       vi.advanceTimersByTime(20 * 60_000);
     });
     expect(screen.getByTestId('countdown')).toHaveTextContent('in 1h');
+  });
+});
+
+describe('TodayModeCard clocks reporting', () => {
+  it('reports true while it shows its own clocks, and false when it unmounts', () => {
+    const onClocksShownChange = vi.fn();
+    const { unmount } = renderView({ activities: [louvre()], onClocksShownChange });
+    expect(screen.getByTestId('today-clocks')).toBeInTheDocument();
+    expect(onClocksShownChange).toHaveBeenLastCalledWith(true);
+    unmount();
+    expect(onClocksShownChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('reports false when it falls back to the existing Next Up card', () => {
+    const onClocksShownChange = vi.fn();
+    renderView({ activities: [], onClocksShownChange });
+    expect(screen.getByTestId('existing-next-up-card')).toBeInTheDocument();
+    expect(onClocksShownChange).toHaveBeenLastCalledWith(false);
+    expect(onClocksShownChange).not.toHaveBeenCalledWith(true);
   });
 });
 

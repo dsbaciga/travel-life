@@ -46,6 +46,11 @@ export interface TodayModeCardProps {
   tripTimezone: string | null;
   photosCount?: number;
   onNavigateToTab: (tabName: string) => void;
+  /**
+   * Called with true while the card is showing its own clocks, and false when it falls
+   * back to the Next Up card or unmounts, so the dashboard can avoid a second clock.
+   */
+  onClocksShownChange?: (shown: boolean) => void;
 }
 
 interface TodayModeCardViewProps extends Omit<TodayModeCardProps, 'tripId'> {
@@ -194,6 +199,7 @@ export function TodayModeCardView({
   tripTimezone,
   photosCount = 0,
   onNavigateToTab,
+  onClocksShownChange,
 }: TodayModeCardViewProps) {
   const resolveTz = useTimezoneResolver();
   const now = useNow();
@@ -228,6 +234,12 @@ export function TodayModeCardView({
     tripStartDate,
     tripEndDate
   );
+  const clocksShown = displayState === 'in_progress';
+  useEffect(() => {
+    onClocksShownChange?.(clocksShown);
+    return () => onClocksShownChange?.(false);
+  }, [clocksShown, onClocksShownChange]);
+
   if (displayState !== 'in_progress') {
     return (
       <NextUpCard

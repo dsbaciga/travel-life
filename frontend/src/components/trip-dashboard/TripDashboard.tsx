@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import type { Trip } from '../../types/trip';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
@@ -171,6 +171,10 @@ export default function TripDashboard({
   const tripTimezone = resolveTz(trip.timezone);
   const homeTimezone = resolveTz(userHomeTimezone);
 
+  // The Today card carries its own local/home clocks; while it shows them, the local
+  // time widget would be a second clock for the same thing.
+  const [todayClocksShown, setTodayClocksShown] = useState(false);
+
   // Check if trip is international (different timezone)
   const isInternationalTrip = tripTimezone !== homeTimezone;
 
@@ -315,6 +319,7 @@ export default function TripDashboard({
             tripTimezone={trip.timezone}
             photosCount={photosCount}
             onNavigateToTab={onNavigateToTab}
+            onClocksShownChange={setTodayClocksShown}
           />
           {/* Today's Itinerary - Only show for in-progress trips */}
           {trip.status === TripStatus.IN_PROGRESS && (
@@ -417,7 +422,7 @@ export default function TripDashboard({
             />
           )}
           {/* Local time - for trips in another timezone */}
-          {isInternationalTrip && (
+          {isInternationalTrip && !todayClocksShown && (
             <LocalTimeWidget
               tripTimezone={tripTimezone}
               homeTimezone={homeTimezone}
