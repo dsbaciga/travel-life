@@ -18,6 +18,8 @@ export type Photo = {
   duration: number | null; // Video duration in seconds
   caption: string | null;
   takenAt: string | null;
+  /** Starred by the owner; the favorites form the trip highlight set. */
+  isFavorite?: boolean;
   latitude: number | null;
   longitude: number | null;
   createdAt: string;
@@ -79,6 +81,7 @@ export type UpdatePhotoInput = {
   takenAt?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  isFavorite?: boolean;
 };
 
 // Note: Location, Activity, and Lodging associations are handled via EntityLink system, not direct FKs

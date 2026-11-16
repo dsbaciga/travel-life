@@ -509,6 +509,60 @@ describe('PhotoService', () => {
   // ============================================
   // PHOTO-006: Get photos by trip with pagination
   // ============================================
+  describe('PHOTO-FAV: favorites', () => {
+    it('should star a photo through updatePhoto', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue(mockPhoto);
+      mockPrisma.photo.update.mockResolvedValue({ ...mockPhoto, isFavorite: true });
+
+      const result = await photoService.updatePhoto(mockUserId, mockPhotoId, {
+        isFavorite: true,
+      });
+
+      expect(mockPrisma.photo.update).toHaveBeenCalledWith({
+        where: { id: mockPhotoId },
+        data: expect.objectContaining({ isFavorite: true }),
+      });
+      expect(result.isFavorite).toBe(true);
+    });
+
+    it('should leave isFavorite untouched when not supplied', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue(mockPhoto);
+      mockPrisma.photo.update.mockResolvedValue(mockPhoto);
+
+      await photoService.updatePhoto(mockUserId, mockPhotoId, { caption: 'x' });
+
+      const updateCall = mockPrisma.photo.update.mock.calls[0][0];
+      expect(updateCall.data.isFavorite).toBeUndefined();
+    });
+
+    it('should reject starring for users without edit access', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue(mockPhoto);
+      mockPrisma.trip.findFirst.mockResolvedValue(null);
+
+      await expect(
+        photoService.updatePhoto(mockUserId, mockPhotoId, { isFavorite: true })
+      ).rejects.toThrow('Trip not found or access denied');
+      expect(mockPrisma.photo.update).not.toHaveBeenCalled();
+    });
+
+    it('should filter to favorites when favoritesOnly is set', async () => {
+      mockPrisma.photo.findMany.mockResolvedValue([{ ...mockPhoto, isFavorite: true }]);
+      mockPrisma.photo.count.mockResolvedValue(1);
+
+      const result = await photoService.getPhotosByTrip(mockUserId, mockTripId, {
+        favoritesOnly: true,
+      });
+
+      expect(mockPrisma.photo.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tripId: mockTripId, isFavorite: true } })
+      );
+      expect(mockPrisma.photo.count).toHaveBeenCalledWith({
+        where: { tripId: mockTripId, isFavorite: true },
+      });
+      expect(result.total).toBe(1);
+    });
+  });
+
   describe('PHOTO-006: getPhotosByTrip - Get photos with pagination', () => {
     it('should return paginated photos for a trip', async () => {
       const photos = [

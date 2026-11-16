@@ -12,6 +12,7 @@ import AlbumModal from "../AlbumModal";
 import AddPhotosToAlbumModal from "../AddPhotosToAlbumModal";
 import Pagination from "../Pagination";
 import { Skeleton } from "../Skeleton";
+import TripHighlights from "./TripHighlights";
 
 const PhotoGallery = lazy(() => import("../PhotoGallery"));
 const PhotoUpload = lazy(() => import("../PhotoUpload"));
@@ -69,6 +70,7 @@ export default function TripPhotosTab({
   const [editingAlbum, setEditingAlbum] = useState<PhotoAlbum | null>(null);
   const [showAlbumsMobileDrawer, setShowAlbumsMobileDrawer] = useState(false);
   const [showAddPhotosModal, setShowAddPhotosModal] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(false);
 
   const currentAlbum =
     selectedAlbumId !== null && selectedAlbumId > 0
@@ -241,6 +243,19 @@ export default function TripPhotosTab({
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowHighlights((v) => !v)}
+                aria-pressed={showHighlights}
+                className={`px-3 py-2 text-sm rounded whitespace-nowrap flex items-center gap-2 border-2 transition-colors ${
+                  showHighlights
+                    ? "bg-amber-100 dark:bg-amber-900/30 border-amber-400 text-amber-800 dark:text-amber-300"
+                    : "bg-white dark:bg-dusk-800 border-gray-200 dark:border-dusk-700 text-gray-700 dark:text-dusk-300 hover:border-amber-300"
+                }`}
+              >
+                <span aria-hidden="true">⭐</span>
+                Highlights
+              </button>
               {/* Add Photos button - only show when viewing a specific album */}
               {selectedAlbumId !== null && selectedAlbumId > 0 && (
                 <button
@@ -296,6 +311,10 @@ export default function TripPhotosTab({
             </div>
           </div>
 
+          {showHighlights ? (
+            <TripHighlights tripId={trip.id} />
+          ) : (
+          <>
           <PhotoGallery
             photos={filteredPhotos}
             albums={albums}
@@ -343,6 +362,11 @@ export default function TripPhotosTab({
               toast.success("Photos removed from album");
             }}
             onSortChange={onPhotoSortChange}
+            onFavoriteChanged={() =>
+              queryClient.invalidateQueries({
+                queryKey: ["photos", "highlights", tripId],
+              })
+            }
             initialSortBy={initialSortBy}
             initialSortOrder={initialSortOrder}
             tripId={trip.id}
@@ -406,6 +430,8 @@ export default function TripPhotosTab({
             <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
               <p>All photos are sorted into albums!</p>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

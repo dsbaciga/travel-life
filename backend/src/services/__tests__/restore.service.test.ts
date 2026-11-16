@@ -659,6 +659,21 @@ describe('RestoreService', () => {
       );
     });
 
+    it('RST-012a: restores the photo favorite flag, defaulting to false for older backups', async () => {
+      await restoreFromBackup(1, fullBackup);
+      expect(mockTx.photo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isFavorite: false }) })
+      );
+
+      mockTx.photo.create.mockClear();
+      const starred = JSON.parse(JSON.stringify(fullBackup));
+      starred.trips[0].photos[0].isFavorite = true;
+      await restoreFromBackup(1, starred);
+      expect(mockTx.photo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isFavorite: true }) })
+      );
+    });
+
     it('RST-012: skips photos when importPhotos is false', async () => {
       const result = await restoreFromBackup(1, fullBackup, {
         clearExistingData: true,

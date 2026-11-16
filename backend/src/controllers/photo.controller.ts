@@ -22,6 +22,7 @@ const photoQuerySchema = z.object({
   albumId: z.coerce.number().int().optional(),
   sortBy: z.enum(['date', 'caption', 'created']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
+  favoritesOnly: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
 });
 
 // Helper function to add Immich URLs for photos and transform album assignments
@@ -95,13 +96,14 @@ export const photoController = {
 
   getPhotosByTrip: asyncHandler(async (req: Request, res: Response) => {
     const tripId = parseId(req.params.tripId, 'tripId');
-    const { skip, take, sortBy, sortOrder } = photoQuerySchema.parse(req.query);
+    const { skip, take, sortBy, sortOrder, favoritesOnly } = photoQuerySchema.parse(req.query);
 
     const result = await photoService.getPhotosByTrip(requireUserId(req), tripId, {
       skip,
       take,
       sortBy,
       sortOrder,
+      favoritesOnly,
     });
 
     // Add thumbnail URLs for Immich photos

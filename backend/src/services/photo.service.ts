@@ -649,11 +649,15 @@ class PhotoService {
     const skip = options?.skip || 0;
     const take = options?.take || 40; // Default to 40 photos per page
     const orderBy = buildPhotoOrderBy(options?.sortBy, options?.sortOrder);
+    const where = {
+      tripId,
+      ...(options?.favoritesOnly ? { isFavorite: true } : {}),
+    };
 
     try {
       const [photos, total] = await Promise.all([
         prisma.photo.findMany({
-          where: { tripId },
+          where,
           include: {
             albumAssignments: {
               include: {
@@ -670,7 +674,7 @@ class PhotoService {
           skip,
           take,
         }),
-        prisma.photo.count({ where: { tripId } }),
+        prisma.photo.count({ where }),
       ]);
 
       return {
@@ -814,6 +818,7 @@ class PhotoService {
             : undefined,
         latitude: data.latitude !== undefined ? data.latitude : undefined,
         longitude: data.longitude !== undefined ? data.longitude : undefined,
+        isFavorite: data.isFavorite !== undefined ? data.isFavorite : undefined,
       },
     });
 
@@ -899,6 +904,7 @@ class PhotoService {
       thumbnail_path: string | null;
       caption: string | null;
       taken_at: Date | null;
+      is_favorite: boolean;
       latitude: DecimalValue | null;
       longitude: DecimalValue | null;
       created_at: Date;
@@ -937,6 +943,7 @@ class PhotoService {
         thumbnailPath: photo.thumbnail_path,
         caption: photo.caption,
         takenAt: photo.taken_at,
+        isFavorite: photo.is_favorite,
         latitude: photo.latitude,
         longitude: photo.longitude,
         createdAt: photo.created_at,

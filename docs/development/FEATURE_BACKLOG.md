@@ -1570,6 +1570,8 @@ Locations that already belong to a trip.
 - "Favorites" filter in the gallery and lightbox
 - Auto-generated highlight reel per trip, shareable via the existing public share
 
+**Status**: ✅ Implemented. `Photo.isFavorite` is toggled through `PUT /api/photos/:id` (edit permission required) and filtered with `GET /api/photos/trip/:tripId?favoritesOnly=true`. The gallery grid, list and lightbox have a star toggle and a Favorites filter, the Photos tab has a Highlights view (empty state explains how to star photos; nothing is auto-picked), and the public share page shows a Highlights section from starred local photos. `isFavorite` round-trips through backup/restore (defaults to false for older backups). Migration: `20261116020000_add_photo_is_favorite`.
+
 ### 101. Infer Photo Location from Itinerary
 
 **Category**: Photo Management

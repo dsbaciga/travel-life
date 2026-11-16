@@ -443,6 +443,7 @@ model Photo {
   latitude      Decimal?                               @db.Decimal(10, 8)
   longitude     Decimal?                               @db.Decimal(11, 8)
   takenAt       DateTime?                              @map("taken_at")
+  isFavorite    Boolean                                @default(false) @map("is_favorite")
   coordinates   Unsupported("geography(Point, 4326)")?
   uploadedAt    DateTime                               @default(now()) @map("uploaded_at")
   createdAt     DateTime                               @default(now()) @map("created_at")
@@ -457,6 +458,7 @@ model Photo {
 
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
+  @@index([tripId, isFavorite])
   @@index([tripId])
   @@index([takenAt])
   @@index([localPath])
