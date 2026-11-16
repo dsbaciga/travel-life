@@ -4,6 +4,7 @@ import type { TripComparison, TripComparisonTrip } from '../../types/tripCompari
 import { formatDateOnly } from '../../utils/timezone';
 import formatCurrency from '../../utils/formatCurrency';
 import { tripColor } from '../../utils/tripComparison';
+import { useUnits } from '../../hooks/useUnits';
 
 interface ComparisonTableProps {
   comparison: TripComparison;
@@ -48,6 +49,7 @@ function CostNotes({ trip }: { trip: TripComparisonTrip }) {
  */
 export default function ComparisonTable({ comparison }: ComparisonTableProps) {
   const { trips, currency } = comparison;
+  const { formatDistance } = useUnits();
 
   const rows: Array<{ label: string; render: (trip: TripComparisonTrip) => ReactNode }> = [
     { label: 'Dates', render: formatRange },
@@ -61,7 +63,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
     {
       label: 'Total distance',
       render: (t) =>
-        t.totalDistanceKm === null ? '—' : `${t.totalDistanceKm.toLocaleString()} km`,
+        t.totalDistanceKm === null ? '—' : formatDistance(t.totalDistanceKm),
     },
     {
       label: `Total spend (${currency})`,
