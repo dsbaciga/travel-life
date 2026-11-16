@@ -2,7 +2,7 @@
 
 Travel Life uses PostgreSQL with PostGIS extension for geospatial data. The schema is managed via Prisma ORM.
 
-The schema defines **49 models** (mapped to **49 tables**) and **13 enums**.
+The schema defines **49 models** (mapped to **49 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
 
 ## Schema Location
 
@@ -690,6 +690,22 @@ A candidate entity extracted from a `PdfImport` by the AI parser, awaiting user 
 | createdEntityId | Int? | ID of the real entity created on acceptance |
 | createdEntityType | PendingEntityType? | Type of the created entity |
 | reviewedAt | DateTime? | When the user reviewed the candidate |
+
+## Budget, Deadlines, Safety, Food, Tracks and Push Models
+
+Models added after the sections above were written. `schema.prisma` is the authority for columns.
+
+| Model (table) | Purpose | Notes |
+| ------------- | ------- | ----- |
+| `TripExpense` (`trip_expenses`) | A cost on a trip (payer, split method and receipt columns too) | Full columns under [Expenses and Splits](#expenses-and-splits). FX snapshot (`exchangeRate`, `baseAmount`, `baseCurrency`) taken at write time; see [Currency Conversion](#currency-conversion). The `amount >= 0` and one-payer `CHECK`s exist only in migrations; Prisma cannot express them, so never `db push` |
+| `BookingDeadline` (`booking_deadlines`) | A dated reminder (cancellation, check-in, payment) | Optionally tied to one lodging, transportation or activity (cascade on delete); `title` is required when there is no booking. `notifiedAt` is set once the push reminder is sent; `dismissedAt` hides it |
+| `TripEmergencyInfo` (`trip_emergency_info`) | Insurance and embassy details, one row per trip (`tripId` unique) | |
+| `FoodLogEntry` (`food_log_entries`) | A dish rated at a restaurant | Optional link to an `Activity` and `Location` (`SetNull` on delete) |
+| `FoodLogEntryPhoto` (`food_log_entry_photos`) | Join of a food entry to `Photo`, ordered by `sortOrder` | Unique per (entry, photo) |
+| `TripTrackPoint` (`trip_track_points`) | GPS breadcrumbs uploaded by the mobile app | Unique on (trip, user, `recordedAt`) so batch uploads are idempotent |
+| `PushSubscription` (`push_subscriptions`) | Browser Web Push endpoint per user | `endpoint` unique; the backend validates it is a public `https` push service |
+| `MobilePushToken` (`mobile_push_tokens`) | Expo push token per device | `token` unique, `lastSeenAt` refreshed on registration |
+| `TripTagAssignment`, `TripCompanion` | Join tables for trip tags and companions | |
 
 ## Currency Conversion
 

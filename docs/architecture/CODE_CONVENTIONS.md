@@ -425,6 +425,25 @@ export default function BudgetManager({ tripId, budget, onUpdate }: BudgetManage
 - **Styling: follow [STYLE_GUIDE.md](STYLE_GUIDE.md).** Tailwind utility classes, dark
   mode variants on every surface, 44px minimum touch targets.
 
+### Forms: the shared hooks and components
+
+Use these instead of reinventing them; each exists because a plain implementation had a bug.
+
+| Concern | Use | Why |
+| ------- | --- | --- |
+| Double click on Add/Save created duplicates | `useSubmitLock` (`run(fn)`, `isSubmitting`) | The lock is a ref, so it holds before React re-renders |
+| "Save & Add Another" | `useSaveAndAddAnother` (`beginSubmit()` at the top of every submit, `keepOpen()` after awaits) | `setKeepOpen(true); form.requestSubmit()` runs the *previous* render's handler and sees stale state |
+| Currency input | `CurrencySelect` (limited to `CONVERTIBLE_CURRENCIES`), never a free-text box | The backend can only convert currencies in that list; `allowEmpty` for optional fields |
+| Place plus a same-named activity/lodging | `useLinkedCreate` + `forms/AlsoCreatePlaceOption` | Creates and links the pair in one flow |
+| Closing a form warns about unsaved changes | `useUnsavedChangesWarning`; don't count pre-filled defaults as edits | Pre-filled "previous entry" values once triggered false warnings |
+| Modal footers | `shared/FormModalFooter` inside `FormModal` | Consistent Cancel / Add / Add Another buttons |
+| Manager list + form state | `useManagerCRUD` with `useManagerFormWrapper` | Removes ~150 lines of boilerplate per manager |
+
+Rules of thumb: a dialog must not be rendered *inside* a menu that unmounts when it closes
+(the dialog dies with it; this is how the PDF import button broke on phones, see
+`PdfImportButton`); and never call `setState` then immediately `requestSubmit()` expecting the
+new state.
+
 ## 11. Timezones and Dates
 
 The rule: **never fall back to UTC for display.** Resolve most-specific-first —

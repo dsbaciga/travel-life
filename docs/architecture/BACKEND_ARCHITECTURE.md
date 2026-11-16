@@ -77,6 +77,14 @@ The backend follows a **layered architecture** with clear separation of concerns
 - **Error Handling**: Centralized error handler middleware
 - **Separation**: Business logic in services, HTTP concerns in controllers
 
+### Stack
+
+Node 26, Express 4, TypeScript 5, Prisma 7 (`@prisma/adapter-pg`), Zod 4, PostgreSQL + PostGIS, JWT (`jsonwebtoken`, HS256), `bcrypt`, `helmet`, `express-rate-limit`, `multer`, `sharp`, `winston`.
+
+### Global Middleware Order (`src/index.ts`)
+
+`trust proxy` -> `helmet` -> `cors` -> rate limiters (`/api/auth/*` limiters, then general `/api` limiter) -> body parsers (1 MB JSON, 100 MB on `/api/backup`) -> `cookie-parser` -> CSRF validation (`security/csrf.ts`, on `/api`) -> routes -> `errorHandler`. Uploaded files under `/uploads` are served only after file-access authentication and authorization checks.
+
 ---
 
 ## Directory Structure
@@ -88,9 +96,12 @@ backend/
     migrations/                  # Database migrations
   src/
     config/
-      index.ts                   # Central configuration (throws if secrets missing)
-      database.ts                # Prisma client instance
+      index.ts                   # Central configuration (throws if secrets missing or weak)
+      database.ts                # Prisma client (pg driver adapter + PostGIS extension)
+      prismaExtensions.ts        # PostGIS extension (syncs GEOGRAPHY columns from lat/lng)
       logger.ts                  # Winston logger setup
+      cron.ts                    # Cron job initialisation
+      swagger.ts                 # OpenAPI / Swagger setup
     controllers/
       auth.controller.ts
       trip.controller.ts
@@ -100,7 +111,7 @@ backend/
       auth.service.ts
       trip.service.ts
       photo.service.ts
-      ...                        # Business logic layer
+      ...                        # Business logic layer (~65 services)
       _shared/
         tripAccess.ts            # Trip/entity access verification
         tripPermissions.ts       # Permission levels, hierarchy, validation
@@ -108,6 +119,11 @@ backend/
         decimalConversion.ts     # Prisma Decimal -> number conversion
         timezoneResolution.ts    # Server-side timezone resolution
         entityLinkCleanup.ts     # EntityLink removal on entity delete
+        tripListOrder.ts         # Trip list sorting / current-trip ranking
+        vendored/                # Pure helpers shared with the mobile app
+          geo.ts                 #   Geo math, track normalisation, stop detection
+          nearbyFood.ts          #   Dietary matching + nearby-food types
+          receiptParser.ts       #   Receipt text parsing
     routes/
       auth.routes.ts
       trip.routes.ts
@@ -115,25 +131,31 @@ backend/
     middleware/
       auth.ts                    # JWT authentication (async, blacklist + passwordVersion check)
       errorHandler.ts            # Global error handling
+      rateLimit.ts               # Rate limiters (general, auth, AI, backup, per-user keyed)
     auth/
       jwt.ts                     # JWT token utilities
       password.ts                # Password hashing
       controllerHelpers.ts       # requireUserId() and related helpers
+      clientPlatform.ts          # Detects the native companion app (body-delivered refresh tokens)
     http/
       asyncHandler.ts            # Async error wrapper
       parseId.ts                 # Safe integer route-param parsing
       cookies.ts                 # Cookie helpers (refresh token storage)
+      mobileSignInPages.ts       # Server-rendered pages for the mobile SSO hand-off
     errors/
       errors.ts                  # AppError class
     prisma/
       crudHelpers.ts             # Generic CRUD helpers
+      modelDelegates.ts          # Prisma model delegate typing helpers (used by crudHelpers)
       prismaIncludes.ts          # Shared Prisma include/select patterns
     security/
       csrf.ts                    # CSRF protection
+      encryption.ts              # AES-256 at-rest encryption for stored API keys / SMTP passwords
       urlValidation.ts           # URL validation / SSRF guards
       promptSafety.ts            # LLM prompt safety checks
     validation/
       zodHelpers.ts              # Shared Zod schema helpers
+      share.ts                   # Share-token format validation
     types/
       auth.types.ts
       trip.types.ts
@@ -141,7 +163,9 @@ backend/
     constants/
       dietaryTags.ts             # Shared constants
     data/
-      checklist-defaults.ts      # Seed data (checklists, language phrases)
+      checklist-defaults.ts      # Seed data (checklists)
+      airports.ts                # Airport seed data
+      language-phrases*.ts       # Language phrase seed data (several files)
     index.ts                     # Express app entry point
   uploads/                       # File upload storage (Docker volume)
   package.json
@@ -358,7 +382,7 @@ export class TripService {
       where: { id: userId },
       select: { timezone: true },
     });
-    return user?.timezone || 'UTC';
+    return user?.timezone || 'UTC'; // simplified; real code uses resolveTimezone(...) from _shared/timezoneResolution
   }
 }
 
@@ -428,7 +452,9 @@ Other modules:
 
 12. **`convertDecimals<T>(obj): T`** (`_shared/decimalConversion.ts`) — recursively converts Prisma `Decimal` values to plain numbers for JSON responses
 13. **`cleanupEntityLinks(tripId, entityType, entityId, tx?)`** (`_shared/entityLinkCleanup.ts`) — removes all `EntityLink` rows for an entity before deletion
-14. **`resolveTimezone(...candidates)` / `getUserTimezone(userId)`** (`_shared/timezoneResolution.ts`) — picks the first specified timezone, falling back to `UTC`
+14. **`resolveTimezone(...candidates)` / `getUserTimezone(userId)`** (`_shared/timezoneResolution.ts`) — `resolveTimezone` picks the first specified timezone (UTC only as the last resort); `getUserTimezone` returns the user's configured zone or `null`, so end the chain with it
+15. **`compareTripsForList`, `tripGroupRank`, `isCurrentTrip`, …** (`_shared/tripListOrder.ts`) — trip list ordering and current-trip detection
+16. **`_shared/vendored/`** (`geo.ts`, `nearbyFood.ts`, `receiptParser.ts`) — pure, dependency-free helpers kept identical to the copies used by the mobile companion app
 
 **Usage Examples**:
 
@@ -554,12 +580,17 @@ async deleteActivity(userId: number, activityId: number) {
 
 ### Prisma ORM
 
-**Prisma Client**: Instantiated in `src/config/database.ts`
+**Prisma Client** (Prisma 7): Instantiated in `src/config/database.ts` with the `@prisma/adapter-pg` driver adapter over a `pg` connection pool, then extended with the PostGIS extension from `config/prismaExtensions.ts`. Also exports `checkDatabaseConnection()` (retrying startup check).
 
 ```typescript
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import { postgisExtension } from './prismaExtensions';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prismaClient = new PrismaClient({ adapter: new PrismaPg(pool) });
+const prisma = prismaClient.$extends(postgisExtension);
 
 export default prisma;
 ```
@@ -707,12 +738,7 @@ All API responses follow this structure:
 {
   status: 'error',
   message: 'Error description',
-  errors?: [ // For validation errors
-    {
-      path: ['fieldName'],
-      message: 'Validation message'
-    }
-  ]
+  fields?: ['fieldName'] // For validation errors: names of the invalid fields
 }
 ```
 
@@ -761,24 +787,25 @@ DELETE /api/locations/:id          - Delete location
 The real `authenticate` middleware is **async**. In addition to verifying the
 token signature, it checks a token blacklist (revoked on logout) and compares
 the token's `passwordVersion` against the user's current `passwordVersion`
-(rejecting tokens issued before a password change). A short-TTL in-memory cache
-avoids a DB query on every request.
+(rejecting tokens issued before a password change). A short-TTL (60s), size-capped
+in-memory LRU cache avoids a DB query on every request. The file also exports
+`resolveCurrentPasswordVersion(userId)` (shared with the `/uploads` file-access
+check in `index.ts`), `invalidatePasswordVersionCache(userId)` and
+`clearPasswordVersionCache()` (tests). The example below omits the cache for brevity.
 
 ```typescript
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../auth/jwt';
-import { AppError } from './errorHandler';
+import { AppError } from './errorHandler'; // re-exported from ../errors/errors
+import { JwtPayload } from '../types/auth.types';
 import prisma from '../config/database';
 import { isBlacklisted } from '../services/tokenBlacklist.service';
 
-// Extend Express Request type (user payload comes from JwtPayload)
+// Extend Express Request type
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        userId: number;
-        email: string;
-      };
+      user?: JwtPayload;
     }
   }
 }
@@ -803,7 +830,7 @@ export const authenticate = async (
       throw new AppError('Token has been revoked', 401);
     }
 
-    // Reject tokens issued before a password change (cached lookup)
+    // Reject tokens issued before a password change (real code: cached lookup)
     const tokenPwVersion = decoded.passwordVersion ?? 0;
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -830,41 +857,28 @@ export const authenticate = async (
 
 **File**: `src/auth/jwt.ts`
 
+Tokens are HS256. The payload is `JwtPayload` from `types/auth.types.ts`
+(`id`, `userId`, `email`, optional `passwordVersion`). Verification pins
+`algorithms: ['HS256']` and validates the claim shapes rather than casting.
+Refresh tokens carry a unique `jti` and are single-use (the consumed token is
+blacklisted via `tokenBlacklist.service`).
+
 ```typescript
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { JwtPayload } from '../types/auth.types';
 
-export const generateAccessToken = (payload: {
-  userId: number;
-  email: string;
-}): string => {
-  return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn, // 15 minutes
-  });
-};
+export const generateAccessToken = (payload: JwtPayload): string =>
+  jwt.sign(payload, config.jwt.secret, accessSignOptions()); // 15m default
 
-export const generateRefreshToken = (payload: {
-  userId: number;
-  email: string;
-}): string => {
-  return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiresIn, // 7 days
-  });
-};
+export const generateRefreshToken = (payload: JwtPayload): string =>
+  jwt.sign({ ...payload, jti: randomUUID() }, config.jwt.refreshSecret, refreshSignOptions()); // 7d default
 
-export const verifyAccessToken = (token: string) => {
-  return jwt.verify(token, config.jwt.secret) as {
-    userId: number;
-    email: string;
-  };
-};
+export const verifyAccessToken = (token: string): VerifiedJwtPayload =>
+  toJwtPayload(jwt.verify(token, config.jwt.secret, { algorithms: ['HS256'] }));
 
-export const verifyRefreshToken = (token: string) => {
-  return jwt.verify(token, config.jwt.refreshSecret) as {
-    userId: number;
-    email: string;
-  };
-};
+export const verifyRefreshToken = (token: string): VerifiedJwtPayload =>
+  toJwtPayload(jwt.verify(token, config.jwt.refreshSecret, { algorithms: ['HS256'] }));
 ```
 
 ### Authorization Patterns
@@ -940,50 +954,52 @@ throw new AppError('Permission denied', 403);
 
 **File**: `src/middleware/errorHandler.ts`
 
+Abridged (the real file also redacts sensitive fields before logging the body in development, and falls back to any error with `isOperational` and a valid `statusCode`):
+
 ```typescript
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import logger from '../config/logger';
+import { AppError } from '../errors/errors';
+import { isPrismaError } from '../types/prisma-helpers';
 
 export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
-  // Log all errors
+  // Log all errors (body only in development, sensitive fields redacted)
   logger.error('Error occurred:', {
     message: err.message,
     stack: err.stack,
     url: req.url,
     method: req.method,
-    body: req.body,
   });
 
-  // Zod validation errors
+  // Zod validation errors - field names only, not schema details (Zod 4: err.issues)
   if (err instanceof ZodError) {
+    const fieldNames = err.issues.map(e => e.path.join('.')).filter(Boolean);
     return res.status(400).json({
       status: 'error',
-      message: 'Validation error',
-      errors: err.errors,
+      message: 'Validation failed',
+      fields: fieldNames.length > 0 ? fieldNames : undefined,
     });
   }
 
   // Prisma errors
-  if ((err as any).code) {
-    const prismaError = err as any;
-
+  if (isPrismaError(err)) {
     // P2002: Unique constraint violation
-    if (prismaError.code === 'P2002') {
+    if (err.code === 'P2002') {
       return res.status(400).json({
         status: 'error',
         message: 'A record with this value already exists',
-        field: prismaError.meta?.target?.[0],
+        field: getConstraintTarget(err.meta),
       });
     }
 
     // P2003: Foreign key constraint
-    if (prismaError.code === 'P2003') {
+    if (err.code === 'P2003') {
       return res.status(400).json({
         status: 'error',
         message: 'Referenced record does not exist',
@@ -991,7 +1007,7 @@ export const errorHandler = (
     }
 
     // P2025: Record not found
-    if (prismaError.code === 'P2025') {
+    if (err.code === 'P2025') {
       return res.status(404).json({
         status: 'error',
         message: 'Record not found',
@@ -1016,7 +1032,7 @@ export const errorHandler = (
 ```
 
 **Key Points**:
-- Handles Zod validation errors
+- Handles Zod validation errors (400 with a `fields` list)
 - Handles Prisma errors (P2002, P2003, P2025)
 - Handles operational errors (AppError)
 - Logs all errors with context
@@ -1062,15 +1078,13 @@ export type UpdateTripInput = z.infer<typeof updateTripSchema>;
 
 ### Validation Pattern
 
-**In Controllers**:
+**In Controllers** (inside an `asyncHandler`-wrapped method; a `ZodError` propagates to the error handler):
 ```typescript
-try {
-  const validatedData = createTripSchema.parse(req.body);
-  // Use validatedData (type-safe)
-} catch (error) {
-  next(error); // ZodError caught by error handler
-}
+const validatedData = createTripSchema.parse(req.body);
+// Use validatedData (type-safe)
 ```
+
+The backend uses **Zod 4**. Shared schema helpers live in `src/validation/zodHelpers.ts`.
 
 ### Important: Nullable vs Optional
 
@@ -1103,62 +1117,36 @@ const updateSchema = z.object({
 
 The config module **fails fast**: it throws on startup if `JWT_SECRET`,
 `JWT_REFRESH_SECRET`, or `DATABASE_URL` are missing. There are no insecure
-default fallbacks for secrets.
+default fallbacks for secrets. The JWT secrets must also be at least 32
+characters and not a well-known placeholder (enforced outside `NODE_ENV=test`).
+`TRUST_PROXY` and `COOKIE_SAME_SITE` are validated too, and a non-https
+`OIDC_ISSUER_URL` is refused unless `OIDC_ALLOW_INSECURE_ISSUER=true`.
+
+Abridged (see the file for the full shape):
 
 ```typescript
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-// Validate required secrets — throw on startup if missing
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) {
-  throw new Error('JWT_SECRET environment variable is required.');
-}
-
-const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
-if (!jwtRefreshSecret) {
-  throw new Error('JWT_REFRESH_SECRET environment variable is required.');
-}
-
 export const config = {
   // Server
-  nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '5000', 10),
-  baseUrl: process.env.BASE_URL || 'http://localhost:5000',
+  nodeEnv, port, baseUrl,
+  trustProxy,                    // reverse-proxy hop count for rate limiting (TRUST_PROXY)
 
-  // Database (throws if DATABASE_URL is missing)
-  databaseUrl: (() => {
-    const url = process.env.DATABASE_URL;
-    if (!url) {
-      throw new Error('DATABASE_URL environment variable is required.');
-    }
-    return url;
-  })(),
+  databaseUrl,                   // throws if DATABASE_URL is missing
+  jwt: { secret, expiresIn, refreshSecret, refreshExpiresIn },
+  cookie: { secure, sameSite, domain, path, maxAge },
+  upload: { dir, maxFileSize },  // 50MB default
 
-  // JWT (no insecure fallback — secrets validated above)
-  jwt: {
-    secret: jwtSecret,
-    expiresIn: process.env.JWT_EXPIRES_IN || '15m',
-    refreshSecret: jwtRefreshSecret,
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-  },
-
-  // File Upload
-  upload: {
-    dir: process.env.UPLOAD_DIR || './uploads',
-    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800', 10), // 50MB
-  },
-
-  // External APIs
-  immich: {
-    apiUrl: process.env.IMMICH_API_URL || '',
-    apiKey: process.env.IMMICH_API_KEY || '',
-  },
-
-  nominatim: {
-    url: process.env.NOMINATIM_URL || 'http://localhost:8080',
-  },
+  // External services
+  immich, openWeatherMap, aviationStack, nominatim, overpass, placeSearch,
+  openRouteService,
+  email,                         // SMTP
+  frontendUrl,
+  oidc,                          // OAuth/OIDC single sign-on (PKCE always on)
+  auth,                          // passwordLoginDisabled, registrationDisabled
+  security,                      // allowPrivateIntegrationUrls (SSRF guard escape hatch)
+  vapid,                         // Web Push
+  llm,                           // AI / LLM provider
+  imap,                          // Saved-link email ingest
+  scheduledBackup,
 };
 
 export default config;
@@ -1166,21 +1154,26 @@ export default config;
 
 ### Environment Variables
 
+The authoritative, current list (required, recommended, optional, rate limits,
+OIDC, VAPID, IMAP, scheduled backups) is in [`backend/CLAUDE.md`](../../backend/CLAUDE.md).
+
 **Required**:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/travel_life?schema=public
-JWT_SECRET=strong-secret-here
-JWT_REFRESH_SECRET=strong-refresh-secret-here
+JWT_SECRET=<at least 32 chars, e.g. openssl rand -base64 48>
+JWT_REFRESH_SECRET=<at least 32 chars>
+NOMINATIM_URL=http://localhost:8080
 ```
 
-**Optional**:
+**Optional** (examples):
 ```env
 PORT=5000
 NODE_ENV=production
-NOMINATIM_URL=http://localhost:8080
 IMMICH_API_URL=https://immich.example.com/api
 IMMICH_API_KEY=immich-api-key
 OPENWEATHERMAP_API_KEY=weather-api-key
+OPENROUTESERVICE_API_KEY=ors-api-key
+AVIATIONSTACK_API_KEY=aviationstack-key
 ```
 
 ---
@@ -1229,18 +1222,14 @@ router.post('/upload', authenticate, upload.single('photo'), photoController.upl
 
 **Accessing File in Controller**:
 ```typescript
-async uploadPhoto(req: Request, res: Response, next: NextFunction) {
-  try {
-    if (!req.file) {
-      throw new AppError('No file uploaded', 400);
-    }
-
-    const photoPath = req.file.path;
-    // Process and save to database
-  } catch (error) {
-    next(error);
+uploadPhoto: asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    throw new AppError('No file uploaded', 400);
   }
-}
+
+  const photoPath = req.file.path;
+  // Process and save to database
+}),
 ```
 
 ### Image Processing
@@ -1318,6 +1307,26 @@ async getImmichAssets(userId: number) {
   return response.data;
 }
 ```
+
+### Other Integrations
+
+Each lives in its own service under `src/services/`; configuration is in `src/config/index.ts` (see [Environment Variables](#environment-variables)).
+
+| Integration | Service(s) |
+| ----------- | ---------- |
+| OpenWeatherMap (weather) | `weather.service.ts` |
+| AviationStack (flight tracking) | `aviationstack.service.ts` |
+| OpenRouteService (road routing, Haversine fallback) | `routing.service.ts`, `travelTime.service.ts` |
+| Overpass + Nominatim place search (mobile nearby food) | `nearbyFood.service.ts`, `placeSearch.service.ts`, `openingHours.service.ts` |
+| LLM provider, OpenAI-compatible (PDF import, AI suggestions) | `llm.service.ts`, `pdfImport.service.ts`, `aiSuggestion.service.ts`, `albumSuggestion.service.ts`, `journalEntryAi.service.ts`, `packingSuggestion.service.ts` |
+| OIDC single sign-on | `oidc.service.ts` |
+| SMTP email | `email.service.ts` |
+| IMAP saved-link ingest | `emailIngest.service.ts`, `emailLinkExtractor.service.ts`, `linkMetadata.service.ts` |
+| Web Push (VAPID) | `pushNotification.service.ts` |
+| Frankfurter (exchange rates) | `exchangeRate.service.ts` |
+| Backups (manual and scheduled) | `backup.service.ts`, `restore.service.ts`, `scheduledBackup.service.ts`, `backupIntegrity.service.ts` |
+
+User-configured integration URLs (Immich, LLM, SMTP) are checked by the SSRF guard in `src/security/urlValidation.ts`.
 
 ---
 
@@ -1636,11 +1645,13 @@ Removes all entity links when an entity is deleted.
  * @param tripId - The trip the entity belongs to
  * @param entityType - The type of entity being deleted
  * @param entityId - The ID of the entity being deleted
+ * @param tx - Optional Prisma transaction client
  */
 export async function cleanupEntityLinks(
   tripId: number,
   entityType: EntityType,
-  entityId: number
+  entityId: number,
+  tx?: TransactionClient
 ): Promise<void>
 ```
 

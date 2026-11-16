@@ -4,20 +4,14 @@ This document outlines the testing strategy and setup for Travel Life.
 
 ## Current Testing Status
 
-Both the backend and frontend have working test infrastructure with test suites in place.
+Every workspace except the E2E layer has a working test setup:
 
-**Backend** (Jest + ts-jest): Fully configured with ~69 test files, including:
-
-- `backend/src/controllers/__tests__/` - ~25 controller test files
-- `backend/src/services/__tests__/` - ~34 service test files
-- `backend/src/middleware/__tests__/` - middleware tests (`auth.test.ts`, `errorHandler.test.ts`)
-- Additional test files across other backend modules
-
-**Frontend** (Vitest + React Testing Library): Fully configured with test files in:
-
-- `frontend/src/components/__tests__/` - component tests
-- `frontend/src/services/__tests__/` - service tests
-- `frontend/src/utils/__tests__/` - utility tests
+| Workspace | Runner | Location | Run from root |
+| --------- | ------ | -------- | ------------- |
+| `backend/` | Jest 29 + ts-jest | `backend/src/**/__tests__/*.test.ts` (~113 files: controllers, services, middleware, routes, auth) | `npm run test:backend` |
+| `frontend/` | Vitest 4 + React Testing Library (jsdom) | `frontend/src/**/__tests__/` (~46 files: components, services, utils, hooks) | `npm run test:frontend` (runs `test:run`, non-watch) |
+| `packages/shared/` | Vitest 4 (node) | `packages/shared/src/**/*.test.ts` (e.g. `src/__tests__/`) | `npm run test:shared` |
+| `mobile/` | Vitest 4 (node, no React Native runtime) | `mobile/src/**/__tests__/**/*.test.ts` | `npm run test:mobile` |
 
 **E2E Tests**: Not configured. There is no Playwright (or Cypress) config in the
 repository. The E2E section below is a recommendation for future work, not a
@@ -123,7 +117,17 @@ export default defineConfig({
 ### Test Setup File
 
 The setup file referenced by the config exists at `frontend/src/test/setup.ts`.
-It registers `@testing-library/jest-dom` matchers and runs cleanup after each test.
+It registers `@testing-library/jest-dom` matchers, stubs `localStorage` and
+`sessionStorage`, calls `vi.clearAllMocks()` before each test, and runs RTL cleanup
+after each test. Shared helpers live next to it: `frontend/src/test/fixtures/` (sample
+entities) and `frontend/src/test/mocks/` (`services.ts` exports ready-made `vi.fn()`
+service mocks such as `mockActivityService`; `api.ts` mocks the axios layer).
+
+### Known gotcha: lowercase drive letter on Windows
+
+Vitest fails every file with `failed to find the runner` when the working directory
+uses a lowercase drive letter (`c:/Users/...`). Run it from an uppercase path
+(`C:/Users/...`), for example `cd C:/Users/<you>/travel-life/frontend && npm run test:run`.
 
 ### package.json Scripts
 
@@ -133,6 +137,7 @@ The following scripts are already defined in `frontend/package.json`:
 {
   "scripts": {
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
   }
@@ -356,64 +361,97 @@ module.exports = {
 
 The setup file referenced by `setupFilesAfterEnv` exists at
 `backend/src/__tests__/setup.ts` (note: under `src/__tests__/`, not `src/test/`).
-It handles global test environment configuration.
+It sets `NODE_ENV=test`, a dummy `DATABASE_URL`, strong fixture JWT secrets (the config
+rejects short or placeholder secrets), silences `console.error`/`console.warn`, and sets a
+10s timeout.
+
+Shared helpers live beside it in `backend/src/__tests__/`:
+
+- `mocks/prisma.ts` - `mockPrismaClient` (every model delegate with `jest.fn()` methods)
+  and `resetPrismaMocks()`; also re-exported from `mocks/index.ts`
+- `mocks/external-apis.ts` - Nominatim, Immich, weather and routing response mocks
+- `mockBuilders/` - request/response/auth builders for controller tests
+- `fixtures/` - sample users, trips and photos
+
+### How Prisma is mocked
+
+There is no `prisma-mock` or `jest-mock-extended` dependency. Tests replace the
+database module with a plain object of `jest.fn()` delegates. `jest.mock()` calls are
+hoisted above imports, so the service under test picks up the mock:
+
+```typescript
+// 1. Stub @prisma/client (enums and Prisma.Decimal are used at import time)
+jest.mock('@prisma/client', () => ({
+  Prisma: { Decimal: class MockDecimal { /* toString, toNumber */ } },
+  EntityType: { PHOTO: 'PHOTO', LOCATION: 'LOCATION', ACTIVITY: 'ACTIVITY' /* ... */ },
+}));
+
+// 2. Replace the Prisma singleton from config/database
+const mockPrisma = {
+  trip: { findFirst: jest.fn() },
+  activity: { create: jest.fn(), findMany: jest.fn(), update: jest.fn(), delete: jest.fn() },
+  $transaction: jest.fn(),
+};
+jest.mock('../../config/database', () => ({ __esModule: true, default: mockPrisma }));
+```
+
+Alternatively, import the shared mock instead of hand-writing delegates, as the
+controller tests do:
+
+```typescript
+import { mockPrismaClient, resetPrismaMocks } from '../../__tests__/mocks/prisma';
+
+jest.mock('../../config/database', () => ({ __esModule: true, default: mockPrismaClient }));
+```
+
+Gotchas:
+
+- Prefix hand-rolled mock variables with `mock` (`mockPrisma`) so Jest allows them
+  inside the hoisted factory.
+- Call `jest.clearAllMocks()` (or `resetPrismaMocks()`) in `beforeEach`.
+- Trip access goes through `verifyTripAccessWithPermission`, which reads
+  `prisma.trip.findFirst` and includes `collaborators`; default that mock to a trip owned
+  by the test user and override it for the "other user" cases.
+- Services export a singleton (`import activityService from '../activity.service'`), not a
+  class you instantiate.
 
 ### Example Service Test
 
-`backend/src/services/__tests__/activity.service.test.ts` already exists. The
-pattern below illustrates how services are tested for ownership verification:
+`backend/src/services/__tests__/activity.service.test.ts` is the reference. It opens
+with a test-ID header (ACT-001 and so on), mocks as above, and asserts both the
+Prisma calls and the access-control failures:
 
 ```typescript
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { ActivityService } from '../activity.service';
-import { prismaMock } from '../../test/prisma-mock';
+import activityService from '../activity.service';
+import { AppError } from '../../errors/errors';
 
 describe('ActivityService', () => {
-  let activityService: ActivityService;
-
   beforeEach(() => {
-    activityService = new ActivityService();
+    jest.clearAllMocks();
+    mockPrisma.trip.findFirst.mockResolvedValue({
+      id: 100, userId: 1, privacyLevel: 'Private', collaborators: [],
+    });
   });
 
-  describe('getActivitiesByTrip', () => {
-    it('should return only activities owned by user', async () => {
-      const userId = 1;
-      const tripId = 1;
+  it('rejects a user with no access to the trip', async () => {
+    mockPrisma.trip.findFirst.mockResolvedValue(null);
 
-      prismaMock.trip.findUnique.mockResolvedValue({
-        id: tripId,
-        userId,
-        // ... other trip fields
-      });
-
-      prismaMock.activity.findMany.mockResolvedValue([]);
-
-      const activities = await activityService.getActivitiesByTrip(tripId, userId);
-
-      expect(activities).toEqual([]);
-      expect(prismaMock.trip.findUnique).toHaveBeenCalledWith({
-        where: { id: tripId },
-      });
-    });
-
-    it('should throw error if trip not owned by user', async () => {
-      const userId = 1;
-      const otherUserId = 2;
-      const tripId = 1;
-
-      prismaMock.trip.findUnique.mockResolvedValue({
-        id: tripId,
-        userId: otherUserId,
-        // ... other trip fields
-      });
-
-      await expect(
-        activityService.getActivitiesByTrip(tripId, userId)
-      ).rejects.toThrow('Trip not found');
-    });
+    await expect(activityService.getActivitiesByTrip(2, 100)).rejects.toThrow(AppError);
   });
 });
 ```
+
+### Controller tests
+
+Most controllers are a single `createCrudController(...)` config, so
+`backend/src/controllers/__tests__/*.controller.test.ts` mock the service module and
+verify, per handler, the service method called, the arguments built from
+`req.params`/body, the status code, and Zod body validation.
+
+### Shared helper tests
+
+Backend helpers under `src/services/_shared/` (for example `prismaUpdateData`,
+`tripAccess`, `decimalConversion`) have tests in `src/services/_shared/__tests__/`.
 
 ---
 
@@ -449,14 +487,26 @@ test('user can login and view dashboard', async ({ page }) => {
 
 ## Running Tests
 
+From the repository root:
+
+```bash
+npm run test:backend     # Jest
+npm run test:frontend    # Vitest, single run (frontend test:run)
+npm run test:shared      # packages/shared, Vitest
+npm run test:mobile      # mobile, Vitest
+```
+
 ### Frontend Tests
 
 ```bash
 cd frontend
-npm test                  # Run tests in watch mode
-npm run test:ui          # Run with UI
-npm run test:coverage    # Generate coverage report
+npm test                 # Watch mode
+npm run test:run         # Single run (what CI uses)
+npm run test:ui          # Vitest UI
+npm run test:coverage    # Coverage report
 ```
+
+Run from an uppercase drive letter on Windows (see the gotcha above).
 
 ### Backend Tests
 
@@ -465,9 +515,12 @@ flag means the run succeeds even if a glob matches no test files).
 
 ```bash
 cd backend
-npm test                 # Run all tests (jest --passWithNoTests)
-npm test -- --coverage   # With coverage
+npm test                                  # Run all tests
+npm test -- --coverage                    # With coverage
+npm test -- activity.service              # One file by name pattern
 ```
+
+CI runs `npx prisma generate` first; the tests need the generated client types.
 
 ### E2E Tests
 
@@ -478,6 +531,66 @@ Testing Setup section above), they can be run with:
 npx playwright test              # Run all E2E tests
 npx playwright test --ui         # Run with UI
 npx playwright test --debug      # Debug mode
+```
+
+---
+
+## Testing packages/shared
+
+`packages/shared` (`@travel-life/shared`) holds platform-free code used by the mobile
+app and, via vendoring, the backend: types, validation, time, itinerary, entity-link,
+receipt and food helpers. Its Vitest config (`packages/shared/vitest.config.mts`) uses the
+`node` environment and picks up `src/**/*.test.ts`. Tests are plain input/output checks
+with no mocking:
+
+```bash
+cd packages/shared
+npm test               # vitest run
+npm run test:watch
+```
+
+### Vendored-module drift test
+
+The backend Docker build context is `./backend`, so it cannot import `packages/shared`.
+Three dependency-free modules (`utils/geo.ts`, `receipt/receiptParser.ts`,
+`food/nearbyFood.ts`) are instead copied into `backend/src/services/_shared/vendored/` by
+`packages/shared/scripts/sync-vendored.mjs`. Those copies are generated; never edit them.
+
+- Edit the source in `packages/shared/src/`, then run `npm run sync:vendored` from the root.
+- `node packages/shared/scripts/sync-vendored.mjs --check` exits 1 on drift.
+- The backend test `VEND-001` in `backend/src/services/__tests__/mobileCompanion.service.test.ts`
+  fails if a vendored copy no longer matches its source (ignoring the generated header and
+  line endings). If it fails, re-run the sync script.
+- A module can only be vendored if it has no imports.
+
+---
+
+## Testing the mobile app
+
+`mobile/vitest.config.mts` runs unit tests in plain Node (`src/**/__tests__/**/*.test.ts`),
+with `__DEV__` defined, `@travel-life/shared` aliased to `packages/shared/src`, and
+`react-native` aliased to `react-native-web`. Only the platform-free core is covered:
+`db/`, `sync/`, `domain/` and `lib/`. UI and Expo-specific code is not unit tested.
+
+Two helpers in `mobile/src/test/` replace the native pieces:
+
+- `nodeSqliteDriver.ts` - `createNodeSqliteDriver()` returns an in-memory `SqlDriver` backed
+  by Node's built-in `node:sqlite` (same SQL dialect as expo-sqlite). It uses the app's
+  real `createSerializedDriver` and runs the real `migrate()`, so schema, migrations,
+  outbox and id-remap statements execute for real instead of against a mock. Call
+  `close()` when done.
+- `fakeServer.ts` - an in-memory stand-in for the Travel Life API implementing the `SyncApi`
+  interface. It handles the same routes the outbox emits, assigns integer ids, keeps the
+  entity and link graph, and enforces the constraints that matter for sync (references must
+  be existing server ids, links unique per source/target, unknown ids are 404).
+
+A sync test pairs the two: open a Node SQLite driver, write rows and outbox entries, run
+the sync engine against the fake server, then assert on both databases.
+
+```bash
+cd mobile
+npm test               # vitest run
+npm run test:watch
 ```
 
 ---
@@ -494,55 +607,25 @@ npx playwright test --debug      # Debug mode
 
 ## CI/CD Integration
 
-Add to `.github/workflows/test.yml`:
+Tests run in `.github/workflows/docker-build-test.yml`, job `lint-and-test`, as a matrix
+over `backend` and `frontend` (Node 26, `npm ci` per component). For each component the
+job runs:
 
-```yaml
-name: Tests
+- frontend: `npm run lint`, `npm run build:strict`, `npm run test:run`
+- backend: `npx prisma generate`, `npm run build` (the relaxed production tsconfig),
+  `npm run build:strict`, `npm test`
 
-on: [push, pull_request]
-
-jobs:
-  backend-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: cd backend && npm ci
-      - run: cd backend && npm test
-
-  frontend-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: cd frontend && npm ci
-      - run: cd frontend && npm test
-
-  e2e-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npx playwright install
-      - run: npx playwright test
-```
+`packages/shared` and `mobile` tests are **not** run in CI; run `npm run test:shared` and
+`npm run test:mobile` locally. There is no E2E job.
 
 ---
 
 ## Next Steps
 
-1. **Immediate Priority**: Set up frontend testing infrastructure
-2. **High Priority**: Write tests for Manager components
-3. **High Priority**: Write tests for photo loading
-4. **Medium Priority**: Add backend service tests
-5. **Medium Priority**: Set up E2E testing framework
-6. **Long-term**: Achieve 80% test coverage across codebase
+1. Add `test:shared` and `test:mobile` to the CI matrix
+2. Keep writing Manager-component and photo-loading tests
+3. Set up E2E testing framework
+4. Long-term: Achieve 80% test coverage across codebase
 
 ---
 

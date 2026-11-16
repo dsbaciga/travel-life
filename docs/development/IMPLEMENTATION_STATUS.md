@@ -1,7 +1,9 @@
 # Travel Life - Implementation Status
 
-Last Updated: 2026-11-16
-Version: v5.6.1
+Last Updated: 2026-11-16 (checklist below not re-audited since v5.6.1, except the November 2026 batch section)
+Version: v7.3.1
+
+> This checklist is complete only through v5.6.1, plus the November 2026 feature batch near the end. For everything shipped since (companion app, PDF import, push, OIDC, Atlas Planner redesign, security audit, ...) read [CHANGELOG.md](../../CHANGELOG.md), which is the authoritative record, and [FEATURE_MAP.md](../architecture/FEATURE_MAP.md) for where each feature lives.
 
 ## ✅ Completed Features
 

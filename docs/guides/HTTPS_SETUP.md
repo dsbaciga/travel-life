@@ -77,13 +77,28 @@ sudo certbot renew --dry-run
 
 ### 4. Update Environment Variables
 
-In your `.env.production`, ensure URLs use HTTPS:
+In your `.env.production`, set the public URLs to HTTPS and tell the backend about the
+extra proxy hop:
 
 ```bash
-VITE_API_URL=https://travel.example.com/api
-VITE_UPLOAD_URL=https://travel.example.com/uploads
-CORS_ORIGIN=https://travel.example.com
+BASE_URL=https://travel.example.com
+FRONTEND_URL=https://travel.example.com
+
+# Host nginx + the bundled frontend nginx = 2 proxies in front of the backend.
+# With the default of 1, every visitor shares one rate-limit bucket.
+TRUST_PROXY=2
 ```
+
+Leave `VITE_API_URL` and `VITE_UPLOAD_URL` at their relative defaults (`/api`,
+`/uploads`): the bundled nginx proxies both to the backend, so a single hostname needs no
+CORS configuration. Set `CORS_ORIGIN` only if the frontend and API are served from
+different origins. The `proxy_pass` target above is the frontend container's host port
+(`FRONTEND_PORT`, default `80`); change it if you moved the port. The API, database and
+Nominatim ports are published on the loopback interface only by default
+(`INTERNAL_BIND_ADDRESS=127.0.0.1`) and need no firewall exceptions.
+
+The bundled frontend nginx already sends a Content-Security-Policy and HSTS on the app
+shell, so you do not need to add a CSP at the host proxy.
 
 ## Option 2: Traefik (Docker-native)
 
@@ -123,6 +138,9 @@ services:
 volumes:
   letsencrypt:
 ```
+
+As with Option 1, set `TRUST_PROXY=2` in `.env.production`: Traefik plus the bundled
+frontend nginx are two proxies in front of the backend.
 
 ## Cookie Security
 

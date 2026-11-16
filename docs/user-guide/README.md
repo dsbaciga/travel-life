@@ -16,9 +16,22 @@ Welcome to Travel Life, your comprehensive travel documentation application. Thi
 10. [Entity Linking](#entity-linking)
 11. [Tags & Companions](#tags--companions)
 12. [PDF Import](#pdf-import)
-13. [Search](#search)
-14. [Settings](#settings)
-15. [Keyboard Shortcuts](#keyboard-shortcuts)
+13. [Today and the Library](#today-and-the-library)
+14. [Trip Layout and Itinerary Views](#trip-layout-and-itinerary-views)
+15. [Food Log](#food-log)
+16. [Deadlines](#deadlines)
+17. [Emergency Info](#emergency-info)
+18. [Inbox: Saved Links and Email Ingest](#inbox-saved-links-and-email-ingest)
+19. [Trip Series](#trip-series)
+20. [Year in Review](#year-in-review)
+21. [Search](#search)
+22. [Settings](#settings)
+23. [Calendar Feed](#calendar-feed)
+24. [Push Notifications](#push-notifications)
+25. [Mobile Companion App](#mobile-companion-app)
+26. [Offline Use and Installing the App](#offline-use-and-installing-the-app)
+27. [Backups](#backups)
+28. [Keyboard Shortcuts](#keyboard-shortcuts)
 
 ---
 
@@ -33,16 +46,30 @@ Welcome to Travel Life, your comprehensive travel documentation application. Thi
 
 ### First Login
 
-After logging in, you'll see the Dashboard with your trips. If you're new, it will be empty.
+After logging in, you land on **Today**, which shows what is happening now and next
+across your trips. If you're new, it will be mostly empty until you create a trip.
+
+### Single Sign-On
+
+If your administrator has enabled single sign-on, the login page shows an extra button
+(its text is set by the administrator) that signs you in through your identity provider.
+Depending on how the server is configured, the password form may be hidden, and
+registration may be closed, in which case the login page says so and accounts are
+created by invitation (see **Settings > Invites**). If sign-in fails you will see a
+message such as "Single sign-on was cancelled" or "No account exists for this sign-in.
+Contact your administrator."
+
 
 ### Setting Up Your Profile
 
-1. Click your avatar in the top right corner
-2. Select **Settings**
-3. Configure:
+1. Open **Settings**
+2. On the **Account** tab, configure:
+   - **Name** and **Change Password**
    - **Timezone**: Your home timezone for dual-timezone display
-   - **Theme**: Light or Dark mode
-   - **External Services**: Immich, weather APIs, etc.
+   - **Home Currency**
+   - **Dietary Preferences**
+   - **Appearance**: Light or Dark mode
+3. Connect services such as Immich and weather on the **Integrations** tab
 
 ---
 
@@ -50,7 +77,7 @@ After logging in, you'll see the Dashboard with your trips. If you're new, it wi
 
 ### Creating a Trip
 
-1. From the Dashboard, click **+ New Trip**
+1. From the **Trips** page, click **+ New Trip**
 2. Enter trip details:
    - **Title**: Give your trip a name
    - **Dates**: Start and end dates (optional for dream trips)
@@ -102,7 +129,7 @@ Want to reuse a trip's structure?
 
 ### Location Categories
 
-Create custom categories in **Settings > Location Categories**:
+Create custom categories in **Settings > Tags & Categories**:
 - Add categories with custom icons and colors
 - Categories help organize and filter locations
 
@@ -137,7 +164,7 @@ Upload multiple photos at once:
 
 If you use Immich for photo management:
 
-1. Go to **Settings > Immich**
+1. Go to **Settings > Integrations** and find the Immich section
 2. Enter your Immich server URL and API key
 3. In a trip's Photos tab, click **Import from Immich**
 4. Select photos to import
@@ -216,7 +243,7 @@ Default categories include:
 - Shopping, Recreation, Cultural, Sports
 - Wellness, Tour, Other
 
-Customize categories in **Settings > Activity Categories**.
+Customize categories in **Settings > Tags & Categories**.
 
 ### Sub-Activities
 
@@ -328,16 +355,16 @@ Connect any item to any other item:
 ### Using Tags
 
 Organize trips with tags:
-1. Go to **Settings > Tags**
+1. Go to **Settings > Tags & Categories**
 2. Create tags (e.g., "Beach", "City", "Road Trip")
 3. Assign tags to trips from the trip settings
 
 ### Travel Companions
 
 Track who you travel with:
-1. Go to **Settings > Companions**
+1. Open **Library > Companions**
 2. Add companions (family, friends, etc.)
-3. Assign companions to trips
+3. Assign companions to trips (a trip's **Companions** tab lists who is on it)
 
 ---
 
@@ -349,8 +376,8 @@ type everything in by hand.
 
 ### Importing a PDF
 
-1. Click the **Import PDF** button in the navigation bar (also available on trip
-   pages)
+1. Open a trip and click **Import PDF** in the trip header (on a phone, it is in the
+   trip's **⋮** menu)
 2. Select or drag in a PDF document (e.g. a booking confirmation or itinerary)
 3. The application uploads the PDF and uses AI to extract structured data such
    as flights, lodging, activities, and dates
@@ -366,9 +393,145 @@ Before anything is saved, you review what the AI found:
 4. Choose the trip to import into (or create a new trip)
 5. Click **Import** to add the reviewed items to your trip
 
+Extracted bookings that you have not accepted or rejected yet wait in the **Inbox**
+(see [Inbox](#inbox-saved-links-and-email-ingest)), where the Inbox badge counts them.
+
 > PDF Import relies on the AI/LLM service being configured. If AI features are
 > disabled or no LLM API key is set, PDF Import will be unavailable. See the
 > **AI / LLM** entry under [External Services](#external-services).
+
+---
+
+## Today and the Library
+
+### Today
+
+**Today** (the first item in the navigation) is the landing page. It shows an agenda,
+upcoming trips, booking deadlines that are due soon, an "on this day" memory and a Year in
+Review card, with a map beside the agenda on large screens. On a phone the map sits above
+the agenda and can be made larger or smaller with the **Larger map** / **Smaller map**
+button. Pending trip invitations also appear here.
+
+### Navigation
+
+The app has four main destinations: **Today**, **Trips**, **Library** and **Inbox**. On a
+phone the bottom bar shows Today, Trips, **Log**, Library and Inbox. **Log** opens a quick
+capture sheet for adding photos, a location, a journal entry, lodging or transport.
+
+### Library
+
+**Library** collects everything that spans trips: albums, Places Visited, the Food Log
+("Best Meals"), checklists, travel stats, the trip calendar, Year in Review, trip series
+and companions. On desktop it is a dropdown; on a phone it opens a hub page.
+
+---
+
+## Trip Layout and Itinerary Views
+
+A trip's tabs are grouped:
+
+| Group | Tabs |
+|-------|------|
+| Overview | Overview |
+| Itinerary | Day Plan, Timeline, Day By Day, Trip Map |
+| Photos | Photos, Photo Map, Photo Timeline |
+| Plans | Places, Activities, Unscheduled, Transport, Lodging, Links, Custom |
+| Journal | Journal, Food Log |
+| Essentials | Budget, Deadlines, Companions, Emergency, Local Norms |
+
+**Day Plan** pairs a day list with a map: on a large screen the list sits beside a sticky
+map, and on a phone you switch between **List** and **Map**. Use **Day By Day** for a
+full page per day and **Timeline** for the chronological view described above.
+
+---
+
+## Food Log
+
+Record dishes you ate and rate them.
+
+1. Open a trip and go to **Journal > Food Log**
+2. Add an entry: **Restaurant**, **Dish**, **Rating**, an **Order again** checkbox,
+   optional **Notes** and photos
+3. Optionally link the entry to one of the trip's activities or locations
+
+To browse every rated dish across all trips, open **Library > Food Log** ("Best Meals").
+You can search by dish, restaurant or note, set a **Minimum rating**, or show only dishes
+marked order again.
+
+---
+
+## Deadlines
+
+Track dates you must not miss, such as the end of free cancellation.
+
+1. Open a trip and go to **Essentials > Deadlines**
+2. Click **Add Deadline**
+3. Choose the **Type**: Free cancellation ends, Online check-in opens, Payment due, or
+   Other deadline
+4. Set the due date and time, an optional **Title** and **Note**, and optionally attach it
+   to a lodging, transportation or activity booking (a deadline can also stand alone)
+
+Deadlines that are due soon, including overdue ones, appear on **Today**.
+
+---
+
+## Emergency Info
+
+The **Emergency** tab (under Essentials) is a printable card for when something goes wrong.
+
+- **Local emergency numbers** for the destination country. The country is worked out from
+  the trip's places and can be changed. Numbers are only listed when known
+- **Travel insurance**: provider, policy number and 24-hour assistance phone
+- **Embassy or consulate**: name, phone and address
+- **Notes**, and per-companion **allergies** and **medical** details
+
+Click **Print** for a paper version. The insurance, embassy and companion details are
+saved on your device after you view them, so the card still opens with no signal, and it
+tells you how old the saved copy is.
+
+---
+
+## Inbox: Saved Links and Email Ingest
+
+The **Inbox** holds things that are not on a trip yet:
+
+- **Saved links.** Paste a URL (and optional notes) into the add-link form. Travel Life
+  fetches a preview. Assign a link to a trip when you are ready, or delete it. There is
+  also an action to delete all unassigned links
+- **Imported bookings** parsed from PDFs that still need review (see
+  [PDF Import](#pdf-import))
+
+The Inbox badge counts links waiting to be filed plus bookings waiting for review.
+
+### Saving links by email
+
+If the administrator has set up the mailbox, you can forward a link to it and it appears in
+the Inbox. In **Settings > Integrations**, the **Link Ingest** section shows the address
+to forward to and a **Trusted senders** list. Mail is accepted only from trusted senders;
+your account email is always trusted. If the section says email ingest is not configured,
+the server has no mailbox set up.
+
+---
+
+## Trip Series
+
+A trip series groups related trips into one longer journey.
+
+1. Open **Library > Trip Series** and create a series, or pick or create one from the
+   **Trip Series** field when you edit a trip
+2. On a series page, add trips that are not already in a series, move them up or down to
+   set their order, or remove them
+3. Trips in a series show a badge that links to the series page, and the trip page
+   includes navigation within the series
+
+---
+
+## Year in Review
+
+**Library > Year in Review** summarises a calendar year of travel: headline totals, a
+**Travel by Month** bar, **Highlights** photos, a **Where You Went** map and the year's
+trips. Pick the year from the selector, and tick **Include trips still being planned** to
+count trips that are not yet completed.
 
 ---
 
@@ -395,28 +558,29 @@ Filter trips by:
 
 ## Settings
 
-### Profile Settings
+Settings has six tabs: **Account**, **Tags & Categories**, **Documents** (travel
+documents), **Integrations**, **Invites** and **Backup**.
 
-- Update username and email
-- Change password
-- Upload avatar
+### Account
 
-### Application Settings
+Name, password, timezone, home currency, dietary preferences and appearance (light or
+dark).
 
-- **Timezone**: Your home timezone
-- **Theme**: Light or Dark mode
+### Tags & Categories
 
-### Location Categories
+Tags, custom location categories (with icons and colors) and activity categories.
 
-Add custom location categories with icons and colors.
+### Integrations
 
-### Activity Categories
+Configure the following (several are typically set up by the administrator):
 
-Customize activity categories with emojis.
+- **Email (SMTP)**
+- **Maps app** preference
+- **Link Ingest**, **Calendar Feed**, **Mobile App** and **Push Notifications**, described
+  in their own sections below
 
-### External Services
+External services:
 
-Configure API keys for:
 - **Immich**: Self-hosted photo library
 - **OpenWeatherMap**: Weather data
 - **AviationStack**: Flight tracking
@@ -427,8 +591,80 @@ Configure API keys for:
 
 ### Backup & Restore
 
-- **Export**: Download all your data as JSON
-- **Import**: Restore from a backup file
+See [Backups](#backups).
+
+---
+
+## Calendar Feed
+
+Subscribe to your trips from Google Calendar, Apple Calendar, Outlook or any calendar app.
+The feed is a read-only iCal (.ics) URL with your trips, flights and other transportation,
+and lodging stays.
+
+1. Go to **Settings > Integrations > Calendar Feed**
+2. Click **Enable Calendar Feed**
+3. Click **Copy URL**, then add it in your calendar app (for example Google Calendar:
+   Settings, Add calendar, From URL)
+
+**Keep the URL private**: anyone who has it can see your trip schedule. **Rotate Feed URL**
+makes the old URL stop working immediately, and **Disable Feed** turns it off.
+
+---
+
+## Push Notifications
+
+Get notified on a device about upcoming trips and tracked flight status changes, even when
+the app is closed.
+
+1. Go to **Settings > Integrations > Push Notifications**
+2. Click **Enable Push Notifications** and allow notifications in your browser when asked
+3. Use **Send Test Notification** to check it works
+
+This is per device and browser. If the section says push is not configured, the
+administrator has not set the server's VAPID keys; if it says notifications are blocked,
+allow them for the site in your browser settings.
+
+---
+
+## Mobile Companion App
+
+Sign in to the Travel Life companion app by scanning a code instead of typing a password.
+
+1. On the web app, go to **Settings > Integrations > Mobile App**
+2. Click **Pair Mobile App** to show a QR code
+3. Scan it in the companion app. It sets the server address and signs you in
+
+The code works once and expires after a few minutes (a countdown is shown). **Generate New
+Code** replaces it and **Hide Code** hides it. Treat the code like a password.
+
+---
+
+## Offline Use and Installing the App
+
+Travel Life is a progressive web app (PWA), so it can be installed to your home screen.
+
+- On iPhone and iPad in Safari, an install prompt explains how to use **Add to Home Screen**
+  (it can be dismissed and stays quiet for a week)
+- When you lose your connection, a banner tells you that you are offline
+- Changes made offline are queued and synced when you reconnect. If the same item changed
+  both on your device and on the server, a conflict list lets you keep your version or the
+  server's
+- Search keeps working offline against data saved on the device, and the
+  [Emergency card](#emergency-info) is kept for offline use
+
+---
+
+## Backups
+
+In **Settings > Backup**:
+
+- **Create Backup** downloads your data as a JSON file: trips with full details, photo
+  metadata (not the photo files themselves), journal entries and albums, tags, companions
+  and custom categories, and your settings. Immich photo references are preserved
+- **Restore from Backup** imports a backup file
+- **Backup Best Practices** lists recommendations
+
+Because photo files are not in the JSON, back those up separately.
 
 ---
 
@@ -436,18 +672,10 @@ Configure API keys for:
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+K` | Open global search |
-| `Ctrl+N` | New trip |
+| `Ctrl+K` (`Cmd+K` on Mac) | Open global search |
+| `Ctrl+S` (`Cmd+S` on Mac) | Save, while an add or edit form is open |
 | `Escape` | Close modal/panel |
 | `?` | Show keyboard shortcuts help |
-
-### In Timeline
-
-| Shortcut | Action |
-|----------|--------|
-| `J` | Next item |
-| `K` | Previous item |
-| `Enter` | Open selected item |
 
 ---
 
@@ -478,7 +706,7 @@ Configure API keys for:
 ### Using Places Visited Map
 
 After completing trips, view all your visited locations on a global map:
-1. Go to **Places Visited** from the main menu
+1. Go to **Library > Places Visited**
 2. See pins for all locations from completed trips
 
 ---

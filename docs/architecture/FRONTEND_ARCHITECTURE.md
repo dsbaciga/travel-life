@@ -2,9 +2,9 @@
 
 This document provides a comprehensive overview of the frontend architecture, patterns, and conventions used in Travel Life.
 
-**Tech Stack**: React 19 + TypeScript + Vite + Tailwind CSS + TanStack Query + Zustand + Leaflet
+**Tech Stack**: React 19 + TypeScript + Vite 7 + Vitest 4 + Tailwind CSS 3 + React Router 8 + TanStack Query 5 + Zustand 5 + Leaflet (PWA via vite-plugin-pwa / Workbox, IndexedDB via `idb`)
 
-Last Updated: 2026-05-15 | Current Version: v5.4.0
+Last Updated: 2026-11-15 | Current Version: v7.3.0
 
 ---
 
@@ -81,7 +81,7 @@ Last Updated: 2026-05-15 | Current Version: v5.4.0
 
 ```text
 frontend/src/
-  components/          # Reusable UI components
+  components/          # Reusable UI components (flat: Managers, modals, maps, settings panels)
     ActivityManager.tsx
     LodgingManager.tsx
     TransportationManager.tsx
@@ -91,6 +91,19 @@ frontend/src/
     PhotoGallery.tsx
     Timeline.tsx
     ...
+    agenda/            # Day agenda: AgendaList, AgendaMap, ItineraryDayView
+    daily-view/        # "Day By Day" view and its per-entity cards
+    emergency/         # PrintableEmergencyCard
+    forms/             # Shared form pieces (ActivityForm, AlsoCreatePlaceOption)
+    icons/             # Icon exports
+    pwa/               # Offline/sync UI (see PWA and Offline)
+    settings/          # SettingsPage sections (Account, BackupRestore, Integrations, TagsAndCategories)
+    shared/            # Cross-feature pieces (FormModalFooter)
+    timeline/          # Timeline day sections, event cards, filters, printable itinerary
+    today/             # TodayMap (scope switch for the Today page)
+    trip-dashboard/    # Trip Overview widgets (TripDashboard, NextUpCard, budget, weather, ...)
+    trip-detail/       # Trip page pieces (tripDetailTabs, TripHeroHeader, TripPhotosTab, share/duplicate modals)
+    widgets/           # Dashboard/stat widgets and calendar/ (monthly, yearly views)
   pages/               # Route-level components
     DashboardPage.tsx    # "Today": agenda and map split view
     LibraryPage.tsx      # Hub for collection pages
@@ -98,20 +111,26 @@ frontend/src/
     TripsPage.tsx
     SettingsPage.tsx
     ...
-  services/            # API client classes
+  services/            # API client classes (*.service.ts) plus offline/sync modules
     activity.service.ts
     trip.service.ts
     location.service.ts
     auth.service.ts
+    syncManager.ts           # Offline change queue + conflict handling
+    offline*.service.ts      # Offline auth, downloads, search, storage
     ...
-  hooks/               # Custom React hooks (~34 hooks)
+  hooks/               # Custom React hooks (~47 hooks)
     useManagerCRUD.ts
     useFormFields.ts
     usePagination.ts
+    useTimezoneResolver.ts
+    useTripAgendaData.ts
     ...
   store/               # Zustand global state
     authStore.ts
     themeStore.ts
+    navigationStore.ts       # Tabs vs sidebar layout (persisted)
+    scrollStore.ts           # Scroll position / page number memory
   types/               # TypeScript type definitions
     activity.ts
     trip.ts
@@ -121,15 +140,21 @@ frontend/src/
     axios.ts                 # Configured axios instance
     config.ts                # Environment configuration
     queryClientSetup.ts      # TanStack Query client + persistence
+    queryPersister.ts        # IndexedDB persister for the query cache
+    offlineDb.ts             # IndexedDB schema (idb)
+    tokenManager.ts          # Access token handling
     ...
   utils/               # Helper functions
     timezone.ts              # Timezone utilities
+    dayAgenda.ts             # buildDayAgenda()
+    formDataBuilder.ts       # Create/update payload builders
     ...
-  constants/           # Shared constant values
+  constants/           # Shared constant values (countryFacts, currencies, dietaryTags)
   assets/              # Static assets (images, etc.)
   test/                # Test setup and utilities
   App.tsx              # Main app component with routing
   main.tsx             # Application entry point
+  sw.ts                # Custom service worker (Workbox injectManifest + Web Push)
   index.css            # Global styles (Tailwind)
 ```
 
@@ -151,7 +176,9 @@ frontend/src/
 
 **Location**: `src/store/`
 
-**Current Stores**:
+**Current Stores**: `authStore`, `themeStore`, `navigationStore` (tabs vs
+sidebar layout and sidebar collapse, persisted) and `scrollStore` (remembers
+scroll positions and page numbers per list). The first two are detailed below.
 
 #### 1. Auth Store (`authStore.ts`)
 ```typescript
@@ -213,7 +240,7 @@ TanStack Query (`@tanstack/react-query`) **is actively used** in this project.
 The query client is configured in `src/lib/queryClientSetup.ts` and is paired
 with `@tanstack/react-query-persist-client` to persist the cache to IndexedDB
 for PWA offline support. The app is wrapped in `PersistQueryClientProvider` in
-`src/App.tsx`. Around 19 files use `useQuery` for data fetching today.
+`src/App.tsx`. Around 34 non-test files use `useQuery` for data fetching today.
 
 **Two coexisting patterns**:
 
@@ -607,7 +634,7 @@ return response.data.data;  // Extract data field
 
 ## Routing
 
-**Library**: React Router v7
+**Library**: React Router v8 (imported from `react-router`)
 
 **Location**: `src/App.tsx`
 
@@ -627,6 +654,7 @@ for protected pages — each protected route is individually wrapped in a
   <Route path="/login" element={<ErrorBoundary><LoginPage /></ErrorBoundary>} />
   <Route path="/register" element={<ErrorBoundary><RegisterPage /></ErrorBoundary>} />
   <Route path="/accept-invite" element={<ErrorBoundary><AcceptInvitePage /></ErrorBoundary>} />
+  <Route path="/share/:token" element={<ErrorBoundary><PublicTripPage /></ErrorBoundary>} />
 
   {/* Protected routes — each wrapped individually */}
   <Route
@@ -657,7 +685,30 @@ for protected pages — each protected route is individually wrapped in a
 dropdown on desktop and the `/library` hub page on mobile; both list the same
 collection pages. See "App Navigation" in the
 [Style Guide](STYLE_GUIDE.md) for the table and for what to touch when adding
-a page.
+a page. `PwaStatusLayer` (offline banner and the route to sync-conflict
+resolution) is also mounted there, for signed-in users only.
+
+### PWA and Offline
+
+- `src/sw.ts` is a custom service worker built with `vite-plugin-pwa`'s
+  `injectManifest` strategy. It precaches the app shell, serves the SPA
+  navigation fallback, runtime-caches API responses, photo thumbnails, map
+  tiles, geocoding and Google Fonts (Workbox `workbox-*` modules), and handles
+  Web Push (`push`, `notificationclick`).
+- `lib/offlineDb.ts` is the IndexedDB layer (`idb`, database
+  `travel-life-offline`) with one object store per entity type plus the sync
+  queue, conflicts, metadata and search index. `lib/openIndexedDb.ts` opens
+  it; `lib/queryPersister.ts` persists the TanStack Query cache.
+- `services/syncManager.ts` replays queued offline changes with backoff and
+  parks conflicts for the user to resolve (`hooks/useSyncConflicts.ts`,
+  `components/pwa/ConflictResolutionModal.tsx`).
+- Other offline services: `offline.service.ts`, `offlineAuth.service.ts`,
+  `offlineDownload.service.ts`, `offlineSearch.service.ts`,
+  `mapTileCache.service.ts`, `storageManager.service.ts`.
+- Offline hooks: `useNetworkStatus`, `useOfflineReady`, `useOfflineMap`,
+  `useOfflineSearch`, `useStorageEstimate`, `useSyncConflicts`.
+- UI lives in `components/pwa/` (indicators, download modal, storage
+  management and quota warnings, iOS install prompt, conflict list and diff).
 
 ### Today (`pages/DashboardPage.tsx`)
 
@@ -1079,6 +1130,7 @@ const manager = useManagerCRUD<T>(service, tripId, options);
 - ✅ `LodgingManager.tsx`
 - ✅ `TransportationManager.tsx`
 - ✅ `JournalManager.tsx`
+- ✅ `LocationManager.tsx`
 - ✅ `TagManager.tsx`
 - ✅ `CompanionManager.tsx`
 
@@ -1241,6 +1293,7 @@ useEffect(() => {
 
 **Variants**:
 
+- `usePagedPagination` (`src/hooks/usePagedPagination.ts`): page-number paging instead of "load more"
 - `useAutoPagination`: Same as usePagination but with `enabled: true` by default
 - `useInfiniteScroll`: Adds `onScroll` handler for scroll-based loading
 - `useInfiniteScrollSentinel`: Uses Intersection Observer for performance
@@ -1249,6 +1302,7 @@ useEffect(() => {
 
 - ✅ `TripDetailPage.tsx` (3 pagination instances: photos, unsorted photos, album photos)
 - ✅ `AlbumDetailPage.tsx` (album photos)
+- ✅ `AlbumsPage.tsx`, `GlobalAlbumsPage.tsx`, `components/trip-detail/TripPhotosTab.tsx`
 
 **Benefits**:
 
@@ -1656,7 +1710,9 @@ service.createEntity(data).catch(() => {});
 
 ## Related Documentation
 
-- [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md) - Complete feature list
+- [IMPLEMENTATION_STATUS.md](../development/IMPLEMENTATION_STATUS.md) - Feature-by-feature progress
+- [FEATURE_MAP.md](FEATURE_MAP.md) - Where each feature lives in the code
+- [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md) - Mobile app and shared code
 - [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) - Backend architecture details
-- [CLAUDE.md](../CLAUDE.md) - Project instructions for AI assistants
-- [BUILD_AND_PUSH.md](BUILD_AND_PUSH.md) - Build and release process
+- [CLAUDE.md](../../CLAUDE.md) - Project instructions for AI assistants
+- [BUILD_AND_PUSH.md](../guides/BUILD_AND_PUSH.md) - Build and release process

@@ -77,8 +77,11 @@ The script, in order:
 - [ ] Builds backend and frontend — a failing build aborts the release
 - [ ] Commits only those files, pushes the branch and opens a PR titled `Release vX.Y.Z`
 
-`release.sh` is disabled until it is ported to this flow; use `release.ps1` (PowerShell 7
-runs on Linux/Mac too).
+`release.sh` has not been ported to this flow and refuses to run; use `release.ps1`
+(PowerShell 7 runs on Linux/Mac too). `release.ps1` must start on `main`, so it cannot run
+from a git worktree; there, follow the Manual Process in
+[docs/guides/BUILD_AND_PUSH.md](docs/guides/BUILD_AND_PUSH.md) (same five-file edit, then tag
+the merged commit and push only the tag).
 
 ### Build Verification
 
@@ -131,9 +134,10 @@ git push origin vX.X.X
       (<https://github.com/dsbaciga/travel-life/actions>)
 - [ ] Images `X.X.X`, `vX.X.X` and `latest` appear on GitHub Packages
 - [ ] GitHub Release created with the `CHANGELOG.md` notes for this version
-- [ ] `travel-life-X.Y.Z.apk` is attached to the release (the Android build is the slowest
-      job and runs independently of the images; a failed APK build leaves the images and the
-      release published without it)
+- [ ] `travel-life-X.Y.Z.apk` (the Android companion app) is attached to the release (the
+      Android build is the slowest job and runs independently of the images; a failed APK
+      build leaves the images and the release published without it, and it is skipped
+      entirely until the Android signing secrets exist, see BUILD_AND_PUSH.md)
 
 ## Post-Release
 
@@ -145,6 +149,9 @@ git push origin vX.X.X
 - [ ] Run database migrations in production
       (`docker exec travel-life-backend npx prisma migrate deploy`) — new images do not apply
       them, and the release notes list any new migrations
+- [ ] Check the release notes for new or changed environment variables (for example
+      `TRUST_PROXY`, `DISABLE_REGISTRATION`, `INTERNAL_BIND_ADDRESS`) and add them to
+      `.env.production` before deploying
 - [ ] Verify production deployment
 
 ### Verification

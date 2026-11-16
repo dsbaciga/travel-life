@@ -8,7 +8,9 @@ Welcome to the Travel Life documentation. This guide will help you navigate the 
 |------|----------|
 | **Get started quickly** | [Quick Start Production](../QUICK_START_PRODUCTION.md) |
 | **Deploy to production** | [Deployment Guide](../DEPLOYMENT.md) |
-| **Understand the codebase** | [Backend Architecture](architecture/BACKEND_ARCHITECTURE.md) |
+| **Understand the codebase** | [Backend Architecture](architecture/BACKEND_ARCHITECTURE.md), [Frontend Architecture](architecture/FRONTEND_ARCHITECTURE.md) |
+| **Find where a feature lives / what to reuse** | [Feature Map](architecture/FEATURE_MAP.md) |
+| **Work on the mobile app or shared code** | [Mobile and Shared](architecture/MOBILE_AND_SHARED.md) |
 | **Write code that fits** | [Code Conventions](architecture/CODE_CONVENTIONS.md) |
 | **Use the API** | [API Reference](api/README.md) |
 | **Work on the UI** | [Style Guide](architecture/STYLE_GUIDE.md) |
@@ -26,6 +28,8 @@ docs/
 │   ├── BACKEND_ARCHITECTURE.md
 │   ├── FRONTEND_ARCHITECTURE.md
 │   ├── CODE_CONVENTIONS.md   # Patterns to follow when writing code
+│   ├── FEATURE_MAP.md        # Feature -> code lookup, shared helpers to reuse
+│   ├── MOBILE_AND_SHARED.md  # packages/shared, vendoring, Expo companion app
 │   ├── STYLE_GUIDE.md
 │   ├── BACKEND_OPTIMIZATION_PLAN.md
 │   └── DATABASE_SCHEMA.md    # Database design and relationships
@@ -33,9 +37,9 @@ docs/
 │   ├── IMPLEMENTATION_STATUS.md
 │   ├── FEATURE_BACKLOG.md
 │   ├── BUGS.md
-│   ├── CODE_REVIEW_REPORT.md
-│   ├── CODE_REVIEW_LOW_PRIORITY.md
-│   └── UI_UX_IMPROVEMENT_PLAN.md
+│   ├── CUSTOM_ITEM_SPEC.md
+│   ├── ATLAS_PLANNER_REDESIGN_PLAN.md
+│   └── VISUAL_UX_AUDIT.md
 ├── guides/                   # How-to guides
 │   ├── BUILD_AND_PUSH.md
 │   ├── DEVELOPMENT_WORKFLOWS.md
@@ -56,6 +60,12 @@ docs/
     └── README.md
 ```
 
+Outside `docs/`: [CHANGELOG.md](../CHANGELOG.md) (authoritative history),
+[backend/CLAUDE.md](../backend/CLAUDE.md) (every backend environment variable),
+[frontend/CLAUDE.md](../frontend/CLAUDE.md), [mobile/README.md](../mobile/README.md) and
+[mobile/AGENTS.md](../mobile/AGENTS.md). `conductor/` is a separate planning workspace
+(product/tech-stack notes and track plans), not the source of truth for the code.
+
 ## Documentation by Role
 
 ### For Developers
@@ -64,6 +74,8 @@ Start with architecture documentation to understand the codebase:
 
 1. **[Backend Architecture](architecture/BACKEND_ARCHITECTURE.md)** - Server-side patterns, services, database access
 2. **[Frontend Architecture](architecture/FRONTEND_ARCHITECTURE.md)** - React components, state management, hooks
+3. **[Feature Map](architecture/FEATURE_MAP.md)** - Where each feature lives and which shared helpers to reuse
+3. **[Mobile and Shared](architecture/MOBILE_AND_SHARED.md)** - Companion app, `packages/shared`, vendoring
 3. **[Code Conventions](architecture/CODE_CONVENTIONS.md)** - How to write code that matches the codebase
 4. **[Style Guide](architecture/STYLE_GUIDE.md)** - UI component patterns, colors, typography
 5. **[API Reference](api/README.md)** - REST API endpoints, request/response formats

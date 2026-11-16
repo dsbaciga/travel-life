@@ -37,6 +37,7 @@ A comprehensive travel documentation application for tracking trips, locations, 
 - **AI Suggestions**: Packing suggestions, activity ideas, and language phrases
 - **Saved Links**: Save links for later, including an optional forward-to-inbox email ingest
 - **Push Notifications**: Web Push reminders (PWA, works offline)
+- **Android Companion App**: A signed APK is attached to each GitHub Release (source in `mobile/`)
 - **Single Sign-On**: OIDC/OAuth login with any provider, with optional SSO-only mode
 
 ### Data management
@@ -212,7 +213,7 @@ Frontend will run on http://localhost:5173 (Vite default for local development)
 
 ## Project Structure
 
-```
+```text
 Travel-Life/
 ├── backend/
 │   ├── prisma/
@@ -247,8 +248,10 @@ Travel-Life/
 │   ├── Dockerfile
 │   ├── Dockerfile.prod
 │   └── package.json
+├── mobile/                        # Android companion app
 ├── docker-compose.yml             # Development
 ├── docker-compose.prod.yml        # Production
+├── docker-compose.truenas*.yml    # TrueNAS (pinned APP_VERSION images)
 ├── .env.production.example        # Production env template
 ├── docs/                          # Project documentation (see docs/README.md)
 └── README.md
@@ -345,7 +348,8 @@ The database is not published to the host; only the backend container reaches it
 | Variable | Default | Description |
 | -------- | ------- | ----------- |
 | `FRONTEND_PORT` | `80` | Host port for the frontend — point your reverse proxy here |
-| `BACKEND_PORT` | `5000` | Host port for the API |
+| `BACKEND_PORT` | `5000` | Host port for the API. Published on `INTERNAL_BIND_ADDRESS` only |
+| `INTERNAL_BIND_ADDRESS` | `127.0.0.1` | Host interface the API, database and Nominatim ports are published on. The frontend proxies `/api` and `/uploads` over the compose network, so nothing needs these ports from outside the host. Set to `0.0.0.0` only if another machine must reach them, and firewall them |
 | `BASE_URL` | `http://localhost:5000` | Public URL of the backend. Used to build OIDC redirect URLs — must be externally reachable |
 | `FRONTEND_URL` | `http://localhost:3000` | Public URL of the app. Used for invitation links and post-SSO redirects |
 | `CORS_ORIGIN` | localhost origins | Comma-separated allowed browser origins. Only needed when the frontend is served from a different origin than the API |
@@ -501,7 +505,8 @@ npx prisma generate
 
 ### Port Already in Use
 
-In production, change the host ports via env vars:
+In production, change the host ports via env vars (the TrueNAS compose files default to
+30600-30603 instead):
 
 ```bash
 BACKEND_PORT=5001
@@ -553,7 +558,9 @@ for the fast path.
 - [ ] HTTPS terminated at the reverse proxy
 - [ ] `BASE_URL` and `FRONTEND_URL` set to the real public URLs
 - [ ] `CORS_ORIGIN` set if the frontend and API are on different origins
-- [ ] Firewall exposes only 80/443
+- [ ] Firewall exposes only 80/443, and `INTERNAL_BIND_ADDRESS` is left at `127.0.0.1`
+- [ ] `TRUST_PROXY` matches the number of proxies in front of the backend (`2` behind a TLS proxy or tunnel)
+- [ ] `DISABLE_REGISTRATION=true` once your own account exists, if the server is internet-facing
 - [ ] Database backups scheduled (see [DEPLOYMENT.md](DEPLOYMENT.md#backup-and-recovery))
 - [ ] Upload volume included in backups
 - [ ] Rate limits reviewed (`AI_RATE_LIMIT_*`, `BACKUP_RATE_LIMIT_*`)
