@@ -528,6 +528,21 @@ below are grouped under `/api/invitations` and `/api/trips/...`.
 | POST | `/search` | Search Immich assets by metadata | Yes |
 | GET | `/albums` | List the user's Immich albums | Yes |
 | GET | `/albums/:albumId` | Get an Immich album with its assets | Yes |
+| POST | `/assets/query` | Browse the library with server-side filters and paging (`filters`: `dateFrom`/`dateTo` as calendar days read in `timezone`, `isFavorite`, `type`, `albumId`, `text` as file name; `page`, `size` up to 200; optional `tripId` flags `alreadyLinked`) | Yes |
+| POST | `/bulk-link/preview` | Count what linking everything a filter matches to a trip would do (`matching`, `alreadyLinked`, `toLink`, capped at 5000) | Yes |
+| POST | `/bulk-link/page` | Link one page (200) of a filter's matches to a trip through the batch linker; returns `nextPage` until finished. Safe to re-run | Yes |
+| PUT | `/photo-albums/:albumId/link` | Link a trip photo album to an Immich album, or `{ "immichAlbumId": null }` to unlink | Yes |
+| POST | `/photo-albums/:albumId/sync` | Manual pull sync: add assets in the linked Immich album that are not yet in the trip album. Never removes anything | Yes |
+| GET | `/photo-albums/:albumId/export-preview` | What an export would write: Immich asset count and uploaded photos that would be skipped | Yes |
+| POST | `/photo-albums/:albumId/export` | Create (or add to) an Immich album from a trip album. Requires `{ "confirm": true }`. Writes to Immich; only ever adds | Yes |
+
+#### Immich album sync and export: behaviour
+
+- Immich API compatibility: calls use `POST /api/search/metadata` (`page`, `size`, `withExif`, `order`, `takenAfter`/`takenBefore`, `isFavorite`, `type`, `albumIds`, `originalFileName`), `GET /api/albums/:id`, `POST /api/albums` and `PUT /api/albums/:id/assets`, plus `/api/server/ping` for the connection test. The `albumIds` search filter and `withExif` are not available on older Immich servers; sync deliberately uses `GET /api/albums/:id` instead so it never depends on them.
+- Sync decides what is new by comparing asset ids, not timestamps (Immich does not expose when an asset joined an album). `immichAlbumSyncedAt` is informational.
+- Assets removed from the Immich album are **not** removed from the trip album or the trip. They are counted in `notInImmichAlbum` (null when the Immich album exceeded the 5,000 asset sync cap).
+- Export only adds: it never deletes or modifies Immich assets, never removes assets from an Immich album, and never uploads. Uploaded (non-Immich) photos are skipped and counted in `skippedUploaded`. If the stored key lacks permission, Immich's message comes back as a 403.
+- Immich 401/403 responses are returned to the client as 403 (never 401, which the web client treats as an expired session).
 
 ### Weather
 

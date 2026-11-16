@@ -157,6 +157,7 @@ export default function TripPhotosTab({
         }}
         tripStartDate={trip.startDate || undefined}
         tripEndDate={trip.endDate || undefined}
+        tripTimezone={trip.timezone}
         existingImmichAssetIds={existingImmichAssetIds}
       />
 

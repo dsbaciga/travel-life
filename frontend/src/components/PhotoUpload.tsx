@@ -31,6 +31,7 @@ interface PhotoUploadProps {
   onPhotoUploaded: () => void;
   tripStartDate?: string;
   tripEndDate?: string;
+  tripTimezone?: string | null;
   existingImmichAssetIds?: Set<string>;
 }
 
@@ -39,6 +40,7 @@ export default function PhotoUpload({
   onPhotoUploaded,
   tripStartDate,
   tripEndDate,
+  tripTimezone,
   existingImmichAssetIds,
 }: PhotoUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
@@ -584,7 +586,13 @@ export default function PhotoUpload({
           onClose={() => setShowImmichBrowser(false)}
           tripStartDate={tripStartDate}
           tripEndDate={tripEndDate}
-          excludeAssetIds={existingImmichAssetIds}
+          tripTimezone={tripTimezone}
+          linkedAssetIds={existingImmichAssetIds}
+          tripId={tripId}
+          onBulkImported={(summary) => {
+            // Refresh the gallery but keep the browser open so the user can see the result.
+            if (summary.linked > 0) onPhotoUploaded();
+          }}
         />
       )}
 

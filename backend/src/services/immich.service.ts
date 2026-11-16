@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { z } from 'zod';
 import { AppError } from '../errors/errors';
 import logger from '../config/logger';
 import prisma from '../config/database';
@@ -40,6 +41,132 @@ export interface ImmichMetadataSearchQuery extends ImmichSearchQuery {
   q?: string;
   searchTerm?: string;
   state?: string;
+}
+
+/**
+ * Immich assets as returned by POST /api/search/metadata and GET /api/albums/:id.
+ * Only the fields this app reads are validated; everything else passes through.
+ * Immich sends explicit nulls for unknown values, hence `nullish()`.
+ */
+const immichAssetViewSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.string(),
+    originalFileName: z.string().nullish(),
+    fileCreatedAt: z.string().nullish(),
+    localDateTime: z.string().nullish(),
+    isFavorite: z.boolean().nullish(),
+    // "HH:MM:SS.sss" on documented versions, plain seconds on some others.
+    duration: z.union([z.string(), z.number()]).nullish(),
+    exifInfo: z
+      .object({
+        latitude: z.number().nullish(),
+        longitude: z.number().nullish(),
+        dateTimeOriginal: z.string().nullish(),
+      })
+      .passthrough()
+      .nullish(),
+  })
+  .passthrough();
+
+export type ImmichAssetView = z.infer<typeof immichAssetViewSchema>;
+
+const immichSearchPageSchema = z.object({
+  assets: z.object({
+    items: z.array(immichAssetViewSchema),
+    nextPage: z.union([z.string(), z.number()]).nullish(),
+  }),
+});
+
+const immichAlbumDetailSchema = z
+  .object({
+    id: z.string().min(1),
+    albumName: z.string(),
+    assets: z.array(immichAssetViewSchema).default([]),
+  })
+  .passthrough();
+
+export type ImmichAlbumDetail = z.infer<typeof immichAlbumDetailSchema>;
+
+const immichAlbumSummarySchema = z.object({ id: z.string().min(1), albumName: z.string() }).passthrough();
+
+/** The PUT /api/albums/:id/assets response: one entry per asset. */
+const immichAddAssetsResultSchema = z.array(
+  z.object({
+    id: z.string(),
+    success: z.boolean(),
+    error: z.string().nullish(),
+  })
+);
+
+/**
+ * Server-side filters for browsing the Immich library. `takenAfter`/`takenBefore`
+ * are full ISO 8601 instants (Immich rejects bare dates).
+ */
+export interface ImmichAssetFilters {
+  takenAfter?: string;
+  takenBefore?: string;
+  /** Only favourites. `false`/undefined means "no favourite filter". */
+  isFavorite?: boolean;
+  type?: 'IMAGE' | 'VIDEO';
+  albumId?: string;
+  /** Matched against the original file name (Immich metadata search). */
+  text?: string;
+}
+
+/** Immich caps `size` on the metadata search at 1000. */
+export const IMMICH_MAX_PAGE_SIZE = 1000;
+
+export interface ImmichAssetsPage {
+  assets: ImmichAssetView[];
+  nextPage: number | null;
+}
+
+export interface ImmichAddAssetsResult {
+  added: number;
+  alreadyInAlbum: number;
+  failed: Array<{ id: string; error: string }>;
+}
+
+/**
+ * Turn a failed Immich call into an AppError that says what Immich said.
+ *
+ * Never forwards Immich's 401 as our own 401: the web client treats a 401 as
+ * "your session expired" and would log the user out. A rejected key is reported
+ * as a 403 with an explicit message instead.
+ */
+function toImmichAppError(error: unknown, action: string): AppError {
+  if (error instanceof AppError) return error;
+  if (isAxiosError(error)) {
+    const status = error.response?.status;
+    const data = error.response?.data as { message?: unknown } | undefined;
+    const rawMessage = data && typeof data === 'object' ? data.message : undefined;
+    const detail = Array.isArray(rawMessage)
+      ? rawMessage.join('; ')
+      : typeof rawMessage === 'string'
+        ? rawMessage
+        : undefined;
+    if (status === 401 || status === 403) {
+      return new AppError(
+        `Immich refused to ${action}${detail ? ` (${detail})` : ''}. Check that your Immich API key has the required permission.`,
+        403
+      );
+    }
+    if (status === 404) {
+      return new AppError(`Immich could not find what was needed to ${action}${detail ? ` (${detail})` : ''}.`, 404);
+    }
+    if (status !== undefined) {
+      return new AppError(
+        `Immich returned an error while trying to ${action}${detail ? `: ${detail}` : ` (HTTP ${status})`}.`,
+        502
+      );
+    }
+    if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+      return new AppError(`Immich took too long to respond while trying to ${action}.`, 504);
+    }
+    return new AppError(`Could not reach Immich to ${action}.`, 502);
+  }
+  return new AppError(`Failed to ${action}: ${getErrorMessage(error)}`, 502);
 }
 
 /**
@@ -584,6 +711,172 @@ class ImmichService {
         responseData ? `- Immich response: ${JSON.stringify(responseData)}` : ''
       );
       throw new AppError('Failed to fetch assets by date range', 500);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Filtered browsing, album linking and album export
+  // ---------------------------------------------------------------------------
+
+  /**
+   * One page of the Immich library with server-side filtering.
+   *
+   * `page` is Immich's own 1-based page number, so paging never downloads
+   * anything before the requested page. The response is validated; an
+   * unexpected shape fails loudly rather than reading as "no photos".
+   */
+  async searchAssetsPage(
+    apiUrl: string,
+    apiKey: string,
+    filters: ImmichAssetFilters,
+    page: number,
+    size: number
+  ): Promise<ImmichAssetsPage> {
+    const body: Record<string, unknown> = {
+      page,
+      size: Math.min(Math.max(1, size), IMMICH_MAX_PAGE_SIZE),
+      withExif: true,
+      order: 'desc',
+    };
+    if (filters.takenAfter) body.takenAfter = filters.takenAfter;
+    if (filters.takenBefore) body.takenBefore = filters.takenBefore;
+    // Immich treats isFavorite=false as "only non-favourites", which is never
+    // what a "favourites only" checkbox being off means.
+    if (filters.isFavorite === true) body.isFavorite = true;
+    if (filters.type) body.type = filters.type;
+    if (filters.albumId) body.albumIds = [filters.albumId];
+    if (filters.text?.trim()) body.originalFileName = filters.text.trim();
+
+    try {
+      const client = this.createClient(apiUrl, apiKey);
+      const response = await client.post('/api/search/metadata', body);
+      const parsed = immichSearchPageSchema.safeParse(response.data);
+      if (!parsed.success) {
+        throw new AppError('Immich returned an unexpected response while searching your library', 502);
+      }
+      const rawNext = parsed.data.assets.nextPage;
+      const next = rawNext === null || rawNext === undefined ? NaN : Number(rawNext);
+      return {
+        assets: parsed.data.assets.items,
+        nextPage: Number.isFinite(next) && next > page ? next : null,
+      };
+    } catch (error: unknown) {
+      throw toImmichAppError(error, 'search your library');
+    }
+  }
+
+  /**
+   * Walk the pages of a filter and collect assets, stopping at `maxAssets`.
+   * `capped` is true when more matching assets exist than were returned.
+   */
+  async collectAssets(
+    apiUrl: string,
+    apiKey: string,
+    filters: ImmichAssetFilters,
+    maxAssets: number
+  ): Promise<{ assets: ImmichAssetView[]; capped: boolean }> {
+    const assets: ImmichAssetView[] = [];
+    let page = 1;
+    const maxPages = Math.ceil(maxAssets / IMMICH_MAX_PAGE_SIZE) + 2;
+    for (let fetched = 0; fetched < maxPages; fetched++) {
+      const result = await this.searchAssetsPage(apiUrl, apiKey, filters, page, IMMICH_MAX_PAGE_SIZE);
+      assets.push(...result.assets);
+      if (assets.length > maxAssets) {
+        return { assets: assets.slice(0, maxAssets), capped: true };
+      }
+      if (result.nextPage === null || result.assets.length === 0) {
+        return { assets, capped: false };
+      }
+      page = result.nextPage;
+    }
+    // Ran out of pages before Immich stopped offering them.
+    return { assets: assets.slice(0, maxAssets), capped: true };
+  }
+
+  /**
+   * An Immich album with its assets, validated. Uses GET /api/albums/:id, which
+   * exists on every Immich version the app supports (unlike the albumIds
+   * search filter), so a failed filter can never be mistaken for "the album".
+   */
+  async getAlbumDetail(
+    apiUrl: string,
+    apiKey: string,
+    albumId: string,
+    options?: { withoutAssets?: boolean }
+  ): Promise<ImmichAlbumDetail> {
+    try {
+      const client = this.createClient(apiUrl, apiKey);
+      // Servers that predate `withoutAssets` ignore it and send the assets anyway.
+      const response = await client.get(`/api/albums/${encodeURIComponent(albumId)}`, {
+        params: options?.withoutAssets ? { withoutAssets: true } : undefined,
+      });
+      const parsed = immichAlbumDetailSchema.safeParse(response.data);
+      if (!parsed.success) {
+        throw new AppError('Immich returned an unexpected response for that album', 502);
+      }
+      return parsed.data;
+    } catch (error: unknown) {
+      throw toImmichAppError(error, 'read the Immich album');
+    }
+  }
+
+  /** Create an empty album in Immich (POST /api/albums). Writes to the user's library. */
+  async createAlbum(
+    apiUrl: string,
+    apiKey: string,
+    albumName: string,
+    description?: string | null
+  ): Promise<{ id: string; albumName: string }> {
+    try {
+      const client = this.createClient(apiUrl, apiKey);
+      const response = await client.post('/api/albums', {
+        albumName,
+        ...(description ? { description } : {}),
+      });
+      const parsed = immichAlbumSummarySchema.safeParse(response.data);
+      if (!parsed.success) {
+        throw new AppError('Immich returned an unexpected response after creating the album', 502);
+      }
+      return { id: parsed.data.id, albumName: parsed.data.albumName };
+    } catch (error: unknown) {
+      throw toImmichAppError(error, 'create the album');
+    }
+  }
+
+  /**
+   * Add assets to an existing Immich album (PUT /api/albums/:id/assets), in
+   * chunks. Only ever adds; there is deliberately no remove counterpart.
+   */
+  async addAssetsToAlbum(
+    apiUrl: string,
+    apiKey: string,
+    albumId: string,
+    assetIds: string[]
+  ): Promise<ImmichAddAssetsResult> {
+    const result: ImmichAddAssetsResult = { added: 0, alreadyInAlbum: 0, failed: [] };
+    const CHUNK = 500;
+    try {
+      const client = this.createClient(apiUrl, apiKey);
+      for (let i = 0; i < assetIds.length; i += CHUNK) {
+        const ids = assetIds.slice(i, i + CHUNK);
+        const response = await client.put(`/api/albums/${encodeURIComponent(albumId)}/assets`, { ids });
+        const parsed = immichAddAssetsResultSchema.safeParse(response.data);
+        if (!parsed.success) {
+          throw new AppError('Immich returned an unexpected response while adding assets to the album', 502);
+        }
+        for (const entry of parsed.data) {
+          if (entry.success) {
+            result.added += 1;
+          } else if (entry.error === 'duplicate') {
+            result.alreadyInAlbum += 1;
+          } else {
+            result.failed.push({ id: entry.id, error: entry.error ?? 'unknown' });
+          }
+        }
+      }
+      return result;
+    } catch (error: unknown) {
+      throw toImmichAppError(error, 'add photos to the Immich album');
     }
   }
 

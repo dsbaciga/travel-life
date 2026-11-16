@@ -602,8 +602,11 @@ class PhotoService {
         const batchAssetIds = batch.map((asset) => asset.immichAssetId);
         const { createResult, createdPhotos } = await prisma.$transaction(async (tx) => {
           // Create photos in batch
+          // skipDuplicates: a concurrent run (double click, two tabs) that links
+          // the same asset must not fail the whole batch on the unique index.
           const createResult = await tx.photo.createMany({
             data: photosToCreate,
+            skipDuplicates: true,
           });
 
           // Query for the created photo IDs (needed for album assignment)

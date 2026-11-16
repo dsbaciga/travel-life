@@ -1,8 +1,16 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import immichService from "../services/immich.service";
-import type { ImmichAsset, ImmichAlbum } from "../types/immich";
+import type {
+  ImmichAsset,
+  ImmichAlbum,
+  ImmichFilters,
+  ImmichBulkSummary,
+} from "../types/immich";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
+import { extractDatePortion } from "../utils/timezone";
+import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
+import ImmichBulkImportDialog from "./ImmichBulkImportDialog";
 
 interface ImmichBrowserProps {
   onSelect: (assets: ImmichAsset[]) => Promise<void>;
@@ -10,14 +18,28 @@ interface ImmichBrowserProps {
   onClose: () => void;
   tripStartDate?: string;
   tripEndDate?: string;
+  /** The trip's timezone; the date filters are read as whole days in it. */
+  tripTimezone?: string | null;
+  /** Assets to hide entirely (for example ones already on the entry being edited). */
   excludeAssetIds?: Set<string>;
+  /** Assets to show but mark as already linked and keep from being selected. */
+  linkedAssetIds?: Set<string>;
   /** Hide videos and keep them out of "select all", for callers that only accept still photos. */
   imagesOnly?: boolean;
+  /**
+   * The trip photos are being linked to. Lets the server flag assets that are
+   * already linked, and enables "Link all matching" (with `onBulkImported`).
+   */
+  tripId?: number;
+  /** Called after a bulk import so the caller can refresh its photo lists. */
+  onBulkImported?: (summary: ImmichBulkSummary) => void;
 }
 
 interface ThumbnailCache {
   [assetId: string]: string; // Maps asset ID to blob URL
 }
+
+const ITEMS_PER_PAGE = 50;
 
 // Immich's API documents `duration` as a "HH:MM:SS.sss" string, but some
 // server versions/endpoints have been observed returning it as a plain
@@ -52,23 +74,55 @@ function requireArrayField<T>(value: T[] | null | undefined, fieldName: string):
   return value;
 }
 
+const tabClass = (active: boolean) =>
+  `px-4 py-2 rounded-lg transition-colors ${
+    active
+      ? "bg-blue-600 text-white"
+      : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
+  }`;
+
+const secondaryButtonClass =
+  "px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed";
+
 export default function ImmichBrowser({
   onSelect,
   onImportAlbum,
   onClose,
   tripStartDate,
   tripEndDate,
+  tripTimezone,
   excludeAssetIds,
+  linkedAssetIds,
   imagesOnly = false,
+  tripId,
+  onBulkImported,
 }: ImmichBrowserProps) {
+  const resolveTz = useTimezoneResolver();
+
+  // The trip's start/end are date-only values: take the calendar day as written
+  // and never run them through a timezone conversion.
+  const tripDates = useMemo(
+    () =>
+      tripStartDate && tripEndDate
+        ? { from: extractDatePortion(tripStartDate), to: extractDatePortion(tripEndDate) }
+        : null,
+    [tripStartDate, tripEndDate]
+  );
+
   const [assets, setAssets] = useState<ImmichAsset[]>([]);
   const [albums, setAlbums] = useState<ImmichAlbum[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [view, setView] = useState<"assets" | "albums">("assets");
-  const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [albumSearchTerm, setAlbumSearchTerm] = useState("");
-  const [filterByTripDates, setFilterByTripDates] = useState(true);
+  // Filters start on the trip's dates when the caller knows them, as before.
+  const [filters, setFilters] = useState<ImmichFilters>(() => ({
+    dateFrom: tripDates?.from,
+    dateTo: tripDates?.to,
+  }));
+  // What is typed in the search box; it becomes a filter on Search / Enter.
+  const [searchText, setSearchText] = useState("");
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
   // Use only Map for selection (stores both ID and data, avoiding redundant Set)
   const [selectedAssetsMap, setSelectedAssetsMap] = useState<Map<string, ImmichAsset>>(
     new Map()
@@ -80,15 +134,36 @@ export default function ImmichBrowser({
   const thumbnailCacheRef = useRef<ThumbnailCache>({});
   // Track blob URLs for cleanup (avoids stale closure issues)
   const blobUrlsRef = useRef<string[]>([]);
+  // Only the newest request may write results, so a slow earlier page cannot
+  // overwrite the page the user has since moved to.
+  const requestIdRef = useRef(0);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreAssets, setHasMoreAssets] = useState(false);
-  const ITEMS_PER_PAGE = 50;
+  const [reloadKey, setReloadKey] = useState(0);
   const [isLinking, setIsLinking] = useState(false);
-  const [isLoadingAll, setIsLoadingAll] = useState(false);
 
-  // Filter albums based on search term
+  const effectiveFilters = useMemo<ImmichFilters>(() => {
+    const next: ImmichFilters = { ...filters };
+    if (imagesOnly) next.type = "IMAGE";
+    if (next.dateFrom || next.dateTo) next.timezone = resolveTz(tripTimezone);
+    return next;
+  }, [filters, imagesOnly, resolveTz, tripTimezone]);
+
+  const updateFilters = (patch: Partial<ImmichFilters>) => {
+    setFilters((prev) => ({ ...prev, ...patch }));
+    setCurrentPage(1);
+  };
+
+  const submitSearch = () => {
+    updateFilters({ text: searchText.trim() || undefined });
+  };
+
+  const isAssetLinked = useCallback(
+    (asset: ImmichAsset) => Boolean(asset.alreadyLinked || linkedAssetIds?.has(asset.id)),
+    [linkedAssetIds]
+  );
+
   const filteredAlbums = useMemo(() => {
     if (!albumSearchTerm.trim()) {
       return albums;
@@ -98,7 +173,8 @@ export default function ImmichBrowser({
     );
   }, [albums, albumSearchTerm]);
 
-  // Filter assets to exclude already-linked photos (and videos, when imagesOnly)
+  // Hide excluded assets (and videos, when imagesOnly). Already-linked assets
+  // stay visible, marked, so the user can see what a trip already has.
   const displayAssets = useMemo(() => {
     const candidates = imagesOnly ? assets.filter((asset) => asset.type !== "VIDEO") : assets;
     if (!excludeAssetIds || excludeAssetIds.size === 0) {
@@ -107,15 +183,10 @@ export default function ImmichBrowser({
     return candidates.filter((asset) => !excludeAssetIds.has(asset.id));
   }, [assets, excludeAssetIds, imagesOnly]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [view, selectedAlbum, filterByTripDates]);
-
-  // Debug: Log selection changes
-  useEffect(() => {
-    console.log(`[ImmichBrowser] Selection state changed: ${selectedAssetsMap.size} photos selected`);
-  }, [selectedAssetsMap]);
+  const selectableAssets = useMemo(
+    () => displayAssets.filter((asset) => !isAssetLinked(asset)),
+    [displayAssets, isAssetLinked]
+  );
 
   // Keep the ref in sync so other effects can read the latest cache
   // without needing to depend on (and re-run for) every cache update.
@@ -189,90 +260,59 @@ export default function ImmichBrowser({
     };
   }, []);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const skip = (currentPage - 1) * ITEMS_PER_PAGE;
-      const take = ITEMS_PER_PAGE;
-
-      if (view === "albums") {
-        console.log("[ImmichBrowser] Loading albums");
-        const result = await immichService.getAlbums(false);
-        setAlbums(requireArrayField(result.albums, "albums"));
-        setHasMoreAssets(false); // Albums don't have pagination yet
-      } else if (selectedAlbum) {
-        console.log("[ImmichBrowser] Loading album:", selectedAlbum);
-        const album = await immichService.getAlbumById(selectedAlbum);
-        setAssets(requireArrayField(album.assets, "assets"));
-        setHasMoreAssets(false);
-      } else if (filterByTripDates && tripStartDate && tripEndDate) {
-        console.log(
-          `[ImmichBrowser] Loading assets by date range (page ${currentPage}):`,
-          tripStartDate,
-          "to",
-          tripEndDate
-        );
-        const result = await immichService.getAssetsByDateRange(
-          tripStartDate,
-          tripEndDate,
-          { skip, take }
-        );
-        console.log(
-          "[ImmichBrowser] Received assets:",
-          result.assets?.length || 0,
-          "hasMore:",
-          result.hasMore
-        );
-        if (result.assets && result.assets.length > 0) {
-          console.log("[ImmichBrowser] First asset sample:", {
-            id: result.assets[0].id,
-            thumbnailUrl: result.assets[0].thumbnailUrl,
-            type: result.assets[0].type,
-          });
-        }
-        setAssets(requireArrayField(result.assets, "assets"));
-        setHasMoreAssets(result.hasMore);
-      } else {
-        console.log(
-          `[ImmichBrowser] Loading all assets (page ${currentPage}, no date filter)`
-        );
-        const result = await immichService.getAssets({ skip, take });
-        setAssets(requireArrayField(result.assets, "assets"));
-        setHasMoreAssets(result.hasMore);
-      }
-    } catch (error) {
-      console.error("[ImmichBrowser] Failed to load Immich data:", error);
-      alert(
-        "Failed to load photos from Immich. Please check your Immich settings."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, view, selectedAlbum, filterByTripDates, tripStartDate, tripEndDate]);
-
-  // Load data when page or filters change
+  // The album list feeds both the Albums tab and the album filter.
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let cancelled = false;
+    immichService
+      .getAlbums(false)
+      .then((result) => {
+        if (!cancelled) setAlbums(requireArrayField(result.albums, "albums"));
+      })
+      .catch((error) => {
+        console.error("[ImmichBrowser] Failed to load albums:", error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      loadData();
-      return;
-    }
-
+  // One server-side filtered page. Changing a filter, the page, or the
+  // reload key fetches again; nothing is downloaded ahead of the page shown.
+  useEffect(() => {
+    if (view !== "assets") return;
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
-    try {
-      const result = await immichService.searchAssets({ searchTerm });
-      setAssets(requireArrayField(result.assets, "assets"));
-    } catch (error) {
-      console.error("Failed to search:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setLoadError(null);
+    immichService
+      .queryAssets({
+        filters: effectiveFilters,
+        page: currentPage,
+        size: ITEMS_PER_PAGE,
+        tripId,
+      })
+      .then((result) => {
+        if (requestId !== requestIdRef.current) return;
+        setAssets(requireArrayField(result.assets, "assets"));
+        setHasMoreAssets(Boolean(result.hasMore));
+      })
+      .catch((error: unknown) => {
+        if (requestId !== requestIdRef.current) return;
+        console.error("[ImmichBrowser] Failed to load Immich data:", error);
+        setAssets([]);
+        setHasMoreAssets(false);
+        setLoadError(
+          error instanceof Error && error.message
+            ? error.message
+            : "Failed to load photos from Immich. Please check your Immich settings."
+        );
+      })
+      .finally(() => {
+        if (requestId === requestIdRef.current) setIsLoading(false);
+      });
+  }, [view, effectiveFilters, currentPage, tripId, reloadKey]);
 
   const handleSelectAsset = (asset: ImmichAsset) => {
+    if (isAssetLinked(asset)) return;
     setSelectedAssetsMap((prev) => {
       const newMap = new Map(prev);
       if (newMap.has(asset.id)) {
@@ -285,13 +325,14 @@ export default function ImmichBrowser({
   };
 
   const handleConfirmSelection = async () => {
+    if (isLinking) return;
     const selectedAssets = Array.from(selectedAssetsMap.values());
     if (selectedAssets.length > 0) {
       setIsLinking(true);
       try {
         await onSelect(selectedAssets);
       } catch (error) {
-        console.error('[ImmichBrowser] Error during photo linking:', error);
+        console.error("[ImmichBrowser] Error during photo linking:", error);
       } finally {
         setIsLinking(false);
       }
@@ -301,7 +342,7 @@ export default function ImmichBrowser({
   const handleSelectAllOnPage = () => {
     setSelectedAssetsMap((prev) => {
       const newMap = new Map(prev);
-      displayAssets.forEach((asset) => newMap.set(asset.id, asset));
+      selectableAssets.forEach((asset) => newMap.set(asset.id, asset));
       return newMap;
     });
   };
@@ -314,75 +355,17 @@ export default function ImmichBrowser({
     });
   };
 
-  const handleSelectAll = async () => {
-    console.log('[ImmichBrowser] handleSelectAll called', {
-      filterByTripDates,
-      tripStartDate,
-      tripEndDate,
-      hasMoreAssets,
-    });
-
-    if (!filterByTripDates || !tripStartDate || !tripEndDate) {
-      // If not filtering by trip dates, just select all on page
-      console.log('[ImmichBrowser] Filter not active, selecting only current page');
-      handleSelectAllOnPage();
-      return;
-    }
-
-    setIsLoadingAll(true);
-    try {
-      console.log(`[ImmichBrowser] Fetching ALL assets in date range: ${tripStartDate} to ${tripEndDate}`);
-      // Fetch ALL assets for the date range (no pagination)
-      const result = await immichService.getAssetsByDateRange(
-        tripStartDate,
-        tripEndDate
-      );
-
-      const allAssets = requireArrayField(result.assets, "assets");
-      console.log(`[ImmichBrowser] Loaded ${allAssets.length} total assets for selection`);
-
-      // Filter out already-linked assets
-      const assetsToSelect = allAssets.filter(
-        (asset) =>
-          !(excludeAssetIds && excludeAssetIds.has(asset.id)) &&
-          !(imagesOnly && asset.type === "VIDEO")
-      );
-
-      console.log(`[ImmichBrowser] After filtering already-linked: ${assetsToSelect.length} assets to select (excluded ${allAssets.length - assetsToSelect.length})`);
-
-      // Add all to selection
-      setSelectedAssetsMap((prev) => {
-        const newMap = new Map(prev);
-        assetsToSelect.forEach((asset) => newMap.set(asset.id, asset));
-        console.log(`[ImmichBrowser] State update: prev size=${prev.size}, new size=${newMap.size}`);
-        return newMap;
-      });
-
-      console.log(`[ImmichBrowser] Selection complete. Requested ${assetsToSelect.length} assets to be added`);
-    } catch (error) {
-      console.error("[ImmichBrowser] Failed to load all assets:", error);
-      alert("Failed to load all photos. Please try again.");
-    } finally {
-      setIsLoadingAll(false);
-    }
-  };
-
   const handleDeselectAll = () => {
     setSelectedAssetsMap(new Map());
   };
 
   const allPageAssetsSelected =
-    displayAssets.length > 0 &&
-    displayAssets.every((asset) => selectedAssetsMap.has(asset.id));
+    selectableAssets.length > 0 &&
+    selectableAssets.every((asset) => selectedAssetsMap.has(asset.id));
 
-  const handleAlbumClick = (albumId: string) => {
-    setSelectedAlbum(albumId);
+  const handleBrowseAlbum = (albumId: string) => {
+    updateFilters({ albumId });
     setView("assets");
-  };
-
-  const handleBackToAssets = () => {
-    setSelectedAlbum(null);
-    loadData();
   };
 
   const handleImportAlbumClick = async (album: ImmichAlbum) => {
@@ -407,6 +390,23 @@ export default function ImmichBrowser({
       setIsLoading(false);
     }
   };
+
+  const bulkEnabled = tripId !== undefined && Boolean(onBulkImported) && !imagesOnly;
+  const activeAlbumName = filters.albumId
+    ? albums.find((album) => album.id === filters.albumId)?.albumName
+    : undefined;
+  const datesMatchTrip =
+    tripDates !== null &&
+    filters.dateFrom === tripDates.from &&
+    filters.dateTo === tripDates.to;
+  const hasActiveFilters = Boolean(
+    filters.dateFrom ||
+      filters.dateTo ||
+      filters.isFavorite ||
+      filters.type ||
+      filters.albumId ||
+      filters.text
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-4">
@@ -443,72 +443,137 @@ export default function ImmichBrowser({
 
           {/* View Tabs */}
           <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setView("assets")}
-              type="button"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                view === "assets"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
-              }`}
-            >
+            <button onClick={() => setView("assets")} type="button" className={tabClass(view === "assets")}>
               All Photos
             </button>
-            <button
-              onClick={() => setView("albums")}
-              type="button"
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                view === "albums"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
-              }`}
-            >
+            <button onClick={() => setView("albums")} type="button" className={tabClass(view === "albums")}>
               Albums
             </button>
-            {selectedAlbum && (
-              <button
-                onClick={handleBackToAssets}
-                type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors"
-              >
-                ← Back to All Photos
-              </button>
-            )}
           </div>
 
           {/* Search and Filters */}
           {view === "assets" && (
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex gap-2 flex-1">
+            <div className="space-y-3" role="search" aria-label="Filter Immich photos">
+              <div className="flex gap-2">
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="Search photos..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && submitSearch()}
+                  placeholder="Search by file name..."
                   aria-label="Search assets"
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
                 />
                 <button
-                  onClick={handleSearch}
+                  onClick={submitSearch}
                   type="button"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
                 >
                   Search
                 </button>
               </div>
-              {tripStartDate && tripEndDate && (
-                <label className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-dusk-700 rounded-lg cursor-pointer flex-shrink-0">
+
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="flex flex-col text-xs text-gray-600 dark:text-dusk-400">
+                  From
+                  <input
+                    type="date"
+                    value={filters.dateFrom ?? ""}
+                    max={filters.dateTo || undefined}
+                    onChange={(e) => updateFilters({ dateFrom: e.target.value || undefined })}
+                    aria-label="From date"
+                    className="input mt-1"
+                  />
+                </label>
+                <label className="flex flex-col text-xs text-gray-600 dark:text-dusk-400">
+                  To
+                  <input
+                    type="date"
+                    value={filters.dateTo ?? ""}
+                    min={filters.dateFrom || undefined}
+                    onChange={(e) => updateFilters({ dateTo: e.target.value || undefined })}
+                    aria-label="To date"
+                    className="input mt-1"
+                  />
+                </label>
+                {tripDates && (
+                  <button
+                    type="button"
+                    onClick={() => updateFilters({ dateFrom: tripDates.from, dateTo: tripDates.to })}
+                    aria-pressed={datesMatchTrip}
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                      datesMatchTrip
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600"
+                    }`}
+                  >
+                    This trip&apos;s dates
+                  </button>
+                )}
+                <label className="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-dusk-700 rounded-lg cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={filterByTripDates}
-                    onChange={(e) => setFilterByTripDates(e.target.checked)}
+                    checked={Boolean(filters.isFavorite)}
+                    onChange={(e) => updateFilters({ isFavorite: e.target.checked || undefined })}
                     className="rounded"
                   />
                   <span className="text-sm text-gray-700 dark:text-dusk-300 whitespace-nowrap">
-                    {filterByTripDates ? "Trip dates only" : "Show all photos"}
+                    Favourites only
                   </span>
                 </label>
+                {!imagesOnly && (
+                  <label className="flex flex-col text-xs text-gray-600 dark:text-dusk-400">
+                    Type
+                    <select
+                      value={filters.type ?? ""}
+                      onChange={(e) =>
+                        updateFilters({
+                          type: e.target.value === "IMAGE" || e.target.value === "VIDEO" ? e.target.value : undefined,
+                        })
+                      }
+                      aria-label="Media type"
+                      className="input mt-1"
+                    >
+                      <option value="">Photos and videos</option>
+                      <option value="IMAGE">Photos</option>
+                      <option value="VIDEO">Videos</option>
+                    </select>
+                  </label>
+                )}
+                <label className="flex flex-col text-xs text-gray-600 dark:text-dusk-400">
+                  Immich album
+                  <select
+                    value={filters.albumId ?? ""}
+                    onChange={(e) => updateFilters({ albumId: e.target.value || undefined })}
+                    aria-label="Immich album"
+                    className="input mt-1 max-w-[14rem]"
+                  >
+                    <option value="">Any album</option>
+                    {albums.map((album) => (
+                      <option key={album.id} value={album.id}>
+                        {album.albumName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilters({});
+                      setSearchText("");
+                      setCurrentPage(1);
+                    }}
+                    className={secondaryButtonClass}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              {filters.albumId && (
+                <p className="text-xs text-gray-600 dark:text-dusk-400">
+                  Showing album {activeAlbumName ? `"${activeAlbumName}"` : "from Immich"}
+                </p>
               )}
             </div>
           )}
@@ -528,44 +593,58 @@ export default function ImmichBrowser({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          {isLoading ? (
+          {view === "albums" ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+                {filteredAlbums.map((album) => (
+                  <div
+                    key={album.id}
+                    className="p-4 bg-gray-100 dark:bg-dusk-700 rounded-lg transition-colors flex flex-col"
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white mb-1 break-words">
+                      {album.albumName}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-dusk-400 mb-3 flex-grow">
+                      {album.assetCount}{" "}
+                      {album.assetCount === 1 ? "photo" : "photos"}
+                    </div>
+                    <div className="flex gap-2">
+                      {onImportAlbum && (
+                        <button
+                          onClick={() => handleImportAlbumClick(album)}
+                          type="button"
+                          className="flex-1 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
+                        >
+                          Import
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleBrowseAlbum(album.id)}
+                        type="button"
+                        className="flex-1 px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                      >
+                        Browse
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {filteredAlbums.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 dark:text-dusk-400">No albums found</p>
+                </div>
+              )}
+            </>
+          ) : isLoading ? (
             <div className="flex justify-center items-center h-full">
               <p className="text-gray-600 dark:text-dusk-400">Loading</p>
             </div>
-          ) : view === "albums" ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-              {filteredAlbums.map((album) => (
-                <div
-                  key={album.id}
-                  className="p-4 bg-gray-100 dark:bg-dusk-700 rounded-lg transition-colors flex flex-col"
-                >
-                  <div className="font-semibold text-gray-900 dark:text-white mb-1 break-words">
-                    {album.albumName}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-dusk-400 mb-3 flex-grow">
-                    {album.assetCount}{" "}
-                    {album.assetCount === 1 ? "photo" : "photos"}
-                  </div>
-                  <div className="flex gap-2">
-                    {onImportAlbum && (
-                      <button
-                        onClick={() => handleImportAlbumClick(album)}
-                        type="button"
-                        className="flex-1 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
-                      >
-                        Import
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleAlbumClick(album.id)}
-                      type="button"
-                      className="flex-1 px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                    >
-                      Browse
-                    </button>
-                  </div>
-                </div>
-              ))}
+          ) : loadError ? (
+            <div className="text-center py-12" role="alert">
+              <p className="text-red-600 dark:text-red-400 mb-3">{loadError}</p>
+              <button type="button" onClick={() => setReloadKey((k) => k + 1)} className={secondaryButtonClass}>
+                Try again
+              </button>
             </div>
           ) : (
             <>
@@ -573,92 +652,74 @@ export default function ImmichBrowser({
               {displayAssets.length > 0 && (
                 <div className="mb-4 flex flex-wrap gap-2">
                   <button
-                    onClick={
-                      allPageAssetsSelected
-                        ? handleDeselectAllOnPage
-                        : handleSelectAllOnPage
-                    }
+                    onClick={allPageAssetsSelected ? handleDeselectAllOnPage : handleSelectAllOnPage}
+                    disabled={selectableAssets.length === 0}
                     type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors text-sm"
+                    className={secondaryButtonClass}
                   >
-                    {allPageAssetsSelected
-                      ? "Deselect All on Page"
-                      : "Select All on Page"}
+                    {allPageAssetsSelected ? "Deselect All on Page" : "Select All on Page"}
                   </button>
-                  {filterByTripDates && tripStartDate && tripEndDate && (hasMoreAssets || displayAssets.length > 0) && (
+                  {bulkEnabled && (
+                    <button
+                      onClick={() => setShowBulkDialog(true)}
+                      type="button"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                    >
+                      Link all matching...
+                    </button>
+                  )}
+                  {selectedAssetsMap.size > 0 && (
                     <>
                       <button
-                        onClick={handleSelectAll}
-                        disabled={isLoadingAll}
+                        onClick={handleDeselectAll}
                         type="button"
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
                       >
-                        {isLoadingAll ? "Loading" : "Select All Photos"}
+                        Deselect All
                       </button>
-                      {selectedAssetsMap.size > 0 && (
-                        <button
-                          onClick={handleDeselectAll}
-                          type="button"
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
-                        >
-                          Deselect All
-                        </button>
-                      )}
-                      {selectedAssetsMap.size > 0 && (
-                        <div className="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-lg text-sm font-medium">
-                          {selectedAssetsMap.size} selected
-                        </div>
-                      )}
+                      <div className="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-lg text-sm font-medium">
+                        {selectedAssetsMap.size} selected
+                      </div>
                     </>
                   )}
                 </div>
               )}
 
               {/* Pagination Controls - Top */}
-              {!isLoading && view === "assets" && (currentPage > 1 || hasMoreAssets) && (
-                <div className="flex justify-center items-center gap-4 mb-6">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-600 dark:text-dusk-400">
-                    Page {currentPage}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={!hasMoreAssets}
-                    type="button"
-                    className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
+              {(currentPage > 1 || hasMoreAssets) && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  hasMore={hasMoreAssets}
+                  onPrevious={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onNext={() => setCurrentPage((p) => p + 1)}
+                  className="mb-6"
+                />
               )}
 
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
-
                 {displayAssets.map((asset) => {
                   const blobUrl = thumbnailCache[asset.id];
+                  const linked = isAssetLinked(asset);
+                  const selected = selectedAssetsMap.has(asset.id);
                   return (
                     <button
                       key={asset.id}
                       onClick={() => handleSelectAsset(asset)}
                       type="button"
+                      aria-disabled={linked}
+                      aria-pressed={selected}
+                      title={linked ? "Already linked to this trip" : undefined}
                       className={`relative aspect-square rounded-lg overflow-hidden border-4 transition-transform ${
-                        selectedAssetsMap.has(asset.id)
+                        selected
                           ? "border-blue-600 shadow-lg scale-105"
                           : "border-transparent hover:border-gray-300 dark:hover:border-dusk-600"
-                      }`}
+                      } ${linked ? "cursor-default" : ""}`}
                     >
                       {blobUrl ? (
                         <img
                           src={blobUrl}
                           alt={asset.originalFileName}
-                          className="w-full h-full object-cover"
+                          className={`w-full h-full object-cover ${linked ? "opacity-50" : ""}`}
                           width={300}
                           height={300}
                           loading="lazy"
@@ -672,6 +733,21 @@ export default function ImmichBrowser({
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-dusk-700">
                           <div className="text-gray-400">Loading</div>
+                        </div>
+                      )}
+                      {linked && (
+                        <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-1.5 py-0.5 rounded">
+                          Linked
+                        </div>
+                      )}
+                      {asset.isFavorite && (
+                        <div
+                          className="absolute top-2 right-2 text-yellow-300 drop-shadow"
+                          aria-label="Favourite"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
                         </div>
                       )}
                       {asset.type === "VIDEO" && (
@@ -692,7 +768,7 @@ export default function ImmichBrowser({
                           )}
                         </>
                       )}
-                      {selectedAssetsMap.has(asset.id) && (
+                      {selected && (
                         <div className="absolute inset-0 bg-blue-600 bg-opacity-25 flex items-center justify-center">
                           <svg
                             className="w-12 h-12 text-white"
@@ -712,50 +788,30 @@ export default function ImmichBrowser({
                   );
                 })}
               </div>
+
+              {displayAssets.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 dark:text-dusk-400">
+                    {assets.length > 0
+                      ? "Everything on this page is already on the entry"
+                      : hasActiveFilters
+                        ? "No photos match these filters"
+                        : "No photos found"}
+                  </p>
+                </div>
+              )}
+
+              {/* Pagination Controls - Bottom */}
+              {(currentPage > 1 || hasMoreAssets) && (
+                <PaginationControls
+                  currentPage={currentPage}
+                  hasMore={hasMoreAssets}
+                  onPrevious={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onNext={() => setCurrentPage((p) => p + 1)}
+                  className="mt-6"
+                />
+              )}
             </>
-          )}
-
-          {!isLoading && displayAssets.length === 0 && view === "assets" && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-dusk-400">
-                {excludeAssetIds && excludeAssetIds.size > 0 && assets.length > 0
-                  ? "All photos on this page are already linked to this trip"
-                  : "No photos found"}
-              </p>
-            </div>
-          )}
-
-          {!isLoading && albums.length === 0 && view === "albums" && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-dusk-400">
-                No albums found
-              </p>
-            </div>
-          )}
-
-          {/* Pagination Controls - Bottom */}
-          {!isLoading && view === "assets" && (currentPage > 1 || hasMoreAssets) && (
-            <div className="flex justify-center items-center gap-4 mt-6">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-600 dark:text-dusk-400">
-                Page {currentPage}
-              </span>
-              <button
-                onClick={() => setCurrentPage((p) => p + 1)}
-                disabled={!hasMoreAssets}
-                type="button"
-                className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
           )}
         </div>
 
@@ -796,6 +852,55 @@ export default function ImmichBrowser({
           </div>
         </div>
       </div>
+
+      {showBulkDialog && tripId !== undefined && (
+        <ImmichBulkImportDialog
+          tripId={tripId}
+          filters={effectiveFilters}
+          onFinished={(summary) => {
+            onBulkImported?.(summary);
+            // Re-read the page so freshly linked assets show as linked.
+            setReloadKey((k) => k + 1);
+          }}
+          onClose={() => setShowBulkDialog(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function PaginationControls({
+  currentPage,
+  hasMore,
+  onPrevious,
+  onNext,
+  className,
+}: {
+  currentPage: number;
+  hasMore: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={`flex justify-center items-center gap-4 ${className ?? ""}`}>
+      <button
+        onClick={onPrevious}
+        disabled={currentPage === 1}
+        type="button"
+        className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-600 dark:text-dusk-400">Page {currentPage}</span>
+      <button
+        onClick={onNext}
+        disabled={!hasMore}
+        type="button"
+        className="px-4 py-2 bg-gray-200 dark:bg-dusk-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-300 dark:hover:bg-dusk-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
     </div>
   );
 }

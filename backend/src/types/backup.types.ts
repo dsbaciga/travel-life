@@ -406,6 +406,9 @@ const BackupPhotoAlbumSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   coverPhotoId: z.number().nullable().optional(),
+  // Link to an Immich album (optional: absent in backups made before album sync existed)
+  immichAlbumId: z.string().nullable().optional(),
+  immichAlbumSyncedAt: z.string().nullable().optional(),
   photos: z.array(BackupPhotoAlbumPhotoSchema).optional(),
 });
 

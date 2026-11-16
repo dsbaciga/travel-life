@@ -37,6 +37,9 @@ export type PhotoAlbum = {
   name: string;
   description: string | null;
   coverPhotoId: number | null;
+  /** Linked Immich album (manual sync); null when the album is not linked. */
+  immichAlbumId?: string | null;
+  immichAlbumSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   coverPhoto?: Photo;

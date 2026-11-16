@@ -3,6 +3,7 @@ import type { PhotoAlbum } from "../types/photo";
 import LinkButton from "./LinkButton";
 import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
 import MarkdownEditor from "./MarkdownEditor";
+import ImmichAlbumPanel from "./ImmichAlbumPanel";
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -201,6 +202,8 @@ export default function AlbumModal({
               </p>
             </div>
           )}
+
+          {isEdit && album && <ImmichAlbumPanel album={album} onChanged={onUpdate} />}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
