@@ -747,6 +747,7 @@ export class TripService {
             latitude: photo.latitude,
             longitude: photo.longitude,
             takenAt: photo.takenAt,
+            isFavorite: photo.isFavorite,
           },
         });
         photoIdMap.set(photo.id, newPhoto.id);
@@ -830,6 +831,7 @@ export class TripService {
             seatNumber: transport.seatNumber,
             bookingReference: transport.bookingReference,
             bookingUrl: transport.bookingUrl,
+            loyaltyProgramId: transport.loyaltyProgramId,
             cost: transport.cost,
             currency: transport.currency,
             status: 'on_time',
@@ -873,6 +875,7 @@ export class TripService {
             timezone: lodging.timezone,
             confirmationNumber: lodging.confirmationNumber,
             bookingUrl: lodging.bookingUrl,
+            loyaltyProgramId: lodging.loyaltyProgramId,
             cost: lodging.cost,
             currency: lodging.currency,
             notes: lodging.notes,
