@@ -11,7 +11,7 @@ import type { Photo } from '../../types/photo';
 import { TripStatus } from '../../types/trip';
 import TripStats from '../TripStats';
 import RecentActivityCard from './RecentActivityCard';
-import NextUpCard from './NextUpCard';
+import TodayModeCard from './TodayModeCard';
 import TodaysItinerary from './TodaysItinerary';
 import ChecklistsWidget from './ChecklistsWidget';
 import CompanionsWidget from './CompanionsWidget';
@@ -305,14 +305,16 @@ export default function TripDashboard({
               onLocationClick={handleLocationClick}
             />
           )}
-          <NextUpCard
+          <TodayModeCard
+            tripId={trip.id}
             activities={activities}
             transportation={transportation}
             lodging={lodging}
+            locations={locations}
             tripStatus={trip.status}
             tripStartDate={trip.startDate}
             tripEndDate={trip.endDate}
-            tripTimezone={tripTimezone}
+            tripTimezone={trip.timezone}
             photosCount={photosCount}
             onNavigateToTab={onNavigateToTab}
           />

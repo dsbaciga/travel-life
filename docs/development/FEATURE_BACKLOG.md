@@ -1907,7 +1907,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Local vs home time side by side
 - Fully usable offline (builds on PWA + offline maps)
 
-**Status**: Not started
+**Status**: Done (frontend only: next-up card with live countdown, address, confirmation number and route; local and home clocks; renders from cached data offline)
 
 ### 118. Passport & Visa Validity Check
 
