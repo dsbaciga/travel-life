@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities';
 import tripStopService from '../../services/tripStop.service';
 import type { Location } from '../../types/location';
 import { useUnits } from '../../hooks/useUnits';
+import { useTripEditAccess } from '../../hooks/useTripEditAccess';
 import AddStopPanel from './AddStopPanel';
 import type { NewStopFromSearch } from './AddStopPanel';
 import type { TripStop } from '../../types/tripStop';
@@ -80,6 +81,8 @@ interface StopRowProps {
   returnVisit: boolean;
   index: number;
   count: number;
+  /** False for a view-only viewer: the row is read-only, with no handle, nights input or remove. */
+  canEdit: boolean;
   active: boolean;
   arrival: string | null;
   departure: string | null;
@@ -95,6 +98,7 @@ function StopRow({
   returnVisit,
   index,
   count,
+  canEdit,
   active,
   arrival,
   departure,
@@ -142,18 +146,20 @@ function StopRow({
         active ? 'border-gold ring-1 ring-gold/40' : 'border-primary-500/10 dark:border-navy-700'
       } ${isDragging ? 'shadow-lg opacity-90 relative z-10' : ''}`}
     >
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
-        aria-label={`Reorder ${stop.name}, stop ${index + 1} of ${count}. Press space to pick up, arrow keys to move.`}
-        className="flex-none min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate dark:text-dusk-400 hover:bg-primary-50 dark:hover:bg-navy-700 cursor-grab active:cursor-grabbing touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-        </svg>
-      </button>
+      {canEdit && (
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label={`Reorder ${stop.name}, stop ${index + 1} of ${count}. Press space to pick up, arrow keys to move.`}
+          className="flex-none min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate dark:text-dusk-400 hover:bg-primary-50 dark:hover:bg-navy-700 cursor-grab active:cursor-grabbing touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </button>
+      )}
 
       <span
         className="flex-none w-7 h-7 rounded-full bg-gold text-navy-900 flex items-center justify-center text-xs font-bold"
@@ -187,25 +193,33 @@ function StopRow({
         )}
       </div>
 
-      <label className="flex-none flex items-center gap-1 text-sm text-slate dark:text-dusk-300">
-        <span className="sr-only">Nights in {stop.name}</span>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={365}
-          value={nightsText}
-          placeholder="0"
-          onChange={(e) => setNightsText(e.target.value)}
-          onBlur={commitNights}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur();
-          }}
-          className="w-16 min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-2 text-center text-charcoal dark:text-white"
-        />
-        <span aria-hidden="true">nights</span>
-      </label>
+      {canEdit ? (
+        <label className="flex-none flex items-center gap-1 text-sm text-slate dark:text-dusk-300">
+          <span className="sr-only">Nights in {stop.name}</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={365}
+            value={nightsText}
+            placeholder="0"
+            onChange={(e) => setNightsText(e.target.value)}
+            onBlur={commitNights}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+            className="w-16 min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-2 text-center text-charcoal dark:text-white"
+          />
+          <span aria-hidden="true">nights</span>
+        </label>
+      ) : (
+        <span className="flex-none text-sm text-slate dark:text-dusk-300 tabular-nums">
+          {stop.nights ?? 0} {stop.nights === 1 ? 'night' : 'nights'}
+        </span>
+      )}
 
+      {canEdit && (
+      <>
       <div className="flex-none flex flex-col sm:flex-row">
         <button
           type="button"
@@ -246,6 +260,8 @@ function StopRow({
           />
         </svg>
       </button>
+      </>
+      )}
     </li>
   );
 }
@@ -259,6 +275,8 @@ function StopRow({
 export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locations }: RoutePlannerProps) {
   const queryClient = useQueryClient();
   const { formatDistance } = useUnits();
+  // False while loading and for view-only viewers, so editing controls never flash on.
+  const { canEdit } = useTripEditAccess(tripId);
   const key = stopsKey(tripId);
   const { data: stops = [], isLoading, isError } = useQuery({
     queryKey: key,
@@ -474,6 +492,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       {/* The list comes first in the DOM so it sits above the map on a phone. */}
       <div className="lg:grid lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-6">
         <div className="min-w-0">
+          {canEdit && (
           <AddStopPanel
             locations={locations}
             stops={stops}
@@ -490,12 +509,17 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
             }}
             disabled={busy}
           />
+          )}
 
           {stops.length === 0 ? (
             <EmptyState
               icon="🗺️"
               message="No stops yet"
-              subMessage="Search for the cities you plan to visit, then drag them into order."
+              subMessage={
+                canEdit
+                  ? 'Search for the cities you plan to visit, then drag them into order.'
+                  : 'No route has been planned for this trip.'
+              }
             />
           ) : (
             <>
@@ -537,6 +561,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                             }
                             index={index}
                             count={stops.length}
+                            canEdit={canEdit}
                             active={stop.id === activeId}
                             arrival={schedule[index]?.arrival ?? null}
                             departure={schedule[index]?.departure ?? null}
@@ -588,6 +613,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
               )}
 
               {/* Optimise */}
+              {canEdit && (
               <section className="mt-5" aria-labelledby="route-planner-optimise">
                 <h3 id="route-planner-optimise" className="text-sm font-semibold text-charcoal dark:text-warm-gray">
                   Optimise route
@@ -665,6 +691,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                   </p>
                 )}
               </section>
+              )}
             </>
           )}
         </div>

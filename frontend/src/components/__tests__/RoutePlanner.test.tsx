@@ -18,6 +18,8 @@
  * - RPL-014: Saved places without coordinates are disabled, with a reason
  * - RPL-015: Places that are already stops are marked, and can be added again
  * - RPL-016: A linked stop links to its saved place, and a repeat shows as a return visit
+ * - RPL-017: A view-only viewer sees the list, map, distances and totals but no editing controls
+ * - RPL-018: No editing controls show while the permission is still loading
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -44,11 +46,15 @@ vi.mock('../route-planner/RoutePlannerMap', () => ({
     <div data-testid="route-map">{stops.map((s) => s.name).join(',')}</div>
   ),
 }));
+vi.mock('../../services/collaboration.service', () => ({
+  default: { getPermissionLevel: vi.fn() },
+}));
 vi.mock('react-hot-toast', () => ({ default: { error: vi.fn(), success: vi.fn() } }));
 
 import RoutePlanner from '../route-planner/RoutePlanner';
 import tripStopService from '../../services/tripStop.service';
 import geocodingService from '../../services/geocoding.service';
+import collaborationService from '../../services/collaboration.service';
 import type { TripStop } from '../../types/tripStop';
 import type { Location } from '../../types/location';
 
@@ -134,6 +140,10 @@ describe('RoutePlanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setSystem('metric');
+    vi.mocked(collaborationService.getPermissionLevel).mockResolvedValue({
+      isOwner: true,
+      permissionLevel: 'admin',
+    });
   });
 
   it('RPL-001: lists stops with legs and totals', async () => {
@@ -420,5 +430,51 @@ describe('RoutePlanner', () => {
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute('href', `/trips/${TRIP_ID}?tab=locations&highlight=7`);
     expect(screen.getAllByText('Return visit')).toHaveLength(1);
+  });
+
+  it('RPL-017: a view-only viewer sees the plan but no editing controls', async () => {
+    vi.mocked(collaborationService.getPermissionLevel).mockResolvedValue({
+      isOwner: false,
+      permissionLevel: 'view',
+    });
+    renderPlanner(zigzag());
+
+    await screen.findByText('Lisbon');
+    // Give the permission query time to settle so a late edit control would show.
+    await waitFor(() => expect(collaborationService.getPermissionLevel).toHaveBeenCalled());
+
+    expect(listNames()).toEqual(['Lisbon', 'Warsaw', 'Madrid', 'Berlin', 'Paris']);
+    expect(screen.getByTestId('route-map')).toBeInTheDocument();
+    expect(screen.getByText('Distance')).toBeInTheDocument();
+    expect(screen.getByText('Nights')).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: /^Reorder / })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Move .* (earlier|later)$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Optimise route' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Optimise route')).not.toBeInTheDocument();
+    expect(screen.queryByText('Keep first stop')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/search/i)).not.toBeInTheDocument();
+  });
+
+  it('RPL-018: no editing controls flash while the permission is loading', async () => {
+    vi.mocked(collaborationService.getPermissionLevel).mockReturnValue(new Promise(() => {}));
+    renderPlanner(zigzag());
+
+    await screen.findByText('Lisbon');
+
+    expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Optimise route' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+  });
+
+  it('RPL-017b: an editor still gets the editing controls', async () => {
+    renderPlanner(zigzag());
+
+    expect(await screen.findByRole('button', { name: 'Remove Lisbon' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move Lisbon later' })).toBeInTheDocument();
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(5);
+    expect(screen.getByRole('button', { name: 'Optimise route' })).toBeInTheDocument();
   });
 });
