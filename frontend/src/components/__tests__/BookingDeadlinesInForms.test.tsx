@@ -338,6 +338,7 @@ describe('deadlines in the lodging and transportation forms', () => {
     endTimezone: null,
     carrier: null,
     vehicleNumber: null,
+    connectionGroupId: null,
     confirmationNumber: null,
     loyaltyProgramId: null,
     cost: null,
