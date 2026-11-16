@@ -27,6 +27,8 @@ interface UseDayJournalComposerOptions {
  * Render `composer` once at the top level of the view, never inside a menu or
  * popover: it holds a modal and must not unmount when a menu closes.
  */
+// The hook lives beside the actions it renders, so the two stay together.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useDayJournalComposer({
   tripId,
   tripStartDate,

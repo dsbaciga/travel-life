@@ -24,7 +24,11 @@ vi.mock('../../hooks/useTimezoneResolver', () => ({
 // What the Today card reports is under test elsewhere; here it is just a switch.
 let todayShowsClocks = true;
 vi.mock('./TodayModeCard', () => ({
-  default: ({ onClocksShownChange }: { onClocksShownChange?: (shown: boolean) => void }) => {
+  default: function MockTodayModeCard({
+    onClocksShownChange,
+  }: {
+    onClocksShownChange?: (shown: boolean) => void;
+  }) {
     useEffect(() => {
       onClocksShownChange?.(todayShowsClocks);
     }, [onClocksShownChange]);
