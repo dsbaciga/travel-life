@@ -296,6 +296,21 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | DELETE | `/:id` | Delete a journal entry | Yes |
 | POST | `/:id/ai-enhance` | AI-enhance a journal entry (rate limited) | Yes |
 
+### CSV Bulk Import (`/api/trips/:tripId/import`)
+
+Imports locations or activities from CSV rows. The browser parses the file and maps columns; every value is re-parsed and validated here with the same Zod schemas as the single-create endpoints. Requires edit access to the trip.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/locations` | Validate (`dryRun: true`) or create locations from rows | Yes |
+| POST | `/activities` | Validate (`dryRun: true`) or create activities from rows | Yes |
+
+Body: `{ rows: [...], dryRun?: boolean, excludeRows?: number[] }`. Rows are objects of raw strings (locations: `name`, `address`, `latitude`, `longitude`, `category`, `notes`, `openingHours`, `timezone`; activities: `name`, `description`, `category`, `location`, `startTime`, `endTime`, `timezone`, `allDay`, `cost`, `currency`, `bookingUrl`, `bookingReference`, `notes`). At most 500 rows and about 1 MB of JSON per request.
+
+Response: `{ dryRun, total, valid, invalid, excluded, created, rows: [{ index, status, errors, warnings, normalized }], tripTimezoneSet, defaultTimezone }`. Row `status` is `valid`, `invalid`, `excluded` or `created`. Errors block a row; warnings (unknown category, no coordinates, duplicates, unmatched location, cost without currency) do not. A real run creates all valid, non-excluded rows in one transaction; an unexpected failure creates nothing.
+
+Rules worth knowing: times without an offset are wall-clock times in the row timezone, else the trip timezone, else the user timezone (never UTC unless nothing is set); `YYYY-MM-DD HH:mm` and ISO 8601 are accepted and `03/04/2026` is rejected; costs are dot-decimal strings such as `1234.50`; address-only locations are imported without coordinates and are not geocoded; no OpenStreetMap opening-hours lookup is made during import.
+
 ### Entity Links (`/api/trips/:tripId/links`)
 
 Links connect any two entities (photos, locations, activities, lodging, transportation, journal entries, albums) within a trip.

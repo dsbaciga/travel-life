@@ -418,6 +418,8 @@ Good enhancements that improve the experience.
 - Preview before import
 - Error handling
 
+**Status**: ✅ Completed. Import locations or activities from the trip header (Import CSV): template download, column mapping with auto-match, a server dry-run preview with per-row errors, warnings and duplicate detection, and a result step with a downloadable error report. API: `POST /api/trips/:tripId/import/locations|activities`. See [API Reference](../api/README.md).
+
 ---
 
 ## 🎨 UI/UX Enhancements

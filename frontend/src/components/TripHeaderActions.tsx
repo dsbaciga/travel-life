@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { EllipsisVerticalIcon } from './icons';
 import PdfImportButton from './PdfImportButton';
 import PdfUploadModal from './PdfUploadModal';
+import BulkImportModal from './BulkImportModal';
 
 interface TripHeaderActionsProps {
   tripId: number;
@@ -32,6 +33,7 @@ export default function TripHeaderActions({
 }: TripHeaderActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
+  const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,6 +100,9 @@ export default function TripHeaderActions({
             <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); setIsPdfImportOpen(true); }}>
               Import PDF
             </button>
+            <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); setIsCsvImportOpen(true); }}>
+              Import CSV
+            </button>
             <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); onDuplicate(); }}>
               Duplicate trip
             </button>
@@ -148,6 +153,14 @@ export default function TripHeaderActions({
         </Link>
 
         <PdfImportButton tripId={tripId} />
+
+        <button
+          type="button"
+          onClick={() => setIsCsvImportOpen(true)}
+          className="btn btn-secondary flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 whitespace-nowrap"
+        >
+          Import CSV
+        </button>
       </div>
 
       {/* Launched from the phone menu, but rendered outside it: the menu's
@@ -161,6 +174,11 @@ export default function TripHeaderActions({
           onClose={() => setIsPdfImportOpen(false)}
           onComplete={() => setIsPdfImportOpen(false)}
         />
+      )}
+
+      {/* Same reason as the PDF dialog above: owned here, outside the phone menu. */}
+      {isCsvImportOpen && (
+        <BulkImportModal isOpen={isCsvImportOpen} onClose={() => setIsCsvImportOpen(false)} tripId={tripId} />
       )}
     </>
   );
