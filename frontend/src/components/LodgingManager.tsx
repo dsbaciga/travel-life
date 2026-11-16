@@ -12,6 +12,8 @@ import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
 import { useLinkedCreate } from "../hooks/useLinkedCreate";
 import { useSubmitLock } from "../hooks/useSubmitLock";
 import FormModal from "./FormModal";
+import BookingDeadlinesSection from "./BookingDeadlinesSection";
+import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
@@ -41,6 +43,7 @@ import BulkEditModal from "./BulkEditModal";
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
 import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
+import LoyaltyProgramField from "./LoyaltyProgramField";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
 
@@ -96,6 +99,7 @@ interface LodgingFormFields {
   checkOutDate: string;
   timezone: string;
   confirmationNumber: string;
+  loyaltyProgramId: number | null;
   bookingUrl: string;
   cost: string;
   currency: string;
@@ -114,6 +118,7 @@ const initialFormState: LodgingFormFields = {
   checkOutDate: "",
   timezone: "",
   confirmationNumber: "",
+  loyaltyProgramId: null,
   bookingUrl: "",
   cost: "",
   currency: "USD",
@@ -310,6 +315,7 @@ export default function LodgingManager({
     );
     handleChange("timezone", lodging.timezone || "");
     handleChange("confirmationNumber", lodging.confirmationNumber || "");
+    handleChange("loyaltyProgramId", lodging.loyaltyProgramId ?? null);
     handleChange("bookingUrl", lodging.bookingUrl || "");
     handleChange("cost", lodging.cost?.toString() || "");
     handleChange("currency", lodging.currency || "USD");
@@ -396,6 +402,7 @@ export default function LodgingManager({
   const editingLodging = manager.editingId
     ? manager.items.find((item) => item.id === manager.editingId) ?? null
     : null;
+  const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "lodging", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingLodging?.timezone, tripTimezone, onUpdate });
 
   // A second click while the first submit is still running (the request, then a list
   // reload, happen before the modal closes) would add the same thing twice.
@@ -411,6 +418,8 @@ export default function LodgingManager({
 
   const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // An uncommitted deadline row is added if complete, or blocks the save with a message on the row.
+    if (!deadlines.flushEditor()) return;
 
     if (!values.name.trim()) {
       toast.error("Name is required");
@@ -440,6 +449,7 @@ export default function LodgingManager({
         checkOutDate: checkOutDateISO,
         timezone: values.timezone || null,
         confirmationNumber: values.confirmationNumber || null,
+        loyaltyProgramId: values.loyaltyProgramId,
         bookingUrl: values.bookingUrl || null,
         cost: values.cost ? parseFloat(values.cost) : null,
         currency: values.currency || null,
@@ -447,6 +457,7 @@ export default function LodgingManager({
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        await deadlines.apply(manager.editingId, values.timezone || null);
         // Sync location link via shared hook (Pattern 14)
         await syncLocationLinkOnUpdate({
           tripId,
@@ -473,6 +484,7 @@ export default function LodgingManager({
         checkOutDate: checkOutDateISO,
         timezone: values.timezone || undefined,
         confirmationNumber: values.confirmationNumber || undefined,
+        loyaltyProgramId: values.loyaltyProgramId ?? undefined,
         bookingUrl: values.bookingUrl || undefined,
         cost: values.cost ? parseFloat(values.cost) : undefined,
         currency: values.currency || undefined,
@@ -496,6 +508,7 @@ export default function LodgingManager({
         // Call service directly to get the created lodging ID for linking
         const createdLodging = await lodgingService.createLodging(createData);
         toast.success('Lodging added successfully');
+        await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
         // Sync location link via shared hook (Pattern 14)
@@ -897,6 +910,12 @@ export default function LodgingManager({
                 }
                 onBookingUrlChange={(value) => handleChange("bookingUrl", value)}
               />
+              <LoyaltyProgramField
+                kind="lodging"
+                name={values.name}
+                value={values.loyaltyProgramId}
+                onChange={(id) => handleChange("loyaltyProgramId", id)}
+              />
             </FormSection>
 
             {/* Cost Section */}
@@ -919,6 +938,7 @@ export default function LodgingManager({
               compact
             />
           </CollapsibleSection>
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="lodging" editor={deadlines.editor} onEditorChange={deadlines.setEditor} editorError={deadlines.editorError} />
         </form>
         </FormModal>
 

@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { useUnits } from '../hooks/useUnits';
 import type { WeatherDisplay } from '../types/weather';
 import {
   getWeatherIcon,
-  formatTemperatureRange,
   formatPrecipitation,
   formatHumidity,
   formatWindSpeed,
@@ -10,7 +10,6 @@ import {
 
 interface WeatherCardProps {
   weather: WeatherDisplay;
-  temperatureUnit?: 'C' | 'F';
   compact?: boolean;
   tripTimezone?: string;
 }
@@ -43,18 +42,15 @@ function formatTimeInTimezone(isoDatetime: string | null, timezone?: string): st
 
 export default function WeatherCard({
   weather,
-  temperatureUnit = 'F',
   compact = true,
   tripTimezone,
 }: WeatherCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const icon = getWeatherIcon(weather.conditions);
-  const tempRange = formatTemperatureRange(
-    weather.high,
-    weather.low,
-    temperatureUnit
-  );
+  const { formatTemperature } = useUnits();
+  const fmt = (t: number | null) => (t === null ? '--' : formatTemperature(t));
+  const tempRange = `${fmt(weather.high)} / ${fmt(weather.low)}`;
 
   if (compact) {
     return (

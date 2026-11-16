@@ -103,6 +103,7 @@ export default function DayHeader({
   eventCount,
   isCollapsed,
   onToggleCollapse,
+  actions,
 }: DayHeaderProps) {
   const showDualTimezone = tripTimezone && userTimezone && tripTimezone !== userTimezone;
 
@@ -171,6 +172,7 @@ export default function DayHeader({
               </span>
             )}
           </div>
+          {actions && <div className="mt-2 print:hidden">{actions}</div>}
         </div>
 
         {/* Right side: Collapse toggle */}

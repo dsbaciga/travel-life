@@ -18,6 +18,8 @@ export type Photo = {
   duration: number | null; // Video duration in seconds
   caption: string | null;
   takenAt: string | null;
+  /** Starred by the owner; the favorites form the trip highlight set. */
+  isFavorite?: boolean;
   latitude: number | null;
   longitude: number | null;
   createdAt: string;
@@ -37,6 +39,9 @@ export type PhotoAlbum = {
   name: string;
   description: string | null;
   coverPhotoId: number | null;
+  /** Linked Immich album (manual sync); null when the album is not linked. */
+  immichAlbumId?: string | null;
+  immichAlbumSyncedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   coverPhoto?: Photo;
@@ -79,6 +84,7 @@ export type UpdatePhotoInput = {
   takenAt?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  isFavorite?: boolean;
 };
 
 // Note: Location, Activity, and Lodging associations are handled via EntityLink system, not direct FKs

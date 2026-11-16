@@ -19,6 +19,7 @@ import locationRoutes from './routes/location.routes';
 import photoRoutes from './routes/photo.routes';
 import photoAlbumRoutes from './routes/photoAlbum.routes';
 import activityRoutes from './routes/activity.routes';
+import bulkImportRoutes from './routes/bulkImport.routes';
 import customItemRoutes from './routes/customItem.routes';
 import transportationRoutes from './routes/transportation.routes';
 import lodgingRoutes from './routes/lodging.routes';
@@ -31,12 +32,14 @@ import checklistRoutes from './routes/checklist.routes';
 import airportRoutes from './routes/airport.routes';
 import searchRoutes from './routes/search.routes';
 import placesRoutes from './routes/places.routes';
+import tripComparisonRoutes from './routes/tripComparison.routes';
 import backupRoutes from './routes/backup.routes';
 import entityLinkRoutes from './routes/entityLink.routes';
 import collaborationRoutes from './routes/collaboration.routes';
 import flightTrackingRoutes from './routes/flightTracking.routes';
 import packingSuggestionRoutes from './routes/packingSuggestion.routes';
 import travelDocumentRoutes from './routes/travelDocument.routes';
+import loyaltyProgramRoutes from './routes/loyaltyProgram.routes';
 import languagePhraseRoutes from './routes/languagePhrase.routes';
 import userInvitationRoutes from './routes/userInvitation.routes';
 import tripSeriesRoutes from './routes/tripSeries.routes';
@@ -48,6 +51,7 @@ import publicShareRoutes from './routes/share.routes';
 import { generalRateLimiter } from './middleware/rateLimit';
 import expenseRoutes, { budgetSummaryRouter } from './routes/expense.routes';
 import bookingDeadlineRoutes, { upcomingDeadlinesRouter } from './routes/bookingDeadline.routes';
+import tripStopRoutes from './routes/tripStop.routes';
 import foodLogRoutes, { foodLogSearchRouter } from './routes/foodLog.routes';
 import savedLinkRoutes, { tripSavedLinksRouter } from './routes/savedLink.routes';
 import pushRoutes from './routes/push.routes';
@@ -328,6 +332,15 @@ const canReadUpload = async (userId: number, relPath: string): Promise<boolean> 
       });
       return self !== null;
     }
+    case 'receipts': {
+      // Receipt photos of expenses: anyone who can read the trip can read them.
+      // Never reachable through the public share routes.
+      const expense = await prisma.tripExpense.findFirst({
+        where: { receiptPath: storedUrl, trip: tripReadFilter(userId) },
+        select: { id: true },
+      });
+      return expense !== null;
+    }
     case 'pdfs': {
       const pdfImport = await prisma.pdfImport.findFirst({
         where: { storedPath: relPath, userId },
@@ -486,10 +499,13 @@ app.use('/api/checklists', checklistRoutes);
 app.use('/api/airports', airportRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/places', placesRoutes);
+app.use('/api/trip-comparison', tripComparisonRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/trips/:tripId/links', entityLinkRoutes);
+app.use('/api/trips/:tripId/import', bulkImportRoutes);
 app.use('/api/trips/:tripId/expenses', expenseRoutes);
 app.use('/api/trips/:tripId/deadlines', bookingDeadlineRoutes);
+app.use('/api/trips/:tripId/stops', tripStopRoutes);
 app.use('/api/deadlines', upcomingDeadlinesRouter);
 app.use('/api/trips/:tripId/food-log', foodLogRoutes);
 app.use('/api/food-log', foodLogSearchRouter);
@@ -500,6 +516,7 @@ app.use('/api/trips/:tripId/saved-links', tripSavedLinksRouter);
 app.use('/api', flightTrackingRoutes);
 app.use('/api', packingSuggestionRoutes);
 app.use('/api/travel-documents', travelDocumentRoutes);
+app.use('/api/loyalty-programs', loyaltyProgramRoutes);
 app.use('/api', languagePhraseRoutes);
 app.use('/api/user-invitations', userInvitationRoutes);
 app.use('/api/trip-series', tripSeriesRoutes);

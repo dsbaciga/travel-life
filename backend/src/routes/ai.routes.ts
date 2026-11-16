@@ -12,5 +12,6 @@ router.use(aiLimiter);
 // Trip-scoped AI routes — mounted at /api/trips/:tripId/ai
 router.get('/link-suggestions', aiController.getLinkSuggestions);
 router.post('/journal-summary', aiController.generateJournalSummary);
+router.post('/journal-day-draft', aiController.generateJournalDayDraft);
 
 export default router;

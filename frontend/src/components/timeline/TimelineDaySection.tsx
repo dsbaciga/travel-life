@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import DayHeader from './DayHeader';
 import TimelineEventCard from './TimelineEventCard';
 import UnscheduledActivityCard from './UnscheduledActivityCard';
@@ -28,6 +29,8 @@ interface TimelineDaySectionProps {
   onEdit: (item: TimelineItem) => void;
   onDelete: (item: TimelineItem) => void;
   onLinkUpdate: () => void;
+  /** Extra per-day actions for the day header. */
+  headerActions?: ReactNode;
 }
 
 export default function TimelineDaySection({
@@ -44,6 +47,7 @@ export default function TimelineDaySection({
   onEdit,
   onDelete,
   onLinkUpdate,
+  headerActions,
 }: TimelineDaySectionProps) {
   const { dateKey, items = [], weather, stats } = dayGroup;
 
@@ -134,6 +138,7 @@ export default function TimelineDaySection({
         eventCount={items.length}
         isCollapsed={isCollapsed}
         onToggleCollapse={onToggleCollapse}
+        actions={headerActions}
       />
 
       {/* Day Content - collapsible */}

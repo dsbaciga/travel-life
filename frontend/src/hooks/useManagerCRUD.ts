@@ -79,23 +79,32 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
 
   /**
    * Creates a new item
-   * @returns true if successful, false otherwise
+   * @returns the created item, or null on failure
    */
-  const handleCreate = useCallback(
-    async (data: TCreateData): Promise<boolean> => {
+  const handleCreateItem = useCallback(
+    async (data: TCreateData): Promise<T | null> => {
       try {
-        await service.create(data);
+        const created = await service.create(data);
         toast.success(`${capitalize(itemName)} added successfully`);
         await loadItems();
         onUpdate?.();
-        return true;
+        return created;
       } catch (error) {
         console.error(`Failed to create ${itemName}:`, error);
         toast.error(`Failed to add ${itemName}`);
-        return false;
+        return null;
       }
     },
     [service, loadItems, onUpdate, itemName]
+  );
+
+  /**
+   * Creates a new item
+   * @returns true if successful, false otherwise
+   */
+  const handleCreate = useCallback(
+    async (data: TCreateData): Promise<boolean> => (await handleCreateItem(data)) !== null,
+    [handleCreateItem]
   );
 
   /**
@@ -202,6 +211,7 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
     // Data operations
     loadItems,
     handleCreate,
+    handleCreateItem,
     handleUpdate,
     handleDelete,
 

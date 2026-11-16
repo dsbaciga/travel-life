@@ -310,6 +310,7 @@ export class OidcService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
+        measurementSystem: user.measurementSystem,
       },
       accessToken: generateAccessToken(payload),
       refreshToken: generateRefreshToken(payload),

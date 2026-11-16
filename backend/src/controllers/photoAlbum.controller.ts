@@ -139,12 +139,14 @@ export const photoAlbumController = {
     const take = req.query.take ? parseInt(req.query.take as string) : undefined;
     const sortBy = req.query.sortBy as PhotoSortByType | undefined;
     const sortOrder = req.query.sortOrder as SortOrderType | undefined;
+    const favoritesOnly = req.query.favoritesOnly === 'true';
 
     const album = await photoAlbumService.getAlbumById(userId, albumId, {
       skip,
       take,
       sortBy,
       sortOrder,
+      favoritesOnly,
     });
 
     // Transform photoAssignments to photos for frontend compatibility

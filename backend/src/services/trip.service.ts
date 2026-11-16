@@ -9,6 +9,7 @@ import { buildConditionalUpdateData, tripDateTransformer } from '../services/_sh
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { getUserTimezone, resolveTimezone } from '../services/_shared/timezoneResolution';
 import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tripListOrder';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -492,9 +493,17 @@ export class TripService {
           PHOTO_UPLOAD_PREFIXES.some((prefix) => value.startsWith(prefix))
       );
 
+    // Receipt photos hang off expenses, which the cascade also removes.
+    const receiptRows = await prisma.tripExpense.findMany({
+      where: { tripId, receiptPath: { not: null } },
+      select: { receiptPath: true },
+    });
+
     await prisma.trip.delete({
       where: { id: tripId },
     });
+
+    await deleteReceiptFiles(receiptRows.map((row) => row.receiptPath));
 
     // A file can be referenced by more than one row (a restored or copied
     // trip), so only remove the ones nothing points at any more.
@@ -738,6 +747,7 @@ export class TripService {
             latitude: photo.latitude,
             longitude: photo.longitude,
             takenAt: photo.takenAt,
+            isFavorite: photo.isFavorite,
           },
         });
         photoIdMap.set(photo.id, newPhoto.id);
@@ -821,6 +831,7 @@ export class TripService {
             seatNumber: transport.seatNumber,
             bookingReference: transport.bookingReference,
             bookingUrl: transport.bookingUrl,
+            loyaltyProgramId: transport.loyaltyProgramId,
             cost: transport.cost,
             currency: transport.currency,
             status: 'on_time',
@@ -864,6 +875,7 @@ export class TripService {
             timezone: lodging.timezone,
             confirmationNumber: lodging.confirmationNumber,
             bookingUrl: lodging.bookingUrl,
+            loyaltyProgramId: lodging.loyaltyProgramId,
             cost: lodging.cost,
             currency: lodging.currency,
             notes: lodging.notes,

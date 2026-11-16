@@ -81,6 +81,7 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       referenceNumber: t.referenceNumber as string | null,
       seatNumber: t.seatNumber as string | null,
       bookingReference: t.bookingReference as string | null,
+      loyaltyProgramId: t.loyaltyProgramId as number | null,
       bookingUrl: t.bookingUrl as string | null,
       cost: t.cost as number | null,
       currency: t.currency as string | null,
@@ -114,6 +115,14 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       note: d.note as string | null,
       dismissedAt: d.dismissedAt ? (d.dismissedAt as Date).toISOString() : null,
     })),
+    // Already in route order (selected with orderBy position); position itself is not stored.
+    stops: ((trip.stops ?? []) as Array<Record<string, unknown>>).map((s) => ({
+      name: s.name as string,
+      latitude: s.latitude as number,
+      longitude: s.longitude as number,
+      nights: (s.nights as number | null) ?? null,
+      locationId: (s.locationId as number | null) ?? null,
+    })),
     foodLogEntries: ((trip.foodLogEntries ?? []) as Array<Record<string, unknown>>).map((f) => ({
       restaurantName: f.restaurantName as string,
       dish: f.dish as string,
@@ -140,6 +149,8 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       name: a.name as string,
       description: a.description as string | null,
       coverPhotoId: a.coverPhotoId as number | null,
+      immichAlbumId: (a.immichAlbumId as string | null | undefined) ?? null,
+      immichAlbumSyncedAt: a.immichAlbumSyncedAt instanceof Date ? a.immichAlbumSyncedAt.toISOString() : null,
       photos: (a.photoAssignments as Array<{ photoId: number; sortOrder?: number }>).map((p) => ({
         photoId: p.photoId,
         sortOrder: p.sortOrder,
@@ -173,7 +184,24 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       typeName: type?.name ?? null,
     })) as BackupTrip['customItems'],
     // Expenses and emergency card info (added in v1.6.0)
-    expenses: trip.expenses as BackupTrip['expenses'],
+    // Payers and split participants travel by companion NAME (ids are reassigned on restore).
+    expenses: (
+      trip.expenses as
+        | Array<
+            {
+              paidByCompanion: { name: string } | null;
+              splits: Array<{ companion: { name: string } | null } & Record<string, unknown>>;
+            } & Record<string, unknown>
+          >
+        | undefined
+    )?.map(({ paidByCompanion, splits, ...expense }) => ({
+      ...expense,
+      paidByCompanionName: paidByCompanion?.name ?? null,
+      splits: (splits ?? []).map(({ companion, ...split }) => ({
+        ...split,
+        companionName: companion?.name ?? null,
+      })),
+    })) as BackupTrip['expenses'],
     emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
@@ -192,6 +220,7 @@ interface BackupPhoto {
   latitude: Decimal | null;
   longitude: Decimal | null;
   takenAt: Date | null;
+  isFavorite: boolean;
 }
 
 /**
@@ -215,6 +244,7 @@ async function fetchPhotosInBatches(tripId: number): Promise<BackupPhoto[]> {
         latitude: true,
         longitude: true,
         takenAt: true,
+        isFavorite: true,
       },
       take: PHOTO_BATCH_SIZE,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
@@ -306,6 +336,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           checkOutDate: true,
           timezone: true,
           confirmationNumber: true,
+          loyaltyProgramId: true,
           bookingUrl: true,
           cost: true,
           currency: true,
@@ -326,6 +357,10 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           note: true,
           dismissedAt: true,
         },
+      },
+      stops: {
+        orderBy: { position: 'asc' },
+        select: { name: true, latitude: true, longitude: true, nights: true, locationId: true },
       },
       foodLogEntries: {
         select: {
@@ -458,6 +493,22 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseCurrency: true,
           date: true,
           notes: true,
+          paidByOwner: true,
+          splitMethod: true,
+          paidByCompanion: { select: { name: true } },
+          splits: {
+            orderBy: { id: 'asc' },
+            select: {
+              isOwner: true,
+              amount: true,
+              percentage: true,
+              companion: { select: { name: true } },
+            },
+          },
+          receiptPath: true,
+          receiptMimeType: true,
+          receiptSizeBytes: true,
+          receiptUploadedAt: true,
         },
       },
       emergencyInfo: {
@@ -517,6 +568,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
         dietaryPreferences: true,
         useCustomMapStyle: true,
         baseCurrency: true,
+        measurementSystem: true,
         preferredMapsApp: true,
         immichApiUrl: true,
         llmBaseUrl: true,
@@ -597,6 +649,12 @@ export async function createBackup(userId: number): Promise<BackupData> {
           },
         },
       },
+    });
+
+    // Fetch loyalty programs (typically small)
+    const loyaltyPrograms = await prisma.loyaltyProgram.findMany({
+      where: { userId },
+      orderBy: { id: 'asc' },
     });
 
     // Fetch travel documents (typically small)
@@ -698,6 +756,10 @@ export async function createBackup(userId: number): Promise<BackupData> {
       dietaryPreferences: (user.dietaryPreferences as string[]) ?? [],
       useCustomMapStyle: user.useCustomMapStyle,
       baseCurrency: user.baseCurrency,
+      measurementSystem:
+        user.measurementSystem === 'imperial' || user.measurementSystem === 'metric'
+          ? user.measurementSystem
+          : null,
       preferredMapsApp: user.preferredMapsApp,
       immichApiUrl: user.immichApiUrl,
       immichApiKey: null,
@@ -735,6 +797,22 @@ export async function createBackup(userId: number): Promise<BackupData> {
         id: s.id,
         name: s.name,
         description: s.description,
+      })),
+      // Loyalty programs. Unlike travel documents the membership number is kept in full:
+      // a backup with it masked could not restore the programs or the booking links.
+      // `id` lets bookings (loyaltyProgramId) be re-linked on restore.
+      loyaltyPrograms: loyaltyPrograms.map((p) => ({
+        id: p.id,
+        name: p.name,
+        type: p.type,
+        providerName: p.providerName,
+        providerCode: p.providerCode,
+        alliance: p.alliance,
+        aliases: p.aliases,
+        membershipNumber: p.membershipNumber,
+        tier: p.tier,
+        pointsBalance: p.pointsBalance,
+        notes: p.notes,
       })),
       // Travel documents with masked document numbers for security
       travelDocuments: travelDocuments.map((doc) => ({

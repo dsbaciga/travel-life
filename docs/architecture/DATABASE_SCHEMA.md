@@ -2,7 +2,7 @@
 
 Travel Life uses PostgreSQL with PostGIS extension for geospatial data. The schema is managed via Prisma ORM.
 
-The schema defines **39 models** (mapped to **39 tables**) and **11 enums**.
+The schema defines **49 models** (mapped to **49 tables**) and **13 enums**.
 
 ## Schema Location
 
@@ -73,13 +73,14 @@ Primary user account model with authentication and settings.
 | username | String | Unique username |
 | email | String | Unique email address |
 | passwordHash | String | Bcrypt hashed password |
-| timezone | String? | User's home timezone (default: UTC) |
+| timezone | String? | User's home timezone (null until chosen; there is no default, and nothing falls back to UTC for display) |
 | activityCategories | Json | Custom activity category list |
 | immichApiUrl | String? | Immich server URL |
 | immichApiKey | String? | Immich API key |
 | weatherApiKey | String? | OpenWeatherMap API key |
 | aviationstackApiKey | String? | Flight tracking API key |
 | openrouteserviceApiKey | String? | Road routing API key |
+| measurementSystem | String? | `imperial` or `metric`; null means the app default (imperial) |
 | createdAt | DateTime | Account creation timestamp |
 
 ### Trip
@@ -146,6 +147,7 @@ Photos associated with trips. Supports local uploads and Immich integration.
 | latitude | Decimal(10,8)? | EXIF latitude |
 | longitude | Decimal(11,8)? | EXIF longitude |
 | takenAt | DateTime? | EXIF timestamp |
+| isFavorite | Boolean | Starred by the user (default `false`); favorites form the trip highlight set |
 
 ### Activity
 
@@ -197,6 +199,7 @@ Travel between locations (flights, trains, etc.).
 | calculatedDistance | Decimal? | Route distance (km) |
 | calculatedDuration | Decimal? | Route duration (minutes) |
 | distanceSource | String? | 'route' or 'haversine' |
+| loyaltyProgramId | Int? | Loyalty program the booking was made under (`LoyaltyProgram`, `SET NULL` on delete) |
 
 ### Lodging
 
@@ -213,6 +216,7 @@ Accommodations during trips.
 | checkOutDate | DateTime | Check-out date |
 | timezone | String? | Property timezone |
 | confirmationNumber | String? | Booking confirmation |
+| loyaltyProgramId | Int? | Loyalty program the stay was booked under (`LoyaltyProgram`, `SET NULL` on delete) |
 | bookingUrl | String? | Booking URL |
 | cost | Decimal(10,2)? | Total cost |
 | currency | String? | Currency code |
@@ -246,6 +250,8 @@ Organize photos into albums.
 | name | String | Album name |
 | description | String? | Description |
 | coverPhotoId | Int? | Cover photo foreign key |
+| immichAlbumId | String? | Linked Immich album (manual sync and opt-in export only) |
+| immichAlbumSyncedAt | DateTime? | When the linked Immich album was last pulled |
 
 ### TripTag
 
@@ -302,6 +308,87 @@ Individual items within a checklist.
 | sortOrder | Int | Display order |
 | metadata | Json? | Extra info (airport code, country code, etc.) |
 | checkedAt | DateTime? | When the item was checked |
+
+## Expenses and Splits
+
+### TripExpense
+
+A logged expense. Carries the currency snapshot columns described under [Currency Conversion](#currency-conversion).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Int | Primary key |
+| tripId | Int | Trip foreign key (cascade) |
+| description | String | What the expense was for |
+| category | String | food, transportation, lodging, activities, shopping, other |
+| amount | Decimal(10,2) | Amount in `currency` (CHECK: not negative) |
+| currency | String? | Currency code |
+| date | Date? | Calendar date (date-only, stored at UTC midnight) |
+| notes | String? | Notes |
+| paidByOwner | Boolean | The trip owner paid (default `false`) |
+| paidByCompanionId | Int? | The companion who paid (`SET NULL` on delete). At most one payer: the owner or a companion, never both (CHECK `trip_expenses_one_payer`); neither means not recorded |
+| splitMethod | String? | `equal`, `amount` or `percentage`; null when not split |
+| receiptPath | String? | Stored receipt image (`/uploads/receipts/<uuid>.jpg`) |
+| receiptMimeType | String? | Receipt MIME type |
+| receiptSizeBytes | Int? | Receipt size in bytes |
+| receiptUploadedAt | DateTime? | When the receipt was attached |
+
+### TripExpenseSplit
+
+One participant's share of an expense, in the expense's own currency (migration `20261116010000_add_expense_splits`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Int | Primary key |
+| expenseId | Int | Expense foreign key (cascade) |
+| isOwner | Boolean | This share is the trip owner's |
+| companionId | Int? | The companion this share belongs to (cascade). Exactly one of `isOwner` / `companionId` identifies the participant (CHECK `trip_expense_splits_one_participant`) |
+| amount | Decimal(10,2) | The participant's share; the shares of an expense add up to its amount |
+| percentage | Decimal(7,4)? | Only set for percentage splits |
+
+A participant appears at most once per expense; both rules are enforced in `expenseSplit.service.ts`.
+
+## Loyalty Programs
+
+### LoyaltyProgram
+
+A user's frequent-flyer or hotel-loyalty membership (migration `20261116030000_add_loyalty_programs`). Bookings reference it by id rather than copying the number.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Int | Primary key |
+| userId | Int | Owner (cascade) |
+| name | String | Programme name, e.g. "SkyMiles" |
+| type | LoyaltyProgramType | Kind of programme |
+| providerName | String | Carrier or brand, e.g. "Delta Air Lines" |
+| providerCode | String? | IATA airline code, e.g. "DL" |
+| alliance | String? | e.g. "SkyTeam" |
+| aliases | String[] | Other names the provider goes by, for matching |
+| membershipNumber | String | The membership number (returned in full to its owner only) |
+| tier | String? | Status tier |
+| pointsBalance | Int? | Optional manual balance |
+| notes | String? | Notes |
+
+`Transportation.loyaltyProgramId` and `Lodging.loyaltyProgramId` point here (`SET NULL` on delete).
+
+## Route Planning
+
+### TripStop
+
+One stop of a trip's route in the multi-city planner (migration `20261116080000_add_trip_stops`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Int | Primary key |
+| tripId | Int | Trip foreign key (cascade) |
+| locationId | Int? | Saved place this stop was made from (`SET NULL` on delete) |
+| name | String | Stop name (a snapshot when linked to a place) |
+| latitude | Float | Latitude |
+| longitude | Float | Longitude |
+| position | Int | Order within the trip |
+| nights | Int? | Planned nights at the stop |
+
+Indexed on `(tripId, position)` and `locationId`.
 
 ## Trip Organization Models
 

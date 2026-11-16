@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
+import { pushModal, popModal, isTopModal } from '../utils/modalStack';
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -27,12 +28,15 @@ export default function ConfirmDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const modalStackIdRef = useRef<number | null>(null);
   const generatedId = useId();
   const dialogTitleId = `confirm-dialog-title-${generatedId}`;
   const dialogDescriptionId = `confirm-dialog-description-${generatedId}`;
 
   // Focus trap and keyboard handling
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Another dialog opened above this one owns the keyboard (Escape closes only the top one).
+    if (!isTopModal(modalStackIdRef.current)) return;
     if (e.key === 'Escape' && !isLoading) {
       onClose();
     }
@@ -53,6 +57,18 @@ export default function ConfirmDialog({
     }
   }, [isLoading, onClose]);
 
+  // Shared modal stack: ref-counted scroll lock and a single topmost dialog, so Escape
+  // in this dialog does not also close a modal underneath it.
+  useEffect(() => {
+    if (!isOpen) return;
+    const id = pushModal();
+    modalStackIdRef.current = id;
+    return () => {
+      popModal(id);
+      modalStackIdRef.current = null;
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       // Store current focus to restore later
@@ -64,12 +80,8 @@ export default function ConfirmDialog({
       // Add keyboard listener
       document.addEventListener('keydown', handleKeyDown);
 
-      // Prevent body scroll
-      document.body.style.overflow = 'hidden';
-
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
-        document.body.style.overflow = '';
         previouslyFocused?.focus();
       };
     }

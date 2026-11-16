@@ -3,6 +3,8 @@ import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { JournalEntry, CreateJournalEntryInput, UpdateJournalEntryInput } from "../types/journalEntry";
 import journalEntryService from "../services/journalEntry.service";
 import toast from "react-hot-toast";
+import { Link } from "react-router";
+import { isAxiosError } from "axios";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
@@ -24,7 +26,8 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
 import { formatDate } from "../utils/dateFormat";
-import { extractDatePortion } from "../utils/timezone";
+import { extractDatePortion, formatDateOnly } from "../utils/timezone";
+import { draftDateWindow, isDateInDraftWindow } from "../utils/journalDraftWindow";
 
 /**
  * JournalManager handles CRUD operations for trip journal entries.
@@ -53,16 +56,41 @@ import { extractDatePortion } from "../utils/timezone";
  * />
  * ```
  */
+/** Ask a mounted JournalManager to open its create form on a given day. */
+export interface JournalOpenRequest {
+  /** Changes with every request, so asking for the same day twice still opens it. */
+  id: number;
+  /** The day (YYYY-MM-DD) the new entry is for. */
+  date: string;
+  /** Also fetch an AI draft for that day straight away (nothing is saved). */
+  draftWithAi?: boolean;
+}
+
 interface JournalManagerProps {
   tripId: number;
   tripStartDate?: string | null;
+  /** Bounds the days "Draft with AI" accepts (with the start date). */
+  tripEndDate?: string | null;
   onUpdate?: () => void;
+  /**
+   * Render only the create/edit form, with no heading, list or New Entry button.
+   * Used to add an entry from a day view; the form is the same one.
+   */
+  formOnly?: boolean;
+  /** Open the create form on this day (see JournalOpenRequest). */
+  openRequest?: JournalOpenRequest | null;
+  /** The form was closed, by saving or cancelling. */
+  onFormClosed?: () => void;
 }
 
 export default function JournalManager({
   tripId,
   tripStartDate,
+  tripEndDate,
   onUpdate,
+  formOnly = false,
+  openRequest,
+  onFormClosed,
 }: JournalManagerProps) {
   // A journal entry's date is a calendar day (`@db.Date`), not an instant, so
   // the form works in plain YYYY-MM-DD. Default to the trip's start day.
@@ -112,6 +140,20 @@ export default function JournalManager({
   // Track unsaved changes for browser close/refresh warning
   const { captureInitialValues, isDirty: isFormDirty, markSaved } = useUnsavedChangesWarning(formValues, manager.showForm);
 
+  // "Draft with AI": the title/body the model wrote, kept so we can tell whether the
+  // fields still hold exactly that. Cleared on save, close, and reset.
+  const [aiDraft, setAiDraft] = useState<{ title: string; content: string } | null>(null);
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const [aiError, setAiError] = useState<{ kind: 'not-configured' | 'failed'; message: string } | null>(null);
+
+  // While the fields are still the untouched AI text they are not the user's words, so
+  // they are not auto-saved: an abandoned AI draft must not come back later as a
+  // "draft you were writing". The first edit adopts the text and auto-save resumes.
+  const isUntouchedAiDraft =
+    aiDraft !== null &&
+    formValues.title === aiDraft.title &&
+    formValues.content === aiDraft.content;
+
   // Auto-save draft for form data
   const draftKey = manager.editingId ? manager.editingId : tripId;
   const draft = useAutoSaveDraft(formValues, {
@@ -120,7 +162,7 @@ export default function JournalManager({
     isEditMode: !!manager.editingId,
     tripId,
     defaultValues: initialFormValues,
-    enabled: manager.showForm,
+    enabled: manager.showForm && !isUntouchedAiDraft,
   });
 
   // Check for existing draft when form opens in create mode
@@ -168,6 +210,7 @@ export default function JournalManager({
   // Generate IDs for accessibility
   const titleFieldId = useId();
   const entryDateFieldId = useId();
+  const draftHintId = useId();
 
   // Capture initial form values for dirty tracking when form opens or switches mode.
   // Uses a microtask delay so handleChange calls from populate effects have settled.
@@ -205,14 +248,18 @@ export default function JournalManager({
   }, [handleEdit]);
 
   // Handle URL-based edit navigation (e.g., from EntityDetailModal)
+  // (A form-only host listens on a param nothing writes, so ?edit= stays for its tab.)
   useEditFromUrlParam(manager.items, handleEditFromUrl, {
     loading: manager.loading,
+    paramName: formOnly ? 'journalFormOnlyEdit' : 'edit',
   });
 
   // Extended reset that also clears additional local state
   const resetForm = useCallback(() => {
     baseResetForm();
     setShowDraftPrompt(false);
+    setAiDraft(null);
+    setAiError(null);
     draft.clearDraft();
   }, [baseResetForm, draft]);
 
@@ -221,7 +268,8 @@ export default function JournalManager({
     baseOpenCreateForm();
   }, [baseOpenCreateForm]);
 
-  useCreateFromUrlParam(openCreateForm);
+  // A day view that hosts only the form must not swallow the Journal tab's ?action=new.
+  useCreateFromUrlParam(openCreateForm, { enabled: !formOnly });
 
   // A second click while the first submit is still running (the request, then a list
   // reload, happen before the modal closes) would add the same thing twice.
@@ -275,6 +323,8 @@ export default function JournalManager({
           // the "nothing changed yet" state, and the entry just saved must not
           // come back as a draft.
           setAllFields(initialFormValues);
+          setAiDraft(null);
+          setAiError(null);
           captureInitialValues(initialFormValues);
           journalFieldErrors.resetErrors();
           draft.clearDraft();
@@ -291,6 +341,91 @@ export default function JournalManager({
       }
     }
   };
+
+  // Ask the AI for a first draft of the day in the Entry Date field. Nothing is
+  // saved: the text only lands in the form, and the user still has to press Create.
+  const startAiDraft = async (date: string, { confirmReplace }: { confirmReplace: boolean }) => {
+    if (!date || aiDrafting) return;
+
+    if (confirmReplace && (formValues.title.trim() || formValues.content.trim())) {
+      // Same native prompt the close button uses: this form is already a modal, and a
+      // second stacked modal fights it for focus.
+      const replace = window.confirm(
+        "The form already has text. Drafting with AI will replace the title and content. Continue?"
+      );
+      if (!replace) return;
+    }
+
+    setAiDrafting(true);
+    setAiError(null);
+    try {
+      const result = await journalEntryService.generateDayDraft(tripId, date);
+      setAllFields({ title: result.title, content: result.body, entryDate: date });
+      setAiDraft({ title: result.title, content: result.body });
+      if (result.truncated) {
+        toast("This day had a lot in it, so the draft may leave some things out.");
+      }
+    } catch (error) {
+      const status = isAxiosError(error) ? error.response?.status : undefined;
+      const serverMessage = isAxiosError(error) ? error.response?.data?.message : undefined;
+      if (status === 503) {
+        setAiError({ kind: 'not-configured', message: "AI isn't set up yet." });
+      } else if (status === 429) {
+        setAiError({ kind: 'failed', message: "You've used all your AI requests for now. Try again later." });
+      } else {
+        setAiError({
+          kind: 'failed',
+          message: typeof serverMessage === 'string' && serverMessage
+            ? serverMessage
+            : "Couldn't generate a draft. Please try again.",
+        });
+      }
+    } finally {
+      setAiDrafting(false);
+    }
+  };
+
+  const handleDraftWithAi = () => startAiDraft(formValues.entryDate, { confirmReplace: true });
+
+  // Open the create form on a given day, as asked by a day view. Each request id is
+  // acted on once, so a re-render (or React's double effect run) cannot open it twice.
+  const handledRequestId = useRef<number | null>(null);
+  useEffect(() => {
+    if (!openRequest || handledRequestId.current === openRequest.id) return;
+    handledRequestId.current = openRequest.id;
+    setAllFields({ title: "", content: "", entryDate: openRequest.date });
+    manager.setEditingId(null);
+    setShowForm(true);
+    if (openRequest.draftWithAi) {
+      // The form was just emptied, so there is no text to confirm replacing.
+      void startAiDraft(openRequest.date, { confirmReplace: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openRequest]);
+
+  // Tell the host when the form closes (saved or cancelled) so it can unmount us.
+  const wasFormOpen = useRef(false);
+  useEffect(() => {
+    if (wasFormOpen.current && !manager.showForm) onFormClosed?.();
+    wasFormOpen.current = manager.showForm;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager.showForm]);
+
+  const draftWindow = useMemo(
+    () => draftDateWindow(tripStartDate, tripEndDate),
+    [tripStartDate, tripEndDate]
+  );
+  const entryDateDraftable =
+    !formValues.entryDate || isDateInDraftWindow(formValues.entryDate, draftWindow);
+  const draftWindowHint = (() => {
+    const { from, to } = draftWindow;
+    const fmt = (d: string) =>
+      formatDateOnly(d, { month: "short", day: "numeric", year: "numeric" });
+    if (from && to) return `AI drafts cover ${fmt(from)} to ${fmt(to)}, the trip plus a day either side.`;
+    if (from) return `AI drafts start on ${fmt(from)}, a day before the trip.`;
+    if (to) return `AI drafts end on ${fmt(to)}, a day after the trip.`;
+    return null;
+  })();
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
@@ -319,6 +454,7 @@ export default function JournalManager({
   return (
     <div className="space-y-6">
       <ConfirmDialogComponent />
+      {!formOnly && (
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
           Journal
@@ -332,6 +468,7 @@ export default function JournalManager({
           <span className="hidden sm:inline">+ New Entry</span>
         </button>
       </div>
+      )}
 
       {/* Form Modal */}
       <FormModal
@@ -433,8 +570,73 @@ export default function JournalManager({
                   onChange={(e) => setField('entryDate', e.target.value)}
                   className="input"
                 />
+                {/* Not min/max on the input: those would also block saving a manual entry
+                    on a day outside the trip, and only the AI draft is scoped. */}
+                {!manager.editingId && draftWindowHint && (
+                  <p
+                    id={draftHintId}
+                    className={`text-xs mt-1 ${
+                      entryDateDraftable
+                        ? "text-gray-500 dark:text-dusk-400"
+                        : "text-amber-700 dark:text-amber-300"
+                    }`}
+                  >
+                    {entryDateDraftable
+                      ? draftWindowHint
+                      : `Draft with AI is off for this date. ${draftWindowHint}`}
+                  </p>
+                )}
               </div>
+              {!manager.editingId && (
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={handleDraftWithAi}
+                    disabled={!formValues.entryDate || !entryDateDraftable || aiDrafting || isSubmitting}
+                    aria-describedby={draftWindowHint ? draftHintId : undefined}
+                    title={
+                      !formValues.entryDate
+                        ? "Pick an entry date first"
+                        : !entryDateDraftable
+                          ? "That date is outside the trip"
+                          : undefined
+                    }
+                    className="btn btn-secondary text-sm disabled:opacity-50"
+                  >
+                    {aiDrafting ? "Drafting…" : "✨ Draft with AI"}
+                  </button>
+                </div>
+              )}
             </div>
+
+            {aiError && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
+              >
+                {aiError.message}
+                {aiError.kind === 'not-configured' && (
+                  <>
+                    {" "}Add an API key under{" "}
+                    <Link to="/settings?tab=integrations" className="underline font-medium">
+                      Settings &rarr; Integrations
+                    </Link>{" "}
+                    to use AI drafts.
+                  </>
+                )}
+              </div>
+            )}
+
+            {aiDraft && !manager.editingId && (
+              <div
+                role="status"
+                data-testid="ai-draft-banner"
+                className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-100"
+              >
+                <strong>AI draft.</strong> Written only from what is recorded for this day, so check it
+                over and add your own voice. Nothing is saved until you press Create Entry.
+              </div>
+            )}
 
             <div>
               <MarkdownEditor
@@ -461,7 +663,7 @@ export default function JournalManager({
           </form>
         </FormModal>
 
-      {manager.items.length === 0 ? (
+      {formOnly ? null : manager.items.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoJournalEntries />}
           message="Tell Your Story"

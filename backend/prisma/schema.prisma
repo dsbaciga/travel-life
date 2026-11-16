@@ -53,6 +53,7 @@ model User {
   // default (apple | google | citymapper | uber | lyft). Null = no preference,
   // the UI then just lists every app that can handle the route.
   preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
@@ -68,6 +69,7 @@ model User {
   checklists              Checklist[]
   invitationsSent         TripInvitation[]   @relation("InvitationsSent")
   travelDocuments         TravelDocument[]
+  loyaltyPrograms         LoyaltyProgram[]
   tripSeries              TripSeries[]
   userInvitationsSent     UserInvitation[]   @relation("UserInvitationsSent")
   userInvitationsAccepted UserInvitation[]   @relation("UserInvitationsAccepted")
@@ -155,6 +157,7 @@ model Trip {
   emergencyInfo             TripEmergencyInfo?
   customItems               CustomItem[]
   bookingDeadlines          BookingDeadline[]
+  stops                     TripStop[]
   foodLogEntries            FoodLogEntry[]
   trackPoints               TripTrackPoint[]
 
@@ -233,6 +236,8 @@ model TravelCompanion {
 
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   tripAssignments TripCompanion[]
+  paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
+  expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
 
   @@index([userId])
   @@index([avatarUrl])
@@ -327,6 +332,7 @@ model Location {
   transportationEnds   Transportation[]  @relation("EndLocation")
   weatherData          WeatherData[]
   customItems          CustomItem[]
+  tripStops            TripStop[]
 
   @@index([tripId])
   @@index([parentId])
@@ -443,6 +449,7 @@ model Photo {
   latitude      Decimal?                               @db.Decimal(10, 8)
   longitude     Decimal?                               @db.Decimal(11, 8)
   takenAt       DateTime?                              @map("taken_at")
+  isFavorite    Boolean                                @default(false) @map("is_favorite")
   coordinates   Unsupported("geography(Point, 4326)")?
   uploadedAt    DateTime                               @default(now()) @map("uploaded_at")
   createdAt     DateTime                               @default(now()) @map("created_at")
@@ -457,6 +464,7 @@ model Photo {
 
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
+  @@index([tripId, isFavorite])
   @@index([tripId])
   @@index([takenAt])
   @@index([localPath])
@@ -473,6 +481,10 @@ model PhotoAlbum {
   coverPhotoId Int?     @map("cover_photo_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Optional link to an Immich album (manual sync only; see immichSync.service.ts)
+  immichAlbumId       String?   @map("immich_album_id") @db.VarChar(255)
+  immichAlbumSyncedAt DateTime? @map("immich_album_synced_at")
 
   trip             Trip                   @relation(fields: [tripId], references: [id], onDelete: Cascade)
   // Note: Location, Activity, and Lodging associations are handled via EntityLink system, not direct FKs
@@ -577,6 +589,9 @@ model Transportation {
   calculatedDistance Decimal?  @map("calculated_distance") @db.Decimal(10, 2) // Route distance in kilometers
   calculatedDuration Decimal?  @map("calculated_duration") @db.Decimal(10, 2) // Route duration in minutes
   distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine'
+  // Which of the booking user's loyalty programs this leg was booked under. A reference only:
+  // the membership number itself stays on LoyaltyProgram and is never copied here.
+  loyaltyProgramId   Int?      @map("loyalty_program_id")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
@@ -585,8 +600,10 @@ model Transportation {
   endLocation      Location?         @relation("EndLocation", fields: [endLocationId], references: [id], onDelete: SetNull)
   flightTracking   FlightTracking?
   bookingDeadlines BookingDeadline[]
+  loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
 
   @@index([tripId])
+  @@index([loyaltyProgramId])
   @@index([scheduledStart])
   @@index([connectionGroupId])
   @@map("transportation")
@@ -613,44 +630,84 @@ model Lodging {
   baseAmount         Decimal? @map("base_amount") @db.Decimal(12, 2)
   baseCurrency       String?  @map("base_currency") @db.VarChar(3)
   notes              String?  @db.Text
+  // Which of the booking user's loyalty programs this stay was booked under. A reference only:
+  // the membership number itself stays on LoyaltyProgram and is never copied here.
+  loyaltyProgramId   Int?     @map("loyalty_program_id")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
   // Note: Location association is handled via EntityLink system, not direct FK
   bookingDeadlines BookingDeadline[]
+  loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
 
   @@index([tripId])
+  @@index([loyaltyProgramId])
   @@index([checkInDate])
   @@index([checkOutDate])
   @@map("lodging")
 }
 
 model TripExpense {
-  id           Int       @id @default(autoincrement())
-  tripId       Int       @map("trip_id")
-  description  String    @db.VarChar(500)
-  category     String    @db.VarChar(50) // food, transportation, lodging, activities, shopping, other
+  id                Int       @id @default(autoincrement())
+  tripId            Int       @map("trip_id")
+  description       String    @db.VarChar(500)
+  category          String    @db.VarChar(50) // food, transportation, lodging, activities, shopping, other
   // DB-level CHECK ("amount" >= 0) named `trip_expenses_amount_non_negative` — added in
   // migration 20260728020000_add_trip_expense_amount_check. Prisma cannot represent
   // CHECK constraints, so `prisma db push` would NOT recreate it.
-  amount       Decimal   @db.Decimal(10, 2)
-  currency     String?   @db.VarChar(3)
+  amount            Decimal   @db.Decimal(10, 2)
+  currency          String?   @db.VarChar(3)
   // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount   Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency String?   @map("base_currency") @db.VarChar(3)
-  date         DateTime? @db.Date
-  notes        String?   @db.Text
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  exchangeRate      Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
+  baseAmount        Decimal?  @map("base_amount") @db.Decimal(12, 2)
+  baseCurrency      String?   @map("base_currency") @db.VarChar(3)
+  date              DateTime? @db.Date
+  notes             String?   @db.Text
+  // Expense splitting (#97). The payer is the trip owner (paidByOwner) OR a companion
+  // (paidByCompanionId) - never both (CHECK trip_expenses_one_payer); neither = not recorded.
+  paidByOwner       Boolean   @default(false) @map("paid_by_owner")
+  paidByCompanionId Int?      @map("paid_by_companion_id")
+  splitMethod       String?   @map("split_method") @db.VarChar(20) // equal, amount, percentage
+  // Receipt photo (backlog #122): "/uploads/receipts/<uuid>.jpg" or null. The file is a normalised copy; never exported by backups.
+  receiptPath       String?   @map("receipt_path") @db.VarChar(255)
+  receiptMimeType   String?   @map("receipt_mime_type") @db.VarChar(50)
+  receiptSizeBytes  Int?      @map("receipt_size_bytes")
+  receiptUploadedAt DateTime? @map("receipt_uploaded_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidByCompanion TravelCompanion?   @relation("ExpensePaidBy", fields: [paidByCompanionId], references: [id], onDelete: SetNull)
+  splits          TripExpenseSplit[]
 
   @@index([tripId])
+  @@index([paidByCompanionId])
   // Matches the primary list query (order by date desc, created_at desc) in expense.service.ts
   @@index([tripId, date])
   @@map("trip_expenses")
+}
+
+// One participant's share of an expense, in the EXPENSE's own currency. Exactly one of
+// isOwner / companionId identifies the participant (CHECK trip_expense_splits_one_participant,
+// added in migration 20261116010000_add_expense_splits, which Prisma cannot represent).
+// A participant appears at most once per expense, and the shares sum exactly to the expense
+// amount; both are enforced in expenseSplit.service.ts.
+model TripExpenseSplit {
+  id          Int      @id @default(autoincrement())
+  expenseId   Int      @map("expense_id")
+  isOwner     Boolean  @default(false) @map("is_owner")
+  companionId Int?     @map("companion_id")
+  amount      Decimal  @db.Decimal(10, 2)
+  percentage  Decimal? @db.Decimal(7, 4) // only set for percentage splits
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  expense   TripExpense      @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  companion TravelCompanion? @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+  @@index([companionId])
+  @@map("trip_expense_splits")
 }
 
 // =============================================================================
@@ -686,6 +743,36 @@ model BookingDeadline {
   @@index([transportationId])
   @@index([activityId])
   @@map("booking_deadlines")
+}
+
+// =============================================================================
+// TRIP STOPS (Multi-City Trip Planner)
+// =============================================================================
+
+// One stop in the ordered route plan of a trip: a place, its position in the route and
+// an optional number of nights. Deliberately separate from Location (which has no
+// ordering and holds every saved place, not just the route). locationId optionally links
+// a stop to a saved place; deleting that place keeps the stop (SetNull) because name and
+// coordinates are stored on the stop itself. Coordinates are range-checked by CHECK
+// constraints in migration 20261116080000_add_trip_stops.
+model TripStop {
+  id         Int      @id @default(autoincrement())
+  tripId     Int      @map("trip_id")
+  locationId Int?     @map("location_id")
+  name       String   @db.VarChar(200)
+  latitude   Float
+  longitude  Float
+  position   Int
+  nights     Int?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([tripId, position])
+  @@index([locationId])
+  @@map("trip_stops")
 }
 
 // =============================================================================
@@ -994,6 +1081,45 @@ model TravelDocument {
   @@index([userId])
   @@index([expiryDate])
   @@map("travel_documents")
+}
+
+// =============================================================================
+// LOYALTY PROGRAMS
+// =============================================================================
+// A user's frequent-flyer / hotel-loyalty memberships. User-scoped personal data:
+// never exposed to trip collaborators or the public share page. Bookings reference a
+// program by id (Transportation/Lodging.loyaltyProgramId) rather than copying the number.
+
+enum LoyaltyProgramType {
+  AIRLINE
+  HOTEL
+  RAIL
+  CAR_RENTAL
+  OTHER
+}
+
+model LoyaltyProgram {
+  id               Int                @id @default(autoincrement())
+  userId           Int                @map("user_id")
+  name             String             @db.VarChar(255) // Programme name, e.g. "SkyMiles"
+  type             LoyaltyProgramType
+  providerName     String             @map("provider_name") @db.VarChar(255) // Carrier or brand, e.g. "Delta Air Lines"
+  providerCode     String?            @map("provider_code") @db.VarChar(10) // IATA airline code, e.g. "DL"
+  alliance         String?            @db.VarChar(100) // e.g. "SkyTeam"
+  aliases          String[]           @default([]) // Other names the provider goes by, for matching
+  membershipNumber String             @map("membership_number") @db.VarChar(100)
+  tier             String?            @db.VarChar(100)
+  pointsBalance    Int?               @map("points_balance")
+  notes            String?            @db.Text
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transportation Transportation[]
+  lodging        Lodging[]
+
+  @@index([userId])
+  @@map("loyalty_programs")
 }
 
 // =============================================================================

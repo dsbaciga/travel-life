@@ -175,6 +175,22 @@ const BackupTravelDocumentSchema = z.object({
   alertDaysBefore: z.number().optional(),
 });
 
+// Loyalty program schema. `id` is the old id that bookings' loyaltyProgramId refers to.
+// The membership number is kept in full (unlike travel documents) so a restore is lossless.
+const BackupLoyaltyProgramSchema = z.object({
+  id: z.number().optional(),
+  name: z.string(),
+  type: z.enum(['AIRLINE', 'HOTEL', 'RAIL', 'CAR_RENTAL', 'OTHER']),
+  providerName: z.string(),
+  providerCode: z.string().nullable().optional(),
+  alliance: z.string().nullable().optional(),
+  aliases: z.array(z.string()).optional(),
+  membershipNumber: z.string(),
+  tier: z.string().nullable().optional(),
+  pointsBalance: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
 // =============================================================================
 // Trip-related Schemas
 // =============================================================================
@@ -264,6 +280,7 @@ const BackupPhotoSchema = z.object({
   latitude: FlexibleCoordinateSchema,
   longitude: FlexibleCoordinateSchema,
   takenAt: FlexibleDateSchema, // ISO datetime or Date object
+  isFavorite: z.boolean().optional(), // absent in backups made before photo favorites
 });
 
 // Activity schema within a trip
@@ -317,6 +334,7 @@ const BackupTransportationSchema = z.object({
   referenceNumber: z.string().nullable().optional(),
   seatNumber: z.string().nullable().optional(),
   bookingReference: z.string().nullable().optional(),
+  loyaltyProgramId: z.number().nullable().optional(), // Old id of a backup loyaltyPrograms entry
   bookingUrl: backupLinkUrl,
   cost: FlexibleCoordinateSchema, // Decimal column: arrives as a JSON string
   currency: z.string().nullable().optional(),
@@ -344,6 +362,7 @@ const BackupLodgingSchema = z.object({
   checkOutDate: z.string(), // ISO datetime
   timezone: z.string().nullable().optional(),
   confirmationNumber: z.string().nullable().optional(),
+  loyaltyProgramId: z.number().nullable().optional(), // Old id of a backup loyaltyPrograms entry
   bookingUrl: backupLinkUrl,
   cost: FlexibleCoordinateSchema, // Decimal column: arrives as a JSON string
   currency: z.string().nullable().optional(),
@@ -365,6 +384,17 @@ const BackupBookingDeadlineSchema = z.object({
   dueAt: z.string(), // ISO datetime
   note: z.string().nullable().optional(),
   dismissedAt: z.string().nullable().optional(),
+});
+
+// Route stop schema within a trip (Multi-City Trip Planner). Stops are listed in route
+// order, so there is no position field. locationId references the OLD id of a location
+// in the same backup; an unresolved link is restored as null.
+const BackupTripStopSchema = z.object({
+  name: z.string(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  nights: z.number().int().nullable().optional(),
+  locationId: z.number().nullable().optional(),
 });
 
 // Food log entry schema within a trip. activityId/locationId reference the OLD ids
@@ -406,6 +436,9 @@ const BackupPhotoAlbumSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
   coverPhotoId: z.number().nullable().optional(),
+  // Link to an Immich album (optional: absent in backups made before album sync existed)
+  immichAlbumId: z.string().nullable().optional(),
+  immichAlbumSyncedAt: z.string().nullable().optional(),
   photos: z.array(BackupPhotoAlbumPhotoSchema).optional(),
 });
 
@@ -506,6 +539,34 @@ const BackupExpenseSchema = z.object({
   baseCurrency: z.string().nullable().optional(),
   date: FlexibleDateSchema,
   notes: z.string().nullable().optional(),
+  // Expense splitting (#97). People travel by NAME, like trip companions do, because
+  // companion ids are reassigned on restore. A payer/participant with no companion name
+  // is the trip owner.
+  paidByOwner: z.boolean().optional(),
+  paidByCompanionName: z.string().nullable().optional(),
+  splitMethod: z.string().nullable().optional(),
+  splits: z
+    .array(
+      z.object({
+        isOwner: z.boolean().optional(),
+        companionName: z.string().nullable().optional(),
+        amount: z.union([z.number(), z.string()]),
+        percentage: FlexibleCoordinateSchema,
+      })
+    )
+    .optional(),
+  // Receipt photo (optional, additive; older backups simply lack these). Only the
+  // PATH travels, not the image; a tampered path rejects the whole backup like photos.
+  receiptPath: z
+    .string()
+    .refine((v) => /^\/uploads\/receipts\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(v) && !v.includes('..'), {
+      message: 'Invalid receipt path. Expected /uploads/receipts/<filename>.',
+    })
+    .nullable()
+    .optional(),
+  receiptMimeType: z.string().max(50).nullable().optional(),
+  receiptSizeBytes: z.number().int().nonnegative().nullable().optional(),
+  receiptUploadedAt: FlexibleDateSchema,
 });
 
 // Trip emergency info schema (added in v1.6.0)
@@ -565,6 +626,7 @@ const BackupTripSchema = z.object({
   transportation: z.array(BackupTransportationSchema).optional(),
   lodging: z.array(BackupLodgingSchema).optional(),
   bookingDeadlines: z.array(BackupBookingDeadlineSchema).optional(),
+  stops: z.array(BackupTripStopSchema).optional(),
   foodLogEntries: z.array(BackupFoodLogEntrySchema).optional(),
   journalEntries: z.array(BackupJournalEntrySchema).optional(),
   photoAlbums: z.array(BackupPhotoAlbumSchema).optional(),
@@ -614,6 +676,8 @@ export const BackupDataSchema = z.object({
     dietaryPreferences: z.array(z.string()).optional(),
     useCustomMapStyle: z.boolean().optional(),
     baseCurrency: z.string().nullable().optional(),
+    // Older backups omit it; restore then leaves the user's current value.
+    measurementSystem: z.enum(['imperial', 'metric']).nullable().optional(),
     preferredMapsApp: z.string().nullable().optional(),
     immichApiUrl: z.string().nullable(),
     // Secret fields are NEVER serialized as plaintext in v1.3.0+ backups.
@@ -637,6 +701,8 @@ export const BackupDataSchema = z.object({
   checklists: z.array(BackupChecklistSchema),
   // Travel documents (added in v1.1.0)
   travelDocuments: z.array(BackupTravelDocumentSchema).optional(),
+  // Loyalty programs (additive and optional, so no version bump: older backups simply lack it)
+  loyaltyPrograms: z.array(BackupLoyaltyProgramSchema).optional(),
   // Trip series (added in v1.2.0)
   tripSeries: z.array(z.object({
     id: z.number(),
@@ -658,6 +724,7 @@ export type BackupLocationCategory = z.infer<typeof BackupLocationCategorySchema
 export type BackupChecklist = z.infer<typeof BackupChecklistSchema>;
 export type BackupChecklistItem = z.infer<typeof BackupChecklistItemSchema>;
 export type BackupTravelDocument = z.infer<typeof BackupTravelDocumentSchema>;
+export type BackupLoyaltyProgram = z.infer<typeof BackupLoyaltyProgramSchema>;
 export type BackupTrip = z.infer<typeof BackupTripSchema>;
 export type BackupActivity = z.infer<typeof BackupActivitySchema>;
 export type BackupTransportation = z.infer<typeof BackupTransportationSchema>;

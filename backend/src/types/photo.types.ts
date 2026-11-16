@@ -32,6 +32,7 @@ export interface Photo {
   duration: number | null; // Video duration in seconds
   caption: string | null;
   takenAt: Date | null;
+  isFavorite: boolean;
   latitude: number | null;
   longitude: number | null;
   createdAt: Date;
@@ -124,6 +125,7 @@ export const updatePhotoSchema = z.object({
   takenAt: optionalDatetime(),
   latitude: optionalLatitude(),
   longitude: optionalLongitude(),
+  isFavorite: z.boolean().optional(),
 });
 
 // Note: Location, Activity, and Lodging associations are handled via EntityLink system, not direct FKs
@@ -175,6 +177,8 @@ export interface PhotoQueryOptions {
   take?: number;
   sortBy?: PhotoSortByType;
   sortOrder?: SortOrderType;
+  /** Only return photos starred as favorites (the trip highlight set). */
+  favoritesOnly?: boolean;
 }
 
 export type UploadPhotoInput = z.infer<typeof uploadPhotoSchema>;

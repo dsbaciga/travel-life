@@ -88,6 +88,8 @@ export interface PublicPhoto {
   id: number;
   caption: string | null;
   takenAt: string | null;
+  /** Starred by the owner; the favorites form the trip's highlight set. */
+  isFavorite: boolean;
   /** API path that streams the full-size image (token-scoped, unauthenticated). */
   url: string;
   /** API path that streams the thumbnail (falls back to the full image). */
@@ -337,6 +339,7 @@ class ShareService {
           id: photo.id,
           caption: photo.caption,
           takenAt: toIso(photo.takenAt),
+          isFavorite: photo.isFavorite,
           url: `/api/public/trips/${token}/photos/${photo.id}/file`,
           thumbnailUrl: photo.thumbnailPath
             ? `/api/public/trips/${token}/photos/${photo.id}/thumbnail`

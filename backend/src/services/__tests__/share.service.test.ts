@@ -176,6 +176,7 @@ function buildSensitiveTripRow() {
         id: 61,
         caption: 'Forum at sunset',
         takenAt: new Date('2026-07-02T18:30:00Z'),
+        isFavorite: true,
         localPath: '/uploads/photos/abc.jpg',
         thumbnailPath: '/uploads/thumbnails/thumb-abc.jpg',
         source: 'local',
@@ -423,7 +424,7 @@ describe('ShareService.getPublicTrip — sensitive field exclusion', () => {
       ['content', 'date', 'entryType', 'id', 'mood', 'title'].sort()
     );
     expect(Object.keys(payload.photos[0]).sort()).toEqual(
-      ['caption', 'id', 'takenAt', 'thumbnailUrl', 'url'].sort()
+      ['caption', 'id', 'isFavorite', 'takenAt', 'thumbnailUrl', 'url'].sort()
     );
   });
 
@@ -446,6 +447,11 @@ describe('ShareService.getPublicTrip — sensitive field exclusion', () => {
     expect(payload.activities[0].locationName).toBe('Colosseum');
     expect(payload.transportation[0].from).toBe('JFK');
     expect(payload.transportation[0].to).toBe('FCO');
+  });
+
+  it('exposes the favorite flag on shared photos', async () => {
+    const payload = await shareService.getPublicTrip(VALID_TOKEN);
+    expect(payload.photos[0].isFavorite).toBe(true);
   });
 
   it('exposes photos only through token-scoped API paths, never the stored file path', async () => {

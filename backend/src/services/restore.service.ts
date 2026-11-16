@@ -4,7 +4,7 @@ import { BackupData, RestoreOptions, isStoredUploadPath } from '../types/backup.
 import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
-import { resolveTimezone } from './_shared/timezoneResolution';
+import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
 
@@ -22,9 +22,13 @@ interface RestoreStats {
   tagsImported: number;
   companionsImported: number;
   travelDocumentsImported: number;
+  loyaltyProgramsImported: number;
   tripLanguagesImported: number;
   savedLinksImported: number;
   customItemsImported: number;
+  /** Expense receipts re-attached, and ones left off because their file was missing or unusable. */
+  receiptsRestored: number;
+  receiptsNotRestored: number;
 }
 
 /**
@@ -94,26 +98,40 @@ export async function restoreFromBackup(
     tagsImported: 0,
     companionsImported: 0,
     travelDocumentsImported: 0,
+    loyaltyProgramsImported: 0,
     tripLanguagesImported: 0,
     savedLinksImported: 0,
     customItemsImported: 0,
+    receiptsRestored: 0,
+    receiptsNotRestored: 0,
   };
+
+  // Receipt files of the expenses a replace-mode restore deletes; removed after commit.
+  const oldReceiptPaths = options.clearExistingData
+    ? (
+        await prisma.tripExpense.findMany({
+          where: { trip: { userId }, receiptPath: { not: null } },
+          select: { receiptPath: true },
+        })
+      ).map((row) => row.receiptPath)
+    : [];
+  const receiptRef: { current: ReceiptRestorer | null } = { current: null };
 
   try {
     // Use a transaction to ensure atomicity
     await prisma.$transaction(
       async (tx) => {
+        const receipts = new ReceiptRestorer(userId, tx);
+        receiptRef.current = receipts;
         // Step 1: Clear existing data if requested
         if (options.clearExistingData) {
           await clearUserData(userId, tx);
         }
 
         // Step 2: Update user settings
-        // Preserve current timezone if the backup doesn't include one
-        const currentUser = await tx.user.findUnique({
-          where: { id: userId },
-          select: { timezone: true },
-        });
+        // A backup with no timezone leaves the user's current one alone (and null stays
+        // null). The column has no default on purpose, so never invent one here.
+        const backupTimezone = backupData.user.timezone?.trim();
         // Validate Immich URL from backup to prevent SSRF
         let sanitizedImmichUrl = backupData.user.immichApiUrl;
         if (sanitizedImmichUrl) {
@@ -182,7 +200,7 @@ export async function restoreFromBackup(
         await tx.user.update({
           where: { id: userId },
           data: {
-            timezone: resolveTimezone(backupData.user.timezone, currentUser?.timezone),
+            ...(backupTimezone ? { timezone: backupTimezone } : {}),
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
             ...(backupData.user.dietaryPreferences !== undefined
@@ -193,6 +211,9 @@ export async function restoreFromBackup(
               : {}),
             ...(backupData.user.baseCurrency !== undefined
               ? { baseCurrency: backupData.user.baseCurrency }
+              : {}),
+            ...(backupData.user.measurementSystem !== undefined
+              ? { measurementSystem: backupData.user.measurementSystem }
               : {}),
             ...(backupData.user.preferredMapsApp !== undefined
               ? { preferredMapsApp: backupData.user.preferredMapsApp }
@@ -308,6 +329,42 @@ export async function restoreFromBackup(
               },
             },
           });
+        }
+
+        // Step 6.4: Import loyalty programs. Built before trips so bookings can be re-linked
+        // through the old id -> new id map. A program already present (same type, provider and
+        // membership number) is reused rather than duplicated during a merge.
+        const loyaltyProgramMap = new Map<number, number>(); // old ID -> new ID
+        for (const programData of backupData.loyaltyPrograms || []) {
+          const existingProgram = await tx.loyaltyProgram.findFirst({
+            where: {
+              userId,
+              type: programData.type,
+              providerName: programData.providerName,
+              membershipNumber: programData.membershipNumber,
+            },
+          });
+          const programId = existingProgram
+            ? existingProgram.id
+            : (
+                await tx.loyaltyProgram.create({
+                  data: {
+                    userId,
+                    name: programData.name,
+                    type: programData.type,
+                    providerName: programData.providerName,
+                    providerCode: programData.providerCode ?? null,
+                    alliance: programData.alliance ?? null,
+                    aliases: programData.aliases ?? [],
+                    membershipNumber: programData.membershipNumber,
+                    tier: programData.tier ?? null,
+                    pointsBalance: programData.pointsBalance ?? null,
+                    notes: programData.notes ?? null,
+                  },
+                })
+              ).id;
+          if (!existingProgram) stats.loyaltyProgramsImported++;
+          if (programData.id != null) loyaltyProgramMap.set(programData.id, programId);
         }
 
         // Step 6.5: Import travel documents (added in v1.1.0)
@@ -480,6 +537,7 @@ export async function restoreFromBackup(
                   latitude: photoData.latitude,
                   longitude: photoData.longitude,
                   takenAt: photoData.takenAt ? new Date(photoData.takenAt) : null,
+                  isFavorite: photoData.isFavorite ?? false,
                 },
               });
               if (photoData.id != null) photoMap.set(photoData.id, photo.id);
@@ -579,6 +637,9 @@ export async function restoreFromBackup(
                 referenceNumber: transportData.referenceNumber,
                 seatNumber: transportData.seatNumber,
                 bookingReference: transportData.bookingReference,
+                loyaltyProgramId: transportData.loyaltyProgramId
+                  ? (loyaltyProgramMap.get(transportData.loyaltyProgramId) ?? null)
+                  : null,
                 bookingUrl: transportData.bookingUrl,
                 cost: transportData.cost,
                 currency: transportData.currency,
@@ -634,6 +695,9 @@ export async function restoreFromBackup(
                 checkOutDate: new Date(lodgingData.checkOutDate),
                 timezone: lodgingData.timezone,
                 confirmationNumber: lodgingData.confirmationNumber,
+                loyaltyProgramId: lodgingData.loyaltyProgramId
+                  ? (loyaltyProgramMap.get(lodgingData.loyaltyProgramId) ?? null)
+                  : null,
                 bookingUrl: lodgingData.bookingUrl,
                 cost: lodgingData.cost,
                 currency: lodgingData.currency,
@@ -680,6 +744,22 @@ export async function restoreFromBackup(
                 dueAt: new Date(deadlineData.dueAt),
                 note: deadlineData.note ?? null,
                 dismissedAt: deadlineData.dismissedAt ? new Date(deadlineData.dismissedAt) : null,
+              },
+            });
+          }
+
+          // Import route stops in backup order (which is route order). A location link is
+          // remapped through the old-id -> new-id map; one missing from the backup is dropped.
+          for (const [position, stopData] of (tripData.stops || []).entries()) {
+            await tx.tripStop.create({
+              data: {
+                tripId: trip.id,
+                name: stopData.name,
+                latitude: stopData.latitude,
+                longitude: stopData.longitude,
+                nights: stopData.nights ?? null,
+                locationId: stopData.locationId ? locationMap.get(stopData.locationId) ?? null : null,
+                position,
               },
             });
           }
@@ -745,6 +825,8 @@ export async function restoreFromBackup(
                 name: albumData.name,
                 description: albumData.description,
                 coverPhotoId: albumData.coverPhotoId ? photoMap.get(albumData.coverPhotoId) : null,
+                immichAlbumId: albumData.immichAlbumId ?? null,
+                immichAlbumSyncedAt: albumData.immichAlbumSyncedAt ? new Date(albumData.immichAlbumSyncedAt) : null,
               },
             });
             if (albumData.id != null) albumMap.set(albumData.id, album.id);
@@ -919,8 +1001,25 @@ export async function restoreFromBackup(
 
           // Import trip expenses (added in v1.6.0)
           for (const expenseData of tripData.expenses || []) {
+            // Payer and split participants are matched to the freshly created companions by
+            // name. One that no longer resolves (missing from the backup) drops out; a split
+            // that then no longer adds up is reported as unsplit by settle-up, not guessed at.
+            const payerCompanionId = expenseData.paidByCompanionName
+              ? companionMap.get(expenseData.paidByCompanionName) ?? null
+              : null;
+            type SplitData = NonNullable<typeof expenseData.splits>[number];
+            type SplitRow = { isOwner: boolean; companionId: number | null; split: SplitData };
+            const splitRows = (expenseData.splits || []).flatMap((split): SplitRow[] => {
+              if (split.isOwner || !split.companionName) {
+                return [{ isOwner: true, companionId: null, split }];
+              }
+              const companionId = companionMap.get(split.companionName);
+              return companionId !== undefined ? [{ isOwner: false, companionId, split }] : [];
+            });
+            const receiptFields = await receipts.prepare(expenseData);
             await tx.tripExpense.create({
               data: {
+                ...receiptFields,
                 tripId: trip.id,
                 description: expenseData.description,
                 category: expenseData.category,
@@ -937,6 +1036,18 @@ export async function restoreFromBackup(
                 baseCurrency: expenseData.baseCurrency ?? null,
                 date: expenseData.date ? new Date(expenseData.date) : null,
                 notes: expenseData.notes ?? null,
+                paidByOwner: expenseData.paidByOwner === true && payerCompanionId === null,
+                paidByCompanionId: payerCompanionId,
+                splitMethod: splitRows.length > 0 ? expenseData.splitMethod ?? null : null,
+                splits: {
+                  create: splitRows.map(({ isOwner, companionId, split }) => ({
+                    isOwner,
+                    companionId,
+                    amount: new Prisma.Decimal(split.amount),
+                    percentage:
+                      split.percentage != null ? new Prisma.Decimal(split.percentage) : null,
+                  })),
+                },
               },
             });
           }
@@ -1027,12 +1138,29 @@ export async function restoreFromBackup(
       }
     );
 
+    if (receiptRef.current) {
+      stats.receiptsRestored = receiptRef.current.restored;
+      stats.receiptsNotRestored = receiptRef.current.notRestored;
+    }
+    // The replaced expenses are gone: delete their receipt files unless the restore
+    // re-attached the same file to a restored expense.
+    if (oldReceiptPaths.length > 0) {
+      const stillUsed = await prisma.tripExpense.findMany({
+        where: { receiptPath: { in: oldReceiptPaths.filter((p): p is string => p !== null) } },
+        select: { receiptPath: true },
+      });
+      const keep = new Set(stillUsed.map((row) => row.receiptPath));
+      await deleteReceiptFiles(oldReceiptPaths.filter((p) => !keep.has(p)));
+    }
+
     return {
       success: true,
       message: 'Data restored successfully',
       stats,
     };
   } catch (error) {
+    // Rolled back: remove receipt files this restore copied.
+    await receiptRef.current?.discardCopies();
     if (error instanceof AppError) throw error;
     console.error('Error restoring from backup:', error);
     throw new AppError(
@@ -1088,6 +1216,11 @@ async function clearUserData(userId: number, tx: TransactionClient) {
 
   // Delete travel documents (added in v1.1.0)
   await tx.travelDocument.deleteMany({
+    where: { userId },
+  });
+
+  // Delete loyalty programs. Bookings that pointed at them are already gone with the trips.
+  await tx.loyaltyProgram.deleteMany({
     where: { userId },
   });
 

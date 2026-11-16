@@ -113,6 +113,7 @@ export const PERSISTABLE_QUERY_KEYS = [
   'trip',
   'locations',
   'location',
+  'locationLinks',
   'activities',
   'activity',
   'lodging',

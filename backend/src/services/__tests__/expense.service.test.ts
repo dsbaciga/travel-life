@@ -34,6 +34,11 @@ const mockPrisma = {
     update: jest.fn(),
     delete: jest.fn(),
   },
+  tripExpenseSplit: {
+    findMany: jest.fn(),
+    update: jest.fn(),
+  },
+  $transaction: jest.fn(),
   activity: {
     findMany: jest.fn(),
     update: jest.fn(),
@@ -119,6 +124,8 @@ function stubEmptyBudgetData() {
 describe('ExpenseService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
+    mockPrisma.$transaction.mockResolvedValue([]);
     mockPrisma.trip.findFirst.mockResolvedValue(ownedTrip());
     jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   });
@@ -228,6 +235,64 @@ describe('ExpenseService', () => {
       expect(mockPrisma.tripExpense.update.mock.calls[0][0].data.baseAmount.toString()).toBe(
         '685.56'
       );
+    });
+
+    it('should re-scale stored splits to the new amount, keeping the sum exact', async () => {
+      mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
+      mockPrisma.tripExpense.update.mockResolvedValue({ id: 5, amount: new Prisma.Decimal('100.00') });
+      mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([
+        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00') },
+        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00') },
+        { id: 3, isOwner: false, companionId: 9, amount: new Prisma.Decimal('100.00') },
+      ]);
+      mockPrisma.tripExpenseSplit.update.mockImplementation(((args: unknown) => args) as never);
+
+      await expenseService.updateExpense(1, 10, 5, { amount: 100 });
+
+      const updates = mockPrisma.tripExpenseSplit.update.mock.calls.map(
+        (c) => c[0] as { where: { id: number }; data: { amount: Prisma.Decimal } }
+      );
+      expect(updates.map((u) => [u.where.id, u.data.amount.toString()])).toEqual([
+        [1, '41.68'], // odd cents land on the largest share (lowest key on a tie)
+        [2, '41.66'],
+        [3, '16.66'],
+      ]);
+      expect(updates.reduce((sum, u) => sum.add(u.data.amount), new Prisma.Decimal(0)).eq(100)).toBe(true);
+    });
+
+    it('should return the re-scaled splits in the update response (not an empty list)', async () => {
+      mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
+      mockPrisma.tripExpense.update.mockResolvedValue({
+        id: 5,
+        amount: new Prisma.Decimal('100.00'),
+        paidByOwner: true,
+        paidByCompanionId: null,
+        splits: [],
+      });
+      const before = [
+        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
+      ];
+      mockPrisma.tripExpenseSplit.findMany
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce([
+          { ...before[0], amount: new Prisma.Decimal('50.00') },
+          { ...before[1], amount: new Prisma.Decimal('50.00') },
+        ]);
+      mockPrisma.tripExpenseSplit.update.mockImplementation(((args: unknown) => args) as never);
+
+      const result = await expenseService.updateExpense(1, 10, 5, { amount: 100 });
+
+      expect(result.paidBy).toBe('owner');
+      expect(result.splits).toEqual([
+        { participant: 'owner', amount: 50, percentage: null },
+        { participant: 'companion:8', amount: 50, percentage: null },
+      ]);
+    });
+
+    it('should not touch splits when the amount did not change', async () => {
+      await expenseService.updateExpense(1, 10, 5, { description: 'Renamed' });
+      expect(mockPrisma.tripExpenseSplit.findMany).not.toHaveBeenCalled();
     });
 
     it('should re-snapshot when the currency changes', async () => {

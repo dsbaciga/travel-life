@@ -43,6 +43,8 @@ export type Lodging = {
   checkOutDate: string | null;
   timezone: string | null;
   confirmationNumber: string | null;
+  /** The user's loyalty program this stay was booked under; the number itself is never on the booking. */
+  loyaltyProgramId: number | null;
   cost: number | null;
   currency: string | null;
   bookingUrl: string | null;
@@ -61,6 +63,7 @@ export type CreateLodgingInput = {
   checkOutDate?: string;
   timezone?: string;
   confirmationNumber?: string;
+  loyaltyProgramId?: number;
   cost?: number;
   currency?: string;
   bookingUrl?: string;
@@ -76,6 +79,7 @@ export type UpdateLodgingInput = {
   checkOutDate?: string | null;
   timezone?: string | null;
   confirmationNumber?: string | null;
+  loyaltyProgramId?: number | null;
   cost?: number | null;
   currency?: string | null;
   bookingUrl?: string | null;

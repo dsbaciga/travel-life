@@ -236,6 +236,40 @@ describe('ActivityService', () => {
   // ============================================================
   // ACT-002: Create all-day activity
   // ============================================================
+  describe('ACT-001b: Create persists timezone and allDay', () => {
+    it('writes the timezone and allDay the request carried', async () => {
+      const userId = 1;
+      mockPrisma.trip.findFirst.mockResolvedValue(createMockTrip(100, userId));
+      mockPrisma.activity.create.mockResolvedValue(createMockActivity({ id: 1, tripId: 100 }));
+
+      await activityService.createActivity(userId, {
+        tripId: 100,
+        name: 'Temple',
+        timezone: 'Asia/Tokyo',
+        allDay: true,
+        startTime: '2025-06-15T00:00:00Z',
+      });
+
+      expect(mockPrisma.activity.create.mock.calls[0][0].data).toMatchObject({
+        timezone: 'Asia/Tokyo',
+        allDay: true,
+      });
+    });
+
+    it('defaults to no timezone and not all-day', async () => {
+      const userId = 1;
+      mockPrisma.trip.findFirst.mockResolvedValue(createMockTrip(100, userId));
+      mockPrisma.activity.create.mockResolvedValue(createMockActivity({ id: 1, tripId: 100 }));
+
+      await activityService.createActivity(userId, { tripId: 100, name: 'Walk' });
+
+      expect(mockPrisma.activity.create.mock.calls[0][0].data).toMatchObject({
+        timezone: null,
+        allDay: false,
+      });
+    });
+  });
+
   describe('ACT-002: Create all-day activity', () => {
     it('should create an all-day activity without specific times', async () => {
       const userId = 1;

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useUnits } from '../../hooks/useUnits';
 import { getTimelineItemIcon, EditIcon, DeleteIcon, LocationIcon, HashIcon, CheckCircleIcon, MoonIcon, BoltIcon, ChecklistIcon, PhotoIcon } from './icons';
 import {
   formatTime,
   formatDuration,
-  formatDistance,
   getTypeColor,
   getTypeBorderColor,
   getTimezoneAbbr,
@@ -36,6 +36,7 @@ export default function TimelineEventCard({
   onDelete,
   onLinkUpdate,
 }: TimelineEventCardProps) {
+  const { formatDistance } = useUnits();
   const isCompact = viewMode === 'compact';
   const entityType = mapTimelineTypeToEntityType(item.type);
 

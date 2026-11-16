@@ -23,7 +23,7 @@ const getRemainingTtlMs = (token: string): number | null => {
 type RefreshResult = {
   accessToken: string;
   refreshToken: string;
-  user: { id: number; username: string; email: string; avatarUrl: string | null; timezone: string | null };
+  user: { id: number; username: string; email: string; avatarUrl: string | null; timezone: string | null; measurementSystem: string | null };
 };
 
 /**
@@ -103,6 +103,7 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
+        measurementSystem: user.measurementSystem,
       },
       accessToken,
       refreshToken,
@@ -144,13 +145,14 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
+        measurementSystem: user.measurementSystem,
       },
       accessToken,
       refreshToken,
     };
   }
 
-  async refreshToken(token: string): Promise<{ accessToken: string; refreshToken: string; user: { id: number; username: string; email: string; avatarUrl: string | null; timezone: string | null } }> {
+  async refreshToken(token: string): Promise<{ accessToken: string; refreshToken: string; user: { id: number; username: string; email: string; avatarUrl: string | null; timezone: string | null; measurementSystem: string | null } }> {
     try {
       // Verify refresh token
       const decoded = verifyRefreshToken(token);
@@ -217,6 +219,7 @@ export class AuthService {
           email: true,
           avatarUrl: true,
           timezone: true,
+          measurementSystem: true,
           passwordVersion: true,
         },
       });
@@ -249,6 +252,7 @@ export class AuthService {
           email: user.email,
           avatarUrl: user.avatarUrl,
           timezone: user.timezone,
+          measurementSystem: user.measurementSystem,
         }
       };
 
@@ -293,6 +297,7 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
+        measurementSystem: user.measurementSystem,
       },
       accessToken: generateAccessToken(payload),
       refreshToken: generateRefreshToken(payload),
@@ -308,6 +313,7 @@ export class AuthService {
         email: true,
         avatarUrl: true,
         timezone: true,
+        measurementSystem: true,
         createdAt: true,
       },
     });

@@ -16,6 +16,7 @@ throwaway container that you delete afterwards.
 | `api-smoke.cjs` | 66 API steps as a new user: sign-up, token refresh, create/edit/delete on every main entity, PostGIS writes, raw-SQL reads, share link and calendar feed without sign-in, trip duplication, backup and restore |
 | `compare-reads.cjs` | Asks the old and the new backend the same read questions about copies of the same data, for every user and trip, and lists every response that differs |
 | `backup-roundtrip.cjs` | For each existing user: backup, restore over their data, backup again, and compare |
+| `batch-nov-2026-smoke.cjs` | About 400 assertions on the November 2026 batch (expense splits, receipts, photo favorites, loyalty programs, trip stops, units, trip comparison, CSV import, journal day draft, Immich sync, booking deadlines), then a backup round trip (replace and merge), trip duplication and mobile sync |
 | `sharing-and-uploads.cjs` | Three users (owner, collaborator, stranger) at each permission level, plus photo and video uploads with real files and who may open them |
 
 ## Running it
@@ -104,7 +105,34 @@ docker rmi tl-verify-be:old tl-verify-be:new
 rm -f /tmp/tl.dump
 ```
 
+## The November 2026 batch script
+
+`batch-nov-2026-smoke.cjs` needs a backend that runs from `backend/` (receipts and photos are
+written to `backend/uploads/`, which is git-ignored) and a database in a container it can reach
+with `docker exec` (default container `tl-batch-verify`, database `batch`, user `tl`; pass another
+container name as the third argument). It registers four users (owner, editor, view-only
+collaborator, stranger) and checks permissions as well as data.
+
+```bash
+bash tools/release-verify/provision-empty-db.sh "$PWD/backend" batch
+cd backend && npm run build
+DATABASE_URL='postgresql://tl:tl_test_pw@127.0.0.1:55432/batch?schema=public' JWT_SECRET=<32+ chars> JWT_REFRESH_SECRET=<32+ chars> PORT=5077 NODE_ENV=production AI_ENABLED=false NOMINATIM_URL=http://127.0.0.1:9 BACKUP_RATE_LIMIT_MAX=1000 AI_RATE_LIMIT_MAX=1000 node dist/index.js &
+cd .. && node tools/release-verify/batch-nov-2026-smoke.cjs http://127.0.0.1:5077 /tmp/batch.json
+```
+
+Notes:
+
+- Run it on a fresh database; it creates users with random names, so a re-run on a used database
+  also works, but the duplication and backup checks read "the first trip called Batch trip".
+- The fake-Immich section starts a small Immich stand-in on 127.0.0.1 and saves its URL for the
+  owner. The backend refuses private and loopback Immich URLs unless the operator opts in, and
+  the script does not work around that: without the opt-in the section is reported as `SKIP` and
+  only the no-Immich checks run. Run it against a backend where you have deliberately allowed
+  private integration URLs (see `backend/CLAUDE.md`) to exercise the full flows.
+- Receipts and photos are cleaned up by the script's own deletes only partly; remove
+  `backend/uploads/receipts`, `photos`, `thumbnails` and `videos` afterwards.
+
 ## What this does not cover
 
 The web interface (drive it in a browser against the frontend image), the mobile app,
-Immich, PDF import, email ingest, push delivery and the scheduled jobs.
+a real Immich server, PDF import, email ingest, push delivery and the scheduled jobs.

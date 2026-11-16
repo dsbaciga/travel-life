@@ -290,6 +290,12 @@ class PhotoAlbumService {
     // Verify user has view permission on the album's trip
     await verifyEntityAccessWithPermission('photoAlbum', albumId, userId, 'view');
 
+    // When filtering to favorites, both the page and the total must be scoped
+    // to starred photos so pagination reflects the full favorites set.
+    const assignmentFilter = options?.favoritesOnly
+      ? { photo: { isFavorite: true } }
+      : undefined;
+
     // Note: Location, Activity, and Lodging associations are fetched via EntityLink system
     const album = await prisma.photoAlbum.findUnique({
       where: { id: albumId },
@@ -300,6 +306,7 @@ class PhotoAlbumService {
           },
         },
         photoAssignments: {
+          where: assignmentFilter,
           include: {
             photo: true,
           },
@@ -308,7 +315,7 @@ class PhotoAlbumService {
           take,
         },
         _count: {
-          select: { photoAssignments: true },
+          select: { photoAssignments: { where: assignmentFilter } },
         },
       },
     });

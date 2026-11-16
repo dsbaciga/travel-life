@@ -18,6 +18,18 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
+const mockStat = jest.fn<(p: string) => Promise<{ isFile: () => boolean }>>();
+const mockCopyFile = jest.fn<(a: string, b: string) => Promise<void>>();
+const mockUnlink = jest.fn<(p: string) => Promise<void>>();
+jest.mock('fs/promises', () => ({
+  __esModule: true,
+  default: {
+    stat: (p: string) => mockStat(p),
+    copyFile: (a: string, b: string) => mockCopyFile(a, b),
+    unlink: (p: string) => mockUnlink(p),
+  },
+}));
+
 // Mock @prisma/client BEFORE any imports that depend on it
 jest.mock('@prisma/client', () => {
   class MockDecimal {
@@ -73,6 +85,11 @@ const mockTx = {
     deleteMany: jest.fn(),
   },
   travelDocument: {
+    create: jest.fn(),
+    findFirst: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  loyaltyProgram: {
     create: jest.fn(),
     findFirst: jest.fn(),
     deleteMany: jest.fn(),
@@ -135,8 +152,12 @@ const mockTx = {
   bookingDeadline: {
     create: jest.fn(),
   },
+  tripStop: {
+    create: jest.fn(),
+  },
   tripExpense: {
     create: jest.fn(),
+    findFirst: jest.fn(),
   },
   tripEmergencyInfo: {
     create: jest.fn(),
@@ -144,6 +165,7 @@ const mockTx = {
 };
 
 const mockPrisma = {
+  tripExpense: { findMany: jest.fn(async () => [] as Array<{ receiptPath: string | null }>) },
   $transaction: jest.fn((callback: unknown) => {
     if (typeof callback === 'function') {
       return (callback as (tx: typeof mockTx) => Promise<unknown>)(mockTx);
@@ -159,7 +181,7 @@ jest.mock('../../config/database', () => ({
 
 // Import the service after all mocks
 import { restoreFromBackup } from '../restore.service';
-import { BackupData } from '../../types/backup.types';
+import { BackupData, BackupDataSchema } from '../../types/backup.types';
 
 describe('RestoreService', () => {
   // Minimal valid backup
@@ -313,6 +335,8 @@ describe('RestoreService', () => {
 
     mockTx.travelDocument.findFirst.mockResolvedValue(null); // No existing docs
     mockTx.travelDocument.create.mockResolvedValue({ id: 1 });
+    mockTx.loyaltyProgram.findFirst.mockResolvedValue(null);
+    mockTx.loyaltyProgram.create.mockResolvedValue({ id: 900 });
 
     let seriesIdCounter = 400;
     mockTx.tripSeries.create.mockImplementation(() =>
@@ -362,6 +386,7 @@ describe('RestoreService', () => {
     mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntryPhoto.create.mockResolvedValue({ id: 1 });
     mockTx.bookingDeadline.create.mockResolvedValue({ id: 1 });
+    mockTx.tripStop.create.mockResolvedValue({ id: 1 });
     mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
     mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
     mockTx.savedLink.create.mockResolvedValue({ id: 1 });
@@ -380,6 +405,7 @@ describe('RestoreService', () => {
     mockTx.customItemType.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.checklist.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.travelDocument.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.loyaltyProgram.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.tripSeries.deleteMany.mockResolvedValue({ count: 0 });
     mockTx.savedLink.deleteMany.mockResolvedValue({ count: 0 });
   });
@@ -390,6 +416,25 @@ describe('RestoreService', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('Data restored successfully');
+    });
+
+    it('RST-019: a backup with no timezone leaves the current timezone alone and never invents UTC', async () => {
+      for (const timezone of [null, undefined, '', '   ']) {
+        mockTx.user.update.mockClear();
+        await restoreFromBackup(1, {
+          ...minimalBackup,
+          user: { ...minimalBackup.user, timezone: timezone as string | null },
+        });
+        const data = mockTx.user.update.mock.calls[0][0].data;
+        expect(data).not.toHaveProperty('timezone');
+      }
+      expect(mockTx.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('RST-019b: a backup with a timezone restores it', async () => {
+      mockTx.user.update.mockClear();
+      await restoreFromBackup(1, { ...minimalBackup, user: { ...minimalBackup.user, timezone: ' Europe/Rome ' } });
+      expect(mockTx.user.update.mock.calls[0][0].data.timezone).toBe('Europe/Rome');
     });
 
     it('RST-002: rejects unsupported backup version', async () => {
@@ -562,6 +607,40 @@ describe('RestoreService', () => {
       expect(booked.data).toMatchObject({ lodgingId: 80, title: null, note: 'Free until noon' });
     });
 
+    it('RST-018: restores route stops in order and remaps their location link', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            // old location id 1 (Colosseum) is restored as the first new location id
+            stops: [
+              { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 1 },
+              { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: 999 },
+              { name: 'Venice', latitude: 45.44, longitude: 12.33 },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.tripStop.create).toHaveBeenCalledTimes(3);
+      const data = mockTx.tripStop.create.mock.calls.map(
+        (c) => (c[0] as { data: Record<string, unknown> }).data
+      );
+      expect(data.map((d) => [d.name, d.position])).toEqual([
+        ['Rome', 0],
+        ['Florence', 1],
+        ['Venice', 2],
+      ]);
+      expect(data[0]).toMatchObject({ nights: 3, locationId: 10 });
+      // an unresolvable link is dropped but the stop survives
+      expect(data[1]).toMatchObject({ nights: null, locationId: null });
+      expect(data[2]).toMatchObject({ nights: null, locationId: null });
+    });
+
     it('RST-016b: re-attaches food log photos through the photo id map', async () => {
       const trip = fullBackup.trips[0];
       const backup: BackupData = {
@@ -646,6 +725,79 @@ describe('RestoreService', () => {
       expect(result.stats.travelDocumentsImported).toBe(1);
     });
 
+    it('RST-010b: restores loyalty programs in full and re-links bookings to them', async () => {
+      mockTx.loyaltyProgram.create.mockResolvedValue({ id: 901 });
+      const backup = {
+        ...fullBackup,
+        loyaltyPrograms: [
+          {
+            id: 7,
+            name: 'SkyMiles',
+            type: 'AIRLINE' as const,
+            providerName: 'Delta Air Lines',
+            providerCode: 'DL',
+            aliases: ['Delta'],
+            membershipNumber: '9876543210',
+            tier: 'Gold',
+            pointsBalance: 12500,
+          },
+        ],
+        trips: [
+          {
+            ...fullBackup.trips[0],
+            transportation: [{ type: 'flight', company: 'Delta', loyaltyProgramId: 7 }],
+            lodging: [
+              {
+                type: 'hotel',
+                name: 'Hotel',
+                checkInDate: '2024-07-01',
+                checkOutDate: '2024-07-02',
+                loyaltyProgramId: 99, // not in the backup: link is dropped, not invented
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, backup);
+
+      expect(mockTx.loyaltyProgram.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: 1,
+          membershipNumber: '9876543210',
+          aliases: ['Delta'],
+          pointsBalance: 12500,
+        }),
+      });
+      expect(result.stats.loyaltyProgramsImported).toBe(1);
+      expect(mockTx.transportation.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loyaltyProgramId: 901 }),
+      });
+      expect(mockTx.lodging.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ loyaltyProgramId: null }),
+      });
+    });
+
+    it('RST-010c: reuses a loyalty program that already exists instead of duplicating it', async () => {
+      mockTx.loyaltyProgram.findFirst.mockResolvedValue({ id: 55 });
+
+      const result = await restoreFromBackup(1, {
+        ...fullBackup,
+        loyaltyPrograms: [
+          {
+            id: 7,
+            name: 'SkyMiles',
+            type: 'AIRLINE' as const,
+            providerName: 'Delta Air Lines',
+            membershipNumber: '9876543210',
+          },
+        ],
+      });
+
+      expect(mockTx.loyaltyProgram.create).not.toHaveBeenCalled();
+      expect(result.stats.loyaltyProgramsImported).toBe(0);
+    });
+
     it('RST-011: imports trip series (v1.2.0)', async () => {
       await restoreFromBackup(1, fullBackup);
 
@@ -656,6 +808,21 @@ describe('RestoreService', () => {
             name: 'Europe Series',
           }),
         })
+      );
+    });
+
+    it('RST-012a: restores the photo favorite flag, defaulting to false for older backups', async () => {
+      await restoreFromBackup(1, fullBackup);
+      expect(mockTx.photo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isFavorite: false }) })
+      );
+
+      mockTx.photo.create.mockClear();
+      const starred = JSON.parse(JSON.stringify(fullBackup));
+      starred.trips[0].photos[0].isFavorite = true;
+      await restoreFromBackup(1, starred);
+      expect(mockTx.photo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isFavorite: true }) })
       );
     });
 
@@ -697,6 +864,7 @@ describe('RestoreService', () => {
       mockTx.locationCategory.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.checklist.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.travelDocument.deleteMany.mockResolvedValue({ count: 0 });
+    mockTx.loyaltyProgram.deleteMany.mockResolvedValue({ count: 0 });
       mockTx.tripSeries.deleteMany.mockResolvedValue({ count: 0 });
 
       const v110Backup: BackupData = { ...minimalBackup, version: '1.1.0' };
@@ -889,6 +1057,232 @@ describe('RestoreService', () => {
           }),
         })
       );
+    });
+  });
+  describe('RST-017: expense payer and splits (#97)', () => {
+    it('re-links the payer and each share to the restored companions by name', async () => {
+      mockTx.travelCompanion.create.mockImplementation((async (args: { data: { name: string } }) => ({
+        id: args.data.name === 'Alice' ? 501 : 502,
+      })) as never);
+
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.6.0',
+        companions: [{ name: 'Alice' }, { name: 'Bob' }],
+        trips: [
+          {
+            title: 'Split Trip',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            companions: ['Alice', 'Bob'],
+            expenses: [
+              {
+                id: 9,
+                description: 'Dinner',
+                category: 'food',
+                amount: 90,
+                currency: 'EUR',
+                paidByCompanionName: 'Bob',
+                splitMethod: 'equal',
+                splits: [
+                  { isOwner: true, amount: 30 },
+                  { companionName: 'Alice', amount: 30 },
+                  { companionName: 'Bob', amount: 30 },
+                  { companionName: 'Ghost', amount: 10 },
+                ],
+              },
+              {
+                description: 'Taxi',
+                category: 'transportation',
+                amount: 20,
+                paidByOwner: true,
+                splitMethod: 'percentage',
+                splits: [{ isOwner: true, amount: 20, percentage: 100 }],
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, backup);
+      expect(result.success).toBe(true);
+
+      const calls = mockTx.tripExpense.create.mock.calls.map(
+        (c) => (c[0] as { data: Record<string, unknown> }).data
+      );
+      const dinner = calls.find((d) => d.description === 'Dinner') as {
+        paidByOwner: boolean;
+        paidByCompanionId: number | null;
+        splitMethod: string | null;
+        splits: { create: Array<{ isOwner: boolean; companionId: number | null }> };
+      };
+      expect(dinner.paidByOwner).toBe(false);
+      expect(dinner.paidByCompanionId).toBe(502);
+      expect(dinner.splitMethod).toBe('equal');
+      // The unknown companion drops out; owner / Alice / Bob remain, with NEW ids.
+      expect(dinner.splits.create.map((r) => [r.isOwner, r.companionId])).toEqual([
+        [true, null],
+        [false, 501],
+        [false, 502],
+      ]);
+
+      const taxi = calls.find((d) => d.description === 'Taxi') as typeof dinner;
+      expect(taxi.paidByOwner).toBe(true);
+      expect(taxi.paidByCompanionId).toBeNull();
+    });
+  });
+
+  describe('RST-RCPT: expense receipts', () => {
+    const baseTrip = {
+      title: 'Japan 2026',
+      status: 'Planned',
+      privacyLevel: 'Private',
+    };
+    const withExpenses = (expenses: Array<Record<string, unknown>>): BackupData =>
+      ({
+        ...minimalBackup,
+        version: '1.6.0',
+        trips: [{ ...baseTrip, expenses }],
+      }) as unknown as BackupData;
+    const expense = (extra: Record<string, unknown> = {}) => ({
+      description: 'Ramen',
+      category: 'food',
+      amount: 12,
+      currency: 'JPY',
+      ...extra,
+    });
+    const createdData = (n: number) =>
+      (mockTx.tripExpense.create.mock.calls[n][0] as { data: Record<string, unknown> }).data;
+
+    beforeEach(() => {
+      mockStat.mockResolvedValue({ isFile: () => true });
+      mockCopyFile.mockResolvedValue(undefined);
+      mockUnlink.mockResolvedValue(undefined);
+      mockTx.tripExpense.findFirst.mockResolvedValue(null);
+      mockPrisma.tripExpense.findMany.mockResolvedValue([]);
+    });
+
+    it('round trip: re-attaches the receipt when its file exists, and counts it', async () => {
+      const result = await restoreFromBackup(
+        1,
+        withExpenses([
+          expense({
+            receiptPath: '/uploads/receipts/a.jpg',
+            receiptMimeType: 'image/jpeg',
+            receiptSizeBytes: 1234,
+            receiptUploadedAt: '2026-05-02T10:00:00.000Z',
+          }),
+        ])
+      );
+      expect(createdData(0)).toMatchObject({
+        receiptPath: '/uploads/receipts/a.jpg',
+        receiptMimeType: 'image/jpeg',
+        receiptSizeBytes: 1234,
+      });
+      expect(mockCopyFile).not.toHaveBeenCalled();
+      expect(result.stats).toMatchObject({ receiptsRestored: 1, receiptsNotRestored: 0 });
+    });
+
+    it('a missing file restores the expense with no receipt and counts it', async () => {
+      mockStat.mockRejectedValue(Object.assign(new Error('gone'), { code: 'ENOENT' }));
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/gone.jpg' })]));
+      expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 1 });
+    });
+
+    it('rejects traversal, absolute and foreign-directory paths in the backup', () => {
+      for (const bad of [
+        '/uploads/receipts/../photos/a.jpg',
+        '/uploads/receipts/../../etc/passwd',
+        '/etc/passwd',
+        'C:\\Windows\\win.ini',
+        '/uploads/photos/a.jpg',
+        '/uploads/receipts/sub/a.jpg',
+        '/uploads/receipts/',
+      ]) {
+        const parsed = BackupDataSchema.safeParse(withExpenses([expense({ receiptPath: bad })]));
+        expect(parsed.success).toBe(false);
+      }
+      expect(BackupDataSchema.safeParse(withExpenses([expense({ receiptPath: '/uploads/receipts/ok-1.jpg' })])).success).toBe(true);
+    });
+
+    it('second layer: a bad path that reaches restore is dropped and counted, never stat-ed', async () => {
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/../photos/a.jpg' })]));
+      expect(mockStat).not.toHaveBeenCalled();
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats.receiptsNotRestored).toBe(1);
+    });
+
+    it('an old backup without receipt fields restores cleanly', async () => {
+      const result = await restoreFromBackup(1, withExpenses([expense()]));
+      expect(result.success).toBe(true);
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 0 });
+      expect(mockStat).not.toHaveBeenCalled();
+    });
+
+    it('merge mode: a file already used by another expense of the user is copied, not shared', async () => {
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 1 } });
+      const result = await restoreFromBackup(
+        1,
+        withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]),
+        { clearExistingData: false, importPhotos: true }
+      );
+      expect(mockCopyFile).toHaveBeenCalledTimes(1);
+      const newPath = createdData(0).receiptPath as string;
+      expect(newPath).toMatch(/^\/uploads\/receipts\/[0-9a-f-]{36}\.jpg$/);
+      expect(newPath).not.toBe('/uploads/receipts/a.jpg');
+      expect(result.stats.receiptsRestored).toBe(1);
+    });
+
+    it('two expenses in one backup pointing at the same file get one file each', async () => {
+      await restoreFromBackup(
+        1,
+        withExpenses([
+          expense({ receiptPath: '/uploads/receipts/a.jpg' }),
+          expense({ receiptPath: '/uploads/receipts/a.jpg' }),
+        ])
+      );
+      expect(createdData(0).receiptPath).toBe('/uploads/receipts/a.jpg');
+      expect(createdData(1).receiptPath).not.toBe('/uploads/receipts/a.jpg');
+      expect(mockCopyFile).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses a receipt file that belongs to another user's expense", async () => {
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 99 } });
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]));
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats.receiptsNotRestored).toBe(1);
+    });
+
+    it('replace mode deletes the receipt files of the replaced expenses, except ones re-attached', async () => {
+      mockPrisma.tripExpense.findMany
+        .mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/old.jpg' }, { receiptPath: '/uploads/receipts/kept.jpg' }])
+        .mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/kept.jpg' }]);
+      await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/kept.jpg' })]));
+      const unlinked = mockUnlink.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+      expect(unlinked).toHaveLength(1);
+      expect(unlinked[0]).toMatch(/uploads\/receipts\/old\.jpg$/);
+    });
+
+    it('merge mode never deletes existing receipt files', async () => {
+      await restoreFromBackup(1, withExpenses([expense()]), { clearExistingData: false, importPhotos: true });
+      expect(mockPrisma.tripExpense.findMany).not.toHaveBeenCalled();
+      expect(mockUnlink).not.toHaveBeenCalled();
+    });
+
+    it('a failed restore removes the copies it made and deletes no old files', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/old.jpg' }]);
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 1 } });
+      mockTx.tripExpense.create.mockRejectedValueOnce(new Error('db down'));
+      await expect(
+        restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]))
+      ).rejects.toBeDefined();
+      const unlinked = mockUnlink.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+      expect(unlinked).toHaveLength(1);
+      expect(unlinked[0]).toMatch(/uploads\/receipts\/[0-9a-f-]{36}\.jpg$/);
+      expect(unlinked[0]).not.toMatch(/old\.jpg/);
     });
   });
 });

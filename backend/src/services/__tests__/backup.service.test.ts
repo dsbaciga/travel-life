@@ -61,6 +61,9 @@ const mockPrisma = {
   travelDocument: {
     findMany: jest.fn(),
   },
+  loyaltyProgram: {
+    findMany: jest.fn(),
+  },
   tripSeries: {
     findMany: jest.fn(),
   },
@@ -190,6 +193,7 @@ describe('BackupService', () => {
     mockPrisma.customItemType.findMany.mockResolvedValue([]);
     mockPrisma.checklist.findMany.mockResolvedValue(mockChecklists);
     mockPrisma.travelDocument.findMany.mockResolvedValue(mockTravelDocuments);
+    mockPrisma.loyaltyProgram.findMany.mockResolvedValue([]);
     mockPrisma.tripSeries.findMany.mockResolvedValue(mockTripSeries);
     mockPrisma.savedLink.findMany.mockResolvedValue(mockUnfiledSavedLinks);
     mockPrisma.trip.findMany.mockResolvedValue([]); // No trips by default
@@ -422,6 +426,75 @@ describe('BackupService', () => {
       ]);
     });
 
+    it('BKP-015: exports route stops in order without ids or positions', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Stops Trip',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        stops: [
+          { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 4 },
+          { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: null },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      expect(result.trips[0].stops).toEqual([
+        { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 4 },
+        { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: null },
+      ]);
+      expect(mockPrisma.trip.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({ stops: expect.objectContaining({ orderBy: { position: 'asc' } }) }),
+        })
+      );
+    });
+
+    it('BKP-016: exports the receipt path and metadata of expenses (paths only, no image bytes)', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Receipt Trip',
+        locations: [], photos: [], activities: [], transportation: [], lodging: [],
+        journalEntries: [], photoAlbums: [], weatherData: [], tagAssignments: [],
+        companionAssignments: [], checklists: [], languages: [], bookingDeadlines: [],
+        expenses: [
+          {
+            id: 1, description: 'Ramen', category: 'food', amount: 12, currency: 'JPY',
+            exchangeRate: null, baseAmount: null, baseCurrency: null, date: null, notes: null,
+            receiptPath: '/uploads/receipts/a.jpg', receiptMimeType: 'image/jpeg',
+            receiptSizeBytes: 4321, receiptUploadedAt: new Date('2026-05-02T10:00:00Z'),
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      // The query asks the database for the receipt columns...
+      const query = mockPrisma.trip.findUnique.mock.calls[0][0] as {
+        include: { expenses: { select: Record<string, boolean> } };
+      };
+      expect(query.include.expenses.select).toMatchObject({
+        receiptPath: true, receiptMimeType: true, receiptSizeBytes: true, receiptUploadedAt: true,
+      });
+      // ...and they reach the backup, where the schema accepts them.
+      expect(result.trips[0].expenses![0].receiptPath).toBe('/uploads/receipts/a.jpg');
+      expect(result.trips[0].expenses![0].receiptSizeBytes).toBe(4321);
+      expect(JSON.stringify(result)).not.toMatch(/base64/i);
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 
@@ -435,6 +508,38 @@ describe('BackupService', () => {
       expect(result.checklists).toHaveLength(1);
       expect(result.checklists[0].name).toBe('Packing List');
       expect(result.checklists[0].items).toHaveLength(1);
+    });
+
+    it('BKP-007b: includes loyalty programs with the full membership number', async () => {
+      mockPrisma.loyaltyProgram.findMany.mockResolvedValue([
+        {
+          id: 3,
+          userId: 1,
+          name: 'SkyMiles',
+          type: 'AIRLINE',
+          providerName: 'Delta Air Lines',
+          providerCode: 'DL',
+          alliance: 'SkyTeam',
+          aliases: ['Delta'],
+          membershipNumber: '9876543210',
+          tier: 'Gold',
+          pointsBalance: 12500,
+          notes: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const result = await createBackup(1);
+
+      expect(mockPrisma.loyaltyProgram.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 1 } })
+      );
+      expect(result.loyaltyPrograms).toEqual([
+        expect.objectContaining({ id: 3, membershipNumber: '9876543210', providerCode: 'DL' }),
+      ]);
+      // No user id or timestamps leak into the file
+      expect(result.loyaltyPrograms![0]).not.toHaveProperty('userId');
     });
 
     it('BKP-007: includes travel documents with masked numbers', async () => {
@@ -472,6 +577,7 @@ describe('BackupService', () => {
       mockPrisma.locationCategory.findMany.mockResolvedValue([]);
       mockPrisma.checklist.findMany.mockResolvedValue([]);
       mockPrisma.travelDocument.findMany.mockResolvedValue([]);
+      mockPrisma.loyaltyProgram.findMany.mockResolvedValue([]);
       mockPrisma.tripSeries.findMany.mockResolvedValue([]);
       mockPrisma.savedLink.findMany.mockResolvedValue([]);
 
@@ -667,6 +773,62 @@ describe('BackupService', () => {
       expect(trip.emergencyInfo?.insuranceProvider).toBe('WorldNomads');
 
       // Validate that BackupDataSchema accepts the full v1.6.0 output
+      expect(() => BackupDataSchema.parse(result)).not.toThrow();
+    });
+
+    it('BKP-012b: exports expense payer and splits by companion name, not id', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Split Trip',
+        description: null,
+        startDate: '2026-04-01',
+        endDate: '2026-04-14',
+        status: 'Planned',
+        privacyLevel: 'Private',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        entityLinks: [],
+        expenses: [
+          {
+            id: 10,
+            description: 'Dinner',
+            category: 'food',
+            amount: 90,
+            currency: 'EUR',
+            date: null,
+            notes: null,
+            paidByOwner: false,
+            splitMethod: 'equal',
+            paidByCompanion: { name: 'Alice' },
+            splits: [
+              { isOwner: true, amount: 45, percentage: null, companion: null },
+              { isOwner: false, amount: 45, percentage: null, companion: { name: 'Alice' } },
+            ],
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+      const expense = result.trips[0].expenses![0];
+
+      expect(expense.paidByCompanionName).toBe('Alice');
+      expect(expense.paidByOwner).toBe(false);
+      expect(expense.splitMethod).toBe('equal');
+      expect(expense.splits).toEqual([
+        { isOwner: true, amount: 45, percentage: null, companionName: null },
+        { isOwner: false, amount: 45, percentage: null, companionName: 'Alice' },
+      ]);
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
 

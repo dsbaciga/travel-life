@@ -130,17 +130,6 @@ export function formatDuration(minutes: number): string {
 }
 
 /**
- * Format distance in kilometers
- */
-export function formatDistance(kilometers: number | null | undefined): string {
-  if (kilometers == null || typeof kilometers !== 'number' || isNaN(kilometers)) {
-    return 'Unknown distance';
-  }
-  const miles = kilometers * 0.621371;
-  return `${kilometers.toFixed(1)} km (${miles.toFixed(1)} mi)`;
-}
-
-/**
  * Get day number from trip start date
  */
 export function getDayNumber(dateString: string, tripStartDate?: string): number | null {

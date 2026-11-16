@@ -5,6 +5,7 @@ import type { Trip } from "../types/trip";
 import photoService from "../services/photo.service";
 import tripService from "../services/trip.service";
 import PhotoGallery from "../components/PhotoGallery";
+import { useTripEditAccess } from "../hooks/useTripEditAccess";
 import Breadcrumbs from "../components/Breadcrumbs";
 import LinkButton from "../components/LinkButton";
 import LinkedEntitiesDisplay from "../components/LinkedEntitiesDisplay";
@@ -21,6 +22,7 @@ export default function AlbumDetailPage() {
   const { tripId, albumId } = useParams<{ tripId: string; albumId: string }>();
   const { ConfirmDialogComponent } = useConfirmDialog();
   const parsedTripId = tripId ? parseInt(tripId) : undefined;
+  const { canEdit: canEditTrip } = useTripEditAccess(parsedTripId);
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(parsedTripId);
   const [album, setAlbum] = useState<AlbumWithPhotos | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -445,6 +447,7 @@ export default function AlbumDetailPage() {
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
             <PhotoGallery
               photos={photosPagination.items}
+              canEdit={canEditTrip}
               onPhotoDeleted={() => loadAlbum()}
               onPhotoUpdated={() => loadAlbum()}
               coverPhotoId={album.coverPhotoId}

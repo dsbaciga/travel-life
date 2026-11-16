@@ -18,6 +18,26 @@ export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   other: 'Other',
 };
 
+/** How a split expense is shared out. */
+export type SplitMethod = 'equal' | 'amount' | 'percentage';
+
+/** `owner` for the trip owner, `companion:<id>` for a companion. */
+export type ParticipantKey = string;
+
+/** One person's share of an expense, in the expense's own currency. */
+export type ExpenseSplitShare = {
+  participant: ParticipantKey;
+  amount: number;
+  /** Only set for percentage splits. */
+  percentage: number | null;
+};
+
+export type ExpenseParticipant = {
+  key: ParticipantKey;
+  label: string;
+  kind: 'owner' | 'companion';
+};
+
 export type TripExpense = {
   id: number;
   tripId: number;
@@ -33,8 +53,57 @@ export type TripExpense = {
   baseCurrency: string | null;
   date: string | null;
   notes: string | null;
+  /** Who paid; null when not recorded. */
+  paidBy: ParticipantKey | null;
+  splitMethod: SplitMethod | null;
+  splits: ExpenseSplitShare[];
+  /** Stored receipt photo ("/uploads/receipts/..."), or null. Load it with getFullAssetUrl. */
+  receiptPath?: string | null;
+  receiptUploadedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SetExpenseSplitInput = {
+  /** null clears the payer and the split. */
+  paidBy: ParticipantKey | null;
+  method?: SplitMethod | null;
+  participants?: Array<{
+    participant: ParticipantKey;
+    amount?: number;
+    percentage?: number;
+  }>;
+};
+
+export type SettleUpBalance = {
+  participant: ParticipantKey;
+  label: string;
+  paid: number;
+  owed: number;
+  /** paid - owed; positive means this person is owed money. */
+  net: number;
+};
+
+export type SettleUpTransfer = {
+  from: ParticipantKey;
+  fromLabel: string;
+  to: ParticipantKey;
+  toLabel: string;
+  amount: number;
+};
+
+export type SettleUpExpenseRef = { expenseId: number; description: string };
+
+export type SettleUpSummary = {
+  /** Currency every amount below is expressed in. */
+  currency: string;
+  balances: SettleUpBalance[];
+  transfers: SettleUpTransfer[];
+  /** Split expenses with no exchange rate — excluded from balances. */
+  unconverted: Array<SettleUpExpenseRef & { currency: string | null; amount: number }>;
+  /** Expenses with no payer or split — excluded from balances. */
+  unsplit: SettleUpExpenseRef[];
+  isComplete: boolean;
 };
 
 export type CreateExpenseInput = {

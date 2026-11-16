@@ -23,6 +23,7 @@ export interface User {
   useCustomMapStyle: boolean;
   /** Home currency (ISO 4217) mixed-currency budget totals are reported in. */
   baseCurrency?: string | null;
+  measurementSystem?: 'imperial' | 'metric' | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +36,8 @@ export interface UpdateUserSettingsInput {
   useCustomMapStyle?: boolean;
   /** Null clears the home currency, reverting to the per-trip fallback. */
   baseCurrency?: string | null;
+  /** Null clears the choice, reverting to the app default. */
+  measurementSystem?: 'imperial' | 'metric' | null;
 }
 
 // User search result for travel partner selection

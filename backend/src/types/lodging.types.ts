@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   requiredStringWithMax,
   optionalStringWithMax,
+  optionalNumericId,
   optionalDatetime,
   optionalTimezone,
   optionalPositiveNumber,
@@ -53,6 +54,7 @@ export interface Lodging {
   checkOutDate: Date | null;
   timezone: string | null;
   confirmationNumber: string | null;
+  loyaltyProgramId: number | null;
   cost: number | null;
   currency: string | null;
   bookingUrl: string | null;
@@ -72,6 +74,7 @@ export const createLodgingSchema = z.object({
   checkOutDate: z.string().optional(),
   timezone: z.string().max(100).optional(),
   confirmationNumber: z.string().max(100).optional(),
+  loyaltyProgramId: optionalNumericId(),
   cost: z.number().min(0).optional(),
   currency: z.string().length(3).optional(),
   bookingUrl: httpUrl().pipe(z.string().max(500)).optional(),
@@ -88,6 +91,7 @@ export const updateLodgingSchema = z.object({
   checkOutDate: optionalDatetime(),
   timezone: optionalTimezone(),
   confirmationNumber: optionalStringWithMax(100),
+  loyaltyProgramId: optionalNumericId(),
   cost: optionalPositiveNumber(),
   currency: optionalCurrencyCode(),
   bookingUrl: optionalUrl(500),

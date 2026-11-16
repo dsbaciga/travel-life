@@ -51,6 +51,8 @@ export interface AuthResponse {
     avatarUrl: string | null;
     /** IANA zone the client formats dates in when nothing more specific applies. */
     timezone: string | null;
+    /** 'imperial' | 'metric', or null when the user never chose (the client applies its default). */
+    measurementSystem: string | null;
   };
   accessToken: string;
   refreshToken: string;

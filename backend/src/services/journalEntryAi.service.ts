@@ -38,7 +38,7 @@ class JournalEntryAiService {
   async generateTripSummary(userId: number, tripId: number): Promise<string> {
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    if (!(await llmService.isConfigured())) {
+    if (!(await llmService.isConfigured(userId))) {
       throw new AppError('AI features are not configured. Set LLM_API_KEY to enable.', 503);
     }
 
@@ -92,7 +92,7 @@ ${truncated}
 
     let summary: string;
     try {
-      summary = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 1024 });
+      summary = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 1024, userId });
     } catch (err) {
       if (err instanceof LlmError) {
         throw new AppError(`AI summary generation failed: ${err.message}`, 502);
@@ -118,7 +118,7 @@ ${truncated}
   ): Promise<{ title?: string; mood?: string }> {
     await verifyEntityAccessWithPermission('journalEntry', entryId, userId, 'view');
 
-    if (!(await llmService.isConfigured())) {
+    if (!(await llmService.isConfigured(userId))) {
       throw new AppError('AI features are not configured. Set LLM_API_KEY to enable.', 503);
     }
 
@@ -157,7 +157,7 @@ ${safeContent}
 
     let raw: string;
     try {
-      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 128, temperature: 0.5 });
+      raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 128, temperature: 0.5, userId });
     } catch (err) {
       if (err instanceof LlmError) {
         throw new AppError(`AI enhancement failed: ${err.message}`, 502);

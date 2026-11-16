@@ -223,7 +223,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | POST | `/upload` | Upload a photo or video (`multipart/form-data`, max 500MB) | Yes |
 | POST | `/immich` | Link a single photo from Immich | Yes |
 | POST | `/immich/batch` | Link multiple photos from Immich in one request | Yes |
-| GET | `/trip/:tripId` | List photos for a trip | Yes |
+| GET | `/trip/:tripId` | List photos for a trip. Query: `skip`, `take`, `sortBy`, `sortOrder`, and `favoritesOnly=true` to return only starred photos (the trip highlight set); `favoritesOnly=true` is also accepted by `/trip/:tripId/unsorted` | Yes |
 | GET | `/trip/:tripId/immich-asset-ids` | List Immich asset IDs already linked to a trip | Yes |
 | GET | `/trip/:tripId/unsorted` | List photos not assigned to any album in a trip | Yes |
 | GET | `/trip/:tripId/date-groupings` | Get date groupings (dates + photo counts) for lazy loading | Yes |
@@ -231,7 +231,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | GET | `/trip/:tripId/suggest-albums` | Get smart album suggestions based on photo clustering | Yes |
 | POST | `/trip/:tripId/accept-suggestion` | Create an album from an album suggestion | Yes |
 | GET | `/:id` | Get a photo by ID | Yes |
-| PUT | `/:id` | Update photo metadata | Yes |
+| PUT | `/:id` | Update photo metadata. Send `{ "isFavorite": true \| false }` to star or unstar a photo (works for uploaded and Immich-linked photos and videos); requires edit permission on the trip | Yes |
 | DELETE | `/:id` | Delete a photo | Yes |
 
 ### Photo Albums (`/api/albums`)
@@ -241,7 +241,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | GET | `/` | List all albums across all trips (supports `skip`/`take` pagination) | Yes |
 | POST | `/` | Create a new album (requires `tripId` in body) | Yes |
 | GET | `/trip/:tripId` | List albums for a specific trip | Yes |
-| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`) | Yes |
+| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`, `sortBy`/`sortOrder`, and `favoritesOnly=true` to page only starred photos) | Yes |
 | PUT | `/:id` | Update an album | Yes |
 | DELETE | `/:id` | Delete an album (does not delete the photos) | Yes |
 | POST | `/:id/photos` | Add photos to an album | Yes |
@@ -295,6 +295,21 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | PUT | `/:id` | Update a journal entry | Yes |
 | DELETE | `/:id` | Delete a journal entry | Yes |
 | POST | `/:id/ai-enhance` | AI-enhance a journal entry (rate limited) | Yes |
+
+### CSV Bulk Import (`/api/trips/:tripId/import`)
+
+Imports locations or activities from CSV rows. The browser parses the file and maps columns; every value is re-parsed and validated here with the same Zod schemas as the single-create endpoints. Requires edit access to the trip.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/locations` | Validate (`dryRun: true`) or create locations from rows | Yes |
+| POST | `/activities` | Validate (`dryRun: true`) or create activities from rows | Yes |
+
+Body: `{ rows: [...], dryRun?: boolean, excludeRows?: number[] }`. Rows are objects of raw strings (locations: `name`, `address`, `latitude`, `longitude`, `category`, `notes`, `openingHours`, `timezone`; activities: `name`, `description`, `category`, `location`, `startTime`, `endTime`, `timezone`, `allDay`, `cost`, `currency`, `bookingUrl`, `bookingReference`, `notes`). At most 500 rows and about 1 MB of JSON per request.
+
+Response: `{ dryRun, total, valid, invalid, excluded, created, rows: [{ index, status, errors, warnings, normalized }], tripTimezoneSet, defaultTimezone }`. Row `status` is `valid`, `invalid`, `excluded` or `created`. Errors block a row; warnings (unknown category, no coordinates, duplicates, unmatched location, cost without currency) do not. A real run creates all valid, non-excluded rows in one transaction; an unexpected failure creates nothing.
+
+Rules worth knowing: times without an offset are wall-clock times in the row timezone, else the trip timezone, else the user timezone (never UTC unless nothing is set); `YYYY-MM-DD HH:mm` and ISO 8601 are accepted and `03/04/2026` is rejected; costs are dot-decimal strings such as `1234.50`; address-only locations are imported without coordinates and are not geocoded; no OpenStreetMap opening-hours lookup is made during import.
 
 ### Entity Links (`/api/trips/:tripId/links`)
 
@@ -378,7 +393,22 @@ Trip-scoped expense tracking, plus a budget-vs-spent summary endpoint mounted al
 | GET | `/api/trips/:tripId/expenses/:id` | Get an expense by ID | Yes |
 | PUT | `/api/trips/:tripId/expenses/:id` | Update an expense | Yes |
 | DELETE | `/api/trips/:tripId/expenses/:id` | Delete an expense | Yes |
+| POST | `/api/trips/:tripId/expenses/scan-receipt` | Read a receipt photo (multipart field `image`; JPEG/PNG/WebP/HEIC, max 10 MB, type checked from the bytes) with the user's AI model. Returns `{ merchant, amount, currency, date, category }`, each nullable (`amount` is a decimal string, `date` is `YYYY-MM-DD`, `currency` is a supported ISO 4217 code or null, never defaulted). Saves nothing and does not keep the image (the client attaches it afterwards through the receipt endpoint). 503 without an AI key, 502 on provider error, 422 when unreadable. Needs edit access; AI rate limit applies | Yes |
+| POST | `/api/trips/:tripId/expenses/:id/receipt` | Attach or replace the receipt photo of an expense (multipart field `image`, same type/size checks as scan). Stores a normalised JPEG (long edge 2400 px, quality 88, EXIF stripped) under `uploads/receipts/` and deletes any previous file. Needs edit access | Yes |
+| DELETE | `/api/trips/:tripId/expenses/:id/receipt` | Remove the receipt photo and delete its file. Needs edit access | Yes |
+
+Expense objects carry `receiptPath`, `receiptMimeType`, `receiptSizeBytes`, `receiptUploadedAt` (all null when none). The file is served by the authenticated `/uploads/receipts/...` route to the trip owner and collaborators only, is never part of the public share payload, and a backup carries only its path, not the image (see Backup & Restore). On restore a receipt is re-attached only if its file is still in `uploads/receipts/`; the restore result reports `receiptsRestored` and `receiptsNotRestored`.
 | GET | `/api/trips/:tripId/budget-summary` | Get budget vs. spent totals with a category breakdown | Yes |
+| GET | `/api/trips/:tripId/expenses/participants` | List who an expense can be paid by or split with: the trip owner (`owner`) and the trip's companions (`companion:<id>`) | Yes |
+| PUT | `/api/trips/:tripId/expenses/:id/split` | Set who paid and how the expense is split. Body: `paidBy` (participant key, or `null` to clear), `method` (`equal`, `amount` or `percentage`), `participants` (`participant` plus `amount` or `percentage`). Amounts must sum to the expense amount, percentages to 100 | Yes (edit) |
+| GET | `/api/trips/:tripId/settle-up` | Per-person paid / share / balance and the payments that settle them, in the budget summary's currency | Yes |
+
+Expenses returned by the list and detail endpoints carry `paidBy`, `splitMethod` and `splits`
+(`participant`, `amount` in the expense's own currency, `percentage`). Settle-up is computed with exact
+decimal arithmetic: each expense's base-currency amount is shared out in proportion to its splits, with
+any odd cent placed on the largest share (lowest participant on a tie). Split expenses with no exchange
+rate are excluded and listed under `unconverted`; expenses with no payer or split are listed under
+`unsplit`.
 
 Budget summary totals are converted into a single base currency using the exchange rate frozen at each
 expense's own date. Amounts that could not be converted are excluded from `spent` and listed under
@@ -414,7 +444,7 @@ token is done by the trip owner via `POST/DELETE /api/trips/:id/share*` (see Tri
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| GET | `/trips/:token` | Get a sanitized, read-only view of a shared trip | No |
+| GET | `/trips/:token` | Get a sanitized, read-only view of a shared trip. Each photo carries an `isFavorite` flag; the public page shows the starred photos as a Highlights set | No |
 | GET | `/trips/:token/photos/:photoId/file` | Stream a shared trip's photo binary (the authenticated `/uploads` route is not reachable without a token) | No |
 | GET | `/trips/:token/photos/:photoId/thumbnail` | Stream a shared trip's photo thumbnail | No |
 
@@ -477,6 +507,19 @@ per area, so changing `diet` does not repeat the upstream request. Errors: `503`
 best match first. Answers are cached for an hour per query; `503` when the place search service is unavailable. It shares the
 food search's per-user rate limit.
 
+### Trip comparison (`/api/trip-comparison`)
+
+`GET /api/trip-comparison?ids=12,15,19` compares 2 to 8 distinct trips in one request (`400` otherwise). Every id must be
+viewable by the caller (owner or collaborator); if any is not, the whole request is rejected with `404` naming the ids, and
+none are silently dropped. The response is `{ currency, trips, locations }` with `trips` in the requested order: dates and
+inclusive `days`, location, activity, photo and transportation counts, `totalDistanceKm`, and a `cost` object.
+
+Costs reuse the budget summary and are expressed in the caller's base currency (the first trip's reporting currency when
+none is set). A trip whose summary is in another currency (for example one owned by someone with a different base
+currency) is restated with the latest rate using Decimal arithmetic and marked `restated`. Amounts the summary could not
+convert are listed in `cost.unconverted`; a total that cannot be restated has `spent: null` and `cost.excludedTotal`.
+`locations` omits places flagged `excludeFromMap` and places without coordinates.
+
 ### Search (`/api/search`)
 
 The search endpoint is rate limited to 30 requests per minute.
@@ -528,6 +571,21 @@ below are grouped under `/api/invitations` and `/api/trips/...`.
 | POST | `/search` | Search Immich assets by metadata | Yes |
 | GET | `/albums` | List the user's Immich albums | Yes |
 | GET | `/albums/:albumId` | Get an Immich album with its assets | Yes |
+| POST | `/assets/query` | Browse the library with server-side filters and paging (`filters`: `dateFrom`/`dateTo` as calendar days read in `timezone`, `isFavorite`, `type`, `albumId`, `text` as file name, or as a content query with `searchMode: "smart"` which calls Immich `POST /api/search/smart` (relevance order, no date ordering, query max 200 chars; empty query falls back to the metadata search; 503 "Smart search isn't available..." if Immich ML is off or the endpoint is missing; refused with 400 by both bulk-link endpoints); `page`, `size` up to 200; optional `tripId` flags `alreadyLinked`) | Yes |
+| POST | `/bulk-link/preview` | Count what linking everything a filter matches to a trip would do (`matching`, `alreadyLinked`, `toLink`, capped at 5000) | Yes |
+| POST | `/bulk-link/page` | Link one page (200) of a filter's matches to a trip through the batch linker; returns `nextPage` until finished. Safe to re-run | Yes |
+| PUT | `/photo-albums/:albumId/link` | Link a trip photo album to an Immich album, or `{ "immichAlbumId": null }` to unlink | Yes |
+| POST | `/photo-albums/:albumId/sync` | Manual pull sync: add assets in the linked Immich album that are not yet in the trip album. Never removes anything | Yes |
+| GET | `/photo-albums/:albumId/export-preview` | What an export would write: Immich asset count and uploaded photos that would be skipped | Yes |
+| POST | `/photo-albums/:albumId/export` | Create (or add to) an Immich album from a trip album. Requires `{ "confirm": true }`. Writes to Immich; only ever adds | Yes |
+
+#### Immich album sync and export: behaviour
+
+- Immich API compatibility: calls use `POST /api/search/metadata` (`page`, `size`, `withExif`, `order`, `takenAfter`/`takenBefore`, `isFavorite`, `type`, `albumIds`, `originalFileName`), `GET /api/albums/:id`, `POST /api/albums` and `PUT /api/albums/:id/assets`, plus `/api/server/ping` for the connection test. The `albumIds` search filter and `withExif` are not available on older Immich servers; sync deliberately uses `GET /api/albums/:id` instead so it never depends on them.
+- Sync decides what is new by comparing asset ids, not timestamps (Immich does not expose when an asset joined an album). `immichAlbumSyncedAt` is informational.
+- Assets removed from the Immich album are **not** removed from the trip album or the trip. They are counted in `notInImmichAlbum` (null when the Immich album exceeded the 5,000 asset sync cap).
+- Export only adds: it never deletes or modifies Immich assets, never removes assets from an Immich album, and never uploads. Uploaded (non-Immich) photos are skipped and counted in `skippedUploaded`. If the stored key lacks permission, Immich's message comes back as a 403.
+- Immich 401/403 responses are returned to the client as 403 (never 401, which the web client treats as an expired session).
 
 ### Weather
 
@@ -545,7 +603,7 @@ Backup and restore endpoints accept large payloads (up to 100MB). The create/res
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| POST | `/create` | Create and download a backup (ZIP archive of all user data) | Yes |
+| POST | `/create` | Create and download a backup (a signed JSON file of all user data; it holds file paths, not photo or receipt image bytes) | Yes |
 | POST | `/restore` | Restore user data from a backup file (overwrites existing data) | Yes |
 | GET | `/info` | Get backup info including entity counts and estimated size | Yes |
 
@@ -557,6 +615,7 @@ AI features are trip-scoped and mounted under `/api/trips/:tripId/ai`. All AI en
 |--------|----------|-------------|------|
 | GET | `/api/trips/:tripId/ai/link-suggestions` | Get AI-suggested entity links for a trip | Yes |
 | POST | `/api/trips/:tripId/ai/journal-summary` | Generate an AI summary of the trip's journal entries | Yes |
+| POST | `/api/trips/:tripId/ai/journal-day-draft` | Draft a journal entry (title + Markdown) for one calendar day. Body `{ "date": "YYYY-MM-DD" }`; needs edit access. The date must be within the trip's dates plus one day either side (open on a side with no date); otherwise `422` naming the trip's range. Returns text only and never creates an entry. `422` if the day has nothing recorded, `503` if no AI key is configured, `502` on provider failure | Yes |
 
 > Related: `POST /api/journal/:id/ai-enhance` (see Journal Entries) also uses AI to enhance a single journal entry.
 
@@ -645,6 +704,20 @@ Manage passports, visas, and other travel documents, including expiry alerts.
 | GET | `/:id` | Get a travel document by ID | Yes |
 | PUT | `/:id` | Update a travel document | Yes |
 | DELETE | `/:id` | Delete a travel document | Yes |
+
+### Loyalty Programs (`/api/loyalty-programs`)
+
+Manage frequent-flyer and hotel-loyalty memberships. User-scoped: every endpoint only sees the caller's own programs, and the membership number is never returned by trip, collaborator or public-share endpoints. Transportation and lodging records reference a program through a nullable `loyaltyProgramId` (the program must belong to the user saving the record); deleting a program clears that reference.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | List the user's loyalty programs | Yes |
+| POST | `/` | Create a program (`name`, `type`, `providerName`, `membershipNumber` required; optional `providerCode`, `alliance`, `aliases`, `tier`, `pointsBalance`, `notes`) | Yes |
+| GET | `/:id` | Get a program by ID | Yes |
+| PUT | `/:id` | Update a program | Yes |
+| DELETE | `/:id` | Delete a program | Yes |
+
+`type` is one of `AIRLINE`, `HOTEL`, `RAIL`, `CAR_RENTAL`, `OTHER`.
 
 ### Language Phrases
 

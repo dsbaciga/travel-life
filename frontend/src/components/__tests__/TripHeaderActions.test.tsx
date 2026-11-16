@@ -47,6 +47,17 @@ describe('TripHeaderActions phone menu', () => {
     expect(screen.getByRole('button', { name: 'Upload & Parse' })).toBeInTheDocument();
   });
 
+  it('opens the CSV import dialog and keeps it open after the menu closes', async () => {
+    const user = userEvent.setup();
+    renderActions();
+
+    await user.click(screen.getByRole('button', { name: 'Trip actions' }));
+    await user.click(within(screen.getByRole('menu'), 'Import CSV'));
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(await screen.findByText('What are you importing?')).toBeInTheDocument();
+  });
+
   it('closes the PDF import dialog on Cancel', async () => {
     const user = userEvent.setup();
     renderActions();

@@ -14,6 +14,8 @@ import transportationService from "../services/transportation.service";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import BookingDeadlinesSection from "./BookingDeadlinesSection";
+import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
@@ -46,8 +48,10 @@ type TransportationBulkEdit = { type?: string; carrier?: string; notes?: string 
 import { getLastUsedCurrency, saveLastUsedCurrency } from "../utils/currencyStorage";
 import { useUnsavedChangesWarning } from "../hooks/useUnsavedChangesWarning";
 import MarkdownRenderer from "./MarkdownRenderer";
+import LoyaltyProgramField from "./LoyaltyProgramField";
 import MarkdownEditor from "./MarkdownEditor";
 import { stripMarkdown } from "../utils/stripMarkdown";
+import { useUnits } from "../hooks/useUnits";
 
 /**
  * TransportationManager handles CRUD operations for trip transportation segments.
@@ -102,6 +106,7 @@ interface TransportationFormFields {
   carrier: string;
   vehicleNumber: string;
   confirmationNumber: string;
+  loyaltyProgramId: number | null;
   cost: string;
   currency: string;
   notes: string;
@@ -123,6 +128,7 @@ const initialFormState: TransportationFormFields = {
   carrier: "",
   vehicleNumber: "",
   confirmationNumber: "",
+  loyaltyProgramId: null,
   cost: "",
   currency: "USD",
   notes: "",
@@ -405,6 +411,7 @@ export default function TransportationManager({
   onUpdate,
 }: TransportationManagerProps) {
   const resolveTz = useTimezoneResolver();
+  const units = useUnits();
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date");
 
@@ -472,6 +479,8 @@ export default function TransportationManager({
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   // Not React state: the submit handler runs before a state change would be visible.
   const addAnother = useSaveAndAddAnother();
+  const editingTransportation = manager.editingId ? manager.items.find((item) => item.id === manager.editingId) ?? null : null;
+  const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "transportation", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingTransportation?.startTimezone, tripTimezone, onUpdate });
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
@@ -583,6 +592,7 @@ export default function TransportationManager({
     handleChange("carrier", transportation.carrier || "");
     handleChange("vehicleNumber", transportation.vehicleNumber || "");
     handleChange("confirmationNumber", transportation.confirmationNumber || "");
+    handleChange("loyaltyProgramId", transportation.loyaltyProgramId ?? null);
     handleChange("cost", transportation.cost?.toString() || "");
     handleChange("currency", transportation.currency || "USD");
     handleChange("notes", transportation.notes || "");
@@ -801,6 +811,8 @@ export default function TransportationManager({
 
   const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // An uncommitted deadline row is added if complete, or blocks the save with a message on the row.
+    if (!deadlines.flushEditor()) return;
 
     // Convert datetime-local values to ISO strings using the specified timezones
     const effectiveStartTz = resolveTz(values.startTimezone, tripTimezone);
@@ -828,12 +840,14 @@ export default function TransportationManager({
         carrier: values.carrier || null,
         vehicleNumber: values.vehicleNumber || null,
         confirmationNumber: values.confirmationNumber || null,
+        loyaltyProgramId: values.loyaltyProgramId,
         cost: values.cost ? parseFloat(values.cost) : null,
         currency: values.currency || null,
         notes: values.notes || null,
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        await deadlines.apply(manager.editingId, values.startTimezone || null);
         markSaved();
         resetForm();
         manager.closeForm();
@@ -854,12 +868,14 @@ export default function TransportationManager({
         carrier: values.carrier || undefined,
         vehicleNumber: values.vehicleNumber || undefined,
         confirmationNumber: values.confirmationNumber || undefined,
+        loyaltyProgramId: values.loyaltyProgramId ?? undefined,
         cost: values.cost ? parseFloat(values.cost) : undefined,
         currency: values.currency || undefined,
         notes: values.notes || undefined,
       };
-      const success = await manager.handleCreate(createData);
-      if (success) {
+      const created = await manager.handleCreateItem(createData);
+      if (created) {
+        await deadlines.apply(created.id, created.startTimezone);
         markSaved();
         // Save currency for next time
         if (values.currency) {
@@ -1026,8 +1042,7 @@ export default function TransportationManager({
     if (kilometers == null || typeof kilometers !== 'number' || isNaN(kilometers)) {
       return 'Unknown distance';
     }
-    const miles = kilometers * 0.621371;
-    return `${kilometers.toFixed(1)} km (${miles.toFixed(1)} mi)`;
+    return units.formatDistance(kilometers);
   };
 
   // Helper to get location display name - for flights, only show the name without full address
@@ -1504,6 +1519,15 @@ export default function TransportationManager({
                 confirmationLabel="Confirmation Number"
                 hideBookingUrl={true}
               />
+
+              <LoyaltyProgramField
+                kind="transportation"
+                name={values.carrier}
+                vehicleNumber={values.vehicleNumber}
+                transportType={values.type}
+                value={values.loyaltyProgramId}
+                onChange={(id) => handleChange("loyaltyProgramId", id)}
+              />
             </FormSection>
 
             {/* Custom Location Text (Advanced) */}
@@ -1573,6 +1597,7 @@ export default function TransportationManager({
               compact
             />
           </CollapsibleSection>
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="transportation" editor={deadlines.editor} onEditorChange={deadlines.setEditor} editorError={deadlines.editorError} />
         </form>
         </FormModal>
 

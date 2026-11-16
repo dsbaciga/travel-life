@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import type { Trip } from '../../types/trip';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
@@ -11,7 +11,7 @@ import type { Photo } from '../../types/photo';
 import { TripStatus } from '../../types/trip';
 import TripStats from '../TripStats';
 import RecentActivityCard from './RecentActivityCard';
-import NextUpCard from './NextUpCard';
+import TodayModeCard from './TodayModeCard';
 import TodaysItinerary from './TodaysItinerary';
 import ChecklistsWidget from './ChecklistsWidget';
 import CompanionsWidget from './CompanionsWidget';
@@ -92,7 +92,6 @@ interface TripDashboardProps {
   flightStatusLoading?: boolean;
   onRefreshFlightStatus?: () => void;
   userHomeTimezone?: string;
-  temperatureUnit?: 'celsius' | 'fahrenheit';
   className?: string;
 }
 
@@ -146,7 +145,6 @@ export default function TripDashboard({
   flightStatusLoading,
   onRefreshFlightStatus,
   userHomeTimezone,
-  temperatureUnit = 'fahrenheit',
   className = '',
 }: TripDashboardProps) {
   // Calculate counts for stats
@@ -172,6 +170,10 @@ export default function TripDashboard({
   // one, then their browser's. resolveTz supplies the user's for us.
   const tripTimezone = resolveTz(trip.timezone);
   const homeTimezone = resolveTz(userHomeTimezone);
+
+  // The Today card carries its own local/home clocks; while it shows them, the local
+  // time widget would be a second clock for the same thing.
+  const [todayClocksShown, setTodayClocksShown] = useState(false);
 
   // Check if trip is international (different timezone)
   const isInternationalTrip = tripTimezone !== homeTimezone;
@@ -305,16 +307,19 @@ export default function TripDashboard({
               onLocationClick={handleLocationClick}
             />
           )}
-          <NextUpCard
+          <TodayModeCard
+            tripId={trip.id}
             activities={activities}
             transportation={transportation}
             lodging={lodging}
+            locations={locations}
             tripStatus={trip.status}
             tripStartDate={trip.startDate}
             tripEndDate={trip.endDate}
-            tripTimezone={tripTimezone}
+            tripTimezone={trip.timezone}
             photosCount={photosCount}
             onNavigateToTab={onNavigateToTab}
+            onClocksShownChange={setTodayClocksShown}
           />
           {/* Today's Itinerary - Only show for in-progress trips */}
           {trip.status === TripStatus.IN_PROGRESS && (
@@ -371,7 +376,6 @@ export default function TripDashboard({
                 <WeatherForecastWidget
                   forecast={weatherForecast || null}
                   location={weatherLocation || trip.title}
-                  temperatureUnit={temperatureUnit}
                   isLoading={weatherLoading}
                   error={weatherError || null}
                   onRefresh={onRefreshWeather}
@@ -418,7 +422,7 @@ export default function TripDashboard({
             />
           )}
           {/* Local time - for trips in another timezone */}
-          {isInternationalTrip && (
+          {isInternationalTrip && !todayClocksShown && (
             <LocalTimeWidget
               tripTimezone={tripTimezone}
               homeTimezone={homeTimezone}

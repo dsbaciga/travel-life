@@ -1,3 +1,5 @@
+import { useUnits } from '../../hooks/useUnits';
+import { distanceValue, type MeasurementSystem } from '../../utils/units';
 /**
  * YearInReviewWidget - A prominent dashboard banner teasing the year's travel
  * stats with a call to action into the full Year in Review page.
@@ -22,7 +24,7 @@ function useYearInReview(year: number) {
   });
 }
 
-function buildStats(review: YearInReview): TeaserStat[] {
+function buildStats(review: YearInReview, system: MeasurementSystem): TeaserStat[] {
   const stats: TeaserStat[] = [
     { value: String(review.tripCount), label: review.tripCount === 1 ? 'Trip' : 'Trips' },
     { value: String(review.daysTraveled), label: review.daysTraveled === 1 ? 'Day away' : 'Days away' },
@@ -37,8 +39,8 @@ function buildStats(review: YearInReview): TeaserStat[] {
     stats.push({ value: String(review.photoCount), label: review.photoCount === 1 ? 'Photo' : 'Photos' });
   } else if (review.totalDistanceKm > 0) {
     stats.push({
-      value: Math.round(review.totalDistanceKm * 0.621371).toLocaleString(),
-      label: 'Miles',
+      value: Math.round(distanceValue(review.totalDistanceKm, system)).toLocaleString(),
+      label: system === 'imperial' ? 'Miles' : 'Kilometers',
     });
   } else {
     stats.push({
@@ -56,7 +58,8 @@ interface YearInReviewBannerProps {
 }
 
 function YearInReviewBanner({ review, isPastYear }: YearInReviewBannerProps) {
-  const stats = buildStats(review);
+  const { system } = useUnits();
+  const stats = buildStats(review, system);
 
   return (
     <Link

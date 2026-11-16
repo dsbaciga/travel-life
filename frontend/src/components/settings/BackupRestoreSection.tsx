@@ -97,7 +97,10 @@ export default function BackupRestoreSection({
         toast.success(
           `Restore completed! Imported ${result.stats.tripsImported} trips, ` +
             `${result.stats.locationsImported} locations, ${result.stats.photosImported} photos, ` +
-            `${result.stats.activitiesImported} activities, and more.`
+            `${result.stats.activitiesImported} activities, and more.` +
+            (result.stats.receiptsNotRestored
+              ? ` ${result.stats.receiptsNotRestored} receipt photo(s) could not be re-attached because the image file is no longer on the server.`
+              : "")
         );
         setSelectedBackupFile(null);
 
