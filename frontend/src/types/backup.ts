@@ -37,6 +37,9 @@ export interface RestoreStats {
   journalEntriesImported: number;
   tagsImported: number;
   companionsImported: number;
+  /** Expense receipts re-attached / left off because their file was missing (absent in older servers). */
+  receiptsRestored?: number;
+  receiptsNotRestored?: number;
 }
 
 export interface RestoreResult {

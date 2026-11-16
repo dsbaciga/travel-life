@@ -422,6 +422,39 @@ describe('BackupService', () => {
       ]);
     });
 
+    it('BKP-015: exports the receipt path and metadata of expenses (paths only, no image bytes)', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Receipt Trip',
+        locations: [], photos: [], activities: [], transportation: [], lodging: [],
+        journalEntries: [], photoAlbums: [], weatherData: [], tagAssignments: [],
+        companionAssignments: [], checklists: [], languages: [], bookingDeadlines: [],
+        expenses: [
+          {
+            id: 1, description: 'Ramen', category: 'food', amount: 12, currency: 'JPY',
+            exchangeRate: null, baseAmount: null, baseCurrency: null, date: null, notes: null,
+            receiptPath: '/uploads/receipts/a.jpg', receiptMimeType: 'image/jpeg',
+            receiptSizeBytes: 4321, receiptUploadedAt: new Date('2026-05-02T10:00:00Z'),
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      // The query asks the database for the receipt columns...
+      const query = mockPrisma.trip.findUnique.mock.calls[0][0] as {
+        include: { expenses: { select: Record<string, boolean> } };
+      };
+      expect(query.include.expenses.select).toMatchObject({
+        receiptPath: true, receiptMimeType: true, receiptSizeBytes: true, receiptUploadedAt: true,
+      });
+      // ...and they reach the backup, where the schema accepts them.
+      expect(result.trips[0].expenses![0].receiptPath).toBe('/uploads/receipts/a.jpg');
+      expect(result.trips[0].expenses![0].receiptSizeBytes).toBe(4321);
+      expect(JSON.stringify(result)).not.toMatch(/base64/i);
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 

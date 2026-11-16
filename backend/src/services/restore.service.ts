@@ -5,6 +5,7 @@ import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
 import { resolveTimezone } from './_shared/timezoneResolution';
+import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
 
@@ -25,6 +26,9 @@ interface RestoreStats {
   tripLanguagesImported: number;
   savedLinksImported: number;
   customItemsImported: number;
+  /** Expense receipts re-attached, and ones left off because their file was missing or unusable. */
+  receiptsRestored: number;
+  receiptsNotRestored: number;
 }
 
 /**
@@ -97,12 +101,27 @@ export async function restoreFromBackup(
     tripLanguagesImported: 0,
     savedLinksImported: 0,
     customItemsImported: 0,
+    receiptsRestored: 0,
+    receiptsNotRestored: 0,
   };
+
+  // Receipt files of the expenses a replace-mode restore deletes; removed after commit.
+  const oldReceiptPaths = options.clearExistingData
+    ? (
+        await prisma.tripExpense.findMany({
+          where: { trip: { userId }, receiptPath: { not: null } },
+          select: { receiptPath: true },
+        })
+      ).map((row) => row.receiptPath)
+    : [];
+  const receiptRef: { current: ReceiptRestorer | null } = { current: null };
 
   try {
     // Use a transaction to ensure atomicity
     await prisma.$transaction(
       async (tx) => {
+        const receipts = new ReceiptRestorer(userId, tx);
+        receiptRef.current = receipts;
         // Step 1: Clear existing data if requested
         if (options.clearExistingData) {
           await clearUserData(userId, tx);
@@ -919,8 +938,10 @@ export async function restoreFromBackup(
 
           // Import trip expenses (added in v1.6.0)
           for (const expenseData of tripData.expenses || []) {
+            const receiptFields = await receipts.prepare(expenseData);
             await tx.tripExpense.create({
               data: {
+                ...receiptFields,
                 tripId: trip.id,
                 description: expenseData.description,
                 category: expenseData.category,
@@ -1027,12 +1048,29 @@ export async function restoreFromBackup(
       }
     );
 
+    if (receiptRef.current) {
+      stats.receiptsRestored = receiptRef.current.restored;
+      stats.receiptsNotRestored = receiptRef.current.notRestored;
+    }
+    // The replaced expenses are gone: delete their receipt files unless the restore
+    // re-attached the same file to a restored expense.
+    if (oldReceiptPaths.length > 0) {
+      const stillUsed = await prisma.tripExpense.findMany({
+        where: { receiptPath: { in: oldReceiptPaths.filter((p): p is string => p !== null) } },
+        select: { receiptPath: true },
+      });
+      const keep = new Set(stillUsed.map((row) => row.receiptPath));
+      await deleteReceiptFiles(oldReceiptPaths.filter((p) => !keep.has(p)));
+    }
+
     return {
       success: true,
       message: 'Data restored successfully',
       stats,
     };
   } catch (error) {
+    // Rolled back: remove receipt files this restore copied.
+    await receiptRef.current?.discardCopies();
     if (error instanceof AppError) throw error;
     console.error('Error restoring from backup:', error);
     throw new AppError(

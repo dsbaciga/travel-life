@@ -18,6 +18,18 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
+const mockStat = jest.fn<(p: string) => Promise<{ isFile: () => boolean }>>();
+const mockCopyFile = jest.fn<(a: string, b: string) => Promise<void>>();
+const mockUnlink = jest.fn<(p: string) => Promise<void>>();
+jest.mock('fs/promises', () => ({
+  __esModule: true,
+  default: {
+    stat: (p: string) => mockStat(p),
+    copyFile: (a: string, b: string) => mockCopyFile(a, b),
+    unlink: (p: string) => mockUnlink(p),
+  },
+}));
+
 // Mock @prisma/client BEFORE any imports that depend on it
 jest.mock('@prisma/client', () => {
   class MockDecimal {
@@ -137,6 +149,7 @@ const mockTx = {
   },
   tripExpense: {
     create: jest.fn(),
+    findFirst: jest.fn(),
   },
   tripEmergencyInfo: {
     create: jest.fn(),
@@ -144,6 +157,7 @@ const mockTx = {
 };
 
 const mockPrisma = {
+  tripExpense: { findMany: jest.fn(async () => [] as Array<{ receiptPath: string | null }>) },
   $transaction: jest.fn((callback: unknown) => {
     if (typeof callback === 'function') {
       return (callback as (tx: typeof mockTx) => Promise<unknown>)(mockTx);
@@ -159,7 +173,7 @@ jest.mock('../../config/database', () => ({
 
 // Import the service after all mocks
 import { restoreFromBackup } from '../restore.service';
-import { BackupData } from '../../types/backup.types';
+import { BackupData, BackupDataSchema } from '../../types/backup.types';
 
 describe('RestoreService', () => {
   // Minimal valid backup
@@ -889,6 +903,160 @@ describe('RestoreService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('RST-RCPT: expense receipts', () => {
+    const baseTrip = {
+      title: 'Japan 2026',
+      status: 'Planned',
+      privacyLevel: 'Private',
+    };
+    const withExpenses = (expenses: Array<Record<string, unknown>>): BackupData =>
+      ({
+        ...minimalBackup,
+        version: '1.6.0',
+        trips: [{ ...baseTrip, expenses }],
+      }) as unknown as BackupData;
+    const expense = (extra: Record<string, unknown> = {}) => ({
+      description: 'Ramen',
+      category: 'food',
+      amount: 12,
+      currency: 'JPY',
+      ...extra,
+    });
+    const createdData = (n: number) =>
+      (mockTx.tripExpense.create.mock.calls[n][0] as { data: Record<string, unknown> }).data;
+
+    beforeEach(() => {
+      mockStat.mockResolvedValue({ isFile: () => true });
+      mockCopyFile.mockResolvedValue(undefined);
+      mockUnlink.mockResolvedValue(undefined);
+      mockTx.tripExpense.findFirst.mockResolvedValue(null);
+      mockPrisma.tripExpense.findMany.mockResolvedValue([]);
+    });
+
+    it('round trip: re-attaches the receipt when its file exists, and counts it', async () => {
+      const result = await restoreFromBackup(
+        1,
+        withExpenses([
+          expense({
+            receiptPath: '/uploads/receipts/a.jpg',
+            receiptMimeType: 'image/jpeg',
+            receiptSizeBytes: 1234,
+            receiptUploadedAt: '2026-05-02T10:00:00.000Z',
+          }),
+        ])
+      );
+      expect(createdData(0)).toMatchObject({
+        receiptPath: '/uploads/receipts/a.jpg',
+        receiptMimeType: 'image/jpeg',
+        receiptSizeBytes: 1234,
+      });
+      expect(mockCopyFile).not.toHaveBeenCalled();
+      expect(result.stats).toMatchObject({ receiptsRestored: 1, receiptsNotRestored: 0 });
+    });
+
+    it('a missing file restores the expense with no receipt and counts it', async () => {
+      mockStat.mockRejectedValue(Object.assign(new Error('gone'), { code: 'ENOENT' }));
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/gone.jpg' })]));
+      expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 1 });
+    });
+
+    it('rejects traversal, absolute and foreign-directory paths in the backup', () => {
+      for (const bad of [
+        '/uploads/receipts/../photos/a.jpg',
+        '/uploads/receipts/../../etc/passwd',
+        '/etc/passwd',
+        'C:\\Windows\\win.ini',
+        '/uploads/photos/a.jpg',
+        '/uploads/receipts/sub/a.jpg',
+        '/uploads/receipts/',
+      ]) {
+        const parsed = BackupDataSchema.safeParse(withExpenses([expense({ receiptPath: bad })]));
+        expect(parsed.success).toBe(false);
+      }
+      expect(BackupDataSchema.safeParse(withExpenses([expense({ receiptPath: '/uploads/receipts/ok-1.jpg' })])).success).toBe(true);
+    });
+
+    it('second layer: a bad path that reaches restore is dropped and counted, never stat-ed', async () => {
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/../photos/a.jpg' })]));
+      expect(mockStat).not.toHaveBeenCalled();
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats.receiptsNotRestored).toBe(1);
+    });
+
+    it('an old backup without receipt fields restores cleanly', async () => {
+      const result = await restoreFromBackup(1, withExpenses([expense()]));
+      expect(result.success).toBe(true);
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 0 });
+      expect(mockStat).not.toHaveBeenCalled();
+    });
+
+    it('merge mode: a file already used by another expense of the user is copied, not shared', async () => {
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 1 } });
+      const result = await restoreFromBackup(
+        1,
+        withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]),
+        { clearExistingData: false, importPhotos: true }
+      );
+      expect(mockCopyFile).toHaveBeenCalledTimes(1);
+      const newPath = createdData(0).receiptPath as string;
+      expect(newPath).toMatch(/^\/uploads\/receipts\/[0-9a-f-]{36}\.jpg$/);
+      expect(newPath).not.toBe('/uploads/receipts/a.jpg');
+      expect(result.stats.receiptsRestored).toBe(1);
+    });
+
+    it('two expenses in one backup pointing at the same file get one file each', async () => {
+      await restoreFromBackup(
+        1,
+        withExpenses([
+          expense({ receiptPath: '/uploads/receipts/a.jpg' }),
+          expense({ receiptPath: '/uploads/receipts/a.jpg' }),
+        ])
+      );
+      expect(createdData(0).receiptPath).toBe('/uploads/receipts/a.jpg');
+      expect(createdData(1).receiptPath).not.toBe('/uploads/receipts/a.jpg');
+      expect(mockCopyFile).toHaveBeenCalledTimes(1);
+    });
+
+    it("refuses a receipt file that belongs to another user's expense", async () => {
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 99 } });
+      const result = await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]));
+      expect(createdData(0).receiptPath).toBeUndefined();
+      expect(result.stats.receiptsNotRestored).toBe(1);
+    });
+
+    it('replace mode deletes the receipt files of the replaced expenses, except ones re-attached', async () => {
+      mockPrisma.tripExpense.findMany
+        .mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/old.jpg' }, { receiptPath: '/uploads/receipts/kept.jpg' }])
+        .mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/kept.jpg' }]);
+      await restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/kept.jpg' })]));
+      const unlinked = mockUnlink.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+      expect(unlinked).toHaveLength(1);
+      expect(unlinked[0]).toMatch(/uploads\/receipts\/old\.jpg$/);
+    });
+
+    it('merge mode never deletes existing receipt files', async () => {
+      await restoreFromBackup(1, withExpenses([expense()]), { clearExistingData: false, importPhotos: true });
+      expect(mockPrisma.tripExpense.findMany).not.toHaveBeenCalled();
+      expect(mockUnlink).not.toHaveBeenCalled();
+    });
+
+    it('a failed restore removes the copies it made and deletes no old files', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValueOnce([{ receiptPath: '/uploads/receipts/old.jpg' }]);
+      mockTx.tripExpense.findFirst.mockResolvedValue({ trip: { userId: 1 } });
+      mockTx.tripExpense.create.mockRejectedValueOnce(new Error('db down'));
+      await expect(
+        restoreFromBackup(1, withExpenses([expense({ receiptPath: '/uploads/receipts/a.jpg' })]))
+      ).rejects.toBeDefined();
+      const unlinked = mockUnlink.mock.calls.map((c) => String(c[0]).replace(/\\/g, '/'));
+      expect(unlinked).toHaveLength(1);
+      expect(unlinked[0]).toMatch(/uploads\/receipts\/[0-9a-f-]{36}\.jpg$/);
+      expect(unlinked[0]).not.toMatch(/old\.jpg/);
     });
   });
 });

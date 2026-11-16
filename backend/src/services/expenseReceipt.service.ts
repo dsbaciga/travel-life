@@ -20,6 +20,13 @@ const RECEIPT_URL_PREFIX = '/uploads/receipts/';
 export const RECEIPT_STORED_MAX_EDGE_PX = 2400;
 export const RECEIPT_STORED_QUALITY = 88;
 
+/** `/uploads/receipts/<name>` with a flat, server-style filename; no separators or `..`. */
+const RECEIPT_PATH_PATTERN = /^\/uploads\/receipts\/[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+export function isReceiptStoredPath(value: unknown): value is string {
+  return typeof value === 'string' && RECEIPT_PATH_PATTERN.test(value) && !value.includes('..');
+}
+
 /** Resolve a stored receipt path, refusing anything outside uploads/receipts/. */
 function resolveReceiptFile(storedPath: string): string | null {
   if (!storedPath.startsWith(RECEIPT_URL_PREFIX)) return null;
@@ -114,6 +121,98 @@ class ExpenseReceiptService {
     });
     await deleteReceiptFiles([existing.receiptPath]);
     return convertDecimals(updated);
+  }
+}
+
+/** The receipt columns an expense row carries. */
+export interface RestoredReceiptFields {
+  receiptPath: string;
+  receiptMimeType: string | null;
+  receiptSizeBytes: number | null;
+  receiptUploadedAt: Date | null;
+}
+
+interface BackupReceiptInput {
+  receiptPath?: string | null;
+  receiptMimeType?: string | null;
+  receiptSizeBytes?: number | null;
+  receiptUploadedAt?: string | Date | null;
+}
+
+/**
+ * Re-attaches receipts while a backup is restored.
+ *
+ * A backup holds receipt PATHS, not image bytes (photos behave the same way), so a
+ * receipt is only re-attached when its file is still on the uploads volume. The
+ * path comes from an uploaded file and is treated as untrusted: it must be a flat
+ * `/uploads/receipts/<name>` path that resolves inside uploads/receipts, and the
+ * file must exist. An expense is never left pointing at anything else; it is
+ * restored without a receipt and counted in `notRestored`.
+ *
+ * Two expenses never share a file: a file already used by another expense of the
+ * same user (a merge restore of data that is still present) or already used earlier
+ * in this restore is copied to a new generated name. A file that belongs to another
+ * user's expense is refused.
+ */
+export class ReceiptRestorer {
+  restored = 0;
+  notRestored = 0;
+  private readonly claimed = new Set<string>();
+  private readonly copies: string[] = [];
+
+  constructor(private readonly userId: number, private readonly db: Pick<typeof prisma, 'tripExpense'>) {}
+
+  async prepare(input: BackupReceiptInput): Promise<Partial<RestoredReceiptFields>> {
+    const original = input.receiptPath;
+    if (!original) return {};
+
+    const fail = (reason: string): Partial<RestoredReceiptFields> => {
+      this.notRestored++;
+      logger.warn('Restore: receipt not re-attached', { userId: this.userId, reason });
+      return {};
+    };
+
+    const absolute = isReceiptStoredPath(original) ? resolveReceiptFile(original) : null;
+    if (!absolute) return fail('path is not a stored receipt path');
+    try {
+      if (!(await fs.stat(absolute)).isFile()) return fail('not a file');
+    } catch {
+      return fail('file is missing');
+    }
+
+    const owner = await this.db.tripExpense.findFirst({
+      where: { receiptPath: original },
+      select: { trip: { select: { userId: true } } },
+    });
+    if (owner && owner.trip.userId !== this.userId) return fail('file belongs to another user');
+
+    let finalPath = original;
+    if (owner || this.claimed.has(original)) {
+      finalPath = `${RECEIPT_URL_PREFIX}${crypto.randomUUID()}.jpg`;
+      const target = resolveReceiptFile(finalPath);
+      if (!target) return fail('could not allocate a file name');
+      try {
+        await fs.copyFile(absolute, target);
+      } catch {
+        return fail('file could not be copied');
+      }
+      this.copies.push(finalPath);
+    }
+    this.claimed.add(finalPath);
+    this.restored++;
+
+    const uploadedAt = input.receiptUploadedAt ? new Date(input.receiptUploadedAt) : null;
+    return {
+      receiptPath: finalPath,
+      receiptMimeType: input.receiptMimeType ?? 'image/jpeg',
+      receiptSizeBytes: input.receiptSizeBytes ?? null,
+      receiptUploadedAt: uploadedAt && !Number.isNaN(uploadedAt.getTime()) ? uploadedAt : null,
+    };
+  }
+
+  /** The restore failed and rolled back: remove the files this restore copied. */
+  async discardCopies(): Promise<void> {
+    await deleteReceiptFiles(this.copies);
   }
 }
 
