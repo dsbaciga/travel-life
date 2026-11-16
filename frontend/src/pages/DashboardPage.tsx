@@ -6,6 +6,7 @@ import UpcomingTripsWidget from '../components/widgets/UpcomingTripsWidget';
 import OnThisDayWidget from '../components/widgets/OnThisDayWidget';
 import DeadlinesWidget from '../components/widgets/DeadlinesWidget';
 import YearInReviewWidget from '../components/widgets/YearInReviewWidget';
+import RecentlyViewedWidget from '../components/widgets/RecentlyViewedWidget';
 import PendingInvitations from '../components/PendingInvitations';
 import AgendaList from '../components/agenda/AgendaList';
 import TodayMap from '../components/today/TodayMap';
@@ -273,6 +274,8 @@ export default function DashboardPage() {
             <div key={`trips-${refreshKey}`}>
               <UpcomingTripsWidget />
             </div>
+
+            <RecentlyViewedWidget />
           </div>
         </div>
 

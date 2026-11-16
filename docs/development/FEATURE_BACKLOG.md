@@ -346,6 +346,8 @@ Good enhancements that improve the experience.
 
 **Implementation**: localStorage tracking or database log.
 
+**Status**: ✅ Completed 2026-11-15 (frontend-only: per-user localStorage list, "Recently viewed" dashboard widget, pruned against the cached trips list)
+
 ### 23. Keyboard Shortcuts
 
 **Category**: Productivity

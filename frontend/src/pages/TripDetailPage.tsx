@@ -17,6 +17,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import FloatingTripHeader from "../components/FloatingTripHeader";
 import { usePagedPagination } from "../hooks/usePagedPagination";
 import { useScrollToHighlight } from "../hooks/useScrollToHighlight";
+import { useRecordTripView } from "../hooks/useRecordTripView";
 import Breadcrumbs from "../components/Breadcrumbs";
 import { useScrollStore } from "../store/scrollStore";
 import { emergencyCardQueryKey } from "../hooks/useEmergencyCard";
@@ -385,6 +386,8 @@ export default function TripDetailPage() {
       }, 100);
     }
   };
+
+  useRecordTripView(tripId, trip?.title, !!trip);
 
   if (isTripLoading) {
     return (
