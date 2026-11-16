@@ -8,10 +8,14 @@
  * - BDF-004: "Save & Add Another" saves the staged deadline, then starts empty
  * - BDF-005: editing shows current deadlines and persists add / change / remove
  * - BDF-006: apply never sends the same pending deadline twice
+ * - BDF-007/008: the same staged-create flow for lodging and transportation
+ * - BDF-009: a complete row left in the inline editor is added when the booking is saved
+ * - BDF-010: an incomplete row blocks the save with a message on the row
+ * - BDF-011/012: flushEditor reads the refs, so it is safe in the same tick as a submit
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, renderHook, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, renderHook, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,6 +23,11 @@ import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 
 import ActivityManager from '../ActivityManager';
+import LodgingManager from '../LodgingManager';
+import TransportationManager from '../TransportationManager';
+import lodgingService from '../../services/lodging.service';
+import transportationService from '../../services/transportation.service';
+import loyaltyProgramService from '../../services/loyaltyProgram.service';
 import { activityService } from '../../services/activity.service';
 import entityLinkService from '../../services/entityLink.service';
 import userService from '../../services/user.service';
@@ -36,6 +45,29 @@ vi.mock('../../services/activity.service', () => {
   };
   return { activityService: mockService, default: mockService };
 });
+vi.mock('../../services/lodging.service', () => {
+  const mockService = {
+    getLodgingByTrip: vi.fn(),
+    createLodging: vi.fn(),
+    updateLodging: vi.fn(),
+    deleteLodging: vi.fn(),
+    bulkDeleteLodging: vi.fn(),
+    bulkUpdateLodging: vi.fn(),
+  };
+  return { default: mockService, lodgingService: mockService };
+});
+vi.mock('../../services/transportation.service', () => {
+  const mockService = {
+    getTransportationByTrip: vi.fn(),
+    createTransportation: vi.fn(),
+    updateTransportation: vi.fn(),
+    deleteTransportation: vi.fn(),
+    bulkDeleteTransportation: vi.fn(),
+    bulkUpdateTransportation: vi.fn(),
+  };
+  return { default: mockService, transportationService: mockService };
+});
+vi.mock('../../services/loyaltyProgram.service', () => ({ default: { getAll: vi.fn() } }));
 vi.mock('../../services/entityLink.service', () => ({
   default: { getLinksFrom: vi.fn(), createLink: vi.fn(), deleteLink: vi.fn(), getTripLinkSummary: vi.fn() },
 }));
@@ -256,7 +288,275 @@ describe('deadlines in the activity form', () => {
   });
 });
 
+/** Adds a "Free cancellation ends" deadline row through the section editor. */
+const stageDeadlineRow = async (user: ReturnType<typeof userEvent.setup>, due: string, note = '') => {
+  await user.click(screen.getByRole('button', { name: /\+ add deadline/i }));
+  fireEvent.change(screen.getByLabelText(/^due$/i), { target: { value: due } });
+  if (note) fireEvent.change(screen.getByLabelText(/note \(optional\)/i), { target: { value: note } });
+  await user.click(screen.getByRole('button', { name: /^add deadline$/i }));
+};
+
+/** Types into the inline editor but does not press "Add deadline". */
+const typeDeadlineRow = async (user: ReturnType<typeof userEvent.setup>, due: string, note = '') => {
+  await user.click(screen.getByRole('button', { name: /\+ add deadline/i }));
+  if (due) fireEvent.change(screen.getByLabelText(/^due$/i), { target: { value: due } });
+  if (note) fireEvent.change(screen.getByLabelText(/note \(optional\)/i), { target: { value: note } });
+};
+
+describe('deadlines in the lodging and transportation forms', () => {
+  let queryClient: QueryClient;
+
+  const savedLodging = {
+    id: 81,
+    tripId: TRIP_ID,
+    type: 'hotel' as const,
+    name: 'Grand Hotel',
+    address: null,
+    checkInDate: '2026-12-01T14:00:00.000Z',
+    checkOutDate: '2026-12-03T10:00:00.000Z',
+    timezone: 'Europe/Paris',
+    confirmationNumber: null,
+    loyaltyProgramId: null,
+    cost: null,
+    currency: null,
+    bookingUrl: null,
+    notes: null,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-01T00:00:00.000Z',
+  };
+  const savedTransportation = {
+    id: 82,
+    tripId: TRIP_ID,
+    type: 'train' as const,
+    fromLocationId: null,
+    toLocationId: null,
+    fromLocationName: null,
+    toLocationName: null,
+    departureTime: null,
+    arrivalTime: null,
+    startTimezone: 'Europe/Paris',
+    endTimezone: null,
+    carrier: null,
+    vehicleNumber: null,
+    confirmationNumber: null,
+    loyaltyProgramId: null,
+    cost: null,
+    currency: null,
+    notes: null,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-01T00:00:00.000Z',
+  };
+
+  const wrap = (node: ReactNode) =>
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>{node}</BrowserRouter>
+      </QueryClientProvider>
+    );
+
+  const renderLodging = () =>
+    wrap(<LodgingManager tripId={TRIP_ID} locations={mockLocations} tripTimezone="Europe/Paris" tripStartDate="2026-12-01" />);
+  const renderTransportation = () =>
+    wrap(<TransportationManager tripId={TRIP_ID} locations={mockLocations} tripTimezone="Europe/Paris" tripStartDate="2026-12-01" />);
+
+  const openLodging = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(await screen.findByRole('button', { name: /add lodging/i }));
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: 'Grand Hotel' } });
+  };
+  const openTransportation = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click((await screen.findAllByRole('button', { name: /add transportation/i }))[0]);
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    vi.mocked(userService.getMe).mockResolvedValue(mockUser);
+    vi.mocked(entityLinkService.getLinksFrom).mockResolvedValue([]);
+    vi.mocked(entityLinkService.getTripLinkSummary).mockResolvedValue({});
+    vi.mocked(loyaltyProgramService.getAll).mockResolvedValue([]);
+    vi.mocked(lodgingService.getLodgingByTrip).mockResolvedValue([]);
+    vi.mocked(lodgingService.createLodging).mockResolvedValue(savedLodging);
+    vi.mocked(transportationService.getTransportationByTrip).mockResolvedValue([]);
+    vi.mocked(transportationService.createTransportation).mockResolvedValue(savedTransportation);
+    vi.mocked(bookingDeadlineService.getDeadlinesByTrip).mockResolvedValue([]);
+    vi.mocked(bookingDeadlineService.createDeadline).mockResolvedValue(existing);
+  });
+
+  it('BDF-007: a deadline staged on a new lodging is created after it, with the new id', async () => {
+    const user = userEvent.setup();
+    renderLodging();
+    await openLodging(user);
+
+    await stageDeadlineRow(user, '2026-12-01T18:00', 'Cancel by 6pm');
+    expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+
+    await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
+    expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(TRIP_ID, {
+      entityType: 'lodging',
+      entityId: 81,
+      kind: 'cancellation',
+      // 18:00 in Paris (CET, UTC+1) in December.
+      dueAt: expect.stringContaining('2026-12-01T17:00'),
+      note: 'Cancel by 6pm',
+    });
+    expect(vi.mocked(lodgingService.createLodging).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(bookingDeadlineService.createDeadline).mock.invocationCallOrder[0]
+    );
+  });
+
+  it('BDF-008: a deadline staged on a new transportation is created after it, with the new id', async () => {
+    const user = userEvent.setup();
+    renderTransportation();
+    await openTransportation(user);
+
+    await stageDeadlineRow(user, '2026-12-01T18:00', 'Cancel by 6pm');
+    expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+
+    await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
+    expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(TRIP_ID, {
+      entityType: 'transportation',
+      entityId: 82,
+      kind: 'cancellation',
+      dueAt: expect.stringContaining('2026-12-01T17:00'),
+      note: 'Cancel by 6pm',
+    });
+    expect(vi.mocked(transportationService.createTransportation).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(bookingDeadlineService.createDeadline).mock.invocationCallOrder[0]
+    );
+  });
+
+  it('BDF-009: a complete row left in the editor is added when the booking is saved', async () => {
+    const user = userEvent.setup();
+    renderLodging();
+    await openLodging(user);
+
+    // Typed, but "Add deadline" is never pressed.
+    await typeDeadlineRow(user, '2026-12-01T18:00', 'Left in the editor');
+    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+
+    await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
+    expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(
+      TRIP_ID,
+      expect.objectContaining({ entityType: 'lodging', entityId: 81, note: 'Left in the editor' })
+    );
+  });
+
+  it('BDF-009b: the same holds for transportation', async () => {
+    const user = userEvent.setup();
+    renderTransportation();
+    await openTransportation(user);
+
+    await typeDeadlineRow(user, '2026-12-01T18:00');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+
+    await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
+    expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(
+      TRIP_ID,
+      expect.objectContaining({ entityType: 'transportation', entityId: 82 })
+    );
+  });
+
+  it('BDF-010: an incomplete row blocks the save with a message, and saves once it is finished', async () => {
+    const user = userEvent.setup();
+    renderLodging();
+    await openLodging(user);
+
+    // A note but no due date.
+    await typeDeadlineRow(user, '', 'No date yet');
+    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/choose a due date/i);
+    expect(lodgingService.createLodging).not.toHaveBeenCalled();
+    expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    // Finishing the row clears the message and lets the save through.
+    fireEvent.change(screen.getByLabelText(/^due$/i), { target: { value: '2026-12-01T18:00' } });
+    expect(screen.queryByText(/choose a due date to add/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+    await waitFor(() => expect(lodgingService.createLodging).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
+  });
+
+  it('BDF-010b: an incomplete row also blocks a transportation save, and removing it lets the save through', async () => {
+    const user = userEvent.setup();
+    renderTransportation();
+    await openTransportation(user);
+
+    await typeDeadlineRow(user, '', 'No date yet');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/choose a due date/i);
+    expect(transportationService.createTransportation).not.toHaveBeenCalled();
+
+    // Cancel the deadline row (the only Cancel inside the Deadlines section is its own).
+    const row = screen.getByLabelText(/^due$/i).closest('div.space-y-3') as HTMLElement;
+    await user.click(within(row).getByRole('button', { name: /^cancel$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+    await waitFor(() => expect(transportationService.createTransportation).toHaveBeenCalledTimes(1));
+    expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
+  });
+});
+
 describe('useBookingDeadlineDrafts', () => {
+  it('BDF-011: flushEditor commits a complete row to the list apply reads, in the same tick', async () => {
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    vi.mocked(bookingDeadlineService.createDeadline).mockClear();
+    vi.mocked(bookingDeadlineService.createDeadline).mockResolvedValue(existing);
+    const { result } = renderHook(
+      () => useBookingDeadlineDrafts({ tripId: TRIP_ID, entityType: 'lodging', entityId: null, active: true, tripTimezone: 'Europe/Paris' }),
+      { wrapper }
+    );
+
+    let allowed = false;
+    await act(async () => {
+      // No render between these calls: they read the refs, not state.
+      result.current.setEditor({ key: null, kind: 'payment', dueLocal: '2026-12-01T10:00', note: ' pay ' });
+      allowed = result.current.flushEditor();
+      await result.current.apply(5, 'Europe/Paris');
+    });
+
+    expect(allowed).toBe(true);
+    expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(
+      TRIP_ID,
+      expect.objectContaining({ entityId: 5, kind: 'payment', note: 'pay' })
+    );
+  });
+
+  it('BDF-012: flushEditor ignores an untouched row and refuses an incomplete one', async () => {
+    const queryClient = new QueryClient();
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    const { result } = renderHook(
+      () => useBookingDeadlineDrafts({ tripId: TRIP_ID, entityType: 'lodging', entityId: null, active: true, tripTimezone: 'Europe/Paris' }),
+      { wrapper }
+    );
+
+    act(() => result.current.setEditor({ key: null, kind: 'cancellation', dueLocal: '', note: '' }));
+    let allowed = false;
+    act(() => {
+      allowed = result.current.flushEditor();
+    });
+    expect(allowed).toBe(true);
+    expect(result.current.editor).toBeNull();
+
+    act(() => result.current.setEditor({ key: null, kind: 'cancellation', dueLocal: '', note: 'x' }));
+    act(() => {
+      allowed = result.current.flushEditor();
+    });
+    expect(allowed).toBe(false);
+    expect(result.current.editorError).toMatch(/due date/i);
+    expect(result.current.drafts).toEqual([]);
+  });
+
   it('BDF-006: two overlapping applies send a pending deadline once', async () => {
     const queryClient = new QueryClient();
     const wrapper = ({ children }: { children: ReactNode }) => (

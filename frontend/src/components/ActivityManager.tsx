@@ -223,6 +223,8 @@ export default function ActivityManager({
   }, [baseOpenCreateForm]);
 
   const handleFormSubmit = async (data: ActivityFormData, newLocationId: number | null) => {
+    // An uncommitted deadline row is added if complete, or blocks the save with a message on the row.
+    if (!deadlines.flushEditor()) return;
     setIsSubmitting(true);
     try {
     if (manager.editingId) {
@@ -764,7 +766,7 @@ export default function ActivityManager({
             defaultUnscheduled={false}
             onDirtyChange={(dirty) => { activityFormDirtyRef.current = dirty; }}
           />
-          <div className="mt-6"><BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="activity" /></div>
+          <div className="mt-6"><BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="activity" editor={deadlines.editor} onEditorChange={deadlines.setEditor} editorError={deadlines.editorError} /></div>
         </div>
       </FormModal>
 

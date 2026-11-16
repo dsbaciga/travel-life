@@ -34,6 +34,15 @@ interface Options {
   onUpdate?: () => void;
 }
 
+/** The inline add/edit row of the Deadlines section, before it is committed to the list. */
+export interface DeadlineEditor {
+  /** Key of the row being edited, or null for a new one. */
+  key: string | null;
+  kind: DeadlineKind;
+  dueLocal: string;
+  note: string;
+}
+
 let draftCounter = 0;
 export const newDraftKey = () => `draft-${++draftCounter}`;
 
@@ -45,8 +54,12 @@ export const newDraftKey = () => `draft-${++draftCounter}`;
  * new booking has an id to attach them to. `apply` never throws: the booking is
  * already saved by then, so a deadline that fails is reported by name instead.
  *
- * The latest drafts are kept in a ref as well as state, because a submit handler
- * can run (via `requestSubmit`) before React has re-rendered.
+ * The latest drafts (and the inline editor row) are kept in refs as well as state,
+ * because a submit handler can run (via `requestSubmit`) before React has re-rendered.
+ *
+ * A row typed into the inline editor but never committed with "Add deadline" is not
+ * dropped on submit: the booking form calls `flushEditor()` first, which commits a
+ * complete row and refuses (returns false, with `editorError` set) an incomplete one.
  */
 export function useBookingDeadlineDrafts({
   tripId,
@@ -62,6 +75,9 @@ export function useBookingDeadlineDrafts({
   const [drafts, setDraftsState] = useState<DeadlineDraft[]>([]);
   const draftsRef = useRef<DeadlineDraft[]>([]);
   const removedRef = useRef<DeadlineDraft[]>([]);
+  const [editor, setEditorState] = useState<DeadlineEditor | null>(null);
+  const editorRef = useRef<DeadlineEditor | null>(null);
+  const [editorError, setEditorError] = useState<string | null>(null);
   const entityTimezoneRef = useRef(entityTimezone);
   entityTimezoneRef.current = entityTimezone;
   const resolveRef = useRef(resolveTz);
@@ -74,6 +90,12 @@ export function useBookingDeadlineDrafts({
   const setDrafts = useCallback((next: DeadlineDraft[]) => {
     draftsRef.current = next;
     setDraftsState(next);
+  }, []);
+
+  const setEditor = useCallback((next: DeadlineEditor | null) => {
+    editorRef.current = next;
+    setEditorState(next);
+    setEditorError(null);
   }, []);
 
   /** Edits the list; removing a saved row remembers it so `apply` can delete it. */
@@ -92,6 +114,7 @@ export function useBookingDeadlineDrafts({
   useEffect(() => {
     removedRef.current = [];
     setDrafts([]);
+    setEditor(null);
     if (!active || entityId === null) return;
     let cancelled = false;
     queryClient
@@ -127,7 +150,35 @@ export function useBookingDeadlineDrafts({
     return () => {
       cancelled = true;
     };
-  }, [active, entityId, entityType, tripId, queryClient, setDrafts]);
+  }, [active, entityId, entityType, tripId, queryClient, setDrafts, setEditor]);
+
+  /**
+   * Call at the start of the booking form's submit. Returns true when the submit may
+   * go ahead. An untouched editor row is simply closed; a row with a due date is
+   * committed to the list as if "Add deadline" had been pressed; a row with content
+   * but no due date blocks the submit (false) and sets `editorError` on that row.
+   */
+  const flushEditor = useCallback((): boolean => {
+    const current = editorRef.current;
+    if (!current) return true;
+    const touched = current.key !== null || current.dueLocal !== '' || current.note.trim() !== '';
+    if (!touched) {
+      setEditor(null);
+      return true;
+    }
+    if (!current.dueLocal) {
+      setEditorError('Choose a due date to add this deadline, or cancel it, before saving.');
+      return false;
+    }
+    const fields = { kind: current.kind, dueLocal: current.dueLocal, note: current.note.trim() };
+    change(
+      current.key === null
+        ? [...draftsRef.current, { key: newDraftKey(), done: false, ...fields }]
+        : draftsRef.current.map((d) => (d.key === current.key ? { ...d, ...fields } : d))
+    );
+    setEditor(null);
+    return true;
+  }, [change, setEditor]);
 
   /**
    * Writes the pending changes for a booking that has just been saved.
@@ -197,7 +248,7 @@ export function useBookingDeadlineDrafts({
 
   const timezone = resolveTz(entityTimezone, tripTimezone);
 
-  return { drafts, change, apply, timezone };
+  return { drafts, change, apply, timezone, editor, setEditor, editorError, flushEditor };
 }
 
 export default useBookingDeadlineDrafts;

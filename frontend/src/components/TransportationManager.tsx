@@ -811,6 +811,8 @@ export default function TransportationManager({
 
   const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // An uncommitted deadline row is added if complete, or blocks the save with a message on the row.
+    if (!deadlines.flushEditor()) return;
 
     // Convert datetime-local values to ISO strings using the specified timezones
     const effectiveStartTz = resolveTz(values.startTimezone, tripTimezone);
@@ -1595,7 +1597,7 @@ export default function TransportationManager({
               compact
             />
           </CollapsibleSection>
-          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="transportation" />
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="transportation" editor={deadlines.editor} onEditorChange={deadlines.setEditor} editorError={deadlines.editorError} />
         </form>
         </FormModal>
 

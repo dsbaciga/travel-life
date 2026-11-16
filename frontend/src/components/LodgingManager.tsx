@@ -418,6 +418,8 @@ export default function LodgingManager({
 
   const performSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // An uncommitted deadline row is added if complete, or blocks the save with a message on the row.
+    if (!deadlines.flushEditor()) return;
 
     if (!values.name.trim()) {
       toast.error("Name is required");
@@ -936,7 +938,7 @@ export default function LodgingManager({
               compact
             />
           </CollapsibleSection>
-          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="lodging" />
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="lodging" editor={deadlines.editor} onEditorChange={deadlines.setEditor} editorError={deadlines.editorError} />
         </form>
         </FormModal>
 

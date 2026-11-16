@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 import FormSection from './FormSection';
 import { DEADLINE_KINDS, DEADLINE_KIND_LABELS, type DeadlineKind } from '../types/bookingDeadline';
-import { newDraftKey, type DeadlineDraft } from '../hooks/useBookingDeadlineDrafts';
+import { newDraftKey, type DeadlineDraft, type DeadlineEditor } from '../hooks/useBookingDeadlineDrafts';
 
 interface BookingDeadlinesSectionProps {
   drafts: DeadlineDraft[];
@@ -11,17 +10,14 @@ interface BookingDeadlinesSectionProps {
   timezone: string;
   /** Prefix for element ids, so two sections on a page do not collide. */
   idPrefix: string;
+  /** The inline add/edit row, held by the hook so a submit can see an uncommitted one. */
+  editor: DeadlineEditor | null;
+  onEditorChange: (next: DeadlineEditor | null) => void;
+  /** Set when the form was submitted with an incomplete row; shown on that row. */
+  editorError?: string | null;
 }
 
-interface EditorState {
-  /** Key of the row being edited, or null for a new one. */
-  key: string | null;
-  kind: DeadlineKind;
-  dueLocal: string;
-  note: string;
-}
-
-const NEW_EDITOR: EditorState = { key: null, kind: 'cancellation', dueLocal: '', note: '' };
+const NEW_EDITOR: DeadlineEditor = { key: null, kind: 'cancellation', dueLocal: '', note: '' };
 
 const formatLocal = (dueLocal: string) => {
   const d = new Date(dueLocal);
@@ -46,9 +42,10 @@ export default function BookingDeadlinesSection({
   onChange,
   timezone,
   idPrefix,
+  editor,
+  onEditorChange: setEditor,
+  editorError,
 }: BookingDeadlinesSectionProps) {
-  const [editor, setEditor] = useState<EditorState | null>(null);
-
   const commit = () => {
     if (!editor) return;
     if (!editor.dueLocal) {
@@ -118,6 +115,11 @@ export default function BookingDeadlinesSection({
 
       {editor ? (
         <div className="space-y-3 rounded-lg border border-gray-200 dark:border-dusk-700 p-3">
+          {editorError && (
+            <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+              {editorError}
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1" htmlFor={`${idPrefix}-deadline-kind`}>Type</label>
