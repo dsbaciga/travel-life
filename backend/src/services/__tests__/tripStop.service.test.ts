@@ -264,6 +264,36 @@ describe('TripStopService', () => {
       expect(mockPrisma.tripStop.update).not.toHaveBeenCalled();
     });
 
+    it('TST-017: moving a stop that stays linked is checked against its place', async () => {
+      mockPrisma.tripStop.findFirst.mockResolvedValue({ ...stop(5, 0), locationId: 4 });
+      mockPrisma.location.findUnique.mockResolvedValue(colosseum);
+
+      await expect(
+        tripStopService.updateStop(1, 10, 5, { latitude: 10, longitude: 10 })
+      ).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockPrisma.tripStop.update).not.toHaveBeenCalled();
+    });
+
+    it('TST-018: renaming a linked stop does not re-check its position', async () => {
+      mockPrisma.tripStop.findFirst.mockResolvedValue({ ...stop(5, 0), locationId: 4 });
+      mockPrisma.tripStop.update.mockResolvedValue({});
+
+      await tripStopService.updateStop(1, 10, 5, { name: 'Renamed', nights: 2 });
+
+      expect(mockPrisma.location.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.tripStop.update).toHaveBeenCalled();
+    });
+
+    it('TST-019: unlinking a stop (locationId null) may move it anywhere', async () => {
+      mockPrisma.tripStop.findFirst.mockResolvedValue({ ...stop(5, 0), locationId: 4 });
+      mockPrisma.tripStop.update.mockResolvedValue({});
+
+      await tripStopService.updateStop(1, 10, 5, { locationId: null, latitude: 10, longitude: 10 });
+
+      expect(mockPrisma.location.findUnique).not.toHaveBeenCalled();
+      expect(mockPrisma.tripStop.update).toHaveBeenCalled();
+    });
+
     it('TST-016: the schema needs name and coordinates unless a place is linked', () => {
       expect(createTripStopSchema.safeParse({ locationId: 4 }).success).toBe(true);
       expect(createTripStopSchema.safeParse({}).success).toBe(false);

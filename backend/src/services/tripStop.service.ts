@@ -110,15 +110,29 @@ class TripStopService {
   async updateStop(userId: number, tripId: number, stopId: number, data: UpdateTripStopInput) {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const existing = await findInTrip(stopId, tripId);
+    const position = {
+      latitude: data.latitude ?? existing.latitude,
+      longitude: data.longitude ?? existing.longitude,
+    };
     if (data.locationId != null) {
-      const location = await loadLinkedLocation(data.locationId, tripId);
-      assertNearLocation(
-        {
-          latitude: data.latitude ?? existing.latitude,
-          longitude: data.longitude ?? existing.longitude,
-        },
-        location
-      );
+      assertNearLocation(position, await loadLinkedLocation(data.locationId, tripId));
+    } else if (
+      data.locationId === undefined &&
+      existing.locationId !== null &&
+      (data.latitude !== undefined || data.longitude !== undefined)
+    ) {
+      // Moving a stop that stays linked: it must still agree with its place. A place that
+      // has lost its coordinates since can no longer be compared against, so it is skipped.
+      const place = await prisma.location.findUnique({
+        where: { id: existing.locationId },
+        select: { latitude: true, longitude: true },
+      });
+      if (place && place.latitude != null && place.longitude != null) {
+        assertNearLocation(position, {
+          latitude: Number(place.latitude),
+          longitude: Number(place.longitude),
+        });
+      }
     }
 
     return prisma.tripStop.update({
