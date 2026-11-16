@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Import PDF works from the trip menu on a phone.** Choosing it from the ⋮ menu closed the menu and nothing else happened; the upload dialog now opens. On tablets and computers the button was unaffected.
+
 ## [7.3.0] - 2026-11-15
 
 ### Security

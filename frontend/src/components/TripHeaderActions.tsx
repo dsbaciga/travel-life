@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { EllipsisVerticalIcon } from './icons';
 import PdfImportButton from './PdfImportButton';
+import PdfUploadModal from './PdfUploadModal';
 
 interface TripHeaderActionsProps {
   tripId: number;
@@ -30,6 +31,7 @@ export default function TripHeaderActions({
   variant = 'plain',
 }: TripHeaderActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,9 +95,9 @@ export default function TripHeaderActions({
             <Link role="menuitem" to={`/trips/${tripId}/edit`} className={menuItemClasses} onClick={() => setIsMenuOpen(false)}>
               Edit trip
             </Link>
-            <div onClick={() => setIsMenuOpen(false)} role="none">
-              <PdfImportButton tripId={tripId} variant="menuItem" />
-            </div>
+            <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); setIsPdfImportOpen(true); }}>
+              Import PDF
+            </button>
             <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); onDuplicate(); }}>
               Duplicate trip
             </button>
@@ -147,6 +149,19 @@ export default function TripHeaderActions({
 
         <PdfImportButton tripId={tripId} />
       </div>
+
+      {/* Launched from the phone menu, but rendered outside it: the menu's
+          contents unmount when it closes, and choosing an item closes it. A
+          dialog owned by something inside the menu was unmounted by the same
+          tap that opened it, so Import PDF did nothing on a phone. */}
+      {isPdfImportOpen && (
+        <PdfUploadModal
+          tripId={tripId}
+          isOpen={isPdfImportOpen}
+          onClose={() => setIsPdfImportOpen(false)}
+          onComplete={() => setIsPdfImportOpen(false)}
+        />
+      )}
     </>
   );
 }
