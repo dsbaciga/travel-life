@@ -257,13 +257,18 @@ class ExpenseService {
     const updatedExpense = await prisma.tripExpense.update({
       where: { id: expenseId },
       data: updateData,
+      include: { splits: { orderBy: { id: 'asc' } } },
     });
 
     // Shares are stored in the expense's own currency and must keep summing to the
     // amount, so a new amount re-scales them (proportionally; odd cents land on the
-    // largest share).
+    // largest share). The response then carries the re-scaled shares, as a GET would.
     if (amountChanged) {
       await this.rescaleSplits(expenseId, updatedExpense.amount);
+      updatedExpense.splits = await prisma.tripExpenseSplit.findMany({
+        where: { expenseId },
+        orderBy: { id: 'asc' },
+      });
     }
 
     return convertDecimals(withSplitFields(updatedExpense));

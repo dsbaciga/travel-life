@@ -260,6 +260,36 @@ describe('ExpenseService', () => {
       expect(updates.reduce((sum, u) => sum.add(u.data.amount), new Prisma.Decimal(0)).eq(100)).toBe(true);
     });
 
+    it('should return the re-scaled splits in the update response (not an empty list)', async () => {
+      mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
+      mockPrisma.tripExpense.update.mockResolvedValue({
+        id: 5,
+        amount: new Prisma.Decimal('100.00'),
+        paidByOwner: true,
+        paidByCompanionId: null,
+        splits: [],
+      });
+      const before = [
+        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
+      ];
+      mockPrisma.tripExpenseSplit.findMany
+        .mockResolvedValueOnce(before)
+        .mockResolvedValueOnce([
+          { ...before[0], amount: new Prisma.Decimal('50.00') },
+          { ...before[1], amount: new Prisma.Decimal('50.00') },
+        ]);
+      mockPrisma.tripExpenseSplit.update.mockImplementation(((args: unknown) => args) as never);
+
+      const result = await expenseService.updateExpense(1, 10, 5, { amount: 100 });
+
+      expect(result.paidBy).toBe('owner');
+      expect(result.splits).toEqual([
+        { participant: 'owner', amount: 50, percentage: null },
+        { participant: 'companion:8', amount: 50, percentage: null },
+      ]);
+    });
+
     it('should not touch splits when the amount did not change', async () => {
       await expenseService.updateExpense(1, 10, 5, { description: 'Renamed' });
       expect(mockPrisma.tripExpenseSplit.findMany).not.toHaveBeenCalled();
