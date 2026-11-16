@@ -9,6 +9,7 @@ import { buildConditionalUpdateData, tripDateTransformer } from '../services/_sh
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { getUserTimezone, resolveTimezone } from '../services/_shared/timezoneResolution';
 import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tripListOrder';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -492,9 +493,17 @@ export class TripService {
           PHOTO_UPLOAD_PREFIXES.some((prefix) => value.startsWith(prefix))
       );
 
+    // Receipt photos hang off expenses, which the cascade also removes.
+    const receiptRows = await prisma.tripExpense.findMany({
+      where: { tripId, receiptPath: { not: null } },
+      select: { receiptPath: true },
+    });
+
     await prisma.trip.delete({
       where: { id: tripId },
     });
+
+    await deleteReceiptFiles(receiptRows.map((row) => row.receiptPath));
 
     // A file can be referenced by more than one row (a restored or copied
     // trip), so only remove the ones nothing points at any more.

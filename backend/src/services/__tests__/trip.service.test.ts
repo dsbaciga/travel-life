@@ -159,8 +159,16 @@ const mockPrisma = {
   tripCollaborator: {
     create: jest.fn(),
   },
+  tripExpense: {
+    findMany: jest.fn(),
+  },
   $transaction: jest.fn(),
 };
+
+const mockDeleteReceiptFiles = jest.fn();
+jest.mock('../expenseReceipt.service', () => ({
+  deleteReceiptFiles: (...args: unknown[]) => mockDeleteReceiptFiles(...args),
+}));
 
 jest.mock('../../config/database', () => ({
   __esModule: true,
@@ -852,6 +860,20 @@ describe('Trip Service', () => {
     beforeEach(() => {
       // No uploaded photos unless a test says otherwise.
       mockPrisma.photo.findMany.mockResolvedValue([]);
+      mockPrisma.tripExpense.findMany.mockResolvedValue([]);
+    });
+
+    it('deletes receipt photos of the trip expenses after the trip row is gone', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(mockTrip);
+      mockPrisma.trip.delete.mockResolvedValue(mockTrip);
+      mockPrisma.tripExpense.findMany.mockResolvedValue([{ receiptPath: '/uploads/receipts/r1.jpg' }]);
+
+      await tripService.deleteTrip(mockUserId, mockTripId);
+
+      expect(mockPrisma.tripExpense.findMany.mock.invocationCallOrder[0]).toBeLessThan(
+        mockPrisma.trip.delete.mock.invocationCallOrder[0]
+      );
+      expect(mockDeleteReceiptFiles).toHaveBeenCalledWith(['/uploads/receipts/r1.jpg']);
     });
 
     it('removes photo files of the deleted trip from disk, except ones another row still uses', async () => {

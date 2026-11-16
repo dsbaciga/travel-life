@@ -12,6 +12,7 @@ import { tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import exchangeRateService, { normalizeCurrency } from './exchangeRate.service';
 import { Prisma } from '@prisma/client';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
 /** Buckets the budget summary reports spending under. */
 type BudgetBucket = 'lodging' | 'transportation' | 'activities' | 'food' | 'other';
@@ -257,9 +258,11 @@ class ExpenseService {
   async deleteExpense(userId: number, tripId: number, expenseId: number) {
     // Verify user has edit permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
-    await verifyExpenseInTrip(expenseId, tripId);
+    const expense = await verifyExpenseInTrip(expenseId, tripId);
 
     await prisma.tripExpense.delete({ where: { id: expenseId } });
+    // The row is gone; remove its receipt photo too (failures are logged, never thrown).
+    await deleteReceiptFiles([expense.receiptPath]);
 
     return { success: true };
   }

@@ -5,7 +5,8 @@ import receiptScanService, { type ReceiptScanResult } from "../services/receiptS
 interface ReceiptScanButtonProps {
   tripId: number;
   disabled?: boolean;
-  onScanned: (result: ReceiptScanResult) => void;
+  /** `file` is the scanned photo, for attaching to the expense once it is saved. */
+  onScanned: (result: ReceiptScanResult, file: File) => void;
 }
 
 function errorMessage(error: unknown): string {
@@ -49,7 +50,7 @@ export default function ReceiptScanButton({ tripId, disabled, onScanned }: Recei
     setIsScanning(true);
     try {
       const result = await receiptScanService.scanReceipt(tripId, file);
-      onScanned(result);
+      onScanned(result, file);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {

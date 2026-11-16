@@ -33,6 +33,9 @@ export type TripExpense = {
   baseCurrency: string | null;
   date: string | null;
   notes: string | null;
+  /** Stored receipt photo ("/uploads/receipts/..."), or null. Load it with getFullAssetUrl. */
+  receiptPath?: string | null;
+  receiptUploadedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };

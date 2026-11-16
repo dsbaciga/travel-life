@@ -64,13 +64,17 @@ export async function assertReceiptImage(buffer: Buffer | undefined): Promise<st
 }
 
 /** Auto-rotate from EXIF, downscale and re-encode as JPEG. Drops all metadata (GPS etc.). */
-async function normaliseImage(buffer: Buffer): Promise<Buffer> {
+export async function normaliseImage(
+  buffer: Buffer,
+  maxEdge: number = MAX_EDGE_PX,
+  quality = 82
+): Promise<Buffer> {
   try {
     return await sharp(buffer)
       .rotate()
-      .resize(MAX_EDGE_PX, MAX_EDGE_PX, { fit: 'inside', withoutEnlargement: true })
+      .resize(maxEdge, maxEdge, { fit: 'inside', withoutEnlargement: true })
       .flatten({ background: '#ffffff' })
-      .jpeg({ quality: 82 })
+      .jpeg({ quality })
       .toBuffer();
   } catch (error) {
     logger.warn('Receipt image could not be decoded', {
