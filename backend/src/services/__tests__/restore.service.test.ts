@@ -418,6 +418,25 @@ describe('RestoreService', () => {
       expect(result.message).toBe('Data restored successfully');
     });
 
+    it('RST-019: a backup with no timezone leaves the current timezone alone and never invents UTC', async () => {
+      for (const timezone of [null, undefined, '', '   ']) {
+        mockTx.user.update.mockClear();
+        await restoreFromBackup(1, {
+          ...minimalBackup,
+          user: { ...minimalBackup.user, timezone: timezone as string | null },
+        });
+        const data = mockTx.user.update.mock.calls[0][0].data;
+        expect(data).not.toHaveProperty('timezone');
+      }
+      expect(mockTx.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('RST-019b: a backup with a timezone restores it', async () => {
+      mockTx.user.update.mockClear();
+      await restoreFromBackup(1, { ...minimalBackup, user: { ...minimalBackup.user, timezone: ' Europe/Rome ' } });
+      expect(mockTx.user.update.mock.calls[0][0].data.timezone).toBe('Europe/Rome');
+    });
+
     it('RST-002: rejects unsupported backup version', async () => {
       // The version value is deliberately unsupported -- that is the point of the
       // test. It is still a structurally valid BackupData, so it needs no cast.

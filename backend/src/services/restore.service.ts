@@ -4,7 +4,6 @@ import { BackupData, RestoreOptions, isStoredUploadPath } from '../types/backup.
 import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
-import { resolveTimezone } from './_shared/timezoneResolution';
 import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
@@ -130,11 +129,9 @@ export async function restoreFromBackup(
         }
 
         // Step 2: Update user settings
-        // Preserve current timezone if the backup doesn't include one
-        const currentUser = await tx.user.findUnique({
-          where: { id: userId },
-          select: { timezone: true },
-        });
+        // A backup with no timezone leaves the user's current one alone (and null stays
+        // null). The column has no default on purpose, so never invent one here.
+        const backupTimezone = backupData.user.timezone?.trim();
         // Validate Immich URL from backup to prevent SSRF
         let sanitizedImmichUrl = backupData.user.immichApiUrl;
         if (sanitizedImmichUrl) {
@@ -203,7 +200,7 @@ export async function restoreFromBackup(
         await tx.user.update({
           where: { id: userId },
           data: {
-            timezone: resolveTimezone(backupData.user.timezone, currentUser?.timezone),
+            ...(backupTimezone ? { timezone: backupTimezone } : {}),
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
             ...(backupData.user.dietaryPreferences !== undefined
