@@ -9,6 +9,7 @@
  * - AP-005: Confirming the export writes once and reports the result
  * - AP-006: Export errors (for example a key without permission) are shown as returned
  * - AP-007: Nothing is sent to Immich on render: sync and export are button-only
+ * - AP-008: Escape in the export confirmation closes only it, not the album modal behind it
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -27,8 +28,14 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('../../services/immich.service', () => ({ default: h.immich }));
 vi.mock('react-hot-toast', () => ({ default: h.toast }));
+vi.mock('../../hooks/useTripLinkSummary', () => ({
+  useTripLinkSummary: () => ({ getLinkSummary: vi.fn().mockReturnValue(null), invalidate: vi.fn(), isLoading: false }),
+}));
+vi.mock('../LinkButton', () => ({ default: () => null }));
+vi.mock('../MarkdownEditor', () => ({ default: () => <div data-testid="markdown-editor" /> }));
 
 import ImmichAlbumPanel from '../ImmichAlbumPanel';
+import AlbumModal from '../AlbumModal';
 
 const album = (over: Partial<PhotoAlbum> = {}): PhotoAlbum => ({
   id: 7,
@@ -184,5 +191,29 @@ describe('ImmichAlbumPanel', () => {
     expect(h.immich.syncAlbum).not.toHaveBeenCalled();
     expect(h.immich.exportAlbum).not.toHaveBeenCalled();
     expect(h.immich.setAlbumLink).not.toHaveBeenCalled();
+  });
+
+  it('AP-008: Escape in the export confirmation closes only it, not the album modal behind it', async () => {
+    h.immich.previewAlbumExport.mockResolvedValue({
+      albumName: 'Beach',
+      immichAssetCount: 12,
+      skippedUploaded: 0,
+      linkedImmichAlbumId: null,
+      willCreate: true,
+    });
+    const onClose = vi.fn();
+    render(<AlbumModal album={album()} tripId={42} onSave={vi.fn()} onClose={onClose} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich...' }));
+    await screen.findByText(/Nothing in Immich is deleted/);
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByText(/Nothing in Immich is deleted/)).not.toBeInTheDocument());
+    expect(onClose).not.toHaveBeenCalled();
+    expect(h.immich.exportAlbum).not.toHaveBeenCalled();
+
+    // With the confirmation gone, Escape reaches the album modal again.
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

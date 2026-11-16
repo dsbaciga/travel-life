@@ -4,6 +4,7 @@ import LinkButton from "./LinkButton";
 import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
 import MarkdownEditor from "./MarkdownEditor";
 import ImmichAlbumPanel from "./ImmichAlbumPanel";
+import { pushModal, popModal, isTopModal } from "../utils/modalStack";
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -31,6 +32,7 @@ export default function AlbumModal({
   const [saving, setSaving] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerElementRef = useRef<HTMLElement | null>(null);
+  const modalStackIdRef = useRef<number | null>(null);
 
   // Fetch link summary for this album
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
@@ -39,6 +41,9 @@ export default function AlbumModal({
 
   // Handle keyboard events including focus trap
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // A dialog stacked above this one (e.g. the Immich export confirmation) owns the keyboard.
+    if (!isTopModal(modalStackIdRef.current)) return;
+
     // Escape to close
     if (e.key === 'Escape') {
       onClose();
@@ -63,6 +68,18 @@ export default function AlbumModal({
     }
   }, [onClose]);
 
+  // Register in the shared modal stack (ref-counted scroll lock, and tells a dialog
+  // opened on top of this one that it is the topmost). Declared before the keyboard
+  // effect so the id is set by the time a key can arrive.
+  useEffect(() => {
+    const id = pushModal();
+    modalStackIdRef.current = id;
+    return () => {
+      popModal(id);
+      modalStackIdRef.current = null;
+    };
+  }, []);
+
   // Focus management and keyboard handling
   useEffect(() => {
     // Store the currently focused element to restore later
@@ -75,11 +92,9 @@ export default function AlbumModal({
     }, 0);
 
     document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
       // Return focus to the trigger element
       triggerElementRef.current?.focus();
     };
