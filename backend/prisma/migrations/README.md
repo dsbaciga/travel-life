@@ -121,6 +121,24 @@ Step 2 marks the four 2026-07-28 migrations as applied too; that is correct, bec
 their effects are already present in the baseline (they are written to be no-ops
 against a database that already has them anyway).
 
+## Migrations added 2026-11-16 (safe on a populated database)
+
+Released in 8.0.0. All additive: new tables, and new columns that are nullable or have a
+default, so existing rows need no backfill. Apply with `prisma migrate deploy`.
+
+| Migration | What it does |
+| --- | --- |
+| `20261116010000_add_expense_splits` | Adds `paid_by_owner` (`BOOLEAN NOT NULL DEFAULT false`), `paid_by_companion_id` and `split_method` to `trip_expenses`, and creates `trip_expense_splits`. Adds CHECK constraints (one payer, valid split method, one participant per split row, non-negative amounts) that `schema.prisma` cannot show. |
+| `20261116020000_add_photo_is_favorite` | Adds `photos.is_favorite` (`BOOLEAN NOT NULL DEFAULT false`) and an index on `(trip_id, is_favorite)`. |
+| `20261116030000_add_loyalty_programs` | Creates the `LoyaltyProgramType` enum and `loyalty_programs` (per user, `ON DELETE CASCADE`), and adds a nullable `loyalty_program_id` to `transportation` and `lodging`. |
+| `20261116070000_add_expense_receipt_image` | Adds nullable `receipt_path`, `receipt_mime_type`, `receipt_size_bytes` and `receipt_uploaded_at` to `trip_expenses`. |
+| `20261116080000_add_trip_stops` | Creates `trip_stops` for the route planner (`ON DELETE CASCADE` from the trip, `SET NULL` from a linked location) with CHECK constraints on latitude, longitude and nights. |
+| `20261116100000_add_immich_album_link` | Adds nullable `immich_album_id` and `immich_album_synced_at` to `photo_albums`. |
+| `20261116120000_add_user_measurement_system` | Adds nullable `users.measurement_system` with a CHECK constraint. `NULL` means the app default (imperial). |
+
+Several of these add CHECK constraints, which `prisma db push` would not recreate; see
+[CHECK constraints are invisible to `schema.prisma`](#check-constraints-are-invisible-to-schemaprisma).
+
 ## Migrations added 2026-07-27 (safe on a populated database)
 
 | Migration | What it does |

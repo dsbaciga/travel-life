@@ -17,6 +17,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.0] - 2026-11-16
+
+A feature release: expense splitting, a multi-city route planner, trip comparison, CSV import, loyalty programs, photo favorites, Today mode and a much larger Immich integration. It also includes everything in 7.3.1, which was never tagged.
+
+**Before you upgrade:** seven database migrations need applying (see *Migrations* below), and distances and temperatures now follow a new **Units** setting that defaults to **imperial** for every account. Anyone who wants kilometres and Celsius must switch it in Settings.
+
+### Added
+
+- **Expense splitting and settle-up.** Record who paid for an expense and how it is split; a Settle Up panel on the Budget tab shows who owes whom.
+- **Receipt scan to expense.** Scan a receipt into a pre-filled expense. The image is kept and attached to the expense.
+- **Multi-city route planner.** A Route Planner tab holds an ordered list of stops (searched or picked from saved places). Drag to reorder, see distances, and optimise the order with a preview and undo.
+- **Trip comparison** at `/trips/compare`: a table (including cost per day), a colour-coded map and a shared timeline.
+- **Bulk import from CSV** for places and activities: downloadable templates, column mapping, a server-validated preview and an error report.
+- **Loyalty programs.** Add programs in Settings and pick one, with suggestions, on transportation and lodging.
+- **Photo favorites and highlights.** Star photos, filter to Favorites, a Highlights view, and highlights on the public share page.
+- **Today mode.** A live next-up card with a countdown, confirmation number and route button, plus local and home clocks.
+- **Draft a day's journal entry with AI** (the trip dates plus one day either side), with add-entry actions on the Timeline and Day By Day views.
+- **Recently viewed trips** widget on the dashboard (stored per user in the browser).
+- **Booking deadlines can be edited inside the lodging, transportation and activity forms.**
+- **Much more Immich:** server-side filters, smart search, bulk linking, syncing an Immich album to a trip album, and an opt-in export of a trip album to Immich.
+- **Units setting** (imperial or metric, default imperial) in Settings, used for distances and temperatures across the app.
+- New documentation for contributors: a feature map, a mobile and shared-code guide, and corrected architecture, API, schema, testing, style and deployment guides. `env.template` lists every environment variable.
+
+### Changed
+
+- **Currency is now a list to pick from in every form**, limited to the currencies the app can convert.
+
+### Fixed
+
+- **"Save & Add Another" keeps the form open** instead of saving and closing.
+- **Closing an untouched Add Lodging or Add Transportation form no longer warns about unsaved changes.**
+- **Import PDF works from the trip menu on a phone.**
+- Creating an activity no longer drops its time zone and all-day setting.
+- AI journal summaries, enhancement and link suggestions now use your own AI key when you have set one.
+- A replace-mode restore no longer turns a missing user time zone into UTC.
+- The Immich browser's text search, "Select All Photos" and date ranges now behave correctly.
+- Duplicating a trip keeps photo favorites and loyalty links.
+
+### Known limitations
+
+- Backups record upload paths, not image bytes, for receipts and photos.
+- Loyalty membership numbers are stored unmasked in backups.
+- Duplicating a trip does not copy route stops or expenses.
+- Packing-suggestion reasons stay in Fahrenheit for metric users.
+- The Android app does not yet know about splits, route stops, loyalty programs or units.
+
+### Migrations
+
+Seven additive migrations; run `docker exec travel-life-backend npx prisma migrate deploy` as part of the deploy:
+
+- `20261116010000_add_expense_splits`
+- `20261116020000_add_photo_is_favorite`
+- `20261116030000_add_loyalty_programs`
+- `20261116070000_add_expense_receipt_image`
+- `20261116080000_add_trip_stops`
+- `20261116100000_add_immich_album_link`
+- `20261116120000_add_user_measurement_system`
+
 ## [7.3.1] - 2026-11-15
 
 ### Changed
