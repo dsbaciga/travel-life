@@ -1521,6 +1521,8 @@ than silently mixed in. Activity/Transportation/Lodging fill in lazily on first 
 
 **Value**: removes the need for a separate Splitwise on every group trip.
 
+**Status**: ✅ Completed
+
 ### 98. Trip Wishlist / Bucket List
 
 **Category**: Travel Planning

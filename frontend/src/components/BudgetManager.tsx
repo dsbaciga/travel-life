@@ -17,6 +17,14 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import { formatDateOnly } from "../utils/timezone";
+import ExpenseSplitFields from "./ExpenseSplitFields";
+import SettleUpPanel from "./SettleUpPanel";
+import {
+  buildSplitInput,
+  emptySplitState,
+  splitStateFromExpense,
+  type SplitFormState,
+} from "../utils/expenseSplit";
 
 /**
  * BudgetManager handles the trip budget and expense tracking tab.
@@ -83,12 +91,21 @@ export default function BudgetManager({
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null);
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(EMPTY_EXPENSE_FORM);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
+  const [splitForm, setSplitForm] = useState<SplitFormState>(emptySplitState);
 
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ["expenses", tripId],
     queryFn: () => expenseService.getExpensesByTrip(tripId),
     enabled: !!tripId,
   });
+
+  // The owner plus the trip's companions: who can pay and who can share an expense.
+  const { data: participants = [] } = useQuery({
+    queryKey: ["expense-participants", tripId],
+    queryFn: () => expenseService.getParticipants(tripId),
+    enabled: !!tripId,
+  });
+  const participantLabels = new Map(participants.map((p) => [p.key, p.label]));
 
   const { data: summary } = useQuery({
     queryKey: ["budget-summary", tripId],
@@ -148,6 +165,7 @@ export default function BudgetManager({
   const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ["expenses", tripId] });
     queryClient.invalidateQueries({ queryKey: ["budget-summary", tripId] });
+    queryClient.invalidateQueries({ queryKey: ["settle-up", tripId] });
     queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
     onUpdate?.();
   };
@@ -219,6 +237,7 @@ export default function BudgetManager({
   const openCreateExpenseForm = () => {
     setEditingExpenseId(null);
     setExpenseForm({ ...EMPTY_EXPENSE_FORM, currency: displayCurrency });
+    setSplitForm(emptySplitState());
     setShowExpenseForm(true);
   };
 
@@ -232,6 +251,7 @@ export default function BudgetManager({
       date: expense.date ? expense.date.substring(0, 10) : "",
       notes: expense.notes || "",
     });
+    setSplitForm(splitStateFromExpense(expense));
     setShowExpenseForm(true);
   };
 
@@ -239,6 +259,7 @@ export default function BudgetManager({
     setShowExpenseForm(false);
     setEditingExpenseId(null);
     setExpenseForm(EMPTY_EXPENSE_FORM);
+    setSplitForm(emptySplitState());
   };
 
   const handleSubmitExpense = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -259,8 +280,22 @@ export default function BudgetManager({
       return;
     }
 
+    // Built before saving so a bad split is refused without creating a half-saved expense.
+    const editingExpense = expenses.find((item) => item.id === editingExpenseId);
+    const splitResult = buildSplitInput(
+      splitForm,
+      participants.map((p) => p.key),
+      amount,
+      !!editingExpense && (editingExpense.paidBy !== null || editingExpense.splits.length > 0)
+    );
+    if (!splitResult.ok) {
+      toast.error(splitResult.error);
+      return;
+    }
+
     setIsSavingExpense(true);
     try {
+      let savedExpenseId = editingExpenseId;
       if (editingExpenseId) {
         const updateData: UpdateExpenseInput = {
           description: expenseForm.description.trim(),
@@ -281,8 +316,16 @@ export default function BudgetManager({
           date: expenseForm.date || undefined,
           notes: expenseForm.notes.trim() || undefined,
         };
-        await expenseService.createExpense(tripId, createData);
+        const created = await expenseService.createExpense(tripId, createData);
+        savedExpenseId = created.id;
         toast.success("Expense added");
+      }
+      if (splitResult.input && savedExpenseId) {
+        try {
+          await expenseService.setExpenseSplit(tripId, savedExpenseId, splitResult.input);
+        } catch {
+          toast.error("Expense saved, but the split could not be saved");
+        }
       }
       closeExpenseForm();
       refreshData();
@@ -571,6 +614,9 @@ export default function BudgetManager({
         </div>
       )}
 
+      {/* Who owes whom */}
+      <SettleUpPanel tripId={tripId} />
+
       {/* Expense Form */}
       {showExpenseForm && (
         <form
@@ -670,6 +716,16 @@ export default function BudgetManager({
               />
             </div>
 
+            {participants.length > 1 && (
+              <ExpenseSplitFields
+                participants={participants}
+                state={splitForm}
+                onChange={setSplitForm}
+                total={Number(expenseForm.amount) || 0}
+                currency={expenseForm.currency}
+              />
+            )}
+
             <div className="sm:col-span-2">
               <label htmlFor="expense-notes" className="label">
                 Notes
@@ -741,6 +797,12 @@ export default function BudgetManager({
                   </div>
                   <div className="mt-1 text-sm text-slate dark:text-warm-gray/70 flex items-center gap-2 flex-wrap">
                     {expense.date && <span>{formatExpenseDate(expense.date)}</span>}
+                    {expense.paidBy && (
+                      <span>
+                        Paid by {participantLabels.get(expense.paidBy) ?? "someone"}
+                        {expense.splits.length > 1 && ` · split ${expense.splits.length} ways`}
+                      </span>
+                    )}
                     {expense.notes && (
                       <span className="truncate max-w-xs" title={expense.notes}>
                         {expense.notes}

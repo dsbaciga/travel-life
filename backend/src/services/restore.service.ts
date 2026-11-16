@@ -919,6 +919,21 @@ export async function restoreFromBackup(
 
           // Import trip expenses (added in v1.6.0)
           for (const expenseData of tripData.expenses || []) {
+            // Payer and split participants are matched to the freshly created companions by
+            // name. One that no longer resolves (missing from the backup) drops out; a split
+            // that then no longer adds up is reported as unsplit by settle-up, not guessed at.
+            const payerCompanionId = expenseData.paidByCompanionName
+              ? companionMap.get(expenseData.paidByCompanionName) ?? null
+              : null;
+            type SplitData = NonNullable<typeof expenseData.splits>[number];
+            type SplitRow = { isOwner: boolean; companionId: number | null; split: SplitData };
+            const splitRows = (expenseData.splits || []).flatMap((split): SplitRow[] => {
+              if (split.isOwner || !split.companionName) {
+                return [{ isOwner: true, companionId: null, split }];
+              }
+              const companionId = companionMap.get(split.companionName);
+              return companionId !== undefined ? [{ isOwner: false, companionId, split }] : [];
+            });
             await tx.tripExpense.create({
               data: {
                 tripId: trip.id,
@@ -937,6 +952,18 @@ export async function restoreFromBackup(
                 baseCurrency: expenseData.baseCurrency ?? null,
                 date: expenseData.date ? new Date(expenseData.date) : null,
                 notes: expenseData.notes ?? null,
+                paidByOwner: expenseData.paidByOwner === true && payerCompanionId === null,
+                paidByCompanionId: payerCompanionId,
+                splitMethod: splitRows.length > 0 ? expenseData.splitMethod ?? null : null,
+                splits: {
+                  create: splitRows.map(({ isOwner, companionId, split }) => ({
+                    isOwner,
+                    companionId,
+                    amount: new Prisma.Decimal(split.amount),
+                    percentage:
+                      split.percentage != null ? new Prisma.Decimal(split.percentage) : null,
+                  })),
+                },
               },
             });
           }

@@ -173,7 +173,24 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       typeName: type?.name ?? null,
     })) as BackupTrip['customItems'],
     // Expenses and emergency card info (added in v1.6.0)
-    expenses: trip.expenses as BackupTrip['expenses'],
+    // Payers and split participants travel by companion NAME (ids are reassigned on restore).
+    expenses: (
+      trip.expenses as
+        | Array<
+            {
+              paidByCompanion: { name: string } | null;
+              splits: Array<{ companion: { name: string } | null } & Record<string, unknown>>;
+            } & Record<string, unknown>
+          >
+        | undefined
+    )?.map(({ paidByCompanion, splits, ...expense }) => ({
+      ...expense,
+      paidByCompanionName: paidByCompanion?.name ?? null,
+      splits: (splits ?? []).map(({ companion, ...split }) => ({
+        ...split,
+        companionName: companion?.name ?? null,
+      })),
+    })) as BackupTrip['expenses'],
     emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
@@ -458,6 +475,18 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseCurrency: true,
           date: true,
           notes: true,
+          paidByOwner: true,
+          splitMethod: true,
+          paidByCompanion: { select: { name: true } },
+          splits: {
+            orderBy: { id: 'asc' },
+            select: {
+              isOwner: true,
+              amount: true,
+              percentage: true,
+              companion: { select: { name: true } },
+            },
+          },
         },
       },
       emergencyInfo: {

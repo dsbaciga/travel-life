@@ -891,4 +891,76 @@ describe('RestoreService', () => {
       );
     });
   });
+  describe('RST-017: expense payer and splits (#97)', () => {
+    it('re-links the payer and each share to the restored companions by name', async () => {
+      mockTx.travelCompanion.create.mockImplementation((async (args: { data: { name: string } }) => ({
+        id: args.data.name === 'Alice' ? 501 : 502,
+      })) as never);
+
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.6.0',
+        companions: [{ name: 'Alice' }, { name: 'Bob' }],
+        trips: [
+          {
+            title: 'Split Trip',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            companions: ['Alice', 'Bob'],
+            expenses: [
+              {
+                id: 9,
+                description: 'Dinner',
+                category: 'food',
+                amount: 90,
+                currency: 'EUR',
+                paidByCompanionName: 'Bob',
+                splitMethod: 'equal',
+                splits: [
+                  { isOwner: true, amount: 30 },
+                  { companionName: 'Alice', amount: 30 },
+                  { companionName: 'Bob', amount: 30 },
+                  { companionName: 'Ghost', amount: 10 },
+                ],
+              },
+              {
+                description: 'Taxi',
+                category: 'transportation',
+                amount: 20,
+                paidByOwner: true,
+                splitMethod: 'percentage',
+                splits: [{ isOwner: true, amount: 20, percentage: 100 }],
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, backup);
+      expect(result.success).toBe(true);
+
+      const calls = mockTx.tripExpense.create.mock.calls.map(
+        (c) => (c[0] as { data: Record<string, unknown> }).data
+      );
+      const dinner = calls.find((d) => d.description === 'Dinner') as {
+        paidByOwner: boolean;
+        paidByCompanionId: number | null;
+        splitMethod: string | null;
+        splits: { create: Array<{ isOwner: boolean; companionId: number | null }> };
+      };
+      expect(dinner.paidByOwner).toBe(false);
+      expect(dinner.paidByCompanionId).toBe(502);
+      expect(dinner.splitMethod).toBe('equal');
+      // The unknown companion drops out; owner / Alice / Bob remain, with NEW ids.
+      expect(dinner.splits.create.map((r) => [r.isOwner, r.companionId])).toEqual([
+        [true, null],
+        [false, 501],
+        [false, 502],
+      ]);
+
+      const taxi = calls.find((d) => d.description === 'Taxi') as typeof dinner;
+      expect(taxi.paidByOwner).toBe(true);
+      expect(taxi.paidByCompanionId).toBeNull();
+    });
+  });
 });
