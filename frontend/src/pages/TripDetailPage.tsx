@@ -41,6 +41,7 @@ const PhotosMapView = lazy(() => import("../components/PhotosMapView"));
 const Timeline = lazy(() => import("../components/Timeline"));
 const DailyView = lazy(() => import("../components/daily-view/DailyView"));
 const TripMap = lazy(() => import("../components/TripMap"));
+const RoutePlanner = lazy(() => import("../components/route-planner/RoutePlanner"));
 const ItineraryDayView = lazy(() => import("../components/agenda/ItineraryDayView"));
 const PhotoTimeline = lazy(() => import("../components/PhotoTimeline"));
 const ActivityManager = lazy(() => import("../components/ActivityManager"));
@@ -649,6 +650,25 @@ export default function TripDetailPage() {
                       </ErrorBoundary>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Route Planner Tab: multi-city stops as a draggable list beside a map */}
+              {activeTab === "route-planner" && (
+                <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-4 sm:p-6 animate-fadeIn">
+                  <ErrorBoundary>
+                    <Suspense
+                      fallback={
+                        <LoadingSpinner.FullPage message="Loading route planner..." />
+                      }
+                    >
+                      <RoutePlanner
+                        tripId={trip.id}
+                        tripStartDate={trip.startDate}
+                        tripEndDate={trip.endDate}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
                 </div>
               )}
 

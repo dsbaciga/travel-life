@@ -684,6 +684,22 @@ export async function restoreFromBackup(
             });
           }
 
+          // Import route stops in backup order (which is route order). A location link is
+          // remapped through the old-id -> new-id map; one missing from the backup is dropped.
+          for (const [position, stopData] of (tripData.stops || []).entries()) {
+            await tx.tripStop.create({
+              data: {
+                tripId: trip.id,
+                name: stopData.name,
+                latitude: stopData.latitude,
+                longitude: stopData.longitude,
+                nights: stopData.nights ?? null,
+                locationId: stopData.locationId ? locationMap.get(stopData.locationId) ?? null : null,
+                position,
+              },
+            });
+          }
+
           // Import food log entries. Activity/location links are remapped through the
           // old-id -> new-id maps; a link missing from the backup is dropped, not the entry.
           for (const foodData of tripData.foodLogEntries || []) {

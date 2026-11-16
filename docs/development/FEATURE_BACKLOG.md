@@ -227,6 +227,8 @@ Good enhancements that improve the experience.
 - See distance/travel time between stops
 - Optimize route for minimum travel time
 
+**Status**: ✅ Completed 2026-11-16 — Route Planner sub-tab under Itinerary: ordered `trip_stops` (name, lat/lng, nights) as a drag-and-drop list (pointer, keyboard and move buttons) beside a numbered-marker map with the route line; client-side haversine distance and an estimated travel time per leg, totals, arrival/departure dates from the trip start, nights-over-trip warning; Optimise route (nearest-neighbour + 2-opt, first/last stop optionally fixed) with a saving preview, explicit apply and undo. API: `GET/POST /api/trips/:tripId/stops`, `PUT /stops/reorder`, `PUT/DELETE /stops/:id`; included in backup/restore.
+
 ### 14. Recurring Trips
 
 **Category**: Planning

@@ -114,6 +114,14 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       note: d.note as string | null,
       dismissedAt: d.dismissedAt ? (d.dismissedAt as Date).toISOString() : null,
     })),
+    // Already in route order (selected with orderBy position); position itself is not stored.
+    stops: ((trip.stops ?? []) as Array<Record<string, unknown>>).map((s) => ({
+      name: s.name as string,
+      latitude: s.latitude as number,
+      longitude: s.longitude as number,
+      nights: (s.nights as number | null) ?? null,
+      locationId: (s.locationId as number | null) ?? null,
+    })),
     foodLogEntries: ((trip.foodLogEntries ?? []) as Array<Record<string, unknown>>).map((f) => ({
       restaurantName: f.restaurantName as string,
       dish: f.dish as string,
@@ -326,6 +334,10 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           note: true,
           dismissedAt: true,
         },
+      },
+      stops: {
+        orderBy: { position: 'asc' },
+        select: { name: true, latitude: true, longitude: true, nights: true, locationId: true },
       },
       foodLogEntries: {
         select: {
