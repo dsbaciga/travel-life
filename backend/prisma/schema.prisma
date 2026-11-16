@@ -236,6 +236,8 @@ model TravelCompanion {
 
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   tripAssignments TripCompanion[]
+  paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
+  expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
 
   @@index([userId])
   @@index([avatarUrl])
@@ -647,30 +649,60 @@ model Lodging {
 }
 
 model TripExpense {
-  id           Int       @id @default(autoincrement())
-  tripId       Int       @map("trip_id")
-  description  String    @db.VarChar(500)
-  category     String    @db.VarChar(50) // food, transportation, lodging, activities, shopping, other
+  id                Int       @id @default(autoincrement())
+  tripId            Int       @map("trip_id")
+  description       String    @db.VarChar(500)
+  category          String    @db.VarChar(50) // food, transportation, lodging, activities, shopping, other
   // DB-level CHECK ("amount" >= 0) named `trip_expenses_amount_non_negative` — added in
   // migration 20260728020000_add_trip_expense_amount_check. Prisma cannot represent
   // CHECK constraints, so `prisma db push` would NOT recreate it.
-  amount       Decimal   @db.Decimal(10, 2)
-  currency     String?   @db.VarChar(3)
+  amount            Decimal   @db.Decimal(10, 2)
+  currency          String?   @db.VarChar(3)
   // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount   Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency String?   @map("base_currency") @db.VarChar(3)
-  date         DateTime? @db.Date
-  notes        String?   @db.Text
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  exchangeRate      Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
+  baseAmount        Decimal?  @map("base_amount") @db.Decimal(12, 2)
+  baseCurrency      String?   @map("base_currency") @db.VarChar(3)
+  date              DateTime? @db.Date
+  notes             String?   @db.Text
+  // Expense splitting (#97). The payer is the trip owner (paidByOwner) OR a companion
+  // (paidByCompanionId) - never both (CHECK trip_expenses_one_payer); neither = not recorded.
+  paidByOwner       Boolean   @default(false) @map("paid_by_owner")
+  paidByCompanionId Int?      @map("paid_by_companion_id")
+  splitMethod       String?   @map("split_method") @db.VarChar(20) // equal, amount, percentage
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidByCompanion TravelCompanion?   @relation("ExpensePaidBy", fields: [paidByCompanionId], references: [id], onDelete: SetNull)
+  splits          TripExpenseSplit[]
 
   @@index([tripId])
+  @@index([paidByCompanionId])
   // Matches the primary list query (order by date desc, created_at desc) in expense.service.ts
   @@index([tripId, date])
   @@map("trip_expenses")
+}
+
+// One participant's share of an expense, in the EXPENSE's own currency. Exactly one of
+// isOwner / companionId identifies the participant (CHECK trip_expense_splits_one_participant,
+// added in migration 20261116010000_add_expense_splits, which Prisma cannot represent).
+// A participant appears at most once per expense, and the shares sum exactly to the expense
+// amount; both are enforced in expenseSplit.service.ts.
+model TripExpenseSplit {
+  id          Int      @id @default(autoincrement())
+  expenseId   Int      @map("expense_id")
+  isOwner     Boolean  @default(false) @map("is_owner")
+  companionId Int?     @map("companion_id")
+  amount      Decimal  @db.Decimal(10, 2)
+  percentage  Decimal? @db.Decimal(7, 4) // only set for percentage splits
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  expense   TripExpense      @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  companion TravelCompanion? @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+  @@index([companionId])
+  @@map("trip_expense_splits")
 }
 
 // =============================================================================

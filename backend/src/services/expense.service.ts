@@ -10,6 +10,8 @@ import {
 import { verifyTripAccessWithPermission } from '../services/_shared/tripAccess';
 import { tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
+import { withSplitFields } from '../services/_shared/expenseSplitFields';
+import { allocateProRata, compareKeys, companionKey, OWNER_KEY } from '../services/_shared/settleUp';
 import exchangeRateService, { normalizeCurrency } from './exchangeRate.service';
 import { Prisma } from '@prisma/client';
 
@@ -160,7 +162,7 @@ class ExpenseService {
       },
     });
 
-    return convertDecimals(expense);
+    return convertDecimals(withSplitFields(expense));
   }
 
   async getExpensesByTrip(userId: number, tripId: number) {
@@ -170,18 +172,23 @@ class ExpenseService {
     const expenses = await prisma.tripExpense.findMany({
       where: { tripId },
       orderBy: [{ date: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+      include: { splits: { orderBy: { id: 'asc' } } },
     });
 
-    return convertDecimals(expenses);
+    return convertDecimals(expenses.map(withSplitFields));
   }
 
   async getExpenseById(userId: number, tripId: number, expenseId: number) {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    const expense = await verifyExpenseInTrip(expenseId, tripId);
+    await verifyExpenseInTrip(expenseId, tripId);
+    const expense = await prisma.tripExpense.findUniqueOrThrow({
+      where: { id: expenseId },
+      include: { splits: { orderBy: { id: 'asc' } } },
+    });
 
-    return convertDecimals(expense);
+    return convertDecimals(withSplitFields(expense));
   }
 
   async updateExpense(
@@ -251,7 +258,14 @@ class ExpenseService {
       data: updateData,
     });
 
-    return convertDecimals(updatedExpense);
+    // Shares are stored in the expense's own currency and must keep summing to the
+    // amount, so a new amount re-scales them (proportionally; odd cents land on the
+    // largest share).
+    if (amountChanged) {
+      await this.rescaleSplits(expenseId, updatedExpense.amount);
+    }
+
+    return convertDecimals(withSplitFields(updatedExpense));
   }
 
   async deleteExpense(userId: number, tripId: number, expenseId: number) {
@@ -509,9 +523,69 @@ class ExpenseService {
     };
   }
 
+  /**
+   * Converts one expense into the reporting currency for settle-up, reusing the
+   * budget summary's resolution (frozen snapshot, else lazy backfill). Returns
+   * null when no exchange rate is available — the caller must exclude it.
+   */
+  async resolveExpenseBaseAmount(
+    expense: {
+      id: number;
+      category: string;
+      amount: Prisma.Decimal;
+      currency: string | null;
+      exchangeRate: Prisma.Decimal | null;
+      baseAmount: Prisma.Decimal | null;
+      baseCurrency: string | null;
+      date: Date | null;
+    },
+    reportingCurrency: string
+  ): Promise<Prisma.Decimal | null> {
+    const outcome = await this.resolveRecordAmount(
+      {
+        source: 'expense',
+        id: expense.id,
+        bucket: bucketForCategory(expense.category),
+        amount: expense.amount,
+        currency: expense.currency,
+        exchangeRate: expense.exchangeRate,
+        baseAmount: expense.baseAmount,
+        baseCurrency: expense.baseCurrency,
+        date: expense.date,
+      },
+      reportingCurrency
+    );
+    return outcome.kind === 'unconverted' ? null : outcome.amount;
+  }
+
   // ---------------------------------------------------------------------------
   // Internals
   // ---------------------------------------------------------------------------
+
+  /** Re-spreads an expense's stored shares over a new amount, keeping the sum exact. */
+  private async rescaleSplits(expenseId: number, newAmount: Prisma.Decimal): Promise<void> {
+    const splits = await prisma.tripExpenseSplit.findMany({ where: { expenseId } });
+    if (splits.length === 0) return;
+
+    const keyOf = (s: (typeof splits)[number]) =>
+      s.isOwner || s.companionId === null ? OWNER_KEY : companionKey(s.companionId);
+    const rescaled = allocateProRata(
+      newAmount,
+      splits.map((s) => ({ participant: keyOf(s), weight: s.amount }))
+    );
+    const amountByKey = new Map(rescaled.map((r) => [r.participant, r.amount]));
+
+    await prisma.$transaction(
+      [...splits]
+        .sort((a, b) => compareKeys(keyOf(a), keyOf(b)))
+        .map((s) =>
+          prisma.tripExpenseSplit.update({
+            where: { id: s.id },
+            data: { amount: amountByKey.get(keyOf(s)) ?? s.amount },
+          })
+        )
+    );
+  }
 
   /**
    * Works out this record's contribution to the totals, filling in and

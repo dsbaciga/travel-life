@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { expenseController } from '../controllers/expense.controller';
+import { expenseSplitController } from '../controllers/expenseSplit.controller';
 
 // mergeParams to access :tripId from the parent mount path
 const router = Router({ mergeParams: true });
@@ -79,6 +80,92 @@ router.use(authenticate);
  */
 router.post('/', expenseController.createExpense);
 router.get('/', expenseController.getExpensesByTrip);
+
+/**
+ * @openapi
+ * /api/trips/{tripId}/expenses/participants:
+ *   get:
+ *     summary: List who an expense can be paid by or split with (the owner and the trip's companions)
+ *     tags: [Expenses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Participants, each with a key of `owner` or `companion:<id>`
+ *       404:
+ *         description: Trip not found
+ */
+router.get('/participants', expenseSplitController.getParticipants);
+
+/**
+ * @openapi
+ * /api/trips/{tripId}/expenses/{id}/split:
+ *   put:
+ *     summary: Set or clear who paid an expense and how it is split
+ *     description: >
+ *       `paidBy: null` clears the payer and the split. Otherwise `method` and
+ *       `participants` are required. `equal` needs only participant keys;
+ *       `amount` needs an `amount` per participant summing to the expense
+ *       amount; `percentage` needs a `percentage` per participant summing to 100.
+ *       Shares are stored in the expense's own currency and always sum exactly
+ *       to the expense amount.
+ *     tags: [Expenses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [paidBy]
+ *             properties:
+ *               paidBy:
+ *                 type: string
+ *                 nullable: true
+ *                 example: companion:12
+ *               method:
+ *                 type: string
+ *                 enum: [equal, amount, percentage]
+ *               participants:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [participant]
+ *                   properties:
+ *                     participant:
+ *                       type: string
+ *                       example: owner
+ *                     amount:
+ *                       type: number
+ *                     percentage:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: The expense with its payer and splits
+ *       400:
+ *         description: Validation error (amounts or percentages do not add up, unknown participant)
+ *       404:
+ *         description: Expense not found
+ */
+router.put('/:id/split', expenseSplitController.setSplit);
 
 /**
  * @openapi
@@ -225,5 +312,33 @@ budgetSummaryRouter.get(
   authenticate,
   expenseController.getBudgetSummary
 );
+
+/**
+ * @openapi
+ * /api/trips/{tripId}/settle-up:
+ *   get:
+ *     summary: Who owes whom for the trip's split expenses
+ *     description: >
+ *       Computed in the same base currency as the budget summary using exact
+ *       decimal arithmetic. Returns each person's paid / owed / net and a short
+ *       list of payments that settles everyone. Expenses with no payer or split
+ *       are listed under `unsplit`; split expenses with no available exchange
+ *       rate are excluded and listed under `unconverted`.
+ *     tags: [Expenses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Balances and suggested transfers
+ *       404:
+ *         description: Trip not found
+ */
+budgetSummaryRouter.get('/settle-up', authenticate, expenseSplitController.getSettleUp);
 
 export { budgetSummaryRouter };

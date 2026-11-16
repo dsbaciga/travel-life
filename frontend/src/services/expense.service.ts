@@ -4,6 +4,9 @@ import type {
   CreateExpenseInput,
   UpdateExpenseInput,
   BudgetSummary,
+  ExpenseParticipant,
+  SetExpenseSplitInput,
+  SettleUpSummary,
 } from '../types/expense';
 
 export const expenseService = {
@@ -44,6 +47,30 @@ export const expenseService = {
 
   async deleteExpense(tripId: number, expenseId: number): Promise<void> {
     await axios.delete(`/trips/${tripId}/expenses/${expenseId}`);
+  },
+
+  async getParticipants(tripId: number): Promise<ExpenseParticipant[]> {
+    const response = await axios.get<ExpenseParticipant[]>(
+      `/trips/${tripId}/expenses/participants`
+    );
+    return response.data;
+  },
+
+  async setExpenseSplit(
+    tripId: number,
+    expenseId: number,
+    data: SetExpenseSplitInput
+  ): Promise<TripExpense> {
+    const response = await axios.put<TripExpense>(
+      `/trips/${tripId}/expenses/${expenseId}/split`,
+      data
+    );
+    return response.data;
+  },
+
+  async getSettleUp(tripId: number): Promise<SettleUpSummary> {
+    const response = await axios.get<SettleUpSummary>(`/trips/${tripId}/settle-up`);
+    return response.data;
   },
 
   async getBudgetSummary(tripId: number): Promise<BudgetSummary> {

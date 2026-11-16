@@ -743,6 +743,62 @@ describe('BackupService', () => {
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
 
+    it('BKP-012b: exports expense payer and splits by companion name, not id', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Split Trip',
+        description: null,
+        startDate: '2026-04-01',
+        endDate: '2026-04-14',
+        status: 'Planned',
+        privacyLevel: 'Private',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        entityLinks: [],
+        expenses: [
+          {
+            id: 10,
+            description: 'Dinner',
+            category: 'food',
+            amount: 90,
+            currency: 'EUR',
+            date: null,
+            notes: null,
+            paidByOwner: false,
+            splitMethod: 'equal',
+            paidByCompanion: { name: 'Alice' },
+            splits: [
+              { isOwner: true, amount: 45, percentage: null, companion: null },
+              { isOwner: false, amount: 45, percentage: null, companion: { name: 'Alice' } },
+            ],
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+      const expense = result.trips[0].expenses![0];
+
+      expect(expense.paidByCompanionName).toBe('Alice');
+      expect(expense.paidByOwner).toBe(false);
+      expect(expense.splitMethod).toBe('equal');
+      expect(expense.splits).toEqual([
+        { isOwner: true, amount: 45, percentage: null, companionName: null },
+        { isOwner: false, amount: 45, percentage: null, companionName: 'Alice' },
+      ]);
+      expect(() => BackupDataSchema.parse(result)).not.toThrow();
+    });
+
     it('accepts Decimal columns as the JSON strings they are downloaded as', () => {
       // Prisma returns Decimal objects, and a Decimal serialises to a string
       // ("41.8902"), not a number. That is what a backup file really contains,

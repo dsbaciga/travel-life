@@ -539,6 +539,22 @@ const BackupExpenseSchema = z.object({
   baseCurrency: z.string().nullable().optional(),
   date: FlexibleDateSchema,
   notes: z.string().nullable().optional(),
+  // Expense splitting (#97). People travel by NAME, like trip companions do, because
+  // companion ids are reassigned on restore. A payer/participant with no companion name
+  // is the trip owner.
+  paidByOwner: z.boolean().optional(),
+  paidByCompanionName: z.string().nullable().optional(),
+  splitMethod: z.string().nullable().optional(),
+  splits: z
+    .array(
+      z.object({
+        isOwner: z.boolean().optional(),
+        companionName: z.string().nullable().optional(),
+        amount: z.union([z.number(), z.string()]),
+        percentage: FlexibleCoordinateSchema,
+      })
+    )
+    .optional(),
 });
 
 // Trip emergency info schema (added in v1.6.0)
