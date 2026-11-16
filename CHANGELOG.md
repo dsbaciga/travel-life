@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.3.1] - 2026-11-15
+
 ### Changed
 
 - **Currency is now a list to pick from in every form** (activities, lodging, transportation, custom items, the trip budget, expenses and souvenirs), limited to the currencies the app can convert. It used to be a box you typed a three-letter code into. An item saved earlier with a different code keeps it and shows it as "not supported for conversion".
