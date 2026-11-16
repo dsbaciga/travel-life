@@ -14,6 +14,8 @@ import transportationService from "../services/transportation.service";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import BookingDeadlinesSection from "./BookingDeadlinesSection";
+import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
@@ -472,6 +474,8 @@ export default function TransportationManager({
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
   // Not React state: the submit handler runs before a state change would be visible.
   const addAnother = useSaveAndAddAnother();
+  const editingTransportation = manager.editingId ? manager.items.find((item) => item.id === manager.editingId) ?? null : null;
+  const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "transportation", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingTransportation?.startTimezone, tripTimezone, onUpdate });
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
@@ -834,6 +838,7 @@ export default function TransportationManager({
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        await deadlines.apply(manager.editingId, values.startTimezone || null);
         markSaved();
         resetForm();
         manager.closeForm();
@@ -858,8 +863,9 @@ export default function TransportationManager({
         currency: values.currency || undefined,
         notes: values.notes || undefined,
       };
-      const success = await manager.handleCreate(createData);
-      if (success) {
+      const created = await manager.handleCreateItem(createData);
+      if (created) {
+        await deadlines.apply(created.id, created.startTimezone);
         markSaved();
         // Save currency for next time
         if (values.currency) {
@@ -1573,6 +1579,7 @@ export default function TransportationManager({
               compact
             />
           </CollapsibleSection>
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="transportation" />
         </form>
         </FormModal>
 

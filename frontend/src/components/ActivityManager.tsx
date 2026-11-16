@@ -11,6 +11,8 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import BookingDeadlinesSection from "./BookingDeadlinesSection";
+import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import ActivityForm, { type ActivityFormData } from "./forms/ActivityForm";
 import {
   formatDateTimeInTimezone,
@@ -112,6 +114,7 @@ export default function ActivityManager({
   // Not React state: the submit handler runs before a state change would be visible.
   const addAnother = useSaveAndAddAnother();
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "activity", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingActivity?.timezone, tripTimezone, onUpdate });
   const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
   const [originalLocationId, setOriginalLocationId] = useState<number | null>(null);
   const [formKey, setFormKey] = useState(0); // Key to force form reset
@@ -243,6 +246,7 @@ export default function ActivityManager({
 
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        await deadlines.apply(manager.editingId, data.timezone);
         // Handle location link changes via entity linking
         await syncLocationLinkOnUpdate({
           tripId,
@@ -279,6 +283,7 @@ export default function ActivityManager({
       try {
         const createdActivity = await activityService.createActivity(createData);
         toast.success('Activity added successfully');
+        await deadlines.apply(createdActivity.id, createdActivity.timezone);
 
         // Create location link if a location was selected
         await syncLocationLinkOnCreate({
@@ -759,6 +764,7 @@ export default function ActivityManager({
             defaultUnscheduled={false}
             onDirtyChange={(dirty) => { activityFormDirtyRef.current = dirty; }}
           />
+          <div className="mt-6"><BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="activity" /></div>
         </div>
       </FormModal>
 

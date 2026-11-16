@@ -12,6 +12,8 @@ import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
 import { useLinkedCreate } from "../hooks/useLinkedCreate";
 import { useSubmitLock } from "../hooks/useSubmitLock";
 import FormModal from "./FormModal";
+import BookingDeadlinesSection from "./BookingDeadlinesSection";
+import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
@@ -396,6 +398,7 @@ export default function LodgingManager({
   const editingLodging = manager.editingId
     ? manager.items.find((item) => item.id === manager.editingId) ?? null
     : null;
+  const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "lodging", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingLodging?.timezone, tripTimezone, onUpdate });
 
   // A second click while the first submit is still running (the request, then a list
   // reload, happen before the modal closes) would add the same thing twice.
@@ -447,6 +450,7 @@ export default function LodgingManager({
       };
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
+        await deadlines.apply(manager.editingId, values.timezone || null);
         // Sync location link via shared hook (Pattern 14)
         await syncLocationLinkOnUpdate({
           tripId,
@@ -496,6 +500,7 @@ export default function LodgingManager({
         // Call service directly to get the created lodging ID for linking
         const createdLodging = await lodgingService.createLodging(createData);
         toast.success('Lodging added successfully');
+        await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
         // Sync location link via shared hook (Pattern 14)
@@ -919,6 +924,7 @@ export default function LodgingManager({
               compact
             />
           </CollapsibleSection>
+          <BookingDeadlinesSection drafts={deadlines.drafts} onChange={deadlines.change} timezone={deadlines.timezone} idPrefix="lodging" />
         </form>
         </FormModal>
 
