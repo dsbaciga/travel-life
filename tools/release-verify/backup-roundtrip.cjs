@@ -8,7 +8,7 @@ const users = JSON.parse(usersJson);
 // Ids and timestamps are reassigned by a restore; everything else must survive.
 const DROP = new Set(['id', 'tripId', 'userId', 'parentId', 'createdAt', 'updatedAt', 'exportDate', 'integrity', 'locationId', 'categoryId',
   'startLocationId', 'endLocationId', 'coverPhotoId', 'bannerPhotoId', 'sourceId', 'targetId', 'entityId', 'activityId', 'albumId', 'photoId',
-  'seriesId', 'checklistId', 'typeId', 'companionId', 'tagId', 'lodgingId', 'transportationId', 'paidById']);
+  'seriesId', 'checklistId', 'typeId', 'companionId', 'tagId', 'lodgingId', 'transportationId', 'paidById', 'loyaltyProgramId']);
 const strip = (v) => {
   if (Array.isArray(v)) return v.map(strip).sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1));
   if (v && typeof v === 'object') {
