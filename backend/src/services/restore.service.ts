@@ -746,6 +746,8 @@ export async function restoreFromBackup(
                 name: albumData.name,
                 description: albumData.description,
                 coverPhotoId: albumData.coverPhotoId ? photoMap.get(albumData.coverPhotoId) : null,
+                immichAlbumId: albumData.immichAlbumId ?? null,
+                immichAlbumSyncedAt: albumData.immichAlbumSyncedAt ? new Date(albumData.immichAlbumSyncedAt) : null,
               },
             });
             if (albumData.id != null) albumMap.set(albumData.id, album.id);

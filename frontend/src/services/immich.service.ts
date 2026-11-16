@@ -4,6 +4,13 @@ import type {
   ImmichAlbum,
   ImmichSettings,
   ImmichConnectionTest,
+  ImmichFilters,
+  ImmichBulkPreview,
+  ImmichBulkPageResult,
+  ImmichAlbumLink,
+  ImmichAlbumSyncResult,
+  ImmichAlbumExportPreview,
+  ImmichAlbumExportResult,
 } from '../types/immich';
 
 class ImmichService {
@@ -112,6 +119,60 @@ class ImmichService {
     const response = await axios.get('/immich/albums', {
       params: shared !== undefined ? { shared } : {},
     });
+    return response.data;
+  }
+
+  /**
+   * Browse the library with server-side filters and paging. When tripId is
+   * given, assets already linked to that trip come back flagged.
+   */
+  async queryAssets(params: {
+    filters: ImmichFilters;
+    page: number;
+    size?: number;
+    tripId?: number;
+  }): Promise<{ assets: ImmichAsset[]; hasMore: boolean; page: number }> {
+    const response = await axios.post('/immich/assets/query', params);
+    return response.data;
+  }
+
+  /** Count what linking everything a filter matches would do. */
+  async previewBulkLink(tripId: number, filters: ImmichFilters): Promise<ImmichBulkPreview> {
+    const response = await axios.post('/immich/bulk-link/preview', { tripId, filters });
+    return response.data;
+  }
+
+  /** Link one page of a filter's matches to a trip; call again with nextPage until it is null. */
+  async linkBulkPage(
+    tripId: number,
+    filters: ImmichFilters,
+    page: number
+  ): Promise<ImmichBulkPageResult> {
+    const response = await axios.post('/immich/bulk-link/page', { tripId, filters, page });
+    return response.data;
+  }
+
+  /** Link a trip photo album to an Immich album, or pass null to unlink. */
+  async setAlbumLink(albumId: number, immichAlbumId: string | null): Promise<ImmichAlbumLink> {
+    const response = await axios.put(`/immich/photo-albums/${albumId}/link`, { immichAlbumId });
+    return response.data;
+  }
+
+  /** Pull assets from the linked Immich album into the trip album. */
+  async syncAlbum(albumId: number): Promise<ImmichAlbumSyncResult> {
+    const response = await axios.post(`/immich/photo-albums/${albumId}/sync`);
+    return response.data;
+  }
+
+  /** What exporting this album to Immich would write. Reads only Travel Life's own data. */
+  async previewAlbumExport(albumId: number): Promise<ImmichAlbumExportPreview> {
+    const response = await axios.get(`/immich/photo-albums/${albumId}/export-preview`);
+    return response.data;
+  }
+
+  /** Create or update the album in Immich. Writes to the user's Immich library. */
+  async exportAlbum(albumId: number): Promise<ImmichAlbumExportResult> {
+    const response = await axios.post(`/immich/photo-albums/${albumId}/export`, { confirm: true });
     return response.data;
   }
 

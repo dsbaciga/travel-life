@@ -1,5 +1,6 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { immichController } from '../controllers/immich.controller';
+import { immichSyncController } from '../controllers/immichSync.controller';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
@@ -295,5 +296,162 @@ router.get('/albums', immichController.getAlbums);
  *         description: Immich service unavailable
  */
 router.get('/albums/:albumId', immichController.getAlbumById);
+
+// ---------------------------------------------------------------------------
+// Filtered browsing, bulk import, album link / sync, and export to Immich
+// ---------------------------------------------------------------------------
+
+/**
+ * Long-running calls (a sync or export of a big album) are given more than
+ * Node's default request timeout.
+ */
+const extendTimeout = (req: Request, res: Response, next: NextFunction) => {
+  req.setTimeout(300000);
+  res.setTimeout(300000);
+  next();
+};
+
+/**
+ * @openapi
+ * /api/immich/assets/query:
+ *   post:
+ *     summary: Browse the Immich library with server-side filters and paging
+ *     description: >
+ *       Filters (calendar-day range read in a timezone, favourites, media type,
+ *       Immich album, file-name text) and paging are applied by Immich itself.
+ *       When tripId is given, each asset is flagged alreadyLinked.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               filters:
+ *                 type: object
+ *                 properties:
+ *                   dateFrom: { type: string, format: date }
+ *                   dateTo: { type: string, format: date }
+ *                   timezone: { type: string, description: IANA zone the dates are read in; defaults to the user's zone }
+ *                   isFavorite: { type: boolean }
+ *                   type: { type: string, enum: [IMAGE, VIDEO] }
+ *                   albumId: { type: string }
+ *                   text: { type: string }
+ *               page: { type: integer, minimum: 1, default: 1 }
+ *               size: { type: integer, minimum: 1, maximum: 200, default: 50 }
+ *               tripId: { type: integer }
+ *     responses:
+ *       200:
+ *         description: A page of assets and whether more pages exist
+ *       400:
+ *         description: Invalid filters or Immich not configured
+ *       502:
+ *         description: Immich unreachable or returned an unexpected response
+ */
+router.post('/assets/query', immichSyncController.browse);
+
+/**
+ * @openapi
+ * /api/immich/bulk-link/preview:
+ *   post:
+ *     summary: Count what a bulk import of a filter would link
+ *     description: Returns matching, already-linked and to-link counts (capped at 5000) so the user can confirm.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Counts, the cap, and the number of link requests to make
+ */
+router.post('/bulk-link/preview', extendTimeout, immichSyncController.previewBulkLink);
+
+/**
+ * @openapi
+ * /api/immich/bulk-link/page:
+ *   post:
+ *     summary: Link one page (200) of a filter's matches to a trip
+ *     description: >
+ *       Uses the existing batch linker, so assets the trip already has are
+ *       skipped and re-running never duplicates photos. Returns nextPage, or
+ *       null when finished.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: linked / alreadyLinked / failed for the page, and nextPage
+ */
+router.post('/bulk-link/page', extendTimeout, immichSyncController.linkBulkPage);
+
+/**
+ * @openapi
+ * /api/immich/photo-albums/{albumId}/link:
+ *   put:
+ *     summary: Link (or unlink) a trip photo album and an Immich album
+ *     description: Body is { immichAlbumId: string | null }. Reads Immich only, to confirm the album exists.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The album's immichAlbumId and immichAlbumSyncedAt
+ */
+router.put('/photo-albums/:albumId/link', immichSyncController.setAlbumLink);
+
+/**
+ * @openapi
+ * /api/immich/photo-albums/{albumId}/sync:
+ *   post:
+ *     summary: Pull assets from the linked Immich album into the trip album
+ *     description: >
+ *       Manual only. Adds assets that are in the Immich album but not yet in
+ *       the trip album. Assets removed from the Immich album are never removed
+ *       from the trip; they are counted in notInImmichAlbum.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sync summary
+ */
+router.post('/photo-albums/:albumId/sync', extendTimeout, immichSyncController.syncAlbum);
+
+/**
+ * @openapi
+ * /api/immich/photo-albums/{albumId}/export-preview:
+ *   get:
+ *     summary: What exporting a trip album to Immich would write
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: immichAssetCount, skippedUploaded, and whether an album would be created
+ */
+router.get('/photo-albums/:albumId/export-preview', immichSyncController.previewExport);
+
+/**
+ * @openapi
+ * /api/immich/photo-albums/{albumId}/export:
+ *   post:
+ *     summary: Create or update an album in Immich from a trip album (writes to Immich)
+ *     description: >
+ *       Requires { confirm: true }. Creates an Immich album (or reuses the
+ *       linked one) and adds the album's Immich-linked photos to it. Never
+ *       deletes or modifies assets, never removes assets from an album, and
+ *       never uploads: uploaded photos are skipped and counted.
+ *     tags: [Immich]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Export summary
+ *       403:
+ *         description: Immich refused (the API key lacks permission)
+ */
+router.post('/photo-albums/:albumId/export', extendTimeout, immichSyncController.exportAlbum);
 
 export default router;

@@ -140,6 +140,8 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       name: a.name as string,
       description: a.description as string | null,
       coverPhotoId: a.coverPhotoId as number | null,
+      immichAlbumId: (a.immichAlbumId as string | null | undefined) ?? null,
+      immichAlbumSyncedAt: a.immichAlbumSyncedAt instanceof Date ? a.immichAlbumSyncedAt.toISOString() : null,
       photos: (a.photoAssignments as Array<{ photoId: number; sortOrder?: number }>).map((p) => ({
         photoId: p.photoId,
         sortOrder: p.sortOrder,
