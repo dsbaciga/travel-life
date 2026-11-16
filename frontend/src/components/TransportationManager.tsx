@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import toast from "react-hot-toast";
 import type {
   Transportation,
@@ -105,6 +106,9 @@ interface TransportationFormFields {
   currency: string;
   notes: string;
 }
+
+/** How long after the form opens its values are taken as the unchanged baseline. */
+const BASELINE_SETTLE_MS = 100;
 
 const initialFormState: TransportationFormFields = {
   type: "flight",
@@ -435,7 +439,7 @@ export default function TransportationManager({
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
 
-  const { values, handleChange, reset, setAllFields } =
+  const { values, handleChange, setAllFields } =
     useFormFields<TransportationFormFields>(getInitialFormState);
 
   // Track unsaved changes for browser close/refresh warning
@@ -466,7 +470,8 @@ export default function TransportationManager({
   const [showFromLocationQuickAdd, setShowFromLocationQuickAdd] = useState(false);
   const [showToLocationQuickAdd, setShowToLocationQuickAdd] = useState(false);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
-  const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Not React state: the submit handler runs before a state change would be visible.
+  const addAnother = useSaveAndAddAnother();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showDraftPrompt, setShowDraftPrompt] = useState(false);
 
@@ -517,6 +522,16 @@ export default function TransportationManager({
     setShowDraftPrompt(false);
   }, [draft]);
 
+  // The newest form values, for code that runs after the current render: the
+  // dirty-tracking baseline has to be taken once the form has settled (defaults
+  // and "continue from the previous entry" auto-fill included), not from the
+  // values of the render in which the form opened. Otherwise an untouched form
+  // already counted as having unsaved changes.
+  const latestValuesRef = useRef(values);
+  useEffect(() => {
+    latestValuesRef.current = values;
+  });
+
   // Capture initial form values for dirty tracking when form opens or switches mode.
   // Uses a microtask delay so handleChange calls from populate effects have settled.
   const prevFormOpenRef = useRef(false);
@@ -528,12 +543,12 @@ export default function TransportationManager({
     prevEditingIdRef.current = manager.editingId;
 
     if (manager.showForm && (justOpened || editingChanged)) {
-      const timer = setTimeout(() => captureInitialValues(values), 0);
+      // A short wait, so the re-render from any auto-fill has been committed.
+      const timer = setTimeout(() => captureInitialValues(latestValuesRef.current), BASELINE_SETTLE_MS);
       return () => clearTimeout(timer);
     }
-    // `values` is read but deliberately not a dependency — see LodgingManager:
-    // re-baselining on every keystroke would leave isDirty permanently false.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Runs only when the form opens or switches entry; the values come from a
+    // ref, not a dependency — see LodgingManager.
   }, [manager.showForm, manager.editingId, captureInitialValues]);
 
   // handleEdit must be defined before handleEditFromUrl since it's used as a dependency
@@ -718,7 +733,6 @@ export default function TransportationManager({
   // Extended reset that also clears additional local state
   const resetForm = useCallback(() => {
     baseResetForm();
-    setKeepFormOpenAfterSave(false);
     setShowMoreOptions(false);
     setShowDraftPrompt(false);
     draft.clearDraft();
@@ -727,7 +741,6 @@ export default function TransportationManager({
   // Open create form with clean state
   const openCreateForm = useCallback(() => {
     baseOpenCreateForm();
-    setKeepFormOpenAfterSave(false);
     setShowMoreOptions(false);
     // Both times start seeded from the trip start date at 09:00, which the user did not
     // choose - treat them as replaceable suggestions.
@@ -780,6 +793,9 @@ export default function TransportationManager({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Synchronously, before anything else: records whether this submit came
+    // from "Save & Add Another".
+    addAnother.beginSubmit();
     return run(() => performSubmit(e));
   };
 
@@ -850,10 +866,14 @@ export default function TransportationManager({
           saveLastUsedCurrency(values.currency);
         }
 
-        if (keepFormOpenAfterSave) {
+        if (addAnother.keepOpen()) {
           // Reset form but keep modal open for quick successive entries
-          reset();
-          setKeepFormOpenAfterSave(false);
+          // The same starting values a newly opened form gets. They also become
+          // the "nothing changed yet" state, and the entry just saved must not
+          // come back as a draft.
+          setAllFields(getInitialFormState);
+          captureInitialValues(getInitialFormState);
+          draft.clearDraft();
           // Focus first input for quick data entry
           setTimeout(() => {
             const firstInput = document.querySelector<HTMLSelectElement>('#transportation-type');
@@ -1178,6 +1198,7 @@ export default function TransportationManager({
               <button
                 type="button"
                 onClick={handleCloseForm}
+                disabled={isSubmitting}
                 className="btn btn-secondary"
               >
                 Cancel
@@ -1185,11 +1206,9 @@ export default function TransportationManager({
               {!manager.editingId && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setKeepFormOpenAfterSave(true);
-                    (document.getElementById('transportation-form') as HTMLFormElement)?.requestSubmit();
-                  }}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block"
+                  disabled={isSubmitting}
+                  onClick={() => addAnother.submit(document.getElementById('transportation-form'))}
+                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
                 >
                   Save & Add Another
                 </button>
@@ -1197,7 +1216,7 @@ export default function TransportationManager({
               <button
                 type="submit"
                 form="transportation-form"
-                className="btn btn-primary"
+                className="btn btn-primary disabled:opacity-50"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Transportation`}

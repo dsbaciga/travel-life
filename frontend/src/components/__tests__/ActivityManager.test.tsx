@@ -223,6 +223,35 @@ describe("ActivityManager", () => {
       });
     });
 
+    it("Save & Add Another saves and keeps the form open; a later plain Add closes it", async () => {
+      // The activity form's submit handler lives in a child component and
+      // awaits before calling back, so this also covers the capture wrapper.
+      const user = userEvent.setup();
+      const first = createMockActivity({ id: 71, name: "First Activity" });
+      vi.mocked(activityService.createActivity).mockResolvedValue(first);
+      vi.mocked(activityService.getActivitiesByTrip).mockResolvedValue([first]);
+
+      renderActivityManager();
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+
+      fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "First Activity" } });
+      await user.click(screen.getByRole("button", { name: /save & add another/i }));
+
+      await waitFor(() => expect(activityService.createActivity).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(screen.getByLabelText(/name/i)).toHaveValue(""));
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "Second Activity" } });
+      await user.click(screen.getByRole("button", { name: /^add activity$/i }));
+
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+      expect(activityService.createActivity).toHaveBeenCalledTimes(2);
+    });
+
     it("should create activity when form is submitted", async () => {
       const user = userEvent.setup();
       const newActivity = createMockActivity({ name: "New Test Activity" });

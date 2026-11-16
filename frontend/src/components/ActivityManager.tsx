@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { Activity, CreateActivityInput, UpdateActivityInput } from "../types/activity";
 import type { Location } from "../types/location";
 import { createLocationStub } from "../utils/locationHelpers";
@@ -108,7 +109,8 @@ export default function ActivityManager({
 
   const [activityCategories, setActivityCategories] = useState<ActivityCategory[]>([]);
   const [localLocations, setLocalLocations] = useState<Location[]>(locations);
-  const [keepFormOpenAfterSave, setKeepFormOpenAfterSave] = useState(false);
+  // Not React state: the submit handler runs before a state change would be visible.
+  const addAnother = useSaveAndAddAnother();
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
   const [originalLocationId, setOriginalLocationId] = useState<number | null>(null);
@@ -210,13 +212,11 @@ export default function ActivityManager({
   // Extended reset that also clears additional local state
   const resetForm = useCallback(() => {
     baseResetForm();
-    setKeepFormOpenAfterSave(false);
   }, [baseResetForm]);
 
   // Open create form with clean state
   const openCreateForm = useCallback(() => {
     baseOpenCreateForm();
-    setKeepFormOpenAfterSave(false);
   }, [baseOpenCreateForm]);
 
   const handleFormSubmit = async (data: ActivityFormData, newLocationId: number | null) => {
@@ -294,9 +294,11 @@ export default function ActivityManager({
         await manager.loadItems();
         onUpdate?.();
 
-        if (keepFormOpenAfterSave) {
-          resetForm();
-          // Keep modal open for quick successive entries
+        if (addAnother.keepOpen()) {
+          // Empty the form but leave the modal open for the next entry.
+          // Not resetForm(): that also closes the modal, which is why this
+          // button used to behave exactly like "Add Activity".
+          setEditState(null);
         } else {
           resetForm();
           manager.closeForm();
@@ -716,8 +718,7 @@ export default function ActivityManager({
                 type="button"
                 disabled={isSubmitting}
                 onClick={() => {
-                  setKeepFormOpenAfterSave(true);
-                  activityFormRef.current?.requestSubmit();
+                  addAnother.submit(activityFormRef.current);
                 }}
                 className="btn btn-secondary text-sm whitespace-nowrap"
               >
@@ -736,23 +737,29 @@ export default function ActivityManager({
           </>
         }
       >
-        <ActivityForm
-          ref={activityFormRef}
-          key={formKey}
-          formId="activity-form"
-          tripId={tripId}
-          locations={localLocations}
-          activityCategories={activityCategories}
-          tripTimezone={tripTimezone}
-          tripStartDate={tripStartDate}
-          existingActivities={manager.items}
-          editingActivity={editingActivity}
-          editingLocationId={editingLocationId}
-          onSubmit={handleFormSubmit}
-          onLocationCreated={handleLocationCreated}
-          defaultUnscheduled={false}
-          onDirtyChange={(dirty) => { activityFormDirtyRef.current = dirty; }}
-        />
+        {/* The form's own submit handler lives in ActivityForm and awaits before
+            calling back, so the "add another" intent is recorded here, as the
+            submit event passes through on its way down. `contents` keeps this
+            wrapper out of the layout. */}
+        <div className="contents" onSubmitCapture={addAnother.beginSubmit}>
+          <ActivityForm
+            ref={activityFormRef}
+            key={formKey}
+            formId="activity-form"
+            tripId={tripId}
+            locations={localLocations}
+            activityCategories={activityCategories}
+            tripTimezone={tripTimezone}
+            tripStartDate={tripStartDate}
+            existingActivities={manager.items}
+            editingActivity={editingActivity}
+            editingLocationId={editingLocationId}
+            onSubmit={handleFormSubmit}
+            onLocationCreated={handleLocationCreated}
+            defaultUnscheduled={false}
+            onDirtyChange={(dirty) => { activityFormDirtyRef.current = dirty; }}
+          />
+        </div>
       </FormModal>
 
       {/* Sort and Filter Controls */}
