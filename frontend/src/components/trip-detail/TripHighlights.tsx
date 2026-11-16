@@ -1,20 +1,21 @@
 import { useState, lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import photoService from "../../services/photo.service";
+import { highlightsKey, favoritePhotosKey } from "../../hooks/useFavoritePhotos";
+import { useTripEditAccess } from "../../hooks/useTripEditAccess";
 import EmptyState from "../EmptyState";
 import { Skeleton } from "../Skeleton";
 
 const PhotoGallery = lazy(() => import("../PhotoGallery"));
-
-/** Query key prefix for a trip's favorite photos (TripPhotosTab invalidates by the same prefix). */
-const highlightsQueryKey = (tripId: number) =>
-  ["photos", "highlights", tripId] as const;
 
 /** Upper bound the photos endpoint accepts for a single page. */
 const HIGHLIGHTS_PAGE_SIZE = 1000;
 
 interface TripHighlightsProps {
   tripId: number;
+  /** Optimistic star state shared with the Photos tab gallery. */
+  favoriteOverrides?: Record<number, boolean>;
+  onFavoriteOverrideChange?: (photoId: number, value: boolean | undefined) => void;
 }
 
 /**
@@ -22,12 +23,17 @@ interface TripHighlightsProps {
  * Photos are never picked automatically. With no favorites it explains how
  * to star some instead.
  */
-export default function TripHighlights({ tripId }: TripHighlightsProps) {
+export default function TripHighlights({
+  tripId,
+  favoriteOverrides,
+  onFavoriteOverrideChange,
+}: TripHighlightsProps) {
   const queryClient = useQueryClient();
+  const { canEdit } = useTripEditAccess(tripId);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [...highlightsQueryKey(tripId), sortOrder],
+    queryKey: [...highlightsKey(tripId), sortOrder],
     queryFn: () =>
       photoService.getPhotosByTrip(tripId, {
         favoritesOnly: true,
@@ -37,8 +43,11 @@ export default function TripHighlights({ tripId }: TripHighlightsProps) {
       }),
   });
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: highlightsQueryKey(tripId) });
+  // Keep the Highlights and filtered-gallery caches in step after any change
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: highlightsKey(tripId) });
+    queryClient.invalidateQueries({ queryKey: favoritePhotosKey(tripId) });
+  };
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
@@ -69,6 +78,9 @@ export default function TripHighlights({ tripId }: TripHighlightsProps) {
       <PhotoGallery
         photos={photos}
         tripId={tripId}
+        canEdit={canEdit}
+        favoriteOverrides={favoriteOverrides}
+        onFavoriteOverrideChange={onFavoriteOverrideChange}
         initialSortBy="date"
         initialSortOrder={sortOrder}
         onSortChange={(_sortBy, order) =>

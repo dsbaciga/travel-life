@@ -11,6 +11,11 @@ interface FavoriteStarButtonProps {
    */
   variant?: "overlay" | "toolbar" | "inline";
   className?: string;
+  /**
+   * For users who cannot edit the trip: renders a non-interactive indicator
+   * when the photo is starred and nothing at all when it is not.
+   */
+  readOnly?: boolean;
 }
 
 const VARIANT_CLASSES: Record<NonNullable<FavoriteStarButtonProps["variant"]>, string> = {
@@ -31,7 +36,22 @@ export default function FavoriteStarButton({
   onToggle,
   variant = "overlay",
   className = "",
+  readOnly = false,
 }: FavoriteStarButtonProps) {
+  if (readOnly) {
+    if (!isFavorite) return null;
+    return (
+      <span
+        role="img"
+        aria-label="Favorite"
+        title="Favorite"
+        className={`inline-flex items-center justify-center ${VARIANT_CLASSES[variant]} ${className}`}
+      >
+        <StarSolid className="w-5 h-5 text-amber-400" aria-hidden="true" />
+      </span>
+    );
+  }
+
   const Icon = isFavorite ? StarSolid : StarOutline;
   const iconColor = isFavorite
     ? "text-amber-400"

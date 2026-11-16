@@ -223,7 +223,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | POST | `/upload` | Upload a photo or video (`multipart/form-data`, max 500MB) | Yes |
 | POST | `/immich` | Link a single photo from Immich | Yes |
 | POST | `/immich/batch` | Link multiple photos from Immich in one request | Yes |
-| GET | `/trip/:tripId` | List photos for a trip. Query: `skip`, `take`, `sortBy`, `sortOrder`, and `favoritesOnly=true` to return only starred photos (the trip highlight set) | Yes |
+| GET | `/trip/:tripId` | List photos for a trip. Query: `skip`, `take`, `sortBy`, `sortOrder`, and `favoritesOnly=true` to return only starred photos (the trip highlight set); `favoritesOnly=true` is also accepted by `/trip/:tripId/unsorted` | Yes |
 | GET | `/trip/:tripId/immich-asset-ids` | List Immich asset IDs already linked to a trip | Yes |
 | GET | `/trip/:tripId/unsorted` | List photos not assigned to any album in a trip | Yes |
 | GET | `/trip/:tripId/date-groupings` | Get date groupings (dates + photo counts) for lazy loading | Yes |
@@ -241,7 +241,7 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 | GET | `/` | List all albums across all trips (supports `skip`/`take` pagination) | Yes |
 | POST | `/` | Create a new album (requires `tripId` in body) | Yes |
 | GET | `/trip/:tripId` | List albums for a specific trip | Yes |
-| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`) | Yes |
+| GET | `/:id` | Get an album with paginated photos (supports `skip`/`take`, `sortBy`/`sortOrder`, and `favoritesOnly=true` to page only starred photos) | Yes |
 | PUT | `/:id` | Update an album | Yes |
 | DELETE | `/:id` | Delete an album (does not delete the photos) | Yes |
 | POST | `/:id/photos` | Add photos to an album | Yes |

@@ -736,16 +736,17 @@ class PhotoService {
 
     const photoIdsInAlbums = photosInAlbums.map((p) => p.photoId);
 
+    const unsortedWhere = {
+      tripId,
+      id: { notIn: photoIdsInAlbums },
+      ...(options?.favoritesOnly ? { isFavorite: true } : {}),
+    };
+
     // Get photos that are NOT in the photoIdsInAlbums array
     try {
       const [photos, total] = await Promise.all([
         prisma.photo.findMany({
-          where: {
-            tripId,
-            id: {
-              notIn: photoIdsInAlbums,
-            },
-          },
+          where: unsortedWhere,
           include: {
             albumAssignments: {
               include: {
@@ -762,14 +763,7 @@ class PhotoService {
           skip,
           take,
         }),
-        prisma.photo.count({
-          where: {
-            tripId,
-            id: {
-              notIn: photoIdsInAlbums,
-            },
-          },
-        }),
+        prisma.photo.count({ where: unsortedWhere }),
       ]);
 
       return {

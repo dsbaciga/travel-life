@@ -545,6 +545,20 @@ describe('PhotoService', () => {
       expect(mockPrisma.photo.update).not.toHaveBeenCalled();
     });
 
+    it('should filter unsorted photos to favorites when favoritesOnly is set', async () => {
+      mockPrisma.photoAlbumAssignment.findMany.mockResolvedValue([{ photoId: 5 }]);
+      mockPrisma.photo.findMany.mockResolvedValue([]);
+      mockPrisma.photo.count.mockResolvedValue(0);
+
+      await photoService.getUnsortedPhotosByTrip(mockUserId, mockTripId, {
+        favoritesOnly: true,
+      });
+
+      const where = { tripId: mockTripId, id: { notIn: [5] }, isFavorite: true };
+      expect(mockPrisma.photo.findMany).toHaveBeenCalledWith(expect.objectContaining({ where }));
+      expect(mockPrisma.photo.count).toHaveBeenCalledWith({ where });
+    });
+
     it('should filter to favorites when favoritesOnly is set', async () => {
       mockPrisma.photo.findMany.mockResolvedValue([{ ...mockPhoto, isFavorite: true }]);
       mockPrisma.photo.count.mockResolvedValue(1);

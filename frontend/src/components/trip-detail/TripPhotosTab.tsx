@@ -1,4 +1,4 @@
-import { useState, lazy } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import type { Trip } from "../../types/trip";
@@ -13,6 +13,13 @@ import AddPhotosToAlbumModal from "../AddPhotosToAlbumModal";
 import Pagination from "../Pagination";
 import { Skeleton } from "../Skeleton";
 import TripHighlights from "./TripHighlights";
+import { useTripEditAccess } from "../../hooks/useTripEditAccess";
+import {
+  useFavoritePhotos,
+  favoritePhotosKey,
+  highlightsKey,
+  type FavoritesScope,
+} from "../../hooks/useFavoritePhotos";
 
 const PhotoGallery = lazy(() => import("../PhotoGallery"));
 const PhotoUpload = lazy(() => import("../PhotoUpload"));
@@ -71,6 +78,44 @@ export default function TripPhotosTab({
   const [showAlbumsMobileDrawer, setShowAlbumsMobileDrawer] = useState(false);
   const [showAddPhotosModal, setShowAddPhotosModal] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
+  const { canEdit } = useTripEditAccess(trip.id);
+
+  // Favorites filter: server-side, scoped like the gallery (trip, unsorted or
+  // one album) and sorted like it, with its own query key and paging.
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [favSort, setFavSort] = useState({
+    by: initialSortBy,
+    order: initialSortOrder,
+  });
+  // Optimistic star state, kept here so it survives the gallery remounting
+  // (Highlights view) and covers the unfiltered list, which is not a query.
+  const [favoriteOverrides, setFavoriteOverrides] = useState<
+    Record<number, boolean>
+  >({});
+  const handleFavoriteOverride = (photoId: number, value: boolean | undefined) =>
+    setFavoriteOverrides((prev) => {
+      const next = { ...prev };
+      if (value === undefined) delete next[photoId];
+      else next[photoId] = value;
+      return next;
+    });
+  const favoritesScope: FavoritesScope =
+    selectedAlbumId === null
+      ? "all"
+      : selectedAlbumId === -1
+      ? "unsorted"
+      : { albumId: selectedAlbumId };
+  const favorites = useFavoritePhotos({
+    tripId,
+    scope: favoritesScope,
+    sortBy: favSort.by,
+    sortOrder: favSort.order,
+    enabled: favoritesOnly && !showHighlights,
+  });
+  const { resetPage: resetFavoritesPage } = favorites;
+  useEffect(() => {
+    resetFavoritesPage();
+  }, [selectedAlbumId, resetFavoritesPage]);
 
   const currentAlbum =
     selectedAlbumId !== null && selectedAlbumId > 0
@@ -312,11 +357,24 @@ export default function TripPhotosTab({
           </div>
 
           {showHighlights ? (
-            <TripHighlights tripId={trip.id} />
+            <TripHighlights
+              tripId={trip.id}
+              favoriteOverrides={favoriteOverrides}
+              onFavoriteOverrideChange={handleFavoriteOverride}
+            />
           ) : (
           <>
           <PhotoGallery
-            photos={filteredPhotos}
+            photos={favoritesOnly ? favorites.photos : filteredPhotos}
+            canEdit={canEdit}
+            favoritesOnly={favoritesOnly}
+            onFavoritesOnlyChange={(value) => {
+              setFavoritesOnly(value);
+              resetFavoritesPage();
+            }}
+            favoritesTotal={favorites.total}
+            favoriteOverrides={favoriteOverrides}
+            onFavoriteOverrideChange={handleFavoriteOverride}
             albums={albums}
             onPhotoDeleted={() => {
               queryClient.invalidateQueries({ queryKey: ["trip", tripId] });
@@ -344,7 +402,9 @@ export default function TripPhotosTab({
             }}
             coverPhotoId={trip.coverPhotoId}
             totalPhotosInView={
-              selectedAlbumId === null
+              favoritesOnly
+                ? favorites.total
+                : selectedAlbumId === null
                 ? photosPagination.total
                 : selectedAlbumId === -1
                 ? unsortedPagination.total
@@ -361,19 +421,39 @@ export default function TripPhotosTab({
               refreshCurrentPhotoView();
               toast.success("Photos removed from album");
             }}
-            onSortChange={onPhotoSortChange}
-            onFavoriteChanged={() =>
-              queryClient.invalidateQueries({
-                queryKey: ["photos", "highlights", tripId],
-              })
-            }
+            onSortChange={(sortBy, sortOrder) => {
+              setFavSort({ by: sortBy, order: sortOrder });
+              resetFavoritesPage();
+              onPhotoSortChange(sortBy, sortOrder);
+            }}
+            onFavoriteChanged={() => {
+              queryClient.invalidateQueries({ queryKey: highlightsKey(tripId) });
+              queryClient.invalidateQueries({ queryKey: favoritePhotosKey(tripId) });
+            }}
             initialSortBy={initialSortBy}
             initialSortOrder={initialSortOrder}
             tripId={trip.id}
           />
 
           {/* Pagination Controls */}
-          {selectedAlbumId === null && photosPagination.totalPages > 1 && (
+          {favoritesOnly && (
+            <Pagination
+              currentPage={favorites.currentPage}
+              totalPages={favorites.totalPages}
+              pageNumbers={favorites.pageNumbers}
+              onPageChange={favorites.goToPage}
+              onPrevious={favorites.previousPage}
+              onNext={favorites.nextPage}
+              hasPreviousPage={favorites.hasPreviousPage}
+              hasNextPage={favorites.hasNextPage}
+              loading={favorites.isFetching}
+              rangeStart={favorites.rangeStart}
+              rangeEnd={favorites.rangeEnd}
+              total={favorites.total}
+              className="mt-6"
+            />
+          )}
+          {!favoritesOnly && selectedAlbumId === null && photosPagination.totalPages > 1 && (
             <Pagination
               currentPage={photosPagination.currentPage}
               totalPages={photosPagination.totalPages}
@@ -390,7 +470,7 @@ export default function TripPhotosTab({
               className="mt-6"
             />
           )}
-          {selectedAlbumId === -1 && unsortedPagination.totalPages > 1 && (
+          {!favoritesOnly && selectedAlbumId === -1 && unsortedPagination.totalPages > 1 && (
             <Pagination
               currentPage={unsortedPagination.currentPage}
               totalPages={unsortedPagination.totalPages}
@@ -407,7 +487,8 @@ export default function TripPhotosTab({
               className="mt-6"
             />
           )}
-          {selectedAlbumId !== null &&
+          {!favoritesOnly &&
+            selectedAlbumId !== null &&
             selectedAlbumId > 0 &&
             albumPhotosPagination.totalPages > 1 && (
               <Pagination
@@ -426,7 +507,7 @@ export default function TripPhotosTab({
                 className="mt-6"
               />
             )}
-          {selectedAlbumId === -1 && filteredPhotos.length === 0 && (
+          {!favoritesOnly && selectedAlbumId === -1 && filteredPhotos.length === 0 && (
             <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
               <p>All photos are sorted into albums!</p>
             </div>

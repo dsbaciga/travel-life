@@ -128,13 +128,14 @@ export const photoController = {
 
   getUnsortedPhotosByTrip: asyncHandler(async (req: Request, res: Response) => {
     const tripId = parseId(req.params.tripId, 'tripId');
-    const { skip, take, sortBy, sortOrder } = photoQuerySchema.parse(req.query);
+    const { skip, take, sortBy, sortOrder, favoritesOnly } = photoQuerySchema.parse(req.query);
 
     const result = await photoService.getUnsortedPhotosByTrip(requireUserId(req), tripId, {
       skip,
       take,
       sortBy,
       sortOrder,
+      favoritesOnly,
     });
 
     // Add thumbnail URLs for Immich photos

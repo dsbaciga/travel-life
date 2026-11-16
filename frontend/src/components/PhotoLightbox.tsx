@@ -77,7 +77,7 @@ interface PhotoLightboxProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onSetCover?: () => void;
-  /** Toggles the favorite star; the star is hidden when omitted. */
+  /** Toggles the favorite star. When omitted the star is read-only (indicator only). */
   onToggleFavorite?: () => void;
   showCoverButton?: boolean;
   editMode?: boolean;
@@ -698,13 +698,13 @@ export default function PhotoLightbox({
                       />
                     </svg>
                   </button>
-                  {onToggleFavorite && (
-                    <FavoriteStarButton
-                      variant="toolbar"
-                      isFavorite={photo.isFavorite === true}
-                      onToggle={onToggleFavorite}
-                    />
-                  )}
+                  {/* Editors get a toggle; view-only users only see that the photo is starred */}
+                  <FavoriteStarButton
+                    variant="toolbar"
+                    readOnly={!onToggleFavorite}
+                    isFavorite={photo.isFavorite === true}
+                    onToggle={onToggleFavorite ?? (() => {})}
+                  />
                   {onEdit && (
                     <button
                       type="button"

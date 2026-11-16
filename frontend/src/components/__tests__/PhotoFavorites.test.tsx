@@ -8,6 +8,7 @@ import FavoriteStarButton from '../FavoriteStarButton';
 import TripHighlights from '../trip-detail/TripHighlights';
 import { createMockPhoto } from '../../test/fixtures';
 import photoService from '../../services/photo.service';
+import collaborationService from '../../services/collaboration.service';
 
 class MockIntersectionObserver implements IntersectionObserver {
   readonly root: Element | Document | null = null;
@@ -31,12 +32,19 @@ vi.mock('react-hot-toast', () => ({
 vi.mock('../../services/photo.service', () => {
   const mockService = {
     getPhotosByTrip: vi.fn(),
+    getUnsortedPhotosByTrip: vi.fn(),
+    getAlbumById: vi.fn(),
     updatePhoto: vi.fn(),
   };
   return { photoService: mockService, default: mockService };
 });
 
+vi.mock('../../services/collaboration.service', () => ({
+  default: { getPermissionLevel: vi.fn() },
+}));
+
 const mockedService = vi.mocked(photoService);
+const mockedCollab = vi.mocked(collaborationService);
 
 function renderGallery(props: Partial<React.ComponentProps<typeof PhotoGallery>> = {}) {
   const photos = [
@@ -46,7 +54,7 @@ function renderGallery(props: Partial<React.ComponentProps<typeof PhotoGallery>>
   ];
   return render(
     <BrowserRouter>
-      <PhotoGallery photos={photos} {...props} />
+      <PhotoGallery photos={photos} canEdit {...props} />
     </BrowserRouter>
   );
 }
@@ -128,7 +136,7 @@ describe('PhotoGallery favorites', () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
         <BrowserRouter>
-          <PhotoGallery photos={photos} />
+          <PhotoGallery photos={photos} canEdit />
         </BrowserRouter>
       </QueryClientProvider>
     );
@@ -142,7 +150,7 @@ describe('PhotoGallery favorites', () => {
   it('shows a hint instead of an empty grid when nothing is starred', async () => {
     render(
       <BrowserRouter>
-        <PhotoGallery photos={[createMockPhoto({ id: 9, caption: 'Solo', thumbnailPath: '/t/9.jpg' })]} />
+        <PhotoGallery canEdit photos={[createMockPhoto({ id: 9, caption: 'Solo', thumbnailPath: '/t/9.jpg' })]} />
       </BrowserRouter>
     );
 
@@ -154,6 +162,7 @@ describe('PhotoGallery favorites', () => {
 describe('TripHighlights', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedCollab.getPermissionLevel.mockResolvedValue({ isOwner: true, permissionLevel: 'admin' });
   });
 
   function renderHighlights() {

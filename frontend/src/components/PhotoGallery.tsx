@@ -124,6 +124,30 @@ interface PhotoGalleryProps {
   onSortChange?: (sortBy: string, sortOrder: string) => void;
   /** Called after a favorite star change has been saved to the server. */
   onFavoriteChanged?: (photoId: number, isFavorite: boolean) => void;
+  /**
+   * Whether the viewer may star photos. Defaults to false: starred photos show
+   * a non-interactive indicator and no star button is offered. Callers pass
+   * `useCanEditTrip(tripId).canEdit`, which is also false while loading so an
+   * interactive star never flashes in for a view-only user.
+   */
+  canEdit?: boolean;
+  /**
+   * Controlled Favorites filter. When `onFavoritesOnlyChange` is provided the
+   * parent owns the filter and is expected to pass the server-filtered list
+   * (every favorite in the trip or album, paged) as `photos`. Without it the
+   * gallery filters the `photos` it was given on the client, which is what
+   * pre-loaded lists such as the album detail page rely on.
+   */
+  favoritesOnly?: boolean;
+  onFavoritesOnlyChange?: (favoritesOnly: boolean) => void;
+  /** Full favorites count across all pages, shown while the filter is on (controlled mode). */
+  favoritesTotal?: number;
+  /**
+   * Optimistic star state keyed by photo id, owned by the parent so it
+   * survives the gallery being remounted (filter on/off, Highlights view).
+   */
+  favoriteOverrides?: Record<number, boolean>;
+  onFavoriteOverrideChange?: (photoId: number, value: boolean | undefined) => void;
   initialSortBy?: string;
   initialSortOrder?: string;
   tripId?: number;
@@ -201,6 +225,7 @@ function PhotoGridItem({
   onToggleSelection,
   onSelectPhoto,
   onToggleFavorite,
+  canEdit,
 }: {
   photo: Photo;
   index: number;
@@ -211,6 +236,7 @@ function PhotoGridItem({
   onToggleSelection: (photoId: number, shiftKey: boolean) => void;
   onSelectPhoto: (photo: Photo) => void;
   onToggleFavorite: (photo: Photo) => void;
+  canEdit: boolean;
 }) {
   return (
     <div
@@ -302,6 +328,7 @@ function PhotoGridItem({
       {/* Favorite star: always visible when starred, otherwise on hover/focus */}
       {!selectionMode && (
         <FavoriteStarButton
+          readOnly={!canEdit}
           isFavorite={photo.isFavorite === true}
           onToggle={() => onToggleFavorite(photo)}
           className={`absolute top-3 right-3 z-20 ${
@@ -357,6 +384,12 @@ export default function PhotoGallery({
   onPhotosRemovedFromAlbum,
   onSortChange,
   onFavoriteChanged,
+  canEdit = false,
+  favoritesOnly: favoritesOnlyProp,
+  onFavoritesOnlyChange,
+  favoritesTotal,
+  favoriteOverrides: favoriteOverridesProp,
+  onFavoriteOverrideChange,
   initialSortBy = "date",
   initialSortOrder = "desc",
   tripId,
@@ -365,10 +398,34 @@ export default function PhotoGallery({
   // Optimistic favorite state keyed by photo id. The photos prop is owned by
   // the parent's pagination hook, so a star toggle is layered on top of it
   // instead of waiting for a refetch.
-  const [favoriteOverrides, setFavoriteOverrides] = useState<
+  const [internalOverrides, setInternalOverrides] = useState<
     Record<number, boolean>
   >({});
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const favoriteOverrides = favoriteOverridesProp ?? internalOverrides;
+  const setFavoriteOverride = useCallback(
+    (photoId: number, value: boolean | undefined) => {
+      if (onFavoriteOverrideChange) {
+        onFavoriteOverrideChange(photoId, value);
+        return;
+      }
+      setInternalOverrides((prev) => {
+        const next = { ...prev };
+        if (value === undefined) delete next[photoId];
+        else next[photoId] = value;
+        return next;
+      });
+    },
+    [onFavoriteOverrideChange]
+  );
+  const isFavoritesControlled = onFavoritesOnlyChange !== undefined;
+  const [internalFavoritesOnly, setInternalFavoritesOnly] = useState(false);
+  const favoritesOnly = isFavoritesControlled
+    ? favoritesOnlyProp === true
+    : internalFavoritesOnly;
+  // A photo unstarred while open in the lightbox stays in the lightbox's
+  // working list (at its old position) until the viewer navigates away or
+  // closes it, so an accidental unstar can be undone with one more click.
+  const [retained, setRetained] = useState<{ photo: Photo; index: number } | null>(null);
 
   const withFavorite = useCallback(
     (photo: Photo): Photo => {
@@ -384,16 +441,30 @@ export default function PhotoGallery({
     () => photosProp.map(withFavorite),
     [photosProp, withFavorite]
   );
-  const favoriteCount = useMemo(
+  const loadedFavoriteCount = useMemo(
     () => allPhotos.filter((p) => p.isFavorite).length,
     [allPhotos]
   );
+  // Controlled: the server told us the full count. Client mode: only the
+  // photos handed to us can be counted.
+  const favoriteCount =
+    isFavoritesControlled && favoritesOnly && favoritesTotal !== undefined
+      ? Math.max(0, favoritesTotal - allPhotos.filter((p) => !p.isFavorite).length)
+      : loadedFavoriteCount;
   // The grid, selection, and the lightbox all page through this list, so with
   // the Favorites filter on the lightbox only visits favorites.
   const photos = useMemo(
     () => (favoritesOnly ? allPhotos.filter((p) => p.isFavorite) : allPhotos),
     [allPhotos, favoritesOnly]
   );
+  // What the lightbox pages through: the visible photos plus the one that was
+  // just unstarred (see `retained`), at the position it had.
+  const lightboxPhotos = useMemo(() => {
+    if (!retained || photos.some((p) => p.id === retained.photo.id)) return photos;
+    const list = [...photos];
+    list.splice(Math.min(retained.index, list.length), 0, retained.photo);
+    return list;
+  }, [photos, retained]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editCaption, setEditCaption] = useState("");
   const [editTakenAt, setEditTakenAt] = useState<string | null>(null);
@@ -611,17 +682,18 @@ export default function PhotoGallery({
 
   const handleToggleFavorite = async (photo: Photo) => {
     const next = !photo.isFavorite;
-    setFavoriteOverrides((prev) => ({ ...prev, [photo.id]: next }));
+    if (!next && favoritesOnly && selectedPhoto?.id === photo.id) {
+      // Remember where the open photo sat before the filter drops it
+      setRetained({ photo: { ...photo, isFavorite: false }, index: photos.findIndex((p) => p.id === photo.id) });
+    }
+    setFavoriteOverride(photo.id, next);
     try {
       await photoService.updatePhoto(photo.id, { isFavorite: next });
       onFavoriteChanged?.(photo.id, next);
     } catch {
       // Roll back to whatever the parent last told us
-      setFavoriteOverrides((prev) => {
-        const rest = { ...prev };
-        delete rest[photo.id];
-        return rest;
-      });
+      setFavoriteOverride(photo.id, undefined);
+      setRetained((r) => (r?.photo.id === photo.id ? null : r));
       toast.error(
         next ? "Failed to add to favorites" : "Failed to remove from favorites"
       );
@@ -948,7 +1020,7 @@ export default function PhotoGallery({
     overscan: VIRTUAL_OVERSCAN,
   });
 
-  if (allPhotos.length === 0) {
+  if (allPhotos.length === 0 && !favoritesOnly) {
     return (
       <EmptyState
         icon={<EmptyIllustrations.NoPhotos />}
@@ -1046,7 +1118,11 @@ export default function PhotoGallery({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setFavoritesOnly((v) => !v)}
+            onClick={() =>
+              isFavoritesControlled
+                ? onFavoritesOnlyChange?.(!favoritesOnly)
+                : setInternalFavoritesOnly((v) => !v)
+            }
             aria-pressed={favoritesOnly}
             title={
               favoriteCount === 0
@@ -1062,10 +1138,17 @@ export default function PhotoGallery({
             <svg className="w-4 h-4" fill={favoritesOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
             </svg>
-            Favorites{favoriteCount > 0 ? ` (${favoriteCount})` : ""}
+            Favorites{favoriteCount > 0 && (!isFavoritesControlled || (favoritesOnly && favoritesTotal !== undefined)) ? ` (${favoriteCount})` : ""}
           </button>
           <span className="text-sm text-gray-600 dark:text-dusk-400">
-            {photos.length} photo{photos.length !== 1 ? "s" : ""}
+            {(() => {
+              // Controlled filter: show the full favorites count, not the page size
+              const count =
+                isFavoritesControlled && favoritesOnly && favoritesTotal !== undefined
+                  ? favoriteCount
+                  : photos.length;
+              return `${count} photo${count !== 1 ? "s" : ""}`;
+            })()}
           </span>
 
           {/* Failed Thumbnails Indicator */}
@@ -1154,6 +1237,7 @@ export default function PhotoGallery({
               onToggleSelection={togglePhotoSelection}
               onSelectPhoto={setSelectedPhoto}
               onToggleFavorite={handleToggleFavorite}
+              canEdit={canEdit}
             />
           ))}
         </div>
@@ -1202,6 +1286,7 @@ export default function PhotoGallery({
                         onToggleSelection={togglePhotoSelection}
                         onSelectPhoto={setSelectedPhoto}
                         onToggleFavorite={handleToggleFavorite}
+                        canEdit={canEdit}
                       />
                     );
                   })}
@@ -1337,6 +1422,7 @@ export default function PhotoGallery({
                       <div className="flex-shrink-0 flex items-center gap-2">
                         {!selectionMode && (
                           <FavoriteStarButton
+                            readOnly={!canEdit}
                             variant="inline"
                             isFavorite={photo.isFavorite === true}
                             onToggle={() => handleToggleFavorite(photo)}
@@ -1377,14 +1463,22 @@ export default function PhotoGallery({
       {selectedPhoto && (
         <PhotoLightbox
           photo={withFavorite(selectedPhoto)}
-          photos={photos}
-          onToggleFavorite={() => handleToggleFavorite(withFavorite(selectedPhoto))}
+          photos={lightboxPhotos}
+          onToggleFavorite={
+            canEdit
+              ? () => handleToggleFavorite(withFavorite(selectedPhoto))
+              : undefined
+          }
           getPhotoUrl={getPhotoUrl}
           onClose={() => {
             setSelectedPhoto(null);
+            setRetained(null);
             setIsEditMode(false);
           }}
-          onNavigate={(photo) => setSelectedPhoto(photo)}
+          onNavigate={(photo) => {
+            setRetained(null);
+            setSelectedPhoto(photo);
+          }}
           onEdit={() => {
             setEditCaption(selectedPhoto.caption || "");
             // Format takenAt for datetime-local input (YYYY-MM-DDTHH:mm)
