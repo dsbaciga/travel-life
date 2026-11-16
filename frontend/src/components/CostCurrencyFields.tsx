@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import CurrencySelect from './CurrencySelect';
 
 interface CostCurrencyFieldsProps {
   cost: string;
@@ -10,7 +11,8 @@ interface CostCurrencyFieldsProps {
 }
 
 /**
- * Reusable cost and currency input field pair
+ * Reusable cost and currency field pair. Currency is a picker limited to the
+ * currencies the app can convert (see CurrencySelect).
  * Used in Activity, Lodging, Transportation managers
  */
 export default function CostCurrencyFields({
@@ -51,15 +53,7 @@ export default function CostCurrencyFields({
         >
           {currencyLabel}
         </label>
-        <input
-          type="text"
-          id={currencyFieldId}
-          value={currency}
-          onChange={(e) => onCurrencyChange(e.target.value)}
-          className="input"
-          maxLength={3}
-          placeholder="USD"
-        />
+        <CurrencySelect id={currencyFieldId} value={currency} onChange={onCurrencyChange} />
       </div>
     </div>
   );
