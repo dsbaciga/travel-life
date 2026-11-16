@@ -129,6 +129,71 @@ class LlmService {
       throw new LlmError(error instanceof Error ? error.message : 'Unknown LLM error');
     }
   }
+
+  /**
+   * Like `chat`, but the user turn also carries one image, sent as an
+   * OpenAI-compatible `image_url` content part (data URL). Works with any
+   * configured endpoint whose model accepts vision input; a text-only model
+   * answers with an error, which surfaces as `LlmError`.
+   * Returns '' when the LLM is not configured.
+   */
+  async chatWithImage(
+    systemPrompt: string,
+    userPrompt: string,
+    image: { mimeType: string; base64: string },
+    options: LlmOptions = {}
+  ): Promise<string> {
+    const resolved = await this.resolveConfig(options.userId);
+    if (!resolved) {
+      logger.warn('LLM not configured — AI features disabled. Set an API key in Settings or LLM_API_KEY env var.');
+      return '';
+    }
+
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (resolved.apiKey) {
+        headers.Authorization = `Bearer ${resolved.apiKey}`;
+      }
+
+      const response = await axios.post(
+        `${resolved.baseUrl}/chat/completions`,
+        {
+          model: resolved.model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: userPrompt },
+                {
+                  type: 'image_url',
+                  image_url: { url: `data:${image.mimeType};base64,${image.base64}` },
+                },
+              ],
+            },
+          ],
+          max_tokens: options.maxTokens ?? resolved.maxTokens,
+          temperature: options.temperature ?? 0.3,
+        },
+        {
+          headers,
+          timeout: 60000,
+          maxRedirects: 0,
+        }
+      );
+
+      const content: unknown = response.data?.choices?.[0]?.message?.content;
+      return typeof content === 'string' ? content : '';
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        logger.error('LLM image request failed', { status, message: error.message });
+        throw new LlmError(`LLM request failed: ${error.message}`, status);
+      }
+      logger.error('LLM image request failed', error);
+      throw new LlmError(error instanceof Error ? error.message : 'Unknown LLM error');
+    }
+  }
 }
 
 export const llmService = new LlmService();

@@ -17,6 +17,9 @@ import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import { formatDateOnly } from "../utils/timezone";
+import ReceiptScanButton, { ScanBadge } from "./ReceiptScanButton";
+import type { ReceiptScanResult } from "../services/receiptScan.service";
+import { receiptToExpenseForm, type ScannedField } from "../utils/receiptPrefill";
 
 /**
  * BudgetManager handles the trip budget and expense tracking tab.
@@ -83,6 +86,9 @@ export default function BudgetManager({
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null);
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(EMPTY_EXPENSE_FORM);
   const [isSavingExpense, setIsSavingExpense] = useState(false);
+  // Receipt scan: which form fields were pre-filled from the photo (marked for review)
+  const [scannedFields, setScannedFields] = useState<ScannedField[]>([]);
+  const [currencyDefaulted, setCurrencyDefaulted] = useState(false);
 
   const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: ["expenses", tripId],
@@ -218,12 +224,16 @@ export default function BudgetManager({
 
   const openCreateExpenseForm = () => {
     setEditingExpenseId(null);
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
     setExpenseForm({ ...EMPTY_EXPENSE_FORM, currency: displayCurrency });
     setShowExpenseForm(true);
   };
 
   const openEditExpenseForm = (expense: TripExpense) => {
     setEditingExpenseId(expense.id);
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
     setExpenseForm({
       description: expense.description,
       category: expense.category,
@@ -239,7 +249,34 @@ export default function BudgetManager({
     setShowExpenseForm(false);
     setEditingExpenseId(null);
     setExpenseForm(EMPTY_EXPENSE_FORM);
+    setScannedFields([]);
+    setCurrencyDefaulted(false);
   };
+
+  // Open the normal "Add Expense" form pre-filled from a scanned receipt.
+  // Nothing is saved here; the user reviews and submits as usual.
+  const handleReceiptScanned = (result: ReceiptScanResult) => {
+    const prefill = receiptToExpenseForm(result, {
+      category: EMPTY_EXPENSE_FORM.category,
+      currency: displayCurrency,
+    });
+    setEditingExpenseId(null);
+    setExpenseForm({
+      ...EMPTY_EXPENSE_FORM,
+      description: prefill.description,
+      category: prefill.category,
+      amount: prefill.amount,
+      currency: prefill.currency,
+      date: prefill.date,
+    });
+    setScannedFields(prefill.scanned);
+    setCurrencyDefaulted(prefill.currencyDefaulted);
+    setShowExpenseForm(true);
+  };
+
+  const isScanned = (field: ScannedField) => scannedFields.includes(field);
+  const scannedRing = (field: ScannedField) =>
+    isScanned(field) ? " ring-2 ring-gold/60" : "";
 
   const handleSubmitExpense = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -327,13 +364,20 @@ export default function BudgetManager({
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Budget &amp; Expenses
         </h2>
-        <button
-          type="button"
-          onClick={showExpenseForm ? closeExpenseForm : openCreateExpenseForm}
-          className="btn-primary"
-        >
-          {showExpenseForm ? "Cancel" : "+ Add Expense"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <ReceiptScanButton
+            tripId={tripId}
+            disabled={editingExpenseId !== null || isSavingExpense}
+            onScanned={handleReceiptScanned}
+          />
+          <button
+            type="button"
+            onClick={showExpenseForm ? closeExpenseForm : openCreateExpenseForm}
+            className="btn-primary"
+          >
+            {showExpenseForm ? "Cancel" : "+ Add Expense"}
+          </button>
+        </div>
       </div>
 
       {/* Budget Overview */}
@@ -581,10 +625,21 @@ export default function BudgetManager({
             {editingExpenseId ? "Edit Expense" : "Add Expense"}
           </h3>
 
+          {scannedFields.length > 0 && (
+            <p
+              role="status"
+              className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-charcoal dark:text-warm-gray"
+            >
+              Filled in from your receipt. Fields marked &quot;From receipt&quot; were read
+              automatically and can be wrong, so check them before saving.
+              {currencyDefaulted && " The receipt showed no currency, so check the currency too."}
+            </p>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label htmlFor="expense-description" className="label label-required">
-                Description
+                Description{isScanned("description") && <ScanBadge />}
               </label>
               <input
                 id="expense-description"
@@ -595,14 +650,14 @@ export default function BudgetManager({
                 onChange={(e) =>
                   setExpenseForm({ ...expenseForm, description: e.target.value })
                 }
-                className="input w-full"
+                className={`input w-full${scannedRing("description")}`}
                 placeholder="e.g. Dinner at trattoria"
               />
             </div>
 
             <div>
               <label htmlFor="expense-category" className="label">
-                Category
+                Category{isScanned("category") && <ScanBadge />}
               </label>
               <select
                 id="expense-category"
@@ -613,7 +668,7 @@ export default function BudgetManager({
                     setExpenseForm({ ...expenseForm, category: value });
                   }
                 }}
-                className="input w-full"
+                className={`input w-full${scannedRing("category")}`}
               >
                 {EXPENSE_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
@@ -626,7 +681,7 @@ export default function BudgetManager({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="expense-amount" className="label label-required">
-                  Amount
+                  Amount{isScanned("amount") && <ScanBadge />}
                 </label>
                 <input
                   id="expense-amount"
@@ -638,19 +693,19 @@ export default function BudgetManager({
                   onChange={(e) =>
                     setExpenseForm({ ...expenseForm, amount: e.target.value })
                   }
-                  className="input w-full"
+                  className={`input w-full${scannedRing("amount")}`}
                   placeholder="0.00"
                 />
               </div>
               <div>
                 <label htmlFor="expense-currency" className="label">
-                  Currency
+                  Currency{isScanned("currency") && <ScanBadge />}
                 </label>
                 <CurrencySelect
                   id="expense-currency"
                   value={expenseForm.currency}
                   onChange={(currency) => setExpenseForm({ ...expenseForm, currency })}
-                  className="input w-full"
+                  className={`input w-full${scannedRing("currency")}`}
                 />
               </div>
             </div>
@@ -658,6 +713,9 @@ export default function BudgetManager({
             <div>
               <label htmlFor="expense-date" className="label">
                 Date
+                {isScanned("date") && (
+                  <ScanBadge detail={formatExpenseDate(expenseForm.date) ?? undefined} />
+                )}
               </label>
               <input
                 id="expense-date"
@@ -666,7 +724,7 @@ export default function BudgetManager({
                 onChange={(e) =>
                   setExpenseForm({ ...expenseForm, date: e.target.value })
                 }
-                className="input w-full"
+                className={`input w-full${scannedRing("date")}`}
               />
             </div>
 

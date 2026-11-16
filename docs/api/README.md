@@ -378,6 +378,7 @@ Trip-scoped expense tracking, plus a budget-vs-spent summary endpoint mounted al
 | GET | `/api/trips/:tripId/expenses/:id` | Get an expense by ID | Yes |
 | PUT | `/api/trips/:tripId/expenses/:id` | Update an expense | Yes |
 | DELETE | `/api/trips/:tripId/expenses/:id` | Delete an expense | Yes |
+| POST | `/api/trips/:tripId/expenses/scan-receipt` | Read a receipt photo (multipart field `image`; JPEG/PNG/WebP/HEIC, max 10 MB, type checked from the bytes) with the user's AI model. Returns `{ merchant, amount, currency, date, category }`, each nullable (`amount` is a decimal string, `date` is `YYYY-MM-DD`, `currency` is a supported ISO 4217 code or null, never defaulted). Saves nothing and does not keep the image. 503 without an AI key, 502 on provider error, 422 when unreadable. Needs edit access; AI rate limit applies | Yes |
 | GET | `/api/trips/:tripId/budget-summary` | Get budget vs. spent totals with a category breakdown | Yes |
 
 Budget summary totals are converted into a single base currency using the exchange rate frozen at each

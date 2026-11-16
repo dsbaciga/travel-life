@@ -1996,7 +1996,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 - Feeds `TripExpense` and multi-currency (#96)
 - Result opens in a confirm form before saving
 
-**Status**: Not started
+**Status**: ✅ Shipped (not yet run against a live model). `POST /api/trips/:tripId/expenses/scan-receipt` takes one photo (JPEG/PNG/WebP/HEIC, 10 MB, type checked from the bytes), downscales it with sharp, and reads it through the user's own LLM via a new `llmService.chatWithImage` (OpenAI-compatible `image_url`; needs a vision-capable model). The reply is validated per field (decimal-string amount, supported ISO currency or null, real calendar date) and returned without creating an expense; the image is not stored. A Scan Receipt button beside Add Expense opens the camera on phones and opens the normal form pre-filled with scanned fields marked. A receipt with no currency leaves the form default in place with a warning. Not done: attaching the photo to the expense (expenses have no attachments).
 
 ### 123. Parking & Rental Car Log
 
