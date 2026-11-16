@@ -426,6 +426,42 @@ describe('BackupService', () => {
       ]);
     });
 
+    it('BKP-015: exports route stops in order without ids or positions', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        title: 'Stops Trip',
+        locations: [],
+        photos: [],
+        activities: [],
+        transportation: [],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        stops: [
+          { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 4 },
+          { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: null },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      expect(result.trips[0].stops).toEqual([
+        { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 4 },
+        { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: null },
+      ]);
+      expect(mockPrisma.trip.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({ stops: expect.objectContaining({ orderBy: { position: 'asc' } }) }),
+        })
+      );
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 

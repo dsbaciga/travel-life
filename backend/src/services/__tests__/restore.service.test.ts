@@ -140,6 +140,9 @@ const mockTx = {
   bookingDeadline: {
     create: jest.fn(),
   },
+  tripStop: {
+    create: jest.fn(),
+  },
   tripExpense: {
     create: jest.fn(),
   },
@@ -369,6 +372,7 @@ describe('RestoreService', () => {
     mockTx.foodLogEntry.create.mockResolvedValue({ id: 1 });
     mockTx.foodLogEntryPhoto.create.mockResolvedValue({ id: 1 });
     mockTx.bookingDeadline.create.mockResolvedValue({ id: 1 });
+    mockTx.tripStop.create.mockResolvedValue({ id: 1 });
     mockTx.tripExpense.create.mockResolvedValue({ id: 1 });
     mockTx.tripEmergencyInfo.create.mockResolvedValue({ id: 1 });
     mockTx.savedLink.create.mockResolvedValue({ id: 1 });
@@ -568,6 +572,40 @@ describe('RestoreService', () => {
       });
       const booked = mockTx.bookingDeadline.create.mock.calls[1][0] as { data: Record<string, unknown> };
       expect(booked.data).toMatchObject({ lodgingId: 80, title: null, note: 'Free until noon' });
+    });
+
+    it('RST-018: restores route stops in order and remaps their location link', async () => {
+      const trip = fullBackup.trips[0];
+      const backup: BackupData = {
+        ...fullBackup,
+        trips: [
+          {
+            ...trip,
+            // old location id 1 (Colosseum) is restored as the first new location id
+            stops: [
+              { name: 'Rome', latitude: 41.9, longitude: 12.5, nights: 3, locationId: 1 },
+              { name: 'Florence', latitude: 43.77, longitude: 11.25, nights: null, locationId: 999 },
+              { name: 'Venice', latitude: 45.44, longitude: 12.33 },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.tripStop.create).toHaveBeenCalledTimes(3);
+      const data = mockTx.tripStop.create.mock.calls.map(
+        (c) => (c[0] as { data: Record<string, unknown> }).data
+      );
+      expect(data.map((d) => [d.name, d.position])).toEqual([
+        ['Rome', 0],
+        ['Florence', 1],
+        ['Venice', 2],
+      ]);
+      expect(data[0]).toMatchObject({ nights: 3, locationId: 10 });
+      // an unresolvable link is dropped but the stop survives
+      expect(data[1]).toMatchObject({ nights: null, locationId: null });
+      expect(data[2]).toMatchObject({ nights: null, locationId: null });
     });
 
     it('RST-016b: re-attaches food log photos through the photo id map', async () => {

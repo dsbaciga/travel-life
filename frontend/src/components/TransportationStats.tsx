@@ -1,3 +1,5 @@
+import { useUnits } from '../hooks/useUnits';
+import { formatDistance as formatUnits, otherMeasurementSystem } from '../utils/units';
 import type {
   Transportation,
   TransportationType,
@@ -16,6 +18,8 @@ interface TypeStats {
 export default function TransportationStats({
   transportation,
 }: TransportationStatsProps) {
+  const { system, formatDistance } = useUnits();
+  const otherSystem = otherMeasurementSystem(system);
   if (transportation.length === 0) {
     return null;
   }
@@ -170,11 +174,10 @@ export default function TransportationStats({
                   Total Distance
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {Math.round(flightStats.distance).toLocaleString()} km
+                  {formatDistance(flightStats.distance)}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
-                  {Math.round(flightStats.distance * 0.621371).toLocaleString()}{" "}
-                  miles
+                  {formatUnits(flightStats.distance, otherSystem)}
                   {flights.some((t) => t.distanceSource === "route") && (
                     <span className="ml-2 text-green-600 dark:text-green-400">
                       • Route-based
@@ -249,11 +252,10 @@ export default function TransportationStats({
                       Total Distance
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {Math.round(stats.distance).toLocaleString()} km
+                      {formatDistance(stats.distance)}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
-                      {Math.round(stats.distance * 0.621371).toLocaleString()}{" "}
-                      miles
+                      {formatUnits(stats.distance, otherSystem)}
                     </div>
                   </div>
                 )}

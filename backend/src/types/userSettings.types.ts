@@ -19,6 +19,8 @@ export const updateUserSettingsSchema = z.object({
   timezone: z.string().min(1).max(100).optional(),
   dietaryPreferences: z.array(z.string()).optional(),
   useCustomMapStyle: z.boolean().optional(),
+  // Units shown for distance and temperature. Null clears the choice (back to the app default).
+  measurementSystem: z.enum(['imperial', 'metric']).nullable().optional(),
   // Home currency that mixed-currency budget totals are reported in.
   // Nullable so it can be cleared, which reverts to the per-trip fallback.
   baseCurrency: optionalCurrencyCode(),

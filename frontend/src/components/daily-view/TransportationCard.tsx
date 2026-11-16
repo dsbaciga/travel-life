@@ -8,6 +8,7 @@ import LinkedEntitiesDisplay from '../LinkedEntitiesDisplay';
 import FlightStatusBadge from '../FlightStatusBadge';
 import DirectionsButton from '../DirectionsButton';
 import { placeFromTransportation } from '../../lib/itineraryPlaces';
+import { useUnits } from '../../hooks/useUnits';
 import type { MapsPlace } from '../../lib/mapsDeepLinks';
 import {
   formatTime,
@@ -40,6 +41,7 @@ export default function TransportationCard({
   originPlace = null,
 }: TransportationCardProps) {
   const navigate = useNavigate();
+  const { formatDistance } = useUnits();
   const colors = getTypeColors('transportation');
 
   // What you actually need on the ground is how to reach the departure point.
@@ -213,7 +215,7 @@ export default function TransportationCard({
                   d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                 />
               </svg>
-              {transportation.calculatedDistance.toFixed(1)} km
+              {formatDistance(transportation.calculatedDistance)}
             </span>
             {transportation.distanceSource && (
               <span className="text-xs text-gray-400 dark:text-dusk-400">

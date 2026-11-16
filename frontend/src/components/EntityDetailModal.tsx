@@ -26,6 +26,7 @@ import type { Photo, AlbumWithPhotos } from '../types/photo';
 import MarkdownRenderer from './MarkdownRenderer';
 import { formatDate } from '../utils/dateFormat';
 import { formatCurrency } from '../utils/formatCurrency';
+import { useUnits } from '../hooks/useUnits';
 
 interface EntityDetailModalProps {
   isOpen: boolean;
@@ -300,6 +301,7 @@ function LodgingDetails({ entity }: { entity: Lodging }) {
 }
 
 function TransportationDetails({ entity }: { entity: Transportation }) {
+  const { formatDistance } = useUnits();
   const typeIcon = TRANSPORT_ICONS[entity.type] || TRANSPORT_ICONS.other;
 
   const getLocationDisplay = (
@@ -349,7 +351,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
       {entity.calculatedDistance && (
         <DetailRow
           label="Distance"
-          value={`${entity.calculatedDistance.toFixed(1)} km (${(entity.calculatedDistance * 0.621371).toFixed(1)} mi)`}
+          value={formatDistance(entity.calculatedDistance)}
         />
       )}
       <DetailRow label="Confirmation #" value={entity.confirmationNumber} />

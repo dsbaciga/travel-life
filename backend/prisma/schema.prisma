@@ -53,6 +53,7 @@ model User {
   // default (apple | google | citymapper | uber | lyft). Null = no preference,
   // the UI then just lists every app that can handle the route.
   preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
@@ -156,6 +157,7 @@ model Trip {
   emergencyInfo             TripEmergencyInfo?
   customItems               CustomItem[]
   bookingDeadlines          BookingDeadline[]
+  stops                     TripStop[]
   foodLogEntries            FoodLogEntry[]
   trackPoints               TripTrackPoint[]
 
@@ -328,6 +330,7 @@ model Location {
   transportationEnds   Transportation[]  @relation("EndLocation")
   weatherData          WeatherData[]
   customItems          CustomItem[]
+  tripStops            TripStop[]
 
   @@index([tripId])
   @@index([parentId])
@@ -703,6 +706,36 @@ model BookingDeadline {
   @@index([transportationId])
   @@index([activityId])
   @@map("booking_deadlines")
+}
+
+// =============================================================================
+// TRIP STOPS (Multi-City Trip Planner)
+// =============================================================================
+
+// One stop in the ordered route plan of a trip: a place, its position in the route and
+// an optional number of nights. Deliberately separate from Location (which has no
+// ordering and holds every saved place, not just the route). locationId optionally links
+// a stop to a saved place; deleting that place keeps the stop (SetNull) because name and
+// coordinates are stored on the stop itself. Coordinates are range-checked by CHECK
+// constraints in migration 20261116080000_add_trip_stops.
+model TripStop {
+  id         Int      @id @default(autoincrement())
+  tripId     Int      @map("trip_id")
+  locationId Int?     @map("location_id")
+  name       String   @db.VarChar(200)
+  latitude   Float
+  longitude  Float
+  position   Int
+  nights     Int?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  trip     Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([tripId, position])
+  @@index([locationId])
+  @@map("trip_stops")
 }
 
 // =============================================================================

@@ -386,6 +386,17 @@ const BackupBookingDeadlineSchema = z.object({
   dismissedAt: z.string().nullable().optional(),
 });
 
+// Route stop schema within a trip (Multi-City Trip Planner). Stops are listed in route
+// order, so there is no position field. locationId references the OLD id of a location
+// in the same backup; an unresolved link is restored as null.
+const BackupTripStopSchema = z.object({
+  name: z.string(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  nights: z.number().int().nullable().optional(),
+  locationId: z.number().nullable().optional(),
+});
+
 // Food log entry schema within a trip. activityId/locationId reference the OLD ids
 // of records in the same backup; unresolved links are restored as null. Attached
 // photos reference the OLD ids of photos in the same backup and are only restored
@@ -587,6 +598,7 @@ const BackupTripSchema = z.object({
   transportation: z.array(BackupTransportationSchema).optional(),
   lodging: z.array(BackupLodgingSchema).optional(),
   bookingDeadlines: z.array(BackupBookingDeadlineSchema).optional(),
+  stops: z.array(BackupTripStopSchema).optional(),
   foodLogEntries: z.array(BackupFoodLogEntrySchema).optional(),
   journalEntries: z.array(BackupJournalEntrySchema).optional(),
   photoAlbums: z.array(BackupPhotoAlbumSchema).optional(),
@@ -636,6 +648,8 @@ export const BackupDataSchema = z.object({
     dietaryPreferences: z.array(z.string()).optional(),
     useCustomMapStyle: z.boolean().optional(),
     baseCurrency: z.string().nullable().optional(),
+    // Older backups omit it; restore then leaves the user's current value.
+    measurementSystem: z.enum(['imperial', 'metric']).nullable().optional(),
     preferredMapsApp: z.string().nullable().optional(),
     immichApiUrl: z.string().nullable(),
     // Secret fields are NEVER serialized as plaintext in v1.3.0+ backups.

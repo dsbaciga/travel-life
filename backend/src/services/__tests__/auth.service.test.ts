@@ -302,6 +302,17 @@ describe('AuthService', () => {
       expect(result.refreshToken.split('.')).toHaveLength(3);
     });
 
+    it('carries the measurement system in the session user (null when never chosen)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, measurementSystem: 'metric' });
+      mockCompanionService.createMyselfCompanion.mockResolvedValue({ id: 1 });
+      const chosen = await authService.login(validLoginData);
+      expect(chosen.user.measurementSystem).toBe('metric');
+
+      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, measurementSystem: null });
+      const legacy = await authService.login(validLoginData);
+      expect(legacy.user.measurementSystem).toBeNull();
+    });
+
     // AUTH-006: Reject login with invalid email
     it('AUTH-006: should reject login with invalid/non-existent email', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
@@ -589,6 +600,7 @@ describe('AuthService', () => {
           email: true,
           avatarUrl: true,
           timezone: true,
+          measurementSystem: true,
           createdAt: true,
         },
       });

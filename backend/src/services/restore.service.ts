@@ -196,6 +196,9 @@ export async function restoreFromBackup(
             ...(backupData.user.baseCurrency !== undefined
               ? { baseCurrency: backupData.user.baseCurrency }
               : {}),
+            ...(backupData.user.measurementSystem !== undefined
+              ? { measurementSystem: backupData.user.measurementSystem }
+              : {}),
             ...(backupData.user.preferredMapsApp !== undefined
               ? { preferredMapsApp: backupData.user.preferredMapsApp }
               : {}),
@@ -725,6 +728,22 @@ export async function restoreFromBackup(
                 dueAt: new Date(deadlineData.dueAt),
                 note: deadlineData.note ?? null,
                 dismissedAt: deadlineData.dismissedAt ? new Date(deadlineData.dismissedAt) : null,
+              },
+            });
+          }
+
+          // Import route stops in backup order (which is route order). A location link is
+          // remapped through the old-id -> new-id map; one missing from the backup is dropped.
+          for (const [position, stopData] of (tripData.stops || []).entries()) {
+            await tx.tripStop.create({
+              data: {
+                tripId: trip.id,
+                name: stopData.name,
+                latitude: stopData.latitude,
+                longitude: stopData.longitude,
+                nights: stopData.nights ?? null,
+                locationId: stopData.locationId ? locationMap.get(stopData.locationId) ?? null : null,
+                position,
               },
             });
           }

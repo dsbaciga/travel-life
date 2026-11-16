@@ -8,6 +8,7 @@ import type {
   PackingSuggestionsResponse,
 } from '../types/packingSuggestion';
 import toast from 'react-hot-toast';
+import { useUnits } from '../hooks/useUnits';
 
 interface PackingSuggestionsProps {
   tripId: number;
@@ -122,6 +123,7 @@ const PRIORITY_CONFIG: Record<
 };
 
 export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) {
+  const { formatTemperature } = useUnits();
   const [data, setData] = useState<PackingSuggestionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingToChecklist, setAddingToChecklist] = useState<Set<string>>(new Set());
@@ -287,7 +289,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
                   d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
                 />
               </svg>
-              {Math.round(data.weatherSummary.minTemp)}° - {data.weatherSummary.maxTemp != null ? Math.round(data.weatherSummary.maxTemp) : '--'}°F
+              {formatTemperature(data.weatherSummary.minTemp)} - {data.weatherSummary.maxTemp != null ? formatTemperature(data.weatherSummary.maxTemp) : '--'}
             </span>
             {data.weatherSummary.hasRain && (
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">

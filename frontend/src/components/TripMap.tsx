@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Transportation, TransportationType } from "../types/transportation";
 import { useMapTiles } from "../hooks/useMapTiles";
+import { useUnits } from "../hooks/useUnits";
 
 interface TripMapProps {
   transportations: Transportation[];
@@ -74,6 +75,7 @@ const calculateBounds = (
 
 export default function TripMap({ transportations, height = "500px" }: TripMapProps) {
   const tileConfig = useMapTiles();
+  const { formatDistance } = useUnits();
 
   // Filter to only ground/sea transportation with valid routes
   const groundTransportations = useMemo(
@@ -232,7 +234,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
                       )}
                       {transportation.calculatedDistance && (
                         <div className="text-gray-600">
-                          {transportation.calculatedDistance.toFixed(1)} km
+                          {formatDistance(transportation.calculatedDistance)}
                         </div>
                       )}
                     </div>
