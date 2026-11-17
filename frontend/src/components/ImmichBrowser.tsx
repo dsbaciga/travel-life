@@ -123,6 +123,8 @@ export default function ImmichBrowser({
   // What is typed in the search box; it becomes a filter on Search / Enter.
   const [searchText, setSearchText] = useState("");
   const [showBulkDialog, setShowBulkDialog] = useState(false);
+  // Below the md breakpoint the filters sit behind a toggle so the photo grid keeps room.
+  const [showFilters, setShowFilters] = useState(false);
   // Use only Map for selection (stores both ID and data, avoiding redundant Set)
   const [selectedAssetsMap, setSelectedAssetsMap] = useState<Map<string, ImmichAsset>>(
     new Map()
@@ -412,12 +414,12 @@ export default function ImmichBrowser({
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-4">
-      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl w-full max-w-6xl h-full sm:h-5/6 flex flex-col" style={{ overscrollBehavior: 'contain' }}>
-        {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-dusk-700">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[90] p-2 sm:p-4">
+      <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl w-full max-w-6xl h-full md:h-5/6 flex flex-col overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
+        {/* Title bar: the only thing pinned above the scrolling area */}
+        <div className="px-3 py-1 sm:px-6 sm:py-3 border-b border-gray-200 dark:border-dusk-700 shrink-0">
+          <div className="flex justify-between items-center gap-2">
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
               Browse Immich Library
             </h2>
             <button
@@ -443,9 +445,17 @@ export default function ImmichBrowser({
               </svg>
             </button>
           </div>
+        </div>
 
+        {/*
+          Tabs, search, filters and the grid scroll together, so the controls can
+          never crowd the photos off a small or short (landscape) screen. On a
+          large, tall window the controls stay stuck to the top instead.
+        */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="p-3 sm:px-6 sm:py-4 border-b border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800 md:[@media(min-height:700px)]:sticky md:[@media(min-height:700px)]:top-0 md:[@media(min-height:700px)]:z-10">
           {/* View Tabs */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-3 sm:mb-4">
             <button onClick={() => setView("assets")} type="button" className={tabClass(view === "assets")}>
               All Photos
             </button>
@@ -457,7 +467,7 @@ export default function ImmichBrowser({
           {/* Search and Filters */}
           {view === "assets" && (
             <div className="space-y-3" role="search" aria-label="Filter Immich photos">
-              <div className="flex gap-2">
+              <div className="flex flex-wrap sm:flex-nowrap gap-2">
                 <select
                   value={filters.searchMode ?? "filename"}
                   onChange={(e) =>
@@ -481,7 +491,7 @@ export default function ImmichBrowser({
                       : "Search by file name..."
                   }
                   aria-label="Search assets"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
+                  className="flex-1 min-w-0 basis-40 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
                 />
                 <button
                   onClick={submitSearch}
@@ -490,9 +500,19 @@ export default function ImmichBrowser({
                 >
                   Search
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((v) => !v)}
+                  aria-expanded={showFilters}
+                  className={`md:hidden ${secondaryButtonClass}`}
+                >
+                  Filters{hasActiveFilters ? " •" : ""}
+                </button>
               </div>
 
-              <div className="flex flex-wrap items-end gap-3">
+              <div
+                className={`${showFilters ? "flex" : "hidden"} md:flex flex-wrap items-end gap-3`}
+              >
                 <label className="flex flex-col text-xs text-gray-600 dark:text-dusk-400">
                   From
                   <input
@@ -616,7 +636,7 @@ export default function ImmichBrowser({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="p-3 sm:p-6">
           {view === "albums" ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
@@ -660,7 +680,7 @@ export default function ImmichBrowser({
               )}
             </>
           ) : isLoading ? (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center py-12">
               <p className="text-gray-600 dark:text-dusk-400">Loading</p>
             </div>
           ) : loadError ? (
@@ -846,10 +866,11 @@ export default function ImmichBrowser({
             </>
           )}
         </div>
+        </div>
 
-        {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-200 dark:border-dusk-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-600 dark:text-dusk-400 text-center sm:text-left">
+        {/* Footer. On phones the count is already on the Link button, so the line of text is dropped. */}
+        <div className="p-3 sm:px-6 sm:py-4 border-t border-gray-200 dark:border-dusk-700 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 shrink-0">
+          <p className="hidden sm:block text-sm text-gray-600 dark:text-dusk-400 text-left">
             {selectedAssetsMap.size > 0
               ? `${selectedAssetsMap.size} ${
                   selectedAssetsMap.size === 1 ? "photo" : "photos"
