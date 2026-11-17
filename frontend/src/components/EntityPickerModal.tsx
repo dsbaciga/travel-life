@@ -104,10 +104,10 @@ export default function EntityPickerModal({
                   <button
                     key={type}
                     onClick={() => setSelectedType(type)}
-                    className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 p-3 sm:p-4 min-w-0 text-center sm:text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
                     <span className="text-2xl">{config.emoji}</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{config.label}</span>
+                    <span className="font-medium text-gray-900 dark:text-white min-w-0 break-words">{config.label}</span>
                   </button>
                 );
               })}

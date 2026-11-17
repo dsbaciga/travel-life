@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getCsrfToken } from '../utils/csrf';
+import { isAuthPagePath, isCredentialEndpoint } from './authRedirect';
 import { getAccessToken, setAccessToken, triggerAuthClear } from './tokenManager';
 
 export { getAccessToken, setAccessToken };
@@ -113,7 +114,11 @@ axiosInstance.interceptors.response.use(
     }
 
     // Handle 401 (Unauthorized) - try cookie-based refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isCredentialEndpoint(originalRequest.url)
+    ) {
       // If a refresh is already in progress, wait for it to complete
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -160,6 +165,9 @@ axiosInstance.interceptors.response.use(
 
         // Preserve the current URL for redirect after login
         const currentPath = window.location.pathname + window.location.search;
+        if (isAuthPagePath(currentPath)) {
+          return Promise.reject(refreshError);
+        }
         window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
         return Promise.reject(refreshError);
       }

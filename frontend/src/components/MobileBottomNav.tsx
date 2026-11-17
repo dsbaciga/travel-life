@@ -115,6 +115,8 @@ const MobileBottomNav = memo(function MobileBottomNav() {
     },
   ];
 
+  if (!user) return null;
+
   return (
     <>
       <nav

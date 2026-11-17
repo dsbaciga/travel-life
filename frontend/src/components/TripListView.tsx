@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router';
 import type { Trip, TripStatusType } from '../types/trip';
 import { formatTripDates, formatTripDuration } from '../utils/dateFormat';
 import { getTripStatusRibbonColor } from '../utils/statusColors';
 import { stripMarkdown } from '../utils/stripMarkdown';
+import TripActionsMenu from './TripActionsMenu';
 import {
   ChevronUpIcon,
   ChevronDownIcon,
-  EllipsisVerticalIcon,
-  PencilIcon,
-  TrashIcon,
   MapPinIcon,
   CameraIcon,
 } from './icons';
@@ -18,6 +16,8 @@ interface TripListViewProps {
   trips: Trip[];
   coverPhotoUrls: { [key: number]: string };
   onDelete: (id: number) => void;
+  /** Archives or unarchives a trip; the menu omits the item when absent */
+  onArchiveToggle?: (trip: Trip) => void;
   onStatusChange: (tripId: number, status: TripStatusType) => void;
   onNavigateAway?: () => void;
   sortColumn?: string;
@@ -29,6 +29,7 @@ const TripListView: React.FC<TripListViewProps> = ({
   trips,
   coverPhotoUrls,
   onDelete,
+  onArchiveToggle,
   // onStatusChange is accepted for API parity with the other trip views but is
   // unused here — the list view has no inline status control.
   onNavigateAway,
@@ -36,29 +37,6 @@ const TripListView: React.FC<TripListViewProps> = ({
   sortDirection,
   onSort,
 }) => {
-  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-
-  const handleMenuToggle = (e: React.MouseEvent, tripId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpenMenuId(openMenuId === tripId ? null : tripId);
-  };
-
-  const handleEdit = (e: React.MouseEvent, tripId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpenMenuId(null);
-    onNavigateAway?.();
-    window.location.href = `/trips/${tripId}/edit`;
-  };
-
-  const handleDelete = (e: React.MouseEvent, tripId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setOpenMenuId(null);
-    onDelete(tripId);
-  };
-
   const getSortAriaSort = (column: string): 'ascending' | 'descending' | 'none' => {
     if (sortColumn !== column) return 'none';
     return sortDirection === 'asc' ? 'ascending' : 'descending';
@@ -95,19 +73,11 @@ const TripListView: React.FC<TripListViewProps> = ({
     }
   };
 
-  // Close menu when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = () => setOpenMenuId(null);
-    if (openMenuId !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openMenuId]);
-
   return (
-    <div className="overflow-x-auto">
+    <div>
       {/* Desktop Table View */}
-      <table className="hidden md:table w-full border-collapse">
+      <div className="hidden md:block overflow-x-auto">
+      <table className="w-full border-collapse">
         <thead>
           <tr className="bg-parchment dark:bg-navy-800 border-b border-primary-100 dark:border-gold/20">
             <th className="px-4 py-3 text-left text-sm font-semibold text-primary-700 dark:text-primary-200 w-16">
@@ -272,41 +242,20 @@ const TripListView: React.FC<TripListViewProps> = ({
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="relative inline-block">
-                    <button
-                      onClick={(e) => handleMenuToggle(e, trip.id)}
-                      className="p-1 rounded-full hover:bg-primary-100 dark:hover:bg-navy-600 transition-colors"
-                      aria-label="Trip actions"
-                      aria-haspopup="true"
-                      aria-expanded={openMenuId === trip.id}
-                    >
-                      <EllipsisVerticalIcon className="h-5 w-5 text-primary-500 dark:text-primary-400" />
-                    </button>
-                    {openMenuId === trip.id && (
-                      <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-navy-700 rounded-lg shadow-lg ring-1 ring-primary-100 dark:ring-gold/20 z-10">
-                        <button
-                          onClick={(e) => handleEdit(e, trip.id)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-primary-700 dark:text-primary-200 hover:bg-primary-50 dark:hover:bg-navy-600 rounded-t-lg transition-colors"
-                        >
-                          <PencilIcon className="h-4 w-4 mr-2" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => handleDelete(e, trip.id)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-lg transition-colors"
-                        >
-                          <TrashIcon className="h-4 w-4 mr-2" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <TripActionsMenu
+                    trip={trip}
+                    onDelete={onDelete}
+                    onArchiveToggle={onArchiveToggle}
+                    onNavigateAway={onNavigateAway}
+                    buttonClassName="p-1 rounded-full hover:bg-primary-100 dark:hover:bg-navy-600 transition-colors"
+                  />
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      </div>
 
       {/* Mobile List View */}
       <div className="md:hidden space-y-2">
@@ -317,7 +266,7 @@ const TripListView: React.FC<TripListViewProps> = ({
           return (
             <div
               key={trip.id}
-              className="bg-white dark:bg-navy-800/50 rounded-lg border border-primary-100 dark:border-gold/20 p-3"
+              className={`bg-white dark:bg-navy-800/50 rounded-lg border border-primary-100 dark:border-gold/20 p-3 ${trip.archived ? 'opacity-60' : ''}`}
             >
               <div className="flex items-center gap-3">
                 <Link
@@ -351,36 +300,20 @@ const TripListView: React.FC<TripListViewProps> = ({
                     >
                       {trip.status.replace(/_/g, ' ')}
                     </span>
+                    {trip.archived && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate/90 dark:bg-navy-900/90 text-white dark:text-warm-gray">
+                        Archived
+                      </span>
+                    )}
                   </div>
                 </Link>
-                <div className="relative flex-shrink-0">
-                  <button
-                    onClick={(e) => handleMenuToggle(e, trip.id)}
-                    className="p-2 rounded-full hover:bg-primary-100 dark:hover:bg-navy-600 transition-colors"
-                    aria-label="Trip actions"
-                    aria-haspopup="true"
-                    aria-expanded={openMenuId === trip.id}
-                  >
-                    <EllipsisVerticalIcon className="h-5 w-5 text-primary-500 dark:text-primary-400" />
-                  </button>
-                  {openMenuId === trip.id && (
-                    <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-navy-700 rounded-lg shadow-lg ring-1 ring-primary-100 dark:ring-gold/20 z-10">
-                      <button
-                        onClick={(e) => handleEdit(e, trip.id)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-primary-700 dark:text-primary-200 hover:bg-primary-50 dark:hover:bg-navy-600 rounded-t-lg transition-colors"
-                      >
-                        <PencilIcon className="h-4 w-4 mr-2" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(e, trip.id)}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-b-lg transition-colors"
-                      >
-                        <TrashIcon className="h-4 w-4 mr-2" />
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                <div className="flex-shrink-0">
+                  <TripActionsMenu
+                    trip={trip}
+                    onDelete={onDelete}
+                    onArchiveToggle={onArchiveToggle}
+                    onNavigateAway={onNavigateAway}
+                  />
                 </div>
               </div>
             </div>

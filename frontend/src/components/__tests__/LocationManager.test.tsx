@@ -255,6 +255,35 @@ describe("LocationManager", () => {
       expect(addressInput.value).toBe("Paris, France");
     });
 
+    it("keeps a name the user typed when the map is tapped", async () => {
+      const user = userEvent.setup();
+      renderLocationManager();
+      await user.click(await screen.findByRole("button", { name: /add location/i }));
+      await screen.findByTestId("mock-location-search-map");
+
+      const nameInput = screen.getByLabelText(/^name/i) as HTMLInputElement;
+      await user.type(nameInput, "Tapped place");
+      await user.click(screen.getByTestId("select-location-btn"));
+
+      expect(nameInput.value).toBe("Tapped place");
+      expect((screen.getByLabelText(/address/i) as HTMLInputElement).value).toBe("Paris, France");
+    });
+
+    it("replaces a name that came from an earlier map pick but not one typed after it", async () => {
+      const user = userEvent.setup();
+      renderLocationManager();
+      await user.click(await screen.findByRole("button", { name: /add location/i }));
+      await screen.findByTestId("mock-location-search-map");
+
+      const nameInput = screen.getByLabelText(/^name/i) as HTMLInputElement;
+      await user.click(screen.getByTestId("select-location-btn"));
+      expect(nameInput.value).toBe("Eiffel Tower");
+
+      await user.type(nameInput, " visit");
+      await user.click(screen.getByTestId("select-location-btn"));
+      expect(nameInput.value).toBe("Eiffel Tower visit");
+    });
+
     it("should create location when form is submitted", async () => {
       const user = userEvent.setup();
       const newLocation = createMockLocation({ name: "New Test Location" });

@@ -233,28 +233,30 @@ export default function TripSeriesPage() {
             {/* Name */}
             <div className="mb-4">
               {editingName ? (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <input
                     type="text"
                     value={nameValue}
                     onChange={(e) => setNameValue(e.target.value)}
-                    className="input text-2xl font-display font-bold flex-1"
+                    className="input text-2xl font-display font-bold w-full sm:w-auto sm:flex-1 min-w-0"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSaveName();
                       if (e.key === 'Escape') setEditingName(false);
                     }}
                   />
-                  <button onClick={handleSaveName} disabled={saving} className="btn btn-primary text-sm">
-                    {saving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button onClick={() => setEditingName(false)} className="btn btn-secondary text-sm">
-                    Cancel
-                  </button>
+                  <div className="flex gap-3">
+                    <button onClick={handleSaveName} disabled={saving} className="btn btn-primary text-sm">
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setEditingName(false)} className="btn btn-secondary text-sm">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-display font-bold text-charcoal dark:text-warm-gray">
+                  <h1 className="min-w-0 break-words [overflow-wrap:anywhere] text-3xl font-display font-bold text-charcoal dark:text-warm-gray">
                     📚 {series.name}
                   </h1>
                   <button
@@ -297,7 +299,7 @@ export default function TripSeriesPage() {
                 </div>
               ) : (
                 <div className="flex items-start gap-2">
-                  <p className="text-slate dark:text-warm-gray/70 font-body flex-1">
+                  <p className="text-slate dark:text-warm-gray/70 font-body flex-1 min-w-0 break-words [overflow-wrap:anywhere]">
                     {series.description || 'No description'}
                   </p>
                   <button
@@ -347,7 +349,7 @@ export default function TripSeriesPage() {
           ) : (
             <ul className="divide-y divide-gray-200 dark:divide-dusk-700">
               {sortedTrips.map((trip, index) => (
-                <li key={trip.id} className="px-6 py-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-dusk-700 transition-colors">
+                <li key={trip.id} className="px-4 sm:px-6 py-4 flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 sm:gap-4 hover:bg-gray-50 dark:hover:bg-dusk-700 transition-colors">
                   {/* Order number */}
                   <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-navy-700 flex items-center justify-center text-sm font-bold text-primary-700 dark:text-gold flex-shrink-0">
                     {index + 1}
@@ -357,23 +359,24 @@ export default function TripSeriesPage() {
                   <div className="flex-1 min-w-0">
                     <Link
                       to={`/trips/${trip.id}`}
-                      className="text-base font-display font-semibold text-charcoal dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
+                      className="inline-block py-3 -my-3 text-base font-display font-semibold break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
                     >
                       {trip.tripTypeEmoji && <span className="mr-1">{trip.tripTypeEmoji}</span>}
                       {trip.title}
                     </Link>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
                       <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${getStatusColor(trip.status)}`}>
                         {trip.status}
                       </span>
-                      <span className="text-xs text-slate dark:text-warm-gray/60 font-body">
+                      <span className="text-xs text-slate dark:text-warm-gray/60 font-body whitespace-nowrap">
                         {formatDate(trip.startDate, 'medium', 'No date')}
                         {trip.endDate && ` - ${formatDate(trip.endDate, 'medium', 'No date')}`}
                       </span>
                     </div>
                   </div>
 
-                  {/* Reorder buttons */}
+                  {/* Row actions: own line below sm */}
+                  <div className="flex w-full sm:w-auto items-center justify-end gap-1 sm:gap-4 flex-shrink-0">
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => handleMoveUp(index)}
@@ -410,6 +413,7 @@ export default function TripSeriesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
+                  </div>
                 </li>
               ))}
             </ul>

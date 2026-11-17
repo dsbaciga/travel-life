@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import authService from '../services/auth.service';
 import type { OidcConfig } from '../types/auth';
 import toast from 'react-hot-toast';
+import { safeRedirectPath } from '../lib/authRedirect';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -60,8 +61,7 @@ export default function LoginPage() {
       toast.success('Login successful!');
       // Navigate to redirect URL if provided, otherwise go to dashboard
       // Validate redirect to prevent open redirect attacks (only allow same-origin paths)
-      const rawRedirect = searchParams.get('redirect') || '/dashboard';
-      const redirectUrl = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard';
+      const redirectUrl = safeRedirectPath(searchParams.get('redirect'));
       navigate(redirectUrl);
     } catch {
       toast.error(error || 'Login failed');

@@ -17,7 +17,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Search on phones.** A search button in the top bar opens a full-screen search; before, search only existed on wider screens.
+- **Archive and unarchive from a phone.** Trip rows and the trip's ⋮ menu now offer Archive / Unarchive, and archived trips carry a badge.
+- **Photo viewer gestures.** Swipe between photos, double-tap or pinch to zoom, drag to pan, tap the backdrop or press Back to close.
+- **Kanban on touch screens.** Each card has a status picker on phones, and a long-press drags a card between columns.
+- **"Save & Add Another" on phones** for every form that has it on desktop.
+- A **Log** entry in the side menu for landscape phones and tablets, where the bottom bar is hidden.
+
+### Changed
+
+- The offline banner now sits under the top bar instead of at the bottom of the screen, where it covered bulk-action buttons.
+- On phones the floating trip title bar is gone and the trip tabs pin directly under the top bar; on short screens (landscape phones) the tabs scroll with the page.
+- Adding or editing an expense or a companion opens in the standard form sheet instead of an inline form.
+- Removing a companion from a trip asks for confirmation.
+- Transportation statistics are collapsed behind a **Stats** toggle on phones.
+- Checklist results and errors use toasts instead of browser alert boxes.
+
 ### Fixed
+
+- **Mobile layout review.** A pass over the whole web app at phone sizes fixed about a hundred problems. The main groups:
+  - Pages that were wider than the screen and zoomed out: the trips list, the Budget tab once a budget was set, trip pages in a series with long titles, split-by-amount expenses, and anywhere a long unbroken word or URL appeared (checklist items, food-log notes, trip and series descriptions).
+  - Controls distorted by the touch-target rule: toggle switches, radio buttons and checkboxes keep their designed shape, and the favourite star no longer covers the middle of a photo thumbnail.
+  - Rows that squeezed their content: Route Planner stop names (which were invisible), expense cards, Tags & Categories, trip series rows, share invitations, companion names, and several dialog footers.
+  - Menus and pickers that opened off-screen: the emoji picker, the trip type filter, the trips list ⋮ menu, the calendar trip popup, and the CSV import preview, which now shows each row's problems under its name.
+  - Forms and errors that opened out of view: trip form validation now scrolls to and focuses the first invalid field, and the Duplicate Trip dialog keeps its buttons visible.
+  - Maps: the Places, Route Planner, Places Visited and Year in Review maps no longer trap scrolling ("Tap to interact with the map"), maps are fitted to their pins, the Today map is taller and redraws when enlarged.
+  - The photo viewer's Close button can no longer be pushed off-screen by a long caption.
+  - The active trip sub-tab is scrolled into view, and album edit/delete and timeline edit/delete are visible without hovering.
+  - The bottom tab bar no longer shows to signed-out visitors on the login, register, invite and shared-trip pages.
+- A wrong password on the login page now shows an error instead of silently reloading, and the next sign-in lands on the Today page.
+- Timeline and Day By Day showed the wrong days (first day missing, day numbers off by one) when the device's time zone was far from the trip's; the same slip in the Trip Health "No lodging for…" dates is fixed.
+- "Go to Checklists" and "View all checklists" on the trip Overview now navigate.
+- Add Transportation no longer pre-fills an arrival earlier than the departure.
+- Tapping the map in Add Location no longer replaces a name you already typed.
+- A trip search with no matches shows "No trips match your filters" instead of the first-run welcome.
+- `UPLOAD_DIR` is honoured everywhere files are written (photos, avatars, receipts, cover images), not only where they are served.
 
 - The Immich library browser is usable on phones again. Its search and filters used to be pinned above the photos and filled the whole screen; they now scroll with the photo grid, the filters sit behind a **Filters** toggle on small screens, and the search row no longer runs off the edge. Landscape phones, where the grid was pushed off-screen entirely, are fixed too.
 

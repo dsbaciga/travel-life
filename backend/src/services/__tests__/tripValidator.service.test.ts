@@ -266,6 +266,31 @@ describe('TripValidatorService', () => {
       expect(lodgingIssues.length).toBeGreaterThan(0);
     });
 
+    it('VAL-004b: names the missing lodging day as the calendar date regardless of server zone', async () => {
+      const original = process.env.TZ;
+      process.env.TZ = 'America/New_York';
+      try {
+        const trip = createTripWithRelations({
+          startDate: new Date('2026-11-12T00:00:00.000Z'),
+          endDate: new Date('2026-11-14T00:00:00.000Z'),
+          lodging: [],
+        });
+        mockPrisma.trip.findFirst.mockResolvedValue(trip);
+        mockPrisma.entityLink.findMany.mockResolvedValue([]);
+
+        const result = await tripValidatorService.validateTrip(1, 1);
+        const messages = result.issuesByCategory.ACCOMMODATIONS
+          .filter(i => i.type === 'missing_lodging')
+          .map(i => i.message);
+
+        expect(messages).toEqual(expect.arrayContaining(['No lodging for Thu, Nov 12']));
+        expect(messages.join(' ')).not.toContain('Nov 11');
+      } finally {
+        if (original === undefined) delete process.env.TZ;
+        else process.env.TZ = original;
+      }
+    });
+
     it('VAL-005: detects missing transportation with multiple locations', async () => {
       const trip = createTripWithRelations({
         locations: [

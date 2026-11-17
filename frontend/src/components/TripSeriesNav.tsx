@@ -45,7 +45,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
         <div className="flex items-center justify-center gap-2 mb-2">
           <Link
             to={`/trip-series/${seriesId}`}
-            className="text-sm font-body font-medium text-primary-600 dark:text-gold hover:underline"
+            className="inline-flex items-center min-h-[44px] min-w-0 text-sm font-body font-medium text-primary-600 dark:text-gold hover:underline break-words [overflow-wrap:anywhere]"
           >
             📚 {seriesName}
           </Link>
@@ -61,7 +61,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
             {prevTrip ? (
               <Link
                 to={`/trips/${prevTrip.id}`}
-                className="group flex items-center gap-2 text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
+                className="group flex items-center gap-2 min-h-[44px] text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
               >
                 <svg
                   className="w-4 h-4 flex-shrink-0 group-hover:-translate-x-0.5 transition-transform"
@@ -99,7 +99,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
             {nextTrip ? (
               <Link
                 to={`/trips/${nextTrip.id}`}
-                className="group inline-flex items-center gap-2 text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
+                className="group flex items-center justify-end gap-2 min-h-[44px] text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
               >
                 <span className="truncate font-body">{nextTrip.title}</span>
                 <svg

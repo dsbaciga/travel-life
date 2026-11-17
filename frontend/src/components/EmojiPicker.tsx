@@ -48,8 +48,11 @@ export default function EmojiPicker({ value, onChange, className = "" }: EmojiPi
   };
 
   // Build position classes based on calculated position
-  const verticalClass = position.openUpward ? "bottom-full mb-2" : "top-full mt-2";
-  const horizontalClass = position.alignRight ? "right-0" : "left-0";
+  const verticalClass = position.openUpward ? "sm:bottom-full sm:mb-2" : "sm:top-full sm:mt-2";
+  const horizontalClass = position.alignRight ? "sm:right-0" : "sm:left-0";
+  // Phones get a centred sheet over a backdrop so the picker always fits the screen.
+  const isPhone =
+    showPicker && typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
 
   return (
     <div className="relative" ref={containerRef}>
@@ -63,20 +66,29 @@ export default function EmojiPicker({ value, onChange, className = "" }: EmojiPi
       </button>
       {showPicker && (
         <div
-          className={`absolute z-[95] ${verticalClass} ${horizontalClass}`}
-          style={position.maxHeight ? { maxHeight: position.maxHeight } : undefined}
+          className={`fixed inset-0 z-[95] flex items-center justify-center bg-black/40 sm:absolute sm:inset-auto sm:block sm:bg-transparent ${verticalClass} ${horizontalClass}`}
+          style={!isPhone && position.maxHeight ? { maxHeight: position.maxHeight } : undefined}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPicker(false);
+          }}
         >
           <Suspense
             fallback={
-              <div className="w-[300px] h-[400px] bg-gray-100 dark:bg-dusk-800 rounded-lg animate-pulse" />
+              <div className="w-[min(300px,calc(100vw-2rem))] h-[400px] bg-gray-100 dark:bg-dusk-800 rounded-lg animate-pulse" />
             }
           >
             <EmojiPickerReact
               onEmojiClick={handleEmojiClick}
               searchDisabled={false}
               skinTonesDisabled
-              width={300}
-              height={position.maxHeight ? Math.min(400, position.maxHeight) : 400}
+              width={isPhone ? "min(300px, calc(100vw - 2rem))" : 300}
+              height={
+                isPhone
+                  ? "min(400px, 70vh)"
+                  : position.maxHeight
+                    ? Math.min(400, position.maxHeight)
+                    : 400
+              }
             />
           </Suspense>
         </div>

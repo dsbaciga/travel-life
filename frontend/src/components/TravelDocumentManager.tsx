@@ -207,14 +207,16 @@ export default function TravelDocumentManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
           Travel Documents
         </h2>
+        {documents.length > 0 && (
         <button onClick={openCreateForm} className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
           <span className="sm:hidden">+ Add</span>
           <span className="hidden sm:inline">+ Add Document</span>
         </button>
+        )}
       </div>
 
       {/* Privacy notice */}

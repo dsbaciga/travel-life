@@ -73,11 +73,11 @@ export default function YearlyCalendarView({ year, trips }: YearlyCalendarViewPr
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 min-[480px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {months.map(({ name, monthIndex, dayCells }) => (
         <div
           key={monthIndex}
-          className="bg-gray-50 dark:bg-navy-900/50 rounded-lg p-2"
+          className="bg-gray-50 dark:bg-navy-900/50 rounded-lg p-2 w-full max-w-xs min-[480px]:max-w-none mx-auto"
         >
           {/* Month name */}
           <h4 className="text-sm font-semibold text-gray-700 dark:text-dusk-300 mb-2 text-center">

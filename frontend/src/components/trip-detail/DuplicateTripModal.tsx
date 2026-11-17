@@ -80,11 +80,24 @@ export default function DuplicateTripModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80] p-4">
-      <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl border border-primary-100 dark:border-gold/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+      <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl border border-primary-100 dark:border-gold/20 max-w-2xl w-full max-h-[90vh] max-h-[90dvh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="duplicate-trip-heading">
+        <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0">
+          <h2 id="duplicate-trip-heading" className="text-2xl font-bold text-gray-900 dark:text-white">
             Duplicate Trip
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 -mr-2 -mt-1 rounded-lg text-gray-500 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors flex-shrink-0"
+            aria-label="Close"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-4 sm:px-6 pb-4 flex-1 min-h-0 overflow-y-auto">
 
           <div className="mb-6">
             <label
@@ -280,14 +293,16 @@ export default function DuplicateTripModal({
             </div>
           </div>
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-sm text-blue-800 dark:text-blue-300">
               <strong>Note:</strong> The duplicated trip will have status "Dream" with all dates cleared.
               You can update dates and details after creation.
             </p>
           </div>
 
-          <div className="flex justify-end gap-3">
+        </div>
+
+        <div className="flex justify-end gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-dusk-700 flex-shrink-0">
             <button
               onClick={onClose}
               className="px-4 py-2 text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
@@ -301,7 +316,6 @@ export default function DuplicateTripModal({
             >
               Duplicate Trip
             </button>
-          </div>
         </div>
       </div>
     </div>

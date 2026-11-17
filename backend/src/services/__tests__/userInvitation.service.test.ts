@@ -65,6 +65,7 @@ jest.mock('../../config', () => ({
   config: {
     frontendUrl: 'http://localhost:3000',
     nodeEnv: 'test',
+    upload: { dir: './uploads' },
   },
 }));
 

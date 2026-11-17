@@ -21,6 +21,8 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState, { EmptyIllustrations } from "../components/EmptyState";
 import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
+import FormModal from "../components/FormModal";
+import FormModalFooter from "../components/shared/FormModalFooter";
 import { TrashIcon, ChevronRightIcon, PlusIcon } from "../components/icons";
 import DietaryTagSelector from "../components/DietaryTagSelector";
 import DietaryBadges from "../components/DietaryBadges";
@@ -345,22 +347,33 @@ export default function CompanionsPage() {
         subtitle="Manage your travel companions and add them to trips"
         backLink={LIBRARY_BACK_LINK}
         action={{
-          label: showForm ? "Cancel" : "+ Add Companion",
-          onClick: () => setShowForm(!showForm),
+          label: "+ Add Companion",
+          onClick: () => setShowForm(true),
         }}
       />
 
       {/* Create/Edit Companion Form */}
-      {showForm && (
+      <FormModal
+        isOpen={showForm}
+        onClose={resetForm}
+        title={editingCompanion ? "Edit Companion" : "Add New Companion"}
+        maxWidth="lg"
+        formId="companion-form"
+        footer={
+          <FormModalFooter
+            onCancel={resetForm}
+            formId="companion-form"
+            submitLabel={editingCompanion ? "Update Companion" : "Create Companion"}
+            isEditMode={!!editingCompanion}
+          />
+        }
+      >
         <form
+          id="companion-form"
           onSubmit={
             editingCompanion ? handleUpdateCompanion : handleCreateCompanion
           }
-          className="mb-6 p-6 bg-gray-50 dark:bg-dusk-800 rounded-lg border border-gray-200 dark:border-dusk-700"
         >
-          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-            {editingCompanion ? "Edit Companion" : "Add New Companion"}
-          </h3>
           <div className="space-y-4">
             <div>
               <label htmlFor="companion-name" className="label">Name *</label>
@@ -424,21 +437,9 @@ export default function CompanionsPage() {
                 compact
               />
             </div>
-            <div className="flex gap-2">
-              <button type="submit" className="btn btn-primary">
-                {editingCompanion ? "Update Companion" : "Create Companion"}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </form>
-      )}
+      </FormModal>
 
       {/* Companions List */}
       <div>
@@ -470,17 +471,17 @@ export default function CompanionsPage() {
                         : "border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800"
                     }`}
                   >
-                    {/* Add to Trip button in top right corner */}
+                    {/* Add to Trip button: top right on wider screens, in the button row on phones */}
                     <button
                       onClick={() => handleOpenAddToTrip(companion)}
                       aria-label={`Add ${companion.name} to trip`}
-                      className="absolute top-3 right-3 px-2 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 font-medium transition-colors"
+                      className="hidden sm:block absolute top-3 right-3 px-2 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 font-medium transition-colors"
                     >
                       + Add to trip
                     </button>
 
                     <div className="flex-1 flex flex-col">
-                      <div className="flex items-start gap-3 mb-3 pr-20">
+                      <div className="flex items-start gap-3 mb-3 sm:pr-20">
                         <CompanionAvatar
                           companion={companion}
                           size="lg"
@@ -491,7 +492,7 @@ export default function CompanionsPage() {
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-lg text-gray-900 dark:text-white truncate">
+                            <h4 className="font-semibold text-lg text-gray-900 dark:text-white break-words [overflow-wrap:anywhere] sm:truncate">
                               {companion.name}
                             </h4>
                             {companion.isMyself && (
@@ -583,7 +584,14 @@ export default function CompanionsPage() {
                       )}
                     </div>
 
-                    <div className="flex gap-2 mt-auto">
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                      <button
+                        onClick={() => handleOpenAddToTrip(companion)}
+                        aria-label={`Add ${companion.name} to trip`}
+                        className="sm:hidden basis-full px-3 py-2 text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 font-medium"
+                      >
+                        + Add to trip
+                      </button>
                       <button
                         onClick={() => startEdit(companion)}
                         aria-label={`Edit ${companion.name}`}

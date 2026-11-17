@@ -7,10 +7,13 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router';
 import { useEffect } from 'react';
 import TripDashboard from './TripDashboard';
 import { createMockTrip } from '../../test/fixtures';
 import { TripStatus } from '../../types/trip';
+import type { Checklist } from '../../types/checklist';
 
 const HOME_ZONE = 'America/New_York';
 
@@ -40,7 +43,11 @@ vi.mock('./TodayModeCard', () => ({
 vi.mock('../TripStats', () => ({ default: () => null }));
 vi.mock('./RecentActivityCard', () => ({ default: () => null }));
 vi.mock('./TodaysItinerary', () => ({ default: () => null }));
-vi.mock('./ChecklistsWidget', () => ({ default: () => null }));
+vi.mock('./ChecklistsWidget', () => ({
+  default: ({ onNavigateToChecklists }: { onNavigateToChecklists: () => void }) => (
+    <button onClick={onNavigateToChecklists}>Go to Checklists</button>
+  ),
+}));
 vi.mock('./CompanionsWidget', () => ({ default: () => null }));
 vi.mock('./MapPreviewWidget', () => ({ default: () => null }));
 vi.mock('./CountdownTimerWidget', () => ({ default: () => null }));
@@ -52,8 +59,18 @@ vi.mock('./UpcomingBookings', () => ({ default: () => null }));
 vi.mock('../TripHealthCheck', () => ({ default: () => null }));
 vi.mock('./LocalTimeWidget', () => ({ default: () => <div data-testid="local-time-widget" /> }));
 
-function renderDashboard(timezone: string) {
+function LocationProbe() {
+  return <div data-testid="location">{useLocation().pathname}</div>;
+}
+
+function renderDashboard(timezone: string, checklists: Checklist[] = []) {
   return render(
+    <MemoryRouter initialEntries={['/trips/1']}>
+      <LocationProbe />
+      <Routes>
+        <Route
+          path="/trips/1"
+          element={
     <TripDashboard
       trip={createMockTrip({ status: TripStatus.IN_PROGRESS, timezone })}
       activities={[]}
@@ -63,12 +80,17 @@ function renderDashboard(timezone: string) {
       journalEntries={[]}
       photos={[]}
       photosCount={0}
-      checklists={[]}
+      checklists={checklists}
       companions={[]}
       onNavigateToTab={vi.fn()}
       onToggleChecklistItem={vi.fn()}
       onNavigateToEntity={vi.fn()}
     />
+          }
+        />
+        <Route path="*" element={null} />
+      </Routes>
+    </MemoryRouter>
   );
 }
 
@@ -93,5 +115,19 @@ describe('TripDashboard clocks', () => {
     todayShowsClocks = false;
     renderDashboard(HOME_ZONE);
     expect(screen.queryByTestId('local-time-widget')).not.toBeInTheDocument();
+  });
+
+  it('opens the checklists pages from the checklists card', async () => {
+    const user = userEvent.setup();
+    const list = (id: number) => ({ id, name: `List ${id}` }) as Checklist;
+
+    const single = renderDashboard('Europe/Paris', [list(5)]);
+    await user.click(screen.getByRole('button', { name: 'Go to Checklists' }));
+    expect(screen.getByTestId('location')).toHaveTextContent('/checklists/5');
+    single.unmount();
+
+    renderDashboard('Europe/Paris', [list(5), list(6)]);
+    await user.click(screen.getByRole('button', { name: 'Go to Checklists' }));
+    expect(screen.getByTestId('location')).toHaveTextContent(/^\/checklists$/);
   });
 });

@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import FormModalFooter from "./shared/FormModalFooter";
 import BookingDeadlinesSection from "./BookingDeadlinesSection";
 import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
 import ActivityForm, { type ActivityFormData } from "./forms/ActivityForm";
@@ -576,7 +577,7 @@ export default function ActivityManager({
                 href={activity.bookingUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                className="inline-block py-2 -my-2 text-blue-600 hover:underline dark:text-blue-400"
               >
                 View Booking
               </a>
@@ -711,37 +712,14 @@ export default function ActivityManager({
         icon="🎯"
         formId="activity-form"
         footer={
-          <>
-            <button
-              type="button"
-              onClick={handleCloseForm}
-              disabled={isSubmitting}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
-            {!manager.editingId && (
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={() => {
-                  addAnother.submit(activityFormRef.current);
-                }}
-                className="btn btn-secondary text-sm whitespace-nowrap"
-              >
-                <span className="hidden sm:inline">Save & Add Another</span>
-                <span className="sm:hidden">+ Another</span>
-              </button>
-            )}
-            <button
-              type="submit"
-              form="activity-form"
-              disabled={isSubmitting}
-              className="btn btn-primary disabled:opacity-50"
-            >
-              {isSubmitting ? "Saving..." : manager.editingId ? "Update Activity" : "Add Activity"}
-            </button>
-          </>
+          <FormModalFooter
+            onCancel={handleCloseForm}
+            formId="activity-form"
+            isSubmitting={isSubmitting}
+            submitLabel={manager.editingId ? "Update Activity" : "Add Activity"}
+            isEditMode={!!manager.editingId}
+            onSaveAndAddAnother={() => addAnother.submit(activityFormRef.current)}
+          />
         }
       >
         {/* The form's own submit handler lives in ActivityForm and awaits before
@@ -781,7 +759,7 @@ export default function ActivityManager({
               id="activity-sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "date" | "category")}
-              className="input py-1 px-2 text-sm w-auto"
+              className="input py-1 px-2 text-sm max-lg:text-base w-auto"
             >
               <option value="date">Date</option>
               <option value="category">Category</option>
@@ -803,7 +781,7 @@ export default function ActivityManager({
                   setDietaryFilter([e.target.value]);
                 }
               }}
-              className="input py-1 px-2 text-sm w-auto"
+              className="input py-1 px-2 text-sm max-lg:text-base w-auto"
             >
               <option value="">All</option>
               {DIETARY_TAGS.map((tag) => (

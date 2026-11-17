@@ -112,19 +112,20 @@ export default function BatchPhotoToolbar({
             </div>
 
             {/* Right section: Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {/* Mobile: Select All / Clear */}
-              <div className="flex sm:hidden items-center gap-1 mr-2">
+              <div className="flex sm:hidden items-center gap-1 mr-1">
                 {selectedCount < totalCount && (
                   <button
                     onClick={onSelectAll}
-                    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
+                    className="px-1.5 py-1.5 min-w-[44px] min-h-[44px] flex flex-col gap-0.5 items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
                     title="Select all"
                     aria-label="Select all"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
+                    <span className="text-[11px] leading-none whitespace-nowrap">All</span>
                   </button>
                 )}
               </div>
@@ -133,14 +134,14 @@ export default function BatchPhotoToolbar({
                 // Album view: Show remove from album button
                 <button
                   onClick={onRemoveFromAlbum}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors min-w-[44px] justify-center"
+                  className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors min-w-[44px] justify-center"
                   title="Remove from album"
                   aria-label="Remove from album"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  <span className="hidden sm:inline">Remove</span>
+                  <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Remove</span>
                 </button>
               ) : (
                 // Regular view: Show all action buttons
@@ -149,35 +150,35 @@ export default function BatchPhotoToolbar({
                   {hasAlbums && (
                     <button
                       onClick={onAddToAlbum}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-gray-100 dark:bg-dusk-800 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-700 transition-colors min-w-[44px] justify-center"
+                      className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-gray-100 dark:bg-dusk-800 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-dusk-700 transition-colors min-w-[44px] justify-center"
                       title="Add to album"
                       aria-label="Add to album"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
-                      <span className="hidden sm:inline">Album</span>
+                      <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Album</span>
                     </button>
                   )}
 
                   {/* Link to Entity */}
                   <button
                     onClick={onLinkToEntity}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors min-w-[44px] justify-center"
+                    className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors min-w-[44px] justify-center"
                     title="Link to location, activity, or lodging"
                     aria-label="Link to location, activity, or lodging"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
-                    <span className="hidden sm:inline">Link</span>
+                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Link</span>
                   </button>
 
                   {/* Delete */}
                   <button
                     onClick={onDelete}
                     disabled={isDeleting}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[44px] justify-center"
+                    className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-w-[44px] justify-center"
                     title="Delete selected photos"
                     aria-label="Delete selected photos"
                   >
@@ -191,7 +192,7 @@ export default function BatchPhotoToolbar({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     )}
-                    <span className="hidden sm:inline">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">{isDeleting ? 'Deleting...' : 'Delete'}</span>
                   </button>
                 </>
               )}
@@ -199,14 +200,14 @@ export default function BatchPhotoToolbar({
               {/* Close / Done button */}
               <button
                 onClick={onExitSelectionMode}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 transition-colors ml-1"
+                className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 transition-colors sm:ml-1"
                 title="Exit selection mode"
                 aria-label="Exit selection mode"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span className="hidden sm:inline">Done</span>
+                <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Done</span>
               </button>
             </div>
           </div>

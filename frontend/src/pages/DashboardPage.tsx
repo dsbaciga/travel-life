@@ -142,7 +142,7 @@ export default function DashboardPage() {
           <section
             aria-label="Map"
             className={`lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-7.5rem)] ${
-              mapExpanded ? 'h-[70vh]' : 'h-56'
+              mapExpanded ? 'h-[70vh]' : 'h-80'
             } flex flex-col`}
           >
             <div className="flex-1 min-h-0">
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                   </h2>
                   <Link
                     to={`/trips/${activeTrip.id}`}
-                    className="flex-none text-sm font-medium text-primary-600 dark:text-teal-300 hover:underline"
+                    className="flex-none inline-flex items-center min-h-[44px] -my-2 text-sm font-medium text-primary-600 dark:text-teal-300 hover:underline"
                   >
                     Open trip
                   </Link>

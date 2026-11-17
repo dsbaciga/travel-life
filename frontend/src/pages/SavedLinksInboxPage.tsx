@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "../lib/errors";
 import savedLinkService from "../services/savedLink.service";
 import tripService from "../services/trip.service";
 import {
@@ -86,7 +87,7 @@ export default function SavedLinksInboxPage() {
       toast.success("Link saved — fetching preview");
       refreshData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save link");
+      toast.error(getApiErrorMessage(err, "Failed to save link"));
     } finally {
       setSaving(false);
     }
@@ -142,9 +143,7 @@ export default function SavedLinksInboxPage() {
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to delete links",
-      );
+      toast.error(getApiErrorMessage(err, "Failed to delete links"));
     } finally {
       setIsBulkDeleting(false);
     }
@@ -174,9 +173,7 @@ export default function SavedLinksInboxPage() {
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to delete links",
-      );
+      toast.error(getApiErrorMessage(err, "Failed to delete links"));
     } finally {
       setIsBulkDeleting(false);
     }
@@ -274,7 +271,7 @@ export default function SavedLinksInboxPage() {
           </div>
 
           {links.map((link, index) => (
-            <div key={link.id} className="card flex gap-4">
+            <div key={link.id} className="card flex gap-4 min-w-0">
               {bulkSelection.selectionMode && (
                 <input
                   type="checkbox"
@@ -311,31 +308,31 @@ export default function SavedLinksInboxPage() {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="font-medium text-charcoal dark:text-dusk-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2"
+                  className="font-medium text-charcoal dark:text-dusk-100 hover:text-primary-600 dark:hover:text-gold line-clamp-2 break-words [overflow-wrap:anywhere]"
                 >
                   {savedLinkDisplayTitle(link)}
                 </a>
 
-                <p className="text-xs text-slate dark:text-dusk-400 mt-0.5">
+                <p className="text-xs text-slate dark:text-dusk-400 mt-0.5 break-words [overflow-wrap:anywhere]">
                   {savedLinkHostname(link)}
                   {link.source === "EMAIL" && " · from email"}
                 </p>
 
                 {link.description && (
-                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 line-clamp-2">
+                  <p className="text-sm text-slate dark:text-dusk-400 mt-2 line-clamp-2 break-words [overflow-wrap:anywhere]">
                     {link.description}
                   </p>
                 )}
 
                 {link.notes && (
-                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 italic line-clamp-2">
+                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 italic line-clamp-2 break-words [overflow-wrap:anywhere]">
                     {link.notes}
                   </p>
                 )}
 
                 <div className="flex items-center gap-3 mt-3 flex-wrap">
                   <select
-                    className="input py-1.5 text-sm max-w-[16rem]"
+                    className="input py-1.5 text-base lg:text-sm max-w-[16rem]"
                     value=""
                     disabled={assigning === link.id}
                     onChange={(e) => {

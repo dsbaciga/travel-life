@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 import type { DefaultChecklistStatus, ChecklistType } from '../types/checklist';
 
 interface ChecklistSelectorModalProps {
@@ -61,7 +62,7 @@ export default function ChecklistSelectorModal({
       onClose();
     } catch (error) {
       console.error('Failed to update checklists:', error);
-      alert('Failed to update checklists');
+      toast.error('Failed to update checklists');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,8 +155,8 @@ export default function ChecklistSelectorModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700 flex justify-between items-center">
-          <div className="flex gap-2">
+        <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-dusk-700 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="flex gap-2 items-center justify-center sm:justify-start whitespace-nowrap">
             {filteredChecklists.length > 0 && (
               <>
                 <button
@@ -176,7 +177,7 @@ export default function ChecklistSelectorModal({
               </>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
             <button
               type="button"
               onClick={onClose}

@@ -18,7 +18,7 @@ export interface OfflineIndicatorProps {
  * - Appears when offline with smooth animation
  * - Shows pending changes count if enabled
  * - Styled with Travel Life design (navy/gold colors)
- * - Fixed position at top or bottom of screen
+ * - Fixed position at top (below the navbar) or bottom of screen
  * - Respects reduced motion preferences
  *
  * @example
@@ -63,10 +63,19 @@ export default function OfflineIndicator({
     };
   }, [isOnline, isSlowConnection]);
 
+  // The top banner is fixed under the navbar, so the page content is pushed
+  // down by the banner's height while it shows (see `.offline-banner-top` in index.css).
+  const pushesContent = shouldRender && position === 'top';
+  useEffect(() => {
+    if (!pushesContent) return;
+    document.documentElement.classList.add('offline-banner-top');
+    return () => document.documentElement.classList.remove('offline-banner-top');
+  }, [pushesContent]);
+
   if (!shouldRender) return null;
 
   const positionClasses = position === 'top'
-    ? 'top-0'
+    ? 'top-16 sm:top-20'
     : 'bottom-16 md:bottom-0';
 
   const animationClasses = isVisible

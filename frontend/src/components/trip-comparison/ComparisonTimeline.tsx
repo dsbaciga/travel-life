@@ -63,11 +63,11 @@ export default function ComparisonTimeline({ trips }: ComparisonTimelineProps) {
           </ul>
           <div className="mt-2 flex items-start gap-3">
             <span className="w-32 shrink-0" aria-hidden="true" />
-            <div className="relative h-5 flex-1 border-t border-slate/30 dark:border-warm-gray/30">
+            <div className="relative h-10 sm:h-5 flex-1 border-t border-slate/30 dark:border-warm-gray/30">
               {layout.ticks.map((tick, i) => (
                 <span
                   key={tick.date}
-                  className={`absolute top-1 whitespace-nowrap text-xs text-slate dark:text-warm-gray/70 ${
+                  className={`absolute ${i % 2 === 1 ? 'top-6 sm:top-1' : 'top-1'} whitespace-nowrap text-xs text-slate dark:text-warm-gray/70 ${
                     i === 0 ? '' : i === layout.ticks.length - 1 ? '-translate-x-full' : '-translate-x-1/2'
                   }`}
                   style={{ left: `${tick.left}%` }}

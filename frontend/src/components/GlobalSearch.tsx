@@ -28,9 +28,11 @@ interface GlobalSearchProps {
   compact?: boolean;
   /** Callback when search is closed */
   onClose?: () => void;
+  /** Render inside a full-screen host: focus on mount, results flow in the page instead of floating. */
+  embedded?: boolean;
 }
 
-export default function GlobalSearch({ compact = false, onClose }: GlobalSearchProps) {
+export default function GlobalSearch({ compact = false, onClose, embedded = false }: GlobalSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,13 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
   const queryRef = useRef(query);
   queryRef.current = query;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (embedded) {
+      inputRef.current?.focus();
+      setShowResults(true);
+    }
+  }, [embedded]);
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -296,7 +305,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
             focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky
             focus:border-transparent
             transition-colors duration-200
-            ${compact ? 'text-sm' : 'text-base'}
+            ${compact ? 'text-base lg:text-sm' : 'text-base'}
           `}
         />
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -321,7 +330,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
               </svg>
             </button>
           ) : (
-            <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 dark:text-dusk-300 bg-gray-100 dark:bg-dusk-700 border border-gray-300 dark:border-dusk-600 rounded">
+            <kbd className="[@media(pointer:coarse)]:hidden px-2 py-1 text-xs font-semibold text-gray-600 dark:text-dusk-300 bg-gray-100 dark:bg-dusk-700 border border-gray-300 dark:border-dusk-600 rounded">
               ⌘K
             </kbd>
           )}
@@ -332,7 +341,9 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       {showResults && (query || recentSearches.length > 0) && (
         <div
           ref={resultsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-xl shadow-2xl max-h-96 overflow-y-auto z-[70] animate-slide-in"
+          className={`${
+            embedded ? 'relative' : 'absolute top-full left-0 right-0 max-h-96 overflow-y-auto z-[70]'
+          } mt-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-xl shadow-2xl animate-slide-in`}
         >
           {/* Recent Searches */}
           {!query && recentSearches.length > 0 && (
@@ -406,7 +417,7 @@ export default function GlobalSearch({ compact = false, onClose }: GlobalSearchP
       )}
 
       {/* Click outside to close */}
-      {showResults && (
+      {showResults && !embedded && (
         <div
           className="fixed inset-0 z-[60]"
           aria-hidden="true"

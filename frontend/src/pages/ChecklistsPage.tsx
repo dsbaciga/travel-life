@@ -6,6 +6,7 @@ import type { Trip } from '../types/trip';
 import checklistService from '../services/checklist.service';
 import tripService from '../services/trip.service';
 import ChecklistSelectorModal from '../components/ChecklistSelectorModal';
+import toast from 'react-hot-toast';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 // Import reusable components
@@ -40,7 +41,7 @@ export default function ChecklistsPage() {
       setChecklists(data);
     } catch (err) {
       console.error('Failed to load checklists:', err);
-      alert('Failed to load checklists');
+      toast.error('Failed to load checklists');
     } finally {
       setIsLoading(false);
     }
@@ -79,10 +80,10 @@ export default function ChecklistsPage() {
     try {
       await checklistService.initializeDefaults();
       await loadChecklists();
-      alert('Default checklists initialized successfully!');
+      toast.success('Default checklists initialized successfully!');
     } catch (err) {
       console.error('Failed to initialize defaults:', err);
-      alert('Failed to initialize default checklists. They may already exist.');
+      toast.error('Failed to initialize default checklists. They may already exist.');
     } finally {
       setIsInitializing(false);
     }
@@ -95,12 +96,12 @@ export default function ChecklistsPage() {
       await loadChecklists();
       let message = `Successfully auto-checked ${result.updated} item${result.updated === 1 ? '' : 's'} based on your trips!`;
       if (result.added > 0) {
-        message += `\nAdded ${result.added} new airport${result.added === 1 ? '' : 's'} from your trips to the Airports list.`;
+        message += ` Added ${result.added} new airport${result.added === 1 ? '' : 's'} from your trips to the Airports list.`;
       }
-      alert(message);
+      toast.success(message);
     } catch (err) {
       console.error('Failed to auto-check items:', err);
-      alert('Failed to auto-check items from trips');
+      toast.error('Failed to auto-check items from trips');
     } finally {
       setIsAutoChecking(false);
     }
@@ -125,7 +126,7 @@ export default function ChecklistsPage() {
       await loadChecklists();
     } catch (err) {
       console.error('Failed to create checklist:', err);
-      alert('Failed to create checklist');
+      toast.error('Failed to create checklist');
     }
   };
 
@@ -145,7 +146,7 @@ export default function ChecklistsPage() {
       await loadChecklists();
     } catch (err) {
       console.error('Failed to delete checklist:', err);
-      alert('Failed to delete checklist');
+      toast.error('Failed to delete checklist');
     }
   };
 
@@ -164,12 +165,12 @@ export default function ChecklistsPage() {
       const result = await checklistService.addDefaults(selectedTypes);
       await loadChecklists();
       await loadDefaultsStatus();
-      alert(`Successfully added ${result.added} default checklists`);
+      toast.success(`Successfully added ${result.added} default checklists`);
     } else {
       const result = await checklistService.removeDefaultsByType(selectedTypes);
       await loadChecklists();
       await loadDefaultsStatus();
-      alert(`Successfully removed ${result.removed} default checklists`);
+      toast.success(`Successfully removed ${result.removed} default checklists`);
     }
   };
 

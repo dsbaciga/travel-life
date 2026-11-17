@@ -48,9 +48,9 @@ export default function BulkImportPreviewTable({
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-dusk-600">
-      <table className="min-w-full text-sm">
-        <thead className="bg-stone-50 dark:bg-dusk-800 text-left text-xs uppercase tracking-wide text-stone-500 dark:text-dusk-400">
+    <div className="sm:overflow-x-auto rounded-lg border border-stone-200 dark:border-dusk-600">
+      <table className="block sm:table min-w-full text-sm">
+        <thead className="hidden sm:table-header-group bg-stone-50 dark:bg-dusk-800 text-left text-xs uppercase tracking-wide text-stone-500 dark:text-dusk-400">
           <tr>
             <th className="px-3 py-2 w-10">
               <span className="sr-only">Include</span>
@@ -62,7 +62,7 @@ export default function BulkImportPreviewTable({
             <th className="px-3 py-2">Problems</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-100 dark:divide-dusk-700">
+        <tbody className="block sm:table-row-group divide-y divide-stone-100 dark:divide-dusk-700">
           {rows.map((row) => {
             const isInvalid = row.status === 'invalid';
             const isOff = !isInvalid && excluded.has(row.index);
@@ -70,7 +70,7 @@ export default function BulkImportPreviewTable({
               <tr
                 key={row.index}
                 data-testid={`import-row-${row.index + 1}`}
-                className={
+                className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-3 sm:table-row sm:p-0 ${
                   isInvalid
                     ? 'bg-red-50/60 dark:bg-red-900/10'
                     : isOff
@@ -78,13 +78,13 @@ export default function BulkImportPreviewTable({
                       : row.warnings.length > 0
                         ? 'bg-amber-50/60 dark:bg-amber-900/10'
                         : ''
-                }
+                }`}
               >
-                <td className="px-3 py-2 align-top">
+                <td className="sm:px-3 sm:py-2 align-top">
                   {isInvalid ? null : (
                     <input
                       type="checkbox"
-                      className="h-5 w-5 rounded border-stone-300 text-primary-600 focus:ring-primary-500"
+                      className="h-5 w-5 text-base sm:text-sm rounded border-stone-300 text-primary-600 focus:ring-primary-500"
                       checked={!isOff}
                       disabled={disabled}
                       onChange={() => onToggle(row.index)}
@@ -92,13 +92,22 @@ export default function BulkImportPreviewTable({
                     />
                   )}
                 </td>
-                <td className="px-3 py-2 align-top text-stone-500 dark:text-dusk-400 whitespace-nowrap">{row.index + 1}</td>
+                <td className="sm:px-3 sm:py-2 align-top text-stone-500 dark:text-dusk-400 whitespace-nowrap before:content-['Row_'] sm:before:hidden">{row.index + 1}</td>
                 {cells(row).map((value, i) => (
-                  <td key={columns[i]} className="px-3 py-2 align-top max-w-[16rem] truncate text-stone-800 dark:text-dusk-200" title={value}>
+                  <td
+                    key={columns[i]}
+                    data-label={columns[i]}
+                    className={`align-top text-stone-800 dark:text-dusk-200 break-words [overflow-wrap:anywhere] sm:px-3 sm:py-2 sm:max-w-[16rem] sm:truncate sm:break-normal ${
+                      i === 0
+                        ? 'flex-1 min-w-0 font-medium'
+                        : 'order-2 basis-[calc(50%-0.375rem)] text-xs before:content-[attr(data-label)] before:block before:text-[10px] before:uppercase before:text-stone-400 dark:before:text-dusk-500 sm:basis-auto sm:text-sm sm:before:hidden'
+                    } ${i > 0 && !value ? 'hidden sm:table-cell' : 'sm:table-cell'}`}
+                    title={value}
+                  >
                     {value}
                   </td>
                 ))}
-                <td className="px-3 py-2 align-top min-w-[16rem]">
+                <td className="order-1 basis-full align-top sm:order-none sm:basis-auto sm:px-3 sm:py-2 sm:min-w-[16rem]">
                   {row.errors.map((e, i) => (
                     <p key={`e${i}`} className="text-red-700 dark:text-red-400">
                       <span className="font-medium">Error</span>

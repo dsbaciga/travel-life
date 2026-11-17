@@ -93,7 +93,7 @@ export default function TransportationCard({
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 break-words [overflow-wrap:anywhere]">
                 {typeDisplay}
                 {transportation.carrier && (
                   <span className="text-gray-500 dark:text-dusk-400 font-normal">

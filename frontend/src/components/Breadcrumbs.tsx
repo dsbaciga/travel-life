@@ -62,7 +62,7 @@ export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps)
                 <Link
                   to={item.href}
                   onClick={item.onClick}
-                  className="text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-accent-400 hover:underline transition-colors truncate"
+                  className="text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-accent-400 hover:underline transition-colors truncate [@media(pointer:coarse)]:py-3"
                   title={item.label}
                 >
                   {item.label}

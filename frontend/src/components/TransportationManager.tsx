@@ -39,6 +39,9 @@ import CostCurrencyFields from "./CostCurrencyFields";
 import BookingFields from "./BookingFields";
 import FlightRouteMap from "./FlightRouteMap";
 import TransportationStats from "./TransportationStats";
+import ExpandableText from "./shared/ExpandableText";
+import FormModalFooter from "./shared/FormModalFooter";
+import { chainedLegTimes } from "../utils/transportChaining";
 import LocationQuickAdd from "./LocationQuickAdd";
 import BulkActionBar from "./BulkActionBar";
 import BulkEditModal, { type BulkEditField } from "./BulkEditModal";
@@ -355,9 +358,11 @@ function TransportationItem({
         {transportation.notes && (
           <div className="mt-2">
             <span className="font-medium">Notes:</span>
-            <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
-              {stripMarkdown(transportation.notes)}
-            </p>
+            <div className="sm:hidden">
+              <ExpandableText className="text-gray-600 dark:text-dusk-400 mt-1">
+                {stripMarkdown(transportation.notes)}
+              </ExpandableText>
+            </div>
             <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
               <MarkdownRenderer content={transportation.notes} compact />
             </div>
@@ -414,6 +419,8 @@ export default function TransportationManager({
   const units = useUnits();
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date");
+  // Statistics start collapsed on phones, where they would push the list far down
+  const [statsOpen, setStatsOpen] = useState(false);
 
   // Compute initial form state with trip start date as default
   const getInitialFormState = useMemo((): TransportationFormFields => {
@@ -651,13 +658,12 @@ export default function TransportationManager({
           const effectiveTz = resolveTz(lastTransport.endTimezone, tripTimezone);
           const arrivalDateTime = convertISOToDateTimeLocal(lastTransport.arrivalTime, effectiveTz);
 
-          // Add 2 hours for connection/layover
-          const arrivalDate = new Date(arrivalDateTime);
-          arrivalDate.setHours(arrivalDate.getHours() + 2);
-
-          // Format as datetime-local
-          const departureDateTime = arrivalDate.toISOString().slice(0, 16).replace('T', 'T');
-          handleChange('departureTime', departureDateTime);
+          // Departure follows the layover; arrival is seeded after it so the pair stays ordered
+          const chained = chainedLegTimes(arrivalDateTime);
+          if (chained) {
+            handleChange('departureTime', chained.departureTime);
+            handleChange('arrivalTime', chained.arrivalTime);
+          }
 
           // A chained departure encodes a real layover buffer, unlike the blank 09:00
           // stub it replaces. Protect it: entering an arrival should not drag the
@@ -1129,7 +1135,24 @@ export default function TransportationManager({
 
       {/* Statistics */}
       {manager.items.length > 0 && (
-        <TransportationStats transportation={manager.items} />
+        <div>
+          <button
+            type="button"
+            onClick={() => setStatsOpen((open) => !open)}
+            aria-expanded={statsOpen}
+            aria-controls="transportation-stats"
+            className="sm:hidden btn btn-secondary w-full text-sm justify-between"
+          >
+            <span>Stats</span>
+            <span aria-hidden="true">{statsOpen ? "▲" : "▼"}</span>
+          </button>
+          <div
+            id="transportation-stats"
+            className={`${statsOpen ? "block mt-3" : "hidden"} sm:block`}
+          >
+            <TransportationStats transportation={manager.items} />
+          </div>
+        </div>
       )}
 
       {/* Filter Tabs */}
@@ -1203,41 +1226,21 @@ export default function TransportationManager({
         icon="🚀"
         formId="transportation-form"
         footer={
-          <div className="flex items-center justify-between w-full gap-4">
-            <DraftIndicator
-              isSaving={draft.isSaving}
-              lastSavedAt={draft.lastSavedAt}
-              show={draft.hasDraft && !manager.editingId}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleCloseForm}
-                disabled={isSubmitting}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              {!manager.editingId && (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => addAnother.submit(document.getElementById('transportation-form'))}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
-                >
-                  Save & Add Another
-                </button>
-              )}
-              <button
-                type="submit"
-                form="transportation-form"
-                className="btn btn-primary disabled:opacity-50"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Transportation`}
-              </button>
-            </div>
-          </div>
+          <FormModalFooter
+            onCancel={handleCloseForm}
+            formId="transportation-form"
+            isSubmitting={isSubmitting}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} Transportation`}
+            isEditMode={!!manager.editingId}
+            onSaveAndAddAnother={() => addAnother.submit(document.getElementById('transportation-form'))}
+            leftContent={
+              <DraftIndicator
+                isSaving={draft.isSaving}
+                lastSavedAt={draft.lastSavedAt}
+                show={draft.hasDraft && !manager.editingId}
+              />
+            }
+          />
         }
       >
         {/* Draft Restore Prompt */}

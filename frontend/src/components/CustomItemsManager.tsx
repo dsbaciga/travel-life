@@ -14,6 +14,7 @@ import EmptyState from "./EmptyState";
 import LinkButton from "./LinkButton";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import CustomItemTypeManager from "./CustomItemTypeManager";
+import ExpandableText from "./shared/ExpandableText";
 import { formatCurrency } from "../utils/formatCurrency";
 
 /**
@@ -293,8 +294,8 @@ export default function CustomItemsManager({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <h2 className="text-xl font-display font-semibold text-charcoal dark:text-dusk-100">
             Custom
           </h2>
@@ -592,9 +593,9 @@ export default function CustomItemsManager({
                     📌
                   </span>
                   <div className="min-w-0">
-                    <p className="font-medium text-charcoal dark:text-dusk-100 line-clamp-2">
+                    <ExpandableText className="font-medium text-charcoal dark:text-dusk-100">
                       {item.name}
-                    </p>
+                    </ExpandableText>
                     <p className="text-xs text-slate dark:text-dusk-400 mt-0.5">
                       {item.type?.name ? `${item.type.name} · ` : ""}
                       {formatWhen(item)}
@@ -632,9 +633,9 @@ export default function CustomItemsManager({
                 )}
 
                 {item.notes && (
-                  <p className="text-sm text-charcoal dark:text-dusk-300 mt-2 line-clamp-2 italic">
+                  <ExpandableText className="text-sm text-charcoal dark:text-dusk-300 mt-2 italic">
                     {item.notes}
-                  </p>
+                  </ExpandableText>
                 )}
 
                 <div className="flex items-center gap-1 mt-3 flex-wrap">

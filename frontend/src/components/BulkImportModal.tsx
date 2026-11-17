@@ -283,7 +283,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
               id="bulk-import-file"
               type="file"
               accept=".csv,text/csv"
-              className="input"
+              className="input text-base sm:text-sm"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) void handleFile(file);
@@ -347,7 +347,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
                   <div>
                     <select
                       id={selectId}
-                      className="input"
+                      className="input text-base sm:text-sm"
                       value={index ?? ''}
                       onChange={(e) =>
                         setMapping((current) => {

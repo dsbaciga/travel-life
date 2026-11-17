@@ -386,10 +386,10 @@ export default function AddPhotosToAlbumModal({
 
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-900/50">
-          <p className="text-sm text-gray-600 dark:text-dusk-400">
+          <p className="hidden sm:block text-sm text-gray-600 dark:text-dusk-400">
             Tip: Hold Shift and click to select a range of photos
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-auto">
             <button onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>

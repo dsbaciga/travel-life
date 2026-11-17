@@ -224,27 +224,6 @@ export default function TripPhotosTab({
           />
         )}
 
-      {/* Mobile Albums Drawer Toggle Button */}
-      <button
-        onClick={() => setShowAlbumsMobileDrawer(true)}
-        className="md:hidden fixed bottom-20 left-6 z-30 p-4 bg-primary-500 dark:bg-gold text-white dark:text-navy-900 rounded-full shadow-lg hover:bg-primary-600 dark:hover:bg-gold/80 transition-colors"
-        aria-label="Open albums"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-          />
-        </svg>
-      </button>
-
       {/* Sidebar Layout */}
       <div className="flex gap-0 bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 overflow-hidden">
         {/* Left: Albums Sidebar */}
@@ -289,6 +268,17 @@ export default function TripPhotosTab({
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              {/* Phones: albums drawer toggle (the sidebar is always visible from md) */}
+              <button
+                type="button"
+                onClick={() => setShowAlbumsMobileDrawer(true)}
+                className="md:hidden px-3 py-2 text-sm rounded whitespace-nowrap flex items-center gap-2 border-2 border-primary-300 dark:border-gold/40 bg-primary-50 dark:bg-gold/10 text-primary-700 dark:text-gold"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Albums
+              </button>
               <button
                 type="button"
                 onClick={() => setShowHighlights((v) => !v)}

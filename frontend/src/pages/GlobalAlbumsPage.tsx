@@ -391,8 +391,8 @@ export default function GlobalAlbumsPage() {
         <LibraryBackLink />
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-sky dark:to-primary-500 flex items-center justify-center shadow-lg">
                 <svg
                   className="w-6 h-6 text-white"
@@ -409,7 +409,7 @@ export default function GlobalAlbumsPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
+                <h1 className="text-2xl sm:text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
                   Photo Albums
                 </h1>
                 {!isInitialLoading && (
@@ -425,7 +425,7 @@ export default function GlobalAlbumsPage() {
             <button
               type="button"
               onClick={() => setShowCreateForm(!showCreateForm)}
-              className="btn btn-primary whitespace-nowrap"
+              className="btn btn-primary whitespace-nowrap self-start sm:self-auto"
             >
               {showCreateForm ? "Cancel" : "+ Create Album"}
             </button>
@@ -667,14 +667,14 @@ export default function GlobalAlbumsPage() {
                     onClick={() => toggleTripCollapse(trip.id)}
                     {...{ "aria-expanded": !isCollapsed }}
                     aria-controls={`${tripSectionIdPrefix}-${trip.id}`}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-primary-50/50 dark:hover:bg-navy-700/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-sky focus-visible:ring-inset"
+                    className="w-full px-4 sm:px-6 py-4 flex items-center justify-between gap-3 hover:bg-primary-50/50 dark:hover:bg-navy-700/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:focus-visible:ring-sky focus-visible:ring-inset"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 dark:from-sky/80 dark:to-primary-500 flex items-center justify-center shadow-md">
                         <span className="text-white text-lg">✈️</span>
                       </div>
-                      <div className="text-left">
-                        <h2 className="text-xl font-semibold text-charcoal dark:text-warm-gray font-display">
+                      <div className="text-left min-w-0">
+                        <h2 className="text-lg sm:text-xl break-words [overflow-wrap:anywhere] font-semibold text-charcoal dark:text-warm-gray font-display">
                           {trip.title}
                         </h2>
                         <p className="text-sm text-slate dark:text-warm-gray/70">
@@ -686,11 +686,11 @@ export default function GlobalAlbumsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
                       <Link
                         to={`/trips/${trip.id}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-sm text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-sky/80 font-medium"
+                        className="text-sm text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-sky/80 font-medium whitespace-nowrap inline-flex items-center min-h-[44px]"
                       >
                         View Trip
                       </Link>

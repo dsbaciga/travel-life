@@ -34,7 +34,7 @@ interface FormModalFooterProps {
  *
  * Supports:
  * - Cancel button (always visible)
- * - Optional "Save & Add Another" button (hidden in edit mode, hidden on mobile)
+ * - Optional "Save & Add Another" button (hidden in edit mode, full-width second row on phones)
  * - Submit button with loading state
  * - Optional left-side content (e.g., DraftIndicator)
  *
@@ -86,12 +86,12 @@ export default function FormModalFooter({
   const showSaveAndAddAnother = !isEditMode && onSaveAndAddAnother;
 
   const buttons = (
-    <div className="flex gap-2 w-full sm:w-auto">
+    <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:flex-nowrap">
       <button
         type="button"
         onClick={onCancel}
         disabled={isSubmitting}
-        className="btn btn-secondary flex-1 sm:flex-none"
+        className="btn btn-secondary flex-1 min-w-0 px-3 sm:px-6 sm:flex-none whitespace-normal sm:whitespace-nowrap"
       >
         Cancel
       </button>
@@ -100,7 +100,7 @@ export default function FormModalFooter({
           type="button"
           disabled={isSubmitting}
           onClick={onSaveAndAddAnother}
-          className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block"
+          className="btn btn-secondary text-sm whitespace-nowrap order-last w-full sm:order-none sm:w-auto"
         >
           Save & Add Another
         </button>
@@ -109,7 +109,7 @@ export default function FormModalFooter({
         type="submit"
         form={formId}
         disabled={isSubmitting}
-        className="btn btn-primary disabled:opacity-50 flex-1 sm:flex-none"
+        className="btn btn-primary disabled:opacity-50 flex-[2] min-w-0 px-3 sm:px-6 sm:flex-none whitespace-normal sm:whitespace-nowrap"
       >
         {isSubmitting ? submittingLabel : submitLabel}
       </button>

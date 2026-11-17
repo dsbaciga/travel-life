@@ -75,7 +75,7 @@ function ChecklistItemRow({
 
   return (
     <label
-      className={`flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer transition-all duration-200
+      className={`flex items-center gap-3 min-w-0 py-2 px-3 rounded-lg cursor-pointer transition-all duration-200
         hover:bg-primary-50/50 dark:hover:bg-navy-700/50
         ${isToggling ? 'opacity-60' : ''}
       `}
@@ -117,7 +117,7 @@ function ChecklistItemRow({
         </div>
       </div>
       <span
-        className={`text-sm font-body transition-all duration-200 ${
+        className={`min-w-0 break-words [overflow-wrap:anywhere] text-sm font-body transition-all duration-200 ${
           item.isChecked
             ? 'text-slate line-through dark:text-warm-gray/60'
             : 'text-charcoal dark:text-warm-gray'

@@ -65,14 +65,14 @@ export default function AgendaList({
               >
                 {item.number}
               </span>
-              <span className="flex-none w-[4.5rem] text-sm tabular-nums text-slate dark:text-dusk-300">
+              <span className="flex-none w-14 sm:w-[4.5rem] text-xs sm:text-sm tabular-nums text-slate dark:text-dusk-300">
                 {time}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-medium text-charcoal dark:text-white truncate">
+                <span className="font-medium text-charcoal dark:text-white line-clamp-3 sm:line-clamp-1 break-words">
                   {item.title}
                 </span>
-                <span className="block text-sm text-slate dark:text-dusk-400 truncate">
+                <span className="text-sm text-slate dark:text-dusk-400 line-clamp-2 sm:line-clamp-1 break-words">
                   {item.subtitle ?? TYPE_LABEL[item.type]}
                   {!item.point && ' · no place set'}
                 </span>

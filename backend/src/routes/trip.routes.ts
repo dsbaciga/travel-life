@@ -6,11 +6,12 @@ import fs from 'fs';
 import { tripController } from '../controllers/trip.controller';
 import { shareController } from '../controllers/share.controller';
 import { authenticate } from '../middleware/auth';
+import { config } from '../config';
 
 const router = Router();
 
 // Temp directory for uploaded cover images before processing
-const TEMP_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'temp');
+const TEMP_UPLOAD_DIR = path.join(path.resolve(config.upload.dir), 'temp');
 
 // Ensure temp directory exists (bind mounts on NAS systems may deny writes — don't
 // crash the server; the upload route will surface the error instead)

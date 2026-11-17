@@ -9,6 +9,33 @@ import FavoriteStarButton from "./FavoriteStarButton";
 import { pushModal, popModal } from "../utils/modalStack";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
+import {
+  classifyRelease,
+  clampPan,
+  distance,
+  DOUBLE_TAP_ZOOM,
+  isDoubleTap,
+  pinchZoom,
+  type Point,
+  type TapRecord,
+} from "../utils/lightboxGestures";
+
+/** History-state marker for the entry the lightbox pushes so Back closes it. */
+const HISTORY_MARKER = "tlLightbox";
+
+interface TouchStart extends Point {
+  time: number;
+  onImage: boolean;
+  onBackdrop: boolean;
+}
+
+interface TouchGesture {
+  pointers: Map<number, Point>;
+  start: TouchStart | null;
+  origin: Point;
+  pinch: { distance: number; zoom: number } | null;
+  lastTap: TapRecord | null;
+}
 
 /**
  * Fetch an Immich original with auth and expose it as a blob URL. `<video src>`
@@ -122,6 +149,25 @@ export default function PhotoLightbox({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isTouching, setIsTouching] = useState(false);
+  const [expandedCaptionId, setExpandedCaptionId] = useState<number | null>(null);
+  const gestureRef = useRef<TouchGesture>({
+    pointers: new Map(),
+    start: null,
+    origin: { x: 0, y: 0 },
+    pinch: null,
+    lastTap: null,
+  });
+  const zoomRef = useRef(1);
+  const positionRef = useRef({ x: 0, y: 0 });
+  const onCloseRef = useRef(onClose);
+  const backdropTapRef = useRef(false);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+    positionRef.current = position;
+    onCloseRef.current = onClose;
+  });
 
   const isVideo = photo.mediaType === 'video';
 
@@ -246,6 +292,30 @@ export default function PhotoLightbox({
     return () => popModal(modalId);
   }, []);
 
+  // Browser Back closes the lightbox instead of leaving the page. The history
+  // entry is pushed after a tick so a StrictMode remount does not push twice.
+  useEffect(() => {
+    let pushed = false;
+    const timer = setTimeout(() => {
+      window.history.pushState({ ...(window.history.state ?? {}), [HISTORY_MARKER]: true }, "");
+      pushed = true;
+    }, 0);
+    const handlePopState = () => {
+      if (!pushed) return;
+      pushed = false;
+      onCloseRef.current();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("popstate", handlePopState);
+      // Closed from the UI while our entry is still current: drop it.
+      if (pushed && window.history.state?.[HISTORY_MARKER]) {
+        window.history.back();
+      }
+    };
+  }, []);
+
   // Auto-hide controls
   useEffect(() => {
     const showControlsTemporarily = () => {
@@ -264,9 +334,12 @@ export default function PhotoLightbox({
 
     const handleMouseMove = () => showControlsTemporarily();
     document.addEventListener("mousemove", handleMouseMove);
+    // Touch screens have no mouse movement; any touch brings the controls back.
+    document.addEventListener("pointerdown", handleMouseMove);
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("pointerdown", handleMouseMove);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
@@ -294,6 +367,105 @@ export default function PhotoLightbox({
     setIsDragging(false);
   };
 
+  // Touch gestures (the mouse keeps its own drag-to-pan above): swipe to
+  // navigate, double-tap to zoom, pinch to zoom, drag to pan when zoomed.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "touch" || isVideo) return;
+    const g = gestureRef.current;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Capture is best effort; moves still arrive while the finger stays over the container.
+    }
+    backdropTapRef.current = false;
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setIsTouching(true);
+    if (g.pointers.size === 2) {
+      const [a, b] = Array.from(g.pointers.values());
+      g.pinch = { distance: distance(a, b), zoom: zoomRef.current };
+      g.start = null;
+    } else if (g.pointers.size === 1) {
+      g.pinch = null;
+      g.origin = { ...positionRef.current };
+      g.start = {
+        x: e.clientX,
+        y: e.clientY,
+        time: Date.now(),
+        onImage: e.target === imageRef.current,
+        onBackdrop: e.target === e.currentTarget,
+      };
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "touch") return;
+    const g = gestureRef.current;
+    if (!g.pointers.has(e.pointerId)) return;
+    g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const width = imageRef.current?.offsetWidth ?? 0;
+    const height = imageRef.current?.offsetHeight ?? 0;
+    if (g.pointers.size >= 2 && g.pinch) {
+      const [a, b] = Array.from(g.pointers.values());
+      const nextZoom = pinchZoom(g.pinch.zoom, g.pinch.distance, distance(a, b));
+      setZoom(nextZoom);
+      setPosition((prev) => clampPan(prev, nextZoom, width, height));
+    } else if (g.pointers.size === 1 && g.start && zoomRef.current > 1) {
+      setPosition(
+        clampPan(
+          { x: g.origin.x + e.clientX - g.start.x, y: g.origin.y + e.clientY - g.start.y },
+          zoomRef.current,
+          width,
+          height
+        )
+      );
+    }
+  };
+
+  const handlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "touch") return;
+    const g = gestureRef.current;
+    if (!g.pointers.delete(e.pointerId)) return;
+    if (g.pointers.size > 0) {
+      // One finger left after a pinch: it never swipes or taps.
+      g.pinch = null;
+      g.start = null;
+      return;
+    }
+    setIsTouching(false);
+    const start = g.start;
+    g.start = null;
+    g.pinch = null;
+    if (zoomRef.current <= 1.01) {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+    }
+    if (!start || e.type !== "pointerup") return;
+
+    const kind = classifyRelease(e.clientX - start.x, e.clientY - start.y, Date.now() - start.time);
+    if (kind === "swipe-next" || kind === "swipe-prev") {
+      if (zoomRef.current > 1) return;
+      if (kind === "swipe-next") handleNext();
+      else handlePrev();
+      return;
+    }
+    if (kind !== "tap") return;
+
+    const tap: TapRecord = { x: e.clientX, y: e.clientY, time: Date.now() };
+    if (start.onImage && isDoubleTap(g.lastTap, tap)) {
+      g.lastTap = null;
+      if (zoomRef.current > 1) {
+        setZoom(1);
+        setPosition({ x: 0, y: 0 });
+      } else {
+        setZoom(DOUBLE_TAP_ZOOM);
+      }
+      return;
+    }
+    g.lastTap = tap;
+    // Close from the click that follows, not here: closing now would let that click land on the page underneath.
+    backdropTapRef.current = start.onBackdrop && zoomRef.current <= 1;
+  };
+
   const thumbnailUrl = getPhotoUrl(photo);
   // Immich videos: the parent hands us the JPEG thumbnail, which a <video> can't
   // play, so stream the authenticated original instead.
@@ -315,7 +487,15 @@ export default function PhotoLightbox({
       {/* Main image container */}
       <div
         ref={containerRef}
-        className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 flex items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        onClick={(e) => {
+          if (backdropTapRef.current && e.target === e.currentTarget) onClose();
+          backdropTapRef.current = false;
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -343,7 +523,9 @@ export default function PhotoLightbox({
               ref={imageRef}
               src={photoUrl}
               alt={photo.caption || "Photo"}
-              className="max-w-full max-h-full object-contain select-none transition-transform duration-150"
+              className={`max-w-full max-h-full object-contain select-none ${
+                isTouching ? "" : "transition-transform duration-150"
+              }`}
               width={1200}
               height={800}
               style={{
@@ -386,18 +568,31 @@ export default function PhotoLightbox({
 
       {/* Top controls */}
       <div
-        className={`absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent transition-opacity duration-300 ${
+        className={`absolute top-0 left-0 right-0 p-4 pointer-events-none bg-gradient-to-b from-black/70 to-transparent transition-opacity duration-300 ${
           showControls ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="flex justify-between items-start max-w-[1600px] mx-auto">
+        <div className="flex justify-between items-start gap-3 max-w-[1600px] mx-auto">
           {/* Photo info */}
-          <div className="text-white">
+          <div className="text-white min-w-0 flex-1">
             <p className="text-sm font-medium">
               {currentIndex + 1} / {photos.length}
             </p>
             {photo.caption && (
-              <p className="text-sm mt-1 max-w-md truncate">{photo.caption}</p>
+              <button
+                type="button"
+                onClick={() =>
+                  setExpandedCaptionId((id) => (id === photo.id ? null : photo.id))
+                }
+                aria-expanded={expandedCaptionId === photo.id}
+                className={`touch-compact pointer-events-auto max-w-md text-left text-sm mt-1 break-words [overflow-wrap:anywhere] ${
+                  expandedCaptionId === photo.id
+                    ? "block max-h-[40vh] overflow-y-auto"
+                    : "line-clamp-2"
+                }`}
+              >
+                {photo.caption}
+              </button>
             )}
           </div>
 
@@ -405,7 +600,7 @@ export default function PhotoLightbox({
           <button
             type="button"
             onClick={onClose}
-            className="text-white bg-black/50 hover:bg-black/75 rounded-full w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
+            className="text-white bg-black/50 hover:bg-black/75 pointer-events-auto rounded-full w-11 h-11 min-w-[44px] min-h-[44px] flex-shrink-0 flex items-center justify-center transition-colors"
             aria-label="Close lightbox"
           >
             <svg
@@ -481,14 +676,14 @@ export default function PhotoLightbox({
 
       {/* Bottom controls */}
       <div
-        className={`absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${
+        className={`absolute bottom-0 left-0 right-0 p-4 pointer-events-none bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${
           showControls ? "opacity-100" : "opacity-0"
         }`}
       >
         <div className="max-w-[1600px] mx-auto">
           {editMode ? (
             /* Edit mode panel */
-            <div className="bg-white dark:bg-dusk-800 rounded-lg p-4 max-w-lg mx-auto">
+            <div className="pointer-events-auto bg-white dark:bg-dusk-800 rounded-lg p-4 max-w-lg mx-auto">
               {/* Caption field */}
               <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
                 Caption
@@ -579,7 +774,7 @@ export default function PhotoLightbox({
                 </div>
                 {/* Linked entities */}
                 {tripId && (
-                  <div className="mt-2 hidden md:block [&_.mt-3]:mt-1 [&_*]:text-white/90 [&_.text-gray-500]:text-white/60 [&_.dark\\:text-gray-400]:text-white/60 [&_.bg-blue-100]:bg-blue-500/30 [&_.dark\\:bg-blue-900\\/50]:bg-blue-500/30 [&_.bg-green-100]:bg-green-500/30 [&_.dark\\:bg-green-900\\/50]:bg-green-500/30 [&_.bg-purple-100]:bg-purple-500/30 [&_.dark\\:bg-purple-900\\/50]:bg-purple-500/30 [&_.bg-orange-100]:bg-orange-500/30 [&_.dark\\:bg-orange-900\\/50]:bg-orange-500/30 [&_.bg-yellow-100]:bg-yellow-500/30 [&_.dark\\:bg-yellow-900\\/50]:bg-yellow-500/30 [&_.bg-pink-100]:bg-pink-500/30 [&_.dark\\:bg-pink-900\\/50]:bg-pink-500/30 [&_.bg-gray-100]:bg-gray-500/30 [&_.dark\\:bg-gray-700]:bg-gray-500/30 [&_.border-blue-300]:border-blue-400/50 [&_.border-green-300]:border-green-400/50 [&_.border-purple-300]:border-purple-400/50 [&_.border-orange-300]:border-orange-400/50 [&_.border-yellow-300]:border-yellow-400/50 [&_.border-pink-300]:border-pink-400/50 [&_.border-gray-300]:border-gray-400/50 [&_.dark\\:border-blue-700]:border-blue-400/50 [&_.dark\\:border-green-700]:border-green-400/50 [&_.dark\\:border-purple-700]:border-purple-400/50 [&_.dark\\:border-orange-700]:border-orange-400/50 [&_.dark\\:border-yellow-700]:border-yellow-400/50 [&_.dark\\:border-pink-700]:border-pink-400/50 [&_.dark\\:border-gray-600]:border-gray-400/50">
+                  <div className="pointer-events-auto mt-2 hidden md:block [&_.mt-3]:mt-1 [&_*]:text-white/90 [&_.text-gray-500]:text-white/60 [&_.dark\\:text-gray-400]:text-white/60 [&_.bg-blue-100]:bg-blue-500/30 [&_.dark\\:bg-blue-900\\/50]:bg-blue-500/30 [&_.bg-green-100]:bg-green-500/30 [&_.dark\\:bg-green-900\\/50]:bg-green-500/30 [&_.bg-purple-100]:bg-purple-500/30 [&_.dark\\:bg-purple-900\\/50]:bg-purple-500/30 [&_.bg-orange-100]:bg-orange-500/30 [&_.dark\\:bg-orange-900\\/50]:bg-orange-500/30 [&_.bg-yellow-100]:bg-yellow-500/30 [&_.dark\\:bg-yellow-900\\/50]:bg-yellow-500/30 [&_.bg-pink-100]:bg-pink-500/30 [&_.dark\\:bg-pink-900\\/50]:bg-pink-500/30 [&_.bg-gray-100]:bg-gray-500/30 [&_.dark\\:bg-gray-700]:bg-gray-500/30 [&_.border-blue-300]:border-blue-400/50 [&_.border-green-300]:border-green-400/50 [&_.border-purple-300]:border-purple-400/50 [&_.border-orange-300]:border-orange-400/50 [&_.border-yellow-300]:border-yellow-400/50 [&_.border-pink-300]:border-pink-400/50 [&_.border-gray-300]:border-gray-400/50 [&_.dark\\:border-blue-700]:border-blue-400/50 [&_.dark\\:border-green-700]:border-green-400/50 [&_.dark\\:border-purple-700]:border-purple-400/50 [&_.dark\\:border-orange-700]:border-orange-400/50 [&_.dark\\:border-yellow-700]:border-yellow-400/50 [&_.dark\\:border-pink-700]:border-pink-400/50 [&_.dark\\:border-gray-600]:border-gray-400/50">
                     <LinkedEntitiesDisplay
                       tripId={tripId}
                       entityType="PHOTO"
@@ -593,7 +788,7 @@ export default function PhotoLightbox({
               </div>
 
               {/* Zoom and action controls */}
-              <div className="flex items-center gap-2">
+              <div className="pointer-events-auto flex items-center gap-2">
                 {/* Zoom controls - hidden on small screens and for videos */}
                 {!isVideo && (
                 <div className="hidden sm:flex items-center bg-black/50 rounded-lg overflow-hidden">
@@ -798,11 +993,16 @@ export default function PhotoLightbox({
 
       {/* Keyboard shortcuts help (visible on hover of controls) */}
       <div
-        className={`absolute bottom-20 left-1/2 -translate-x-1/2 text-white/60 text-xs text-center transition-opacity duration-300 ${
-          showControls ? "opacity-100" : "opacity-0"
+        className={`absolute bottom-20 left-1/2 -translate-x-1/2 w-max max-w-[calc(100%-2rem)] pointer-events-none text-white/60 text-xs text-center transition-opacity duration-300 [@media(max-height:500px)]:hidden ${
+          showControls && !editMode ? "opacity-100" : "opacity-0"
         }`}
       >
-        <p>← → Navigate &bull; {!isVideo && '+ - Zoom &bull; 0 Reset &bull; '}i Info &bull; ESC Close</p>
+        <p className="[@media(pointer:coarse)]:hidden">
+          ← → Navigate • {!isVideo && "+ - Zoom • 0 Reset • "}i Info • ESC Close
+        </p>
+        <p className="hidden [@media(pointer:coarse)]:block">
+          Swipe to navigate{!isVideo && " · Double-tap to zoom"}
+        </p>
       </div>
 
       {/* Photo Details Panel */}

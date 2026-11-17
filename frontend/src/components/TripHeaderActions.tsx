@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import tripService from '../services/trip.service';
 import { EllipsisVerticalIcon } from './icons';
 import PdfImportButton from './PdfImportButton';
 import PdfUploadModal from './PdfUploadModal';
@@ -11,6 +14,8 @@ interface TripHeaderActionsProps {
   onManageTags: () => void;
   onShare?: () => void;
   onDuplicate: () => void;
+  /** Current archived state; enables the Archive / Unarchive item in the phone menu. */
+  archived?: boolean;
   /** `overlay` styles the trigger for use on top of a cover photo. */
   variant?: 'overlay' | 'plain';
 }
@@ -29,12 +34,28 @@ export default function TripHeaderActions({
   onManageTags,
   onShare,
   onDuplicate,
+  archived,
   variant = 'plain',
 }: TripHeaderActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
   const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const archiveMutation = useMutation({
+    mutationFn: (nextArchived: boolean) => tripService.updateTrip(tripId, { archived: nextArchived }),
+    onSuccess: (_data, nextArchived) => {
+      toast.success(nextArchived ? 'Trip archived.' : 'Trip unarchived.');
+    },
+    onError: () => {
+      toast.error('Failed to update trip.');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+    },
+  });
 
   useEffect(() => {
     if (!isMenuOpen) return;
@@ -106,6 +127,11 @@ export default function TripHeaderActions({
             <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); onDuplicate(); }}>
               Duplicate trip
             </button>
+            {archived !== undefined && (
+              <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); archiveMutation.mutate(!archived); }}>
+                {archived ? 'Unarchive trip' : 'Archive trip'}
+              </button>
+            )}
           </div>
         )}
       </div>

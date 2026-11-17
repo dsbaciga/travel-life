@@ -92,7 +92,7 @@ export default function UpcomingTripsWidget() {
         </div>
         <Link
           to="/trips"
-          className="text-sm text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-sky/80 font-medium transition-colors"
+          className="inline-flex items-center min-h-[44px] -my-2 text-sm text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-sky/80 font-medium transition-colors"
         >
           View All →
         </Link>
@@ -137,7 +137,7 @@ export default function UpcomingTripsWidget() {
                       <h4 className="trip-title-compact text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-sky transition-colors truncate">
                         {trip.title}
                       </h4>
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(trip.status)}`}>
+                      <span className={`flex-none whitespace-nowrap px-2 py-0.5 text-xs font-medium rounded-full border ${getStatusColor(trip.status)}`}>
                         {trip.status}
                       </span>
                     </div>

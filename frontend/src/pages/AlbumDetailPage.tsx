@@ -284,13 +284,15 @@ export default function AlbumDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <div className="max-w-[1600px] mx-auto px-6 py-8">
-        <Breadcrumbs
-          items={[
-            { label: 'Trips', href: '/trips' },
-            { label: trip?.title || 'Trip', href: `/trips/${tripId}` },
-            { label: album.name }
-          ]}
-        />
+        <div className="[@media(pointer:coarse)]:[&_a]:inline-flex [@media(pointer:coarse)]:[&_a]:items-center [@media(pointer:coarse)]:[&_a]:min-h-[44px]">
+          <Breadcrumbs
+            items={[
+              { label: 'Trips', href: '/trips' },
+              { label: trip?.title || 'Trip', href: `/trips/${tripId}` },
+              { label: album.name }
+            ]}
+          />
+        </div>
 
         {isEditMode ? (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
@@ -584,7 +586,7 @@ export default function AlbumDetailPage() {
               </div>
 
               {/* Footer */}
-              <div className="flex justify-between items-center p-6 border-t border-gray-200 dark:border-dusk-700">
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 p-4 sm:p-6 border-t border-gray-200 dark:border-dusk-700">
                 <button
                   type="button"
                   onClick={() => {
@@ -594,11 +596,11 @@ export default function AlbumDetailPage() {
                       setSelectedPhotoIds(new Set(availablePhotos.map(p => p.id)));
                     }
                   }}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium whitespace-nowrap self-start sm:self-auto"
                 >
                   {selectedPhotoIds.size === availablePhotos.length ? "Deselect All" : "Select All"}
                 </button>
-                <div className="flex gap-3">
+                <div className="flex gap-3 justify-end">
                   <button
                     type="button"
                     onClick={() => setShowPhotoSelector(false)}

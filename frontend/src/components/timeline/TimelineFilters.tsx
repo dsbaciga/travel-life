@@ -62,9 +62,9 @@ export default function TimelineFilters({
   return (
     <div className="space-y-2">
       {/* Row 1: Type filters + View controls - all in one row */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
         {/* Type filters - scrollable on mobile */}
-        <div className="flex gap-1.5 overflow-x-auto flex-1 pb-1 -mb-1 scrollbar-hide">
+        <div className="flex gap-1.5 overflow-x-auto flex-1 min-w-0 max-[359px]:basis-full pb-1 -mb-1 scrollbar-hide">
           {(Object.keys(TYPE_CONFIG) as TimelineItemType[]).map((type) => {
             const config = TYPE_CONFIG[type];
             const isActive = visibleTypes.has(type);
@@ -91,7 +91,7 @@ export default function TimelineFilters({
         <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-dusk-700" />
 
         {/* View controls - compact icon buttons */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 max-[359px]:gap-0 max-[359px]:ml-auto flex-shrink-0">
           {/* Expand/Collapse */}
           <button
             type="button"

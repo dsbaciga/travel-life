@@ -138,13 +138,13 @@ export default function DayNavigator({
   }, [isDropdownOpen, focusedIndex, allDates, handleDaySelect]);
 
   return (
-    <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_auto] items-center bg-white dark:bg-dusk-800 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-700 p-3 gap-2">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:grid-cols-[auto_1fr_auto_1fr_auto_auto] items-center bg-white dark:bg-dusk-800 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-700 p-2 sm:p-3 gap-1 sm:gap-2">
       {/* Column 1: Previous Day Button */}
       <button
         type="button"
         onClick={handlePrevious}
         disabled={!canGoBack}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+        className={`flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg transition-colors ${
           canGoBack
             ? 'text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700'
             : 'text-gray-300 dark:text-dusk-600 cursor-not-allowed'
@@ -168,7 +168,7 @@ export default function DayNavigator({
       </button>
 
       {/* Column 2: Weather badge (centered in this column) */}
-      <div className="flex justify-center">
+      <div className="hidden sm:flex justify-center">
         {weather && (
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
             <span className="text-lg">{weather.icon}</span>
@@ -190,7 +190,7 @@ export default function DayNavigator({
       </div>
 
       {/* Column 3: Day Indicator - Clickable dropdown */}
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative min-w-0 justify-self-center" ref={dropdownRef}>
         <button
           ref={setTriggerRefs}
           type="button"
@@ -199,9 +199,9 @@ export default function DayNavigator({
           {...{ 'aria-expanded': isDropdownOpen }}
           aria-haspopup="listbox"
           aria-label={`Day ${currentDay} of ${totalDays}. ${currentDate}. Press Enter to select a different day.`}
-          className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-dusk-800"
+          className="flex flex-col items-center gap-1 px-2 sm:px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-dusk-800"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <span className="text-lg font-bold text-gray-900 dark:text-white">
               Day {currentDay}
             </span>
@@ -283,7 +283,7 @@ export default function DayNavigator({
       </div>
 
       {/* Column 4: Timezone badge (centered in this column) */}
-      <div className="flex justify-center">
+      <div className="hidden sm:flex justify-center">
         {tripTimezone && (
           <div className="hidden sm:flex items-center px-2 py-1 rounded bg-gray-100 dark:bg-dusk-700 text-xs text-gray-500 dark:text-dusk-400">
             {getTimezoneAbbr(tripTimezone)}
@@ -297,7 +297,7 @@ export default function DayNavigator({
           <button
             type="button"
             onClick={onPrint}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 hover:text-gray-900 dark:hover:text-white transition-colors"
             aria-label="Print this day"
             title="Print this day"
           >
@@ -324,7 +324,7 @@ export default function DayNavigator({
         type="button"
         onClick={handleNext}
         disabled={!canGoForward}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+        className={`flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg transition-colors ${
           canGoForward
             ? 'text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700'
             : 'text-gray-300 dark:text-dusk-600 cursor-not-allowed'

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUser, useLogout } from "../store/authStore";
 import { useClearPosition } from "../store/scrollStore";
 import GlobalSearch from "./GlobalSearch";
+import CaptureSheet from "./CaptureSheet";
 import BrandLogo from "./BrandLogo";
 import pdfImportService from "../services/pdfImport.service";
 import savedLinkService from "../services/savedLink.service";
@@ -84,6 +85,8 @@ const Navbar = memo(function Navbar() {
   const clearPosition = useClearPosition();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showCapture, setShowCapture] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const groupRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -155,12 +158,13 @@ const Navbar = memo(function Navbar() {
   // Close mobile menu on route change
   useEffect(() => {
     setShowMobileMenu(false);
+    setShowSearch(false);
     setOpenGroup(null);
   }, [location.pathname]);
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {
-    if (showMobileMenu) {
+    if (showMobileMenu || showSearch) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -168,7 +172,7 @@ const Navbar = memo(function Navbar() {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [showMobileMenu]);
+  }, [showMobileMenu, showSearch]);
 
   if (!user) return null;
 
@@ -297,6 +301,18 @@ const Navbar = memo(function Navbar() {
 
           {/* Right Side: User Menu + Mobile Toggle */}
           <div className="flex items-center space-x-2">
+            {/* Search entry point below md, where the inline search is hidden */}
+            <button
+              type="button"
+              onClick={() => setShowSearch(true)}
+              className="md:hidden p-3 min-w-[44px] min-h-[44px] rounded-lg text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors flex items-center justify-center"
+              aria-label="Search"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
             {/* User Menu (Desktop) */}
             {/* Must stay below the mobile overlay (z-[60]) and drawer (z-[70]); they
                 share this nav's stacking context, so a higher value here would
@@ -407,6 +423,34 @@ const Navbar = memo(function Navbar() {
         they were sized to the 64px navbar instead of the screen (a short drawer with
         its link list squashed to nothing, and no dimming over the page).
       */}
+      {/* Full-screen search for phones */}
+      {showSearch && (
+        <div
+          className="fixed inset-0 z-[80] md:hidden bg-white dark:bg-navy-900 overflow-y-auto overscroll-contain px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search"
+        >
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <GlobalSearch embedded onClose={() => setShowSearch(false)} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSearch(false)}
+              className="min-w-[44px] min-h-[44px] rounded-lg text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors flex items-center justify-center"
+              aria-label="Close search"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <CaptureSheet isOpen={showCapture} onClose={() => setShowCapture(false)} />
+
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
         <div
@@ -454,8 +498,22 @@ const Navbar = memo(function Navbar() {
             </button>
           </div>
 
+          {/* On short (landscape) screens the links and user block scroll together; taller screens keep the user block pinned. */}
+          <div className="flex-1 min-h-0 flex flex-col [@media(max-height:520px)]:overflow-y-auto">
           {/* Mobile Navigation Links */}
-          <nav className="flex-1 py-4 px-2 space-y-1 bg-white dark:bg-navy-900 overflow-y-auto" aria-label="Menu">
+          <nav className="flex-1 min-h-0 overflow-y-auto [@media(max-height:520px)]:flex-none [@media(max-height:520px)]:overflow-visible py-4 px-2 space-y-1 bg-white dark:bg-navy-900" aria-label="Menu">
+            {/* The bottom tab bar (and its Log button) is hidden from md up */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowMobileMenu(false);
+                setShowCapture(true);
+              }}
+              aria-haspopup="dialog"
+              className="hidden md:block w-full text-left px-4 py-2.5 text-base rounded-lg font-body font-medium text-primary-600 dark:text-gold bg-primary-50 dark:bg-navy-800 hover:bg-primary-100 dark:hover:bg-navy-700 transition-colors"
+            >
+              Log
+            </button>
             {navLinks.map((link) => (
               <div key={link.path}>
                 <NavLink
@@ -486,7 +544,7 @@ const Navbar = memo(function Navbar() {
           </nav>
 
           {/* Mobile User Section */}
-          <div className="flex-shrink-0 border-t border-primary-500/10 dark:border-gold/20 p-4 bg-white dark:bg-navy-900">
+          <div className="flex-none mt-auto border-t border-primary-500/10 dark:border-gold/20 p-4 bg-white dark:bg-navy-900">
             <div className="flex items-center space-x-3 mb-3 px-2">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 flex items-center justify-center">
                 <span className="text-white font-medium text-sm">
@@ -519,6 +577,7 @@ const Navbar = memo(function Navbar() {
             >
               Logout
             </button>
+          </div>
           </div>
         </div>
       </div>
