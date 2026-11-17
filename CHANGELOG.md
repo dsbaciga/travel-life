@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The Immich library browser is usable on phones again. Its search and filters used to be pinned above the photos and filled the whole screen; they now scroll with the photo grid, the filters sit behind a **Filters** toggle on small screens, and the search row no longer runs off the edge. Landscape phones, where the grid was pushed off-screen entirely, are fixed too.
+
 ## [8.0.0] - 2026-11-16
 
 A feature release: expense splitting, a multi-city route planner, trip comparison, CSV import, loyalty programs, photo favorites, Today mode and a much larger Immich integration. It also includes everything in 7.3.1, which was never tagged.
