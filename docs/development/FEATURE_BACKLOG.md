@@ -2237,14 +2237,48 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 **Description**: A backup is a single JSON file. It records the upload paths of photos and expense receipts but not the image bytes, so restoring onto a server that has lost its uploads volume leaves photos and receipts without images.
 
+**Design agreed 2026-11-16**: keep the trip backup as it is (small, pointers only) and back the files up separately, so the JSON does not balloon.
+
 **Features**:
-- Option to include the image files (photos, thumbnails, receipt images) in the backup, for example as a zip archive with the JSON inside
-- Restore writes the files back to the uploads volume and re-attaches them
-- Size estimate before downloading, and a way to leave the images out
+- A scheduled, incremental media backup that copies each uploaded file (photos, thumbnails, covers, avatars, receipt images) into the backup directory once; uploaded files have generated names and are not edited in place, so later runs copy only new files
+- A manifest per run (path, size, checksum) so a restore can tell a missing file from a corrupt one
+- Files deleted in the app are kept in the media backup for a retention period, so an older trip backup can still find its images
+- Two-step restore: restore the trip backup as today, then "restore media" copies back any referenced file missing from the uploads volume
+- Optional "Download media" zip for moving to another server
+- Immich-linked photos are out of scope: they live in Immich and only the link is backed up
 
-**Current State**: restore re-attaches a photo or receipt only when its file is still on the uploads volume, and reports how many it could not.
+**Current State**: restore re-attaches a receipt only when its file is still on the uploads volume, and reports how many it could not (`receiptsNotRestored`). Photos are not checked: a restored photo whose file is missing is recreated pointing at nothing, with no warning. That gap is small and independent of the rest of this item.
 
-**Status**: Not started
+**Status**: Not started, deferred by decision on 2026-11-16. For the production deployment a snapshot or replication task on the TrueNAS uploads dataset already covers the image files. Build this if backups need to be portable, to reach an S3 target (the unfinished part of #115), or to work without ZFS.
+
+### Open follow-ups from the 2026-11-16 batch
+
+Recorded when the batch (#11, #13, #22, #27, #70, #97, #100, #109, #116, #117, #120, #122) was submitted as PR #214. None of these blocks the features; each is either an unverified path or a known gap.
+
+**Not yet verified**:
+- No new screen has been opened in a browser; phone layout and dark mode are unchecked
+- #70 has never run against a live Immich server. The fake-Immich steps in `tools/release-verify/batch-nov-2026-smoke.cjs` are written but skipped, because the backend refuses a loopback Immich URL unless started with `ALLOW_PRIVATE_INTEGRATION_URLS=true`. The smart-search request and response fields are assumptions; the album filter may be ignored or rejected by some Immich versions
+- #120 and #122 have never called a real model. Receipt scan needs a model that accepts images; HEIC uploads are untested
+- The seven migrations were applied to an empty throwaway database only, not to the development or production database
+
+**Known gaps**:
+- Trip duplication does not copy route stops (#13) or expenses, so splits and receipts are not copied either. It does carry photo favorites and loyalty links
+- The server-generated reasons in packing suggestions are written in Fahrenheit and do not follow the Units setting
+- The mobile companion app does not know about splits, stops, loyalty programs, receipt images or the Units setting
+- #100: stars changed on another device do not show until the Photos tab is reopened; an unstarred photo stays in Highlights until the list refreshes
+- #109: the timeline quick-edit modal has no loyalty program field (it leaves the existing link unchanged)
+- #120: the Day Plan tab and the trip dashboard's "Day by day" widget have no add-journal actions
+- #27: importing the same CSV twice creates the rows again if the flagged duplicates are left ticked (they are unticked by default); files that are not UTF-8 are not re-decoded
+- #11: a shared trip owned by a user with a different base currency is restated at the latest exchange rate, not each expense's own rate
+- Receipts, photos and covers are written under `cwd/uploads` and ignore `UPLOAD_DIR`, while the static file server honours it. Harmless with the Docker default
+- A replace-mode restore still nulls `llmBaseUrl`, `llmModel` and `immichApiUrl` when the backup does not carry them
+- `DailyView.journalActions.test.tsx` DJA-001 was given a longer timeout after timing out under full-suite load; not confirmed to be only an environment effect
+
+**Decisions taken** (2026-11-16):
+- Loyalty membership numbers are stored unmasked in backups, unlike travel-document numbers, so that a restore can bring them back
+- The Units setting defaults to imperial for anyone who has not chosen
+- Trip duplication keeps photo favorites and loyalty links
+- The receipt restore keeps its current ownership check (backups are HMAC-signed, so a receipt path cannot be forged without `ALLOW_UNSIGNED_BACKUP_RESTORE`); a stricter rule would break restoring onto a fresh database
 
 ---
 
@@ -2421,7 +2455,7 @@ Ideas from a brainstorm with the owner. Dropped as already shipped: On This Day,
 
 ## Update Log
 
-- **2026-11-16**: Shipped a batch of twelve features built in parallel in isolated worktrees and merged on one integration branch: #11 trip comparison, #13 multi-city route planner (with a new per-user Units setting, imperial or metric, defaulting to imperial), #22 recently viewed trips, #27 CSV import, #70 Immich expansion (filtering, bulk link, album sync, opt-in export, smart search), #97 expense splitting and settle-up, #100 photo favorites, #109 loyalty programs, #116 deadlines inside the booking forms, #117 Today mode, #120 day auto-draft journal, and #122 receipt scan with stored receipt images. Seven new migrations: `20261116010000_add_expense_splits`, `20261116020000_add_photo_is_favorite`, `20261116030000_add_loyalty_programs`, `20261116070000_add_expense_receipt_image`, `20261116080000_add_trip_stops`, `20261116100000_add_immich_album_link`, `20261116120000_add_user_measurement_system`. Verification on the merged branch: backend build and 2,681 Jest tests, frontend `tsc -b` and 1,022 Vitest tests, and a 402-step smoke test against a real database all pass. Nothing was tested against a live Immich server or a real LLM (both are mocked), so Immich sync/export/smart search, receipt scan and the AI day draft are unproven end to end. Pre-existing bugs fixed along the way: activity `timezone` and `allDay` were not saved on create; the AI journal summary, enhance and link suggestions ignored a user's own AI key; trip duplication now carries photo favorites and loyalty links; and a replace-mode restore no longer turns a backup with no timezone into `UTC` (it leaves the user's timezone alone). Cross-feature polish: the route planner is read-only for view-only collaborators, trip comparison distances follow the Units setting, an uncommitted deadline row in a booking form is added or blocks the save instead of vanishing, the expense form warns when a split includes someone who has left the trip, the dashboard shows one clock when the Today card has its own, Escape in the Immich export confirmation closes only that dialog, and the backend keeps one copy of the convertible-currency list. Added #127 (self-contained backups: images are not in the backup file)
+- **2026-11-16**: Shipped a batch of twelve features built in parallel in isolated worktrees and merged on one integration branch: #11 trip comparison, #13 multi-city route planner (with a new per-user Units setting, imperial or metric, defaulting to imperial), #22 recently viewed trips, #27 CSV import, #70 Immich expansion (filtering, bulk link, album sync, opt-in export, smart search), #97 expense splitting and settle-up, #100 photo favorites, #109 loyalty programs, #116 deadlines inside the booking forms, #117 Today mode, #120 day auto-draft journal, and #122 receipt scan with stored receipt images. Seven new migrations: `20261116010000_add_expense_splits`, `20261116020000_add_photo_is_favorite`, `20261116030000_add_loyalty_programs`, `20261116070000_add_expense_receipt_image`, `20261116080000_add_trip_stops`, `20261116100000_add_immich_album_link`, `20261116120000_add_user_measurement_system`. Submitted as PR #214. Verification on the merged branch: backend build and 2,683 Jest tests and frontend `tsc -b` and 1,043 Vitest tests pass; against a real database, `api-smoke.cjs` passes 66 of 66 and the new `batch-nov-2026-smoke.cjs` passes 400 of 402 with the two fake-Immich steps skipped. Nothing was tested against a live Immich server or a real LLM (both are mocked), so Immich sync/export/smart search, receipt scan and the AI day draft are unproven end to end. Pre-existing bugs fixed along the way: activity `timezone` and `allDay` were not saved on create; the AI journal summary, enhance and link suggestions ignored a user's own AI key; trip duplication now carries photo favorites and loyalty links; and a replace-mode restore no longer turns a backup with no timezone into `UTC` (it leaves the user's timezone alone). Cross-feature polish: the route planner is read-only for view-only collaborators, trip comparison distances follow the Units setting, an uncommitted deadline row in a booking form is added or blocks the save instead of vanishing, the expense form warns when a split includes someone who has left the trip, the dashboard shows one clock when the Today card has its own, Escape in the Immich export confirmation closes only that dialog, and the backend keeps one copy of the convertible-currency list. Bugs the real-database run found in the new code, all fixed: the expense update response returned empty splits, moving a linked route stop skipped the 50 km check, and trip duplication dropped photo favorites and loyalty links. Added #127 (self-contained backups: images are not in the backup file; design agreed and deferred) and an "Open follow-ups from the 2026-11-16 batch" list after it
 - **2026-11-15**: Full audit of every item without a completed status, checked against the code. Every such item now has a Status line, and partly shipped items have a Verified note listing what is still open. Stale entries corrected: #64 (push shipped), #88 (blank-print bug fixed in `415fcba`), #117, #119, #122 and #123 (were "Not started"; partly built, mostly in the mobile companion app), #34 (video mostly built), #80 (Trip Series), #45 (clustering and location search). Two things found broken rather than missing: the keyboard shortcuts help dialog (#23, #76) and the packing suggestions panel (#119) both exist but are not mounted anywhere. Quick Reference rebuilt: checkmarks match the item statuses, three wrong item numbers fixed, and the missing items added
 - **2026-11-07**: Added #115–#126 (backups, deadline tracker, Today mode, passport check, packing list, journal auto-draft, food log, receipt scan, parking log, data quality, records, share PINs)
 - **2026-07-25 (evening)**: Shipped #96 (multi-currency with FX rates), #102 (opening hours & closure warnings), and #112 (transit & rideshare deep links). Built in parallel in isolated worktrees. Backend +144 tests, frontend +81, zero new failures against the v5.6.0 baseline of 30 pre-existing ones. Note for future verification: `npx tsc --noEmit` in `frontend/` is a **no-op** — the root `tsconfig.json` has `"files": []` with only project references, so it silently checks nothing. Use `npx tsc -b` (which is what `npm run build:strict` already does); the shortcut hid a real type error in this batch
