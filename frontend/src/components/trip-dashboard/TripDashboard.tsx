@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
 import type { Trip } from '../../types/trip';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
@@ -147,6 +148,13 @@ export default function TripDashboard({
   userHomeTimezone,
   className = '',
 }: TripDashboardProps) {
+  const navigate = useNavigate();
+
+  // Checklists are not a trip tab: they live on their own pages.
+  const handleNavigateToChecklists = useCallback(() => {
+    navigate(checklists.length === 1 ? `/checklists/${checklists[0].id}` : '/checklists');
+  }, [navigate, checklists]);
+
   // Calculate counts for stats
   const activitiesCount = activities.length;
   const transportationCount = transportation.length;
@@ -356,7 +364,7 @@ export default function TripDashboard({
                 <ChecklistsWidget
                   checklists={checklists}
                   onToggleItem={onToggleChecklistItem}
-                  onNavigateToChecklists={() => onNavigateToTab('checklists')}
+                  onNavigateToChecklists={handleNavigateToChecklists}
                 />
               )}
             </div>

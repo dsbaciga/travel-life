@@ -5,8 +5,9 @@ import sharp from 'sharp';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
+import { config } from '../config';
 
-const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
+const UPLOADS_ROOT = path.resolve(config.upload.dir);
 const COVER_DIR = path.join(UPLOADS_ROOT, 'covers');
 
 /**

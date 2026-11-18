@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { TripWithColor } from './calendarUtils';
 import { formatTripDates } from '../../../utils/dateFormat';
 import { getAccessToken } from '../../../lib/axios';
 import { getFullAssetUrl } from '../../../lib/config';
+
+// Matches MobileBottomNav: visible below the md breakpoint, h-16 plus its top border.
+const MOBILE_NAV_BREAKPOINT = 768;
+const MOBILE_NAV_HEIGHT = 66;
 
 interface TripPopupProps {
   trip: TripWithColor;
@@ -105,35 +109,29 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
     }
   };
 
-  // Calculate popup position to keep it on screen
-  const getPopupStyle = () => {
-    const popupWidth = 280;
-    const popupHeight = 200;
+  // Keep the popup on screen using its measured height, clear of the phone bottom tab bar.
+  const [popupStyle, setPopupStyle] = useState<{ left: string; top: string }>({
+    left: `${position.x}px`,
+    top: `${position.y + 8}px`,
+  });
+
+  useLayoutEffect(() => {
+    const popupWidth = popupRef.current?.offsetWidth ?? 288;
+    const popupHeight = popupRef.current?.offsetHeight ?? 200;
     const padding = 16;
+    const bottomInset = window.innerWidth < MOBILE_NAV_BREAKPOINT ? MOBILE_NAV_HEIGHT : 0;
+    const maxBottom = window.innerHeight - bottomInset - padding;
 
-    let left = position.x;
+    const left = Math.max(padding, Math.min(position.x, window.innerWidth - popupWidth - padding));
+
     let top = position.y + 8;
-
-    // Adjust if popup would go off right edge
-    if (left + popupWidth > window.innerWidth - padding) {
-      left = window.innerWidth - popupWidth - padding;
-    }
-
-    // Adjust if popup would go off left edge
-    if (left < padding) {
-      left = padding;
-    }
-
-    // Adjust if popup would go off bottom edge
-    if (top + popupHeight > window.innerHeight - padding) {
+    if (top + popupHeight > maxBottom) {
       top = position.y - popupHeight - 8;
     }
+    top = Math.max(padding, Math.min(top, maxBottom - popupHeight));
 
-    return {
-      left: `${left}px`,
-      top: `${top}px`,
-    };
-  };
+    setPopupStyle({ left: `${left}px`, top: `${top}px` });
+  }, [position.x, position.y, coverPhotoUrl, trip.id]);
 
   return (
     <div
@@ -142,7 +140,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
       aria-modal="true"
       aria-labelledby="trip-popup-title"
       className="fixed z-50 w-72 bg-white dark:bg-navy-800 rounded-xl shadow-2xl border border-gray-200 dark:border-navy-700 overflow-hidden animate-scale-in"
-      style={getPopupStyle()}
+      style={popupStyle}
     >
       {/* Cover photo or color bar */}
       {coverPhotoUrl ? (

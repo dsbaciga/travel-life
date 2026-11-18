@@ -18,6 +18,7 @@ import FormSection, { CollapsibleSection } from "./FormSection";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
 import FormModalFooter from "./shared/FormModalFooter";
+import ExpandableText from "./shared/ExpandableText";
 import { createDateTimeFormatter, convertISOToDateTimeLocal, convertDateTimeLocalToISO } from "../utils/timezone";
 import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
 import { useFormFields } from "../hooks/useFormFields";
@@ -1024,7 +1025,7 @@ export default function LodgingManager({
                 {lodging.address && (
                   <div className="flex flex-wrap gap-x-2">
                     <span className="font-medium flex-shrink-0">Address:</span>
-                    <span className="line-clamp-2 sm:line-clamp-none">{lodging.address}</span>
+                    <span className="min-w-0 break-words [overflow-wrap:anywhere]">{lodging.address}</span>
                   </div>
                 )}
 
@@ -1081,9 +1082,11 @@ export default function LodgingManager({
                 {lodging.notes && (
                   <div className="mt-2">
                     <span className="font-medium">Notes:</span>
-                    <p className="text-gray-600 dark:text-dusk-400 mt-1 line-clamp-2 sm:hidden">
-                      {stripMarkdown(lodging.notes)}
-                    </p>
+                    <div className="sm:hidden">
+                      <ExpandableText className="text-gray-600 dark:text-dusk-400 mt-1">
+                        {stripMarkdown(lodging.notes)}
+                      </ExpandableText>
+                    </div>
                     <div className="text-gray-600 dark:text-dusk-400 mt-1 hidden sm:block">
                       <MarkdownRenderer content={lodging.notes} compact />
                     </div>

@@ -262,12 +262,22 @@ export default function TripFormPage() {
     return newErrors;
   };
 
+  /** Brings the first invalid field on screen, clear of the fixed top bar and the sticky Save bar. */
+  const focusFirstInvalidField = (validationErrors: FormErrors) => {
+    const fieldId = (['title', 'endDate'] as const).find((key) => validationErrors[key]);
+    const field = fieldId ? document.getElementById(fieldId) : null;
+    if (!field) return;
+    field.focus({ preventScroll: true });
+    field.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
+      focusFirstInvalidField(validationErrors);
       return;
     }
 
@@ -394,7 +404,7 @@ export default function TripFormPage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="text-blue-600 dark:text-blue-400 hover:underline"
+            className="inline-flex items-center min-h-[44px] text-blue-600 dark:text-blue-400 hover:underline"
           >
             &larr; Back
           </button>
@@ -428,7 +438,7 @@ export default function TripFormPage() {
                 id="title"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className={`input ${errors.title ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
+                className={`input scroll-mt-24 scroll-mb-44 ${errors.title ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
                 placeholder="My Amazing Trip"
                 aria-invalid={!!errors.title}
                 aria-describedby={errors.title ? 'title-error' : undefined}
@@ -525,7 +535,7 @@ export default function TripFormPage() {
                   id="endDate"
                   value={endDate}
                   onChange={(e) => handleEndDateChange(e.target.value)}
-                  className={`input ${errors.endDate ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
+                  className={`input scroll-mt-24 scroll-mb-44 ${errors.endDate ? 'border-red-500 dark:border-red-400 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500' : ''}`}
                   aria-invalid={!!errors.endDate}
                   aria-describedby={errors.endDate ? 'endDate-error' : undefined}
                 />

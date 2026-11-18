@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { Location, CreateLocationInput, UpdateLocationInput, LocationCategory } from "../types/location";
 import locationService from "../services/location.service";
@@ -8,6 +8,7 @@ import DirectionsButton from "./DirectionsButton";
 import { placeFromLocation } from "../lib/itineraryPlaces";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import FormModalFooter from "./shared/FormModalFooter";
 import FormSection from "./FormSection";
 import LocationDisplay from "./LocationDisplay";
 import PhotoPreviewPopover from "./timeline/PhotoPreviewPopover";
@@ -214,7 +215,17 @@ export default function LocationManager({
     }
   };
 
+  // The last name filled in from the map or a search result. A later pick may replace
+  // it, but never a name the user typed.
+  const autoFilledNameRef = useRef<string | null>(null);
+  const nameRef = useRef(values.name);
+  useEffect(() => {
+    nameRef.current = values.name;
+  }, [values.name]);
+  const mapSectionRef = useRef<HTMLDivElement>(null);
+
   const resetForm = useCallback(() => {
+    autoFilledNameRef.current = null;
     reset();
     locationFieldErrors.resetErrors();
     manager.setEditingId(null);
@@ -236,13 +247,19 @@ export default function LocationManager({
     latitude: number;
     longitude: number;
   }) => {
-    handleChange("name", data.name);
+    const currentName = nameRef.current;
+    if (currentName.trim() === "" || currentName === autoFilledNameRef.current) {
+      handleChange("name", data.name);
+      autoFilledNameRef.current = data.name;
+      nameRef.current = data.name;
+    }
     handleChange("address", data.address);
     handleChange("latitude", data.latitude);
     handleChange("longitude", data.longitude);
   };
 
   const handleEdit = (location: Location) => {
+    autoFilledNameRef.current = null;
     handleChange("name", location.name);
     handleChange("address", location.address || "");
     handleChange("notes", location.notes || "");
@@ -711,41 +728,21 @@ export default function LocationManager({
         maxWidth="2xl"
         formId="location-form"
         footer={
-          <div className="flex items-center justify-between w-full gap-4">
-            <DraftIndicator
-              isSaving={draft.isSaving}
-              lastSavedAt={draft.lastSavedAt}
-              show={draft.hasDraft && !manager.editingId}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleCloseForm}
-                disabled={isSubmitting}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              {!manager.editingId && (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => addAnother.submit(document.getElementById('location-form'))}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
-                >
-                  Save & Add Another
-                </button>
-              )}
-              <button
-                type="submit"
-                form="location-form"
-                className="btn btn-primary disabled:opacity-50"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Add"} Location`}
-              </button>
-            </div>
-          </div>
+          <FormModalFooter
+            onCancel={handleCloseForm}
+            formId="location-form"
+            isSubmitting={isSubmitting}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} Location`}
+            isEditMode={!!manager.editingId}
+            onSaveAndAddAnother={() => addAnother.submit(document.getElementById('location-form'))}
+            leftContent={
+              <DraftIndicator
+                isSaving={draft.isSaving}
+                lastSavedAt={draft.lastSavedAt}
+                show={draft.hasDraft && !manager.editingId}
+              />
+            }
+          />
         }
       >
         {/* Draft Restore Prompt */}
@@ -1010,6 +1007,17 @@ export default function LocationManager({
         </form>
       </FormModal>
 
+      {/* Phones: the map sits below the whole list, so offer a way to jump to it. */}
+      {manager.items.length > 0 && (
+        <button
+          type="button"
+          onClick={() => mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="md:hidden mb-4 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg border border-primary-500/30 dark:border-gold/30 text-sm font-medium text-primary-700 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-700"
+        >
+          <span aria-hidden="true">🗺️</span> Show map
+        </button>
+      )}
+
       {/* Locations List */}
       <div className="space-y-4">
         {manager.loading ? (
@@ -1029,7 +1037,7 @@ export default function LocationManager({
 
       {/* Locations Map */}
       {manager.items.length > 0 && (
-        <div className="mt-8 pt-8 border-t border-primary-100 dark:border-gold/20">
+        <div ref={mapSectionRef} className="mt-8 pt-8 border-t border-primary-100 dark:border-gold/20 scroll-mt-32">
           <TripLocationsMap locations={manager.items} />
         </div>
       )}

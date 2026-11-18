@@ -459,7 +459,7 @@ export default function TagsAndCategoriesSection({
         </p>
 
         {/* Add New Category */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-dusk-700 rounded-lg px-3">
             <EmojiPicker
               value={newCategoryEmoji}
@@ -473,12 +473,12 @@ export default function TagsAndCategoriesSection({
             onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
             placeholder="New category name"
             aria-label="New category name"
-            className="input flex-1"
+            className="input flex-1 min-w-[8rem]"
           />
           <button
             onClick={handleAddCategory}
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary w-full sm:w-auto"
           >
             Add Category
           </button>
@@ -494,9 +494,9 @@ export default function TagsAndCategoriesSection({
             categories.map((category, index) => (
               <div
                 key={category.name}
-                className="flex items-center justify-between bg-gray-50 dark:bg-dusk-700 rounded-lg p-3"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-gray-50 dark:bg-dusk-700 rounded-lg p-3"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-1 min-w-0">
                   <div className="flex flex-col">
                     <button
                       onClick={() => handleMoveCategoryUp(index)}
@@ -526,7 +526,7 @@ export default function TagsAndCategoriesSection({
                     }
                   />
                   {editingCategoryName === category.name ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto sm:flex-1 min-w-0">
                       <input
                         type="text"
                         value={editingCategoryNewName}
@@ -539,7 +539,7 @@ export default function TagsAndCategoriesSection({
                           if (e.key === "Escape")
                             handleCancelRenameCategory();
                         }}
-                        className="input flex-1"
+                        className="input basis-full sm:basis-0 flex-1 min-w-0"
                         aria-label="Edit category name"
                         autoFocus
                       />
@@ -561,7 +561,7 @@ export default function TagsAndCategoriesSection({
                   ) : (
                     <button
                       type="button"
-                      className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit"
+                      className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit min-w-0 max-w-full break-words [overflow-wrap:anywhere]"
                       onClick={() => handleStartRenameCategory(category.name)}
                       title="Click to rename"
                     >
@@ -615,7 +615,7 @@ export default function TagsAndCategoriesSection({
         </p>
 
         {/* Add New Trip Type */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-dusk-700 rounded-lg px-3">
             <EmojiPicker
               value={newTripTypeEmoji}
@@ -629,12 +629,12 @@ export default function TagsAndCategoriesSection({
             onKeyDown={(e) => e.key === "Enter" && handleAddTripType()}
             placeholder="New trip type name"
             aria-label="New trip type name"
-            className="input flex-1"
+            className="input flex-1 min-w-[8rem]"
           />
           <button
             onClick={handleAddTripType}
             type="button"
-            className="btn btn-primary"
+            className="btn btn-primary w-full sm:w-auto"
           >
             Add Type
           </button>
@@ -650,9 +650,9 @@ export default function TagsAndCategoriesSection({
             tripTypes.map((tripType, index) => (
               <div
                 key={tripType.name}
-                className="flex items-center justify-between bg-gray-50 dark:bg-dusk-700 rounded-lg p-3"
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-gray-50 dark:bg-dusk-700 rounded-lg p-3"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-1 min-w-0">
                   <div className="flex flex-col">
                     <button
                       onClick={() => handleMoveTripTypeUp(index)}
@@ -682,7 +682,7 @@ export default function TagsAndCategoriesSection({
                     }
                   />
                   {editingTripTypeName === tripType.name ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto sm:flex-1 min-w-0">
                       <input
                         type="text"
                         value={editingTripTypeNewName}
@@ -695,7 +695,7 @@ export default function TagsAndCategoriesSection({
                           if (e.key === "Escape")
                             handleCancelRenameTripType();
                         }}
-                        className="input flex-1"
+                        className="input basis-full sm:basis-0 flex-1 min-w-0"
                         aria-label="Edit trip type name"
                         autoFocus
                       />
@@ -717,7 +717,7 @@ export default function TagsAndCategoriesSection({
                   ) : (
                     <button
                       type="button"
-                      className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit"
+                      className="text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 bg-transparent border-none p-0 text-left font-inherit min-w-0 max-w-full break-words [overflow-wrap:anywhere]"
                       onClick={() => handleStartRenameTripType(tripType.name)}
                       title="Click to rename"
                     >
@@ -904,7 +904,7 @@ export default function TagsAndCategoriesSection({
                   </div>
                 ) : editingTagName === tag.id ? (
                   // Rename mode
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="flex flex-col">
                       <button
                         onClick={() => handleMoveTagUp(index)}
@@ -928,7 +928,7 @@ export default function TagsAndCategoriesSection({
                       </button>
                     </div>
                     <span
-                      className="px-3 py-1 rounded-full text-sm font-medium"
+                      className="px-3 py-1 rounded-full text-sm font-medium max-w-full break-words [overflow-wrap:anywhere]"
                       style={{
                         backgroundColor: tag.color || "#3B82F6",
                         color: tag.textColor || "#FFFFFF",
@@ -944,7 +944,7 @@ export default function TagsAndCategoriesSection({
                         if (e.key === "Enter") handleSaveRenameTag(tag.id);
                         if (e.key === "Escape") handleCancelRenameTag();
                       }}
-                      className="input flex-1"
+                      className="input flex-1 min-w-[10rem]"
                       aria-label="Edit tag name"
                       autoFocus
                     />
@@ -965,8 +965,8 @@ export default function TagsAndCategoriesSection({
                   </div>
                 ) : (
                   // View mode
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="flex flex-col">
                         <button
                           onClick={() => handleMoveTagUp(index)}
@@ -991,7 +991,7 @@ export default function TagsAndCategoriesSection({
                       </div>
                       <button
                         type="button"
-                        className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer bg-transparent border-none p-0"
+                        className="px-3 py-1 rounded-full text-sm font-medium cursor-pointer bg-transparent border-none p-0 min-w-0 max-w-full text-left break-words [overflow-wrap:anywhere]"
                         style={{
                           backgroundColor: tag.color || "#3B82F6",
                           color: tag.textColor || "#FFFFFF",
@@ -1002,7 +1002,7 @@ export default function TagsAndCategoriesSection({
                         {tag.name}
                       </button>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 flex-none">
                       <button
                         onClick={() => handleStartRenameTag(tag)}
                         type="button"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
+import toast from "react-hot-toast";
 import type { Checklist, ChecklistItem } from "../types/checklist";
 import checklistService from "../services/checklist.service";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
@@ -27,7 +28,7 @@ export default function ChecklistDetailPage() {
       setChecklistName(data.name);
     } catch (err) {
       console.error("Failed to load checklist:", err);
-      alert("Failed to load checklist");
+      toast.error("Failed to load checklist");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +46,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update item:", err);
-      alert("Failed to update item");
+      toast.error("Failed to update item");
     }
   };
 
@@ -65,7 +66,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to add item:", err);
-      alert("Failed to add item");
+      toast.error("Failed to add item");
     }
   };
 
@@ -85,7 +86,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to delete item:", err);
-      alert("Failed to delete item");
+      toast.error("Failed to delete item");
     }
   };
 
@@ -100,7 +101,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update checklist name:", err);
-      alert("Failed to update checklist name");
+      toast.error("Failed to update checklist name");
     }
   };
 
@@ -178,11 +179,11 @@ export default function ChecklistDetailPage() {
         aria-label={`Toggle ${item.name}`}
       />
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-gray-900 dark:text-white">
+        <div className="font-medium text-gray-900 dark:text-white break-words [overflow-wrap:anywhere]">
           {item.name}
         </div>
         {item.description && (
-          <div className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
+          <div className="text-sm text-gray-600 dark:text-dusk-400 mt-1 break-words [overflow-wrap:anywhere]">
             {item.description}
           </div>
         )}
@@ -218,32 +219,34 @@ export default function ChecklistDetailPage() {
           <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
               {editingName ? (
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
                   <input
                     type="text"
                     value={checklistName}
                     onChange={(e) => setChecklistName(e.target.value)}
-                    className="input text-3xl font-bold"
+                    className="input text-xl sm:text-3xl font-bold sm:flex-1 min-w-0"
                     autoFocus
                     aria-label="Checklist name"
                     placeholder="Enter checklist name"
                   />
-                  <button onClick={handleSaveName} className="btn btn-primary">
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setEditingName(false);
-                      setChecklistName(checklist.name);
-                    }}
-                    className="btn btn-secondary"
-                  >
-                    Cancel
-                  </button>
+                  <div className="flex gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
+                    <button onClick={handleSaveName} className="btn btn-primary">
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingName(false);
+                        setChecklistName(checklist.name);
+                      }}
+                      className="btn btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex gap-2 items-center min-w-0">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white break-words min-w-0">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white break-words [overflow-wrap:anywhere] min-w-0">
                     {checklist.name}
                   </h1>
                   {!checklist.isDefault && (
@@ -257,7 +260,7 @@ export default function ChecklistDetailPage() {
                 </div>
               )}
               {checklist.description && (
-                <p className="text-gray-600 dark:text-dusk-400 mt-2">
+                <p className="text-gray-600 dark:text-dusk-400 mt-2 break-words [overflow-wrap:anywhere]">
                   {checklist.description}
                 </p>
               )}
@@ -285,7 +288,7 @@ export default function ChecklistDetailPage() {
         </div>
 
         <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-6">
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
             <input
               type="text"
               value={searchQuery}
@@ -294,16 +297,19 @@ export default function ChecklistDetailPage() {
               placeholder="Search items..."
               aria-label="Search checklist items"
             />
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="btn btn-primary"
-            >
-              {showAddForm
-                ? "Cancel"
-                : isAirports
-                  ? "+ Add Airport"
-                  : "+ Add Item"}
-            </button>
+            {/* The inline item form has its own Cancel; the airport picker does not. */}
+            {(isAirports || !showAddForm) && (
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="btn btn-primary"
+              >
+                {showAddForm
+                  ? "Cancel"
+                  : isAirports
+                    ? "+ Add Airport"
+                    : "+ Add Item"}
+              </button>
+            )}
           </div>
 
           {showAddForm && isAirports && (
@@ -368,7 +374,7 @@ export default function ChecklistDetailPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Unchecked Items Column */}
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                   To Do ({unchecked.length})
                 </h2>
@@ -384,7 +390,7 @@ export default function ChecklistDetailPage() {
               </div>
 
               {/* Checked Items Column */}
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                   Completed ({checked.length})
                 </h2>

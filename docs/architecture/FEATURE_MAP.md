@@ -139,6 +139,13 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Toasts | `utils/toast` | `utils/` |
 | Error message extraction | `lib/errors` | `lib/` |
 | Map tiles / config | `useMapTiles`, `utils/mapConfig`, `AppTileLayer` | `hooks/`, `utils/`, `components/` |
+| Stop a map trapping page scroll on touch screens | `map/MapTouchGuard` (child of `MapContainer`) | `components/` |
+| Fit a map to its pins | `utils/placesBounds` | `utils/` |
+| List the calendar days of a trip (date-only, device-zone safe) | `timeline/tripDays` | `components/` |
+| Clamped text with "Show more" | `shared/ExpandableText` | `components/` |
+| Trip row actions menu (edit, archive, delete) | `TripActionsMenu` | `components/` |
+| Safe post-login redirect / auth-page checks | `lib/authRedirect` | `lib/` |
+| Photo viewer touch gestures (swipe, pinch, double-tap) | `utils/lightboxGestures` | `utils/` |
 | Entity type metadata (labels, icons, colors) | `lib/entityConfig` | `lib/` |
 | Maps-app deep links | `lib/mapsDeepLinks`, `useMapsPreferences` | `lib/`, `hooks/` |
 | Loading / empty states | `LoadingSpinner`, `Skeleton`, `SkeletonLoader`, `EmptyState` | `components/` |

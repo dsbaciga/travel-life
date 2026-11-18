@@ -232,7 +232,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4`}
+      className={`fixed inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4 [@media(max-height:480px)]:p-2 [@media(max-height:480px)]:sm:p-2`}
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"
@@ -257,7 +257,7 @@ export default function Modal({
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 sm:p-6 border-b border-primary-100 dark:border-gold/20 flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 sm:p-6 [@media(max-height:480px)]:sm:px-4 [@media(max-height:480px)]:sm:py-1 border-b border-primary-100 dark:border-gold/20 flex-shrink-0">
           <h2
             id={titleId}
             className="text-lg sm:text-xl font-bold text-charcoal dark:text-warm-gray flex items-center gap-2 min-w-0 break-words"
@@ -279,8 +279,8 @@ export default function Modal({
 
         {/* Content */}
         <div
-          className={`flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:p-6 ${
-            footer ? '' : 'pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6'
+          className={`flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:p-6 [@media(max-height:480px)]:sm:p-4 ${
+            footer ? '' : 'pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-6 [@media(max-height:480px)]:sm:pb-4'
           }`}
         >
           {children}
@@ -288,7 +288,7 @@ export default function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="flex flex-wrap justify-center sm:justify-end gap-2 sm:gap-3 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6 border-t border-primary-100 dark:border-gold/20 flex-shrink-0 bg-parchment dark:bg-navy-800/50">
+          <div className="flex flex-wrap justify-center sm:justify-end gap-2 sm:gap-3 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 [@media(max-height:480px)]:sm:px-4 [@media(max-height:480px)]:sm:py-2 border-t border-primary-100 dark:border-gold/20 flex-shrink-0 bg-parchment dark:bg-navy-800/50">
             {footer}
           </div>
         )}

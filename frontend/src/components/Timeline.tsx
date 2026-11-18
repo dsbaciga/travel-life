@@ -30,6 +30,7 @@ import {
   getDateStringInTimezone,
 } from './timeline/index';
 import type { PrintOption } from './timeline/TimelineFilters';
+import { listTripDays, dayKeyForDateOnly } from './timeline/tripDays';
 import type { TimelineItem, TimelineItemType, DayGroup, DayStats, UnscheduledActivityWithLocation } from './timeline/types';
 import { useTripLinkSummary } from '../hooks/useTripLinkSummary';
 import { getEntityKey } from '../types/entityLink';
@@ -788,18 +789,9 @@ const Timeline = ({
             return;
           }
           if (w && w.date) {
-            // Parse the date as a local date to avoid timezone shifts
-            // Weather dates come from the server as ISO strings (e.g., "2025-01-15T00:00:00.000Z")
-            // which when parsed as UTC midnight can shift to the previous day in local timezones.
-            // We need to extract the date parts and create a local noon date to match
-            // how generateAllTripDates creates timeline dates.
-            const dateStr = typeof w.date === 'string'
-              ? w.date.split('T')[0]  // Extract "YYYY-MM-DD" from ISO string
-              : new Date(w.date).toISOString().split('T')[0];
-            const [year, month, day] = dateStr.split('-').map(Number);
-            // Create date at noon local time to match how timeline dates are generated
-            const localDate = new Date(year, month - 1, day, 12, 0, 0);
-            const dateKey = getDateStringInTimezone(localDate, tripTimezone);
+            // Weather dates are calendar days; key them by that day, not by an instant.
+            const dateKey = dayKeyForDateOnly(typeof w.date === 'string' ? w.date : new Date(w.date).toISOString());
+            if (!dateKey) return;
             weatherByDate[dateKey] = w;
           }
         });
@@ -876,41 +868,7 @@ const Timeline = ({
   const generateAllTripDates = (): string[] => {
     if (!tripStartDate || !tripEndDate || !tripTimezone) return [];
 
-    const parseLocalDate = (dateStr: string): { year: number; month: number; day: number } => {
-      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (match) {
-        return {
-          year: parseInt(match[1], 10),
-          month: parseInt(match[2], 10) - 1,
-          day: parseInt(match[3], 10),
-        };
-      }
-      const d = new Date(dateStr);
-      return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
-    };
-
-    const startParts = parseLocalDate(tripStartDate);
-    const endParts = parseLocalDate(tripEndDate);
-
-    const dates: string[] = [];
-    const current = new Date(startParts.year, startParts.month, startParts.day, 12, 0, 0);
-    const endDate = new Date(endParts.year, endParts.month, endParts.day, 12, 0, 0);
-
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tripTimezone,
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-
-    while (current <= endDate) {
-      dates.push(formatter.format(current));
-      current.setDate(current.getDate() + 1);
-      if (dates.length > 1000) break;
-    }
-
-    return dates;
+    return listTripDays(tripStartDate, tripEndDate).map((day) => day.dateKey);
   };
 
   const allTripDates = generateAllTripDates();
@@ -1073,7 +1031,7 @@ const Timeline = ({
     itemDate.setHours(0, 0, 0, 0);
 
     const diffTime = itemDate.getTime() - startDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
     return diffDays + 1;
   };
 
@@ -1342,14 +1300,8 @@ const Timeline = ({
       const weatherByDate: Record<string, WeatherData> = {};
       if (weather && Array.isArray(weather)) {
         weather.forEach((w) => {
-          // Parse the date as a local date to avoid timezone shifts
-          // (same fix as in loadTimelineData)
-          const dateStr = typeof w.date === 'string'
-            ? w.date.split('T')[0]
-            : new Date(w.date).toISOString().split('T')[0];
-          const [year, month, day] = dateStr.split('-').map(Number);
-          const localDate = new Date(year, month - 1, day, 12, 0, 0);
-          const dateKey = getDateStringInTimezone(localDate, tripTimezone);
+          const dateKey = dayKeyForDateOnly(typeof w.date === 'string' ? w.date : new Date(w.date).toISOString());
+          if (!dateKey) return;
           weatherByDate[dateKey] = w;
         });
       }

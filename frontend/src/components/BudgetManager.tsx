@@ -18,6 +18,8 @@ import EmptyState from "./EmptyState";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import { formatDateOnly } from "../utils/timezone";
 import ExpenseSplitFields from "./ExpenseSplitFields";
+import FormModal from "./FormModal";
+import FormModalFooter from "./shared/FormModalFooter";
 import SettleUpPanel from "./SettleUpPanel";
 import {
   buildSplitInput,
@@ -109,6 +111,8 @@ export default function BudgetManager({
   const [viewingReceipt, setViewingReceipt] = useState<{ path: string; title: string } | null>(null);
   // A ref, not state: a second click in the same tick must not save (or upload) twice.
   const submitLock = useRef(false);
+  // Expense notes are clamped to two lines on phones; tapping one expands it.
+  const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!pendingReceipt) {
@@ -339,6 +343,13 @@ export default function BudgetManager({
     setShowExpenseForm(true);
   };
 
+  const toggleNotes = (id: number) =>
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+
   const isScanned = (field: ScannedField) => scannedFields.includes(field);
   const scannedRing = (field: ScannedField) =>
     isScanned(field) ? " ring-2 ring-gold/60" : "";
@@ -500,10 +511,10 @@ export default function BudgetManager({
           />
           <button
             type="button"
-            onClick={showExpenseForm ? closeExpenseForm : openCreateExpenseForm}
+            onClick={openCreateExpenseForm}
             className="btn-primary"
           >
-            {showExpenseForm ? "Cancel" : "+ Add Expense"}
+            + Add Expense
           </button>
         </div>
       </div>
@@ -512,14 +523,14 @@ export default function BudgetManager({
       <div className="bg-parchment dark:bg-navy-700/50 rounded-2xl border border-primary-100 dark:border-gold/20 p-6">
         {!isEditingBudget ? (
           <div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-1">
                   Trip Budget
                 </p>
                 {budget !== null ? (
                   <>
-                    <p className="text-3xl font-bold font-display text-charcoal dark:text-warm-gray">
+                    <p className="text-2xl sm:text-3xl break-words [overflow-wrap:anywhere] font-bold font-display text-charcoal dark:text-warm-gray">
                       {formatCurrency(budget, budgetCurrency)}
                       <span className="text-sm font-body font-normal text-slate dark:text-warm-gray/70 ml-2">
                         {budgetCurrency || displayCurrency}
@@ -544,7 +555,7 @@ export default function BudgetManager({
                   </p>
                 )}
               </div>
-              <div className="flex gap-2 flex-shrink-0">
+              <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
                 <button
                   type="button"
                   onClick={openBudgetEditor}
@@ -567,7 +578,7 @@ export default function BudgetManager({
 
             {/* Progress / remaining indicator */}
             <div className="mt-4">
-              <div className="flex items-baseline justify-between mb-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-2">
                 <span
                   className={`text-lg font-semibold ${
                     isOverBudget
@@ -725,16 +736,16 @@ export default function BudgetManager({
           <h3 className="font-body font-semibold text-lg text-charcoal dark:text-warm-gray mb-3">
             Spending by Category
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {breakdownEntries.map(([category, amount]) => (
               <div
                 key={category}
-                className="bg-white dark:bg-navy-700/50 rounded-xl border border-primary-100 dark:border-gold/20 p-3"
+                className="min-w-0 bg-white dark:bg-navy-700/50 rounded-xl border border-primary-100 dark:border-gold/20 p-3"
               >
                 <p className="text-xs font-medium text-slate dark:text-warm-gray/70 capitalize mb-1">
                   {category}
                 </p>
-                <p className="text-lg font-semibold text-charcoal dark:text-warm-gray">
+                <p className="text-lg font-semibold break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray">
                   {formatCurrency(amount)}
                 </p>
               </div>
@@ -747,15 +758,24 @@ export default function BudgetManager({
       <SettleUpPanel tripId={tripId} />
 
       {/* Expense Form */}
-      {showExpenseForm && (
-        <form
-          onSubmit={handleSubmitExpense}
-          className="bg-white dark:bg-navy-700/50 rounded-2xl border border-primary-100 dark:border-gold/20 p-6 space-y-4 animate-fade-in"
-        >
-          <h3 className="font-body font-semibold text-lg text-charcoal dark:text-warm-gray">
-            {editingExpenseId ? "Edit Expense" : "Add Expense"}
-          </h3>
-
+      <FormModal
+        isOpen={showExpenseForm}
+        onClose={closeExpenseForm}
+        title={editingExpenseId ? "Edit Expense" : "Add Expense"}
+        icon="💰"
+        formId="expense-form"
+        maxWidth="2xl"
+        footer={
+          <FormModalFooter
+            onCancel={closeExpenseForm}
+            formId="expense-form"
+            isSubmitting={isSavingExpense}
+            submitLabel={editingExpenseId ? "Update Expense" : "Add Expense"}
+            isEditMode={!!editingExpenseId}
+          />
+        }
+      >
+        <form id="expense-form" onSubmit={handleSubmitExpense} className="space-y-4">
           {scannedFields.length > 0 && (
             <p
               role="status"
@@ -889,7 +909,7 @@ export default function BudgetManager({
 
           <div>
             <span className="label">Receipt photo</span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {shownReceiptUrl && (
                 <img
                   src={shownReceiptUrl}
@@ -920,25 +940,8 @@ export default function BudgetManager({
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={closeExpenseForm}
-              className="btn-secondary"
-              disabled={isSavingExpense}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary" disabled={isSavingExpense}>
-              {isSavingExpense
-                ? "Saving..."
-                : editingExpenseId
-                ? "Update Expense"
-                : "Add Expense"}
-            </button>
-          </div>
         </form>
-      )}
+      </FormModal>
 
       {/* Expense List */}
       <div>
@@ -961,9 +964,9 @@ export default function BudgetManager({
             {expenses.map((expense) => (
               <div
                 key={expense.id}
-                className="flex items-start justify-between gap-4 bg-white dark:bg-navy-700/50 rounded-xl border border-primary-100 dark:border-gold/20 p-4 hover:shadow-md transition-shadow duration-200"
+                className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 bg-white dark:bg-navy-700/50 rounded-xl border border-primary-100 dark:border-gold/20 p-4 hover:shadow-md transition-shadow duration-200"
               >
-                <div className="min-w-0">
+                <div className="min-w-0 sm:flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-charcoal dark:text-warm-gray break-words">
                       {expense.description}
@@ -981,13 +984,21 @@ export default function BudgetManager({
                       </span>
                     )}
                     {expense.notes && (
-                      <span className="truncate max-w-xs" title={expense.notes}>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotes(expense.id)}
+                        aria-expanded={expandedNotes.has(expense.id)}
+                        title={expense.notes}
+                        className={`touch-compact w-full min-w-0 text-left break-words [overflow-wrap:anywhere] sm:w-auto sm:max-w-xs sm:truncate ${
+                          expandedNotes.has(expense.id) ? "sm:whitespace-normal" : "line-clamp-2 sm:line-clamp-none"
+                        }`}
+                      >
                         {expense.notes}
-                      </span>
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center justify-between gap-3 sm:justify-end sm:flex-shrink-0">
                   <div className="text-right">
                     <span className="block font-semibold text-charcoal dark:text-warm-gray whitespace-nowrap">
                       {formatCurrency(expense.amount, expense.currency)}

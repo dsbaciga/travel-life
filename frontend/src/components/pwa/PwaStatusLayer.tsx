@@ -164,7 +164,7 @@ export default function PwaStatusLayer() {
 
   return (
     <>
-      <OfflineIndicator position="bottom" />
+      <OfflineIndicator position="top" />
 
       {conflicts.length > 0 && (
         <div className="fixed right-4 bottom-20 z-40 md:bottom-4">

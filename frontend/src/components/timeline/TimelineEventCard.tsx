@@ -267,15 +267,15 @@ export default function TimelineEventCard({
   const address: string | null = item.location || null;
 
   return (
-    <div className="timeline-item relative flex gap-3">
+    <div className="timeline-item relative flex gap-2 sm:gap-3">
       {/* Connection line to next item */}
       {showConnectionLine && (
-        <div className="absolute left-5 top-10 h-full w-0.5 border-l-2 border-dashed border-green-400 dark:border-green-500 z-0" />
+        <div className={`absolute ${isCompact ? 'left-[15px] top-8' : 'left-[17px] top-9'} sm:left-5 sm:top-10 h-full w-0.5 border-l-2 border-dashed border-green-400 dark:border-green-500 z-0`} />
       )}
 
       {/* Icon dot */}
       <div
-        className={`flex-shrink-0 ${isCompact ? 'w-10 h-10' : 'w-11 h-11'} rounded-full ${getTypeColor(
+        className={`flex-shrink-0 ${isCompact ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-9 h-9 sm:w-11 sm:h-11'} rounded-full ${getTypeColor(
           item.type
         )} text-white flex items-center justify-center z-10 shadow-md ${
           connectionInfo ? 'ring-2 ring-green-400 dark:ring-green-500' : ''
@@ -288,12 +288,12 @@ export default function TimelineEventCard({
       <div
         className={`group flex-1 bg-white dark:bg-dusk-800 border-l-4 ${getTypeBorderColor(
           item.type
-        )} rounded-lg ${isCompact ? 'p-2.5' : 'p-4'} shadow-sm hover:shadow-md transition-shadow relative border border-gray-200 dark:border-dusk-700 border-l-4 ${
+        )} rounded-lg ${isCompact ? 'p-2.5' : 'p-3 sm:p-4'} shadow-sm hover:shadow-md transition-shadow relative border border-gray-200 dark:border-dusk-700 border-l-4 ${
           connectionInfo ? 'ring-1 ring-green-200 dark:ring-green-800' : ''
         }`}
       >
         {/* Quick action buttons - appear on hover */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 print:hidden">
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity flex gap-1 print:hidden">
           <button
             type="button"
             onClick={(e) => {
@@ -319,7 +319,7 @@ export default function TimelineEventCard({
         </div>
 
         {/* Time row */}
-        <div className={`text-sm text-gray-500 dark:text-dusk-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16`}>
+        <div className={`text-sm text-gray-500 dark:text-dusk-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16 [@media(hover:none)]:pr-24 [@media(hover:none)]:min-h-[36px]`}>
           {/* Desktop: columnar layout for dual timezone */}
           {showDualTime && userTimezone && displayTimezone !== userTimezone ? (
             <>
@@ -352,8 +352,8 @@ export default function TimelineEventCard({
         </div>
 
         {/* Title and subtitle */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-0.5 sm:gap-2">
+          <div className="min-w-0 sm:flex-1">
             <h4 className={`font-semibold text-gray-900 dark:text-white break-words ${isCompact ? 'text-sm' : ''}`}>
               {item.title}
             </h4>

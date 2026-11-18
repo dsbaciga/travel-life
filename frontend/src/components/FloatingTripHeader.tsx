@@ -52,7 +52,7 @@ export default function FloatingTripHeader({ trip, observeRef }: FloatingTripHea
 
   return (
     <div
-      className="fixed top-16 sm:top-20 left-0 right-0 z-30 bg-white/95 dark:bg-dusk-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-dusk-700 shadow-md transform animate-slide-in-down"
+      className="max-sm:hidden [@media(max-height:600px)]:hidden fixed top-16 sm:top-20 left-0 right-0 z-30 bg-white/95 dark:bg-dusk-800/95 backdrop-blur-sm border-b border-gray-200 dark:border-dusk-700 shadow-md transform animate-slide-in-down"
       role="banner"
       aria-label="Trip quick info"
     >
@@ -92,7 +92,7 @@ export default function FloatingTripHeader({ trip, observeRef }: FloatingTripHea
           {/* Right: Edit button */}
           <Link
             to={`/trips/${trip.id}/edit`}
-            className="flex-shrink-0 px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+            className="flex-shrink-0 inline-flex items-center min-h-[44px] px-3 text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
           >
             Edit
           </Link>

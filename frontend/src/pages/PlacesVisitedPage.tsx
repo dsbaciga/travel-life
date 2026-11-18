@@ -108,9 +108,9 @@ export default function PlacesVisitedPage() {
     // The page sits inside <main>, which is already inset by the top navbar and
     // (on mobile) the bottom nav. A full 100vh here pushed the bottom of the
     // map underneath both, so the height subtracts that chrome per breakpoint:
-    // 4rem+4rem mobile, 5rem+4rem at sm, 5rem+0 from md where the bottom nav is
-    // hidden.
-    <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-9rem)] md:h-[calc(100vh-5rem)] flex flex-col">
+    // 4rem+4.25rem(+ safe area) mobile, 5rem+4.25rem at sm, 5rem+0 from md where
+    // the bottom nav is hidden.
+    <div className="h-[calc(100vh-8.25rem)] h-[calc(100dvh-8.25rem-env(safe-area-inset-bottom))] sm:h-[calc(100vh-9.25rem)] sm:h-[calc(100dvh-9.25rem-env(safe-area-inset-bottom))] md:h-[calc(100vh-5rem)] md:h-[calc(100dvh-5rem)] flex flex-col">
       {/* Header — compact on mobile so the map keeps the screen */}
       <div className="bg-white dark:bg-dusk-800 border-b border-gray-200 dark:border-dusk-700 px-4 py-2 md:py-4">
         <div className="max-w-[1600px] mx-auto">
@@ -179,7 +179,7 @@ export default function PlacesVisitedPage() {
         {/* Map */}
         <div className="flex-1 relative z-0">
           {showFavoritesOnly && !favoritesLoading && displayedLocations.length === 0 ? (
-            <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-dusk-900">
+            <div className="h-full flex items-center justify-center bg-gray-50 dark:bg-dusk-900 px-4">
               <EmptyState
                 icon="⭐"
                 message="No favorite locations yet"

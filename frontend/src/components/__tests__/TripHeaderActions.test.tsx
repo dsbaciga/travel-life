@@ -11,6 +11,11 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TripHeaderActions from '../TripHeaderActions';
+import tripService from '../../services/trip.service';
+
+vi.mock('../../services/trip.service', () => ({
+  default: { updateTrip: vi.fn().mockResolvedValue({}) },
+}));
 
 const renderActions = (overrides: Partial<React.ComponentProps<typeof TripHeaderActions>> = {}) => {
   const props = {
@@ -78,6 +83,27 @@ describe('TripHeaderActions phone menu', () => {
 
     expect(props.onDuplicate).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('archives the trip from the menu', async () => {
+    const user = userEvent.setup();
+    renderActions({ archived: false });
+
+    await user.click(screen.getByRole('button', { name: 'Trip actions' }));
+    await user.click(within(screen.getByRole('menu'), 'Archive trip'));
+
+    expect(tripService.updateTrip).toHaveBeenCalledWith(7, { archived: true });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('unarchives an archived trip from the menu', async () => {
+    const user = userEvent.setup();
+    renderActions({ archived: true });
+
+    await user.click(screen.getByRole('button', { name: 'Trip actions' }));
+    await user.click(within(screen.getByRole('menu'), 'Unarchive trip'));
+
+    expect(tripService.updateTrip).toHaveBeenCalledWith(7, { archived: false });
   });
 });
 

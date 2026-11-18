@@ -99,7 +99,7 @@ export default function TripComparisonPage() {
       <main className="max-w-[1600px] mx-auto px-4 py-8">
         <Link
           to="/trips"
-          className="text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-block"
+          className="text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-flex items-center min-h-[44px]"
         >
           ← My Trips
         </Link>

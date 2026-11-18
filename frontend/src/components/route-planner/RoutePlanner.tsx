@@ -142,7 +142,7 @@ function StopRow({
       onMouseLeave={() => onActive(null)}
       onFocus={() => onActive(stop.id)}
       onBlur={() => onActive(null)}
-      className={`flex items-center gap-2 rounded-xl border px-2 py-2 bg-white dark:bg-navy-800 ${
+      className={`flex flex-wrap sm:flex-nowrap items-center gap-2 rounded-xl border px-2 py-2 bg-white dark:bg-navy-800 ${
         active ? 'border-gold ring-1 ring-gold/40' : 'border-primary-500/10 dark:border-navy-700'
       } ${isDragging ? 'shadow-lg opacity-90 relative z-10' : ''}`}
     >
@@ -168,7 +168,8 @@ function StopRow({
         {index + 1}
       </span>
 
-      <div className="min-w-0 flex-1">
+      {/* Below sm the name takes its own line above the controls so it is never squeezed to nothing. */}
+      <div className="min-w-0 order-first basis-full px-1 sm:order-none sm:basis-0 sm:flex-1 sm:px-0">
         <p className="font-medium text-charcoal dark:text-white truncate" title={stop.name}>
           {stop.name}
         </p>
@@ -208,7 +209,7 @@ function StopRow({
             onKeyDown={(e) => {
               if (e.key === 'Enter') e.currentTarget.blur();
             }}
-            className="w-16 min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-2 text-center text-charcoal dark:text-white"
+            className="w-16 min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-2 text-center max-lg:text-base text-charcoal dark:text-white"
           />
           <span aria-hidden="true">nights</span>
         </label>

@@ -9,7 +9,7 @@ interface FoodLogThumbProps {
 }
 
 const DEFAULT_CLASS =
-  "h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-dusk-700";
+  "h-16 w-16 overflow-hidden rounded-lg object-cover border border-gray-200 dark:border-dusk-700";
 
 /**
  * A food photo thumbnail for either kind of photo. Immich thumbnails need an

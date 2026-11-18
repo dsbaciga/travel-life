@@ -22,6 +22,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import axios from 'axios';
 import ffmpeg from 'fluent-ffmpeg';
+import { config } from '../config';
 import {
   verifyTripAccessWithPermission,
   verifyEntityAccessWithPermission,
@@ -30,7 +31,8 @@ import { convertDecimals } from '../services/_shared/decimalConversion';
 import { resolveTimezone, getUserTimezone } from '../services/_shared/timezoneResolution';
 import { cleanupEntityLinks } from '../services/_shared/entityLinkCleanup';
 
-const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
+// Same directory the static `/uploads` handler serves from (UPLOAD_DIR, default ./uploads).
+const UPLOADS_ROOT = path.resolve(config.upload.dir);
 const UPLOAD_DIR = path.join(UPLOADS_ROOT, 'photos');
 const THUMBNAIL_DIR = path.join(UPLOADS_ROOT, 'thumbnails');
 const VIDEO_DIR = path.join(UPLOADS_ROOT, 'videos');
@@ -416,8 +418,7 @@ class PhotoService {
         // DB insert failed after file was already moved - clean up the orphaned files
         try { await fs.unlink(filepath); } catch { /* ignore cleanup errors */ }
         if (thumbnailPathUrl) {
-          const thumbFullPath = path.join(process.cwd(), thumbnailPathUrl);
-          try { await fs.unlink(thumbFullPath); } catch { /* ignore cleanup errors */ }
+          await unlinkStoredUpload(thumbnailPathUrl, 'thumbnail');
         }
         throw dbError;
       }

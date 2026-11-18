@@ -1,7 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useContext } from 'react';
 import { Link } from 'react-router';
-import type { Trip } from '../types/trip';
+import type { Trip, TripStatusType } from '../types/trip';
+import { KANBAN_COLUMNS, KanbanStatusChangeContext } from './kanbanColumns';
 import { formatTripDates, getTripDateStatus } from '../utils/dateFormat';
 
 interface KanbanCardProps {
@@ -26,6 +28,8 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
       trip,
     },
   });
+
+  const changeStatus = useContext(KanbanStatusChangeContext);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -119,6 +123,30 @@ export default function KanbanCard({ trip, coverPhotoUrl, onNavigateAway }: Kanb
               </span>
             )}
           </div>
+        )}
+
+        {/* Status control for touch screens, where drag and drop needs a long press */}
+        {changeStatus && (
+          <select
+            value={trip.status}
+            aria-label={`Move ${trip.title} to another column`}
+            onChange={(e) => {
+              // The page's mutation reports failures with a toast
+              changeStatus(trip.id, e.target.value as TripStatusType).catch(() => undefined);
+            }}
+            // Keep the select from starting a drag
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            className="md:hidden mt-2 w-full rounded-md border border-gray-200 dark:border-dusk-600 bg-gray-50 dark:bg-dusk-600 px-2 py-1.5 text-xs text-gray-700 dark:text-white"
+          >
+            {KANBAN_COLUMNS.map((column) => (
+              <option key={column.status} value={column.status}>
+                {column.label}
+              </option>
+            ))}
+          </select>
         )}
       </div>
     </div>

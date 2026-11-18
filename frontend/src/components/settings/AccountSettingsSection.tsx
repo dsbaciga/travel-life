@@ -360,6 +360,7 @@ export default function AccountSettingsSection({
           onChange={onDietaryPreferencesChange}
           showLabels={true}
           showSelectAll={false}
+          className="max-sm:[&_span.truncate]:whitespace-normal max-sm:[&_span.truncate]:break-words max-sm:[&_span.truncate]:min-w-0"
         />
         <div className="mt-4">
           <button

@@ -3,12 +3,13 @@ import fs from 'fs/promises';
 import path from 'path';
 import prisma from '../config/database';
 import logger from '../config/logger';
+import { config } from '../config';
 import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
 import { assertReceiptImage, normaliseImage } from './receiptScan.service';
 
-const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
+const UPLOADS_ROOT = path.resolve(config.upload.dir);
 const RECEIPT_DIR = path.join(UPLOADS_ROOT, 'receipts');
 const RECEIPT_URL_PREFIX = '/uploads/receipts/';
 

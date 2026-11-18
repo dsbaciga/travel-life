@@ -173,14 +173,16 @@ export default function LoyaltyProgramManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
           Loyalty Programs
         </h2>
+        {programs.length > 0 && (
         <button onClick={openCreateForm} className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
           <span className="sm:hidden">+ Add</span>
           <span className="hidden sm:inline">+ Add Program</span>
         </button>
+        )}
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">

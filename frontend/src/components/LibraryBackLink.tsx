@@ -11,7 +11,7 @@ export default function LibraryBackLink({ className = '' }: { className?: string
   return (
     <Link
       to={LIBRARY_BACK_LINK.href}
-      className={`text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-block ${className}`}
+      className={`text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-flex items-center min-h-[44px] ${className}`}
     >
       {LIBRARY_BACK_LINK.label}
     </Link>

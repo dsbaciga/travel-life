@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Toaster } from 'react-hot-toast';
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Lazy-loaded page components for route-level code splitting
@@ -68,6 +68,16 @@ const maxAge = getMaxCacheAge();
 
 function App() {
   const { initializeAuth, isInitialized, isAuthenticated } = useAuthStore();
+  // Toasts sit below the 64px top bar on phones so they never cover its controls.
+  const [isPhone, setIsPhone] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsPhone(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   // Initialize auth on app mount (handles page refresh)
   useEffect(() => {
@@ -156,7 +166,11 @@ function App() {
           }}
         >
           <ScrollToTop />
-          <Toaster position="top-right" containerClassName="z-[100]" />
+          <Toaster
+            position={isPhone ? 'top-center' : 'top-right'}
+            containerClassName="z-[100]"
+            containerStyle={isPhone && isAuthenticated ? { top: 72 } : undefined}
+          />
           {/* Skip to content link for accessibility */}
           <a href="#main-content" className="skip-link">
             Skip to main content
@@ -169,7 +183,11 @@ function App() {
               hiding the end of every page behind the nav. */}
           <main
             id="main-content"
-            className="pt-16 sm:pt-20 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0"
+            className={
+              isAuthenticated
+                ? 'pt-16 sm:pt-20 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0'
+                : undefined
+            }
             tabIndex={-1}
           >
             <Suspense fallback={<LoadingSpinner.FullPage message="Loading page…" />}>

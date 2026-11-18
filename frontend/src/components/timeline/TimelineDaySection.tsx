@@ -142,7 +142,7 @@ export default function TimelineDaySection({
       />
 
       {/* Day Content - collapsible */}
-      <div className={`${isCompact ? 'p-3' : 'p-4'} ${isCollapsed ? 'hidden print:block' : ''} scroll-mt-48`}>
+      <div className={`${isCompact ? 'p-2 sm:p-3' : 'p-2 sm:p-4'} ${isCollapsed ? 'hidden print:block' : ''} scroll-mt-48`}>
         {items.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-dusk-400">
             <p className="text-sm">No events scheduled for this day</p>
@@ -175,7 +175,7 @@ export default function TimelineDaySection({
             {/* Timeline vertical line container */}
             <div className="relative">
               {/* Vertical timeline line */}
-              <div className="absolute left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dusk-700" />
+              <div className={`absolute ${isCompact ? 'left-[15px]' : 'left-[17px]'} sm:left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dusk-700`} />
 
               {/* Events list */}
               <div className={isCompact ? 'space-y-3' : 'space-y-4'}>

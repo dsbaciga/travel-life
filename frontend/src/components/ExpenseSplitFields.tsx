@@ -82,7 +82,7 @@ export default function ExpenseSplitFields({
   const percentageGap = percentageDifference(state, keys);
 
   return (
-    <fieldset className="sm:col-span-2 rounded-xl border border-primary-100 dark:border-gold/20 p-4 space-y-3">
+    <fieldset className="min-w-0 sm:col-span-2 rounded-xl border border-primary-100 dark:border-gold/20 p-4 space-y-3">
       <legend className="px-1 text-sm font-medium text-slate dark:text-warm-gray/70">
         Split with travel companions
       </legend>
@@ -145,17 +145,17 @@ export default function ExpenseSplitFields({
             {participants.map((p) => {
               const included = state.included[p.key] === true;
               return (
-                <li key={p.key} className="flex items-center gap-3">
+                <li key={p.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <input
                     id={`split-include-${p.key}`}
                     type="checkbox"
                     checked={included}
                     onChange={(e) => toggle(p.key, e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 flex-shrink-0 rounded border-gray-300"
                   />
                   <label
                     htmlFor={`split-include-${p.key}`}
-                    className="flex-1 text-sm text-charcoal dark:text-warm-gray"
+                    className="min-w-0 flex-1 basis-32 break-words [overflow-wrap:anywhere] text-sm text-charcoal dark:text-warm-gray"
                   >
                     {p.label}
                   </label>
@@ -173,7 +173,7 @@ export default function ExpenseSplitFields({
                           amounts: { ...state.amounts, [p.key]: e.target.value },
                         })
                       }
-                      className="input w-28"
+                      className="input w-28 max-w-full"
                       placeholder="0.00"
                     />
                   )}
@@ -193,7 +193,7 @@ export default function ExpenseSplitFields({
                             percentages: { ...state.percentages, [p.key]: e.target.value },
                           })
                         }
-                        className="input w-24"
+                        className="input w-24 max-w-full"
                         placeholder="0"
                       />
                       <span className="text-sm text-slate dark:text-warm-gray/70">%</span>

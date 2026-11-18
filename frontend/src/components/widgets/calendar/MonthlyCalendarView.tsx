@@ -7,6 +7,7 @@ import {
   parseDate,
 } from './calendarUtils';
 import TripPopup from './TripPopup';
+import { formatDateOnly } from '../../../utils/timezone';
 
 interface MonthlyCalendarViewProps {
   year: number;
@@ -170,7 +171,7 @@ export default function MonthlyCalendarView({ year, month, trips }: MonthlyCalen
                       key={`${bar.trip.id}-${weekIndex}`}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${bar.trip.title}: ${bar.trip.startDate} to ${bar.trip.endDate}`}
+                      aria-label={`${bar.trip.title}: ${formatDateOnly(bar.trip.startDate)} to ${formatDateOnly(bar.trip.endDate)}`}
                       className="absolute pointer-events-auto cursor-pointer hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-1 transition-all"
                       style={{
                         left: `calc(${leftPercent}% + 2px)`,

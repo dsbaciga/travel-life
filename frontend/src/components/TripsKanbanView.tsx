@@ -2,7 +2,8 @@ import { useCallback, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -10,7 +11,7 @@ import {
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useState } from 'react';
 import type { Trip, TripStatusType } from '../types/trip';
-import { TripStatus } from '../types/trip';
+import { KANBAN_COLUMNS as COLUMNS, KanbanStatusChangeContext } from './kanbanColumns';
 import KanbanColumn from './KanbanColumn';
 import KanbanCard from './KanbanCard';
 
@@ -22,15 +23,6 @@ interface TripsKanbanViewProps {
   onNavigateAway?: () => void;
 }
 
-// Define column configuration
-const COLUMNS = [
-  { status: TripStatus.DREAM, label: 'Dream', color: '#9333EA' },
-  { status: TripStatus.PLANNING, label: 'Planning', color: '#EAB308' },
-  { status: TripStatus.PLANNED, label: 'Planned', color: '#3B82F6' },
-  { status: TripStatus.IN_PROGRESS, label: 'In Progress', color: '#22C55E' },
-  { status: TripStatus.COMPLETED, label: 'Completed', color: '#6B7280' },
-];
-
 export default function TripsKanbanView({
   trips,
   coverPhotoUrls,
@@ -40,9 +32,17 @@ export default function TripsKanbanView({
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    // Mouse drags after 8px of movement. Touch needs a press-and-hold so a swipe
+    // still scrolls the board.
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
       },
     })
   );
@@ -118,6 +118,7 @@ export default function TripsKanbanView({
   );
 
   return (
+    <KanbanStatusChangeContext.Provider value={onStatusChange}>
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
@@ -153,5 +154,6 @@ export default function TripsKanbanView({
         ) : null}
       </DragOverlay>
     </DndContext>
+    </KanbanStatusChangeContext.Provider>
   );
 }

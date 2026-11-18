@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import MapTouchGuard from '../map/MapTouchGuard';
 import { useMapTiles } from '../../hooks/useMapTiles';
 import type { AgendaItem } from '../../utils/dayAgenda';
 
@@ -119,6 +120,7 @@ export default function AgendaMap({ items, activeKey, onSelect, className = 'h-f
         <TileLayer key={tiles.url} url={tiles.url} attribution={tiles.attribution} maxZoom={tiles.maxZoom} />
         <FitToPoints points={points} />
         <InvalidateOnResize />
+        <MapTouchGuard />
 
         {order.length > 1 && (
           <Polyline

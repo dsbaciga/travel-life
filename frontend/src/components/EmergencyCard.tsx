@@ -519,7 +519,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
             {card.companions.map((companion) => (
               <li key={companion.id} className="py-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0 break-words [overflow-wrap:anywhere]">
                     <p className="font-medium text-charcoal dark:text-warm-gray">
                       {companion.name}
                       {companion.relationship && (

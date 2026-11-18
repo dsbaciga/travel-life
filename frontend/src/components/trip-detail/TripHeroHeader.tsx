@@ -118,8 +118,8 @@ export default function TripHeroHeader({
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70"></div>
           <div className="relative h-full p-4 sm:p-6 flex flex-col justify-between text-white">
             <div className="flex flex-wrap justify-between items-start gap-4">
-              <div className="min-w-0 flex-1 pr-4">
-                <h1 className="trip-title-hero text-white drop-shadow-lg break-words">
+              <div className="min-w-0 flex-1 basis-[16rem] pr-4">
+                <h1 title={trip.title} className="trip-title-hero text-white drop-shadow-lg break-words line-clamp-3 sm:line-clamp-none">
                   {trip.title}
                 </h1>
                 <span
@@ -153,6 +153,7 @@ export default function TripHeroHeader({
                 onManageTags={onManageTags}
                 onShare={onShare}
                 onDuplicate={onDuplicate}
+                archived={trip.archived}
                 variant="overlay"
               />
             </div>
@@ -280,8 +281,8 @@ export default function TripHeroHeader({
       ) : (
         <div className="p-6 relative bg-gradient-to-br from-primary-50/50 to-parchment dark:from-navy-800 dark:to-navy-900 rounded-2xl">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
-            <div className="min-w-0 flex-1 pr-4">
-              <h1 className="trip-title-hero text-charcoal dark:text-warm-gray break-words">
+            <div className="min-w-0 flex-1 basis-[16rem] pr-4">
+              <h1 title={trip.title} className="trip-title-hero text-charcoal dark:text-warm-gray break-words line-clamp-3 sm:line-clamp-none">
                 {trip.title}
               </h1>
               <span
@@ -306,6 +307,7 @@ export default function TripHeroHeader({
               onManageTags={onManageTags}
               onShare={onShare}
               onDuplicate={onDuplicate}
+              archived={trip.archived}
             />
           </div>
 
@@ -334,7 +336,7 @@ export default function TripHeroHeader({
           </button>
 
           {trip.description && (
-            <div className="text-gray-700 dark:text-dusk-300 mb-4">
+            <div className="text-gray-700 dark:text-dusk-300 mb-4 break-words [overflow-wrap:anywhere]">
               <MarkdownRenderer content={trip.description} />
             </div>
           )}

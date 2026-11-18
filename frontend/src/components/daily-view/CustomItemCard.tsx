@@ -76,7 +76,7 @@ export default function CustomItemCard({
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 break-words [overflow-wrap:anywhere]">
                 {item.name}
               </h3>
 
@@ -160,7 +160,7 @@ export default function CustomItemCard({
               href={item.url}
               target="_blank"
               rel="noopener noreferrer nofollow"
-              className="text-blue-600 dark:text-blue-400 hover:underline break-all"
+              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline break-all [@media(pointer:coarse)]:min-h-[44px]"
             >
               {item.url}
             </a>

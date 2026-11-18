@@ -416,11 +416,13 @@ export default function FoodLogManager({
                   return (
                     <li key={`photo-${photo.id}`} className="relative">
                       {thumb ? (
-                        <FoodLogThumb
-                          thumbnailPath={thumb}
-                          source={photo.source}
-                          alt={photo.caption || "Attached photo"}
-                        />
+                        <div className="h-16 w-16 overflow-hidden rounded-lg">
+                          <FoodLogThumb
+                            thumbnailPath={thumb}
+                            source={photo.source}
+                            alt={photo.caption || "Attached photo"}
+                          />
+                        </div>
                       ) : (
                         <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-gray-200 dark:border-dusk-700 text-xs text-gray-500">
                           Photo
@@ -429,7 +431,7 @@ export default function FoodLogManager({
                       <button
                         type="button"
                         onClick={() => setRemovedPhotoIds((prev) => [...prev, photo.id])}
-                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                        className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                         aria-label="Remove photo"
                       >
                         ×
@@ -439,15 +441,17 @@ export default function FoodLogManager({
                 })}
                 {previews.map(({ file, url }) => (
                   <li key={`new-${file.name}-${file.size}-${file.lastModified}`} className="relative">
-                    <img
-                      src={url}
-                      alt={`New photo ${file.name}`}
-                      className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
-                    />
+                    <div className="h-16 w-16 overflow-hidden rounded-lg">
+                      <img
+                        src={url}
+                        alt={`New photo ${file.name}`}
+                        className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setNewFiles((prev) => prev.filter((f) => f !== file))}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                      className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${file.name}`}
                     >
                       ×
@@ -456,16 +460,18 @@ export default function FoodLogManager({
                 ))}
                 {immichAssets.map((asset) => (
                   <li key={`immich-${asset.id}`} className="relative">
-                    <FoodLogThumb
-                      thumbnailPath={immichThumbPath(asset.id)}
-                      source="immich"
-                      alt={`Immich photo ${asset.originalFileName}`}
-                      className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
-                    />
+                    <div className="h-16 w-16 overflow-hidden rounded-lg">
+                      <FoodLogThumb
+                        thumbnailPath={immichThumbPath(asset.id)}
+                        source="immich"
+                        alt={`Immich photo ${asset.originalFileName}`}
+                        className="h-16 w-16 rounded-lg object-cover border-2 border-dashed border-primary-500/50 dark:border-gold/50"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setImmichAssets((prev) => prev.filter((a) => a.id !== asset.id))}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                      className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${asset.originalFileName}`}
                     >
                       ×
@@ -528,7 +534,7 @@ export default function FoodLogManager({
         <div className="space-y-6">
           {groups.map((group) => (
             <section key={group.restaurantName.toLowerCase()}>
-              <h3 className="mb-2 flex items-baseline gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="mb-2 flex items-baseline gap-2 text-lg font-semibold text-gray-900 dark:text-white break-words [overflow-wrap:anywhere]">
                 {group.restaurantName}
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   avg {group.averageRating.toFixed(1)}
@@ -540,8 +546,8 @@ export default function FoodLogManager({
                     key={entry.id}
                     className="flex items-start justify-between gap-4 rounded-xl border border-gray-200 dark:border-dusk-700 p-4"
                   >
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-white">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 dark:text-white break-words [overflow-wrap:anywhere]">
                         {entry.dish}
                         {entry.orderAgain && (
                           <span className="ml-2 text-xs text-green-600 dark:text-green-400">Order again</span>
@@ -551,7 +557,7 @@ export default function FoodLogManager({
                         {ratingStars(entry.rating)}
                       </p>
                       {entry.notes && (
-                        <p className="text-sm text-gray-600 dark:text-dusk-400">{entry.notes}</p>
+                        <p className="text-sm text-gray-600 dark:text-dusk-400 break-words [overflow-wrap:anywhere]">{entry.notes}</p>
                       )}
                       <FoodLogPhotoStrip photos={entry.photos} label={entry.dish} />
                     </div>

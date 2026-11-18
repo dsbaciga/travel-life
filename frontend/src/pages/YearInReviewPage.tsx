@@ -344,7 +344,7 @@ export default function YearInReviewPage() {
                 <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">
                   Where You Went
                 </h2>
-                <div className="h-[420px] rounded-2xl overflow-hidden shadow-lg border-2 border-primary-100 dark:border-gold/20 relative z-0">
+                <div className="h-64 sm:h-[420px] rounded-2xl overflow-hidden shadow-lg border-2 border-primary-100 dark:border-gold/20 relative z-0">
                   <PlacesVisitedMapContainer
                     locations={yearLocations}
                     transportation={yearTransportation}

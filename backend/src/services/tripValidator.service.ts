@@ -517,7 +517,7 @@ class TripValidatorService {
         const current = new Date(checkIn);
         while (current < checkOut) {
           lodgingDays.add(current.toISOString().split('T')[0]);
-          current.setDate(current.getDate() + 1);
+          current.setUTCDate(current.getUTCDate() + 1);
         }
       }
     });
@@ -530,17 +530,19 @@ class TripValidatorService {
       if (!lodgingDays.has(dateKey)) {
         missingDays.push(dateKey);
       }
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     // Create individual issues for each missing day (allows selective dismissal)
     missingDays.forEach(date => {
       const issueKey = date;
       const issueId = this.generateIssueId('missing_lodging', issueKey);
-      const formattedDate = new Date(date).toLocaleDateString('en-US', {
+      // The key is a UTC calendar day; formatting in the server zone would shift it.
+      const formattedDate = new Date(`${date}T00:00:00.000Z`).toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC'
       });
 
       issues.push({
@@ -702,7 +704,7 @@ class TripValidatorService {
       if (!daysWithActivities.has(dateKey)) {
         emptyDays.push(dateKey);
       }
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     if (emptyDays.length > 0) {

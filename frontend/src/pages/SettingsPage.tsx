@@ -151,7 +151,7 @@ export default function SettingsPage() {
       <main className="max-w-[1600px] mx-auto px-6 py-8">
         <Link
           to="/dashboard"
-          className="text-blue-600 dark:text-blue-400 hover:underline mb-6 inline-block"
+          className="text-blue-600 dark:text-blue-400 hover:underline mb-3 inline-flex items-center min-h-[44px]"
         >
           ← Back to Today
         </Link>

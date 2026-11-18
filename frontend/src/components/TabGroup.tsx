@@ -27,6 +27,25 @@ interface TabGroupProps {
   activeTab: string;
   onTabChange: (tabId: string, subTabId?: string) => void;
   className?: string;
+  id?: string;
+}
+
+// Scroll only the strips themselves: scrollIntoView would also scroll the page.
+function revealActive(strip: HTMLElement | null) {
+  const el = strip?.querySelector<HTMLElement>('[data-tab-active="true"]');
+  if (!strip || !el) return;
+  const stripBox = strip.getBoundingClientRect();
+  const box = el.getBoundingClientRect();
+  if (box.left < stripBox.left) {
+    strip.scrollLeft += box.left - stripBox.left;
+  } else if (box.right > stripBox.right) {
+    strip.scrollLeft += box.right - stripBox.right;
+  }
+}
+
+
+function isTabActiveId(tab: TabGroupItem, activeTab: string): boolean {
+  return tab.id === activeTab || !!tab.subTabs?.some((sub) => sub.id === activeTab);
 }
 
 export default function TabGroup({
@@ -34,6 +53,7 @@ export default function TabGroup({
   activeTab,
   onTabChange,
   className = "",
+  id,
 }: TabGroupProps) {
   const [expandedTab, setExpandedTab] = useState<string | null>(activeTab);
 
@@ -67,11 +87,32 @@ export default function TabGroup({
 
   // Keep the active tab reachable without hunting: scroll it into view whenever
   // it changes from elsewhere (URL, sidebar, capture sheet).
+  // The sub-tab strip scrolls the same way, so its active pill is revealed too.
+  const subStripRef = useRef<HTMLDivElement>(null);
+  const [hasSubOverflowRight, setHasSubOverflowRight] = useState(false);
+
+  const updateSubOverflow = useCallback(() => {
+    const strip = subStripRef.current;
+    if (!strip) return;
+    setHasSubOverflowRight(strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1);
+  }, []);
+
+  const expandedSubTabsId = tabs.find((t) => t.subTabs && isTabActiveId(t, activeTab))?.id;
+
   useEffect(() => {
-    stripRef.current
-      ?.querySelector<HTMLElement>('[data-tab-active="true"]')
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [activeTab]);
+    revealActive(stripRef.current);
+    revealActive(subStripRef.current);
+    updateOverflow();
+    updateSubOverflow();
+  }, [activeTab, expandedSubTabsId, updateOverflow, updateSubOverflow]);
+
+  useEffect(() => {
+    const strip = subStripRef.current;
+    if (!strip) return;
+    const observer = new ResizeObserver(updateSubOverflow);
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, [updateSubOverflow, expandedSubTabsId]);
 
   // Calculate total count for a tab group
   const getGroupCount = (tab: TabGroupItem): number => {
@@ -119,7 +160,7 @@ export default function TabGroup({
   };
 
   return (
-    <div className={`bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-primary-500/10 dark:border-gold/20 overflow-hidden ${className}`}>
+    <div id={id} className={`bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-2xl shadow-lg border-2 border-primary-500/10 dark:border-gold/20 overflow-hidden ${className}`}>
       <div>
         {/* Main Tab Navigation — scrolls horizontally on narrow screens rather
             than collapsing to a dropdown, so every destination stays one tap
@@ -184,7 +225,12 @@ export default function TabGroup({
           return (
             <div
               key={`${tab.id}-subtabs`}
-              className="flex items-center gap-1 px-4 py-2 bg-parchment/50 dark:bg-navy-900/50 border-b border-primary-100 dark:border-gold/15 overflow-x-auto scrollbar-hide"
+              className="relative bg-parchment dark:bg-navy-900 border-b border-primary-100 dark:border-gold/15"
+            >
+            <div
+              ref={subStripRef}
+              onScroll={updateSubOverflow}
+              className="flex items-center gap-1 px-4 py-2 overflow-x-auto scrollbar-hide"
             >
               {tab.subTabs.map((subTab) => {
                 const isSubActive = subTab.id === activeTab;
@@ -219,6 +265,13 @@ export default function TabGroup({
                   </button>
                 );
               })}
+            </div>
+            {hasSubOverflowRight && (
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-parchment dark:from-navy-900 to-transparent"
+                aria-hidden="true"
+              />
+            )}
             </div>
           );
         })}

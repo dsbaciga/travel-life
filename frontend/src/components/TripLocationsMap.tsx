@@ -14,6 +14,7 @@ import '../utils/mapUtils'; // Ensure leaflet icons are set up
 
 // Import reusable components
 import EmptyState from './EmptyState';
+import MapTouchGuard from './map/MapTouchGuard';
 
 // Import themed map tiles hook
 import { useMapTiles } from '../hooks/useMapTiles';
@@ -130,7 +131,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
         </span>
       </div>
 
-      <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 shadow-lg relative z-0">
+      <div className="h-64 sm:h-80 md:h-96 lg:h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 shadow-lg relative z-0 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!w-11 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!h-11 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!leading-[44px]">
         <MapContainer
           center={[center.lat, center.lng]}
           zoom={13}
@@ -145,6 +146,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
             maxZoom={tileConfig.maxZoom}
           />
           <MapBounds locations={validLocations} />
+          <MapTouchGuard />
 
           {/* Transportation Routes */}
           {showRoutes && transportations.map((transport) => {

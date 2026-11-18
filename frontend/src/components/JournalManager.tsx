@@ -9,6 +9,7 @@ import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import FormModalFooter from "./shared/FormModalFooter";
 import DraftIndicator from "./DraftIndicator";
 import DraftRestorePrompt from "./DraftRestorePrompt";
 import { useFormFields } from "../hooks/useFormFields";
@@ -478,41 +479,21 @@ export default function JournalManager({
         icon="📔"
         formId="journal-form"
         footer={
-          <div className="flex items-center justify-between w-full gap-4">
-            <DraftIndicator
-              isSaving={draft.isSaving}
-              lastSavedAt={draft.lastSavedAt}
-              show={draft.hasDraft && !manager.editingId}
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleCloseForm}
-                disabled={isSubmitting}
-                className="btn btn-secondary"
-              >
-                Cancel
-              </button>
-              {!manager.editingId && (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => addAnother.submit(document.getElementById('journal-form'))}
-                  className="btn btn-secondary text-sm whitespace-nowrap hidden sm:block disabled:opacity-50"
-                >
-                  Save & Add Another
-                </button>
-              )}
-              <button
-                type="submit"
-                form="journal-form"
-                className="btn btn-primary disabled:opacity-50"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Saving..." : `${manager.editingId ? "Update" : "Create"} Entry`}
-              </button>
-            </div>
-          </div>
+          <FormModalFooter
+            onCancel={handleCloseForm}
+            formId="journal-form"
+            isSubmitting={isSubmitting}
+            submitLabel={`${manager.editingId ? "Update" : "Create"} Entry`}
+            isEditMode={!!manager.editingId}
+            onSaveAndAddAnother={() => addAnother.submit(document.getElementById('journal-form'))}
+            leftContent={
+              <DraftIndicator
+                isSaving={draft.isSaving}
+                lastSavedAt={draft.lastSavedAt}
+                show={draft.hasDraft && !manager.editingId}
+              />
+            }
+          />
         }
       >
         {/* Draft Restore Prompt */}

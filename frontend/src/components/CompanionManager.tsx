@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useManagerCRUD } from '../hooks/useManagerCRUD';
 import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useFormReset } from '../hooks/useFormReset';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import CompanionAvatar from './CompanionAvatar';
 import Modal from './Modal';
 import EmptyState from './EmptyState';
@@ -38,6 +39,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
     itemName: "companion",
   });
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [companions, setCompanions] = useState<Companion[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,6 +140,15 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
   };
 
   const handleUnlinkCompanion = async (companionId: number) => {
+    const companion = manager.items.find((c) => c.id === companionId);
+    const confirmed = await confirm({
+      title: 'Remove from Trip',
+      message: `Remove ${companion?.name ?? 'this companion'} from this trip? They stay in your companions list.`,
+      confirmLabel: 'Remove',
+      variant: 'warning',
+    });
+    if (!confirmed) return;
+
     try {
       await companionService.unlinkCompanionFromTrip(tripId, companionId);
       toast.success('Companion removed from trip');
@@ -176,6 +187,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
 
   return (
     <div className="space-y-6">
+      <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
           Travel Companions

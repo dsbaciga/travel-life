@@ -5,11 +5,12 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { photoController } from '../controllers/photo.controller';
 import { authenticate } from '../middleware/auth';
+import { config } from '../config';
 
 const router = Router();
 
 // Temp directory for uploaded files before processing
-const TEMP_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'temp');
+const TEMP_UPLOAD_DIR = path.join(path.resolve(config.upload.dir), 'temp');
 
 // Track whether uploads are available
 let uploadsAvailable = true;

@@ -137,7 +137,8 @@ export default function TodayMap({
 
           {scope === 'photos' && tripId != null && (
             // PhotosMapView sizes its own map and says so when no photo has a place.
-            <div className="h-full overflow-y-auto">
+            // The empty state is shrunk to the box and drops its icon and hint on phones.
+            <div className="h-full overflow-y-auto [&>.h-96]:h-full [&>.h-96]:p-3 [&>.h-96>svg]:hidden [&>.h-96>p:last-child]:hidden sm:[&>.h-96>svg]:block sm:[&>.h-96>p:last-child]:block">
               <PhotosMapView tripId={tripId} fetchAllPhotos showLegend={false} />
             </div>
           )}

@@ -86,7 +86,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
           <tr className="bg-parchment dark:bg-navy-700">
             <th
               scope="col"
-              className="sticky left-0 z-10 bg-parchment dark:bg-navy-700 px-3 py-3 text-left font-semibold text-charcoal dark:text-warm-gray"
+              className="sticky left-0 z-10 bg-parchment dark:bg-navy-700 max-w-[6rem] sm:max-w-none px-3 py-3 text-left font-semibold text-charcoal dark:text-warm-gray"
             >
               Trip
             </th>
@@ -94,7 +94,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
               <th
                 key={trip.id}
                 scope="col"
-                className="px-3 py-3 text-left font-semibold text-charcoal dark:text-warm-gray min-w-[11rem]"
+                className="px-3 py-3 text-left font-semibold text-charcoal dark:text-warm-gray min-w-[8rem] sm:min-w-[11rem]"
               >
                 <span className="flex items-start gap-2">
                   <span
@@ -106,7 +106,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
                   </span>
                   <Link
                     to={`/trips/${trip.id}`}
-                    className="text-primary-600 dark:text-gold hover:underline"
+                    className="min-w-0 break-words [overflow-wrap:anywhere] text-primary-600 dark:text-gold hover:underline"
                   >
                     {trip.title}
                   </Link>
@@ -120,7 +120,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
             <tr key={row.label} className="border-t border-primary-100 dark:border-gold/10">
               <th
                 scope="row"
-                className="sticky left-0 z-10 bg-white dark:bg-navy-800 px-3 py-2 text-left font-medium text-slate dark:text-warm-gray/80 whitespace-nowrap"
+                className="sticky left-0 z-10 bg-white dark:bg-navy-800 px-3 py-2 text-left font-medium text-slate dark:text-warm-gray/80 max-w-[6rem] sm:max-w-none break-words sm:whitespace-nowrap"
               >
                 {row.label}
               </th>

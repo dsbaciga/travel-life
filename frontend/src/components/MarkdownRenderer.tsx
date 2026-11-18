@@ -11,6 +11,12 @@ interface MarkdownRendererProps {
 const SAFE_URL_PATTERN = /^(https?:|mailto:|tel:|#)/i;
 
 const components: Components = {
+  // A wide table scrolls inside its own box instead of widening the page.
+  table: ({ children }) => (
+    <div className="overflow-x-auto">
+      <table>{children}</table>
+    </div>
+  ),
   a: ({ href, children }) => {
     const safeHref = href && SAFE_URL_PATTERN.test(href) ? href : undefined;
     return (
@@ -37,7 +43,7 @@ export default function MarkdownRenderer({ content, compact = false, className =
   const proseSize = compact ? 'prose-sm' : 'prose-base';
 
   return (
-    <div className={`prose dark:prose-invert max-w-none ${proseSize} ${className}`}>
+    <div className={`prose dark:prose-invert max-w-none break-words [overflow-wrap:anywhere] ${proseSize} ${className}`}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {content}
       </ReactMarkdown>

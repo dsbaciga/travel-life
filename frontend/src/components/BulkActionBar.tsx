@@ -121,6 +121,9 @@ export default function BulkActionBar({
     selectedCount === 1 ? entityLabel : ENTITY_LABELS[entityType].plural;
 
   return (
+    <>
+    {/* Keeps the last item clear of the fixed bar when scrolled to the end. */}
+    <div aria-hidden="true" className="h-32 sm:h-24" />
     <div
       className={`fixed bottom-16 md:bottom-0 left-0 right-0 z-40 transition-transform duration-300 ease-out ${
         isVisible ? 'translate-y-0' : 'translate-y-full'
@@ -262,5 +265,6 @@ export default function BulkActionBar({
         </div>
       </div>
     </div>
+    </>
   );
 }

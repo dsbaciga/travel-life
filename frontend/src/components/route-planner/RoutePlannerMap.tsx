@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import AppTileLayer from '../AppTileLayer';
+import MapTouchGuard from '../map/MapTouchGuard';
 import type { TripStop } from '../../types/tripStop';
 
 interface RoutePlannerMapProps {
@@ -95,7 +96,7 @@ export default function RoutePlannerMap({
 
   return (
     <div
-      className={`${className} rounded-xl overflow-hidden border border-primary-500/10 dark:border-navy-700`}
+      className={`${className} rounded-xl overflow-hidden border border-primary-500/10 dark:border-navy-700 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!w-11 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!h-11 [@media(pointer:coarse)]:[&_.leaflet-bar_a]:!leading-[44px]`}
     >
       <MapContainer
         center={points[0]}
@@ -107,6 +108,7 @@ export default function RoutePlannerMap({
         <AppTileLayer />
         <FitToPoints points={points} />
         <InvalidateOnResize />
+        <MapTouchGuard />
 
         {points.length > 1 && (
           <Polyline

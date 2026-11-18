@@ -150,6 +150,30 @@ export default function TripDetailPage() {
   // Ref for floating header observation
   const tripHeaderRef = useRef<HTMLDivElement>(null);
 
+  // A `?tab=` deep link opens on the tab strip, not on a header that can fill
+  // the first screen of a phone. Runs once, when the trip first renders.
+  const hasScrolledToTabsRef = useRef(false);
+  const tripLoaded = Boolean(trip);
+  useEffect(() => {
+    if (!tripLoaded || hasScrolledToTabsRef.current) return;
+    hasScrolledToTabsRef.current = true;
+    if (!isTabId(searchParams.get("tab"))) return;
+    // Widgets above the tabs finish loading after the first pass and shift
+    // them, so the scroll is repeated once unless the user has scrolled since.
+    let lastTop: number | null = null;
+    const scrollToTabs = () => {
+      const tabs = document.getElementById("trip-tabs");
+      if (!tabs || (lastTop !== null && Math.abs(window.scrollY - lastTop) > 2)) return;
+      // 65px is the fixed navbar; a strip at or above it is already stuck.
+      const top = tabs.getBoundingClientRect().top;
+      if (top <= 65 + 4) return;
+      lastTop = Math.max(0, window.scrollY + top - 65 - 8);
+      window.scrollTo({ top: lastTop });
+    };
+    requestAnimationFrame(scrollToTabs);
+    window.setTimeout(scrollToTabs, 800);
+  }, [tripLoaded, searchParams]);
+
   // Pagination hooks - using paged pagination for memory efficiency
   const photosPagination = usePagedPagination<Photo>(
     async (skip, take) => {
@@ -415,6 +439,7 @@ export default function TripDetailPage() {
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs
+          className="max-sm:[&_a]:inline-flex max-sm:[&_a]:min-h-[44px] max-sm:[&_a]:items-center"
           items={[
             {
               label: "Trips",
@@ -477,12 +502,13 @@ export default function TripDetailPage() {
           >
             {/* Tab Navigation - Mobile always, Desktop only when tabs layout selected */}
             <TabGroup
+              id="trip-tabs"
               tabs={tabGroups}
               activeTab={activeTab}
               onTabChange={(tabId) => {
                 if (isTabId(tabId)) changeTab(tabId);
               }}
-              className={`mb-6 sticky top-28 sm:top-32 bg-cream dark:bg-navy-900 z-20 ${
+              className={`mb-6 sticky top-[65px] sm:top-32 [@media(max-height:600px)]:static bg-cream dark:bg-navy-900 z-20 ${
                 navigationLayout === "sidebar" ? "md:hidden" : ""
               }`}
             />

@@ -26,6 +26,7 @@ import JournalCard from './JournalCard';
 import CustomItemCard from './CustomItemCard';
 import EmptyDayPlaceholder from './EmptyDayPlaceholder';
 import PrintableDayItinerary from './PrintableDayItinerary';
+import { listTripDays, dayKeyForDateOnly, utcNoonRange, dayKeyForUtcNoon } from '../timeline/tripDays';
 import customItemService from '../../services/customItem.service';
 import {
   isActivity,
@@ -110,57 +111,8 @@ export default function DailyView({
   const generateAllTripDates = useCallback((): { dayNumber: number; dateKey: string; displayDate: string; date: Date }[] => {
     if (!tripStartDate || !tripEndDate) return [];
 
-    const parseLocalDate = (dateStr: string): { year: number; month: number; day: number } => {
-      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (match) {
-        return {
-          year: parseInt(match[1], 10),
-          month: parseInt(match[2], 10) - 1,
-          day: parseInt(match[3], 10),
-        };
-      }
-      const d = new Date(dateStr);
-      return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
-    };
-
-    const startParts = parseLocalDate(tripStartDate);
-    const endParts = parseLocalDate(tripEndDate);
-
-    const dates: { dayNumber: number; dateKey: string; displayDate: string; date: Date }[] = [];
-    const current = new Date(startParts.year, startParts.month, startParts.day, 12, 0, 0);
-    const endDate = new Date(endParts.year, endParts.month, endParts.day, 12, 0, 0);
-
-    const dateKeyFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tripTimezone,
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-
-    const displayFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tripTimezone,
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    let dayNumber = 1;
-    while (current <= endDate) {
-      dates.push({
-        dayNumber,
-        dateKey: dateKeyFormatter.format(current),
-        displayDate: displayFormatter.format(current),
-        date: new Date(current),
-      });
-      current.setDate(current.getDate() + 1);
-      dayNumber++;
-      if (dates.length > 1000) break; // Safety limit
-    }
-
-    return dates;
-  }, [tripStartDate, tripEndDate, tripTimezone]);
+    return listTripDays(tripStartDate, tripEndDate);
+  }, [tripStartDate, tripEndDate]);
 
   // Get date string for comparison
   const getDateString = useCallback((date: Date | string): string => {
@@ -287,13 +239,10 @@ export default function DailyView({
         if (Array.isArray(weather)) {
           weather.forEach((w) => {
             if (w && w.date) {
-              // Parse the date as a local date to avoid timezone shifts
-              const dateStr = typeof w.date === 'string'
-                ? w.date.split('T')[0]
-                : new Date(w.date).toISOString().split('T')[0];
-              const [year, month, day] = dateStr.split('-').map(Number);
-              const localDate = new Date(year, month - 1, day, 12, 0, 0);
-              const dateKey = getDateString(localDate);
+              const dateKey = dayKeyForDateOnly(
+                typeof w.date === 'string' ? w.date : new Date(w.date).toISOString()
+              );
+              if (!dateKey) return;
               processedWeather[dateKey] = {
                 date: w.date,
                 high: w.temperatureHigh,
@@ -421,21 +370,17 @@ export default function DailyView({
                 ? lodge.checkOutDate.split('T')[0]
                 : new Date(lodge.checkOutDate).toISOString().split('T')[0];
 
-            const [checkInYear, checkInMonth, checkInDay] = checkInStr.split('-').map(Number);
-            const [checkOutYear, checkOutMonth, checkOutDay] = checkOutStr.split('-').map(Number);
+            const stayDays = utcNoonRange(checkInStr, checkOutStr);
+            if (stayDays.length === 0) return;
+            const checkInDate = stayDays[0];
+            const checkOutDate = stayDays[stayDays.length - 1];
 
-            const checkInDate = new Date(checkInYear, checkInMonth - 1, checkInDay, 12, 0, 0);
-            const checkOutDate = new Date(checkOutYear, checkOutMonth - 1, checkOutDay, 12, 0, 0);
+            const totalNights = stayDays.length - 1;
 
-            const totalNights = Math.round(
-              (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
-            );
-
-            const current = new Date(checkInDate);
             let nightNumber = 1;
 
-            while (current <= checkOutDate) {
-              const dateKey = getDateString(current);
+            for (const current of stayDays) {
+              const dateKey = dayKeyForUtcNoon(current);
               const isCheckInDay = current.getTime() === checkInDate.getTime();
               const isCheckOutDay = current.getTime() === checkOutDate.getTime();
 
@@ -460,11 +405,10 @@ export default function DailyView({
               if (!isCheckOutDay) {
                 nightNumber++;
               }
-              current.setDate(current.getDate() + 1);
             }
           } else if (lodge.checkInDate) {
-            const dateKey = getDateString(lodge.checkInDate);
-            if (dayDataMap[dateKey]) {
+            const dateKey = dayKeyForDateOnly(String(lodge.checkInDate));
+            if (dateKey && dayDataMap[dateKey]) {
               dayDataMap[dateKey].push({
                 type: 'lodging',
                 dateTime: new Date(lodge.checkInDate),
@@ -494,8 +438,8 @@ export default function DailyView({
               // When parsed with new Date(), JavaScript interprets this as midnight UTC,
               // which shifts to the previous day in timezones west of UTC.
               const journalDate = parseDateOnlyAsLocal(entry.date);
-              const dateKey = getDateString(journalDate);
-              if (dayDataMap[dateKey]) {
+              const dateKey = dayKeyForDateOnly(entry.date);
+              if (dateKey && dayDataMap[dateKey]) {
                 dayDataMap[dateKey].push({
                   type: 'journal',
                   dateTime: journalDate,

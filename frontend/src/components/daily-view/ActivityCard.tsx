@@ -66,7 +66,7 @@ export default function ActivityCard({
     >
       {/* Header */}
       <div className="p-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-2 sm:gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             {/* Icon */}
             <div
@@ -77,7 +77,7 @@ export default function ActivityCard({
 
             {/* Main content */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
+              <h3 title={activity.name} className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 break-words [overflow-wrap:anywhere]">
                 {activity.name}
               </h3>
 

@@ -54,13 +54,20 @@ const formatTime = (dateTime: Date | string | null | undefined, timezone?: strin
 
 // Format date for headers.
 //
-// `dateKey` is a calendar day (YYYY-MM-DD), not an instant. Parsing it with
-// `new Date()` reads it as UTC midnight, so formatting in any zone west of UTC
-// renders the previous day. `formatDate` parses the Y/M/D parts directly, which
-// keeps the day the itinerary was grouped under. See the date-only rule in
-// utils/timezone.ts (`formatDateOnly`).
-const formatDateHeader = (dateKey: string): string =>
-  formatDate(dateKey, 'full', dateKey);
+// `dateKey` names a calendar day: either YYYY-MM-DD or the "Fri, Nov 13, 2026"
+// key the timeline groups by. Both carry the day itself, so neither is read as an
+// instant in the viewer's zone (see `formatDateOnly` in utils/timezone.ts).
+const formatDateHeader = (dateKey: string): string => {
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateKey)) return formatDate(dateKey, 'full', dateKey);
+  const parsed = new Date(dateKey);
+  if (Number.isNaN(parsed.getTime())) return dateKey;
+  return parsed.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
 
 // Format currency (shared guarded helper — unknown codes must not throw)
 const formatCost = formatCurrency;

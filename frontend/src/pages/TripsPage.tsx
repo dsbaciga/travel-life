@@ -528,7 +528,7 @@ export default function TripsPage() {
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
           <h2 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">My Trips</h2>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-3 sm:w-auto">
             <Link
               to="/trip-series"
               className="px-3 py-1.5 text-sm font-medium rounded-lg text-primary-600 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors"
@@ -589,7 +589,7 @@ export default function TripsPage() {
                 </svg>
               </button>
             </div>
-            <Link to="/trips/new" className="btn btn-primary">
+            <Link to="/trips/new" className="btn btn-primary w-full justify-center text-center sm:w-auto">
               + New Trip
             </Link>
           </div>
@@ -772,7 +772,7 @@ export default function TripsPage() {
         {loading ? (
           <SkeletonGrid count={6} columns={3} hasImage />
         ) : filteredTrips.length === 0 ? (
-          trips.length === 0 ? (
+          !hasActiveFilters ? (
             <EmptyState
               icon={<EmptyIllustrations.NoTrips />}
               message="Your Adventure Begins Here"
@@ -803,6 +803,7 @@ export default function TripsPage() {
             trips={filteredTrips}
             coverPhotoUrls={coverPhotoUrls}
             onDelete={handleDelete}
+            onArchiveToggle={handleArchiveToggle}
             onStatusChange={handleStatusChange}
             onNavigateAway={handleNavigateAway}
             sortColumn={sortColumn}

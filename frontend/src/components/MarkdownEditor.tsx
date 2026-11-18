@@ -1,5 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import MarkdownRenderer from './MarkdownRenderer';
+
+/** Phones and other touch screens, where nested scrolling and resize grips do not work. */
+const AUTO_GROW_QUERY = '(max-width: 639px), (pointer: coarse)';
+
+function useAutoGrow(): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(AUTO_GROW_QUERY).matches
+      : false
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mql = window.matchMedia(AUTO_GROW_QUERY);
+    const onChange = () => setMatches(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  return matches;
+}
 
 interface MarkdownEditorProps {
   value: string;
@@ -25,6 +44,17 @@ export default function MarkdownEditor({
   className = '',
 }: MarkdownEditorProps) {
   const [previewing, setPreviewing] = useState(false);
+  // On touch screens the textarea grows with its content, so only the surrounding
+  // sheet scrolls and the Preview/Edit toggle can stay pinned above the text.
+  const autoGrow = useAutoGrow();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!autoGrow || !el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [autoGrow, value, previewing]);
 
   const minHeight = `${rows * 1.5 + 1}rem`;
 
@@ -37,7 +67,11 @@ export default function MarkdownEditor({
         </label>
       )}
 
-      <div className="flex items-center justify-end mb-1">
+      <div
+        className={`flex items-center justify-end mb-1 ${
+          autoGrow ? 'sticky top-0 z-10 bg-white dark:bg-navy-800 py-1 -mt-1' : ''
+        }`}
+      >
         <button
           type="button"
           onClick={() => setPreviewing(!previewing)}
@@ -51,7 +85,7 @@ export default function MarkdownEditor({
       {previewing ? (
         <div
           className="input overflow-y-auto"
-          style={{ minHeight, maxHeight: '20rem' }}
+          style={autoGrow ? { minHeight } : { minHeight, maxHeight: '20rem' }}
         >
           {value ? (
             <MarkdownRenderer content={value} compact={compact} />
@@ -61,13 +95,14 @@ export default function MarkdownEditor({
         </div>
       ) : (
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={rows}
           placeholder={placeholder}
           required={required}
           disabled={disabled}
-          className="input w-full"
+          className={`input w-full ${autoGrow ? 'resize-none overflow-hidden' : ''}`}
         />
       )}
 

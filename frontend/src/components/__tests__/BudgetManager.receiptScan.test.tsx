@@ -104,8 +104,7 @@ describe('Scan receipt on the Budget tab', () => {
     expect(createExpense).not.toHaveBeenCalled();
     expect(uploadReceipt).not.toHaveBeenCalled();
 
-    const form = screen.getByLabelText(/Description/).closest('form') as HTMLElement;
-    await userEvent.click(within(form).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
     await waitFor(() => expect(createExpense).toHaveBeenCalledTimes(1));
     expect(createExpense).toHaveBeenCalledWith(
       7,
@@ -130,8 +129,7 @@ describe('Scan receipt on the Budget tab', () => {
     await userEvent.upload(screen.getByTestId('receipt-scan-input'), photo());
     await waitFor(() => expect(screen.getByLabelText(/Description/)).toHaveValue('Cafe'));
 
-    const form = screen.getByLabelText(/Description/).closest('form') as HTMLElement;
-    await userEvent.click(within(form).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
 
     await waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(String(toastError.mock.calls[0][0])).toMatch(/expense was saved, but the receipt photo was not attached.*try again/i);
@@ -144,8 +142,7 @@ describe('Scan receipt on the Budget tab', () => {
     renderBudget();
     await userEvent.upload(screen.getByTestId('receipt-scan-input'), photo());
     await waitFor(() => expect(screen.getByLabelText(/Description/)).toHaveValue('One'));
-    const form = screen.getByLabelText(/Description/).closest('form') as HTMLElement;
-    await userEvent.click(within(form).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
     await waitFor(() => expect(uploadReceipt).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.queryByLabelText(/Description/)).not.toBeInTheDocument());
 
@@ -154,8 +151,7 @@ describe('Scan receipt on the Budget tab', () => {
     expect(screen.queryByAltText('Receipt thumbnail')).not.toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/Description/), 'Two');
     await userEvent.type(screen.getByLabelText(/Amount/, { selector: '#expense-amount' }), '2');
-    const form2 = screen.getByLabelText(/Description/).closest('form') as HTMLElement;
-    await userEvent.click(within(form2).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
     await waitFor(() => expect(createExpense).toHaveBeenCalledTimes(2));
     expect(uploadReceipt).toHaveBeenCalledTimes(1);
   });

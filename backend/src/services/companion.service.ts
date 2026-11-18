@@ -6,8 +6,9 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
 import { randomUUID } from 'crypto';
+import { config } from '../config';
 
-const UPLOADS_ROOT = path.resolve(process.cwd(), 'uploads');
+const UPLOADS_ROOT = path.resolve(config.upload.dir);
 const AVATAR_DIR = path.join(UPLOADS_ROOT, 'avatars');
 
 // Ensure avatar directory exists

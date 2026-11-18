@@ -320,8 +320,8 @@ function PhotoGridItem({
 
       {/* Badges */}
       {coverPhotoId === photo.id && (
-        <div className="absolute top-3 left-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-xs px-3 py-1.5 rounded-full font-body font-semibold shadow-lg z-10">
-          Cover Photo
+        <div className="absolute bottom-1.5 left-1.5 sm:bottom-auto sm:top-3 sm:left-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1.5 rounded-full font-body font-semibold shadow-lg z-10 whitespace-nowrap">
+          Cover<span className="hidden sm:inline"> Photo</span>
         </div>
       )}
 
@@ -1198,7 +1198,8 @@ export default function PhotoGallery({
           <div className="flex items-center gap-3 flex-wrap">
             {/* Selection hint */}
             <span className="text-sm text-gray-600 dark:text-dusk-400">
-              Click photos to select. Hold Shift for range selection.
+              <span className="[@media(pointer:coarse)]:hidden">Click photos to select. Hold Shift for range selection.</span>
+              <span className="hidden [@media(pointer:coarse)]:inline">Tap photos to select.</span>
             </span>
             {/* Quick select all if more photos available */}
             {totalPhotosInView > photos.length && onLoadAllPhotos && (

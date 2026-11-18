@@ -15,6 +15,9 @@ interface MultiSelectDropdownProps {
   className?: string;
 }
 
+const PANEL_MIN_WIDTH = 220;
+const PANEL_MARGIN = 16;
+
 export default function MultiSelectDropdown({
   options,
   selected,
@@ -24,6 +27,7 @@ export default function MultiSelectDropdown({
 }: MultiSelectDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [alignRight, setAlignRight] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -115,6 +119,17 @@ export default function MultiSelectDropdown({
     [isOpen, focusedIndex, options, toggleOption]
   );
 
+  // The panel is at least PANEL_MIN_WIDTH wide and anchored to the button's left
+  // edge; when that would run past the viewport it anchors to the right edge instead.
+  const toggleOpen = () => {
+    if (!isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const overflowsRight = rect.left + PANEL_MIN_WIDTH > window.innerWidth - PANEL_MARGIN;
+      setAlignRight(overflowsRight && rect.right - PANEL_MIN_WIDTH >= PANEL_MARGIN);
+    }
+    setIsOpen(!isOpen);
+  };
+
   const clearAll = () => {
     onChange([]);
   };
@@ -144,7 +159,7 @@ export default function MultiSelectDropdown({
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleOpen}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dropdownId : undefined}
@@ -162,7 +177,7 @@ export default function MultiSelectDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 min-w-[220px] max-h-72 overflow-auto rounded-lg bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-600 shadow-lg animate-fade-in">
+        <div className={`absolute z-50 mt-1 min-w-[220px] max-w-[calc(100vw-2rem)] ${alignRight ? 'right-0' : 'left-0'} max-h-72 overflow-auto rounded-lg bg-white dark:bg-navy-800 border border-gray-200 dark:border-navy-600 shadow-lg animate-fade-in`}>
           {/* Select All / Clear - outside role="listbox" for ARIA compliance */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-navy-700 text-xs">
             <button
