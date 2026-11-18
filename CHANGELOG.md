@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.1.0] - 2026-11-17
+
 ### Added
 
 - **Search on phones.** A search button in the top bar opens a full-screen search; before, search only existed on wider screens.
