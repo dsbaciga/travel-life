@@ -8,6 +8,7 @@ import { AppError } from '../errors/errors';
 import { TransportationType, type TransportationTypeEnum } from '../types/transportation.types';
 import { LodgingType, type LodgingTypeEnum } from '../types/lodging.types';
 import { pdfParserService } from './pdfParser.service';
+import { llmEndpointKey, type ResolvedLlmConfig } from './llm.service';
 import { cleanupEntityLinks } from './_shared/entityLinkCleanup';
 import type { UpdatePendingEntityInput } from '../types/pdfImport.types';
 import {
@@ -66,7 +67,7 @@ function resolveStoredPath(storedPath: string): string {
  * model on modest hardware (e.g. Ollama on a NAS), where two documents at once
  * would just make both slow or time out.
  *
- * Keyed by endpoint (see llmService.endpointKey), not global: everyone on the
+ * Keyed by LLM server (see llmEndpointKey), not global: everyone on the
  * instance-wide LLM shares one slot, but a user whose Settings point at their
  * own (possibly slow or unresponsive) server can only ever block themselves.
  *
@@ -98,13 +99,19 @@ export function isPdfParsingBusy(endpoint?: string): boolean {
   return endpoint === undefined ? parsingSlots.size > 0 : parsingSlots.has(endpoint);
 }
 
-/** Resolves the user's LLM endpoint, refusing up front when there is none. */
-async function requireLlmEndpoint(userId: number): Promise<string> {
-  const endpoint = await pdfParserService.endpointKey(userId);
-  if (!endpoint) {
+/** The LLM a parse will use, resolved once: its slot key and the exact config. */
+interface ClaimedLlm {
+  key: string;
+  llmConfig: ResolvedLlmConfig;
+}
+
+/** Resolves the user's LLM once, refusing up front when there is none. */
+async function requireLlm(userId: number): Promise<ClaimedLlm> {
+  const llmConfig = await pdfParserService.resolveLlm(userId);
+  if (!llmConfig) {
     throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
   }
-  return endpoint;
+  return { key: llmEndpointKey(llmConfig.baseUrl), llmConfig };
 }
 
 class PdfImportService {
@@ -114,20 +121,20 @@ class PdfImportService {
    * Refused with 409 while another PDF is being read (see claimParsingSlot).
    */
   async uploadAndProcess(userId: number, file: MulterFile, hintTripId?: number) {
-    const endpoint = await requireLlmEndpoint(userId);
-    claimParsingSlot(endpoint);
+    const llm = await requireLlm(userId);
+    claimParsingSlot(llm.key);
     try {
-      return await this.storeAndStartParsing(userId, file, endpoint, hintTripId);
+      return await this.storeAndStartParsing(userId, file, llm, hintTripId);
     } catch (err) {
       // Never got as far as the background job, which would release it.
-      releaseParsingSlot(endpoint);
+      releaseParsingSlot(llm.key);
       throw err;
     }
   }
 
   /** Runs the parse and frees the slot whichever way it ends, including a cancel. */
   private launchParsing(
-    endpoint: string,
+    llm: ClaimedLlm,
     pdfImportId: number,
     userId: number,
     absolutePath: string,
@@ -135,19 +142,21 @@ class PdfImportService {
     hintTripId?: number
   ): void {
     const controller = new AbortController();
-    parsingSlots.set(endpoint, { active: { pdfImportId, controller } });
+    parsingSlots.set(llm.key, { active: { pdfImportId, controller } });
     this.processInBackground(
       pdfImportId,
       userId,
       absolutePath,
       filename,
       hintTripId,
-      controller.signal
+      controller.signal,
+      // The config whose slot was claimed, not whatever Settings say by now.
+      llm.llmConfig
     )
       .catch((err) => logger.error('PDF background processing failed', { pdfImportId, err }))
       .finally(() => {
-        if (parsingSlots.get(endpoint)?.active?.controller === controller) {
-          releaseParsingSlot(endpoint);
+        if (parsingSlots.get(llm.key)?.active?.controller === controller) {
+          releaseParsingSlot(llm.key);
         }
       });
   }
@@ -155,7 +164,7 @@ class PdfImportService {
   private async storeAndStartParsing(
     userId: number,
     file: MulterFile,
-    endpoint: string,
+    llm: ClaimedLlm,
     hintTripId?: number
   ) {
     // Validate PDF magic bytes
@@ -213,7 +222,7 @@ class PdfImportService {
     }
 
     // Fire background processing (don't await)
-    this.launchParsing(endpoint, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
+    this.launchParsing(llm, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
 
     return pdfImport;
   }
@@ -227,12 +236,17 @@ class PdfImportService {
     absolutePath: string,
     filename: string,
     hintTripId?: number,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    llmConfig?: ResolvedLlmConfig
   ): Promise<void> {
     try {
       const text = await pdfParserService.extractText(absolutePath);
       if (signal?.aborted) return;
-      const { entities } = await pdfParserService.parseDocument(text, filename, userId, signal);
+      const { entities } = await pdfParserService.parseDocument(text, filename, {
+        userId,
+        llmConfig,
+        signal,
+      });
       // Cancelled while the model was answering: the import row is being deleted.
       if (signal?.aborted) return;
 
@@ -580,8 +594,8 @@ class PdfImportService {
       throw new AppError('Import is currently being parsed', 409);
     }
 
-    const endpoint = await requireLlmEndpoint(userId);
-    claimParsingSlot(endpoint);
+    const llm = await requireLlm(userId);
+    claimParsingSlot(llm.key);
     try {
       const absolutePath = resolveStoredPath(record.storedPath);
 
@@ -596,9 +610,9 @@ class PdfImportService {
         data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
       });
 
-      this.launchParsing(endpoint, id, userId, absolutePath, record.originalName);
+      this.launchParsing(llm, id, userId, absolutePath, record.originalName);
     } catch (err) {
-      releaseParsingSlot(endpoint);
+      releaseParsingSlot(llm.key);
       throw err;
     }
   }

@@ -9,7 +9,8 @@
  * - LLM-005: chat throws LlmError when axios request fails
  * - LLM-006: requests use the configurable timeout (5 minutes by default)
  * - LLM-007: a cancelled request rejects without an error-level log
- * - LLM-008: endpointKey identifies the LLM server per user (shared vs own)
+ * - LLM-008: llmEndpointKey collapses spelling variants of one server to one key
+ * - LLM-009: resolveForUser, and a pinned llmConfig skips the per-user lookup
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -29,7 +30,7 @@ jest.mock('../../config/database', () => ({
 jest.mock('axios');
 const mockAxios = jest.mocked(axios);
 
-import { llmService, LlmError } from '../llm.service';
+import { llmService, LlmError, llmEndpointKey } from '../llm.service';
 import { encryptSecret } from '../../security/encryption';
 import { config } from '../../config';
 
@@ -182,22 +183,40 @@ describe('LlmService', () => {
     ).rejects.toThrow('LLM request cancelled');
   });
 
-  it("LLM-008: endpointKey groups users by the LLM server they'd use", async () => {
+  it('LLM-008: llmEndpointKey names the machine, so URL spelling variants collapse to one key', () => {
+    for (const url of [
+      'http://ollama.lan:11434/v1',
+      'http://Ollama.LAN:11434/v1/',
+      'https://ollama.lan/api/v1',
+      'http://user:secret@ollama.lan:8080/v1?x=1#frag',
+      ' http://ollama.lan.:11434/v1 ',
+    ]) {
+      expect(llmEndpointKey(url)).toBe('ollama.lan');
+    }
+    expect(llmEndpointKey('http://[::1]:11434/v1')).toBe('::1');
+    expect(llmEndpointKey('https://my-own-llm.example/v1')).toBe('my-own-llm.example');
+  });
+
+  it('LLM-009: resolveForUser reports the config a user would get, and a pinned config skips the lookup', async () => {
     config.llm.apiKey = 'ollama';
-    config.llm.baseUrl = 'http://Ollama.lan:11434/v1/';
-
+    config.llm.baseUrl = 'http://ollama.lan:11434/v1';
     mockPrismaUserFindUnique.mockResolvedValueOnce(null);
-    expect(await llmService.endpointKey(1)).toBe('http://ollama.lan:11434/v1');
-
-    mockPrismaUserFindUnique.mockResolvedValueOnce({
-      llmApiKey: null,
-      llmBaseUrl: 'https://my-own-llm.example/v1',
-      llmModel: null,
-    });
-    expect(await llmService.endpointKey(2)).toBe('https://my-own-llm.example/v1');
+    const pinned = await llmService.resolveForUser(1);
+    expect(pinned).toMatchObject({ baseUrl: 'http://ollama.lan:11434/v1', apiKey: 'ollama' });
 
     config.llm.apiKey = '';
     mockPrismaUserFindUnique.mockResolvedValueOnce(null);
-    expect(await llmService.endpointKey(3)).toBeNull();
+    expect(await llmService.resolveForUser(2)).toBeNull();
+
+    // Settings changed since: the pinned config is used as-is, with no lookup.
+    mockPrismaUserFindUnique.mockClear();
+    mockAxios.post.mockResolvedValue({ data: { choices: [{ message: { content: 'ok' } }] } });
+    await llmService.chat('s', 'u', { userId: 1, llmConfig: pinned! });
+    expect(mockPrismaUserFindUnique).not.toHaveBeenCalled();
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      'http://ollama.lan:11434/v1/chat/completions',
+      expect.any(Object),
+      expect.any(Object)
+    );
   });
 });

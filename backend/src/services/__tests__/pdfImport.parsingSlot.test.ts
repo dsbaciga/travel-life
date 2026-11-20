@@ -10,6 +10,8 @@
  * - PDFQ-006: A stuck import is only reset well after the LLM timeout
  * - PDFQ-007: Deleting an import mid-parse aborts the LLM request and frees the slot
  * - PDFQ-008: A user with their own LLM endpoint is not blocked by the shared one (and vice versa)
+ * - PDFQ-009: The parse uses the LLM config resolved when its slot was claimed, even if Settings change
+ * - PDFQ-010: Spelling variants of the shared server's URL do not get a slot of their own
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -57,21 +59,22 @@ jest.mock('../../config/logger', () => ({
 }));
 
 /** The LLM server each user's PDFs go to; the instance-wide one unless overridden. */
-const SHARED_ENDPOINT = 'http://ollama.lan:11434/v1';
-const mockEndpointKey = jest.fn<(userId?: number) => Promise<string | null>>();
+type LlmConfig = { baseUrl: string; apiKey: string | null; model: string; maxTokens: number };
+const llmAt = (baseUrl: string): LlmConfig => ({ baseUrl, apiKey: null, model: 'llama3.1', maxTokens: 2048 });
+const SHARED_LLM = llmAt('http://ollama.lan:11434/v1');
+const mockResolveLlm = jest.fn<(userId?: number) => Promise<LlmConfig | null>>();
+type ParseOpts = { userId?: number; llmConfig?: LlmConfig; signal?: AbortSignal };
 const mockExtractText = jest.fn<(path: string) => Promise<string>>();
 const mockParseDocument = jest.fn<
-  (text: string, filename: string, userId?: number, signal?: AbortSignal) => Promise<{ entities: [] }>
+  (text: string, filename: string, opts?: ParseOpts) => Promise<{ entities: [] }>
 >();
 
 jest.mock('../pdfParser.service', () => ({
   pdfParserService: {
-    endpointKey: (userId?: number) => mockEndpointKey(userId),
+    resolveLlm: (userId?: number) => mockResolveLlm(userId),
     extractText: (path: string) => mockExtractText(path),
-    parseDocument: (text: string, filename: string, userId?: number, signal?: AbortSignal) =>
-      signal === undefined
-        ? mockParseDocument(text, filename, userId)
-        : mockParseDocument(text, filename, userId, signal),
+    parseDocument: (text: string, filename: string, opts?: ParseOpts) =>
+      mockParseDocument(text, filename, opts),
   },
 }));
 
@@ -106,7 +109,7 @@ describe('PDF parsing slot', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockEndpointKey.mockResolvedValue(SHARED_ENDPOINT);
+    mockResolveLlm.mockResolvedValue(SHARED_LLM);
     mockExtractText.mockResolvedValue('Booking text');
     mockParseDocument.mockResolvedValue({ entities: [] });
     mockPdfImportCreate.mockImplementation(async () => ({ id: nextId++ }));
@@ -149,7 +152,7 @@ describe('PDF parsing slot', () => {
     });
     expect(isPdfParsingBusy()).toBe(false);
 
-    mockEndpointKey.mockResolvedValueOnce(null);
+    mockResolveLlm.mockResolvedValueOnce(null);
     await expect(pdfImportService.uploadAndProcess(1, pdfFile())).rejects.toMatchObject({
       statusCode: 503,
     });
@@ -175,17 +178,21 @@ describe('PDF parsing slot', () => {
 
     await pdfImportService.reparseImport(1, 99);
     await waitUntilIdle();
-    expect(mockParseDocument).toHaveBeenLastCalledWith('Booking text', 'old.pdf', 1, expect.any(AbortSignal));
+    expect(mockParseDocument).toHaveBeenLastCalledWith('Booking text', 'old.pdf', {
+      userId: 1,
+      llmConfig: SHARED_LLM,
+      signal: expect.any(AbortSignal),
+    });
   });
 
   it('PDFQ-008: a user on their own LLM server neither blocks nor is blocked by the shared one', async () => {
     // User 9 pointed Settings at their own (slow, possibly hostile) server.
-    mockEndpointKey.mockImplementation(async (userId) =>
-      userId === 9 ? 'https://my-own-llm.example/v1' : SHARED_ENDPOINT
+    mockResolveLlm.mockImplementation(async (userId) =>
+      userId === 9 ? llmAt('https://my-own-llm.example/v1') : SHARED_LLM
     );
     const finishOwn = holdParsing();
     await pdfImportService.uploadAndProcess(9, pdfFile());
-    expect(isPdfParsingBusy('https://my-own-llm.example/v1')).toBe(true);
+    expect(isPdfParsingBusy('my-own-llm.example')).toBe(true);
 
     // Everyone else can still use the shared server...
     const finishShared = holdParsing();
@@ -203,14 +210,59 @@ describe('PDF parsing slot', () => {
   it("PDFQ-005: parses with the uploading user's LLM settings", async () => {
     await pdfImportService.uploadAndProcess(42, pdfFile());
     await waitUntilIdle();
-    expect(mockParseDocument).toHaveBeenCalledWith('Booking text', 'hotel.pdf', 42, expect.any(AbortSignal));
+    expect(mockParseDocument).toHaveBeenCalledWith('Booking text', 'hotel.pdf', {
+      userId: 42,
+      llmConfig: SHARED_LLM,
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it('PDFQ-009: sends the parse to the server whose slot it claimed, even after a Settings change', async () => {
+    // Slow first read: Settings change while it is still in the queue for text extraction.
+    let releaseText: (text: string) => void = () => {};
+    mockExtractText.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseText = resolve; })
+    );
+    await pdfImportService.uploadAndProcess(5, pdfFile());
+    expect(isPdfParsingBusy('ollama.lan')).toBe(true);
+
+    // The user now points Settings somewhere else; the running parse must not follow.
+    mockResolveLlm.mockResolvedValue(llmAt('https://elsewhere.example/v1'));
+    releaseText('Booking text');
+    await waitUntilIdle();
+
+    expect(mockParseDocument).toHaveBeenCalledWith(
+      'Booking text',
+      'hotel.pdf',
+      expect.objectContaining({ llmConfig: SHARED_LLM })
+    );
+  });
+
+  it("PDFQ-010: spelling variants of the shared server's URL share its slot", async () => {
+    const finish = holdParsing();
+    await pdfImportService.uploadAndProcess(1, pdfFile());
+
+    for (const variant of [
+      'http://OLLAMA.LAN:11434/v1/',
+      'http://ollama.lan:8080/v1',
+      'http://user:pw@ollama.lan:11434/v1?x=1#y',
+      'https://ollama.lan./api/v1',
+    ]) {
+      mockResolveLlm.mockResolvedValueOnce(llmAt(variant));
+      await expect(pdfImportService.uploadAndProcess(7, pdfFile())).rejects.toMatchObject({
+        statusCode: 409,
+      });
+    }
+
+    finish();
+    await waitUntilIdle();
   });
 });
 
 describe('cancelling', () => {
   it('PDFQ-007: deleting an import mid-parse aborts the LLM call and frees the slot', async () => {
     jest.clearAllMocks();
-    mockEndpointKey.mockResolvedValue(SHARED_ENDPOINT);
+    mockResolveLlm.mockResolvedValue(SHARED_LLM);
     mockExtractText.mockResolvedValue('Booking text');
     mockPdfImportCreate.mockResolvedValue({ id: 500 });
     mockPdfImportUpdateMany.mockResolvedValue({ count: 1 });
@@ -219,7 +271,8 @@ describe('cancelling', () => {
 
     // A slow model that only stops when its request is aborted.
     let seenSignal: AbortSignal | undefined;
-    mockParseDocument.mockImplementationOnce((_t, _f, _u, signal) => {
+    mockParseDocument.mockImplementationOnce((_t, _f, opts) => {
+      const signal = opts?.signal;
       seenSignal = signal;
       return new Promise((_resolve, reject) => {
         signal?.addEventListener('abort', () => reject(new Error('canceled')));

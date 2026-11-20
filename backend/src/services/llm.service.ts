@@ -10,9 +10,31 @@ interface LlmOptions {
   userId?: number;
   /** Aborts the request, e.g. when the user cancels a PDF import. */
   signal?: AbortSignal;
+  /**
+   * Use exactly this config instead of resolving it from `userId` now. PDF
+   * import resolves once when it claims a parsing slot, so a Settings change
+   * mid-parse cannot send the request to a server whose slot was not claimed.
+   */
+  llmConfig?: ResolvedLlmConfig;
 }
 
-interface ResolvedLlmConfig {
+/**
+ * The machine an LLM base URL points at, used to rate-limit per server. Parsed
+ * with the URL parser so spelling variants of one server (case, port, path,
+ * query, credentials, trailing dot) cannot pass as different servers. Two
+ * services on one host share a key on purpose: they share the hardware.
+ * A different name or IP for the same box is still a different key; closing
+ * that needs DNS resolution, which belongs with request-time URL validation.
+ */
+export function llmEndpointKey(baseUrl: string): string {
+  try {
+    return new URL(baseUrl.trim()).hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+  } catch {
+    return baseUrl.trim().toLowerCase();
+  }
+}
+
+export interface ResolvedLlmConfig {
   baseUrl: string;
   /** Null for local LLMs that require no auth (e.g., Ollama). */
   apiKey: string | null;
@@ -85,13 +107,11 @@ class LlmService {
   }
 
   /**
-   * Identifies the LLM server a user's requests go to (its base URL), or null
-   * when no LLM is configured. Users on the instance-wide config share a key;
-   * a user's own endpoint from Settings gets its own.
+   * The LLM config a user's requests would use right now, or null when none is
+   * configured. Pass it back as `options.llmConfig` to pin a later request to it.
    */
-  async endpointKey(userId?: number): Promise<string | null> {
-    const resolved = await this.resolveConfig(userId);
-    return resolved ? resolved.baseUrl.trim().replace(/\/+$/, '').toLowerCase() : null;
+  async resolveForUser(userId?: number): Promise<ResolvedLlmConfig | null> {
+    return this.resolveConfig(userId);
   }
 
   async chat(
@@ -99,7 +119,7 @@ class LlmService {
     userPrompt: string,
     options: LlmOptions = {}
   ): Promise<string> {
-    const resolved = await this.resolveConfig(options.userId);
+    const resolved = options.llmConfig ?? (await this.resolveConfig(options.userId));
     if (!resolved) {
       logger.warn('LLM not configured — AI features disabled. Set an API key in Settings or LLM_API_KEY env var.');
       return '';
@@ -161,7 +181,7 @@ class LlmService {
     image: { mimeType: string; base64: string },
     options: LlmOptions = {}
   ): Promise<string> {
-    const resolved = await this.resolveConfig(options.userId);
+    const resolved = options.llmConfig ?? (await this.resolveConfig(options.userId));
     if (!resolved) {
       logger.warn('LLM not configured — AI features disabled. Set an API key in Settings or LLM_API_KEY env var.');
       return '';
