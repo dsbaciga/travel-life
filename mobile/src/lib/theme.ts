@@ -50,6 +50,8 @@ export interface Palette {
   warning: string;
   danger: string;
   info: string;
+  /** Android touch ripple on ordinary surfaces. */
+  ripple: string;
 }
 
 export const lightPalette: Palette = {
@@ -71,6 +73,7 @@ export const lightPalette: Palette = {
   warning: '#b45309',
   danger: '#b91c1c',
   info: '#0369a1',
+  ripple: 'rgba(15, 23, 42, 0.08)',
 };
 
 export const darkPalette: Palette = {
@@ -92,6 +95,7 @@ export const darkPalette: Palette = {
   warning: '#fbbf24',
   danger: '#f87171',
   info: '#7dd3fc',
+  ripple: 'rgba(255, 255, 255, 0.12)',
 };
 
 /** Colour families for itinerary item types: [foreground, soft background]. */

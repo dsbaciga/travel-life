@@ -272,9 +272,9 @@ export default function FoodScreen() {
 
       <SectionHeader title="Where" />
       <Row>
-        <Chip label="📍 My location" selected={custom === null} onPress={() => void searchAgain()} />
+        <Chip label="My location" icon="myLocation" selected={custom === null} onPress={() => void searchAgain()} />
         {custom ? <Chip label={custom.name} selected /> : null}
-        <Chip label="🔎 Another place" selected={picking} onPress={() => setPicking((open) => !open)} />
+        <Chip label="Another place" icon="search" selected={picking} onPress={() => setPicking((open) => !open)} />
       </Row>
       {picking ? (
         <Card>

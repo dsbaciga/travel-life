@@ -5,7 +5,7 @@
  * buttons and silently drops the rest. Mount `<ActionSheetHost />` once at the
  * root; call `showActionSheet(...)` imperatively.
  */
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
@@ -71,10 +71,11 @@ export function ActionSheetHost() {
                 close();
                 void action.onPress();
               }}
+              android_ripple={{ color: palette.ripple }}
               style={({ pressed }) => [
                 styles.action,
                 { borderColor: palette.border },
-                pressed && styles.pressed,
+                Platform.OS !== 'android' && pressed && styles.pressed,
               ]}>
               <AppText color={action.destructive ? palette.danger : palette.text}>{action.label}</AppText>
             </Pressable>
@@ -84,6 +85,7 @@ export function ActionSheetHost() {
           accessibilityRole="button"
           accessibilityLabel="Cancel"
           onPress={close}
+          android_ripple={{ color: palette.ripple }}
           style={[styles.action, styles.cancel, { backgroundColor: palette.surfaceRaised }]}>
           <AppText variant="label">Cancel</AppText>
         </Pressable>
@@ -108,6 +110,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.sm,
   },
-  cancel: { alignItems: 'center', borderRadius: radius.md, borderBottomWidth: 0, marginTop: spacing.sm },
+  cancel: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderBottomWidth: 0,
+    marginTop: spacing.sm,
+    overflow: 'hidden',
+  },
   pressed: { opacity: 0.6 },
 });

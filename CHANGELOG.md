@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Mobile app: confirmations and Undo.** Copying a confirmation code, nudging an item's time, moving it to another day, making it all-day, reordering, saving, deleting, adding photos and accepting a PDF booking now show a short message at the bottom of the screen, with a small vibration. Time changes and reorders offer **Undo**.
+- **Mobile app: real icons instead of emoji.** The tab bar, the capture button, timeline badges, Quick capture options, checklists and buttons use Material Symbols on Android (SF Symbols on iOS). They take the theme colours and look the same on every phone, where emoji varied by phone maker. The icon font ships inside the app, so icons work offline.
+- **Mobile app: matching headers.** The headers on forms, Sync, Settings and other pushed screens use the app's light and dark colours instead of plain black or white.
+- **Mobile app: touch ripples.** Cards, buttons, chips and menu rows show the Android touch ripple when tapped.
+
 ## [8.1.1] - 2026-11-20
 
 ### Added

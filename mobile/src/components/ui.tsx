@@ -4,6 +4,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,13 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { splitLeadingEmoji } from '../lib/labels';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
+import Icon, { type IconName } from './Icon';
+
+/**
+ * Android shows a ripple where you touch; iOS has no ripple, so it keeps the
+ * fade. Fading as well on Android would dim the ripple itself.
+ */
+const RIPPLE = Platform.OS === 'android';
 
 /** True inside a hero card, where text and controls switch to the on-dark colours. */
 const HeroContext = createContext(false);
@@ -88,7 +96,8 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [base, pressed && styles.pressed]}>
+      android_ripple={{ color: hero ? HERO_WASH : palette.ripple }}
+      style={({ pressed }) => [base, RIPPLE ? styles.clipRipple : pressed && styles.pressed]}>
       {body}
     </Pressable>
   );
@@ -144,6 +153,8 @@ interface ButtonProps {
   loading?: boolean;
   compact?: boolean;
   accessibilityHint?: string;
+  /** Leading icon, drawn in the label colour. */
+  icon?: IconName;
 }
 
 export function Button({
@@ -154,6 +165,7 @@ export function Button({
   loading,
   compact,
   accessibilityHint,
+  icon: iconName,
 }: ButtonProps) {
   const palette = usePalette();
   const onHero = useContext(HeroContext);
@@ -190,19 +202,23 @@ export function Button({
       accessibilityState={{ disabled: Boolean(disabled || loading), busy: Boolean(loading) }}
       disabled={disabled || loading}
       onPress={onPress}
+      android_ripple={{
+        color: variant === 'primary' || variant === 'danger' || onHero ? 'rgba(255, 255, 255, 0.24)' : palette.ripple,
+      }}
       style={({ pressed }) => [
         styles.button,
         compact && styles.buttonCompact,
         { backgroundColor: background, borderColor: outline },
         (disabled || loading) && styles.disabled,
-        pressed && styles.pressed,
+        RIPPLE ? styles.clipRipple : pressed && styles.pressed,
       ]}>
       {loading ? (
         <ActivityIndicator color={foreground} />
       ) : (
         <View style={styles.buttonContent}>
+          {iconName ? <Icon name={iconName} size={18} color={foreground} /> : null}
           {/* The icon is its own Text: a bad emoji glyph must not take the words down with it. */}
-          {icon ? <Text style={styles.buttonIcon}>{icon}</Text> : null}
+          {!iconName && icon ? <Text style={styles.buttonIcon}>{icon}</Text> : null}
           <Text style={[styles.buttonLabel, { color: foreground }]}>{words}</Text>
         </View>
       )}
@@ -222,9 +238,11 @@ interface ChipProps {
    * wraps it out of the chip; normal weight needs no faking.
    */
   detail?: string;
+  /** Leading icon, drawn in the label colour. */
+  icon?: IconName;
 }
 
-export function Chip({ label, selected, onPress, tone = 'default', detail }: ChipProps) {
+export function Chip({ label, selected, onPress, tone = 'default', detail, icon }: ChipProps) {
   const palette = usePalette();
   const toneColor =
     tone === 'success'
@@ -238,11 +256,20 @@ export function Chip({ label, selected, onPress, tone = 'default', detail }: Chi
             : palette.textMuted;
   const onHero = useContext(HeroContext);
   const idleLabel = onHero ? palette.onHero : toneColor;
-  const body = (
-    <Text style={[styles.chipLabel, { color: selected ? palette.onPrimary : idleLabel }]}>
+  const labelColor = selected ? palette.onPrimary : idleLabel;
+  const text = (
+    <Text style={[styles.chipLabel, { color: labelColor }]}>
       {label}
       {detail ? <Text style={styles.chipDetail}> {detail}</Text> : null}
     </Text>
+  );
+  const body = icon ? (
+    <View style={styles.chipContent}>
+      <Icon name={icon} size={16} color={labelColor} />
+      {text}
+    </View>
+  ) : (
+    text
   );
   const chipStyle = [
     styles.chip,
@@ -259,7 +286,8 @@ export function Chip({ label, selected, onPress, tone = 'default', detail }: Chi
       accessibilityState={{ selected: Boolean(selected) }}
       onPress={onPress}
       hitSlop={6}
-      style={({ pressed }) => [chipStyle, pressed && styles.pressed]}>
+      android_ripple={{ color: selected || onHero ? 'rgba(255, 255, 255, 0.24)' : palette.ripple }}
+      style={({ pressed }) => [chipStyle, RIPPLE ? styles.clipRipple : pressed && styles.pressed]}>
       {body}
     </Pressable>
   );
@@ -367,6 +395,9 @@ const styles = StyleSheet.create({
   },
   cardHero: { elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
   pressed: { opacity: 0.7 },
+  // Keeps the Android ripple inside the rounded corners. Android only: on iOS
+  // this would also clip the card shadow.
+  clipRipple: { overflow: 'hidden' },
   disabled: { opacity: 0.5 },
   button: {
     minHeight: TOUCH_TARGET,
@@ -387,6 +418,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
   },
+  chipContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   chipLabel: { fontSize: 13, fontWeight: '600' },
   chipDetail: { fontWeight: 'normal' },
   field: { gap: spacing.xs },

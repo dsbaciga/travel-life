@@ -71,6 +71,12 @@ Key rules:
 - Run `npm test`, `npm run typecheck`, `npx tsc --noEmit -p tsconfig.test.json` and
   `npx eslint src` from `mobile/` before declaring work done.
 - Plain `http` servers are refused unless on a local network (private IPs, `.local`, `localhost`).
+- Screens are built from the shared kit, so reuse it before writing a one-off:
+  - `components/ui.tsx`: `Screen`, `Card`, `Button`, `Chip`, `Field` and friends. They are themed from `lib/theme.ts` and give Android ripples.
+  - `components/Icon.tsx`: icons by meaning (`<Icon name="parking" />`, or the `icon` prop on `Button` and `Chip`). Material Symbols on Android, SF Symbols on iOS, through `expo-symbols`. Don't use emoji as icons; add a name to `GLYPHS` instead.
+  - `lib/toast.ts`: `showToast(message, { label: 'Undo', onPress })` confirms an action. `components/Toast.tsx` renders it.
+  - `lib/feedback.ts`: haptics (`tapFeedback`, `successFeedback`, `warningFeedback`) and `copyWithFeedback`.
+  - `components/ActionSheet.tsx`: `showActionSheet` for menus. Don't use `Alert.alert` for menus, because Android drops buttons past the third.
 
 ### Backend surface used by the app
 

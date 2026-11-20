@@ -4,7 +4,6 @@
  */
 import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
@@ -13,6 +12,7 @@ import { dayKeyInTimezone, formatDateOnly, resolveTimezone } from '@travel-life/
 
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
+import Icon from '@/components/Icon';
 import MapToButton from '@/components/MapToButton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import {
@@ -23,6 +23,7 @@ import {
 } from '@/domain/mutations';
 import { buildTripDays, unscheduledItems, type TimelineItem } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { successFeedback, tapFeedback, warningFeedback } from '@/lib/feedback';
 import { ENTITY_FORMS, type FormKind } from '@/lib/entityForms';
 import {
   useActiveTrip,
@@ -35,6 +36,7 @@ import {
 import { api } from '@/lib/session';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
 import { spacing, TOUCH_TARGET, usePalette } from '@/lib/theme';
+import { showToast } from '@/lib/toast';
 
 type Mode = 'days' | 'types' | 'checklists' | 'review';
 
@@ -119,14 +121,16 @@ export default function TripScreen() {
   const moveActivity = useCallback(
     async (dayKey: string, entityId: EntityId, direction: -1 | 1) => {
       const day = days.find((d) => d.dayKey === dayKey);
-      if (!day) return;
+      if (!day) return null;
       const order = day.items.filter((i) => i.type === 'ACTIVITY' && !i.allDay).map((i) => i.entityId);
       const from = order.findIndex((id) => String(id) === String(entityId));
       const to = from + direction;
-      if (from < 0 || to < 0 || to >= order.length) return;
+      if (from < 0 || to < 0 || to >= order.length) return null;
+      const before = [...order];
       [order[from], order[to]] = [order[to], order[from]];
       await reorderActivities(await getDb(), order);
       await notifyLocalChange();
+      return before;
     },
     [days]
   );
@@ -135,6 +139,12 @@ export default function TripScreen() {
   const addToDay = useCallback(
     (dayKey: string) => {
       if (!trip) return;
+      const dayLabel = formatDateOnly(`${dayKey}T00:00:00Z`, { weekday: 'short', month: 'short', day: 'numeric' });
+      const scheduled = async () => {
+        tapFeedback();
+        await notifyLocalChange();
+        showToast(`Added to ${dayLabel}`);
+      };
       const actions = [
         ...unscheduled
           .filter((item) => item.entityKind === 'ACTIVITY' || item.entityKind === 'CUSTOM_ITEM')
@@ -149,7 +159,7 @@ export default function TripScreen() {
                 { type: 'moveToDay', dayKey },
                 item.timezone
               );
-              await notifyLocalChange();
+              await scheduled();
             },
           })),
         ...savedLinks.slice(0, 12).map((link) => ({
@@ -161,7 +171,7 @@ export default function TripScreen() {
             if (created) {
               await adjustTime(await getDb(), 'ACTIVITY', created.id, { type: 'moveToDay', dayKey }, tripZone);
             }
-            await notifyLocalChange();
+            await scheduled();
           },
         })),
         {
@@ -182,6 +192,9 @@ export default function TripScreen() {
     (entity: PendingEntity) => {
       const decide = (verb: 'accept' | 'reject') => async () => {
         await api.request(`/pdf-imports/pending/${entity.id}/${verb}`, { method: 'POST', body: {} });
+        if (verb === 'accept') successFeedback();
+        else warningFeedback();
+        showToast(verb === 'accept' ? 'Added to the trip' : 'Rejected');
         await refetchPending();
         // Accepting creates a real entity server-side; pull it into the mirror.
         if (verb === 'accept') void syncNow();
@@ -216,7 +229,7 @@ export default function TripScreen() {
         <Chip label="By type" selected={mode === 'types'} onPress={() => setMode('types')} />
         <Chip label="Checklists" selected={mode === 'checklists'} onPress={() => setMode('checklists')} />
         <Chip label="Review queue" selected={mode === 'review'} onPress={() => setMode('review')} />
-        <Chip label="Photos" onPress={() => router.push('/camera-roll')} />
+        <Chip label="Photos" icon="photos" onPress={() => router.push('/camera-roll')} />
       </ScrollView>
     </View>
   );
@@ -249,7 +262,7 @@ export default function TripScreen() {
                   dayKey={row.dayKey}
                   tripTimezone={tripZone}
                   pending={dirty?.has(`${row.item.entityKind}:${row.item.entityId}`) ?? false}
-                  onMove={(id, direction) => void moveActivity(row.dayKey, id, direction)}
+                  onMove={(id, direction) => moveActivity(row.dayKey, id, direction)}
                 />
               </View>
             )
@@ -360,13 +373,15 @@ export default function TripScreen() {
                     accessibilityLabel={item.name}
                     style={styles.checkRow}
                     onPress={async () => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+                      tapFeedback();
                       await toggleChecklistItem(await getDb(), item.id, !item.isChecked);
                       await notifyLocalChange();
                     }}>
-                    <AppText variant="heading" color={item.isChecked ? palette.success : palette.textMuted}>
-                      {item.isChecked ? '☑' : '☐'}
-                    </AppText>
+                    <Icon
+                      name={item.isChecked ? 'checked' : 'unchecked'}
+                      size={24}
+                      color={item.isChecked ? palette.success : palette.textMuted}
+                    />
                     <AppText muted={item.isChecked} style={[styles.flex, item.isChecked && styles.struck]}>
                       {item.name}
                     </AppText>

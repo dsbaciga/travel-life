@@ -10,11 +10,12 @@ import * as Linking from 'expo-linking';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { formatDateOnly, getCountryFacts, resolveCountryFromAddress } from '@travel-life/shared';
 
 import { showActionSheet } from '@/components/ActionSheet';
+import Icon, { type IconName } from '@/components/Icon';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen, SectionHeader } from '@/components/ui';
 import { getDb } from '@/lib/db';
 import {
@@ -43,6 +44,17 @@ import {
 } from '@/lib/vault';
 
 type Section = 'documents' | 'emergency' | 'norms' | 'phrases';
+
+/** One line of local norms, led by its icon. */
+function Fact({ icon, children }: { icon: IconName; children: ReactNode }) {
+  const palette = usePalette();
+  return (
+    <Row style={styles.fact}>
+      <Icon name={icon} size={20} color={palette.textMuted} />
+      <AppText style={styles.factText}>{children}</AppText>
+    </Row>
+  );
+}
 
 /** One-tap dial. Strips formatting so the dialer receives digits and a leading +. */
 function PhoneLink({ label, number }: { label: string; number: string }) {
@@ -290,16 +302,16 @@ export default function VaultScreen() {
         facts ? (
           <Card>
             <AppText variant="heading">{facts.name}</AppText>
-            <AppText>
-              🔌 Plugs {facts.electricity.plugTypes.join(', ')} · {facts.electricity.voltage} V ·{' '}
+            <Fact icon="plug">
+              Plugs {facts.electricity.plugTypes.join(', ')} · {facts.electricity.voltage} V ·{' '}
               {facts.electricity.frequency} Hz
-            </AppText>
-            <AppText>
-              🚰 Tap water:{' '}
+            </Fact>
+            <Fact icon="water">
+              Tap water:{' '}
               {facts.tapWater === 'safe' ? 'safe to drink' : facts.tapWater === 'caution' ? 'use caution' : 'not safe to drink'}
-            </AppText>
-            <AppText>🚗 Drives on the {facts.drivingSide}</AppText>
-            <AppText>💶 {facts.tipping}</AppText>
+            </Fact>
+            <Fact icon="parking">Drives on the {facts.drivingSide}</Fact>
+            <Fact icon="money">{facts.tipping}</Fact>
           </Card>
         ) : (
           <EmptyState title="Country unknown" message="Set the trip's destination country in the web app to see plugs, tipping and tap-water guidance." />
@@ -385,4 +397,6 @@ export default function VaultScreen() {
 const styles = StyleSheet.create({
   between: { justifyContent: 'space-between' },
   phone: { minHeight: TOUCH_TARGET, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  fact: { flexWrap: 'nowrap', alignItems: 'flex-start' },
+  factText: { flex: 1 },
 });

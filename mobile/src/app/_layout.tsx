@@ -1,21 +1,24 @@
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as ExpoCrypto from 'expo-crypto';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
+import * as Font from 'expo-font';
+import symbolFont from 'expo-symbols/androidWeights/regular';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { ShareIntentProvider } from 'expo-share-intent';
-import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ActionSheetHost } from '@/components/ActionSheet';
 import ShareIntentRouter from '@/components/ShareIntentRouter';
+import { ToastHost } from '@/components/Toast';
 import { setIdFactory } from '@/domain/mutations';
 import { useSession } from '@/lib/session';
 import { syncNow } from '@/lib/sync';
-import { useResolvedColorScheme, useThemeStore } from '@/lib/theme';
+import { darkPalette, lightPalette, useResolvedColorScheme, useThemeStore, type Palette } from '@/lib/theme';
 import { registerForPush } from '@/tasks/notifications';
 // Side-effect imports: background tasks and the widget handler must be defined
 // at module load, before the OS can deliver an event to a headless launch.
@@ -38,19 +41,64 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: Infinity, retry: false, networkMode: 'always' } },
 });
 
+/**
+ * The navigation theme, built from the palette so the headers of pushed screens
+ * (forms, Sync, Settings) match the screen under them instead of using the
+ * library's stock black and white.
+ */
+function navigationTheme(scheme: 'light' | 'dark'): Theme {
+  const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+  const palette: Palette = scheme === 'dark' ? darkPalette : lightPalette;
+  return {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: palette.primary,
+      background: palette.background,
+      card: palette.surface,
+      text: palette.text,
+      border: palette.border,
+      notification: palette.danger,
+    },
+  };
+}
+
+/**
+ * Icons draw from the Material Symbols font on Android. Loading it before the
+ * splash screen hides means the first screen does not show empty icon slots.
+ * It ships inside the app, so this works offline.
+ */
+async function loadIconFont(): Promise<void> {
+  if (Platform.OS === 'ios') return;
+  try {
+    // Never hold the splash screen for icons: give up after a moment and let
+    // each icon finish loading on its own.
+    await Promise.race([
+      Font.loadAsync({ [symbolFont.name]: symbolFont.font }),
+      new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+    ]);
+  } catch {
+    // Icons fall back to blank space; the app still works.
+  }
+}
+
 export default function RootLayout() {
   const colorScheme = useResolvedColorScheme();
   const hydrated = useSession((state) => state.hydrated);
   const signedIn = useSession((state) => state.session !== null);
+  const [iconsReady, setIconsReady] = useState(false);
+  const theme = useMemo(() => navigationTheme(colorScheme), [colorScheme]);
 
   useEffect(() => {
     void useSession.getState().hydrate();
     void useThemeStore.getState().hydrate();
+    void loadIconFont().finally(() => setIconsReady(true));
   }, []);
 
+  const ready = hydrated && iconsReady;
   useEffect(() => {
-    if (hydrated) void SplashScreen.hideAsync();
-  }, [hydrated]);
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
 
   useEffect(() => {
     if (!signedIn) return;
@@ -75,14 +123,14 @@ export default function RootLayout() {
     };
   }, [signedIn]);
 
-  if (!hydrated) return null;
+  if (!ready) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ShareIntentProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <ThemeProvider value={theme}>
               <Stack screenOptions={{ headerBackTitle: 'Back' }}>
                 <Stack.Protected guard={signedIn}>
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -104,6 +152,7 @@ export default function RootLayout() {
                 </Stack.Protected>
               </Stack>
               {signedIn ? <ShareIntentRouter /> : null}
+              <ToastHost />
               <ActionSheetHost />
               <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             </ThemeProvider>

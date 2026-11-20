@@ -89,7 +89,8 @@ export default function PhotoAttachments({ photos, onChange, max = 12 }: Props) 
         </Row>
       ) : null}
       <Button
-        label={photos.length > 0 ? '+ Add another photo' : '📷 Add photo'}
+        label={photos.length > 0 ? 'Add another photo' : 'Add photo'}
+        icon="camera"
         variant="secondary"
         disabled={photos.length >= max}
         onPress={() =>

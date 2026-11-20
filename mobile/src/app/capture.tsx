@@ -5,28 +5,34 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type { SyncEntityMap } from '@travel-life/shared';
 
+import Icon, { type IconName } from '@/components/Icon';
 import { AppText, Banner, Card, EmptyState, Screen } from '@/components/ui';
 import { createEntity, type LinkSpec } from '@/domain/mutations';
 import { exifCoordinate, exifDate } from '@/domain/exif';
 import { suggestLinks } from '@/domain/smart';
 import { listEntities } from '@/db/repository';
 import { getDb } from '@/lib/db';
+import { successFeedback } from '@/lib/feedback';
 import type { FormKind } from '@/lib/entityForms';
 import { useActiveTrip } from '@/lib/hooks';
 import { notifyLocalChange, syncNow } from '@/lib/sync';
+import { radius, spacing, usePalette } from '@/lib/theme';
+import { showToast } from '@/lib/toast';
 import { getCurrentPosition, positionFailureMessage } from '@/tasks/location';
 
 interface Option {
   key: string;
-  icon: string;
+  icon: IconName;
   title: string;
   detail: string;
   run: () => void | Promise<void>;
 }
 
 export default function CaptureScreen() {
+  const palette = usePalette();
   const { data: trip } = useActiveTrip();
   const [message, setMessage] = useState<string | null>(null);
 
@@ -99,6 +105,8 @@ export default function CaptureScreen() {
     }
     await notifyLocalChange();
     void syncNow();
+    successFeedback();
+    showToast(result.assets.length === 1 ? 'Photo added' : `${result.assets.length} photos added`);
     router.back();
   };
 
@@ -134,17 +142,17 @@ export default function CaptureScreen() {
     });
 
   const options: Option[] = [
-    { key: 'stop', icon: '📍', title: 'New activity / spontaneous stop', detail: 'Stamped now, linked to where you are', run: spontaneousStop },
-    { key: 'pin', icon: '📌', title: 'New location pin — “I’m here”', detail: 'Drops a pin at your current GPS position', run: dropPin },
-    { key: 'camera', icon: '📷', title: 'Snap a photo', detail: 'Auto-linked to the current activity and place', run: () => capturePhoto('camera') },
-    { key: 'library', icon: '🖼️', title: 'Add photos from library', detail: 'Uses each photo’s own time and GPS', run: () => capturePhoto('library') },
-    { key: 'receipt', icon: '🧾', title: 'Scan receipt / add expense', detail: 'Reads the total, currency and merchant', run: () => router.replace('/receipt') },
-    { key: 'food', icon: '🍽️', title: 'Find food nearby', detail: 'Search around you, with a dietary filter', run: () => router.replace('/food') },
-    { key: 'meal', icon: '🍝', title: 'Log a meal', detail: 'Rating, dish and “order again?”', run: () => openForm('FOOD_LOG') },
-    { key: 'note', icon: '📝', title: 'Quick journal note', detail: 'Tip: use the keyboard’s microphone to dictate', run: quickNote },
-    { key: 'transit', icon: '🚆', title: 'Log transit', detail: 'A train, bus, ferry or taxi you just took', run: () => openForm('TRANSPORTATION') },
-    { key: 'link', icon: '🔗', title: 'Save a link', detail: 'Keep a URL with this trip', run: () => openForm('SAVED_LINK') },
-    { key: 'parked', icon: '🚗', title: 'Where I parked', detail: 'Pin, photo and meter timer', run: () => router.replace('/parked') },
+    { key: 'stop', icon: 'place', title: 'New activity / spontaneous stop', detail: 'Stamped now, linked to where you are', run: spontaneousStop },
+    { key: 'pin', icon: 'pin', title: 'New location pin — “I’m here”', detail: 'Drops a pin at your current GPS position', run: dropPin },
+    { key: 'camera', icon: 'camera', title: 'Snap a photo', detail: 'Auto-linked to the current activity and place', run: () => capturePhoto('camera') },
+    { key: 'library', icon: 'photos', title: 'Add photos from library', detail: 'Uses each photo’s own time and GPS', run: () => capturePhoto('library') },
+    { key: 'receipt', icon: 'receipt', title: 'Scan receipt / add expense', detail: 'Reads the total, currency and merchant', run: () => router.replace('/receipt') },
+    { key: 'food', icon: 'food', title: 'Find food nearby', detail: 'Search around you, with a dietary filter', run: () => router.replace('/food') },
+    { key: 'meal', icon: 'meal', title: 'Log a meal', detail: 'Rating, dish and “order again?”', run: () => openForm('FOOD_LOG') },
+    { key: 'note', icon: 'note', title: 'Quick journal note', detail: 'Tip: use the keyboard’s microphone to dictate', run: quickNote },
+    { key: 'transit', icon: 'transit', title: 'Log transit', detail: 'A train, bus, ferry or taxi you just took', run: () => openForm('TRANSPORTATION') },
+    { key: 'link', icon: 'link', title: 'Save a link', detail: 'Keep a URL with this trip', run: () => openForm('SAVED_LINK') },
+    { key: 'parked', icon: 'parking', title: 'Where I parked', detail: 'Pin, photo and meter timer', run: () => router.replace('/parked') },
   ];
 
   return (
@@ -153,14 +161,25 @@ export default function CaptureScreen() {
       {message ? <Banner text={message} tone="warning" /> : null}
       {options.map((option) => (
         <Card key={option.key} onPress={() => void option.run()} accessibilityLabel={option.title}>
-          <AppText variant="heading">
-            {option.icon} {option.title}
-          </AppText>
-          <AppText variant="caption" muted>
-            {option.detail}
-          </AppText>
+          <View style={styles.option}>
+            <View style={[styles.badge, { backgroundColor: palette.tint }]}>
+              <Icon name={option.icon} size={22} color={palette.primary} />
+            </View>
+            <View style={styles.optionText}>
+              <AppText variant="heading">{option.title}</AppText>
+              <AppText variant="caption" muted>
+                {option.detail}
+              </AppText>
+            </View>
+          </View>
         </Card>
       ))}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  option: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  badge: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  optionText: { flex: 1, gap: 2 },
+});

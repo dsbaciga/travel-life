@@ -32,10 +32,14 @@ import {
 } from '@/domain/mutations';
 import { suggestLinks, type LinkSuggestion } from '@/domain/smart';
 import { getDb } from '@/lib/db';
+import { successFeedback, warningFeedback } from '@/lib/feedback';
 import { ENTITY_FORMS, completeEntity, isFormKind, validationErrors } from '@/lib/entityForms';
 import { useActiveTrip, useEntities, useEntity, useUserTimezone } from '@/lib/hooks';
 import { notifyLocalChange, syncNow } from '@/lib/sync';
+import { showToast } from '@/lib/toast';
 import { getCurrentPosition, positionFailureMessage } from '@/tasks/location';
+
+const capitalize = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
 
 type Values = Record<string, unknown>;
 
@@ -239,6 +243,8 @@ export default function EntityScreen() {
       }
       await notifyLocalChange();
       void syncNow();
+      successFeedback();
+      showToast(isNew ? `${capitalize(definition.noun)} added` : 'Changes saved');
       router.back();
     } finally {
       setSaving(false);
@@ -257,6 +263,8 @@ export default function EntityScreen() {
           await deleteEntity(await getDb(), kind, entityId);
           await notifyLocalChange();
           void syncNow();
+          warningFeedback();
+          showToast(`${capitalize(definition.noun)} deleted`);
           router.back();
         },
       },
@@ -297,7 +305,7 @@ export default function EntityScreen() {
         {!isNew && entityId !== undefined ? <MapToButton tripId={tripId} kind={kind} id={entityId} compact={false} /> : null}
 
         {kind === 'LOCATION' ? (
-          <Button label="📍 Use current GPS location" variant="secondary" onPress={() => void fillFromGps()} />
+          <Button label="Use current GPS location" icon="myLocation" variant="secondary" onPress={() => void fillFromGps()} />
         ) : null}
 
         <EntityForm

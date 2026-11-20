@@ -2,7 +2,6 @@
  * Today mode (#117): what is next, when, and how to get there.
  */
 import { FlashList } from '@shopify/flash-list';
-import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,6 +32,7 @@ import {
   type TimelineItem,
 } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { copyWithFeedback, tapFeedback } from '@/lib/feedback';
 import {
   useActiveTrip,
   useDirtyKeys,
@@ -44,6 +44,7 @@ import {
 } from '@/lib/hooks';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
 import { spacing, usePalette } from '@/lib/theme';
+import { showToast } from '@/lib/toast';
 import { useQuery } from '@tanstack/react-query';
 
 interface Destination {
@@ -169,9 +170,13 @@ export default function TodayScreen() {
     async (item: TimelineItem) => {
       if (item.entityKind !== 'ACTIVITY' && item.entityKind !== 'CUSTOM_ITEM') return;
       await adjustTime(await getDb(), item.entityKind, item.entityId, { type: 'moveToDay', dayKey: activeDay }, item.timezone);
+      tapFeedback();
       await notifyLocalChange();
+      showToast(
+        `Added to ${activeDay === todayKey ? 'today' : formatDateOnly(`${activeDay}T00:00:00Z`, { weekday: 'short', day: 'numeric' })}`
+      );
     },
-    [activeDay]
+    [activeDay, todayKey]
   );
   const burn = useMemo(
     () => (trip ? computeBurnRate(trip, expenses, todayKey) : null),
@@ -217,10 +222,12 @@ export default function TodayScreen() {
       const order = todayItems.filter((i) => i.type === 'ACTIVITY' && !i.allDay).map((i) => i.entityId);
       const from = order.findIndex((id) => String(id) === String(entityId));
       const to = from + direction;
-      if (from < 0 || to < 0 || to >= order.length) return;
+      if (from < 0 || to < 0 || to >= order.length) return null;
+      const before = [...order];
       [order[from], order[to]] = [order[to], order[from]];
       await reorderActivities(await getDb(), order);
       await notifyLocalChange();
+      return before;
     },
     [todayItems]
   );
@@ -372,13 +379,14 @@ export default function TodayScreen() {
               <AppText selectable>{destination.address}</AppText>
             ) : null}
             <Row>
-              {destination ? <Button label="Directions" compact onPress={openDirections} /> : null}
+              {destination ? <Button label="Directions" icon="navigate" compact onPress={openDirections} /> : null}
               {nextUp.item.confirmation ? (
                 <Button
                   label={`Copy ${nextUp.item.confirmation}`}
+                  icon="copy"
                   variant="secondary"
                   compact
-                  onPress={() => void Clipboard.setStringAsync(nextUp.item.confirmation as string)}
+                  onPress={() => void copyWithFeedback(nextUp.item.confirmation as string)}
                 />
               ) : null}
             </Row>
@@ -392,18 +400,20 @@ export default function TodayScreen() {
       {isToday ? (
       <Row>
         <Button
-          label={parking ? `🚗 ${meter?.label ?? 'Parked'}` : '🚗 Where I parked'}
+          label={parking ? (meter?.label ?? 'Parked') : 'Where I parked'}
+          icon="parking"
           variant={meter?.state === 'soon' || meter?.state === 'expired' ? 'danger' : 'secondary'}
           compact
           onPress={() => router.push('/parked')}
         />
         <Button
-          label="💬 Phrasebook"
+          label="Phrasebook"
+          icon="phrasebook"
           variant="secondary"
           compact
           onPress={() => router.push({ pathname: '/(tabs)/vault', params: { section: 'phrases' } })}
         />
-        <Button label="🍽️ Food nearby" variant="secondary" compact onPress={() => router.push('/food')} />
+        <Button label="Food nearby" icon="food" variant="secondary" compact onPress={() => router.push('/food')} />
       </Row>
       ) : null}
 
