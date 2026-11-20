@@ -81,7 +81,7 @@ export function isLinkRelationship(value: unknown): value is LinkRelationship {
  * @example
  * ```ts
  * getDefaultRelationship('PHOTO', 'LOCATION');      // 'TAKEN_AT'
- * getDefaultRelationship('ACTIVITY', 'LOCATION');   // 'OCCURRED_AT'
+ * getDefaultRelationship('ACTIVITY', 'LOCATION');   // 'RELATED' (the place itself is Activity.locationId)
  * getDefaultRelationship('JOURNAL_ENTRY', 'PHOTO'); // 'DOCUMENTS'
  * ```
  */
@@ -97,10 +97,9 @@ export function getDefaultRelationship(
   if (sourceType === 'PHOTO' && (targetType === 'PHOTO_ALBUM' || targetType === 'JOURNAL_ENTRY')) {
     return 'FEATURED_IN';
   }
-  // Activity/lodging occurred at location
-  if ((sourceType === 'ACTIVITY' || sourceType === 'LODGING') && targetType === 'LOCATION') {
-    return 'OCCURRED_AT';
-  }
+  // Note: "activity/lodging is at a location" is the entity's own locationId, not a link; a link
+  // between the two is a loose RELATED association (the API turns such a link into the FK when
+  // the entity has no place yet).
   // Journal documents entities
   if (sourceType === 'JOURNAL_ENTRY') {
     return 'DOCUMENTS';

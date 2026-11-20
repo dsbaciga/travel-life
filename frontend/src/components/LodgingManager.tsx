@@ -3,7 +3,6 @@ import { useSaveAndAddAnother } from "../hooks/useSaveAndAddAnother";
 import type { Lodging, LodgingType, CreateLodgingInput, UpdateLodgingInput } from "../types/lodging";
 import type { Location } from "../types/location";
 import lodgingService from "../services/lodging.service";
-import entityLinkService from "../services/entityLink.service";
 import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
@@ -30,7 +29,6 @@ import { useEditFromUrlParam } from "../hooks/useEditFromUrlParam";
 import { useCreateFromUrlParam } from "../hooks/useCreateFromUrlParam";
 import { useAutoSaveDraft } from "../hooks/useAutoSaveDraft";
 import { useDraftRestore } from "../hooks/useDraftRestore";
-import { useEntityLinkSync } from "../hooks/useEntityLinkSync";
 import { useBulkOperations } from "../hooks/useBulkOperations";
 import { useManagerFormWrapper } from "../hooks/useManagerFormWrapper";
 import { createLocationStub } from "../utils/locationHelpers";
@@ -94,7 +92,7 @@ interface LodgingManagerProps {
 interface LodgingFormFields {
   type: LodgingType;
   name: string;
-  locationId: number | undefined; // Used for EntityLink, not direct FK
+  locationId: number | undefined; // The lodging's own locationId FK
   address: string;
   checkInDate: string;
   checkOutDate: string;
@@ -113,7 +111,7 @@ const BASELINE_SETTLE_MS = 100;
 const initialFormState: LodgingFormFields = {
   type: "hotel",
   name: "",
-  locationId: undefined, // Used for EntityLink, not direct FK
+  locationId: undefined, // The lodging's own locationId FK
   address: "",
   checkInDate: "",
   checkOutDate: "",
@@ -176,8 +174,6 @@ export default function LodgingManager({
   // Not React state: the submit handler runs before a state change would be visible.
   const addAnother = useSaveAndAddAnother();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  // Track original location ID when editing to detect changes (for entity linking)
-  const [originalLocationId, setOriginalLocationId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "type">("date");
 
   // Bulk operations (selection + delete/edit) via shared hook
@@ -194,7 +190,6 @@ export default function LodgingManager({
   });
 
   // Shared entity link sync for location association
-  const { syncLocationLinkOnUpdate, syncLocationLinkOnCreate } = useEntityLinkSync();
 
   // Shared date/time formatter (Pattern 12: eliminates duplicated formatDateTime wrapper)
   const formatDateTime = useMemo(() => createDateTimeFormatter(tripTimezone), [tripTimezone]);
@@ -277,27 +272,13 @@ export default function LodgingManager({
   }, [locations]);
 
   // handleEdit must be defined before handleEditFromUrl since it's used as a dependency
-  const handleEdit = useCallback(async (lodging: Lodging) => {
+  const handleEdit = useCallback((lodging: Lodging) => {
     setShowMoreOptions(true); // Always show all options when editing
     handleChange("type", lodging.type);
     handleChange("name", lodging.name);
     handleChange("address", lodging.address || "");
 
-    // Fetch linked location via entity linking system
-    try {
-      const links = await entityLinkService.getLinksFrom(tripId, 'LODGING', lodging.id, 'LOCATION');
-      if (links.length > 0 && links[0].targetId) {
-        handleChange("locationId", links[0].targetId);
-        setOriginalLocationId(links[0].targetId);
-      } else {
-        handleChange("locationId", undefined);
-        setOriginalLocationId(null);
-      }
-    } catch {
-      // If fetching links fails, just proceed without location
-      handleChange("locationId", undefined);
-      setOriginalLocationId(null);
-    }
+    handleChange("locationId", lodging.locationId ?? undefined);
 
     // Convert stored UTC times to local times in the specified timezone
     const effectiveTz = resolveTz(lodging.timezone, tripTimezone);
@@ -322,7 +303,7 @@ export default function LodgingManager({
     handleChange("currency", lodging.currency || "USD");
     handleChange("notes", lodging.notes || "");
     manager.openEditForm(lodging.id);
-  }, [tripId, handleChange, tripTimezone, resolveTz, manager]);
+  }, [handleChange, tripTimezone, resolveTz, manager]);
 
   // Stable callback for URL-based edit navigation
   const handleEditFromUrl = useCallback((lodging: Lodging) => {
@@ -383,7 +364,6 @@ export default function LodgingManager({
   const resetForm = useCallback(() => {
     baseResetForm();
     setShowMoreOptions(false);
-    setOriginalLocationId(null);
     setShowDraftPrompt(false);
     setAlsoCreatePlace(false);
     draft.clearDraft();
@@ -393,7 +373,6 @@ export default function LodgingManager({
   const openCreateForm = useCallback(() => {
     baseOpenCreateForm();
     setShowMoreOptions(false);
-    setOriginalLocationId(null);
   }, [baseOpenCreateForm]);
 
   useCreateFromUrlParam(openCreateForm);
@@ -441,8 +420,9 @@ export default function LodgingManager({
     const checkOutDateISO = convertDateTimeLocalToISO(values.checkOutDate, effectiveTz);
 
     if (manager.editingId) {
-      // For updates, send null to clear empty fields (without locationId - using entity links)
+      // For updates, send null to clear empty fields (locationId null clears the place)
       const updateData = {
+        locationId: values.locationId || null,
         type: values.type,
         name: values.name,
         address: values.address || null,
@@ -459,24 +439,15 @@ export default function LodgingManager({
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
         await deadlines.apply(manager.editingId, values.timezone || null);
-        // Sync location link via shared hook (Pattern 14)
-        await syncLocationLinkOnUpdate({
-          tripId,
-          sourceType: 'LODGING',
-          sourceId: manager.editingId,
-          newLocationId: values.locationId || null,
-          originalLocationId,
-          entityLabel: 'Lodging',
-          invalidateLinkSummary,
-        });
+        invalidateLinkSummary();
 
         markSaved();
         resetForm();
         manager.closeForm();
       }
     } else {
-      // For creates, use undefined to omit optional fields (without locationId - using entity links)
-      const createData = {
+      // For creates, use undefined to omit optional fields
+      const createDataBase = {
         tripId,
         type: values.type,
         name: values.name,
@@ -506,22 +477,16 @@ export default function LodgingManager({
           }
         }
 
-        // Call service directly to get the created lodging ID for linking
-        const createdLodging = await lodgingService.createLodging(createData);
+        // Call service directly to get the created lodging ID
+        const createdLodging = await lodgingService.createLodging({
+          ...createDataBase,
+          locationId: newLocationId,
+        });
         toast.success('Lodging added successfully');
         await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
-        // Sync location link via shared hook (Pattern 14)
-        await syncLocationLinkOnCreate({
-          tripId,
-          sourceType: 'LODGING',
-          sourceId: createdLodging.id,
-          newLocationId,
-          originalLocationId: null,
-          entityLabel: 'Lodging',
-          invalidateLinkSummary,
-        });
+        invalidateLinkSummary();
 
         // Reload items and trigger parent update
         await manager.loadItems();
@@ -539,7 +504,6 @@ export default function LodgingManager({
           // come back as a draft.
           setAllFields(getInitialFormState);
           captureInitialValues(getInitialFormState);
-          setOriginalLocationId(null);
           draft.clearDraft();
           // Focus first input for quick data entry
           setTimeout(() => {

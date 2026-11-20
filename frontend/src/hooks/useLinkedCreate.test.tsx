@@ -53,35 +53,29 @@ describe('useLinkedCreate', () => {
     expect(locationService.createLocation).not.toHaveBeenCalled();
   });
 
-  it('creates an activity named after the place and links it to the place', async () => {
+  it('creates an activity named after the place, located at the place', async () => {
     vi.mocked(activityService.createActivity).mockResolvedValue({ id: 21 } as never);
     const { createCompanionForPlace } = setup();
 
     await expect(createCompanionForPlace('activity', place)).resolves.toBe(true);
-    expect(activityService.createActivity).toHaveBeenCalledWith({ tripId: 7, name: 'Louvre' });
-    expect(entityLinkService.createLink).toHaveBeenCalledWith(7, {
-      sourceType: 'ACTIVITY',
-      sourceId: 21,
-      targetType: 'LOCATION',
-      targetId: 11,
-    });
+    expect(activityService.createActivity).toHaveBeenCalledWith({ tripId: 7, locationId: 11, name: 'Louvre' });
+    // The place is the activity's own locationId, not a link
+    expect(entityLinkService.createLink).not.toHaveBeenCalled();
   });
 
-  it('creates a lodging carrying the place address and links it', async () => {
+  it('creates a lodging carrying the place address, located at the place', async () => {
     vi.mocked(lodgingService.createLodging).mockResolvedValue({ id: 31 } as never);
     const { createCompanionForPlace } = setup();
 
     await expect(createCompanionForPlace('lodging', place)).resolves.toBe(true);
     expect(lodgingService.createLodging).toHaveBeenCalledWith({
       tripId: 7,
+      locationId: 11,
       type: 'hotel',
       name: 'Louvre',
       address: 'Rue de Rivoli',
     });
-    expect(entityLinkService.createLink).toHaveBeenCalledWith(
-      7,
-      expect.objectContaining({ sourceType: 'LODGING', sourceId: 31, targetId: 11 })
-    );
+    expect(entityLinkService.createLink).not.toHaveBeenCalled();
   });
 
   it('reports failure without linking when the companion cannot be created', async () => {

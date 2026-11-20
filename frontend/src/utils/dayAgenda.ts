@@ -94,7 +94,14 @@ export function buildDayAgenda({
   resolveTimezone,
 }: DayAgendaInput): AgendaItem[] {
   const locationById = new Map(locations.map((location) => [location.id, location]));
-  const linkedPoint = (sourceType: string, sourceId: number): AgendaPoint | null => {
+  // The entity's own place (locationId FK) wins; loose location links are only a fallback.
+  const linkedPoint = (
+    sourceType: string,
+    sourceId: number,
+    ownLocationId: number | null | undefined
+  ): AgendaPoint | null => {
+    const own = ownLocationId != null ? toPoint(locationById.get(ownLocationId)) : null;
+    if (own) return own;
     for (const link of locationLinks) {
       if (link.sourceType !== sourceType || link.sourceId !== sourceId) continue;
       const point = toPoint(locationById.get(link.targetId));
@@ -119,7 +126,7 @@ export function buildDayAgenda({
       time: activity.allDay ? null : activity.startTime,
       timezone,
       allDay: activity.allDay,
-      point: linkedPoint('ACTIVITY', activity.id),
+      point: linkedPoint('ACTIVITY', activity.id, activity.locationId),
       endPoint: null,
       tab: 'activities',
     });
@@ -156,7 +163,7 @@ export function buildDayAgenda({
       entityId: stay.id,
       subtitle: titleCase(stay.type),
       timezone,
-      point: linkedPoint('LODGING', stay.id),
+      point: linkedPoint('LODGING', stay.id, stay.locationId),
       endPoint: null,
       tab: 'lodging' as const,
     };

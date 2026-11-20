@@ -308,6 +308,7 @@ describe('deadlines in the lodging and transportation forms', () => {
 
   const savedLodging = {
     id: 81,
+    locationId: null,
     tripId: TRIP_ID,
     type: 'hotel' as const,
     name: 'Grand Hotel',

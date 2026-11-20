@@ -10,6 +10,7 @@
  * - DEST-006: Custom items and meals use their place; items with nothing to go on get no button
  * - DEST-007: A place at 0,0 is not a destination
  * - DEST-008: Travel mode by transport type
+ * - DEST-009: An activity or lodging navigates to its own locationId, ahead of any link, and falls back to links
  */
 import { describe, expect, it } from 'vitest';
 import type {
@@ -88,6 +89,29 @@ describe('buildNavTargets', () => {
     expect(targets.get(navKey('LOCATION', 3))?.place).toEqual({ name: 'Hallgrimskirkja' });
     expect(targets.has(navKey('LOCATION', 4))).toBe(false);
     expect(targets.get(navKey('LOCATION', 1))).toMatchObject({ mode: 'driving', label: 'Map to' });
+  });
+
+  it('DEST-009: locationId wins over links, and a missing location falls back to links', () => {
+    const targets = buildNavTargets(
+      sources({
+        locations: [
+          location(10, { latitude: 41.9, longitude: 12.5 }),
+          location(11, { latitude: 45.4, longitude: 9.2 }),
+        ],
+        lodging: [lodging(1, { locationId: 10 }), lodging(2, { locationId: 99 })],
+        activities: [
+          { ...activity(1), locationId: 11 } as ActivityDto,
+          { ...activity(2), locationId: 99 } as ActivityDto,
+        ],
+        links: [link('ACTIVITY', 1, 'LOCATION', 10), link('ACTIVITY', 2, 'LOCATION', 10), link('LODGING', 2, 'LOCATION', 11)],
+      })
+    );
+
+    expect(targets.get(navKey('ACTIVITY', 1))?.place).toMatchObject({ latitude: 45.4, longitude: 9.2 });
+    // locationId 99 is not in the mirror (deleted): the link is used instead
+    expect(targets.get(navKey('ACTIVITY', 2))?.place).toMatchObject({ latitude: 41.9, longitude: 12.5 });
+    expect(targets.get(navKey('LODGING', 1))?.place).toMatchObject({ name: 'Hotel 1', latitude: 41.9 });
+    expect(targets.get(navKey('LODGING', 2))?.place).toMatchObject({ name: 'Hotel 2', latitude: 45.4 });
   });
 
   it('DEST-002: a lodging uses its linked place for coordinates, else its own address', () => {

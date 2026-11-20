@@ -13,6 +13,7 @@ import type { CustomItem } from '../types/customItem';
 import journalService from '../services/journalEntry.service';
 import weatherService from '../services/weather.service';
 import entityLinkService from '../services/entityLink.service';
+import { buildEntityLocationIdsMap } from '../utils/entityLocations';
 import locationService from '../services/location.service';
 import { getWeatherIcon } from '../utils/weatherIcons';
 import { parseDateOnlyAsLocal } from '../utils/timezone';
@@ -324,16 +325,12 @@ const Timeline = ({
       // This map is used for:
       // 1. Finding linked locations for unscheduled activities (avoids N+1 API calls)
       // 2. Finding linked locations for scheduled entities when matching unscheduled activities to days
-      const entityLinksMap: Record<string, number[]> = {};
-      if (Array.isArray(locationLinks)) {
-        for (const link of locationLinks) {
-          const key = `${link.sourceType}:${link.sourceId}`;
-          if (!entityLinksMap[key]) {
-            entityLinksMap[key] = [];
-          }
-          entityLinksMap[key].push(link.targetId);
-        }
-      }
+      // An activity's or lodging's own place (locationId) leads; loose location links follow.
+      const entityLinksMap: Record<string, number[]> = buildEntityLocationIdsMap(
+        Array.isArray(locationLinks) ? locationLinks : [],
+        Array.isArray(activities) ? activities : [],
+        Array.isArray(lodging) ? lodging : []
+      );
       setEntityLocationLinksMap(entityLinksMap);
       logger.log(`Built entity-location links map with ${Object.keys(entityLinksMap).length} entities`, {
         operation: 'loadTimelineData.entityLinks',

@@ -75,19 +75,27 @@ export function buildTodayItems({
   resolveTimezone,
 }: BuildTodayItemsInput): TodayItem[] {
   const locationById = new Map(locations.map((location) => [location.id, location]));
-  const linkedLocations = (sourceType: string, sourceId: number): Location[] =>
-    locationLinks
+  // The entity's own place (locationId FK) comes first, then any loose location links.
+  const linkedLocations = (
+    sourceType: string,
+    sourceId: number,
+    ownLocationId: number | null | undefined
+  ): Location[] => {
+    const own = ownLocationId != null ? locationById.get(ownLocationId) : undefined;
+    const loose = locationLinks
       .filter((link) => link.sourceType === sourceType && link.sourceId === sourceId)
       .flatMap((link) => {
         const location = locationById.get(link.targetId);
-        return location ? [location] : [];
+        return location && location !== own ? [location] : [];
       });
+    return own ? [own, ...loose] : loose;
+  };
 
   const items: TodayItem[] = [];
 
   for (const activity of activities) {
     if (!activity.startTime) continue;
-    const place = placeFromActivity(activity, linkedLocations('ACTIVITY', activity.id));
+    const place = placeFromActivity(activity, linkedLocations('ACTIVITY', activity.id, activity.locationId));
     items.push({
       key: `activity-${activity.id}`,
       type: 'activity',
@@ -137,7 +145,7 @@ export function buildTodayItems({
 
   for (const stay of lodging) {
     const timezone = resolveTimezone(stay.timezone);
-    const place = placeFromLodging(stay, linkedLocations('LODGING', stay.id));
+    const place = placeFromLodging(stay, linkedLocations('LODGING', stay.id, stay.locationId));
     const common = {
       type: 'lodging' as const,
       entityId: stay.id,

@@ -10,6 +10,7 @@ const resolveTimezone = (own: string | null | undefined) => own || PARIS;
 const activity = (over: Partial<Activity> & { id: number }): Activity => ({
   tripId: 1,
   parentId: null,
+  locationId: null,
   name: 'Activity',
   description: null,
   category: null,
@@ -55,6 +56,7 @@ const leg = (over: Partial<Transportation> & { id: number }): Transportation => 
 
 const stay = (over: Partial<Lodging> & { id: number }): Lodging => ({
   tripId: 1,
+  locationId: null,
   type: 'hotel',
   name: 'Hotel',
   address: null,

@@ -117,10 +117,12 @@ function extractActivitySearchData(activity: {
   description?: string | null;
   notes?: string | null;
   category?: string | null;
-  location?: string | null;
+  /** The activity's place (the locationId FK, hydrated by the API as a small object). */
+  location?: string | { name: string } | null;
 }): { searchText: string; title: string; subtitle?: string } {
+  const locationName = typeof activity.location === 'string' ? activity.location : activity.location?.name;
   return {
-    searchText: normalizeMultiple([activity.name, activity.description, activity.notes, activity.category, activity.location]),
+    searchText: normalizeMultiple([activity.name, activity.description, activity.notes, activity.category, locationName]),
     title: activity.name,
     subtitle: activity.category || undefined,
   };

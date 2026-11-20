@@ -94,6 +94,8 @@ export interface ActivityDto extends Timestamps {
   id: EntityId;
   tripId: number;
   parentId: EntityId | null;
+  /** Where the activity is (a direct FK to a LOCATION). Absent in rows synced before the FK existed. */
+  locationId?: EntityId | null;
   name: string;
   description: string | null;
   category: string | null;
@@ -178,6 +180,8 @@ export type LodgingType = (typeof LODGING_TYPES)[number];
 export interface LodgingDto extends Timestamps {
   id: EntityId;
   tripId: number;
+  /** Where the stay is (a direct FK to a LOCATION). Absent in rows synced before the FK existed. */
+  locationId?: EntityId | null;
   type: string;
   name: string;
   address: string | null;

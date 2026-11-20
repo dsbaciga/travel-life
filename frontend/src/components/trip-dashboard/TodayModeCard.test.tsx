@@ -47,6 +47,7 @@ const NOW = '2026-06-10T12:00:00Z';
 const activity = (over: Partial<Activity> & { id: number; name: string }): Activity => ({
   tripId: 1,
   parentId: null,
+  locationId: null,
   description: null,
   category: null,
   allDay: false,
@@ -91,6 +92,7 @@ const leg = (over: Partial<Transportation> & { id: number }): Transportation => 
 
 const stay = (over: Partial<Lodging> & { id: number; name: string }): Lodging => ({
   tripId: 1,
+  locationId: null,
   type: 'hotel',
   address: null,
   checkInDate: null,

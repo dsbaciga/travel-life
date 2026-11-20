@@ -221,7 +221,7 @@ describe('sync engine', () => {
       'LOCATION',
       locationInput()
     );
-    expect(link.relationship).toBe('OCCURRED_AT');
+    expect(link.relationship).toBe('RELATED');
     expect(isLocalId(link.sourceId) && isLocalId(link.targetId)).toBe(true);
 
     const result = await flushOutbox(db, server);
@@ -237,7 +237,7 @@ describe('sync engine', () => {
       sourceId: serverActivity.id,
       targetType: 'LOCATION',
       targetId: serverLocation.id,
-      relationship: 'OCCURRED_AT',
+      relationship: 'RELATED',
     });
 
     // Local mirror is fully on server ids, with no stragglers.
@@ -739,7 +739,7 @@ describe('sync engine', () => {
         sourceId: serverStop?.id,
         targetType: 'LOCATION',
         targetId: serverBar?.id,
-        relationship: 'OCCURRED_AT',
+        relationship: 'RELATED',
       }),
     ]);
     // Same wall-clock time, one day later.
