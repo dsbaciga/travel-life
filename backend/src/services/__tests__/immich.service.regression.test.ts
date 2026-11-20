@@ -41,6 +41,11 @@ resetMockAxiosCreate();
 
 // Import the service (and AppError) after mocks
 import immichService from '../immich.service';
+import { config } from '../../config';
+
+// These tests model a LAN Immich (http://localhost:2283), which the
+// request-time SSRF guard only allows with ALLOW_PRIVATE_INTEGRATION_URLS.
+config.security.allowPrivateIntegrationUrls = true;
 import { AppError } from '../../errors/errors';
 
 const TEST_API_URL = 'http://localhost:2283';
@@ -359,6 +364,11 @@ describe('ImmichService regressions', () => {
         },
         timeout: 30000,
         maxRedirects: 0,
+        // `localhost` is a name, so even under the LAN escape hatch it goes
+        // through the request-time guard's LAN-policy agents.
+        httpAgent: expect.anything(),
+        httpsAgent: expect.anything(),
+        proxy: false,
       });
     });
 

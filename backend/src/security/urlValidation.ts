@@ -27,7 +27,14 @@ const BLOCKED_HOSTNAMES = [
  * the self-hosted integrations — Immich, a local LLM, a LAN SMTP relay — where
  * a private address is the primary deployment pattern rather than an attack.
  * Callers use it to skip SSRF validation deliberately, so it must stay
- * conservative: only literal loopback and the RFC1918 ranges, plus `.local`.
+ * conservative:
+ *
+ * - IP literals qualify only when they are loopback or RFC1918 (checked as
+ *   real addresses: a DNS name such as `10.evil.example.com` or
+ *   `192.168.attacker.net` is NOT an IP and does not qualify);
+ * - names qualify only when they are `localhost` or end in `.local`. A name
+ *   can still resolve anywhere, so request-time code must restrict what it
+ *   resolves to (see `integrationRequestGuard.ts`).
  *
  * Do not use this to decide that a URL is *safe*. It only says the operator
  * plausibly meant to reach their own network.
@@ -35,13 +42,36 @@ const BLOCKED_HOSTNAMES = [
 export function isLocalNetworkHostname(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
 
-  return (
-    ['localhost', '127.0.0.1', '::1'].includes(host) ||
-    host.startsWith('192.168.') ||
-    host.startsWith('10.') ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    host.endsWith('.local')
-  );
+  if (net.isIP(host)) return isLanIpAddress(host);
+  return host === 'localhost' || host.endsWith('.local');
+}
+
+/**
+ * Whether an IP address is loopback or RFC1918 private: the addresses a LAN
+ * service legitimately lives on. Link-local (169.254/16, cloud metadata),
+ * CGNAT, multicast, reserved and unspecified addresses are NOT LAN addresses.
+ * IPv4-mapped IPv6 is judged by its embedded IPv4 address.
+ */
+export function isLanIpAddress(ip: string): boolean {
+  const host = ip.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+
+  if (net.isIPv4(host)) {
+    const [a, b] = host.split('.').map(Number);
+    return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  }
+
+  if (net.isIPv6(host)) {
+    if (host === '::1') return true;
+    const dotted = host.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (dotted) return isLanIpAddress(dotted[1]);
+    const expanded = expandIPv6(host);
+    if (expanded && expanded.substring(0, 24) === '0'.repeat(20) + 'ffff') {
+      const embedded = [24, 26, 28, 30].map((i) => parseInt(expanded.substring(i, i + 2), 16)).join('.');
+      return isLanIpAddress(embedded);
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -204,6 +234,14 @@ function isPrivateIP(hostname: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Whether an IP address (v4 or v6, brackets optional) is loopback, private,
+ * link-local or otherwise internal. Non-IP strings return false.
+ */
+export function isPrivateIpAddress(ip: string): boolean {
+  return isPrivateIP(ip);
 }
 
 /**

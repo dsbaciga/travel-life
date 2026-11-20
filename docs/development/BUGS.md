@@ -400,10 +400,10 @@ defect and there is no version of the code in which it is "done" — see
 - **Confidence**: Confirmed
 - **Suggested fix**: Issue the token as an HMAC over the session/user identifier keyed by a server secret, and verify the HMAC.
 
-#### Stored integration URLs are validated only at save time, not at fetch time
+#### Stored integration URLs are validated only at save time, not at fetch time ✅ FIXED
 
 - **Reported**: 2026-07-25
-- **Status**: Open
+- **Status**: Fixed (2026-11-20)
 - **Priority**: Medium
 - **Component**: Backend
 - **Category**: Security — SSRF / DNS rebinding
@@ -412,6 +412,7 @@ defect and there is no version of the code in which it is "done" — see
 - **Impact**: A user saves `https://attacker.example.com` (public IP, passes), then re-points that DNS record at `169.254.169.254` or `127.0.0.1`. Every subsequent Immich call hits the internal target with the response surfaced to the user. Same shape applies to `llmBaseUrl`.
 - **Confidence**: Confirmed
 - **Suggested fix**: Re-validate immediately before each outbound request (or pin the validated IP into the request agent), and limit redirect following.
+- **Fix**: `security/integrationRequestGuard.ts` adds `integrationRequestOptions(url)`, spread into every request to a user-configured URL: the Immich client (`immich.service.ts` `createClient`), the Immich asset check in `photo.service.ts`, and per-user LLM endpoints (`llm.service.ts` `chat` and `chatWithImage`). At request time it re-runs the static checks (scheme, blocked names, IP literals) and routes the request through shared http/https agents whose `lookup` resolves the hostname, refuses the connection if any answer is private or internal, and hands the checked address straight to the socket, so there is no second lookup to rebind. Proxies are disabled on guarded requests so the checked address is the one connected to, and all of these calls keep `maxRedirects: 0`. The LAN escape hatch stays, but tighter: `isLocalNetworkHostname` now matches loopback/RFC1918 only as real IP literals (a DNS name such as `10.evil.example.com` used to pass its prefix test, at save time and in the hatch), plus `localhost` and `*.local` names. With `ALLOW_PRIVATE_INTEGRATION_URLS` on, a LAN IP literal goes out as a normal request, and a `localhost`/`.local` name goes through agents that accept public or loopback/RFC1918 answers but never link-local/metadata, CGNAT or reserved ones. The admin's `LLM_BASE_URL` is trusted and not guarded. Tests: `security/__tests__/integrationRequestGuard.test.ts` drives real axios requests at a local server with mocked DNS (save-time public, request-time private → refused, server never hit; escape hatch on/off), plus service-level cases in `immich.service.test.ts` and `llm.service.test.ts`.
 
 #### Registration and user search both allow account enumeration
 

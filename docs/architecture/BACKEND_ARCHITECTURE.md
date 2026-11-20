@@ -152,6 +152,7 @@ backend/
       csrf.ts                    # CSRF protection
       encryption.ts              # AES-256 at-rest encryption for stored API keys / SMTP passwords
       urlValidation.ts           # URL validation / SSRF guards
+      integrationRequestGuard.ts # Request-time SSRF guard (DNS rebinding) for user-configured URLs
       promptSafety.ts            # LLM prompt safety checks
     validation/
       zodHelpers.ts              # Shared Zod schema helpers
@@ -1326,7 +1327,7 @@ Each lives in its own service under `src/services/`; configuration is in `src/co
 | Frankfurter (exchange rates) | `exchangeRate.service.ts` |
 | Backups (manual and scheduled) | `backup.service.ts`, `restore.service.ts`, `scheduledBackup.service.ts`, `backupIntegrity.service.ts` |
 
-User-configured integration URLs (Immich, LLM, SMTP) are checked by the SSRF guard in `src/security/urlValidation.ts`.
+User-configured integration URLs (Immich, LLM, SMTP) are checked by the SSRF guard in `src/security/urlValidation.ts` when saved. Requests to a stored Immich or per-user LLM URL also spread `integrationRequestOptions(url)` from `src/security/integrationRequestGuard.ts` into their axios config: it re-checks the URL and connects through agents whose DNS lookup refuses private addresses, so a hostname re-pointed after saving (DNS rebinding) is not reached. Keep `maxRedirects: 0` next to it, and use it for any new outbound call to a URL a user configures. Admin-set env URLs are trusted and skip it.
 
 ---
 

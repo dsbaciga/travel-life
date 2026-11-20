@@ -25,7 +25,7 @@
  * - IMM-021: getAssetOriginalStream returns stream and content type
  */
 
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import axios from 'axios';
 
 // Mock axios
@@ -49,6 +49,11 @@ resetMockAxiosCreate();
 
 // Import the service after mocks
 import immichService from '../immich.service';
+import { config } from '../../config';
+
+// These tests model a LAN Immich (http://localhost:2283), which the
+// request-time SSRF guard only allows with ALLOW_PRIVATE_INTEGRATION_URLS.
+config.security.allowPrivateIntegrationUrls = true;
 
 const TEST_API_URL = 'http://localhost:2283';
 const TEST_API_KEY = 'test-immich-api-key';
@@ -77,6 +82,48 @@ describe('ImmichService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetMockAxiosCreate();
+  });
+
+  describe('request-time SSRF guard (DNS rebinding)', () => {
+    afterEach(() => {
+      config.security.allowPrivateIntegrationUrls = true;
+    });
+
+    it('IMM-G01: routes a public Immich URL through the guarded agents with redirects off', async () => {
+      mockClient.get.mockResolvedValue({ status: 200, data: { res: 'pong' } });
+
+      await immichService.testConnection('https://immich.example.com', TEST_API_KEY);
+
+      expect(mockAxios.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseURL: 'https://immich.example.com',
+          maxRedirects: 0,
+          httpAgent: expect.anything(),
+          httpsAgent: expect.anything(),
+          proxy: false,
+        })
+      );
+    });
+
+    it('IMM-G02: uses a normal request for a LAN URL when private URLs are allowed', async () => {
+      mockClient.get.mockResolvedValue({ status: 200, data: { res: 'pong' } });
+
+      await immichService.testConnection('http://192.168.1.20:2283', TEST_API_KEY);
+
+      const options = mockAxios.create.mock.calls[0][0];
+      expect(options).not.toHaveProperty('httpAgent');
+      expect(options).not.toHaveProperty('httpsAgent');
+    });
+
+    it('IMM-G03: refuses a stored LAN URL once private URLs are no longer allowed', async () => {
+      config.security.allowPrivateIntegrationUrls = false;
+
+      await expect(
+        immichService.getAlbums('http://192.168.1.20:2283', TEST_API_KEY)
+      ).rejects.toThrow();
+      expect(mockAxios.create).not.toHaveBeenCalled();
+      expect(mockClient.get).not.toHaveBeenCalled();
+    });
   });
 
   describe('testConnection', () => {

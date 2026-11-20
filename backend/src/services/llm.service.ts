@@ -3,6 +3,7 @@ import { config } from '../config';
 import prisma from '../config/database';
 import logger from '../config/logger';
 import { decryptSecret } from '../security/encryption';
+import { integrationRequestOptions } from '../security/integrationRequestGuard';
 
 interface LlmOptions {
   maxTokens?: number;
@@ -40,6 +41,11 @@ export interface ResolvedLlmConfig {
   apiKey: string | null;
   model: string;
   maxTokens: number;
+  /**
+   * True when `baseUrl` came from the user's settings rather than the admin's
+   * `LLM_BASE_URL`. Only user URLs are re-validated at request time.
+   */
+  userSuppliedUrl: boolean;
 }
 
 /**
@@ -52,6 +58,17 @@ export class LlmError extends Error {
     super(message);
     this.name = 'LlmError';
   }
+}
+
+/**
+ * Request-time SSRF guard for a user's own LLM endpoint (DNS rebinding). The
+ * admin's `LLM_BASE_URL` is trusted and goes out as a normal request.
+ */
+function requestGuard(resolved: ResolvedLlmConfig): ReturnType<typeof integrationRequestOptions> {
+  // Decided by where the URL came from, not how the config was obtained: a config
+  // pinned earlier (PDF import) is validated exactly like a freshly resolved one.
+  const isInstanceUrl = !resolved.userSuppliedUrl && resolved.baseUrl === config.llm.baseUrl;
+  return isInstanceUrl ? {} : integrationRequestOptions(resolved.baseUrl);
 }
 
 class LlmService {
@@ -88,6 +105,7 @@ class LlmService {
         apiKey: userApiKey, // null is valid for local LLMs
         model: userModel || config.llm.model,
         maxTokens: config.llm.maxTokens,
+        userSuppliedUrl: true,
       };
     }
 
@@ -99,6 +117,7 @@ class LlmService {
       apiKey: effectiveApiKey,
       model: userModel || config.llm.model,
       maxTokens: config.llm.maxTokens,
+      userSuppliedUrl: false,
     };
   }
 
@@ -147,6 +166,7 @@ class LlmService {
           timeout: config.llm.timeoutMs,
           signal: options.signal,
           maxRedirects: 0,
+          ...requestGuard(resolved),
         }
       );
 
@@ -217,6 +237,7 @@ class LlmService {
           headers,
           timeout: 60000,
           maxRedirects: 0,
+          ...requestGuard(resolved),
         }
       );
 

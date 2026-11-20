@@ -30,6 +30,11 @@ const mockClient = {
 mockAxios.create.mockReturnValue(mockClient as unknown as ReturnType<typeof axios.create>);
 
 import immichService from '../immich.service';
+import { config } from '../../config';
+
+// These tests model a LAN Immich (http://localhost:2283), which the
+// request-time SSRF guard only allows with ALLOW_PRIVATE_INTEGRATION_URLS.
+config.security.allowPrivateIntegrationUrls = true;
 
 const URL = 'http://localhost:2283';
 const KEY = 'test-key';

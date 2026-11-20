@@ -4,6 +4,7 @@ import { AppError } from '../errors/errors';
 import logger from '../config/logger';
 import prisma from '../config/database';
 import { decryptSecret } from '../security/encryption';
+import { integrationRequestOptions } from '../security/integrationRequestGuard';
 import {
   ImmichAsset,
   ImmichAlbum,
@@ -216,7 +217,10 @@ class ImmichService {
         'Content-Type': 'application/json',
       },
       timeout: 30000,
+      // No redirects: a redirect could point anywhere, past the guard below.
       maxRedirects: 0,
+      // Re-validate the address at request time (DNS rebinding); see the guard.
+      ...integrationRequestOptions(baseURL),
     });
   }
 
@@ -911,10 +915,10 @@ class ImmichService {
    * Lives here rather than in the controller so that database access stays in
    * the service layer (Routes -> Controllers -> Services -> Prisma).
    *
-   * Note: we intentionally do NOT re-validate the stored URL against internal
-   * addresses. Self-hosted Immich instances typically run on the same LAN
-   * (e.g. 192.168.x.x), which SSRF validation would block. The URL is checked
-   * when saved, and users can only set their own.
+   * The URL is validated when saved, and again on every request by
+   * `createClient` (`integrationRequestOptions`), which refuses a hostname that
+   * has since been re-pointed at a private address. LAN Immich servers stay
+   * reachable when `ALLOW_PRIVATE_INTEGRATION_URLS` is on.
    */
   async getUserSettings(userId: number): Promise<{ apiUrl: string; apiKey: string }> {
     const user = await prisma.user.findUnique({
