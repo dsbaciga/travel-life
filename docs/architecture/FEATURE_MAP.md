@@ -108,7 +108,9 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Trip permission check | `tripAccess`, `tripPermissions` | `services/_shared/` |
 | Partial-update data from nullable/optional Zod input | `buildConditionalUpdateData` | `services/_shared/prismaUpdateData.ts` |
 | Decimal ⇄ number | `decimalConversion` | `services/_shared/` |
-| Delete a row's entity links | `cleanupEntityLinks` | `services/_shared/entityLinkCleanup.ts` |
+| Delete a row's entity links | `cleanupEntityLinks` (the database triggers do it too) | `services/_shared/entityLinkCleanup.ts` |
+| Where an activity/lodging is (`locationId` FK) and how old clients see it as a link | `findSyntheticLocationLinks`, `syntheticLocationLinkId`, `claimEntityLocation` | `services/_shared/entityLocationLinks.ts`, `services/entityLink.service.ts` |
+| An activity's/lodging's place ids, own FK first then loose links | `buildEntityLocationIdsMap` | `utils/entityLocations.ts` (frontend) |
 | Timezone fallback chain | `resolveTimezone`, `getUserTimezone` | `services/_shared/timezoneResolution.ts` |
 | Trip list ordering (open trips before Completed) | `tripListOrder` | `services/_shared/` |
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |

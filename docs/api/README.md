@@ -334,6 +334,8 @@ Rules worth knowing: times without an offset are wall-clock times in the row tim
 
 Links connect any two entities (photos, locations, activities, lodging, transportation, journal entries, albums) within a trip.
 
+An activity's or lodging's place is its own `locationId` (set through the activity/lodging endpoints), not a link. For clients that predate that, the link endpoints still show it as a synthetic `OCCURRED_AT` link with a negative `id`, and creating such a link for an activity/lodging with no place sets `locationId` instead of storing a row; deleting it (by pair or by that id) clears `locationId`.
+
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | POST | `/` | Create a link between two entities | Yes |

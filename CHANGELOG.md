@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **An activity or lodging now has a real place.** "This is at that place" is stored as `locationId` on the activity or lodging (`ON DELETE SET NULL`) instead of an entity link. The migration moves existing links onto it, one per item (an `OCCURRED_AT` link first, then the oldest; a place from another trip is never used) and removes the link it replaced; any other place links stay as plain related links. Activity and lodging requests and responses carry `locationId` and a small `location`, the forms, timeline, daily view, map, weather, trip health check, public share page, calendar feed, AI link suggestions, bulk import, trip duplication, backups and the mobile sync use it. The Android app and any cached web page that still create, show or delete a place as a link keep working.
+- **Backups are format 1.7.0.** Activities and lodging export `locationId`. Older backups still restore: their place link becomes the `locationId`.
+
+### Fixed
+
+- Deleting a photo, place, activity, lodging, transport leg, journal entry, album, PDF import, saved link or custom item now always removes the links that pointed at it, enforced by the database as well as by the app.
+
 ## [8.1.1] - 2026-11-20
 
 ### Added

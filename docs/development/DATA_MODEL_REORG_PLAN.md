@@ -107,7 +107,7 @@ Design:
   `entity_links` rows that reference the deleted row. Application-level
   `cleanupEntityLinks` calls stay (databases created with `prisma db push` have no triggers).
 
-- [ ] Step A done
+- [x] Step A done
 
 ## Step B: structured country
 

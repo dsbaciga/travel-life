@@ -158,6 +158,7 @@ Planned or completed activities.
 | id | Int | Primary key |
 | tripId | Int | Trip foreign key |
 | parentId | Int? | Parent activity (for sub-activities) |
+| locationId | Int? | Where the activity is (`Location`, `SET NULL` on delete; indexed). The single source of truth for "is at": not an `EntityLink` |
 | name | String | Activity name |
 | description | String? | Description |
 | category | String? | Category (sightseeing, dining, etc.) |
@@ -209,6 +210,7 @@ Accommodations during trips.
 |-------|------|-------------|
 | id | Int | Primary key |
 | tripId | Int | Trip foreign key |
+| locationId | Int? | Where the stay is (`Location`, `SET NULL` on delete; indexed). The single source of truth for "is at": not an `EntityLink` |
 | type | String | Hotel, Airbnb, Hostel, Camping, etc. |
 | name | String | Property name |
 | address | String? | Address |
@@ -938,6 +940,28 @@ The `EntityLink` model provides a polymorphic linking system for connecting any 
 | relationship | LinkRelationship | Type of relationship |
 | sortOrder | Int? | Custom ordering |
 | notes | String? | Link notes |
+
+### Referential integrity (triggers)
+
+`entity_links` has no foreign keys to the entities it joins, so migration
+`20261120000000_add_activity_lodging_location_fk` adds one row-level `AFTER DELETE` trigger per
+table an `EntityType` can name (`photos`, `locations`, `activities`, `lodging`,
+`transportation`, `journal_entries`, `photo_albums`, `pdf_imports`, `saved_links`,
+`custom_items`). Each runs `entity_links_delete_for_deleted_row('<TYPE>')`, which deletes the
+links where the deleted row is the source or the target. Prisma cannot express triggers, so a
+database built with `prisma db push` has none: `cleanupEntityLinks` and
+`cleanupOrphanedEntityLinks` stay as the application-level guarantee. **A new `EntityType`
+value needs its own trigger in a new migration.**
+
+### Where an activity or lodging is
+
+`Activity.locationId` and `Lodging.locationId` hold that fact (see their tables above); the
+migration moved it out of `entity_links` (one link per entity: `OCCURRED_AT` first, then the
+lowest link id; a location of another trip is never used) and deleted the link it replaced.
+Any other activity/lodging <-> location link is a loose `RELATED` association. For clients that
+predate the FK the link API still *shows* the FK as a synthetic `OCCURRED_AT` link with a
+negative id and accepts the old calls against it
+(`services/_shared/entityLocationLinks.ts`, `claimEntityLocation` in `entityLink.service.ts`).
 
 ### EntityType Enum
 
