@@ -9,6 +9,7 @@ import {
   evaluateLocationRows,
   type EvaluatedRow,
 } from './_shared/bulkImportEvaluators';
+import { deriveLocationCountryCode } from './_shared/countryCodes';
 import type {
   BulkImportResult,
   ImportActivitiesInput,
@@ -137,6 +138,7 @@ class BulkImportService {
           tripId,
           name: data.name,
           address: data.address ?? null,
+          countryCode: deriveLocationCountryCode(null, data.address),
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
           categoryId: data.categoryId ?? null,

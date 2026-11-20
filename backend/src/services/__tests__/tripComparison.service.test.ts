@@ -223,6 +223,21 @@ describe('TripComparisonService', () => {
     expect(mockConvert).not.toHaveBeenCalled();
   });
 
+  it('CMP-006b: country is the trip override, else the most common location country code', async () => {
+    mockPrisma.trip.findMany.mockResolvedValue([tripRow(1, { countryCode: null }), tripRow(2, { countryCode: 'PT' }), tripRow(3, { countryCode: null })]);
+    const loc = (id: number, tripId: number, countryCode: string | null) => ({
+      id, tripId, name: `L${id}`, address: null, countryCode, latitude: null, longitude: null, excludeFromMap: false,
+    });
+    mockPrisma.location.findMany.mockResolvedValue([
+      loc(1, 1, 'FR'), loc(2, 1, 'IT'), loc(3, 1, 'IT'), loc(4, 2, 'ES'), loc(5, 3, null),
+    ]);
+    mockGetBudgetSummary.mockResolvedValue(summary('USD', 0));
+
+    const result = await tripComparisonService.compareTrips(1, [1, 2, 3]);
+
+    expect(result.trips.map((t) => t.countryCode)).toEqual(['IT', 'PT', null]);
+  });
+
   it('CMP-007: passes the budget summary unconverted amounts through per trip', async () => {
     mockPrisma.trip.findMany.mockResolvedValue([tripRow(1), tripRow(2)]);
     const unconverted = [{ currency: 'ISK', amount: 9000, count: 2 }];

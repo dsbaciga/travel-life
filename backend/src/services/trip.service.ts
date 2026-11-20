@@ -10,6 +10,7 @@ import { convertDecimals } from '../services/_shared/decimalConversion';
 import { getUserTimezone, resolveTimezone } from '../services/_shared/timezoneResolution';
 import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tripListOrder';
 import { deleteReceiptFiles } from './expenseReceipt.service';
+import { deriveLocationCountryCode } from './_shared/countryCodes';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -689,6 +690,7 @@ export class TripService {
             tripId: newTrip.id,
             name: location.name,
             address: location.address,
+            countryCode: location.countryCode ?? deriveLocationCountryCode(null, location.address),
             latitude: location.latitude,
             longitude: location.longitude,
             categoryId: location.categoryId,
@@ -715,6 +717,7 @@ export class TripService {
             parentId: newParentId || null,
             name: location.name,
             address: location.address,
+            countryCode: location.countryCode ?? deriveLocationCountryCode(null, location.address),
             latitude: location.latitude,
             longitude: location.longitude,
             categoryId: location.categoryId,

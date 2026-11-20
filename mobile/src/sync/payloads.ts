@@ -73,6 +73,7 @@ const CREATE_FIELDS: Readonly<Record<SyncEntityKind, readonly string[]>> = {
     'parentId',
     'name',
     'address',
+    'countryCode',
     'latitude',
     'longitude',
     'categoryId',

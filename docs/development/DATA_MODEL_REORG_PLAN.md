@@ -133,7 +133,7 @@ Design:
   address parsing only for rows with no code. Wherever the app derives a trip's country
   from its locations, structured codes win; `Trip.countryCode` stays the manual override.
 
-- [ ] Step B done
+- [x] Step B done
 
 ## Step C: one representation of "who paid"
 

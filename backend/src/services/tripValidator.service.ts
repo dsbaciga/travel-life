@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import travelTimeService from './travelTime.service';
 import travelDocumentService from './travelDocument.service';
 import visaRequirementService from './visaRequirement.service';
+import { normalizeCountryCode, resolveCountryCodeFromName } from './_shared/vendored/countryFacts';
 import openingHoursService from './openingHours.service';
 import { formatInTimeZone } from 'date-fns-tz';
 import { TripWithRelations } from '../types/prisma-helpers';
@@ -956,18 +957,27 @@ class TripValidatorService {
 
       const passportCountry = passport.issuingCountry;
 
-      // Extract destination countries from trip locations
-      type LocationRecord = { id: number; name: string; address: string | null };
-      const destinationCountries = new Map<string, LocationRecord[]>(); // country -> locations
+      // Group the trip's locations by destination country. The structured
+      // Location.countryCode wins; only a location with no code falls back to parsing its
+      // address text (older rows the migration could not map, or clients that sent neither).
+      type LocationRecord = { id: number; name: string; address: string | null; countryCode?: string | null };
+      const destinationCountries = new Map<string, LocationRecord[]>(); // display name -> locations
+      const destinationCodes = new Map<string, string | null>(); // display name -> ISO code
 
       for (const location of trip.locations as LocationRecord[]) {
-        if (location.address) {
-          const country = visaRequirementService.extractCountryFromAddress(location.address);
-          if (country) {
-            const existing = destinationCountries.get(country) || [];
-            existing.push(location);
-            destinationCountries.set(country, existing);
-          }
+        let code: string | null = normalizeCountryCode(location.countryCode) ?? null;
+        let country: string | null = code ? visaRequirementService.getCountryName(code) : null;
+
+        if (!country && location.address) {
+          country = visaRequirementService.extractCountryFromAddress(location.address);
+          code = country ? resolveCountryCodeFromName(country) ?? null : null;
+        }
+
+        if (country) {
+          const existing = destinationCountries.get(country) || [];
+          existing.push(location);
+          destinationCountries.set(country, existing);
+          destinationCodes.set(country, code);
         }
       }
 
@@ -976,10 +986,14 @@ class TripValidatorService {
       }
 
       // Check visa requirements for each destination country
-      const destinations = Array.from(destinationCountries.keys());
+      const destinations = Array.from(destinationCountries.keys()).map((name) => ({
+        name,
+        countryCode: destinationCodes.get(name) ?? null,
+      }));
       const bulkResult = visaRequirementService.getVisaRequirementsForDestinations(
         passportCountry,
-        destinations
+        destinations,
+        passport.issuingCountryCode
       );
 
       // Create issues for destinations requiring visa action

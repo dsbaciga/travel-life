@@ -521,6 +521,7 @@ describe('vendored shared modules', () => {
   const pairs: Array<[string, string]> = [
     ['utils/geo.ts', 'geo.ts'],
     ['receipt/receiptParser.ts', 'receiptParser.ts'],
+    ['constants/countryFacts.ts', 'countryFacts.ts'],
   ];
   const sharedSrc = path.resolve(__dirname, '../../../../packages/shared/src');
   const vendoredDir = path.resolve(__dirname, '../_shared/vendored');

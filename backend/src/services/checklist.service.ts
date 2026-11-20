@@ -6,6 +6,7 @@ import { DEFAULT_AIRPORTS, DEFAULT_COUNTRIES, DEFAULT_CITIES, DEFAULT_US_STATES 
 import { searchAirports } from './airport.service';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { buildConditionalUpdateData } from './_shared/prismaUpdateData';
+import { normalizeCountryCode, resolveCountryCodeFromName } from './_shared/vendored/countryFacts';
 
 // Type for checklist item metadata shapes
 interface AirportMetadata {
@@ -190,6 +191,7 @@ interface TripForAutoPopulate {
     id: number;
     name: string;
     address: string | null;
+    countryCode?: string | null;
   }>;
   transportation: Array<{
     id: number;
@@ -606,9 +608,17 @@ class ChecklistService {
     const countriesChecklist = checklists.find((c) => c.type === 'countries');
     if (countriesChecklist) {
       const visitedCountries = new Set<string>();
+      const visitedCountryCodes = new Set<string>();
 
       trips.forEach((trip) => {
         trip.locations.forEach((location) => {
+          // Structured country first; the address heuristic below only runs for locations that
+          // have no code.
+          const code = normalizeCountryCode(location.countryCode);
+          if (code) {
+            visitedCountryCodes.add(code);
+            return;
+          }
           // Extract country from address (simple heuristic - last part after comma)
           if (location.address) {
             const parts = location.address.split(',').map((p) => p.trim());
@@ -624,11 +634,15 @@ class ChecklistService {
       for (const item of countriesChecklist.items) {
         if (!item.isChecked) {
           const countryName = item.name;
-          // Check if any visited country matches (case-insensitive, partial match)
-          const isVisited = Array.from(visitedCountries).some(vc =>
-            vc.toLowerCase().includes(countryName.toLowerCase()) ||
-            countryName.toLowerCase().includes(vc.toLowerCase())
-          );
+          const itemCode = resolveCountryCodeFromName(countryName);
+          // Exact match on ISO code when both sides have one, otherwise the legacy
+          // case-insensitive partial name match (only fed by locations with no code).
+          const isVisited =
+            (itemCode !== undefined && visitedCountryCodes.has(itemCode)) ||
+            Array.from(visitedCountries).some(vc =>
+              vc.toLowerCase().includes(countryName.toLowerCase()) ||
+              countryName.toLowerCase().includes(vc.toLowerCase())
+            );
 
           if (isVisited) {
             itemsToCheck.push(item.id);

@@ -52,6 +52,20 @@ describe("resolveTripCountry", () => {
     expect(result.source).toBe("address");
   });
 
+  it("EMG-CTY-002b: a structured location code beats parsing the addresses, the override still wins", () => {
+    const fromLocation = resolveTripCountry(null, ["Rua Augusta, Lisbon, Portugal"], ["jp"]);
+    expect(fromLocation.code).toBe("JP");
+    expect(fromLocation.source).toBe("location");
+    expect(fromLocation.facts?.name).toBe("Japan");
+
+    const overridden = resolveTripCountry("PT", [], ["JP"]);
+    expect(overridden.code).toBe("PT");
+    expect(overridden.source).toBe("override");
+
+    // No codes (an older cached payload): the address path is unchanged.
+    expect(resolveTripCountry(null, ["Rua Augusta, Lisbon, Portugal"], []).source).toBe("address");
+  });
+
   // ==========================================================================
   // EMG-CTY-003
   // ==========================================================================

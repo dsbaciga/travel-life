@@ -121,6 +121,7 @@ Points of interest within a trip.
 | parentId | Int? | Parent location (for nested locations) |
 | name | String | Location name |
 | address | String? | Full address |
+| countryCode | VarChar(2)? | ISO 3166-1 alpha-2, upper case (CHECK `locations_country_code_format_check`). From the geocoder when the client sends it, else derived from the address text on create/update; null when unknown. Indexed with `tripId` |
 | latitude | Decimal(10,8)? | Latitude coordinate |
 | longitude | Decimal(11,8)? | Longitude coordinate |
 | categoryId | Int? | Location category foreign key |
@@ -565,7 +566,8 @@ Stores user travel documents (passports, visas, etc.).
 | id | Int | Primary key |
 | userId | Int | Owner foreign key |
 | type | TravelDocumentType | PASSPORT, VISA, ID_CARD, GLOBAL_ENTRY, VACCINATION |
-| issuingCountry | String | Issuing country |
+| issuingCountry | String | Issuing country (name, for display) |
+| issuingCountryCode | VarChar(2)? | ISO alpha-2 of `issuingCountry`, derived from the name; null when not recognised (CHECK on format) |
 | documentNumber | String? | Document number |
 | issueDate | Date? | Issue date |
 | expiryDate | Date? | Expiry date |
@@ -583,6 +585,8 @@ Static reference data for visa requirements between countries.
 | id | Int | Primary key |
 | passportCountry | String | Passport-holder country |
 | destinationCountry | String | Destination country |
+| passportCountryCode | VarChar(2)? | ISO alpha-2 of `passportCountry` (CHECK on format) |
+| destinationCountryCode | VarChar(2)? | ISO alpha-2 of `destinationCountry` (CHECK on format) |
 | visaRequired | Boolean | Whether a visa is required |
 | visaType | String | visa_free, visa_on_arrival, e_visa, visa_required |
 | maxStayDays | Int? | Maximum stay length |
@@ -590,7 +594,9 @@ Static reference data for visa requirements between countries.
 | sourceUrl | String? | Source reference URL |
 | lastVerified | Date? | When the data was last verified |
 
-Unique on `(passportCountry, destinationCountry)`.
+Unique on `(passportCountry, destinationCountry)`. Lookups match the codes first, then the names.
+The running app reads `backend/data/visa-requirements.json`, not this table (nothing seeds it); the
+service derives the codes from the names at load time.
 
 ### TripLanguage
 

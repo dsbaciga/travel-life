@@ -25,6 +25,7 @@ export const VENDORED = [
   { from: 'utils/geo.ts', to: 'geo.ts' },
   { from: 'receipt/receiptParser.ts', to: 'receiptParser.ts' },
   { from: 'food/nearbyFood.ts', to: 'nearbyFood.ts' },
+  { from: 'constants/countryFacts.ts', to: 'countryFacts.ts' },
 ];
 
 export const header = (from) =>

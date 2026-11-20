@@ -49,6 +49,12 @@ export interface EmergencyCard {
    * its own address -> ISO country resolution and fall back through them.
    */
   locationAddresses: string[];
+  /**
+   * The structured `Location.countryCode` of every located place on the trip, in creation
+   * order (locations with no code are skipped). The client prefers these over parsing
+   * `locationAddresses`, which stays for rows that have no code.
+   */
+  locationCountryCodes: string[];
   companions: EmergencyCardCompanion[];
   /**
    * False when companion medical fields were withheld, so the UI can say
@@ -107,8 +113,8 @@ class EmergencyInfoService {
       prisma.trip.findUnique({ where: { id: tripId }, select: { countryCode: true } }),
       prisma.tripEmergencyInfo.findUnique({ where: { tripId } }),
       prisma.location.findMany({
-        where: { tripId, address: { not: null } },
-        select: { address: true },
+        where: { tripId, OR: [{ address: { not: null } }, { countryCode: { not: null } }] },
+        select: { address: true, countryCode: true },
         orderBy: { id: 'asc' },
       }),
       prisma.tripCompanion.findMany({
@@ -148,6 +154,9 @@ class EmergencyInfoService {
       locationAddresses: locations
         .map((location) => location.address)
         .filter((address): address is string => Boolean(address)),
+      locationCountryCodes: locations
+        .map((location) => location.countryCode)
+        .filter((code): code is string => Boolean(code)),
       companions,
       includesMedicalDetails: isOwner,
     };

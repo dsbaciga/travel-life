@@ -20,10 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **An activity or lodging now has a real place.** "This is at that place" is stored as `locationId` on the activity or lodging (`ON DELETE SET NULL`) instead of an entity link. The migration moves existing links onto it, one per item (an `OCCURRED_AT` link first, then the oldest; a place from another trip is never used) and removes the link it replaced; any other place links stay as plain related links. Activity and lodging requests and responses carry `locationId` and a small `location`, the forms, timeline, daily view, map, weather, trip health check, public share page, calendar feed, AI link suggestions, bulk import, trip duplication, backups and the mobile sync use it. The Android app and any cached web page that still create, show or delete a place as a link keep working.
+- **Places, passports and visa checks know the country as a code.** A place stores its country (ISO code) from the map search when it has one, otherwise worked out from the address; changing the address refreshes it. Existing places, passports and visa rows are filled in from their text where the country is recognisable. The visa check, the trip health check, the emergency card, local norms, trip comparison and the countries checklist use the code first and only read the address text for places without one.
+- **Backups are format 1.8.0** (places carry `countryCode`, passports `issuingCountryCode`). Older backups still restore and get the codes worked out.
 - **Backups are format 1.7.0.** Activities and lodging export `locationId`. Older backups still restore: their place link becomes the `locationId`.
 
 ### Fixed
 
+- Deleting a place now clears it from the activities and lodgings that used it in a way the Android app notices, so they stop showing a place that is gone.
+- The visa data treated "Britain" as the United States; it is the United Kingdom.
 - Deleting a photo, place, activity, lodging, transport leg, journal entry, album, PDF import, saved link or custom item now always removes the links that pointed at it, enforced by the database as well as by the app.
 
 ## [8.1.1] - 2026-11-20

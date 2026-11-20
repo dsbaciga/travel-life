@@ -5,6 +5,7 @@ import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
 import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
+import { deriveLocationCountryCode, deriveCountryCodeFromName } from './_shared/countryCodes';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
 
@@ -46,8 +47,11 @@ interface RestoreStats {
  *          express it as an ACTIVITY/LODGING <-> LOCATION entity link; restore promotes it to
  *          the FK (OCCURRED_AT first, then file order) and drops that link, exactly as the
  *          20261120000000 migration does for existing rows.
+ * v1.8.0 - Locations carry countryCode and travel documents issuingCountryCode (ISO alpha-2).
+ *          Older backups have neither; restore derives them from the address / country name,
+ *          the same rule as the 20261121000000 migration and the live create paths.
  */
-const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
+const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.8.0'];
 
 /**
  * Second layer of defence for file paths coming out of an uploaded backup.
@@ -393,6 +397,7 @@ export async function restoreFromBackup(
                   userId,
                   type: docData.type,
                   issuingCountry: docData.issuingCountry,
+                  issuingCountryCode: deriveCountryCodeFromName(docData.issuingCountryCode, docData.issuingCountry),
                   // Document number is masked in backup, don't restore it
                   // User will need to re-enter after restore
                   documentNumber: null,
@@ -497,6 +502,8 @@ export async function restoreFromBackup(
                 parentId: null, // Set later in second pass
                 name: locationData.name,
                 address: locationData.address,
+                // Absent in pre-1.8.0 backups: derived from the address text.
+                countryCode: deriveLocationCountryCode(locationData.countryCode, locationData.address),
                 latitude: locationData.latitude,
                 longitude: locationData.longitude,
                 categoryId,

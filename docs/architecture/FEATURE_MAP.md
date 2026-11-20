@@ -40,7 +40,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Receipt scan (LLM) and receipt images | `receiptScan`, `expenseReceipt`, `llm` (`chatWithImage`) | `ReceiptScanButton`, `ReceiptViewer` |
 | Loyalty programs / membership numbers | `loyaltyProgram` | `LoyaltyProgramManager`, `LoyaltyProgramField` |
 | Booking deadlines | `bookingDeadline` | `DeadlinesManager`, `widgets/DeadlinesWidget` |
-| Travel documents / visas | `travelDocument`, `visaRequirement` | `TravelDocumentManager`, `DocumentAlerts` |
+| Travel documents / visas | `travelDocument`, `visaRequirement`, `services/_shared/countryCodes` | `TravelDocumentManager`, `DocumentAlerts` |
 | Emergency info / local norms | `emergencyInfo` | `EmergencyCard`, `components/emergency/`, `LocalNormsCard` |
 | Checklists and packing | `checklist`, `packingSuggestion`, `data/checklist-defaults` | `ChecklistsPage`, `ChecklistDetailPage`, `PackingSuggestions` |
 | Weather | `weather` | `WeatherCard`, `WeatherSettings` |
@@ -108,6 +108,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Trip permission check | `tripAccess`, `tripPermissions` | `services/_shared/` |
 | Partial-update data from nullable/optional Zod input | `buildConditionalUpdateData` | `services/_shared/prismaUpdateData.ts` |
 | Decimal ⇄ number | `decimalConversion` | `services/_shared/` |
+| Country code (ISO alpha-2) of a location / passport / visa name; keeping it fresh on update | `deriveLocationCountryCode`, `deriveCountryCodeFromName`, `resolveLocationCountryCodeUpdate` (shared table: `resolveCountryCodeFromName`, `resolveLocationCountryCode`, `normalizeCountryCode` in `packages/shared/.../countryFacts.ts`, vendored to the backend, copied to `frontend/src/constants/countryFacts.ts`) | `services/_shared/countryCodes.ts` |
 | Delete a row's entity links | `cleanupEntityLinks` (the database triggers do it too) | `services/_shared/entityLinkCleanup.ts` |
 | Where an activity/lodging is (`locationId` FK) and how old clients see it as a link | `findSyntheticLocationLinks`, `syntheticLocationLinkId`, `claimEntityLocation` | `services/_shared/entityLocationLinks.ts`, `services/entityLink.service.ts` |
 | An activity's/lodging's place ids, own FK first then loose links | `buildEntityLocationIdsMap` | `utils/entityLocations.ts` (frontend) |

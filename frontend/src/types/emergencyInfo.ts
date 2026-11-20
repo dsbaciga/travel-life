@@ -47,6 +47,11 @@ export interface EmergencyCardData {
   info: TripEmergencyInfo | null;
   /** Free-text location addresses, in trip order, for client-side country resolution. */
   locationAddresses: string[];
+  /**
+   * Structured `Location.countryCode` values in trip order (uncoded locations skipped).
+   * Preferred over `locationAddresses`; absent in payloads cached by older versions.
+   */
+  locationCountryCodes?: string[];
   companions: EmergencyCardCompanion[];
   /**
    * False when companion medical fields were withheld by the server. Lets the UI

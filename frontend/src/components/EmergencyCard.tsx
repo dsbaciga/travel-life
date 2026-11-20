@@ -353,7 +353,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
             >
               <option value="">
                 Detect from this trip&apos;s locations
-                {country.source === "address" && country.facts
+                {(country.source === "address" || country.source === "location") && country.facts
                   ? ` (${country.facts.name})`
                   : ""}
               </option>

@@ -12,6 +12,8 @@
  * - LOC-008: Update location
  * - LOC-009: Delete location cascades photos (cleans up entity links)
  * - LOC-010: Parent-child location hierarchy
+ * - LOC-011: Delete (single and bulk) clears activity/lodging location_id so updated_at advances
+ * - LOC-012: countryCode is stored as supplied, else derived from the address, and never goes stale
  */
 
 // Mock logger BEFORE any imports to prevent config/index.ts from loading
@@ -88,7 +90,14 @@ const mockPrisma = {
     findFirst: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    deleteMany: jest.fn(),
     count: jest.fn(),
+  },
+  activity: {
+    updateMany: jest.fn(),
+  },
+  lodging: {
+    updateMany: jest.fn(),
   },
   locationCategory: {
     findMany: jest.fn(),
@@ -1221,6 +1230,160 @@ describe('LocationService', () => {
       await expect(locationService.deleteCategory(userId, categoryId)).rejects.toThrow(
         'Category not found or cannot be deleted'
       );
+    });
+  });
+
+  // ============================================================
+  // LOC-011: Deleting a location advances updated_at on the bookings that pointed at it
+  // ============================================================
+  describe('LOC-011: Delete clears activity/lodging location_id first', () => {
+    it('single delete nulls the FK with updateMany (so updatedAt advances) before deleting', async () => {
+      const callOrder: string[] = [];
+      mockPrisma.location.findUnique.mockResolvedValue({ id: 5, tripId: 100, name: 'X' });
+      mockPrisma.entityLink.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.activity.updateMany.mockImplementation(async () => {
+        callOrder.push('activity');
+        return { count: 2 };
+      });
+      mockPrisma.lodging.updateMany.mockImplementation(async () => {
+        callOrder.push('lodging');
+        return { count: 1 };
+      });
+      mockPrisma.location.delete.mockImplementation(async () => {
+        callOrder.push('delete');
+        return {};
+      });
+
+      await locationService.deleteLocation(1, 5);
+
+      expect(mockPrisma.activity.updateMany).toHaveBeenCalledWith({
+        where: { locationId: { in: [5] } },
+        data: { locationId: null },
+      });
+      expect(mockPrisma.lodging.updateMany).toHaveBeenCalledWith({
+        where: { locationId: { in: [5] } },
+        data: { locationId: null },
+      });
+      expect(callOrder).toEqual(['activity', 'lodging', 'delete']);
+    });
+
+    it('bulk delete clears every deleted location in one updateMany per table, before deleteMany', async () => {
+      const callOrder: string[] = [];
+      mockPrisma.location.findMany.mockResolvedValue([
+        { id: 5, tripId: 100, trip: {} },
+        { id: 6, tripId: 100, trip: {} },
+      ]);
+      mockPrisma.entityLink.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.activity.updateMany.mockImplementation(async () => {
+        callOrder.push('activity');
+        return { count: 0 };
+      });
+      mockPrisma.lodging.updateMany.mockImplementation(async () => {
+        callOrder.push('lodging');
+        return { count: 0 };
+      });
+      mockPrisma.location.deleteMany.mockImplementation(async () => {
+        callOrder.push('deleteMany');
+        return { count: 2 };
+      });
+
+      const result = await locationService.bulkDeleteLocations(1, 100, { ids: [5, 6] });
+
+      expect(mockPrisma.activity.updateMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.activity.updateMany).toHaveBeenCalledWith({
+        where: { locationId: { in: [5, 6] } },
+        data: { locationId: null },
+      });
+      expect(mockPrisma.lodging.updateMany).toHaveBeenCalledWith({
+        where: { locationId: { in: [5, 6] } },
+        data: { locationId: null },
+      });
+      expect(callOrder).toEqual(['activity', 'lodging', 'deleteMany']);
+      expect(result).toEqual({ success: true, deletedCount: 2 });
+    });
+  });
+
+  // ============================================================
+  // LOC-012: Structured country code
+  // ============================================================
+  describe('LOC-012: countryCode', () => {
+    const created = { id: 1, tripId: 100, name: 'X', category: null, parent: null };
+    const existingParis = { id: 1, tripId: 100, address: 'Paris, France', countryCode: 'FR' };
+
+    it('stores a code supplied by the client', async () => {
+      mockPrisma.location.create.mockResolvedValue(created);
+      await locationService.createLocation(1, { tripId: 100, name: 'X', address: 'Somewhere, France', countryCode: 'BE' });
+      expect(mockPrisma.location.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: 'BE' }) })
+      );
+    });
+
+    it('derives the code from the address when the client sent none', async () => {
+      mockPrisma.location.create.mockResolvedValue(created);
+      await locationService.createLocation(1, { tripId: 100, name: 'X', address: '12 Rue de Rivoli, Paris, France' });
+      expect(mockPrisma.location.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: 'FR' }) })
+      );
+    });
+
+    it('stores null when neither a code nor a recognisable address is given', async () => {
+      mockPrisma.location.create.mockResolvedValue(created);
+      await locationService.createLocation(1, { tripId: 100, name: 'X', address: '221B Baker Street' });
+      expect(mockPrisma.location.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: null }) })
+      );
+    });
+
+    it('update: a changed address with no code re-derives (the old code never lingers)', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(existingParis);
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { address: 'Rome, Italy' });
+      expect(mockPrisma.location.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: 'IT' }) })
+      );
+    });
+
+    it('update: a changed address that names no country clears the code', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(existingParis);
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { address: '221B Baker Street' });
+      expect(mockPrisma.location.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: null }) })
+      );
+    });
+
+    it('update: a supplied code wins over what the new address would derive', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(existingParis);
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { address: 'Rome, Italy', countryCode: 'SM' });
+      expect(mockPrisma.location.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: 'SM' }) })
+      );
+    });
+
+    it('update: re-sending the unchanged address keeps the stored (geocoder) code', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue({ ...existingParis, countryCode: 'MC' });
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { address: 'Paris, France', notes: 'n' });
+      const data = mockPrisma.location.update.mock.calls[0][0].data;
+      expect(data).not.toHaveProperty('countryCode');
+    });
+
+    it('update: an explicit null re-derives from the existing address', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue({ ...existingParis, countryCode: 'MC' });
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { countryCode: null });
+      expect(mockPrisma.location.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ countryCode: 'FR' }) })
+      );
+    });
+
+    it('update: changing only notes leaves the code alone', async () => {
+      mockPrisma.location.findUnique.mockResolvedValue(existingParis);
+      mockPrisma.location.update.mockResolvedValue({ id: 1, category: null, parent: null });
+      await locationService.updateLocation(1, 1, { notes: 'hello' });
+      const data = mockPrisma.location.update.mock.calls[0][0].data;
+      expect(data).not.toHaveProperty('countryCode');
     });
   });
 });

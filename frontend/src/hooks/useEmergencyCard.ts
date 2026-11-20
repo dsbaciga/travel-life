@@ -42,7 +42,8 @@ export function useEmergencyCard(tripId: number): UseEmergencyCardResult {
 
   const country = resolveTripCountry(
     data?.card.countryCode,
-    data?.card.locationAddresses ?? []
+    data?.card.locationAddresses ?? [],
+    data?.card.locationCountryCodes ?? []
   );
 
   return {

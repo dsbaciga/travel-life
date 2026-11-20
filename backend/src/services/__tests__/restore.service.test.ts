@@ -821,6 +821,39 @@ describe('RestoreService', () => {
       expect(result.stats.travelDocumentsImported).toBe(1);
     });
 
+    it('RST-010c: a backup with no country codes (pre-1.8.0) gets them derived on restore', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.7.0',
+        travelDocuments: [
+          { type: 'PASSPORT', issuingCountry: 'United States', name: 'A' },
+          { type: 'PASSPORT', issuingCountry: 'Atlantis', name: 'B' },
+          { type: 'PASSPORT', issuingCountry: 'Germany', issuingCountryCode: 'at', name: 'C' },
+        ],
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Louvre', address: 'Rue de Rivoli, Paris, France' },
+              { id: 2, name: 'Nowhere', address: '221B Baker Street' },
+              { id: 3, name: 'Coded', address: 'Rome, Italy', countryCode: 'sm' },
+            ],
+            activities: [],
+            lodging: [],
+            entityLinks: [],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      const locationCodes = mockTx.location.create.mock.calls.map((c) => (c[0] as { data: { countryCode: string | null } }).data.countryCode);
+      expect(locationCodes).toEqual(['FR', null, 'SM']);
+      const docCodes = mockTx.travelDocument.create.mock.calls.map((c) => (c[0] as { data: { issuingCountryCode: string | null } }).data.issuingCountryCode);
+      expect(docCodes).toEqual(['US', null, 'AT']);
+    });
+
     it('RST-010b: restores loyalty programs in full and re-links bookings to them', async () => {
       mockTx.loyaltyProgram.create.mockResolvedValue({ id: 901 });
       const backup = {

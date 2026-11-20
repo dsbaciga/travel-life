@@ -14,6 +14,7 @@ import {
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { cleanupEntityLinks } from '../services/_shared/entityLinkCleanup';
+import { deriveLocationCountryCode, resolveLocationCountryCodeUpdate } from '../services/_shared/countryCodes';
 
 /** Provenance of a location's opening hours. Manual entry always wins over the OSM lookup. */
 const OPENING_HOURS_SOURCE_OSM = 'osm';
@@ -207,6 +208,7 @@ export class LocationService {
         parentId: data.parentId,
         name: data.name,
         address: data.address,
+        countryCode: deriveLocationCountryCode(data.countryCode, data.address),
         latitude: data.latitude,
         longitude: data.longitude,
         categoryId: data.categoryId,
@@ -401,7 +403,7 @@ export class LocationService {
 
   async updateLocation(userId: number, locationId: number, data: UpdateLocationInput) {
     // Verify user has edit permission on the location's trip
-    const { entity: location } = await verifyEntityAccessWithPermission<{ tripId: number }>(
+    const { entity: location } = await verifyEntityAccessWithPermission<{ tripId: number; address: string | null }>(
       'location',
       locationId,
       userId,
@@ -465,6 +467,13 @@ export class LocationService {
     // Clearing the hours also clears the provenance, which re-opens the location to a lookup.
     if (data.openingHours !== undefined) {
       updateData.openingHoursSource = data.openingHours ? OPENING_HOURS_SOURCE_MANUAL : null;
+    }
+
+    // A supplied code is stored as given; a changed address re-derives it so a code from the
+    // old address cannot linger; an unchanged address leaves the stored code alone.
+    const nextCountryCode = resolveLocationCountryCodeUpdate(data, location.address);
+    if (nextCountryCode !== undefined) {
+      updateData.countryCode = nextCountryCode;
     }
 
     // The pin moved without an explicit timezone, so the stored zone may now be wrong.
@@ -533,6 +542,25 @@ export class LocationService {
     return descendants;
   }
 
+  /**
+   * Clear `location_id` on the activities and lodgings pointing at locations that are about to
+   * be deleted. The foreign key is `ON DELETE SET NULL`, which would do the same but does not
+   * touch `updated_at`, so the mobile delta sync (rows "changed since") would never re-send
+   * those rows and the app would keep showing a place that no longer exists. `updateMany`
+   * advances `updatedAt`; the FK stays as the backstop for databases written outside this path.
+   */
+  private async detachBookingsFromLocations(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0], locationIds: number[]): Promise<void> {
+    if (locationIds.length === 0) return;
+    await tx.activity.updateMany({
+      where: { locationId: { in: locationIds } },
+      data: { locationId: null },
+    });
+    await tx.lodging.updateMany({
+      where: { locationId: { in: locationIds } },
+      data: { locationId: null },
+    });
+  }
+
   async deleteLocation(userId: number, locationId: number) {
     // Verify user has edit permission on the location's trip
     const { entity: location } = await verifyEntityAccessWithPermission<{ tripId: number }>(
@@ -545,6 +573,7 @@ export class LocationService {
     // Clean up entity links and delete atomically in a transaction
     await prisma.$transaction(async (tx) => {
       await cleanupEntityLinks(location.tripId, 'LOCATION', locationId, tx);
+      await this.detachBookingsFromLocations(tx, [locationId]);
       await tx.location.delete({
         where: { id: locationId },
       });
@@ -656,6 +685,7 @@ export class LocationService {
       for (const location of locations) {
         await cleanupEntityLinks(location.tripId, 'LOCATION', location.id, tx);
       }
+      await this.detachBookingsFromLocations(tx, locations.map((location) => location.id));
       return tx.location.deleteMany({
         where: {
           id: { in: data.ids },

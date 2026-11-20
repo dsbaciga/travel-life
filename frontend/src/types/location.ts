@@ -4,6 +4,8 @@ export type Location = {
   parentId: number | null;
   name: string;
   address: string | null;
+  /** ISO 3166-1 alpha-2 country of the place, or null when it could not be determined. */
+  countryCode?: string | null;
   latitude: number | null;
   longitude: number | null;
   categoryId: number | null;
@@ -57,6 +59,8 @@ export type CreateLocationInput = {
   parentId?: number | null;
   name: string;
   address?: string;
+  /** ISO alpha-2 from the geocoder. Omit it and the backend derives the country from the address. */
+  countryCode?: string | null;
   latitude?: number;
   longitude?: number;
   categoryId?: number;

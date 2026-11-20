@@ -15,9 +15,11 @@ export interface DetectedCountry {
   locationCount: number;
 }
 
-/** The subset of a Location this hook needs — anything with an address works. */
+/** The subset of a Location this hook needs: its stored country code and/or its address. */
 export interface AddressBearing {
   address: string | null;
+  /** Structured ISO alpha-2; wins over parsing `address`. */
+  countryCode?: string | null;
 }
 
 export interface TripCountries {
@@ -89,7 +91,8 @@ export function useTripCountries(
     const counts = new Map<string, number>();
 
     for (const location of locations) {
-      const code = resolveCountryFromAddress(location.address);
+      // The structured code wins; the address is parsed only for locations that have none.
+      const code = location.countryCode?.trim().toUpperCase() || resolveCountryFromAddress(location.address);
       if (!code) continue;
       counts.set(code, (counts.get(code) ?? 0) + 1);
     }

@@ -665,6 +665,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
       select: {
         type: true,
         issuingCountry: true,
+        issuingCountryCode: true,
         documentNumber: true,
         issueDate: true,
         expiryDate: true,
@@ -820,6 +821,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
       travelDocuments: travelDocuments.map((doc) => ({
         type: doc.type,
         issuingCountry: doc.issuingCountry,
+        issuingCountryCode: doc.issuingCountryCode,
         // Mask document number: show only last 4 characters
         documentNumber: maskDocumentNumber(doc.documentNumber),
         issueDate: doc.issueDate,

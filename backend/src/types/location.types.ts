@@ -11,6 +11,8 @@ import {
   optionalBoolean,
   optionalTimezone,
   optionalNotesWithMax,
+  countryCode,
+  optionalCountryCode,
 } from '../validation/zodHelpers';
 
 /**
@@ -27,6 +29,9 @@ export const createLocationSchema = z.object({
   parentId: z.number().optional().nullable(),
   name: requiredStringWithMax(500),
   address: z.string().optional(),
+  // ISO 3166-1 alpha-2 (the geocoder's country). Omit or send null and the backend derives it
+  // from the address text.
+  countryCode: countryCode().optional().nullable(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   categoryId: z.number().optional().nullable(),
@@ -45,6 +50,9 @@ export const updateLocationSchema = z.object({
   // name is NOT NULL in the database, so it may be omitted but never cleared
   name: requiredStringWithMax(500).optional(),
   address: optionalNotes(), // String, optional, nullable
+  // Null clears the code and re-derives it from the address. Changing the address without
+  // sending a code re-derives it too.
+  countryCode: optionalCountryCode(),
   latitude: optionalLatitude(),
   longitude: optionalLongitude(),
   categoryId: optionalNumericId(),
@@ -99,6 +107,8 @@ export interface LocationResponse {
   parentId: number | null;
   name: string;
   address: string | null;
+  /** ISO 3166-1 alpha-2 country, or null when unknown. */
+  countryCode: string | null;
   latitude: number | null;
   longitude: number | null;
   categoryId: number | null;

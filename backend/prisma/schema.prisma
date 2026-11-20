@@ -234,7 +234,7 @@ model TravelCompanion {
   allergies          Json     @default("[]")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   tripAssignments TripCompanion[]
   paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
   expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
@@ -299,6 +299,10 @@ model Location {
   parentId             Int?                                   @map("parent_id")
   name                 String                                 @db.VarChar(500)
   address              String?                                @db.Text
+  // ISO 3166-1 alpha-2, upper case. CHECK locations_country_code_format_check (migration
+  // 20261121000000_add_structured_country_codes). Set from the geocoder when the client knows it,
+  // otherwise derived from the address text; null when neither is recognisable.
+  countryCode          String?                                @map("country_code") @db.VarChar(2)
   latitude             Decimal?                               @db.Decimal(10, 8)
   longitude            Decimal?                               @db.Decimal(11, 8)
   categoryId           Int?                                   @map("category_id")
@@ -336,12 +340,13 @@ model Location {
   weatherData          WeatherData[]
   customItems          CustomItem[]
   tripStops            TripStop[]
+  foodLogEntries       FoodLogEntry[]
 
   @@index([tripId])
   @@index([parentId])
+  @@index([tripId, countryCode])
   @@index([coordinates], type: Gist)
   @@map("locations")
-  foodLogEntries FoodLogEntry[]
 }
 
 model LocationCategory {
@@ -551,6 +556,7 @@ model Activity {
   children         Activity[]        @relation("ActivityChildren")
   dietaryTags      Json?             @map("dietary_tags")
   bookingDeadlines BookingDeadline[]
+  foodLogEntries   FoodLogEntry[]
 
   @@index([tripId])
   @@index([parentId])
@@ -558,7 +564,6 @@ model Activity {
   @@index([tripId, manualOrder])
   @@index([startTime])
   @@map("activities")
-  foodLogEntries FoodLogEntry[]
 }
 
 model Transportation {
@@ -1080,19 +1085,22 @@ enum TravelDocumentType {
 }
 
 model TravelDocument {
-  id              Int                @id @default(autoincrement())
-  userId          Int                @map("user_id")
-  type            TravelDocumentType
-  issuingCountry  String             @map("issuing_country") @db.VarChar(100)
-  documentNumber  String?            @map("document_number") @db.VarChar(255)
-  issueDate       DateTime?          @map("issue_date") @db.Date
-  expiryDate      DateTime?          @map("expiry_date") @db.Date
-  name            String             @db.VarChar(500) // Name on document or descriptive name
-  notes           String?            @db.Text
-  isPrimary       Boolean            @default(false) @map("is_primary")
-  alertDaysBefore Int                @default(180) @map("alert_days_before")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  id                 Int                @id @default(autoincrement())
+  userId             Int                @map("user_id")
+  type               TravelDocumentType
+  issuingCountry     String             @map("issuing_country") @db.VarChar(100)
+  // ISO alpha-2 of issuingCountry (name kept for display). CHECK travel_documents_issuing_country_code_format_check
+  // (migration 20261121000000_add_structured_country_codes); null when the name is not recognised.
+  issuingCountryCode String?            @map("issuing_country_code") @db.VarChar(2)
+  documentNumber     String?            @map("document_number") @db.VarChar(255)
+  issueDate          DateTime?          @map("issue_date") @db.Date
+  expiryDate         DateTime?          @map("expiry_date") @db.Date
+  name               String             @db.VarChar(500) // Name on document or descriptive name
+  notes              String?            @db.Text
+  isPrimary          Boolean            @default(false) @map("is_primary")
+  alertDaysBefore    Int                @default(180) @map("alert_days_before")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1146,19 +1154,25 @@ model LoyaltyProgram {
 // Static reference data for visa requirements between countries
 
 model VisaRequirement {
-  id                 Int       @id @default(autoincrement())
-  passportCountry    String    @map("passport_country") @db.VarChar(100)
-  destinationCountry String    @map("destination_country") @db.VarChar(100)
-  visaRequired       Boolean   @map("visa_required")
-  visaType           String    @map("visa_type") @db.VarChar(50) // visa_free, visa_on_arrival, e_visa, visa_required
-  maxStayDays        Int?      @map("max_stay_days")
-  notes              String?   @db.Text
-  sourceUrl          String?   @map("source_url") @db.VarChar(500)
-  lastVerified       DateTime? @map("last_verified") @db.Date
+  id                     Int       @id @default(autoincrement())
+  passportCountry        String    @map("passport_country") @db.VarChar(100)
+  destinationCountry     String    @map("destination_country") @db.VarChar(100)
+  // ISO alpha-2 of the two name columns; CHECKs visa_requirements_{passport,destination}_country_code_format_check
+  // (migration 20261121000000_add_structured_country_codes). Lookups match codes first, then names.
+  passportCountryCode    String?   @map("passport_country_code") @db.VarChar(2)
+  destinationCountryCode String?   @map("destination_country_code") @db.VarChar(2)
+  visaRequired           Boolean   @map("visa_required")
+  visaType               String    @map("visa_type") @db.VarChar(50) // visa_free, visa_on_arrival, e_visa, visa_required
+  maxStayDays            Int?      @map("max_stay_days")
+  notes                  String?   @db.Text
+  sourceUrl              String?   @map("source_url") @db.VarChar(500)
+  lastVerified           DateTime? @map("last_verified") @db.Date
 
   @@unique([passportCountry, destinationCountry])
   @@index([passportCountry])
   @@index([destinationCountry])
+  @@index([passportCountryCode])
+  @@index([destinationCountryCode])
   @@map("visa_requirements")
 }
 
