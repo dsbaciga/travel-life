@@ -16,6 +16,9 @@
  * - IP literals and blocked names are refused without any DNS lookup
  * - LAN escape hatch: ALLOW_PRIVATE_INTEGRATION_URLS + a LAN host is allowed;
  *   with the flag off the same URL is refused
+ * - Escape-hatch bypasses: DNS names that merely look like LAN IPs
+ *   (`10.evil.example.com`) get no exemption, and `localhost`/`.local` names
+ *   may resolve to LAN addresses but never to link-local/metadata
  */
 
 import { jest, describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
@@ -26,10 +29,11 @@ import axios from 'axios';
 import { config } from '../../config';
 import {
   guardedLookup,
+  lanLookup,
   integrationRequestOptions,
   PRIVATE_ADDRESS_ERROR_CODE,
 } from '../integrationRequestGuard';
-import { validateUrlNotInternal } from '../urlValidation';
+import { isLanIpAddress, isLocalNetworkHostname, validateUrlNotInternal } from '../urlValidation';
 
 // urlValidation promisifies resolve4/resolve6 at import time, so DNS is
 // replaced at module level (before any import) with functions that read the
@@ -243,7 +247,10 @@ describe('integrationRequestGuard', () => {
 
       expect(integrationRequestOptions('http://192.168.1.20:2283')).toEqual({});
       expect(integrationRequestOptions('http://10.0.0.5:11434/v1')).toEqual({});
-      expect(integrationRequestOptions('http://nas.local:2283')).toEqual({});
+      // A name, not an IP: it still goes through the LAN-policy agents.
+      const named = integrationRequestOptions('http://nas.local:2283');
+      expect(named.httpAgent).toBeDefined();
+      expect(named.proxy).toBe(false);
     });
 
     it('still guards a public hostname when the flag is on', async () => {
@@ -256,10 +263,88 @@ describe('integrationRequestGuard', () => {
       expect(hits).toBe(0);
     });
 
+    it('gives no exemption to DNS names that look like LAN IPs', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      lookupAnswers.set('10.evil.example.com', [v4('169.254.169.254')]);
+      lookupAnswers.set('192.168.attacker.net', [v4('127.0.0.1')]);
+
+      expect(integrationRequestOptions('http://10.evil.example.com/').httpAgent).toBeDefined();
+      await expect(guardedGet('http://10.evil.example.com/latest/meta-data/')).rejects.toMatchObject({
+        code: PRIVATE_ADDRESS_ERROR_CODE,
+      });
+      await expect(guardedGet(`http://192.168.attacker.net:${port}/`)).rejects.toMatchObject({
+        code: PRIVATE_ADDRESS_ERROR_CODE,
+      });
+      expect(hits).toBe(0);
+    });
+
+    it('lets a .local name reach a LAN address when the flag is on', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      lookupAnswers.set('nas.local', [v4('127.0.0.1')]);
+
+      const response = await guardedGet(`http://nas.local:${port}/api/server/ping`);
+
+      expect(response.data).toEqual({ reached: true });
+      expect(hits).toBe(1);
+    });
+
+    it('refuses a .local name that resolves to link-local / metadata', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      lookupAnswers.set('evil.local', [v4('169.254.169.254')]);
+      lookupAnswers.set('cgnat.local', [v4('100.64.0.1')]);
+
+      await expect(guardedGet('http://evil.local/latest/meta-data/')).rejects.toMatchObject({
+        code: PRIVATE_ADDRESS_ERROR_CODE,
+      });
+      await expect(guardedGet('http://cgnat.local/')).rejects.toMatchObject({
+        code: PRIVATE_ADDRESS_ERROR_CODE,
+      });
+    });
+
+    it('lanLookup accepts public, loopback and RFC1918 answers only', async () => {
+      const run = (host: string) =>
+        new Promise<NodeJS.ErrnoException | null>((resolve) => {
+          lanLookup(host, {}, (err) => resolve(err));
+        });
+      lookupAnswers.set('a.local', [v4('93.184.216.34')]);
+      lookupAnswers.set('b.local', [v4('192.168.1.20'), v4('10.0.0.5')]);
+      lookupAnswers.set('c.local', [v4('192.168.1.20'), v4('169.254.1.1')]);
+
+      expect(await run('a.local')).toBeNull();
+      expect(await run('b.local')).toBeNull();
+      expect((await run('c.local'))?.code).toBe(PRIVATE_ADDRESS_ERROR_CODE);
+    });
+
     it('refuses the same LAN address once the flag is off', () => {
       expect(() => integrationRequestOptions('http://192.168.1.20:2283')).toThrow(
         /private or internal IP/
       );
+    });
+  });
+
+  describe('isLocalNetworkHostname / isLanIpAddress', () => {
+    it('accepts loopback and RFC1918 IP literals', () => {
+      for (const host of ['127.0.0.1', '10.0.0.5', '172.16.0.1', '172.31.255.255', '192.168.1.20', '::1', '[::1]', '::ffff:192.168.1.20']) {
+        expect(isLocalNetworkHostname(host)).toBe(true);
+      }
+    });
+
+    it('accepts localhost and .local names', () => {
+      expect(isLocalNetworkHostname('localhost')).toBe(true);
+      expect(isLocalNetworkHostname('NAS.local')).toBe(true);
+    });
+
+    it('rejects DNS names that only start like a LAN IP', () => {
+      for (const host of ['10.evil.example.com', '192.168.attacker.net', '172.16.x.example.org', '127.0.0.1.nip.io']) {
+        expect(isLocalNetworkHostname(host)).toBe(false);
+      }
+    });
+
+    it('rejects non-LAN internal addresses', () => {
+      for (const ip of ['169.254.169.254', '100.64.0.1', '0.0.0.0', '172.32.0.1', 'fe80::1', '::ffff:169.254.169.254']) {
+        expect(isLanIpAddress(ip)).toBe(false);
+        expect(isLocalNetworkHostname(ip)).toBe(false);
+      }
     });
   });
 });

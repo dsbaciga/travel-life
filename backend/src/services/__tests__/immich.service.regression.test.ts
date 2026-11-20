@@ -364,6 +364,11 @@ describe('ImmichService regressions', () => {
         },
         timeout: 30000,
         maxRedirects: 0,
+        // `localhost` is a name, so even under the LAN escape hatch it goes
+        // through the request-time guard's LAN-policy agents.
+        httpAgent: expect.anything(),
+        httpsAgent: expect.anything(),
+        proxy: false,
       });
     });
 

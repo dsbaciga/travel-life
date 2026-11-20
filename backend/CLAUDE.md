@@ -56,7 +56,7 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 
 ### Security escape hatches (leave off unless you know why)
 
-- `ALLOW_PRIVATE_INTEGRATION_URLS` - Set to `true` to let Immich/LLM/SMTP URLs point at private-network addresses (always allowed when `NODE_ENV=development`). Off by default so those settings cannot be used to probe the server's own network (SSRF guard in `security/urlValidation.ts` at save time, `security/integrationRequestGuard.ts` on every Immich/LLM request). Only hosts written as a LAN address or `.local` name qualify; a DNS name that resolves to a LAN address is still refused
+- `ALLOW_PRIVATE_INTEGRATION_URLS` - Set to `true` to let Immich/LLM/SMTP URLs point at private-network addresses (always allowed when `NODE_ENV=development`). Off by default so those settings cannot be used to probe the server's own network (SSRF guard in `security/urlValidation.ts` at save time, `security/integrationRequestGuard.ts` on every Immich/LLM request). Only loopback/RFC1918 IP literals, `localhost` and `.local` names qualify (a `.local` name may resolve to a LAN address but never to link-local/cloud metadata); any other DNS name, even one that resolves to a LAN address or starts with `10.`/`192.168.`, is still refused
 - `ALLOW_UNSIGNED_BACKUP_RESTORE` - Set to `true` to restore old backup files that carry no HMAC `integrity` signature. Restore once, re-export, then unset
 
 ### Rate limits (all optional)
