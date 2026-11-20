@@ -71,6 +71,10 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-}
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-}
+      # Let users point integrations (LLM, Immich, SMTP) at LAN addresses such as
+      # a self-hosted Ollama on 192.168.x.x. Off by default (SSRF protection).
+      ALLOW_PRIVATE_INTEGRATION_URLS: ${ALLOW_PRIVATE_INTEGRATION_URLS:-}
       AI_RATE_LIMIT_MAX: ${AI_RATE_LIMIT_MAX:-}
       AI_RATE_LIMIT_WINDOW_MS: ${AI_RATE_LIMIT_WINDOW_MS:-}
       BACKUP_RATE_LIMIT_MAX: ${BACKUP_RATE_LIMIT_MAX:-}

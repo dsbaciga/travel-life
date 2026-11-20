@@ -8,6 +8,8 @@ interface LlmOptions {
   maxTokens?: number;
   temperature?: number;
   userId?: number;
+  /** Aborts the request, e.g. when the user cancels a PDF import. */
+  signal?: AbortSignal;
 }
 
 interface ResolvedLlmConfig {
@@ -112,7 +114,8 @@ class LlmService {
         },
         {
           headers,
-          timeout: 30000,
+          timeout: config.llm.timeoutMs,
+          signal: options.signal,
           maxRedirects: 0,
         }
       );
@@ -120,6 +123,11 @@ class LlmService {
       const content: unknown = response.data?.choices?.[0]?.message?.content;
       return typeof content === 'string' ? content : '';
     } catch (error) {
+      // A deliberate cancel (e.g. the user stopped a PDF import) is not a failure.
+      if (options.signal?.aborted) {
+        logger.info('LLM request cancelled');
+        throw new LlmError('LLM request cancelled');
+      }
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         logger.error('LLM request failed', { status, message: error.message });

@@ -276,6 +276,60 @@ router.put('/openrouteservice-settings', userController.updateOpenrouteserviceSe
 
 /**
  * @openapi
+ * /api/users/llm-settings:
+ *   get:
+ *     summary: Get the user's LLM (AI) settings
+ *     description: >
+ *       Per-user overrides for the LLM that powers PDF import and AI suggestions.
+ *       The API key itself is never returned, only whether one is set.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: LLM settings (llmApiKeySet, llmBaseUrl, llmModel, llmConfigured)
+ *       401:
+ *         description: Unauthorized
+ *   put:
+ *     summary: Update the user's LLM (AI) settings
+ *     description: >
+ *       Any OpenAI-compatible endpoint. A base URL with no API key is allowed for
+ *       local no-auth servers such as Ollama. Private-network URLs are rejected
+ *       unless ALLOW_PRIVATE_INTEGRATION_URLS is enabled.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               llmApiKey:
+ *                 type: string
+ *                 nullable: true
+ *               llmBaseUrl:
+ *                 type: string
+ *                 format: uri
+ *                 nullable: true
+ *                 description: e.g. http://192.168.1.50:11434/v1
+ *               llmModel:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: LLM settings updated
+ *       400:
+ *         description: Validation error or disallowed URL
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/llm-settings', userController.getLlmSettings);
+router.put('/llm-settings', userController.updateLlmSettings);
+
+/**
+ * @openapi
  * /api/users/maps-settings:
  *   get:
  *     summary: Get the preferred external maps app

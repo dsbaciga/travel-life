@@ -1,43 +1,39 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import pdfImportService from '../services/pdfImport.service';
-import type { PdfImportStatus } from '../types/pdfImport';
+import {
+  PDF_IMPORT_GIVE_UP_MS,
+  isPdfImportFinished,
+  pdfImportPollDelayMs,
+} from '../utils/pdfImportPolling';
 
-const TERMINAL_STATUSES: PdfImportStatus[] = ['PARSED', 'PARSE_FAILED', 'NO_ENTITIES'];
-
-// First 10 attempts at 2s = 20s, remaining 50 at 5s = 250s → total ~4.5 minutes
-// before the hook gives up and stops polling. Prevents runaway polling when the
-// backend job crashes without updating status.
-const MAX_POLL_ATTEMPTS = 60;
-
+/**
+ * Polls one import until it reaches a terminal status. Gives up after
+ * PDF_IMPORT_GIVE_UP_MS (longer than the backend's LLM timeout) so a crashed
+ * background job can't poll forever.
+ */
 export function usePdfImportPolling(importId: number | null) {
-  const attemptCountRef = useRef(0);
+  const startedAtRef = useRef(Date.now());
   const [timedOut, setTimedOut] = useState(false);
 
-  // Reset attempt counter and timeout flag whenever we start polling a new import
+  // Restart the clock whenever we start polling a new import
   useEffect(() => {
-    attemptCountRef.current = 0;
+    startedAtRef.current = Date.now();
     setTimedOut(false);
   }, [importId]);
 
   const query = useQuery({
     queryKey: ['pdfImport', importId],
-    queryFn: async () => {
-      attemptCountRef.current += 1;
-      return pdfImportService.getPdfImportById(importId!);
-    },
+    queryFn: () => pdfImportService.getPdfImportById(importId!),
     enabled: importId !== null && !timedOut,
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      // Only stop polling once we have a terminal status
-      if (status && TERMINAL_STATUSES.includes(status)) return false;
-      // Cap polling so a crashed background job can't poll forever
-      if (attemptCountRef.current >= MAX_POLL_ATTEMPTS) {
+      if (isPdfImportFinished(query.state.data?.status)) return false;
+      const elapsed = Date.now() - startedAtRef.current;
+      if (elapsed >= PDF_IMPORT_GIVE_UP_MS) {
         setTimedOut(true);
         return false;
       }
-      // Exponential backoff: 2s for first 10 attempts, then 5s
-      return attemptCountRef.current < 10 ? 2000 : 5000;
+      return pdfImportPollDelayMs(elapsed);
     },
     refetchIntervalInBackground: false,
   });

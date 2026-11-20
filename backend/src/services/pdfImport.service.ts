@@ -61,12 +61,80 @@ function resolveStoredPath(storedPath: string): string {
   return absolute;
 }
 
+/**
+ * Only one PDF is read at a time, across every user on the instance. The LLM
+ * may be a self-hosted model on modest hardware (e.g. Ollama on a NAS), where
+ * two documents at once would just make both slow or time out.
+ *
+ * In-process on purpose: the backend runs as a single container, and a slot
+ * held by a process that has since died must not block uploads after restart.
+ */
+export const PDF_PARSE_BUSY_MESSAGE =
+  'Another PDF is still being read. Try again when it finishes.';
+
+let parsingSlotBusy = false;
+
+/** The parse holding the slot, so it can be cancelled (see deletePdfImport). */
+let activeParse: { pdfImportId: number; controller: AbortController } | null = null;
+
+function claimParsingSlot(): void {
+  // Synchronous check-and-set: no await between them, so two requests cannot both win.
+  if (parsingSlotBusy) throw new AppError(PDF_PARSE_BUSY_MESSAGE, 409);
+  parsingSlotBusy = true;
+}
+
+function releaseParsingSlot(): void {
+  parsingSlotBusy = false;
+}
+
+/** Test hook: whether a PDF is being read right now. */
+export function isPdfParsingBusy(): boolean {
+  return parsingSlotBusy;
+}
+
 class PdfImportService {
   /**
    * Validates PDF magic bytes (%PDF) and uploads/processes the file.
    * Returns immediately after creating the DB record — processing is async.
+   * Refused with 409 while another PDF is being read (see claimParsingSlot).
    */
-  async uploadAndProcess(
+  async uploadAndProcess(userId: number, file: MulterFile, hintTripId?: number) {
+    claimParsingSlot();
+    try {
+      return await this.storeAndStartParsing(userId, file, hintTripId);
+    } catch (err) {
+      // Never got as far as the background job, which would release it.
+      releaseParsingSlot();
+      throw err;
+    }
+  }
+
+  /** Runs the parse and frees the slot whichever way it ends, including a cancel. */
+  private launchParsing(
+    pdfImportId: number,
+    userId: number,
+    absolutePath: string,
+    filename: string,
+    hintTripId?: number
+  ): void {
+    const controller = new AbortController();
+    activeParse = { pdfImportId, controller };
+    this.processInBackground(
+      pdfImportId,
+      userId,
+      absolutePath,
+      filename,
+      hintTripId,
+      controller.signal
+    )
+      .catch((err) => logger.error('PDF background processing failed', { pdfImportId, err }))
+      .finally(() => {
+        if (activeParse?.controller === controller) activeParse = null;
+        releaseParsingSlot();
+      });
+  }
+
+  private async storeAndStartParsing(
     userId: number,
     file: MulterFile,
     hintTripId?: number
@@ -130,9 +198,7 @@ class PdfImportService {
     }
 
     // Fire background processing (don't await)
-    this.processInBackground(pdfImport.id, userId, absolutePath, file.originalname, hintTripId).catch(
-      (err) => logger.error('PDF background processing failed', { pdfImportId: pdfImport.id, err })
-    );
+    this.launchParsing(pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
 
     return pdfImport;
   }
@@ -145,11 +211,15 @@ class PdfImportService {
     userId: number,
     absolutePath: string,
     filename: string,
-    hintTripId?: number
+    hintTripId?: number,
+    signal?: AbortSignal
   ): Promise<void> {
     try {
       const text = await pdfParserService.extractText(absolutePath);
-      const { entities } = await pdfParserService.parseDocument(text, filename);
+      if (signal?.aborted) return;
+      const { entities } = await pdfParserService.parseDocument(text, filename, userId, signal);
+      // Cancelled while the model was answering: the import row is being deleted.
+      if (signal?.aborted) return;
 
       if (entities.length === 0) {
         await prisma.pdfImport.update({
@@ -223,6 +293,10 @@ class PdfImportService {
         },
       });
     } catch (err) {
+      if (signal?.aborted) {
+        logger.info('PDF processing cancelled', { pdfImportId });
+        return;
+      }
       logger.error('PDF processing failed', { pdfImportId, err });
       await prisma.pdfImport.update({
         where: { id: pdfImportId },
@@ -491,26 +565,41 @@ class PdfImportService {
       throw new AppError('Import is currently being parsed', 409);
     }
 
-    // Delete existing PENDING entities (keep ACCEPTED/REJECTED)
-    await prisma.pendingEntity.deleteMany({
-      where: { pdfImportId: id, status: PendingEntityStatus.PENDING },
-    });
+    claimParsingSlot();
+    try {
+      const absolutePath = resolveStoredPath(record.storedPath);
 
-    // Transition back to PARSING
-    await prisma.pdfImport.update({
-      where: { id },
-      data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
-    });
+      // Delete existing PENDING entities (keep ACCEPTED/REJECTED)
+      await prisma.pendingEntity.deleteMany({
+        where: { pdfImportId: id, status: PendingEntityStatus.PENDING },
+      });
 
-    const absolutePath = resolveStoredPath(record.storedPath);
-    this.processInBackground(id, userId, absolutePath, record.originalName).catch(
-      (err) => logger.error('PDF reparse failed', { pdfImportId: id, err })
-    );
+      // Transition back to PARSING
+      await prisma.pdfImport.update({
+        where: { id },
+        data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
+      });
+
+      this.launchParsing(id, userId, absolutePath, record.originalName);
+    } catch (err) {
+      releaseParsingSlot();
+      throw err;
+    }
   }
 
+  /**
+   * Deletes an import. If it is still being read, the LLM request is aborted
+   * first (which also stops a local model such as Ollama generating), freeing
+   * the parsing slot for the next PDF. This is what "Cancel" calls.
+   */
   async deletePdfImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
+
+    if (activeParse?.pdfImportId === id) {
+      logger.info('Cancelling PDF parse in progress', { pdfImportId: id });
+      activeParse.controller.abort();
+    }
 
     const absolutePath = resolveStoredPath(record.storedPath);
     try {
@@ -550,11 +639,14 @@ class PdfImportService {
    * up is not stuck until the next restart.
    */
   async resetStaleParsing(): Promise<void> {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    // Never reset a job that may still be waiting on the LLM: allow at least
+    // twice the LLM timeout, and no less than ten minutes.
+    const staleAfterMs = Math.max(10 * 60 * 1000, 2 * config.llm.timeoutMs);
+    const cutoff = new Date(Date.now() - staleAfterMs);
     const stale = await prisma.pdfImport.findMany({
       where: {
         status: PdfImportStatus.PARSING,
-        updatedAt: { lt: tenMinutesAgo },
+        updatedAt: { lt: cutoff },
       },
       select: { id: true },
     });

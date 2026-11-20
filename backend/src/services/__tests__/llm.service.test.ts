@@ -7,6 +7,8 @@
  * - LLM-003: chat supports local no-auth LLM when llmBaseUrl is set without API key
  * - LLM-004: chat returns empty string when LLM is not configured
  * - LLM-005: chat throws LlmError when axios request fails
+ * - LLM-006: requests use the configurable timeout (5 minutes by default)
+ * - LLM-007: a cancelled request rejects without an error-level log
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -66,7 +68,7 @@ describe('LlmService', () => {
           'Content-Type': 'application/json',
           Authorization: 'Bearer sk-user-secret-key-123',
         },
-        timeout: 30000,
+        timeout: 300000,
         maxRedirects: 0,
       })
     );
@@ -141,5 +143,41 @@ describe('LlmService', () => {
     mockAxios.post.mockRejectedValue(new Error('Connection reset'));
 
     await expect(llmService.chat('sys', 'usr')).rejects.toBeInstanceOf(LlmError);
+  });
+
+  it('LLM-006: uses config.llm.timeoutMs, 5 minutes unless LLM_TIMEOUT_MS overrides it', async () => {
+    const original = config.llm.timeoutMs;
+    try {
+      expect(original).toBe(300000);
+      config.llm.timeoutMs = 600000;
+      config.llm.apiKey = 'ollama';
+      mockPrismaUserFindUnique.mockResolvedValue(null);
+      mockAxios.post.mockResolvedValue({ data: { choices: [{ message: { content: 'ok' } }] } });
+
+      await llmService.chat('s', 'u', { userId: 1 });
+
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({ timeout: 600000 })
+      );
+    } finally {
+      config.llm.timeoutMs = original;
+    }
+  });
+
+  it('LLM-007: passes the abort signal and treats a cancel as cancelled, not failed', async () => {
+    config.llm.apiKey = 'ollama';
+    mockPrismaUserFindUnique.mockResolvedValue(null);
+    const controller = new AbortController();
+    mockAxios.post.mockImplementation(async (_url, _body, opts) => {
+      expect((opts as { signal?: AbortSignal }).signal).toBe(controller.signal);
+      controller.abort();
+      throw new Error('canceled');
+    });
+
+    await expect(
+      llmService.chat('s', 'u', { userId: 1, signal: controller.signal })
+    ).rejects.toThrow('LLM request cancelled');
   });
 });
