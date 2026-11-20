@@ -14,6 +14,8 @@ export interface PdfImport {
   createdAt: string;
   updatedAt: string;
   _count?: { pendingEntities: number };
+  /** 0 while being read, n = PDFs ahead of it in line, null/absent = not queued. */
+  queuePosition?: number | null;
 }
 
 export interface PendingEntity {

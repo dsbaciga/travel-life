@@ -281,6 +281,10 @@ own key in Settings; these are the instance-wide defaults.
 | `LLM_BASE_URL` | `https://api.openai.com/v1` | Any OpenAI-compatible endpoint |
 | `LLM_MODEL` | `gpt-4o-mini` | Model name |
 | `LLM_MAX_TOKENS` | `2048` | Max tokens per request |
+| `LLM_TIMEOUT_MS` | `300000` | Per-request timeout (5 min); raise it for slow self-hosted models |
+
+For a self-hosted Ollama set as the instance default, use `LLM_BASE_URL=http://<lan-ip>:<port>/v1`
+and any non-empty `LLM_API_KEY` (Ollama ignores it, but an empty key counts as "not configured").
 
 ### Single Sign-On (OIDC)
 

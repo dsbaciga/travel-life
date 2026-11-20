@@ -32,6 +32,7 @@ working. Changing either secret invalidates all sessions and refresh tokens.
 - `LLM_BASE_URL` - LLM API base URL (defaults to `https://api.openai.com/v1`)
 - `LLM_MODEL` - LLM model name (defaults to `gpt-4o-mini`)
 - `LLM_MAX_TOKENS` - Maximum tokens per LLM request (defaults to `2048`)
+- `LLM_TIMEOUT_MS` - Per-request LLM timeout in milliseconds (defaults to `300000`, 5 minutes, so self-hosted models like Ollama have time to finish). Stuck PDF imports are only reset after twice this, and at least 10 minutes
 - `AI_RATE_LIMIT_MAX` - Maximum AI requests per window (defaults to `20`)
 - `AI_RATE_LIMIT_WINDOW_MS` - AI rate limit window in milliseconds (defaults to `3600000`)
 - `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID` - Enable OAuth/OIDC single sign-on (works with Google, Authentik, Keycloak, or any OIDC provider). Register `<BASE_URL>/api/auth/oidc/callback` as the redirect URI with the provider. PKCE (S256) is always used

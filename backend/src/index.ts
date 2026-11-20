@@ -552,6 +552,11 @@ const startServer = async () => {
     // Increased retries for TrueNAS environment
     await checkDatabaseConnection(10, 5000);
 
+    // Put PDF imports that were waiting or mid-read before a restart back in
+    // line (the parse queue lives in memory). Runs first so the stale reset
+    // below does not fail imports that can simply be read again.
+    await pdfImportService.requeueAfterRestart();
+
     // Reset any PDF imports stuck in PARSING from a previous server crash
     await pdfImportService.resetStaleParsing();
 
