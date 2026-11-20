@@ -8,6 +8,8 @@ import { AppError } from '../errors/errors';
 import { TransportationType, type TransportationTypeEnum } from '../types/transportation.types';
 import { LodgingType, type LodgingTypeEnum } from '../types/lodging.types';
 import { pdfParserService } from './pdfParser.service';
+import { llmEndpointKey, type ResolvedLlmConfig } from './llm.service';
+import { pdfParseQueue } from './pdfParseQueue';
 import { cleanupEntityLinks } from './_shared/entityLinkCleanup';
 import type { UpdatePendingEntityInput } from '../types/pdfImport.types';
 import {
@@ -61,20 +63,87 @@ function resolveStoredPath(storedPath: string): string {
   return absolute;
 }
 
+// One PDF at a time per LLM machine, one per user, taking turns: see pdfParseQueue.ts.
+
+/** Test hook: whether a PDF is being read right now (on one LLM machine, or any). */
+export function isPdfParsingBusy(key?: string): boolean {
+  return pdfParseQueue.isBusy(key);
+}
+
+/** The LLM a parse will use, resolved once: its queue key and the exact config. */
+interface ClaimedLlm {
+  key: string;
+  llmConfig: ResolvedLlmConfig;
+}
+
+/** Resolves the user's LLM once, refusing up front when there is none. */
+async function requireLlm(userId: number): Promise<ClaimedLlm> {
+  const llmConfig = await pdfParserService.resolveLlm(userId);
+  if (!llmConfig) {
+    throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
+  }
+  return { key: llmEndpointKey(llmConfig.baseUrl), llmConfig };
+}
+
 class PdfImportService {
   /**
-   * Validates PDF magic bytes (%PDF) and uploads/processes the file.
-   * Returns immediately after creating the DB record — processing is async.
+   * Validates PDF magic bytes (%PDF), stores the file and queues it for reading.
+   * Returns right after creating the DB record; reading happens in the
+   * background. If the LLM machine is busy the import waits its turn (status
+   * UPLOADED, `queuePosition` > 0). Refused with 409 if this user already has
+   * a PDF waiting or being read (see pdfParseQueue).
    */
-  async uploadAndProcess(
-    userId: number,
-    file: MulterFile,
-    hintTripId?: number
-  ) {
-    if (!(await pdfParserService.isConfigured(userId))) {
-      throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
+  async uploadAndProcess(userId: number, file: MulterFile, hintTripId?: number) {
+    const llm = await requireLlm(userId);
+    pdfParseQueue.reserveUser(userId);
+    let queued = false;
+    try {
+      const { pdfImport, absolutePath } = await this.storeUpload(userId, file);
+      this.enqueueParse(llm, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
+      queued = true;
+      return { ...pdfImport, queuePosition: pdfParseQueue.position(pdfImport.id) };
+    } finally {
+      // Never became a job, which would free the user's place when it ends.
+      if (!queued) pdfParseQueue.releaseUser(userId);
     }
+  }
 
+  /** Puts an import in line for its LLM machine. */
+  private enqueueParse(
+    llm: ClaimedLlm,
+    pdfImportId: number,
+    userId: number,
+    absolutePath: string,
+    filename: string,
+    hintTripId?: number
+  ): void {
+    pdfParseQueue.enqueue({
+      pdfImportId,
+      userId,
+      key: llm.key,
+      run: async (signal) => {
+        // Its turn: claim it. Zero rows means it was cancelled while waiting.
+        const started = await prisma.pdfImport.updateMany({
+          where: { id: pdfImportId, status: PdfImportStatus.UPLOADED },
+          data: { status: PdfImportStatus.PARSING },
+        });
+        if (started.count === 0 || signal.aborted) return;
+        await this.processInBackground(
+          pdfImportId,
+          userId,
+          absolutePath,
+          filename,
+          hintTripId,
+          signal,
+          // The config resolved when it was queued, not whatever Settings say by now.
+          llm.llmConfig
+        );
+      },
+    });
+  }
+
+  /** Validates and saves an upload as an UPLOADED import (waiting to be read). */
+  private async storeUpload(userId: number, file: MulterFile) {
     // Validate PDF magic bytes
     if (!file.buffer) {
       throw new AppError('File buffer is missing', 400);
@@ -120,21 +189,7 @@ class PdfImportService {
       throw new AppError('Failed to save uploaded file', 500);
     }
 
-    // Atomically transition to PARSING (guard against concurrent calls)
-    const updated = await prisma.pdfImport.updateMany({
-      where: { id: pdfImport.id, status: PdfImportStatus.UPLOADED },
-      data: { status: PdfImportStatus.PARSING },
-    });
-    if (updated.count === 0) {
-      throw new AppError('Import already in progress', 409);
-    }
-
-    // Fire background processing (don't await)
-    this.processInBackground(pdfImport.id, userId, absolutePath, file.originalname, hintTripId).catch(
-      (err) => logger.error('PDF background processing failed', { pdfImportId: pdfImport.id, err })
-    );
-
-    return pdfImport;
+    return { pdfImport, absolutePath };
   }
 
   /**
@@ -145,11 +200,20 @@ class PdfImportService {
     userId: number,
     absolutePath: string,
     filename: string,
-    hintTripId?: number
+    hintTripId?: number,
+    signal?: AbortSignal,
+    llmConfig?: ResolvedLlmConfig
   ): Promise<void> {
     try {
       const text = await pdfParserService.extractText(absolutePath);
-      const { entities } = await pdfParserService.parseDocument(text, filename);
+      if (signal?.aborted) return;
+      const { entities } = await pdfParserService.parseDocument(text, filename, {
+        userId,
+        llmConfig,
+        signal,
+      });
+      // Cancelled while the model was answering: the import row is being deleted.
+      if (signal?.aborted) return;
 
       if (entities.length === 0) {
         await prisma.pdfImport.update({
@@ -223,6 +287,10 @@ class PdfImportService {
         },
       });
     } catch (err) {
+      if (signal?.aborted) {
+        logger.info('PDF processing cancelled', { pdfImportId });
+        return;
+      }
       logger.error('PDF processing failed', { pdfImportId, err });
       await prisma.pdfImport.update({
         where: { id: pdfImportId },
@@ -282,7 +350,8 @@ class PdfImportService {
       include: { _count: { select: { pendingEntities: true } } },
     });
     if (!record) throw new AppError('PDF import not found', 404);
-    return record;
+    // 0 = being read, n = n PDFs ahead of it, null = not in the queue.
+    return { ...record, queuePosition: pdfParseQueue.position(id) };
   }
 
   async getPendingEntities(userId: number, opts: { pdfImportId?: number; status?: string; entityType?: string }) {
@@ -487,30 +556,51 @@ class PdfImportService {
   async reparseImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
-    if (record.status === PdfImportStatus.PARSING) {
-      throw new AppError('Import is currently being parsed', 409);
+    if (
+      record.status === PdfImportStatus.PARSING ||
+      record.status === PdfImportStatus.UPLOADED ||
+      pdfParseQueue.position(id) !== null
+    ) {
+      throw new AppError('This PDF is already waiting or being read', 409);
     }
 
-    // Delete existing PENDING entities (keep ACCEPTED/REJECTED)
-    await prisma.pendingEntity.deleteMany({
-      where: { pdfImportId: id, status: PendingEntityStatus.PENDING },
-    });
+    const llm = await requireLlm(userId);
+    pdfParseQueue.reserveUser(userId);
+    let queued = false;
+    try {
+      const absolutePath = resolveStoredPath(record.storedPath);
 
-    // Transition back to PARSING
-    await prisma.pdfImport.update({
-      where: { id },
-      data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
-    });
+      // Delete existing PENDING entities (keep ACCEPTED/REJECTED)
+      await prisma.pendingEntity.deleteMany({
+        where: { pdfImportId: id, status: PendingEntityStatus.PENDING },
+      });
 
-    const absolutePath = resolveStoredPath(record.storedPath);
-    this.processInBackground(id, userId, absolutePath, record.originalName).catch(
-      (err) => logger.error('PDF reparse failed', { pdfImportId: id, err })
-    );
+      // Back in line: UPLOADED until its turn comes
+      await prisma.pdfImport.update({
+        where: { id },
+        data: { status: PdfImportStatus.UPLOADED, errorMessage: null, processedAt: null },
+      });
+
+      this.enqueueParse(llm, id, userId, absolutePath, record.originalName);
+      queued = true;
+    } finally {
+      if (!queued) pdfParseQueue.releaseUser(userId);
+    }
   }
 
+  /**
+   * Deletes an import. If it is waiting, it leaves the queue; if it is being
+   * read, the LLM request is aborted (which also stops a local model such as
+   * Ollama generating) and the next PDF in line starts. This is what "Cancel"
+   * calls.
+   */
   async deletePdfImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
+
+    if (pdfParseQueue.cancel(id)) {
+      logger.info('Cancelled PDF import waiting or being read', { pdfImportId: id });
+    }
 
     const absolutePath = resolveStoredPath(record.storedPath);
     try {
@@ -544,17 +634,77 @@ class PdfImportService {
   }
 
   /**
+   * Rebuilds the in-memory queue after a restart, oldest first. Anything left
+   * UPLOADED (waiting) or PARSING (its reader died with the old process) goes
+   * back in line. A user with several (not possible through the API, but old
+   * data may have it) keeps the oldest; the rest are failed so "Try again"
+   * re-queues them. The trip hint from the original upload is not stored, so a
+   * re-queued import is matched to a trip by its dates.
+   */
+  async requeueAfterRestart(): Promise<number> {
+    const waiting = await prisma.pdfImport.findMany({
+      where: { status: { in: [PdfImportStatus.UPLOADED, PdfImportStatus.PARSING] } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, userId: true, storedPath: true, originalName: true },
+    });
+
+    let requeued = 0;
+    for (const record of waiting) {
+      const fail = (errorMessage: string) =>
+        prisma.pdfImport.update({
+          where: { id: record.id },
+          data: { status: PdfImportStatus.PARSE_FAILED, errorMessage, processedAt: new Date() },
+        });
+
+      // One bad record must not stop the server from starting.
+      try {
+        if (pdfParseQueue.hasUser(record.userId)) {
+          await fail('The server restarted before this PDF was read. Try again.');
+          continue;
+        }
+        const llmConfig = await pdfParserService.resolveLlm(record.userId);
+        if (!llmConfig) {
+          await fail('LLM not configured — cannot process PDFs.');
+          continue;
+        }
+        const absolutePath = resolveStoredPath(record.storedPath);
+        await prisma.pdfImport.update({
+          where: { id: record.id },
+          data: { status: PdfImportStatus.UPLOADED },
+        });
+        pdfParseQueue.reserveUser(record.userId);
+        this.enqueueParse(
+          { key: llmEndpointKey(llmConfig.baseUrl), llmConfig },
+          record.id,
+          record.userId,
+          absolutePath,
+          record.originalName
+        );
+        requeued++;
+      } catch (err) {
+        logger.error('Could not re-queue PDF import after restart', { pdfImportId: record.id, err });
+        await fail('The server restarted before this PDF was read. Try again.').catch(() => {});
+      }
+    }
+    if (requeued > 0) logger.info(`Re-queued ${requeued} PDF import(s) after restart`);
+    return requeued;
+  }
+
+  /**
    * Reset imports stuck in PARSING for more than 10 minutes.
    * Awaited on startup before the server listens, and re-run hourly by the
    * cron scheduler (config/cron.ts) so a job that hangs while the process stays
    * up is not stuck until the next restart.
    */
   async resetStaleParsing(): Promise<void> {
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    // Never reset a job that may still be waiting on the LLM: allow at least
+    // twice the LLM timeout, and no less than ten minutes.
+    const staleAfterMs = Math.max(10 * 60 * 1000, 2 * config.llm.timeoutMs);
+    const cutoff = new Date(Date.now() - staleAfterMs);
     const stale = await prisma.pdfImport.findMany({
       where: {
         status: PdfImportStatus.PARSING,
-        updatedAt: { lt: tenMinutesAgo },
+        updatedAt: { lt: cutoff },
       },
       select: { id: true },
     });

@@ -7,6 +7,7 @@ import { clearPersistedCache } from '../lib/queryPersister';
 import { getQueryClient } from '../lib/queryClientSetup';
 import { offlineService } from '../services/offline.service';
 import offlineAuthService from '../services/offlineAuth.service';
+import { usePdfImportTrackerStore } from './pdfImportTrackerStore';
 
 interface ApiErrorData {
   message?: string;
@@ -74,6 +75,7 @@ async function clearCachedUserData(
     ['offline data cache', () => offlineService.clearAllCache()],
     ['offline auth session', () => offlineAuthService.clearOfflineSession()],
     ['service worker caches', () => clearServiceWorkerCaches()],
+    ['PDF imports in progress', () => usePdfImportTrackerStore.getState().clear()],
   ];
 
   // The sync queue is unsynced *user work*, not a cache — the only copy of

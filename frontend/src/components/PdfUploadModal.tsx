@@ -4,22 +4,21 @@ import toast from 'react-hot-toast';
 import Modal from './Modal';
 import pdfImportService from '../services/pdfImport.service';
 import tripService from '../services/trip.service';
-import PdfReviewModal from './PdfReviewModal';
-import type { PdfImport } from '../types/pdfImport';
+import { getApiErrorMessage } from '../lib/errors';
+import { usePdfImportTrackerStore } from '../store/pdfImportTrackerStore';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: () => void;
   tripId?: number;
 }
 
-export default function PdfUploadModal({ isOpen, onClose, onComplete, tripId: initialTripId }: Props) {
+export default function PdfUploadModal({ isOpen, onClose, tripId: initialTripId }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<number | undefined>(initialTripId);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [createdImport, setCreatedImport] = useState<PdfImport | null>(null);
+  const trackImport = usePdfImportTrackerStore((state) => state.track);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: tripsData } = useQuery({
@@ -54,25 +53,17 @@ export default function PdfUploadModal({ isOpen, onClose, onComplete, tripId: in
     setUploading(true);
     try {
       const result = await pdfImportService.uploadPdf(file, selectedTripId);
-      setCreatedImport(result);
-    } catch {
-      toast.error('Upload failed. Please try again.');
+      // Parsing runs on the server and can take minutes with a local model.
+      // PdfImportWatcher pops a banner with a Review link when it finishes.
+      // Its "Reading…" banner (with Cancel) comes from the watcher.
+      trackImport(result.id, file.name);
+      onClose();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Upload failed. Please try again.'));
     } finally {
       setUploading(false);
     }
   };
-
-  // Once we have a created import, show the review modal
-  if (createdImport) {
-    return (
-      <PdfReviewModal
-        isOpen={true}
-        importId={createdImport.id}
-        onClose={onClose}
-        onComplete={onComplete}
-      />
-    );
-  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Import from PDF" maxWidth="md">

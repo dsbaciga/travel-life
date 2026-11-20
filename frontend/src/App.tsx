@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Toaster } from 'react-hot-toast';
 import React, { useEffect, useState, Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
+import PdfImportWatcher from './components/PdfImportWatcher';
 
 // Lazy-loaded page components for route-level code splitting
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
@@ -171,6 +172,7 @@ function App() {
             containerClassName="z-[100]"
             containerStyle={isPhone && isAuthenticated ? { top: 72 } : undefined}
           />
+          <PdfImportWatcher />
           {/* Skip to content link for accessibility */}
           <a href="#main-content" className="skip-link">
             Skip to main content

@@ -248,6 +248,9 @@ export const config = {
     apiKey: process.env.LLM_API_KEY || '',
     model: process.env.LLM_MODEL || 'gpt-4o-mini',
     maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '2048', 10),
+    // Per-request timeout. Generous by default so a self-hosted model (e.g.
+    // Ollama on CPU) can finish reading a long booking PDF.
+    timeoutMs: parseInt(process.env.LLM_TIMEOUT_MS || '300000', 10) || 300000,
   },
 
   // Saved-link email ingest (IMAP).

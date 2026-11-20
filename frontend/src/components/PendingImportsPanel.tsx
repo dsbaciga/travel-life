@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import pdfImportService from '../services/pdfImport.service';
 import PdfReviewModal from './PdfReviewModal';
@@ -31,7 +32,12 @@ function summarise(entities: PendingEntity[]): string {
  */
 export default function PendingImportsPanel() {
   const queryClient = useQueryClient();
-  const [reviewingImportId, setReviewingImportId] = useState<number | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedImportId, setSelectedImportId] = useState<number | null>(null);
+  // `?reviewImport=<id>` deep link, written by the "PDF is ready" banner.
+  const reviewParam = searchParams.get('reviewImport');
+  const linkedImportId = reviewParam && /^\d+$/.test(reviewParam) ? Number(reviewParam) : null;
+  const reviewingImportId = selectedImportId ?? linkedImportId;
 
   const { data: pending = [] } = useQuery({
     queryKey: ['pendingEntities', 'inbox'],
@@ -56,13 +62,30 @@ export default function PendingImportsPanel() {
     return [...byImport.entries()];
   }, [pending]);
 
-  if (groups.length === 0) return null;
-
   const closeReview = () => {
-    setReviewingImportId(null);
+    setSelectedImportId(null);
+    if (linkedImportId !== null) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('reviewImport');
+      setSearchParams(next, { replace: true });
+    }
     queryClient.invalidateQueries({ queryKey: ['pendingEntities'] });
     queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
   };
+
+  const reviewModal =
+    reviewingImportId !== null ? (
+      <PdfReviewModal
+        isOpen
+        importId={reviewingImportId}
+        onClose={closeReview}
+        onComplete={closeReview}
+      />
+    ) : null;
+
+  // Nothing waiting, but a banner link may still have asked for one import
+  // (a failed parse offering "Try again", or one already reviewed).
+  if (groups.length === 0) return reviewModal;
 
   return (
     <section className="card mb-8" aria-labelledby="pending-imports-heading">
@@ -88,7 +111,7 @@ export default function PendingImportsPanel() {
               <button
                 type="button"
                 className="btn btn-secondary flex-none"
-                onClick={() => setReviewingImportId(importId)}
+                onClick={() => setSelectedImportId(importId)}
               >
                 Review
               </button>
@@ -97,14 +120,7 @@ export default function PendingImportsPanel() {
         })}
       </ul>
 
-      {reviewingImportId !== null && (
-        <PdfReviewModal
-          isOpen
-          importId={reviewingImportId}
-          onClose={closeReview}
-          onComplete={closeReview}
-        />
-      )}
+      {reviewModal}
     </section>
   );
 }

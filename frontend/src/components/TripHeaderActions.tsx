@@ -198,7 +198,6 @@ export default function TripHeaderActions({
           tripId={tripId}
           isOpen={isPdfImportOpen}
           onClose={() => setIsPdfImportOpen(false)}
-          onComplete={() => setIsPdfImportOpen(false)}
         />
       )}
 

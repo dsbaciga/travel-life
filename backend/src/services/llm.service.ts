@@ -8,9 +8,33 @@ interface LlmOptions {
   maxTokens?: number;
   temperature?: number;
   userId?: number;
+  /** Aborts the request, e.g. when the user cancels a PDF import. */
+  signal?: AbortSignal;
+  /**
+   * Use exactly this config instead of resolving it from `userId` now. PDF
+   * import resolves once when it claims a parsing slot, so a Settings change
+   * mid-parse cannot send the request to a server whose slot was not claimed.
+   */
+  llmConfig?: ResolvedLlmConfig;
 }
 
-interface ResolvedLlmConfig {
+/**
+ * The machine an LLM base URL points at, used to rate-limit per server. Parsed
+ * with the URL parser so spelling variants of one server (case, port, path,
+ * query, credentials, trailing dot) cannot pass as different servers. Two
+ * services on one host share a key on purpose: they share the hardware.
+ * A different name or IP for the same box is still a different key; closing
+ * that needs DNS resolution, which belongs with request-time URL validation.
+ */
+export function llmEndpointKey(baseUrl: string): string {
+  try {
+    return new URL(baseUrl.trim()).hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+  } catch {
+    return baseUrl.trim().toLowerCase();
+  }
+}
+
+export interface ResolvedLlmConfig {
   baseUrl: string;
   /** Null for local LLMs that require no auth (e.g., Ollama). */
   apiKey: string | null;
@@ -82,12 +106,20 @@ class LlmService {
     return (await this.resolveConfig(userId)) !== null;
   }
 
+  /**
+   * The LLM config a user's requests would use right now, or null when none is
+   * configured. Pass it back as `options.llmConfig` to pin a later request to it.
+   */
+  async resolveForUser(userId?: number): Promise<ResolvedLlmConfig | null> {
+    return this.resolveConfig(userId);
+  }
+
   async chat(
     systemPrompt: string,
     userPrompt: string,
     options: LlmOptions = {}
   ): Promise<string> {
-    const resolved = await this.resolveConfig(options.userId);
+    const resolved = options.llmConfig ?? (await this.resolveConfig(options.userId));
     if (!resolved) {
       logger.warn('LLM not configured — AI features disabled. Set an API key in Settings or LLM_API_KEY env var.');
       return '';
@@ -112,7 +144,8 @@ class LlmService {
         },
         {
           headers,
-          timeout: 30000,
+          timeout: config.llm.timeoutMs,
+          signal: options.signal,
           maxRedirects: 0,
         }
       );
@@ -120,6 +153,11 @@ class LlmService {
       const content: unknown = response.data?.choices?.[0]?.message?.content;
       return typeof content === 'string' ? content : '';
     } catch (error) {
+      // A deliberate cancel (e.g. the user stopped a PDF import) is not a failure.
+      if (options.signal?.aborted) {
+        logger.info('LLM request cancelled');
+        throw new LlmError('LLM request cancelled');
+      }
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         logger.error('LLM request failed', { status, message: error.message });
@@ -143,7 +181,7 @@ class LlmService {
     image: { mimeType: string; base64: string },
     options: LlmOptions = {}
   ): Promise<string> {
-    const resolved = await this.resolveConfig(options.userId);
+    const resolved = options.llmConfig ?? (await this.resolveConfig(options.userId));
     if (!resolved) {
       logger.warn('LLM not configured — AI features disabled. Set an API key in Settings or LLM_API_KEY env var.');
       return '';

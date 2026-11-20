@@ -8,6 +8,17 @@ import { usePdfImportPolling } from '../hooks/usePdfImportPolling';
 import pdfImportService from '../services/pdfImport.service';
 import tripService from '../services/trip.service';
 import type { PendingEntity } from '../types/pdfImport';
+import { createdEntityPath, showPdfImportBanner } from '../utils/pdfImportNotifications';
+
+/** A short name for the accepted booking, e.g. the hotel or the carrier and route. */
+function describeEntity(data: Record<string, unknown>): string | null {
+  const text = (key: string) => (typeof data[key] === 'string' && data[key] ? (data[key] as string) : null);
+  const route =
+    text('fromLocationName') && text('toLocationName')
+      ? `${text('fromLocationName')} → ${text('toLocationName')}`
+      : null;
+  return text('name') ?? ([text('carrier'), route].filter(Boolean).join(', ') || null);
+}
 
 interface Props {
   isOpen: boolean;
@@ -21,6 +32,14 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   LODGING: 'Lodging',
   ACTIVITY: 'Activity',
   LOCATION: 'Location',
+};
+
+// Per-trip list query each accepted entity lands in (see useTripDetailQueries)
+const TRIP_LIST_QUERY_KEYS: Record<string, string> = {
+  TRANSPORTATION: 'transportation',
+  LODGING: 'lodging',
+  ACTIVITY: 'activities',
+  LOCATION: 'locations',
 };
 
 // Fields to show for each entity type (ordered display)
@@ -40,6 +59,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   const [selectedTripId, setSelectedTripId] = useState<number | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reparsing, setReparsing] = useState(false);
+  const [entitiesLoaded, setEntitiesLoaded] = useState(false);
   // Guard: prevents reloading entity list mid-review (e.g. on window focus refetch)
   const entitiesLoadedRef = useRef(false);
 
@@ -56,6 +76,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       entitiesLoadedRef.current = true;
       pdfImportService.getPendingEntities({ pdfImportId: importId, status: 'PENDING' }).then((data) => {
         setEntities(data);
+        setEntitiesLoaded(true);
         if (data[0]) {
           setEditedData(data[0].parsedData as Record<string, unknown>);
           setSelectedTripId(data[0].matchedTripId ?? undefined);
@@ -87,8 +108,35 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     }
     setIsSubmitting(true);
     try {
-      await pdfImportService.acceptPendingEntity(currentEntity.id, selectedTripId, editedData);
-      toast.success(`${ENTITY_TYPE_LABELS[currentEntity.entityType]} added to trip`);
+      const created = await pdfImportService.acceptPendingEntity(
+        currentEntity.id,
+        selectedTripId,
+        editedData
+      );
+      // Refresh the trip's lists and tab counts, which the "View" link lands on.
+      queryClient.invalidateQueries({ queryKey: ['trip', selectedTripId] });
+      queryClient.invalidateQueries({
+        queryKey: [TRIP_LIST_QUERY_KEYS[currentEntity.entityType], selectedTripId],
+      });
+      const label = ENTITY_TYPE_LABELS[currentEntity.entityType];
+      const tripTitle = trips.find((trip) => trip.id === selectedTripId)?.title;
+      showPdfImportBanner(
+        `accepted-${currentEntity.id}`,
+        {
+          tone: 'success',
+          title: `${label} added${tripTitle ? ` to ${tripTitle}` : ' to trip'}`,
+          body: describeEntity(editedData) ?? 'Saved from your PDF.',
+          action: {
+            label: 'View',
+            to: createdEntityPath(
+              selectedTripId,
+              currentEntity.entityType,
+              created.createdEntityId
+            ),
+          },
+        },
+        { duration: 10000 }
+      );
       queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
       advance();
     } catch {
@@ -118,6 +166,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       await pdfImportService.reparseImport(importId);
       // Reset review state so entities reload after reparse
       entitiesLoadedRef.current = false;
+      setEntitiesLoaded(false);
       setEntities([]);
       setCurrentIndex(0);
       setEditedData({});
@@ -164,12 +213,15 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
 
   // Status: PARSING or UPLOADED
   if (!importData || importData.status === 'UPLOADED' || importData.status === 'PARSING') {
+    const ahead = importData?.queuePosition ?? 0;
     return (
       <Modal isOpen={isOpen} onClose={onClose} title="Processing PDF" maxWidth="md">
         <div className="flex flex-col items-center py-8 gap-4">
           <LoadingSpinner />
           <p className="text-sm text-stone-600 dark:text-dusk-400">
-            Extracting travel details from your PDF...
+            {ahead > 0
+              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one...`
+              : 'Extracting travel details from your PDF...'}
           </p>
         </div>
       </Modal>
@@ -214,6 +266,24 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
         <div className="py-4">
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             No travel entities were found in this PDF. The document may not contain recognizable booking information.
+          </p>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg">
+            Close
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Status: PARSED, and everything in it was already accepted or rejected
+  if (entitiesLoaded && entities.length === 0) {
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} title="Nothing Left to Review" maxWidth="md">
+        <div className="py-4">
+          <p className="text-sm text-stone-600 dark:text-dusk-400">
+            Every booking from this PDF has already been added or dismissed.
           </p>
         </div>
         <div className="mt-4 flex justify-end">
