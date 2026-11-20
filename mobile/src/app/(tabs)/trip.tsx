@@ -14,7 +14,7 @@ import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
 import Icon from '@/components/Icon';
 import MapToButton from '@/components/MapToButton';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import {
   adjustTime,
   promoteSavedLink,
@@ -218,12 +218,17 @@ export default function TripScreen() {
 
   const modeBar = (
     <View style={styles.modeBar}>
-      <AppText variant="title" numberOfLines={1}>
-        {trip.title}
-      </AppText>
-      <AppText muted>
-        {formatDateOnly(trip.startDate)} – {formatDateOnly(trip.endDate)}
-      </AppText>
+      <Row style={styles.between}>
+        <View style={styles.flex}>
+          <AppText variant="title" numberOfLines={1}>
+            {trip.title}
+          </AppText>
+          <AppText muted>
+            {formatDateOnly(trip.startDate)} – {formatDateOnly(trip.endDate)}
+          </AppText>
+        </View>
+        <IconButton icon="settings" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
+      </Row>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         <Chip label="Day by day" selected={mode === 'days'} onPress={() => setMode('days')} />
         <Chip label="By type" selected={mode === 'types'} onPress={() => setMode('types')} />

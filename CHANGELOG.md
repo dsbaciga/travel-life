@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile app: real icons instead of emoji.** The tab bar, the capture button, timeline badges, Quick capture options, checklists and buttons use Material Symbols on Android (SF Symbols on iOS). They take the theme colours and look the same on every phone, where emoji varied by phone maker. The icon font ships inside the app, so icons work offline.
 - **Mobile app: matching headers.** The headers on forms, Sync, Settings and other pushed screens use the app's light and dark colours instead of plain black or white.
 - **Mobile app: touch ripples.** Cards, buttons, chips and menu rows show the Android touch ripple when tapped.
+- **Mobile app: a calmer Today header.** The row of up to seven sync chips is now one pill that shows whatever most needs attention ("2 conflicts", "Offline · 3 to sync"). Tap it for the Sync screen. The budget is a bar of what has been spent, with a tick where spending would be if it kept pace with the trip, plus the amounts in the budget currency.
+- **Mobile app: Settings is one tap away.** A gear button sits in the Today and Trip headers. Before, Settings was only reachable from the Vault.
+- **Mobile app: faster Quick capture.** Photo, Stop here, Expense and Note are large tiles at the top. Everything else is listed below under More.
+- **Mobile app: Save is always in reach.** On add and edit forms, Save is pinned to the bottom of the screen instead of sitting after the last field. Delete moved to a trash button in the header.
 
 ## [8.1.1] - 2026-11-20
 

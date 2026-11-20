@@ -7,7 +7,7 @@
  */
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import type { EntityId, EntityType, SyncEntityKind, SyncEntityMap } from '@travel-life/shared';
 import {
   dayKeyInTimezone,
@@ -21,7 +21,7 @@ import EntityForm from '@/components/EntityForm';
 import EntityLinkSection from '@/components/EntityLinkSection';
 import MapToButton from '@/components/MapToButton';
 import PhotoAttachments, { type PickedPhoto } from '@/components/PhotoAttachments';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { parseIdKey } from '@/db/repository';
 import {
   createEntity,
@@ -36,6 +36,7 @@ import { successFeedback, warningFeedback } from '@/lib/feedback';
 import { ENTITY_FORMS, completeEntity, isFormKind, validationErrors } from '@/lib/entityForms';
 import { useActiveTrip, useEntities, useEntity, useUserTimezone } from '@/lib/hooks';
 import { notifyLocalChange, syncNow } from '@/lib/sync';
+import { usePalette } from '@/lib/theme';
 import { showToast } from '@/lib/toast';
 import { getCurrentPosition, positionFailureMessage } from '@/tasks/location';
 
@@ -92,6 +93,7 @@ function parsePreset(raw: string | undefined): Values {
 
 export default function EntityScreen() {
   const params = useLocalSearchParams<Params>();
+  const palette = usePalette();
   const kind = isFormKind(params.kind) ? params.kind : null;
   const isNew = params.id === 'new';
   const entityId: EntityId | undefined = isNew || !params.id ? undefined : parseIdKey(params.id);
@@ -298,8 +300,27 @@ export default function EntityScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ title }} />
-      <Screen>
+      <Stack.Screen
+        options={{
+          title,
+          // Delete lives in the header, out of the way of Save: a destructive
+          // action should be findable, not the biggest thing on the form.
+          headerRight: isNew
+            ? undefined
+            : () => (
+                <IconButton
+                  icon="delete"
+                  accessibilityLabel={`Delete ${definition.noun}`}
+                  color={palette.danger}
+                  onPress={confirmDelete}
+                />
+              ),
+        }}
+      />
+      <Screen
+        footer={
+          <Button label={isNew ? `Add ${definition.noun}` : 'Save changes'} onPress={() => void save()} loading={saving} />
+        }>
         {Object.keys(errors).length > 0 ? <Banner tone="danger" text="Check the highlighted fields." /> : null}
 
         {!isNew && entityId !== undefined ? <MapToButton tripId={tripId} kind={kind} id={entityId} compact={false} /> : null}
@@ -350,8 +371,6 @@ export default function EntityScreen() {
           </Card>
         ) : null}
 
-        <Button label={isNew ? `Add ${definition.noun}` : 'Save changes'} onPress={() => void save()} loading={saving} />
-
         {!isNew && kind === 'SAVED_LINK' ? (
           <Row>
             <Button label="Promote to activity" variant="secondary" compact onPress={() => void promote('ACTIVITY')} />
@@ -361,12 +380,6 @@ export default function EntityScreen() {
 
         {!isNew && entityId !== undefined && isEntityType(kind) ? (
           <EntityLinkSection tripId={tripId} type={kind as EntityType} id={entityId} />
-        ) : null}
-
-        {!isNew ? (
-          <View>
-            <Button label={`Delete ${definition.noun}`} variant="danger" onPress={confirmDelete} />
-          </View>
         ) : null}
       </Screen>
     </KeyboardAvoidingView>

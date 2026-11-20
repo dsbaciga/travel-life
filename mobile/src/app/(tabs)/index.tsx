@@ -21,7 +21,8 @@ import {
 
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import BudgetMeter from '@/components/BudgetMeter';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
 import {
@@ -43,6 +44,7 @@ import {
   useUserTimezone,
 } from '@/lib/hooks';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
+import { summarizeSync } from '@/lib/summaries';
 import { spacing, usePalette } from '@/lib/theme';
 import { showToast } from '@/lib/toast';
 import { useQuery } from '@tanstack/react-query';
@@ -256,6 +258,7 @@ export default function TodayScreen() {
     if (status === 'CLOSED') hoursLabel = { text: 'Closed now', tone: 'danger' };
   }
   const meter = parking ? meterStatus(parking, now) : null;
+  const syncSummary = summarizeSync({ offline, counts, blocked, lastError });
 
   const header = (
     <View style={styles.header}>
@@ -267,30 +270,23 @@ export default function TodayScreen() {
           <DualClock trip={trip} now={now} />
         </View>
         <Button label="Trips" variant="ghost" compact onPress={() => router.push('/trips')} />
+        <IconButton icon="settings" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </Row>
 
-      <Row>
-        {offline ? <Chip label="Offline" tone="warning" /> : null}
-        {counts.pending > 0 ? (
-          <Chip label={`${counts.pending} to sync`} tone="info" onPress={() => router.push('/sync')} />
-        ) : null}
-        {counts.conflict > 0 ? (
-          <Chip label={`${counts.conflict} conflict`} tone="danger" onPress={() => router.push('/sync')} />
-        ) : null}
-        {blocked > 0 ? (
-          <Chip label={`${blocked} waiting`} tone="warning" onPress={() => router.push('/sync')} />
-        ) : null}
-        {lastError ? <Chip label="Sync problem" tone="danger" onPress={() => router.push('/sync')} /> : null}
-        {counts.failed > 0 ? (
-          <Chip label={`${counts.failed} failed`} tone="danger" onPress={() => router.push('/sync')} />
-        ) : null}
-        {burn ? (
+      {syncSummary ? (
+        // One pill for sync, showing the thing most worth acting on; the Sync
+        // screen has the full breakdown.
+        <Row>
           <Chip
-            label={`Budget ${Math.round(burn.spentFraction * 100)}% · trip ${Math.round(burn.elapsedFraction * 100)}%`}
-            tone={burn.state === 'over' ? 'danger' : burn.state === 'under' ? 'success' : 'default'}
+            label={syncSummary.label}
+            tone={syncSummary.tone}
+            icon={syncSummary.tone === 'danger' ? 'alert' : offline ? 'offline' : 'sync'}
+            onPress={() => router.push('/sync')}
           />
-        ) : null}
-      </Row>
+        </Row>
+      ) : null}
+
+      {burn ? <BudgetMeter burn={burn} currency={trip.budgetCurrency} /> : null}
 
       {counts.conflict > 0 ? (
         <Banner tone="warning" text="Someone else changed an item you edited offline. Tap the conflict chip to choose." />

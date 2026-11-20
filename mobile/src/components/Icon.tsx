@@ -48,6 +48,11 @@ const GLYPHS = {
   plug: { ios: 'powerplug', android: 'power' },
   water: { ios: 'drop', android: 'water_drop' },
   money: { ios: 'banknote', android: 'payments' },
+  delete: { ios: 'trash', android: 'delete' },
+  sync: { ios: 'arrow.triangle.2.circlepath', android: 'sync' },
+  offline: { ios: 'icloud.slash', android: 'cloud_off' },
+  alert: { ios: 'exclamationmark.triangle', android: 'warning' },
+  chevronRight: { ios: 'chevron.right', android: 'chevron_right' },
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof GLYPHS;

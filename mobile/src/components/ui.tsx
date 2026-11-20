@@ -41,15 +41,22 @@ interface ScreenProps {
   /** Wrap content in a ScrollView (default true). Pass false for list screens. */
   scroll?: boolean;
   padded?: boolean;
+  /**
+   * Pinned under the content and always visible, for the screen's main action
+   * (Save) so it never scrolls out of reach at the end of a long form.
+   */
+  footer?: ReactNode;
 }
 
-export function Screen({ children, scroll = true, padded = true }: ScreenProps) {
+export function Screen({ children, scroll = true, padded = true, footer }: ScreenProps) {
   const palette = usePalette();
   const insets = useSafeAreaInsets();
   const underTabBar = useContext(TabBarContext);
   // Screens outside the tab bar run to the bottom edge of the display, where
   // Android's navigation buttons (or gesture bar) would cover the last row.
-  const clearance = underTabBar ? 0 : insets.bottom;
+  // A footer takes over that job, since it is what sits at the bottom edge.
+  const edgeClearance = underTabBar ? 0 : insets.bottom;
+  const clearance = footer ? 0 : edgeClearance;
   const content = padded
     ? { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.lg + clearance }
     : clearance > 0
@@ -64,7 +71,45 @@ export function Screen({ children, scroll = true, padded = true }: ScreenProps) 
       ) : (
         <View style={[styles.flex, content]}>{children}</View>
       )}
+      {footer ? (
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: palette.surface,
+              borderTopColor: palette.border,
+              paddingBottom: spacing.md + edgeClearance,
+            },
+          ]}>
+          {footer}
+        </View>
+      ) : null}
     </SafeAreaView>
+  );
+}
+
+interface IconButtonProps {
+  icon: IconName;
+  /** Spoken name: an icon-only control has no visible words. */
+  accessibilityLabel: string;
+  onPress: () => void;
+  color?: string;
+}
+
+/** A 44pt, icon-only control for headers (settings, delete). */
+export function IconButton({ icon, accessibilityLabel, onPress, color }: IconButtonProps) {
+  const palette = usePalette();
+  const onHero = useContext(HeroContext);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      hitSlop={4}
+      android_ripple={{ color: palette.ripple, borderless: true, radius: TOUCH_TARGET / 2 }}
+      style={({ pressed }) => [styles.iconButton, !RIPPLE && pressed && styles.pressed]}>
+      <Icon name={icon} size={24} color={color ?? (onHero ? palette.onHero : palette.text)} />
+    </Pressable>
   );
 }
 
@@ -394,6 +439,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   cardHero: { elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  iconButton: {
+    width: TOUCH_TARGET,
+    height: TOUCH_TARGET,
+    borderRadius: TOUCH_TARGET / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   pressed: { opacity: 0.7 },
   // Keeps the Android ripple inside the rounded corners. Android only: on iOS
   // this would also clip the card shadow.

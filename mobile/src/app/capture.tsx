@@ -9,7 +9,7 @@ import { StyleSheet, View } from 'react-native';
 import type { SyncEntityMap } from '@travel-life/shared';
 
 import Icon, { type IconName } from '@/components/Icon';
-import { AppText, Banner, Card, EmptyState, Screen } from '@/components/ui';
+import { AppText, Banner, Card, EmptyState, Screen, SectionHeader } from '@/components/ui';
 import { createEntity, type LinkSpec } from '@/domain/mutations';
 import { exifCoordinate, exifDate } from '@/domain/exif';
 import { suggestLinks } from '@/domain/smart';
@@ -155,11 +155,34 @@ export default function CaptureScreen() {
     { key: 'parked', icon: 'parking', title: 'Where I parked', detail: 'Pin, photo and meter timer', run: () => router.replace('/parked') },
   ];
 
+  const featured = FEATURED.map((key) => options.find((option) => option.key === key)).filter(
+    (option): option is Option => option !== undefined
+  );
+  const others = options.filter((option) => !FEATURED.includes(option.key));
+
   return (
     <Screen>
       <AppText muted>Adding to {trip.title}</AppText>
       {message ? <Banner text={message} tone="warning" /> : null}
-      {options.map((option) => (
+
+      {/* The four captures used most on the go, as big thumb-sized tiles. */}
+      <View style={styles.grid}>
+        {featured.map((option) => (
+          <View key={option.key} style={styles.tileCell}>
+            <Card onPress={() => void option.run()} accessibilityLabel={option.title} style={styles.tile}>
+              <View style={[styles.tileBadge, { backgroundColor: palette.tint }]}>
+                <Icon name={option.icon} size={28} color={palette.primary} />
+              </View>
+              <AppText variant="heading" style={styles.center}>
+                {TILE_TITLES[option.key] ?? option.title}
+              </AppText>
+            </Card>
+          </View>
+        ))}
+      </View>
+
+      <SectionHeader title="More" />
+      {others.map((option) => (
         <Card key={option.key} onPress={() => void option.run()} accessibilityLabel={option.title}>
           <View style={styles.option}>
             <View style={[styles.badge, { backgroundColor: palette.tint }]}>
@@ -171,6 +194,7 @@ export default function CaptureScreen() {
                 {option.detail}
               </AppText>
             </View>
+            <Icon name="chevronRight" size={20} color={palette.textMuted} />
           </View>
         </Card>
       ))}
@@ -178,7 +202,23 @@ export default function CaptureScreen() {
   );
 }
 
+/** Shown as tiles, in this order. */
+const FEATURED: readonly string[] = ['camera', 'stop', 'receipt', 'note'];
+
+/** Tile labels have room for a word or two; the list keeps the full titles. */
+const TILE_TITLES: Readonly<Record<string, string>> = {
+  camera: 'Photo',
+  stop: 'Stop here',
+  receipt: 'Expense',
+  note: 'Note',
+};
+
 const styles = StyleSheet.create({
+  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -spacing.xs },
+  tileCell: { width: '50%', padding: spacing.xs },
+  tile: { alignItems: 'center', justifyContent: 'center', minHeight: 116, gap: spacing.sm },
+  tileBadge: { width: 52, height: 52, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center' },
+  center: { textAlign: 'center' },
   option: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   badge: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   optionText: { flex: 1, gap: 2 },
