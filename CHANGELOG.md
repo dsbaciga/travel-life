@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile app: Settings is one tap away.** A gear button sits in the Today and Trip headers. Before, Settings was only reachable from the Vault.
 - **Mobile app: faster Quick capture.** Photo, Stop here, Expense and Note are large tiles at the top. Everything else is listed below under More.
 - **Mobile app: Save is always in reach.** On add and edit forms, Save is pinned to the bottom of the screen instead of sitting after the last field. Delete moved to a trash button in the header.
+- **Mobile app: easier-to-scan timelines.** "Not synced" is a small dot instead of a chip. Directions and the booking code share one line. Cancelled items are struck through.
+- **Mobile app: Trip tab tidy-up.** Trip photos opens from a header button instead of sitting among the view switches. Expenses in "By type" show as money in their currency (€4.50). The review queue says "Transport", "Stay" or "Place" instead of "TRANSPORTATION".
+- **Mobile app: a roomier map.** The filters sit on one line and the rest of the panel folds away. New buttons jump to where you are and fit every place on screen. On iOS the map now follows the app's own light or dark setting instead of guessing from a colour.
+- **Mobile app: a clearer day strip on Today.** Each day shows its weekday and date, with a dot under today. The selected day scrolls to the centre.
+- **Mobile app: smaller touches.** The pull-to-refresh spinner uses the app colour. Menus have a handle and close with a swipe down. Destructive choices such as "Mark cancelled" are always listed last, just above Cancel.
 
 ## [8.1.1] - 2026-11-20
 

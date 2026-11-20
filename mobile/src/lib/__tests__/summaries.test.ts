@@ -76,3 +76,9 @@ describe('describeBudget', () => {
     expect(summary.pace).toBe('40% of the trip gone');
   });
 });
+
+describe('formatMoney with decimals', () => {
+  it('keeps the currency decimals when not rounding', () => {
+    expect(formatMoney(4.5, 'EUR', false)).toMatch(/4[.,]50/);
+  });
+});

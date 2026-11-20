@@ -88,26 +88,44 @@ export function Screen({ children, scroll = true, padded = true, footer }: Scree
   );
 }
 
+/**
+ * "Not synced yet", as a small dot instead of a chip: it is common offline and
+ * should not compete with the item's title and time.
+ */
+export function PendingDot() {
+  const palette = usePalette();
+  return (
+    <View
+      accessible
+      accessibilityLabel="Not synced yet"
+      style={[styles.pendingDot, { backgroundColor: palette.info }]}
+    />
+  );
+}
+
 interface IconButtonProps {
   icon: IconName;
   /** Spoken name: an icon-only control has no visible words. */
   accessibilityLabel: string;
   onPress: () => void;
   color?: string;
+  disabled?: boolean;
 }
 
 /** A 44pt, icon-only control for headers (settings, delete). */
-export function IconButton({ icon, accessibilityLabel, onPress, color }: IconButtonProps) {
+export function IconButton({ icon, accessibilityLabel, onPress, color, disabled }: IconButtonProps) {
   const palette = usePalette();
   const onHero = useContext(HeroContext);
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: Boolean(disabled) }}
+      disabled={disabled}
       onPress={onPress}
       hitSlop={4}
       android_ripple={{ color: palette.ripple, borderless: true, radius: TOUCH_TARGET / 2 }}
-      style={({ pressed }) => [styles.iconButton, !RIPPLE && pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.iconButton, disabled && styles.disabled, !RIPPLE && pressed && styles.pressed]}>
       <Icon name={icon} size={24} color={color ?? (onHero ? palette.onHero : palette.text)} />
     </Pressable>
   );
@@ -445,6 +463,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  pendingDot: { width: 8, height: 8, borderRadius: 4 },
   iconButton: {
     width: TOUCH_TARGET,
     height: TOUCH_TARGET,

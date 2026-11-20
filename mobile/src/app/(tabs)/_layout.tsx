@@ -6,12 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Icon, { type IconName } from '@/components/Icon';
 import { TabBarContext } from '@/components/ui';
-import { usePalette } from '@/lib/theme';
+import { FAB, usePalette } from '@/lib/theme';
 import { useToast } from '@/lib/toast';
 
-/** Where the capture button sits above the bottom inset, and how tall it is. */
-const FAB_BOTTOM = 64;
-const FAB_SIZE = 60;
+const FAB_BOTTOM = FAB.bottom;
+const FAB_SIZE = FAB.size;
 
 const tabIcon = (name: IconName) =>
   function TabIcon({ color }: { color: ColorValue }) {

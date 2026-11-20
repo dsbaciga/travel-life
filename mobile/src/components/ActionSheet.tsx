@@ -5,7 +5,8 @@
  * buttons and silently drops the rest. Mount `<ActionSheetHost />` once at the
  * root; call `showActionSheet(...)` imperatively.
  */
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
+import { Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
@@ -29,7 +30,14 @@ const useSheet = create<SheetState>((set) => ({
   title: null,
   message: null,
   actions: [],
-  open: (title, actions, message = null) => set({ title, actions, message }),
+  // Destructive actions go last, nearest Cancel and away from the thumb's
+  // first landing spot; the rest keep the order they were given in.
+  open: (title, actions, message = null) =>
+    set({
+      title,
+      message,
+      actions: [...actions.filter((a) => !a.destructive), ...actions.filter((a) => a.destructive)],
+    }),
   close: () => set({ title: null, message: null, actions: [] }),
 }));
 
@@ -41,6 +49,17 @@ export function ActionSheetHost() {
   const { title, message, actions, close } = useSheet();
   const palette = usePalette();
   const insets = useSafeAreaInsets();
+  // A downward swipe on the top of the sheet dismisses it, as the handle suggests.
+  const swipe = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderRelease: (_event, gesture) => {
+          if (gesture.dy > 48 || gesture.vy > 0.8) close();
+        },
+      }),
+    [close]
+  );
 
   return (
     <Modal visible={title !== null} transparent animationType="slide" onRequestClose={close}>
@@ -55,10 +74,13 @@ export function ActionSheetHost() {
           styles.sheet,
           { backgroundColor: palette.surface, paddingBottom: insets.bottom + spacing.md },
         ]}>
-        <AppText variant="heading" numberOfLines={2}>
-          {title}
-        </AppText>
-        {message ? <AppText muted>{message}</AppText> : null}
+        <View {...swipe.panHandlers} style={styles.top}>
+          <View style={[styles.handle, { backgroundColor: palette.border }]} />
+          <AppText variant="heading" numberOfLines={2}>
+            {title}
+          </AppText>
+          {message ? <AppText muted>{message}</AppText> : null}
+        </View>
         <ScrollView style={styles.list}>
           {actions.map((action) => (
             <Pressable
@@ -103,6 +125,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.lg,
     maxHeight: '75%',
   },
+  top: { gap: spacing.sm },
+  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, marginBottom: spacing.xs },
   list: { flexGrow: 0 },
   action: {
     minHeight: TOUCH_TARGET + 4,

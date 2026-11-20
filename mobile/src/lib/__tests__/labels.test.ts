@@ -7,9 +7,10 @@
  * - LABEL-003: Variation selectors and joined sequences stay with the icon
  * - LABEL-004: An emoji-only label is not split, and an empty label is safe
  * - LABEL-005: An emoji in the middle of a label is not touched
+ * - LABEL-006: Server entity types read as words
  */
 import { describe, expect, it } from 'vitest';
-import { splitLeadingEmoji } from '../labels';
+import { entityTypeLabel, splitLeadingEmoji } from '../labels';
 
 describe('splitLeadingEmoji', () => {
   it('LABEL-001: separates a leading emoji from the words', () => {
@@ -39,5 +40,14 @@ describe('splitLeadingEmoji', () => {
 
   it('LABEL-005: does not touch an emoji in the middle', () => {
     expect(splitLeadingEmoji('Photos 📷')).toEqual({ icon: null, text: 'Photos 📷' });
+  });
+});
+
+describe('entityTypeLabel', () => {
+  it('LABEL-006: turns server entity types into words', () => {
+    expect(entityTypeLabel('TRANSPORTATION')).toBe('Transport');
+    expect(entityTypeLabel('LODGING')).toBe('Stay');
+    expect(entityTypeLabel('CUSTOM_ITEM')).toBe('Custom item');
+    expect(entityTypeLabel('')).toBe('');
   });
 });

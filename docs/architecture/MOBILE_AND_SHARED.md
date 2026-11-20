@@ -72,7 +72,8 @@ Key rules:
   `npx eslint src` from `mobile/` before declaring work done.
 - Plain `http` servers are refused unless on a local network (private IPs, `.local`, `localhost`).
 - Screens are built from the shared kit, so reuse it before writing a one-off:
-  - `components/ui.tsx`: `Screen`, `Card`, `Button`, `Chip`, `IconButton`, `Field` and friends. They are themed from `lib/theme.ts` and give Android ripples. `Screen`'s `footer` pins a form's Save button to the bottom edge.
+  - `components/ui.tsx`: `Screen`, `Card`, `Button`, `Chip`, `IconButton`, `Field` and friends. They are themed from `lib/theme.ts` and give Android ripples. `Screen`'s `footer` pins a form's Save button to the bottom edge. `PendingDot` marks an item with unsynced edits.
+  - `lib/theme.ts` also holds `FAB_CLEARANCE` (bottom padding for lists under the tab bar, so rows clear the capture button) and `useRefreshColors()` (spread into every `RefreshControl`).
   - `lib/summaries.ts`: the pure wording behind the Today header (`summarizeSync` picks the one sync state worth showing, `describeBudget` feeds `components/BudgetMeter.tsx`).
   - `components/Icon.tsx`: icons by meaning (`<Icon name="parking" />`, or the `icon` prop on `Button` and `Chip`). Material Symbols on Android, SF Symbols on iOS, through `expo-symbols`. Don't use emoji as icons; add a name to `GLYPHS` instead.
   - `lib/toast.ts`: `showToast(message, { label: 'Undo', onPress })` confirms an action. `components/Toast.tsx` renders it.

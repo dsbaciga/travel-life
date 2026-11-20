@@ -18,7 +18,7 @@ import Icon, { type IconName } from './Icon';
 import { showActionSheet, type SheetAction } from './ActionSheet';
 import { radius, spacing, usePalette, useTypeColors, type TypeColorKey } from '../lib/theme';
 import MapToButton from './MapToButton';
-import { AppText, Card, Chip, Row } from './ui';
+import { AppText, Card, Chip, PendingDot, Row } from './ui';
 
 interface TimelineRowProps {
   item: TimelineItem;
@@ -183,10 +183,14 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
                 />
               ) : null}
               {item.status === 'cancelled' ? <Chip label="Cancelled" tone="danger" /> : null}
-              {pending ? <Chip label="Not synced" tone="info" /> : null}
+              {pending ? <PendingDot /> : null}
             </Row>
           </Row>
-          <AppText variant="heading" numberOfLines={2}>
+          <AppText
+            variant="heading"
+            numberOfLines={2}
+            muted={item.status === 'cancelled'}
+            style={item.status === 'cancelled' ? styles.struck : undefined}>
             {item.title}
           </AppText>
           {item.subtitle ? (
@@ -194,16 +198,18 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
               {item.subtitle}
             </AppText>
           ) : null}
-          <View style={styles.mapTo}>
+          {/* Directions and the booking code share one line, so a row grows
+              by one line at most for its extras. */}
+          <Row style={styles.extras}>
             <MapToButton tripId={tripId} kind={item.entityKind} id={item.entityId} />
-          </View>
-          {item.confirmation ? (
-            <View style={[styles.code, { backgroundColor: palette.surfaceRaised }]}>
-              <AppText variant="label" selectable>
-                {item.confirmation}
-              </AppText>
-            </View>
-          ) : null}
+            {item.confirmation ? (
+              <View style={[styles.code, { backgroundColor: palette.surfaceRaised }]}>
+                <AppText variant="label" selectable>
+                  {item.confirmation}
+                </AppText>
+              </View>
+            ) : null}
+          </Row>
         </View>
       </View>
     </Card>
@@ -217,6 +223,7 @@ const styles = StyleSheet.create({
   badge: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, gap: spacing.xs },
   header: { justifyContent: 'space-between' },
-  mapTo: { alignSelf: 'flex-start' },
+  extras: { alignItems: 'center' },
+  struck: { textDecorationLine: 'line-through' },
   code: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 6 },
 });

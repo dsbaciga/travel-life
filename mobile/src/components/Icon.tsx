@@ -53,6 +53,10 @@ const GLYPHS = {
   offline: { ios: 'icloud.slash', android: 'cloud_off' },
   alert: { ios: 'exclamationmark.triangle', android: 'warning' },
   chevronRight: { ios: 'chevron.right', android: 'chevron_right' },
+  chevronLeft: { ios: 'chevron.left', android: 'chevron_left' },
+  expand: { ios: 'chevron.down', android: 'expand_more' },
+  collapse: { ios: 'chevron.up', android: 'expand_less' },
+  fitAll: { ios: 'arrow.up.left.and.arrow.down.right', android: 'fit_screen' },
 } as const satisfies Record<string, Glyph>;
 
 export type IconName = keyof typeof GLYPHS;

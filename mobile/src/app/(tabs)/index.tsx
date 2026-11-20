@@ -5,7 +5,7 @@ import { FlashList } from '@shopify/flash-list';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import type { EntityId, LocationDto, LodgingDto, TransportationDto, TripDto } from '@travel-life/shared';
 import {
   buildMapsAppLinks,
@@ -45,7 +45,7 @@ import {
 } from '@/lib/hooks';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
 import { summarizeSync } from '@/lib/summaries';
-import { spacing, usePalette } from '@/lib/theme';
+import { FAB_CLEARANCE, radius, spacing, TOUCH_TARGET, usePalette, useRefreshColors } from '@/lib/theme';
 import { showToast } from '@/lib/toast';
 import { useQuery } from '@tanstack/react-query';
 
@@ -126,6 +126,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
 
 export default function TodayScreen() {
   const palette = usePalette();
+  const refreshColors = useRefreshColors();
   const now = useNow();
   const userTimezone = useUserTimezone();
   const { data: trip, isLoading } = useActiveTrip();
@@ -162,11 +163,14 @@ export default function TodayScreen() {
   const nextUp = useMemo(() => findNextUp(items, now), [items, now]);
 
   const stripRef = useRef<ScrollViewInstance>(null);
+  const [stripWidth, setStripWidth] = useState(0);
   useEffect(() => {
-    if (activeIndex >= 0) {
-      stripRef.current?.scrollTo({ x: Math.max(0, activeIndex * DAY_CHIP_WIDTH - DAY_CHIP_WIDTH * 2), animated: true });
-    }
-  }, [activeIndex]);
+    if (activeIndex < 0 || stripWidth === 0) return;
+    // Every day chip is the same width, so the selected one can be centred exactly.
+    const step = DAY_CHIP_WIDTH + DAY_CHIP_GAP;
+    const x = DAY_STRIP_PADDING + activeIndex * step - (stripWidth - DAY_CHIP_WIDTH) / 2;
+    stripRef.current?.scrollTo({ x: Math.max(0, x), animated: true });
+  }, [activeIndex, stripWidth]);
 
   const scheduleHere = useCallback(
     async (item: TimelineItem) => {
@@ -293,10 +297,9 @@ export default function TodayScreen() {
       ) : null}
 
       <Row style={styles.dayNav}>
-        <Button
-          label="‹"
-          variant="ghost"
-          compact
+        <IconButton
+          icon="chevronLeft"
+          accessibilityLabel="Previous day"
           disabled={activeIndex <= 0}
           onPress={() => setPickedDay(dayKeys[activeIndex - 1] ?? null)}
         />
@@ -305,20 +308,43 @@ export default function TodayScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.flex}
+          onLayout={(event) => setStripWidth(event.nativeEvent.layout.width)}
           contentContainerStyle={styles.dayStrip}>
-          {dayKeys.map((key) => (
-            <Chip
-              key={key}
-              label={`${key === todayKey ? '● ' : ''}${formatDateOnly(`${key}T00:00:00Z`, { weekday: 'short', day: 'numeric' })}`}
-              selected={key === activeDay}
-              onPress={() => setPickedDay(key)}
-            />
-          ))}
+          {dayKeys.map((key) => {
+            const selected = key === activeDay;
+            const today = key === todayKey;
+            const date = `${key}T00:00:00Z`;
+            const ink = selected ? palette.onPrimary : palette.text;
+            return (
+              <Pressable
+                key={key}
+                accessibilityRole="button"
+                accessibilityLabel={`${formatDateOnly(date, { weekday: 'long', month: 'long', day: 'numeric' })}${today ? ', today' : ''}`}
+                accessibilityState={{ selected }}
+                onPress={() => setPickedDay(key)}
+                android_ripple={{ color: palette.ripple }}
+                style={[
+                  styles.dayChip,
+                  {
+                    backgroundColor: selected ? palette.primary : palette.surface,
+                    borderColor: selected ? palette.primary : today ? palette.primary : palette.border,
+                  },
+                ]}>
+                <AppText variant="caption" color={selected ? palette.onPrimary : palette.textMuted}>
+                  {formatDateOnly(date, { weekday: 'short' })}
+                </AppText>
+                <AppText variant="heading" color={ink}>
+                  {formatDateOnly(date, { day: 'numeric' })}
+                </AppText>
+                {/* Today is marked by a dot, so the selection can move away from it. */}
+                <View style={[styles.todayDot, today && { backgroundColor: selected ? palette.onPrimary : palette.primary }]} />
+              </Pressable>
+            );
+          })}
         </ScrollView>
-        <Button
-          label="›"
-          variant="ghost"
-          compact
+        <IconButton
+          icon="chevronRight"
+          accessibilityLabel="Next day"
           disabled={activeIndex < 0 || activeIndex >= dayKeys.length - 1}
           onPress={() => setPickedDay(dayKeys[activeIndex + 1] ?? null)}
         />
@@ -484,22 +510,35 @@ export default function TodayScreen() {
           ) : null
         }
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />}
+        refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} {...refreshColors} />}
       />
     </Screen>
   );
 }
 
-const DAY_CHIP_WIDTH = 84;
+const DAY_CHIP_WIDTH = 52;
+const DAY_CHIP_GAP = spacing.sm;
+const DAY_STRIP_PADDING = spacing.xs;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   dayNav: { flexWrap: 'nowrap', alignItems: 'center' },
-  dayStrip: { gap: spacing.sm, paddingHorizontal: spacing.xs },
+  dayStrip: { gap: DAY_CHIP_GAP, paddingHorizontal: DAY_STRIP_PADDING },
+  dayChip: {
+    width: DAY_CHIP_WIDTH,
+    minHeight: TOUCH_TARGET + 20,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  todayDot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
   unscheduled: { padding: spacing.lg, gap: spacing.sm },
   unscheduledItem: { gap: spacing.xs },
   header: { padding: spacing.lg, gap: spacing.md },
   titleRow: { flexWrap: 'nowrap' },
   rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
-  list: { paddingBottom: 140 },
+  list: { paddingBottom: FAB_CLEARANCE },
 });

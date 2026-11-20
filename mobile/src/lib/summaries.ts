@@ -42,25 +42,29 @@ export function summarizeSync({ offline, counts, blocked, lastError }: SyncSnaps
   return null;
 }
 
-/** "€1,234" in the trip's budget currency; a bare number if the code is unusable. */
-export function formatMoney(amount: number, currency: string | null | undefined): string {
-  const rounded = Math.round(amount);
-  if (!currency) return rounded.toLocaleString();
+/**
+ * "€1,234" in the given currency; a bare number if the code is unusable.
+ * `whole` rounds to whole units (budgets); otherwise the currency's own
+ * decimals are kept (a single expense of €4.50).
+ */
+export function formatMoney(amount: number, currency: string | null | undefined, whole = true): string {
+  const value = whole ? Math.round(amount) : amount;
+  if (!currency) return value.toLocaleString();
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency,
-      maximumFractionDigits: 0,
-    }).format(rounded);
+      ...(whole ? { maximumFractionDigits: 0 } : {}),
+    }).format(value);
   } catch {
-    return `${rounded.toLocaleString()} ${currency}`;
+    return `${value.toLocaleString()} ${currency}`;
   }
 }
 
 export interface BudgetSummary {
   /** "€420 of €1,000" */
   amounts: string;
-  /** "Ahead of plan", "On track", "Over pace" */
+  /** "Under budget", "On track", "Over pace" */
   verdict: string;
   /** "40% of the trip gone" */
   pace: string;

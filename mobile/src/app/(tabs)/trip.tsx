@@ -14,7 +14,7 @@ import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
 import Icon from '@/components/Icon';
 import MapToButton from '@/components/MapToButton';
-import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, PendingDot, Row, Screen } from '@/components/ui';
 import {
   adjustTime,
   promoteSavedLink,
@@ -35,7 +35,9 @@ import {
 } from '@/lib/hooks';
 import { api } from '@/lib/session';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
-import { spacing, TOUCH_TARGET, usePalette } from '@/lib/theme';
+import { FAB_CLEARANCE, spacing, TOUCH_TARGET, usePalette, useRefreshColors } from '@/lib/theme';
+import { entityTypeLabel } from '@/lib/labels';
+import { formatMoney } from '@/lib/summaries';
 import { showToast } from '@/lib/toast';
 
 type Mode = 'days' | 'types' | 'checklists' | 'review';
@@ -73,6 +75,7 @@ function rowTitle(kind: FormKind, row: Record<string, unknown>): string {
 
 export default function TripScreen() {
   const palette = usePalette();
+  const refreshColors = useRefreshColors();
   const now = useNow(60000);
   const userTimezone = useUserTimezone();
   const { data: trip } = useActiveTrip();
@@ -199,7 +202,7 @@ export default function TripScreen() {
         // Accepting creates a real entity server-side; pull it into the mirror.
         if (verb === 'accept') void syncNow();
       };
-      showActionSheet(String(entity.data?.name ?? entity.data?.title ?? entity.entityType), [
+      showActionSheet(String(entity.data?.name ?? entity.data?.title ?? entityTypeLabel(entity.entityType)), [
         { label: 'Accept and add to trip', onPress: decide('accept') },
         { label: 'Reject', destructive: true, onPress: decide('reject') },
       ]);
@@ -227,6 +230,9 @@ export default function TripScreen() {
             {formatDateOnly(trip.startDate)} – {formatDateOnly(trip.endDate)}
           </AppText>
         </View>
+        {/* Photos opens its own screen, so it sits with the other header
+            buttons rather than among the chips that switch this view. */}
+        <IconButton icon="photos" accessibilityLabel="Trip photos" onPress={() => router.push('/camera-roll')} />
         <IconButton icon="settings" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </Row>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
@@ -234,7 +240,6 @@ export default function TripScreen() {
         <Chip label="By type" selected={mode === 'types'} onPress={() => setMode('types')} />
         <Chip label="Checklists" selected={mode === 'checklists'} onPress={() => setMode('checklists')} />
         <Chip label="Review queue" selected={mode === 'review'} onPress={() => setMode('review')} />
-        <Chip label="Photos" icon="photos" onPress={() => router.push('/camera-roll')} />
       </ScrollView>
     </View>
   );
@@ -248,7 +253,7 @@ export default function TripScreen() {
           getItemType={(row) => row.type}
           ListHeaderComponent={modeBar}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />}
+          refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} {...refreshColors} />}
           ListEmptyComponent={<EmptyState title="No days yet" message="Set trip dates in the web app, or add an activity." />}
           renderItem={({ item: row }) =>
             row.type === 'header' ? (
@@ -327,12 +332,10 @@ export default function TripScreen() {
                   <AppText variant="heading" numberOfLines={1} style={styles.flex}>
                     {rowTitle(typeKind, row)}
                   </AppText>
-                  {dirty?.has(`${typeKind}:${row.id}`) ? <Chip label="Not synced" tone="info" /> : null}
+                  {dirty?.has(`${typeKind}:${row.id}`) ? <PendingDot /> : null}
                 </Row>
-                {typeKind === 'EXPENSE' ? (
-                  <AppText muted>
-                    {String(row.amount)} {String(row.currency ?? '')}
-                  </AppText>
+                {typeKind === 'EXPENSE' && typeof row.amount === 'number' ? (
+                  <AppText muted>{formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}</AppText>
                 ) : null}
                 {typeKind === 'FOOD_LOG' ? (
                   <AppText muted>
@@ -411,9 +414,12 @@ export default function TripScreen() {
         />
       ) : (
         pending.map((entity) => (
-          <Card key={entity.id} onPress={() => reviewPending(entity)} accessibilityLabel={`Review ${entity.entityType}`}>
+          <Card
+            key={entity.id}
+            onPress={() => reviewPending(entity)}
+            accessibilityLabel={`Review ${entityTypeLabel(entity.entityType).toLowerCase()}`}>
             <AppText variant="label" muted>
-              {entity.entityType}
+              {entityTypeLabel(entity.entityType)}
             </AppText>
             <AppText variant="heading">{String(entity.data?.name ?? entity.data?.title ?? 'Extracted item')}</AppText>
             <AppText muted>Tap to accept or reject</AppText>
@@ -429,7 +435,7 @@ const styles = StyleSheet.create({
   mapTo: { alignSelf: 'flex-start' },
   modeBar: { padding: spacing.lg, gap: spacing.sm },
   chips: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
-  list: { paddingBottom: 140 },
+  list: { paddingBottom: FAB_CLEARANCE },
   rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   dayHeader: { justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   between: { justifyContent: 'space-between', flexWrap: 'nowrap' },

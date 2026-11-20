@@ -5,7 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, type LongPressEvent, type Region } from 'react-native-maps';
 import type { LocationDto } from '@travel-life/shared';
@@ -20,13 +20,13 @@ import {
 } from '@travel-life/shared';
 
 import { showActionSheet } from '@/components/ActionSheet';
-import { AppText, Banner, Button, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import { AppText, Banner, Button, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { listLinks } from '@/db/repository';
 import { loadTrack } from '@/domain/track';
 import { getDb } from '@/lib/db';
 import { useActiveTrip, useEntities, useNow, useUserTimezone } from '@/lib/hooks';
 import { useSync } from '@/lib/sync';
-import { spacing, usePalette } from '@/lib/theme';
+import { radius, spacing, usePalette, useResolvedColorScheme } from '@/lib/theme';
 import { getCurrentPosition, positionFailureMessage, isTracking, startTracking, stopTracking } from '@/tasks/location';
 
 /** "Walking distance" for the near-me filter. */
@@ -50,6 +50,8 @@ export default function MapScreen() {
   const [me, setMe] = useState<{ latitude: number; longitude: number } | null>(null);
   const [tracking, setTracking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(true);
+  const colorScheme = useResolvedColorScheme();
 
   const tripZone = resolveTimezone(trip?.timezone, userTimezone);
   const todayKey = dayKeyInTimezone(now, tripZone);
@@ -146,6 +148,15 @@ export default function MapScreen() {
     return position;
   };
 
+  const fitAll = () => {
+    if (visible.length === 0) return;
+    mapRef.current?.fitToCoordinates(
+      visible.map((l) => ({ latitude: l.latitude, longitude: l.longitude })),
+      // Clear the options panel at the top and the tab bar at the bottom.
+      { edgePadding: { top: 160, right: 64, bottom: 64, left: 48 }, animated: true }
+    );
+  };
+
   const onLongPress = (event: LongPressEvent) => {
     if (!trip) return;
     const { latitude, longitude } = event.nativeEvent.coordinate;
@@ -204,7 +215,7 @@ export default function MapScreen() {
         initialRegion={initialRegion}
         showsUserLocation
         onLongPress={onLongPress}
-        userInterfaceStyle={palette.background === '#0f172a' ? 'dark' : 'light'}>
+        userInterfaceStyle={colorScheme}>
         {visible.map((location) => (
           <Marker
             key={String(location.id)}
@@ -238,30 +249,59 @@ export default function MapScreen() {
       {/* box-none: the overlay itself passes touches through to the map. */}
       <SafeAreaView pointerEvents="box-none" style={StyleSheet.absoluteFill} edges={['top']}>
         <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border }]}>
-          <Row>
-            <Chip label="All" selected={filter === 'all'} onPress={() => setFilter('all')} />
-            <Chip label="Today" selected={filter === 'today'} onPress={() => setFilter('today')} />
-            <Chip label="Favourites" selected={filter === 'favorites'} onPress={() => setFilter('favorites')} />
-            <Chip
-              label="Near me now"
-              selected={filter === 'near'}
-              onPress={async () => {
-                if (await locate()) setFilter('near');
-              }}
+          {/* The filters stay on one line and scroll; the rest folds away so
+              the map gets the screen. */}
+          <View style={styles.panelTop}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+              <Chip label="All" selected={filter === 'all'} onPress={() => setFilter('all')} />
+              <Chip label="Today" selected={filter === 'today'} onPress={() => setFilter('today')} />
+              <Chip label="Favourites" selected={filter === 'favorites'} onPress={() => setFilter('favorites')} />
+              <Chip
+                label="Near me now"
+                selected={filter === 'near'}
+                onPress={async () => {
+                  if (await locate()) setFilter('near');
+                }}
+              />
+            </ScrollView>
+            <IconButton
+              icon={expanded ? 'collapse' : 'expand'}
+              accessibilityLabel={expanded ? 'Hide map options' : 'Show map options'}
+              onPress={() => setExpanded((open) => !open)}
             />
-          </Row>
-          <Row>
-            <Button
-              label={tracking ? 'Stop recording route' : 'Record my route'}
-              variant={tracking ? 'danger' : 'secondary'}
-              compact
-              onPress={() => void toggleTracking()}
-            />
-            <AppText variant="caption" muted>
-              {visible.length} place{visible.length === 1 ? '' : 's'} · long-press the map to add one
+          </View>
+          {expanded ? (
+            <>
+              <Row>
+                <Button
+                  label={tracking ? 'Stop recording route' : 'Record my route'}
+                  variant={tracking ? 'danger' : 'secondary'}
+                  compact
+                  onPress={() => void toggleTracking()}
+                />
+                <AppText variant="caption" muted style={styles.flex}>
+                  {visible.length} place{visible.length === 1 ? '' : 's'} · long-press the map to add one
+                </AppText>
+              </Row>
+              {notice ? <Banner text={notice} tone="warning" /> : null}
+            </>
+          ) : tracking ? (
+            <AppText variant="caption" color={palette.danger}>
+              Recording your route
             </AppText>
-          </Row>
-          {notice ? <Banner text={notice} tone="warning" /> : null}
+          ) : null}
+        </View>
+
+        {/* Floating map controls, under the panel on the right. */}
+        <View pointerEvents="box-none" style={styles.controls}>
+          <View style={[styles.control, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+            <IconButton icon="myLocation" accessibilityLabel="Show where I am" onPress={() => void locate()} />
+          </View>
+          {visible.length > 0 ? (
+            <View style={[styles.control, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+              <IconButton icon="fitAll" accessibilityLabel="Show all places" onPress={fitAll} />
+            </View>
+          ) : null}
         </View>
       </SafeAreaView>
     </View>
@@ -272,9 +312,23 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   panel: {
     margin: spacing.sm,
-    padding: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
     gap: spacing.sm,
-    borderRadius: 12,
+    borderRadius: radius.md,
     borderWidth: 1,
+  },
+  panelTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  filters: { gap: spacing.sm, alignItems: 'center', paddingRight: spacing.sm },
+  controls: { alignSelf: 'flex-end', marginRight: spacing.sm, gap: spacing.sm },
+  control: {
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    elevation: 2,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
 });
