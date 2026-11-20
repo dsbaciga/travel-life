@@ -26,7 +26,21 @@ export interface BannerContent {
 }
 
 /** Shown while the model reads the PDF, replaced in place by the result banner. */
-export function describeImportInProgress(name: string, onCancel: () => void): BannerContent {
+export function describeImportInProgress(
+  name: string,
+  onCancel: () => void,
+  /** PDFs ahead of this one in the server's queue; 0 or absent = being read. */
+  queuePosition?: number | null
+): BannerContent {
+  const ahead = queuePosition ?? 0;
+  if (ahead > 0) {
+    return {
+      tone: 'working',
+      title: `Waiting to read ${name}`,
+      body: `${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of it. You can keep working; we'll let you know when it's ready.`,
+      action: { label: 'Cancel', onClick: onCancel },
+    };
+  }
   return {
     tone: 'working',
     title: `Reading ${name}…`,

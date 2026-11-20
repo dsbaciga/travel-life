@@ -7,6 +7,7 @@
  * - PIW-004: An import still parsing is polled until it finishes
  * - PIW-005: An import that no longer exists is dropped without a banner
  * - PIW-006: While parsing, a "Reading…" banner offers Cancel, which deletes the import
+ * - PIW-007: A PDF waiting in the server's queue says so, then switches to "Reading…" in place
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -165,6 +166,24 @@ describe('PdfImportWatcher', () => {
 
     await waitFor(() => expect(usePdfImportTrackerStore.getState().tracked).toEqual([]));
     expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('PIW-007: a queued PDF shows its place in line, then reading, then the result', async () => {
+    service.getPdfImportById
+      .mockResolvedValueOnce(makeImport({ status: 'UPLOADED', queuePosition: 1 }))
+      .mockResolvedValueOnce(makeImport({ status: 'PARSING', queuePosition: 0 }))
+      .mockResolvedValue(makeImport({ status: 'PARSED', _count: { pendingEntities: 1 } }));
+    usePdfImportTrackerStore.getState().track(7, 'hotel.pdf');
+
+    renderWithApp(<PdfImportWatcher />);
+
+    expect(await screen.findByText('Waiting to read hotel.pdf')).toBeInTheDocument();
+    expect(screen.getByText(/1 PDF ahead of it/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(await screen.findByText('Reading hotel.pdf…', {}, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByText('hotel.pdf is ready', {}, { timeout: 5000 })).toBeInTheDocument();
+    // One banner throughout, updated in place.
+    expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
   it('PIW-006: Cancel deletes the import and stops tracking it', async () => {

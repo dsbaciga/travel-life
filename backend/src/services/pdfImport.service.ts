@@ -9,6 +9,7 @@ import { TransportationType, type TransportationTypeEnum } from '../types/transp
 import { LodgingType, type LodgingTypeEnum } from '../types/lodging.types';
 import { pdfParserService } from './pdfParser.service';
 import { llmEndpointKey, type ResolvedLlmConfig } from './llm.service';
+import { pdfParseQueue } from './pdfParseQueue';
 import { cleanupEntityLinks } from './_shared/entityLinkCleanup';
 import type { UpdatePendingEntityInput } from '../types/pdfImport.types';
 import {
@@ -62,44 +63,14 @@ function resolveStoredPath(storedPath: string): string {
   return absolute;
 }
 
-/**
- * Only one PDF is read at a time per LLM server. The LLM may be a self-hosted
- * model on modest hardware (e.g. Ollama on a NAS), where two documents at once
- * would just make both slow or time out.
- *
- * Keyed by LLM server (see llmEndpointKey), not global: everyone on the
- * instance-wide LLM shares one slot, but a user whose Settings point at their
- * own (possibly slow or unresponsive) server can only ever block themselves.
- *
- * In-process on purpose: the backend runs as a single container, and a slot
- * held by a process that has since died must not block uploads after restart.
- */
-export const PDF_PARSE_BUSY_MESSAGE =
-  'Another PDF is still being read. Try again when it finishes.';
+// One PDF at a time per LLM machine, one per user, taking turns: see pdfParseQueue.ts.
 
-interface ParsingSlot {
-  /** Set once the background parse starts, so Cancel can abort it. */
-  active?: { pdfImportId: number; controller: AbortController };
+/** Test hook: whether a PDF is being read right now (on one LLM machine, or any). */
+export function isPdfParsingBusy(key?: string): boolean {
+  return pdfParseQueue.isBusy(key);
 }
 
-const parsingSlots = new Map<string, ParsingSlot>();
-
-function claimParsingSlot(endpoint: string): void {
-  // Synchronous check-and-set: no await between them, so two requests cannot both win.
-  if (parsingSlots.has(endpoint)) throw new AppError(PDF_PARSE_BUSY_MESSAGE, 409);
-  parsingSlots.set(endpoint, {});
-}
-
-function releaseParsingSlot(endpoint: string): void {
-  parsingSlots.delete(endpoint);
-}
-
-/** Test hook: whether a PDF is being read right now (on one endpoint, or any). */
-export function isPdfParsingBusy(endpoint?: string): boolean {
-  return endpoint === undefined ? parsingSlots.size > 0 : parsingSlots.has(endpoint);
-}
-
-/** The LLM a parse will use, resolved once: its slot key and the exact config. */
+/** The LLM a parse will use, resolved once: its queue key and the exact config. */
 interface ClaimedLlm {
   key: string;
   llmConfig: ResolvedLlmConfig;
@@ -116,24 +87,29 @@ async function requireLlm(userId: number): Promise<ClaimedLlm> {
 
 class PdfImportService {
   /**
-   * Validates PDF magic bytes (%PDF) and uploads/processes the file.
-   * Returns immediately after creating the DB record — processing is async.
-   * Refused with 409 while another PDF is being read (see claimParsingSlot).
+   * Validates PDF magic bytes (%PDF), stores the file and queues it for reading.
+   * Returns right after creating the DB record; reading happens in the
+   * background. If the LLM machine is busy the import waits its turn (status
+   * UPLOADED, `queuePosition` > 0). Refused with 409 if this user already has
+   * a PDF waiting or being read (see pdfParseQueue).
    */
   async uploadAndProcess(userId: number, file: MulterFile, hintTripId?: number) {
     const llm = await requireLlm(userId);
-    claimParsingSlot(llm.key);
+    pdfParseQueue.reserveUser(userId);
+    let queued = false;
     try {
-      return await this.storeAndStartParsing(userId, file, llm, hintTripId);
-    } catch (err) {
-      // Never got as far as the background job, which would release it.
-      releaseParsingSlot(llm.key);
-      throw err;
+      const { pdfImport, absolutePath } = await this.storeUpload(userId, file);
+      this.enqueueParse(llm, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
+      queued = true;
+      return { ...pdfImport, queuePosition: pdfParseQueue.position(pdfImport.id) };
+    } finally {
+      // Never became a job, which would free the user's place when it ends.
+      if (!queued) pdfParseQueue.releaseUser(userId);
     }
   }
 
-  /** Runs the parse and frees the slot whichever way it ends, including a cancel. */
-  private launchParsing(
+  /** Puts an import in line for its LLM machine. */
+  private enqueueParse(
     llm: ClaimedLlm,
     pdfImportId: number,
     userId: number,
@@ -141,32 +117,33 @@ class PdfImportService {
     filename: string,
     hintTripId?: number
   ): void {
-    const controller = new AbortController();
-    parsingSlots.set(llm.key, { active: { pdfImportId, controller } });
-    this.processInBackground(
+    pdfParseQueue.enqueue({
       pdfImportId,
       userId,
-      absolutePath,
-      filename,
-      hintTripId,
-      controller.signal,
-      // The config whose slot was claimed, not whatever Settings say by now.
-      llm.llmConfig
-    )
-      .catch((err) => logger.error('PDF background processing failed', { pdfImportId, err }))
-      .finally(() => {
-        if (parsingSlots.get(llm.key)?.active?.controller === controller) {
-          releaseParsingSlot(llm.key);
-        }
-      });
+      key: llm.key,
+      run: async (signal) => {
+        // Its turn: claim it. Zero rows means it was cancelled while waiting.
+        const started = await prisma.pdfImport.updateMany({
+          where: { id: pdfImportId, status: PdfImportStatus.UPLOADED },
+          data: { status: PdfImportStatus.PARSING },
+        });
+        if (started.count === 0 || signal.aborted) return;
+        await this.processInBackground(
+          pdfImportId,
+          userId,
+          absolutePath,
+          filename,
+          hintTripId,
+          signal,
+          // The config resolved when it was queued, not whatever Settings say by now.
+          llm.llmConfig
+        );
+      },
+    });
   }
 
-  private async storeAndStartParsing(
-    userId: number,
-    file: MulterFile,
-    llm: ClaimedLlm,
-    hintTripId?: number
-  ) {
+  /** Validates and saves an upload as an UPLOADED import (waiting to be read). */
+  private async storeUpload(userId: number, file: MulterFile) {
     // Validate PDF magic bytes
     if (!file.buffer) {
       throw new AppError('File buffer is missing', 400);
@@ -212,19 +189,7 @@ class PdfImportService {
       throw new AppError('Failed to save uploaded file', 500);
     }
 
-    // Atomically transition to PARSING (guard against concurrent calls)
-    const updated = await prisma.pdfImport.updateMany({
-      where: { id: pdfImport.id, status: PdfImportStatus.UPLOADED },
-      data: { status: PdfImportStatus.PARSING },
-    });
-    if (updated.count === 0) {
-      throw new AppError('Import already in progress', 409);
-    }
-
-    // Fire background processing (don't await)
-    this.launchParsing(llm, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
-
-    return pdfImport;
+    return { pdfImport, absolutePath };
   }
 
   /**
@@ -385,7 +350,8 @@ class PdfImportService {
       include: { _count: { select: { pendingEntities: true } } },
     });
     if (!record) throw new AppError('PDF import not found', 404);
-    return record;
+    // 0 = being read, n = n PDFs ahead of it, null = not in the queue.
+    return { ...record, queuePosition: pdfParseQueue.position(id) };
   }
 
   async getPendingEntities(userId: number, opts: { pdfImportId?: number; status?: string; entityType?: string }) {
@@ -590,12 +556,17 @@ class PdfImportService {
   async reparseImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
-    if (record.status === PdfImportStatus.PARSING) {
-      throw new AppError('Import is currently being parsed', 409);
+    if (
+      record.status === PdfImportStatus.PARSING ||
+      record.status === PdfImportStatus.UPLOADED ||
+      pdfParseQueue.position(id) !== null
+    ) {
+      throw new AppError('This PDF is already waiting or being read', 409);
     }
 
     const llm = await requireLlm(userId);
-    claimParsingSlot(llm.key);
+    pdfParseQueue.reserveUser(userId);
+    let queued = false;
     try {
       const absolutePath = resolveStoredPath(record.storedPath);
 
@@ -604,33 +575,31 @@ class PdfImportService {
         where: { pdfImportId: id, status: PendingEntityStatus.PENDING },
       });
 
-      // Transition back to PARSING
+      // Back in line: UPLOADED until its turn comes
       await prisma.pdfImport.update({
         where: { id },
-        data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
+        data: { status: PdfImportStatus.UPLOADED, errorMessage: null, processedAt: null },
       });
 
-      this.launchParsing(llm, id, userId, absolutePath, record.originalName);
-    } catch (err) {
-      releaseParsingSlot(llm.key);
-      throw err;
+      this.enqueueParse(llm, id, userId, absolutePath, record.originalName);
+      queued = true;
+    } finally {
+      if (!queued) pdfParseQueue.releaseUser(userId);
     }
   }
 
   /**
-   * Deletes an import. If it is still being read, the LLM request is aborted
-   * first (which also stops a local model such as Ollama generating), freeing
-   * the parsing slot for the next PDF. This is what "Cancel" calls.
+   * Deletes an import. If it is waiting, it leaves the queue; if it is being
+   * read, the LLM request is aborted (which also stops a local model such as
+   * Ollama generating) and the next PDF in line starts. This is what "Cancel"
+   * calls.
    */
   async deletePdfImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
 
-    for (const slot of parsingSlots.values()) {
-      if (slot.active?.pdfImportId === id) {
-        logger.info('Cancelling PDF parse in progress', { pdfImportId: id });
-        slot.active.controller.abort();
-      }
+    if (pdfParseQueue.cancel(id)) {
+      logger.info('Cancelled PDF import waiting or being read', { pdfImportId: id });
     }
 
     const absolutePath = resolveStoredPath(record.storedPath);
@@ -662,6 +631,63 @@ class PdfImportService {
       }
       await tx.pdfImport.delete({ where: { id } });
     });
+  }
+
+  /**
+   * Rebuilds the in-memory queue after a restart, oldest first. Anything left
+   * UPLOADED (waiting) or PARSING (its reader died with the old process) goes
+   * back in line. A user with several (not possible through the API, but old
+   * data may have it) keeps the oldest; the rest are failed so "Try again"
+   * re-queues them. The trip hint from the original upload is not stored, so a
+   * re-queued import is matched to a trip by its dates.
+   */
+  async requeueAfterRestart(): Promise<number> {
+    const waiting = await prisma.pdfImport.findMany({
+      where: { status: { in: [PdfImportStatus.UPLOADED, PdfImportStatus.PARSING] } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, userId: true, storedPath: true, originalName: true },
+    });
+
+    let requeued = 0;
+    for (const record of waiting) {
+      const fail = (errorMessage: string) =>
+        prisma.pdfImport.update({
+          where: { id: record.id },
+          data: { status: PdfImportStatus.PARSE_FAILED, errorMessage, processedAt: new Date() },
+        });
+
+      // One bad record must not stop the server from starting.
+      try {
+        if (pdfParseQueue.hasUser(record.userId)) {
+          await fail('The server restarted before this PDF was read. Try again.');
+          continue;
+        }
+        const llmConfig = await pdfParserService.resolveLlm(record.userId);
+        if (!llmConfig) {
+          await fail('LLM not configured — cannot process PDFs.');
+          continue;
+        }
+        const absolutePath = resolveStoredPath(record.storedPath);
+        await prisma.pdfImport.update({
+          where: { id: record.id },
+          data: { status: PdfImportStatus.UPLOADED },
+        });
+        pdfParseQueue.reserveUser(record.userId);
+        this.enqueueParse(
+          { key: llmEndpointKey(llmConfig.baseUrl), llmConfig },
+          record.id,
+          record.userId,
+          absolutePath,
+          record.originalName
+        );
+        requeued++;
+      } catch (err) {
+        logger.error('Could not re-queue PDF import after restart', { pdfImportId: record.id, err });
+        await fail('The server restarted before this PDF was read. Try again.').catch(() => {});
+      }
+    }
+    if (requeued > 0) logger.info(`Re-queued ${requeued} PDF import(s) after restart`);
+    return requeued;
   }
 
   /**

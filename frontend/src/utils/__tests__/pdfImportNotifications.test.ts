@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createdEntityPath,
   describeFinishedImport,
+  describeImportInProgress,
   pdfImportReviewPath,
 } from '../pdfImportNotifications';
 import { PDF_IMPORT_GIVE_UP_MS, isPdfImportFinished, pdfImportPollDelayMs } from '../pdfImportPolling';
@@ -60,6 +61,23 @@ describe('deep links', () => {
     expect(createdEntityPath(39, 'TRANSPORTATION', 8)).toBe(
       '/trips/39?tab=transportation#transportation-8'
     );
+  });
+});
+
+describe('describeImportInProgress', () => {
+  const noop = () => {};
+
+  it('says it is reading when the PDF has its turn', () => {
+    expect(describeImportInProgress('a.pdf', noop).title).toBe('Reading a.pdf…');
+    expect(describeImportInProgress('a.pdf', noop, 0).title).toBe('Reading a.pdf…');
+  });
+
+  it('says how many PDFs are ahead while it waits, and still offers Cancel', () => {
+    const one = describeImportInProgress('a.pdf', noop, 1);
+    expect(one.title).toBe('Waiting to read a.pdf');
+    expect(one.body).toMatch(/^1 PDF ahead of it\./);
+    expect(one.action).toMatchObject({ label: 'Cancel' });
+    expect(describeImportInProgress('a.pdf', noop, 3).body).toMatch(/^3 PDFs ahead of it\./);
   });
 });
 

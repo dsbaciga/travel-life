@@ -17,6 +17,13 @@ export function isPdfImportFinished(status: PdfImportStatus | undefined): boolea
  */
 export const PDF_IMPORT_GIVE_UP_MS = 12 * 60 * 1000;
 
+/**
+ * Upper bound on watching one import overall, including time spent waiting in
+ * the server's queue behind other users' PDFs (where the give-up clock above
+ * has not started yet).
+ */
+export const PDF_IMPORT_MAX_WATCH_MS = 60 * 60 * 1000;
+
 const FAST_PHASE_MS = 20 * 1000;
 const FAST_INTERVAL_MS = 2000;
 const SLOW_INTERVAL_MS = 5000;

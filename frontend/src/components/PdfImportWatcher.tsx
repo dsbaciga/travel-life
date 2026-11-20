@@ -12,6 +12,7 @@ import {
 import type { PdfImport } from '../types/pdfImport';
 import {
   PDF_IMPORT_GIVE_UP_MS,
+  PDF_IMPORT_MAX_WATCH_MS,
   isPdfImportFinished,
   pdfImportPollDelayMs,
 } from '../utils/pdfImportPolling';
@@ -35,8 +36,12 @@ export default function PdfImportWatcher() {
   // Imports already given their result banner (or cancelled). Guards against a
   // second banner while the untrack re-render is in flight.
   const settled = useRef(new Set<number>());
-  // Imports already showing their "Reading…" banner.
-  const announced = useRef(new Set<number>());
+  // What each import's in-progress banner currently says ("waiting-2",
+  // "reading"), so it is only re-shown when that changes.
+  const announced = useRef(new Map<number, string>());
+  // When each import was first seen being read; the give-up clock starts there,
+  // not at upload, since a PDF may wait in line behind other users first.
+  const readingSince = useRef(new Map<number, number>());
 
   const results = useQueries({
     queries: tracked.map((item) => ({
@@ -56,8 +61,8 @@ export default function PdfImportWatcher() {
       if (settled.current.has(item.id)) return;
       settled.current.add(item.id);
       try {
-        // Deleting an import that is being read aborts the LLM request and
-        // frees the server's one-at-a-time slot.
+        // Deleting an import takes it out of the server's queue, aborting the
+        // LLM request if it is being read so the next PDF in line can start.
         await pdfImportService.deletePdfImport(item.id);
         untrack(item.id);
         queryClient.removeQueries({ queryKey: ['pdfImport', item.id] });
@@ -88,16 +93,28 @@ export default function PdfImportWatcher() {
         return;
       }
 
+      const now = Date.now();
       const finished = isPdfImportFinished(data?.status);
-      const gaveUp = !finished && Date.now() - item.startedAt >= PDF_IMPORT_GIVE_UP_MS;
+      const ahead = data?.queuePosition ?? 0;
+      const reading = data?.status === 'PARSING' || (data?.status === 'UPLOADED' && ahead === 0);
+      if (reading && !readingSince.current.has(item.id)) readingSince.current.set(item.id, now);
+      const started = readingSince.current.get(item.id);
+      const gaveUp =
+        !finished &&
+        ((started !== undefined && now - started >= PDF_IMPORT_GIVE_UP_MS) ||
+          now - item.startedAt >= PDF_IMPORT_MAX_WATCH_MS);
 
       if (!finished && !gaveUp) {
         // Wait for the first answer, so a stale entry never flashes a banner.
-        if (data && !announced.current.has(item.id)) {
-          announced.current.add(item.id);
-          showPdfImportBanner(item.id, describeImportInProgress(item.name, () => void cancel(item)), {
-            duration: Infinity,
-          });
+        const phase = ahead > 0 ? `waiting-${ahead}` : 'reading';
+        if (data && announced.current.get(item.id) !== phase) {
+          announced.current.set(item.id, phase);
+          // Same toast id each time, so the banner updates in place.
+          showPdfImportBanner(
+            item.id,
+            describeImportInProgress(item.name, () => void cancel(item), ahead),
+            { duration: Infinity }
+          );
         }
         return;
       }

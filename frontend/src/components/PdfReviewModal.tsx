@@ -213,12 +213,15 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
 
   // Status: PARSING or UPLOADED
   if (!importData || importData.status === 'UPLOADED' || importData.status === 'PARSING') {
+    const ahead = importData?.queuePosition ?? 0;
     return (
       <Modal isOpen={isOpen} onClose={onClose} title="Processing PDF" maxWidth="md">
         <div className="flex flex-col items-center py-8 gap-4">
           <LoadingSpinner />
           <p className="text-sm text-stone-600 dark:text-dusk-400">
-            Extracting travel details from your PDF...
+            {ahead > 0
+              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one...`
+              : 'Extracting travel details from your PDF...'}
           </p>
         </div>
       </Modal>

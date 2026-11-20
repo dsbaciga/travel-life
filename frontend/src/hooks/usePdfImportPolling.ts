@@ -27,7 +27,13 @@ export function usePdfImportPolling(importId: number | null) {
     queryFn: () => pdfImportService.getPdfImportById(importId!),
     enabled: importId !== null && !timedOut,
     refetchInterval: (query) => {
-      if (isPdfImportFinished(query.state.data?.status)) return false;
+      const data = query.state.data;
+      if (isPdfImportFinished(data?.status)) return false;
+      // Waiting in the server's queue behind other PDFs is not a stall: the
+      // give-up clock only starts once this one is actually being read.
+      if (data?.status === 'UPLOADED' && (data.queuePosition ?? 0) > 0) {
+        startedAtRef.current = Date.now();
+      }
       const elapsed = Date.now() - startedAtRef.current;
       if (elapsed >= PDF_IMPORT_GIVE_UP_MS) {
         setTimedOut(true);
