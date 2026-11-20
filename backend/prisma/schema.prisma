@@ -327,7 +327,10 @@ model Location {
   category             LocationCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   parent               Location?         @relation("LocationChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children             Location[]        @relation("LocationChildren")
-  // Note: Activity, Lodging, and PhotoAlbum associations are handled via EntityLink system, not direct FKs
+  // Activity and Lodging point here through a direct FK (location_id); PhotoAlbum associations
+  // still go through the EntityLink system.
+  activities           Activity[]
+  lodgings             Lodging[]
   transportationStarts Transportation[]  @relation("StartLocation")
   transportationEnds   Transportation[]  @relation("EndLocation")
   weatherData          WeatherData[]
@@ -515,6 +518,10 @@ model Activity {
   id               Int       @id @default(autoincrement())
   tripId           Int       @map("trip_id")
   parentId         Int?      @map("parent_id")
+  // Where the activity takes place: the single source of truth for "is at" (replaces the
+  // ACTIVITY -> LOCATION entity link). ON DELETE SET NULL, added in migration
+  // 20261120000000_add_activity_lodging_location_fk.
+  locationId       Int?      @map("location_id")
   name             String    @db.VarChar(500)
   description      String?   @db.Text
   category         String?   @db.VarChar(100) // sightseeing, dining, adventure, entertainment, etc.
@@ -539,7 +546,7 @@ model Activity {
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  // Note: Location association is handled via EntityLink system, not direct FK
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   parent           Activity?         @relation("ActivityChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children         Activity[]        @relation("ActivityChildren")
   dietaryTags      Json?             @map("dietary_tags")
@@ -547,6 +554,7 @@ model Activity {
 
   @@index([tripId])
   @@index([parentId])
+  @@index([locationId])
   @@index([tripId, manualOrder])
   @@index([startTime])
   @@map("activities")
@@ -612,6 +620,9 @@ model Transportation {
 model Lodging {
   id                 Int      @id @default(autoincrement())
   tripId             Int      @map("trip_id")
+  // Where the stay is: the single source of truth for "is at" (replaces the LODGING -> LOCATION
+  // entity link). ON DELETE SET NULL, added in migration 20261120000000_add_activity_lodging_location_fk.
+  locationId         Int?     @map("location_id")
   type               String   @db.VarChar(50)
   name               String   @db.VarChar(500)
   address            String?  @db.VarChar(1000)
@@ -637,11 +648,12 @@ model Lodging {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  // Note: Location association is handled via EntityLink system, not direct FK
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   bookingDeadlines BookingDeadline[]
   loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
 
   @@index([tripId])
+  @@index([locationId])
   @@index([loyaltyProgramId])
   @@index([checkInDate])
   @@index([checkOutDate])
@@ -984,6 +996,12 @@ enum LinkRelationship {
   FEATURED_IN // Photo featured in album/journal
 }
 
+// Referential integrity: Prisma cannot express the AFTER DELETE triggers that remove a link when
+// either end is deleted (one per table an EntityType can name; function
+// entity_links_delete_for_deleted_row, migration 20261120000000_add_activity_lodging_location_fk).
+// `prisma db push` would NOT create them, so application code still calls cleanupEntityLinks.
+// "Activity / lodging is at a location" is NOT a link any more: see Activity.locationId and
+// Lodging.locationId.
 model EntityLink {
   id     Int @id @default(autoincrement())
   tripId Int @map("trip_id")

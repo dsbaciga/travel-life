@@ -9,13 +9,16 @@ import {
 import {
   verifyTripAccessWithPermission,
   verifyEntityAccessWithPermission,
+  verifyEntityInTrip,
 } from '../services/_shared/tripAccess';
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import loyaltyProgramService from './loyaltyProgram.service';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
+import { locationWithAddressSelect } from '../prisma/prismaIncludes';
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// The stay's place is the direct `locationId` FK (not an EntityLink). Responses carry
+// `locationId` plus a small `location` object.
 
 class LodgingService {
   async createLodging(userId: number, data: CreateLodgingInput) {
@@ -26,10 +29,14 @@ class LodgingService {
       await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
     }
 
-    // Note: Location association is handled via EntityLink system after creation
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, data.tripId);
+    }
+
     const lodging = await prisma.lodging.create({
       data: {
         tripId: data.tripId,
+        locationId: data.locationId || null,
         type: data.type,
         name: data.name,
         address: data.address || null,
@@ -43,6 +50,7 @@ class LodgingService {
         bookingUrl: data.bookingUrl || null,
         notes: data.notes || null,
       },
+      include: { location: { select: locationWithAddressSelect } },
     });
 
     return convertDecimals(lodging);
@@ -52,9 +60,9 @@ class LodgingService {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const lodgings = await prisma.lodging.findMany({
       where: { tripId },
+      include: { location: { select: locationWithAddressSelect } },
       orderBy: [{ checkInDate: 'asc' }, { createdAt: 'asc' }],
     });
 
@@ -65,11 +73,11 @@ class LodgingService {
     // Verify user has view permission on the lodging's trip
     await verifyEntityAccessWithPermission('lodging', lodgingId, userId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const lodging = await prisma.lodging.findUnique({
       where: { id: lodgingId },
       include: {
         trip: true,
+        location: { select: locationWithAddressSelect },
       },
     });
 
@@ -82,10 +90,14 @@ class LodgingService {
     data: UpdateLodgingInput
   ) {
     // Verify user has edit permission on the lodging's trip
-    await verifyEntityAccessWithPermission('lodging', lodgingId, userId, 'edit');
+    const { entity: existing } = await verifyEntityAccessWithPermission<{ tripId: number }>('lodging', lodgingId, userId, 'edit');
 
     if (data.loyaltyProgramId) {
       await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
+
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, existing.tripId);
     }
 
     // Transformer for date fields: convert to Date if truthy, skip update if null/undefined.
@@ -94,7 +106,6 @@ class LodgingService {
     const dateTransformer = (val: string | null | undefined) =>
       val ? new Date(val) : undefined;
 
-    // Note: Location association is handled via EntityLink system, not direct FK
     const updateData: Prisma.LodgingUncheckedUpdateInput = buildConditionalUpdateData(data, {
       transformers: {
         checkInDate: dateTransformer,
@@ -106,6 +117,7 @@ class LodgingService {
       where: { id: lodgingId },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
       data: updateData,
+      include: { location: { select: locationWithAddressSelect } },
     });
 
     return convertDecimals(updatedLodging);

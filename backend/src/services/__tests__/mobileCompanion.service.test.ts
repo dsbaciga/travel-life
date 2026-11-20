@@ -145,7 +145,14 @@ describe('MobileSyncService', () => {
 
   it('MSYNC-001: full snapshot returns every kind, all ids, and the permission', async () => {
     mockPrisma.checklist.findMany.mockResolvedValue([{ id: 3 }]);
-    mockPrisma.activity.findMany.mockResolvedValue([{ id: 7, name: 'Gondola' }]);
+    // The synthetic place-link query (where.locationId set) sees the FK-backed activity 7 -> location 20;
+    // the data and id queries see the plain row.
+    mockPrisma.activity.findMany.mockImplementation(async (args?: unknown) => {
+      const where = (args as { where?: Record<string, unknown> } | undefined)?.where ?? {};
+      return 'locationId' in where
+        ? [{ id: 7, tripId: TRIP, locationId: 20, createdAt: new Date('2026-06-01T00:00:00Z') }]
+        : [{ id: 7, name: 'Gondola' }];
+    });
     mockPrisma.entityLink.findMany.mockResolvedValue([{ id: 99 }]);
 
     const snap = await mobileSyncService.getSnapshot(USER, TRIP);
@@ -173,11 +180,18 @@ describe('MobileSyncService', () => {
     expect(snap.entities.ACTIVITY).toEqual([{ id: 7, name: 'Gondola' }]);
     expect(snap.ids.ACTIVITY).toEqual([7]);
     expect(snap.ids.CHECKLIST).toEqual([3]);
-    expect(snap.linkIds).toEqual([99]);
+    // linkIds: the synthetic FK place link of activity 7 (negative id, -(2 * 7)) plus the real row
+    expect(snap.linkIds).toEqual([-14, 99]);
+    expect(snap.links).toEqual([
+      expect.objectContaining({ id: -14, sourceType: 'ACTIVITY', sourceId: 7, targetType: 'LOCATION', targetId: 20, relationship: 'OCCURRED_AT' }),
+      { id: 99 },
+    ]);
     expect(Number.isNaN(new Date(snap.serverTime).getTime())).toBe(false);
 
     // No updatedAt filter on a full pull.
-    const full = mockPrisma.activity.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    const full = (mockPrisma.activity.findMany.mock.calls as Array<[{ where: Record<string, unknown> }]>)
+      .map((c) => c[0])
+      .find((a) => !('locationId' in a.where) && !('select' in a)) as { where: Record<string, unknown> };
     expect(full.where).toEqual({ tripId: TRIP });
     // Checklist items are scoped through the trip's checklists.
     const items = mockPrisma.checklistItem.findMany.mock.calls[0][0] as { where: Record<string, unknown> };

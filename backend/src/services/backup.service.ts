@@ -293,6 +293,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
         select: {
           id: true,
           parentId: true,
+          locationId: true,
           name: true,
           description: true,
           category: true,
@@ -329,6 +330,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
       lodging: {
         select: {
           id: true,
+          locationId: true,
           type: true,
           name: true,
           address: true,

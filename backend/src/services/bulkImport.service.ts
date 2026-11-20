@@ -218,13 +218,13 @@ class BulkImportService {
     }
 
     await prisma.$transaction(async (tx) => {
-      const links: Prisma.EntityLinkCreateManyInput[] = [];
-
       for (const { data } of plan.toCreate) {
         const { activity, costDecimal, locationId } = data;
-        const created = await tx.activity.create({
+        await tx.activity.create({
           data: {
             tripId,
+            // The place is the activity's own FK (locationId was matched within this trip)
+            locationId: locationId ?? null,
             name: activity.name,
             description: activity.description || null,
             category: activity.category || null,
@@ -241,21 +241,6 @@ class BulkImportService {
           },
           select: { id: true },
         });
-
-        if (locationId !== undefined) {
-          links.push({
-            tripId,
-            sourceType: 'ACTIVITY',
-            sourceId: created.id,
-            targetType: 'LOCATION',
-            targetId: locationId,
-            relationship: 'OCCURRED_AT',
-          });
-        }
-      }
-
-      if (links.length > 0) {
-        await tx.entityLink.createMany({ data: links, skipDuplicates: true });
       }
     }, IMPORT_TRANSACTION_OPTIONS);
 

@@ -42,8 +42,12 @@ interface RestoreStats {
  * v1.6.0 - Added expenses, emergencyInfo, unfiledSavedLinks, companion medical fields,
  *          trip budget/countryCode/archived/excludeFromAutoShare, user preferences,
  *          activity dietaryTags, and FX snapshots on costed items
+ * v1.7.0 - Activities and lodging carry locationId (the place is a direct FK). Older backups
+ *          express it as an ACTIVITY/LODGING <-> LOCATION entity link; restore promotes it to
+ *          the FK (OCCURRED_AT first, then file order) and drops that link, exactly as the
+ *          20261120000000 migration does for existing rows.
  */
-const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
+const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
 
 /**
  * Second layer of defence for file paths coming out of an uploaded backup.
@@ -559,13 +563,16 @@ export async function restoreFromBackup(
           }
 
           // Import activities (build ID mapping)
-          // Note: Location associations are now handled via EntityLink system (restored separately below)
+          // The place is the activity's locationId (old id remapped through locationMap)
           const activityMap = new Map<number, number>(); // old ID -> new ID
           for (const activityData of tripData.activities || []) {
             const activity = await tx.activity.create({
               data: {
                 tripId: trip.id,
                 parentId: null, // Set later in second pass
+                locationId: activityData.locationId
+                  ? (locationMap.get(activityData.locationId) ?? null)
+                  : null,
                 name: activityData.name,
                 description: activityData.description,
                 category: activityData.category,
@@ -682,12 +689,15 @@ export async function restoreFromBackup(
           }
 
           // Import lodging
-          // Note: Location associations are now handled via EntityLink system (restored separately below)
+          // The place is the lodging's locationId (old id remapped through locationMap)
           const lodgingMap = new Map<number, number>(); // old ID -> new ID
           for (const lodgingData of tripData.lodging || []) {
             const lodging = await tx.lodging.create({
               data: {
                 tripId: trip.id,
+                locationId: lodgingData.locationId
+                  ? (locationMap.get(lodgingData.locationId) ?? null)
+                  : null,
                 type: lodgingData.type,
                 name: lodgingData.name,
                 address: lodgingData.address,
@@ -1096,9 +1106,70 @@ export async function restoreFromBackup(
             }
           };
 
-          for (const linkData of tripData.entityLinks || []) {
+          // Backups before v1.7.0 express "this activity/lodging is at this place" as a link.
+          // Promote one per entity (OCCURRED_AT first, then file order) to the entity's
+          // locationId and do not restore that link; other place links stay as RELATED.
+          const legacyPlaceLinks =
+            SUPPORTED_BACKUP_VERSIONS.indexOf(backupData.version) < SUPPORTED_BACKUP_VERSIONS.indexOf('1.7.0');
+          const placeOf = (
+            link: { sourceType: string; sourceId: number; targetType: string; targetId: number }
+          ): { entityType: 'ACTIVITY' | 'LODGING'; entityId: number; locationId: number } | null => {
+            const sourceIsEntity = link.sourceType === 'ACTIVITY' || link.sourceType === 'LODGING';
+            const targetIsEntity = link.targetType === 'ACTIVITY' || link.targetType === 'LODGING';
+            if (sourceIsEntity && link.targetType === 'LOCATION') {
+              const entityId = getNewEntityId(link.sourceType, link.sourceId);
+              const locationId = getNewEntityId('LOCATION', link.targetId);
+              return entityId && locationId
+                ? { entityType: link.sourceType as 'ACTIVITY' | 'LODGING', entityId, locationId }
+                : null;
+            }
+            if (link.sourceType === 'LOCATION' && targetIsEntity) {
+              const entityId = getNewEntityId(link.targetType, link.targetId);
+              const locationId = getNewEntityId('LOCATION', link.sourceId);
+              return entityId && locationId
+                ? { entityType: link.targetType as 'ACTIVITY' | 'LODGING', entityId, locationId }
+                : null;
+            }
+            return null;
+          };
+          const promotedPlace = new Map<string, { index: number; locationId: number }>();
+          if (legacyPlaceLinks) {
+            (tripData.entityLinks || []).forEach((linkData, index) => {
+              const place = placeOf(linkData);
+              if (!place) return;
+              const key = `${place.entityType}:${place.entityId}`;
+              const current = promotedPlace.get(key);
+              const currentIsOccurredAt =
+                current !== undefined &&
+                (tripData.entityLinks || [])[current.index].relationship === 'OCCURRED_AT';
+              if (!current || (linkData.relationship === 'OCCURRED_AT' && !currentIsOccurredAt)) {
+                promotedPlace.set(key, { index, locationId: place.locationId });
+              }
+            });
+            for (const [key, chosen] of promotedPlace) {
+              const [entityType, entityId] = key.split(':');
+              if (entityType === 'ACTIVITY') {
+                await tx.activity.update({ where: { id: Number(entityId) }, data: { locationId: chosen.locationId } });
+              } else {
+                await tx.lodging.update({ where: { id: Number(entityId) }, data: { locationId: chosen.locationId } });
+              }
+            }
+          }
+
+          for (const [linkIndex, linkData] of (tripData.entityLinks || []).entries()) {
             const newSourceId = getNewEntityId(linkData.sourceType, linkData.sourceId);
             const newTargetId = getNewEntityId(linkData.targetType, linkData.targetId);
+
+            let relationship = linkData.relationship;
+            if (legacyPlaceLinks) {
+              const place = placeOf(linkData);
+              if (place) {
+                const chosen = promotedPlace.get(`${place.entityType}:${place.entityId}`);
+                // The chosen link (and a duplicate of it in the other direction) is the FK now
+                if (chosen && (chosen.index === linkIndex || chosen.locationId === place.locationId)) continue;
+                if (relationship === 'OCCURRED_AT') relationship = 'RELATED';
+              }
+            }
 
             // Only create the link if both source and target entities were restored
             if (newSourceId && newTargetId) {
@@ -1109,7 +1180,7 @@ export async function restoreFromBackup(
                   sourceId: newSourceId,
                   targetType: linkData.targetType,
                   targetId: newTargetId,
-                  relationship: linkData.relationship,
+                  relationship,
                   sortOrder: linkData.sortOrder,
                   notes: linkData.notes,
                 },

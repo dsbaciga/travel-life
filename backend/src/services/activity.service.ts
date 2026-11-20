@@ -10,8 +10,10 @@ import {
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
+import { locationWithAddressSelect } from '../prisma/prismaIncludes';
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// The activity's place is the direct `locationId` FK (not an EntityLink). Responses carry
+// `locationId` plus a small `location` object.
 
 class ActivityService {
   async createActivity(userId: number, data: CreateActivityInput) {
@@ -23,11 +25,15 @@ class ActivityService {
       await verifyEntityInTrip('activity', data.parentId, data.tripId);
     }
 
-    // Note: Location association is handled via EntityLink system after creation
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, data.tripId);
+    }
+
     const activity = await prisma.activity.create({
       data: {
         tripId: data.tripId,
         parentId: data.parentId || null,
+        locationId: data.locationId || null,
         name: data.name,
         description: data.description || null,
         category: data.category || null,
@@ -43,6 +49,7 @@ class ActivityService {
         dietaryTags: data.dietaryTags ?? undefined,
       },
       include: {
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
@@ -59,10 +66,10 @@ class ActivityService {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const activities = await prisma.activity.findMany({
       where: { tripId },
       include: {
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
@@ -73,6 +80,7 @@ class ActivityService {
           select: {
             id: true,
             name: true,
+            locationId: true,
             description: true,
             startTime: true,
             endTime: true,
@@ -101,11 +109,11 @@ class ActivityService {
     // Verify user has view permission on the activity's trip
     await verifyEntityAccessWithPermission('activity', activityId, userId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
       include: {
         trip: true,
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
@@ -116,6 +124,7 @@ class ActivityService {
           select: {
             id: true,
             name: true,
+            locationId: true,
             description: true,
             startTime: true,
             endTime: true,
@@ -157,7 +166,10 @@ class ActivityService {
       await verifyEntityInTrip('activity', data.parentId, activity.tripId);
     }
 
-    // Note: Location association is handled via EntityLink system, not direct FK
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, activity.tripId);
+    }
+
     const updateData: Prisma.ActivityUncheckedUpdateInput = buildConditionalUpdateData(data, {
       transformers: {
         startTime: (val: string | null) => (val ? new Date(val) : null),
@@ -172,6 +184,7 @@ class ActivityService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
       data: updateData,
       include: {
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,

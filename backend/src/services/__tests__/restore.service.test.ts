@@ -117,6 +117,7 @@ const mockTx = {
   },
   lodging: {
     create: jest.fn(),
+    update: jest.fn(),
   },
   journalEntry: {
     create: jest.fn(),
@@ -396,6 +397,7 @@ describe('RestoreService', () => {
     mockTx.trip.update.mockResolvedValue({});
     mockTx.location.update.mockResolvedValue({});
     mockTx.activity.update.mockResolvedValue({});
+    mockTx.lodging.update.mockResolvedValue({});
 
     // deleteMany returns
     mockTx.trip.deleteMany.mockResolvedValue({ count: 0 });
@@ -689,19 +691,113 @@ describe('RestoreService', () => {
       expect(mockTx.foodLogEntryPhoto.create).not.toHaveBeenCalled();
     });
 
-    it('RST-008: imports entity links with mapped IDs', async () => {
+    it('RST-008: a pre-1.7.0 OCCURRED_AT activity->location link is promoted to activity.locationId (no link row)', async () => {
       await restoreFromBackup(1, fullBackup);
 
-      // Entity link should be created with new IDs (not original IDs)
-      expect(mockTx.entityLink.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            sourceType: 'ACTIVITY',
-            targetType: 'LOCATION',
-            relationship: 'OCCURRED_AT',
-          }),
-        })
-      );
+      // Old ids (activity 1, location 1) are mapped to the new ids (60, 10)
+      expect(mockTx.activity.update).toHaveBeenCalledWith({
+        where: { id: 60 },
+        data: { locationId: 10 },
+      });
+      expect(mockTx.entityLink.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-008b: a 1.7.0 backup restores activity and lodging locationId through the location map', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.7.0',
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Colosseum', address: 'Rome', latitude: 41.89, longitude: 12.49 },
+              { id: 2, name: 'Hotel site', address: 'Rome', latitude: 41.9, longitude: 12.5 },
+            ],
+            activities: [{ id: 1, name: 'Visit Colosseum', locationId: 1 }, { id: 2, name: 'Free time', locationId: null }],
+            lodging: [
+              { id: 1, type: 'hotel', name: 'Hotel Roma', checkInDate: '2024-07-01', checkOutDate: '2024-07-15', locationId: 2 },
+              { id: 2, type: 'hotel', name: 'Unknown', checkInDate: '2024-07-01', checkOutDate: '2024-07-15', locationId: 777 },
+            ],
+            entityLinks: [],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      const activityCalls = mockTx.activity.create.mock.calls.map((c) => (c[0] as { data: { locationId: number | null } }).data.locationId);
+      expect(activityCalls).toEqual([10, null]);
+      const lodgingCalls = mockTx.lodging.create.mock.calls.map((c) => (c[0] as { data: { locationId: number | null } }).data.locationId);
+      // location 2 -> new id 11; an id that is not in the backup is dropped rather than invented
+      expect(lodgingCalls).toEqual([11, null]);
+      // Nothing to promote for a 1.7.0 backup
+      expect(mockTx.activity.update).not.toHaveBeenCalledWith(expect.objectContaining({ data: { locationId: expect.anything() } }));
+      expect(mockTx.lodging.update).not.toHaveBeenCalled();
+      expect(mockTx.entityLink.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-008c: a 1.6.0 backup with two place links on one activity promotes OCCURRED_AT and restores the other as RELATED', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.6.0',
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Colosseum', address: 'Rome', latitude: 41.89, longitude: 12.49 },
+              { id: 2, name: 'Forum', address: 'Rome', latitude: 41.9, longitude: 12.48 },
+            ],
+            entityLinks: [
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LOCATION', targetId: 1, relationship: 'RELATED' },
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LOCATION', targetId: 2, relationship: 'OCCURRED_AT' },
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      // The OCCURRED_AT one (Forum, old id 2 -> new id 11) becomes the FK
+      expect(mockTx.activity.update).toHaveBeenCalledWith({ where: { id: 60 }, data: { locationId: 11 } });
+      // The other place link is kept as an ordinary RELATED link to Colosseum (new id 10)
+      expect(mockTx.entityLink.create).toHaveBeenCalledTimes(1);
+      expect(mockTx.entityLink.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          sourceType: 'ACTIVITY',
+          sourceId: 60,
+          targetType: 'LOCATION',
+          targetId: 10,
+          relationship: 'RELATED',
+        }),
+      });
+    });
+
+    it('RST-008d: a pre-1.7.0 lodging place link is promoted to lodging.locationId; non-place links are untouched', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.5.0',
+        trips: [
+          {
+            ...trip,
+            lodging: [{ id: 1, type: 'hotel', name: 'Hotel Roma', checkInDate: '2024-07-01', checkOutDate: '2024-07-15' }],
+            entityLinks: [
+              { sourceType: 'LODGING', sourceId: 1, targetType: 'LOCATION', targetId: 1, relationship: 'OCCURRED_AT' },
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LODGING', targetId: 1, relationship: 'RELATED' },
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.lodging.update).toHaveBeenCalledWith({ where: { id: 80 }, data: { locationId: 10 } });
+      expect(mockTx.entityLink.create).toHaveBeenCalledTimes(1);
+      expect(mockTx.entityLink.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ sourceType: 'ACTIVITY', targetType: 'LODGING', relationship: 'RELATED' }),
+      });
     });
 
     it('RST-009: imports flight tracking data', async () => {

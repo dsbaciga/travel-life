@@ -763,6 +763,7 @@ export class TripService {
         const newActivity = await tx.activity.create({
           data: {
             tripId: newTrip.id,
+            locationId: activity.locationId ? locationIdMap.get(activity.locationId) ?? null : null,
             name: activity.name,
             description: activity.description,
             category: activity.category,
@@ -789,6 +790,7 @@ export class TripService {
           data: {
             tripId: newTrip.id,
             parentId: newParentId || null,
+            locationId: activity.locationId ? locationIdMap.get(activity.locationId) ?? null : null,
             name: activity.name,
             description: activity.description,
             category: activity.category,
@@ -867,6 +869,7 @@ export class TripService {
         await tx.lodging.createMany({
           data: lodgings.map((lodging) => ({
             tripId: newTrip.id,
+            locationId: lodging.locationId ? locationIdMap.get(lodging.locationId) ?? null : null,
             type: lodging.type,
             name: lodging.name,
             address: lodging.address,

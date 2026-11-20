@@ -128,9 +128,9 @@ describe('TripValidatorService', () => {
         ],
         // Activities on all days
         activities: [
-          { id: 1, name: 'Day 1 Activity', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
-          { id: 2, name: 'Day 2 Activity', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
-          { id: 3, name: 'Day 3 Activity', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
+          { id: 1, locationId: 10, name: 'Day 1 Activity', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: 11, name: 'Day 2 Activity', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+          { id: 3, locationId: 12, name: 'Day 3 Activity', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
         ],
         // Has locations and transport
         locations: [{ id: 1, name: 'Place 1' }],
@@ -139,14 +139,7 @@ describe('TripValidatorService', () => {
 
       mockPrisma.trip.findFirst.mockResolvedValue(trip);
 
-      // Mock entity links for activities -> locations (all have locations)
-      // Include targetId so travel time checks can resolve locations
-      const entityLinks = [
-        { sourceId: 1, targetId: 10 },
-        { sourceId: 2, targetId: 11 },
-        { sourceId: 3, targetId: 12 },
-      ];
-      mockPrisma.entityLink.findMany.mockResolvedValue(entityLinks);
+      // Every activity has its own locationId (10, 11, 12), which travel time checks resolve below
 
       // Mock location.findMany for travel time checks - return locations with coordinates
       mockPrisma.location.findMany.mockResolvedValue([
@@ -321,12 +314,12 @@ describe('TripValidatorService', () => {
       expect(transportIssues[0].message).toContain('no transportation');
     });
 
-    it('VAL-006: detects activities without location', async () => {
+    it('VAL-006: detects activities without location (locationId null)', async () => {
       const trip = createTripWithRelations({
         activities: [
-          { id: 1, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
-          { id: 2, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
-          { id: 3, name: 'Activity 3', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
+          { id: 1, locationId: 5, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: null, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+          { id: 3, locationId: null, name: 'Activity 3', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
         ],
         locations: [{ id: 1 }],
         transportation: [{ id: 1 }],
@@ -334,9 +327,6 @@ describe('TripValidatorService', () => {
       });
 
       mockPrisma.trip.findFirst.mockResolvedValue(trip);
-
-      // Only activity 1 has a location link
-      mockPrisma.entityLink.findMany.mockResolvedValue([{ sourceId: 1 }]);
 
       const result = await tripValidatorService.validateTrip(1, 1);
 
@@ -346,6 +336,28 @@ describe('TripValidatorService', () => {
 
       expect(locationIssues.length).toBeGreaterThan(0);
       expect(locationIssues[0].message).toContain('without location');
+      // Only the activities with a null locationId are affected; activity 1 has a place
+      expect(locationIssues[0].affectedItems).toEqual(expect.arrayContaining([2, 3]));
+      expect(locationIssues[0].affectedItems).not.toContain(1);
+    });
+
+    it('VAL-006b: does not flag activities that all have a locationId, and never reads entity links for it', async () => {
+      const trip = createTripWithRelations({
+        activities: [
+          { id: 1, locationId: 5, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: 6, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+        ],
+        locations: [{ id: 5 }, { id: 6 }],
+        transportation: [{ id: 1 }],
+        lodging: [{ checkInDate: new Date('2024-07-01'), checkOutDate: new Date('2024-07-03') }],
+      });
+
+      mockPrisma.trip.findFirst.mockResolvedValue(trip);
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+
+      expect(result.issuesByCategory.COMPLETENESS.filter(i => i.type === 'missing_location')).toHaveLength(0);
+      expect(mockPrisma.entityLink.findMany).not.toHaveBeenCalled();
     });
 
     it('VAL-007: detects activities without scheduled time', async () => {

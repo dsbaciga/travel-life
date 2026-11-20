@@ -10,7 +10,10 @@ import { z } from 'zod';
 //          trip budget/countryCode/archived/excludeFromAutoShare, user dietaryPreferences/
 //          useCustomMapStyle/baseCurrency/preferredMapsApp, activity dietaryTags, and FX
 //          snapshots on costed items
-export const BACKUP_VERSION = '1.6.0';
+// v1.7.0 - Activities and lodging carry locationId (old id of an entry in `locations`): the place
+//          is a direct FK now. Backups before 1.7.0 express it as an entity link, which restore
+//          promotes to the FK.
+export const BACKUP_VERSION = '1.7.0';
 
 // =============================================================================
 // Shared/Reusable Schemas
@@ -287,6 +290,7 @@ const BackupPhotoSchema = z.object({
 const BackupActivitySchema = z.object({
   id: z.number().optional(), // For EntityLink mapping
   parentId: z.number().nullable().optional(),
+  locationId: z.number().nullable().optional(), // Old id of a backup locations entry (v1.7.0)
   name: z.string(),
   description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -355,6 +359,7 @@ const BackupTransportationSchema = z.object({
 // Lodging schema within a trip
 const BackupLodgingSchema = z.object({
   id: z.number().optional(), // For EntityLink mapping
+  locationId: z.number().nullable().optional(), // Old id of a backup locations entry (v1.7.0)
   type: z.string(),
   name: z.string(),
   address: z.string().nullable().optional(),

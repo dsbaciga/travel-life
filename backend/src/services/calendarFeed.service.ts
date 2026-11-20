@@ -225,6 +225,8 @@ interface LodgingRecord {
   address: string | null;
   checkInDate: Date;
   checkOutDate: Date;
+  /** The stay's place (locationId FK); used when the lodging has no address of its own. */
+  location?: { name: string; address: string | null } | null;
 }
 
 export function buildTripEvent(trip: TripRecord): IcsEvent | null {
@@ -283,7 +285,7 @@ export function buildLodgingEvent(lodging: LodgingRecord): IcsEvent {
   return {
     uid: `lodging-${lodging.id}@travel-life`,
     summary: `🏨 ${lodging.name}`,
-    location: lodging.address,
+    location: lodging.address || lodging.location?.address || lodging.location?.name || null,
     allDay: true,
     start: lodging.checkInDate,
     // DTEND is exclusive — add one day so the event spans through check-out day
@@ -381,6 +383,7 @@ class CalendarFeedService {
             address: true,
             checkInDate: true,
             checkOutDate: true,
+            location: { select: { name: true, address: true } },
           },
         },
       },

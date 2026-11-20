@@ -58,12 +58,14 @@ jest.mock('../../config/database', () => {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      updateMany: jest.fn(),
       count: jest.fn(),
     },
     lodging: {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      updateMany: jest.fn(),
       count: jest.fn(),
     },
     transportation: {
@@ -195,6 +197,11 @@ describe('EntityLinkService', () => {
     jest.clearAllMocks();
     // Default mock: trip access is granted (returns TripAccessResult)
     mockVerifyTripAccessWithPermission.mockResolvedValue(mockTripAccessResult);
+    // Default: no FK-backed (synthetic) place links and no FK to claim
+    mockPrisma.activity.findMany.mockResolvedValue([]);
+    mockPrisma.lodging.findMany.mockResolvedValue([]);
+    mockPrisma.activity.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.lodging.updateMany.mockResolvedValue({ count: 0 });
   });
 
   // ==========================================================================
@@ -323,8 +330,8 @@ describe('EntityLinkService', () => {
   // ==========================================================================
   // LINK-003: Auto-detect OCCURRED_AT for activity->location
   // ==========================================================================
-  describe('LINK-003: Auto-detect OCCURRED_AT for activity->location', () => {
-    it('should auto-detect OCCURRED_AT when activity links to location', async () => {
+  describe('LINK-003: activity/lodging -> location sets the locationId FK (no stored OCCURRED_AT row)', () => {
+    it('should set the activity locationId when it links to a location', async () => {
       const input = {
         tripId: TEST_TRIP_ID,
         sourceType: 'ACTIVITY' as const,
@@ -336,26 +343,30 @@ describe('EntityLinkService', () => {
       mockPrisma.activity.findFirst.mockResolvedValue(mockActivity);
       mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
       mockPrisma.entityLink.findFirst.mockResolvedValue(null);
-      mockPrisma.entityLink.create.mockImplementation(async (args) => {
-        return createMockEntityLink({
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.activity.findMany.mockResolvedValue([
+        { id: 3, tripId: TEST_TRIP_ID, locationId: 2, createdAt: new Date('2025-01-01') },
+      ]);
+
+      const result = await entityLinkService.createLink(TEST_USER_ID, input);
+
+      expect(mockPrisma.activity.updateMany).toHaveBeenCalledWith({
+        where: { id: 3, tripId: TEST_TRIP_ID, locationId: null },
+        data: { locationId: 2 },
+      });
+      expect(mockPrisma.entityLink.create).not.toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({
           sourceType: 'ACTIVITY',
           sourceId: 3,
-          relationship: args.data.relationship,
-        });
-      });
-
-      await entityLinkService.createLink(TEST_USER_ID, input);
-
-      expect(mockPrisma.entityLink.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            relationship: 'OCCURRED_AT',
-          }),
+          targetType: 'LOCATION',
+          targetId: 2,
+          relationship: 'OCCURRED_AT',
         })
       );
     });
 
-    it('should auto-detect OCCURRED_AT when lodging links to location', async () => {
+    it('should set the lodging locationId when it links to a location', async () => {
       const input = {
         tripId: TEST_TRIP_ID,
         sourceType: 'LODGING' as const,
@@ -367,23 +378,20 @@ describe('EntityLinkService', () => {
       mockPrisma.lodging.findFirst.mockResolvedValue(mockLodging);
       mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
       mockPrisma.entityLink.findFirst.mockResolvedValue(null);
-      mockPrisma.entityLink.create.mockImplementation(async (args) => {
-        return createMockEntityLink({
-          sourceType: 'LODGING',
-          sourceId: 4,
-          relationship: args.data.relationship,
-        });
+      mockPrisma.lodging.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.lodging.findMany.mockResolvedValue([
+        { id: 4, tripId: TEST_TRIP_ID, locationId: 2, createdAt: new Date('2025-01-01') },
+      ]);
+
+      const result = await entityLinkService.createLink(TEST_USER_ID, input);
+
+      expect(mockPrisma.lodging.updateMany).toHaveBeenCalledWith({
+        where: { id: 4, tripId: TEST_TRIP_ID, locationId: null },
+        data: { locationId: 2 },
       });
-
-      await entityLinkService.createLink(TEST_USER_ID, input);
-
-      expect(mockPrisma.entityLink.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            relationship: 'OCCURRED_AT',
-          }),
-        })
-      );
+      expect(mockPrisma.entityLink.create).not.toHaveBeenCalled();
+      expect(result.sourceType).toBe('LODGING');
+      expect(result.relationship).toBe('OCCURRED_AT');
     });
   });
 
@@ -1471,6 +1479,137 @@ describe('EntityLinkService', () => {
       expect(result).toHaveLength(2);
       expect(result[0].sourceType).toBe('PHOTO');
       expect(result[1].sourceType).toBe('ACTIVITY');
+    });
+  });
+  // ==========================================================================
+  // LINK-019: locationId FK compatibility (synthetic place links)
+  // ==========================================================================
+  describe('LINK-019: locationId FK compatibility', () => {
+    const createdAt = new Date('2025-01-01');
+
+    it('claims the FK when empty and answers with a link-shaped response with a negative id', async () => {
+      mockPrisma.activity.findFirst.mockResolvedValue(mockActivity);
+      mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
+      mockPrisma.entityLink.findFirst.mockResolvedValue(null);
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.activity.findMany.mockResolvedValue([{ id: 3, tripId: TEST_TRIP_ID, locationId: 2, createdAt }]);
+
+      const result = await entityLinkService.createLink(TEST_USER_ID, {
+        tripId: TEST_TRIP_ID,
+        sourceType: 'ACTIVITY',
+        sourceId: 3,
+        targetType: 'LOCATION',
+        targetId: 2,
+      });
+
+      expect(result.id).toBe(-6); // ACTIVITY 3 -> -(2 * 3)
+      expect(result).toMatchObject({ tripId: TEST_TRIP_ID, sourceType: 'ACTIVITY', sourceId: 3, targetType: 'LOCATION', targetId: 2 });
+    });
+
+    it('returns the reversed link shape when the location is the source', async () => {
+      mockPrisma.lodging.findFirst.mockResolvedValue(mockLodging);
+      mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
+      mockPrisma.entityLink.findFirst.mockResolvedValue(null);
+      mockPrisma.lodging.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.lodging.findMany.mockResolvedValue([{ id: 4, tripId: TEST_TRIP_ID, locationId: 2, createdAt }]);
+
+      const result = await entityLinkService.createLink(TEST_USER_ID, {
+        tripId: TEST_TRIP_ID,
+        sourceType: 'LOCATION',
+        sourceId: 2,
+        targetType: 'LODGING',
+        targetId: 4,
+      });
+
+      expect(result.id).toBe(-9); // LODGING 4 -> -(2 * 4 + 1)
+      expect(result).toMatchObject({ sourceType: 'LOCATION', sourceId: 2, targetType: 'LODGING', targetId: 4 });
+    });
+
+    it('rejects with 400 already exists when the entity is already at that location', async () => {
+      mockPrisma.activity.findFirst.mockResolvedValue({ ...mockActivity, locationId: 2 });
+      mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
+      mockPrisma.entityLink.findFirst.mockResolvedValue(null);
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        entityLinkService.createLink(TEST_USER_ID, {
+          tripId: TEST_TRIP_ID,
+          sourceType: 'ACTIVITY',
+          sourceId: 3,
+          targetType: 'LOCATION',
+          targetId: 2,
+        })
+      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('already exists') });
+      expect(mockPrisma.entityLink.create).not.toHaveBeenCalled();
+    });
+
+    it('stores a RELATED row when the entity already has a different location', async () => {
+      mockPrisma.activity.findFirst.mockResolvedValue({ ...mockActivity, locationId: 99 });
+      mockPrisma.location.findFirst.mockResolvedValue(mockLocation);
+      mockPrisma.entityLink.findFirst.mockResolvedValue(null);
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.entityLink.create.mockImplementation(async (args) =>
+        createMockEntityLink({ sourceType: 'ACTIVITY', sourceId: 3, relationship: args.data.relationship })
+      );
+
+      await entityLinkService.createLink(TEST_USER_ID, {
+        tripId: TEST_TRIP_ID,
+        sourceType: 'ACTIVITY',
+        sourceId: 3,
+        targetType: 'LOCATION',
+        targetId: 2,
+      });
+
+      expect(mockPrisma.entityLink.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ relationship: 'RELATED' }) })
+      );
+    });
+
+    it('deleteLinkById with a synthetic activity id clears the activity locationId', async () => {
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 1 });
+
+      await entityLinkService.deleteLinkById(TEST_USER_ID, TEST_TRIP_ID, -6);
+
+      expect(mockPrisma.activity.updateMany).toHaveBeenCalledWith({
+        where: { id: 3, tripId: TEST_TRIP_ID, locationId: { not: null } },
+        data: { locationId: null },
+      });
+      expect(mockPrisma.entityLink.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.entityLink.delete).not.toHaveBeenCalled();
+    });
+
+    it('deleteLinkById with a synthetic lodging id clears the lodging locationId', async () => {
+      mockPrisma.lodging.updateMany.mockResolvedValue({ count: 1 });
+
+      await entityLinkService.deleteLinkById(TEST_USER_ID, TEST_TRIP_ID, -9);
+
+      expect(mockPrisma.lodging.updateMany).toHaveBeenCalledWith({
+        where: { id: 4, tripId: TEST_TRIP_ID, locationId: { not: null } },
+        data: { locationId: null },
+      });
+    });
+
+    it('deleteLinkById with a synthetic id 404s when the entity has no location', async () => {
+      mockPrisma.activity.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(entityLinkService.deleteLinkById(TEST_USER_ID, TEST_TRIP_ID, -6)).rejects.toMatchObject({
+        statusCode: 404,
+      });
+    });
+
+    it('getLinksFrom includes the FK-backed place as a synthetic OCCURRED_AT link', async () => {
+      mockPrisma.entityLink.findMany.mockResolvedValue([]);
+      mockPrisma.activity.findMany.mockResolvedValue([{ id: 3, tripId: TEST_TRIP_ID, locationId: 2, createdAt }]);
+      mockPrisma.location.findMany.mockResolvedValue([{ id: 2, name: 'Test Location' }]);
+
+      const result = await entityLinkService.getLinksFrom(TEST_USER_ID, {
+        tripId: TEST_TRIP_ID,
+        sourceType: 'ACTIVITY',
+        sourceId: 3,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: -6, targetType: 'LOCATION', targetId: 2, relationship: 'OCCURRED_AT' });
     });
   });
 });

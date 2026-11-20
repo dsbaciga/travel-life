@@ -27,6 +27,10 @@ router.use(authenticate);
  *               parentId:
  *                 type: integer
  *                 description: Parent activity ID for nested activities
+ *               locationId:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: Location (of the same trip) the activity is at; null clears it
  *               name:
  *                 type: string
  *                 maxLength: 500
@@ -139,6 +143,10 @@ router.get('/trip/:tripId', activityController.getActivitiesByTrip);
  *             properties:
  *               parentId:
  *                 type: integer
+ *               locationId:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: Location (of the same trip) the activity is at; null clears it
  *               name:
  *                 type: string
  *                 maxLength: 500

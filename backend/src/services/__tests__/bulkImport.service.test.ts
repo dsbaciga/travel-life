@@ -6,7 +6,7 @@
  * - BIS-002: Dry run validates but never opens a transaction
  * - BIS-003: Real location import writes valid rows in one transaction and skips invalid/excluded ones
  * - BIS-004: First located row sets the trip timezone when the trip has none
- * - BIS-005: Activity import stores cost as Prisma.Decimal and links to the named location
+ * - BIS-005: Activity import stores cost as Prisma.Decimal and sets locationId to the named location
  * - BIS-006: Wall-clock activity times use the trip zone, else the user zone
  * - BIS-007: An unexpected failure inside the transaction propagates (nothing is reported created)
  */
@@ -115,7 +115,7 @@ describe('BulkImportService', () => {
     expect(result.tripTimezoneSet).toBe('Europe/Paris');
   });
 
-  it('BIS-005: activity cost is a Prisma.Decimal and the location link is created', async () => {
+  it('BIS-005: activity cost is a Prisma.Decimal and the location location FK is set', async () => {
     mockPrisma.location.findMany.mockResolvedValue([{ id: 42, name: 'Louvre' }]);
     const result = await bulkImportService.importActivities(1, 9, {
       rows: [{ name: 'Visit', location: 'louvre', cost: '12.50', currency: 'eur', category: 'dining' }],
@@ -127,10 +127,10 @@ describe('BulkImportService', () => {
     expect(created.data.cost.toString()).toBe('12.5');
     expect(created.data.currency).toBe('EUR');
     expect(created.data.category).toBe('Dining');
-    expect(tx.entityLink.createMany).toHaveBeenCalledWith({
-      data: [expect.objectContaining({ sourceType: 'ACTIVITY', sourceId: 500, targetType: 'LOCATION', targetId: 42, relationship: 'OCCURRED_AT', tripId: 9 })],
-      skipDuplicates: true,
-    });
+    expect(tx.activity.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ tripId: 9, locationId: 42 }) })
+    );
+    expect(tx.entityLink.createMany).not.toHaveBeenCalled();
     expect(result.created).toBe(1);
     expect(result.defaultTimezone).toEqual({ zone: 'Europe/Paris', source: 'trip' });
   });

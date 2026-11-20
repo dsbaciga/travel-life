@@ -77,6 +77,8 @@ interface TripEntities {
     description: string | null;
     startTime: Date | null;
     endTime: Date | null;
+    // Where the activity already is (direct FK); an activity with a place gets no place suggestion
+    locationId: number | null;
   }>;
   lodging: Array<{
     id: number;
@@ -84,6 +86,7 @@ interface TripEntities {
     address: string | null;
     checkInDate: Date;
     checkOutDate: Date;
+    locationId: number | null;
   }>;
   transportation: Array<{
     id: number;
@@ -364,7 +367,9 @@ function suggestNameLinks(entities: TripEntities, existing: ExistingLinkSet): Li
   const suggestions: LinkSuggestion[] = [];
 
   // ACTIVITY → LOCATION: activity name/description mentions location name
+  // (accepting one sets the activity's locationId; skipped when it already has a place)
   for (const activity of entities.activities) {
+    if (activity.locationId != null) continue;
     for (const location of entities.locations) {
       if (isAlreadyLinked(existing, 'ACTIVITY', activity.id, 'LOCATION', location.id)) continue;
 
@@ -391,6 +396,7 @@ function suggestNameLinks(entities: TripEntities, existing: ExistingLinkSet): Li
 
   // LODGING → LOCATION: lodging name or address mentions location name
   for (const lodging of entities.lodging) {
+    if (lodging.locationId != null) continue;
     for (const location of entities.locations) {
       if (isAlreadyLinked(existing, 'LODGING', lodging.id, 'LOCATION', location.id)) continue;
 
@@ -721,11 +727,11 @@ export const aiSuggestionService = {
       }),
       prisma.activity.findMany({
         where: { tripId },
-        select: { id: true, name: true, description: true, startTime: true, endTime: true },
+        select: { id: true, name: true, description: true, startTime: true, endTime: true, locationId: true },
       }),
       prisma.lodging.findMany({
         where: { tripId },
-        select: { id: true, name: true, address: true, checkInDate: true, checkOutDate: true },
+        select: { id: true, name: true, address: true, checkInDate: true, checkOutDate: true, locationId: true },
       }),
       prisma.transportation.findMany({
         where: { tripId },
@@ -741,9 +747,21 @@ export const aiSuggestionService = {
       }),
     ]);
 
-    // Build existing-link set for fast lookup
+    // Build existing-link set for fast lookup. An activity/lodging place (FK) counts as a link.
+    const placeLinks: Array<{ sourceType: EntityType; sourceId: number; targetType: EntityType; targetId: number }> = [
+      ...rawActivities.flatMap((a) =>
+        a.locationId != null
+          ? [{ sourceType: 'ACTIVITY' as const, sourceId: a.id, targetType: 'LOCATION' as const, targetId: a.locationId }]
+          : []
+      ),
+      ...rawLodging.flatMap((l) =>
+        l.locationId != null
+          ? [{ sourceType: 'LODGING' as const, sourceId: l.id, targetType: 'LOCATION' as const, targetId: l.locationId }]
+          : []
+      ),
+    ];
     const existing: ExistingLinkSet = new Set(
-      existingLinks.flatMap((l) => [
+      [...existingLinks, ...placeLinks].flatMap((l) => [
         linkKey(l.sourceType, l.sourceId, l.targetType, l.targetId),
         linkKey(l.targetType, l.targetId, l.sourceType, l.sourceId),
       ])
@@ -772,6 +790,7 @@ export const aiSuggestionService = {
         description: a.description,
         startTime: a.startTime,
         endTime: a.endTime,
+        locationId: a.locationId,
       })),
       lodging: rawLodging.map((lo) => ({
         id: lo.id,
@@ -779,6 +798,7 @@ export const aiSuggestionService = {
         address: lo.address,
         checkInDate: lo.checkInDate,
         checkOutDate: lo.checkOutDate,
+        locationId: lo.locationId,
       })),
       transportation: rawTransportation.map((t) => ({
         id: t.id,

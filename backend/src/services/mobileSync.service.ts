@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
+import { findSyntheticLocationLinks } from './_shared/entityLocationLinks';
 
 /** Only the live fields the Today screen shows; not the tracking internals. */
 const flightTrackingSelect = {
@@ -142,7 +143,13 @@ class MobileSyncService {
       prisma.checklistItem.findMany({
         where: { checklistId: { in: checklistIds }, ...changed },
       }),
-      prisma.entityLink.findMany({ where: tripScope }),
+      // The place of an activity/lodging is its own `locationId` (carried on the rows). It is also
+      // listed here as a synthetic OCCURRED_AT link (negative id) so app versions that read the
+      // place from the link graph keep working; newer code prefers `locationId`.
+      Promise.all([
+        findSyntheticLocationLinks(tripId),
+        prisma.entityLink.findMany({ where: tripScope }),
+      ]).then(([synthetic, rows]) => [...synthetic, ...rows]),
       prisma.location.findMany({ where: tripScope, select: { id: true } }),
       prisma.photoAlbum.findMany({ where: tripScope, select: { id: true } }),
       prisma.lodging.findMany({ where: tripScope, select: { id: true } }),

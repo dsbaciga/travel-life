@@ -600,23 +600,12 @@ class TripValidatorService {
   private async checkMissingInformation(trip: TripWithRelations, dismissedSet: Set<string>): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
 
-    type ActivityRecord = { id: number; startTime: Date | null; allDay: boolean };
+    type ActivityRecord = { id: number; startTime: Date | null; allDay: boolean; locationId: number | null };
     const activities = trip.activities as ActivityRecord[];
 
-    // Activities without locations (now checked via EntityLink system)
-    const activityIds = activities.map((a: ActivityRecord) => a.id);
-    if (activityIds.length > 0) {
-      const activityLocationLinks = await prisma.entityLink.findMany({
-        where: {
-          tripId: trip.id,
-          sourceType: 'ACTIVITY',
-          sourceId: { in: activityIds },
-          targetType: 'LOCATION',
-        },
-        select: { sourceId: true },
-      });
-      const activitiesWithLocation = new Set(activityLocationLinks.map((l: { sourceId: number }) => l.sourceId));
-      const activitiesWithoutLocation = activities.filter((a: ActivityRecord) => !activitiesWithLocation.has(a.id));
+    // Activities without locations (the activity's own locationId)
+    if (activities.length > 0) {
+      const activitiesWithoutLocation = activities.filter((a: ActivityRecord) => a.locationId == null);
 
       if (activitiesWithoutLocation.length > 0) {
         const issueKey = 'activities_without_location';
@@ -732,7 +721,7 @@ class TripValidatorService {
   private async checkTravelTimeAlerts(trip: TripWithRelations, dismissedSet: Set<string>): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
 
-    type TravelActivityRecord = { id: number; name: string; startTime: Date | null; endTime: Date | null };
+    type TravelActivityRecord = { id: number; name: string; startTime: Date | null; endTime: Date | null; locationId: number | null };
     const activities = trip.activities as TravelActivityRecord[];
 
     // Get activities with times, sorted by time
@@ -744,25 +733,13 @@ class TripValidatorService {
       return issues;
     }
 
-    // Get location links for these activities (via EntityLink system)
-    const activityIds = activitiesWithTimes.map((a: TravelActivityRecord) => a.id);
-    const locationLinks = await prisma.entityLink.findMany({
-      where: {
-        tripId: trip.id,
-        sourceType: 'ACTIVITY',
-        sourceId: { in: activityIds },
-        targetType: 'LOCATION',
-      },
-    });
-
-    // Build a map of activity ID -> location ID
-    type LinkRecord = { sourceId: number; targetId: number };
+    // Build a map of activity ID -> location ID (the activity's own locationId)
     const activityLocationMap = new Map<number, number>();
-    (locationLinks as LinkRecord[]).forEach((link: LinkRecord) => {
-      activityLocationMap.set(link.sourceId, link.targetId);
-    });
+    for (const a of activitiesWithTimes) {
+      if (a.locationId != null) activityLocationMap.set(a.id, a.locationId);
+    }
 
-    // Filter to only activities that have linked locations
+    // Filter to only activities that have a location
     const activitiesWithLocationIds = activitiesWithTimes.filter((a: TravelActivityRecord) => activityLocationMap.has(a.id));
 
     if (activitiesWithLocationIds.length < 2) {

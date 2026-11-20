@@ -590,7 +590,7 @@ describe('BackupService', () => {
       expect(result.checklists).toHaveLength(0);
     });
 
-    it('BKP-012: exports v1.6.0 fields (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
+    it('BKP-012: exports v1.7.0 fields (incl. activity/lodging locationId) (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
       mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
       mockPrisma.trip.findUnique.mockResolvedValue({
         id: 1,
@@ -619,6 +619,7 @@ describe('BackupService', () => {
           {
             id: 1,
             parentId: null,
+            locationId: 7,
             name: 'Ramen Dinner',
             description: null,
             category: 'Dining',
@@ -675,6 +676,7 @@ describe('BackupService', () => {
         lodging: [
           {
             id: 1,
+            locationId: 8,
             type: 'hotel',
             name: 'Ryokan',
             address: null,
@@ -747,7 +749,7 @@ describe('BackupService', () => {
 
       const result = await createBackup(1);
 
-      expect(result.version).toBe('1.6.0');
+      expect(result.version).toBe('1.7.0');
       expect(result.user.dietaryPreferences).toEqual(['gluten-free']);
       expect(result.user.useCustomMapStyle).toBe(false);
       expect(result.user.baseCurrency).toBe('USD');
@@ -763,6 +765,8 @@ describe('BackupService', () => {
       expect(trip.budget).toBe(5000);
       expect(trip.budgetCurrency).toBe('USD');
       expect(trip.countryCode).toBe('JP');
+      expect(trip.activities![0].locationId).toBe(7);
+      expect(trip.lodging![0].locationId).toBe(8);
       expect(trip.activities![0].dietaryTags).toEqual(['pork']);
       expect(trip.activities![0].exchangeRate).toBe(0.0067);
       expect(trip.transportation![0].baseAmount).toBe(93.8);
@@ -772,7 +776,7 @@ describe('BackupService', () => {
       expect(trip.expenses![0].description).toBe('Suica top-up');
       expect(trip.emergencyInfo?.insuranceProvider).toBe('WorldNomads');
 
-      // Validate that BackupDataSchema accepts the full v1.6.0 output
+      // Validate that BackupDataSchema accepts the full v1.7.0 output
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
 

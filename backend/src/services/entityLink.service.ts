@@ -3,6 +3,10 @@ import prisma from '../config/database';
 import logger from '../config/logger';
 import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from '../services/_shared/tripAccess';
+import {
+  decodeSyntheticLocationLinkId,
+  findSyntheticLocationLinks,
+} from '../services/_shared/entityLocationLinks';
 
 // Type for Prisma transaction client
 type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -429,16 +433,81 @@ function getDefaultRelationship(
   if (sourceType === 'PHOTO' && (targetType === 'PHOTO_ALBUM' || targetType === 'JOURNAL_ENTRY')) {
     return 'FEATURED_IN';
   }
-  // Activity/lodging occurred at location
-  if ((sourceType === 'ACTIVITY' || sourceType === 'LODGING') && targetType === 'LOCATION') {
-    return 'OCCURRED_AT';
-  }
+  // Note: "activity/lodging is at a location" is the entity's own locationId, not a link. A link
+  // between the two that is stored as a row is a loose RELATED association.
   // Journal documents entities
   if (sourceType === 'JOURNAL_ENTRY') {
     return 'DOCUMENTS';
   }
   // Default
   return 'RELATED';
+}
+
+type LocationClaim = 'claimed' | 'already' | 'none';
+
+/**
+ * Compatibility for clients that still express "activity/lodging is at location" as a link.
+ * When `a` and `b` are an ACTIVITY/LODGING and a LOCATION (either order) and the entity has no
+ * `locationId` yet, sets it (atomically) and returns 'claimed': no link row is stored. Returns
+ * 'already' when the entity is already at that very location and 'none' when the pair is not a
+ * place pair or the entity is at a different location (the link is then an ordinary association).
+ */
+async function claimEntityLocation(
+  client: TransactionClient | typeof prisma,
+  tripId: number,
+  a: { type: EntityType; id: number },
+  b: { type: EntityType; id: number }
+): Promise<LocationClaim> {
+  const [entity, location] = a.type === 'LOCATION' ? [b, a] : [a, b];
+  if (location.type !== 'LOCATION') return 'none';
+
+  if (entity.type === 'ACTIVITY') {
+    const { count } = await client.activity.updateMany({
+      where: { id: entity.id, tripId, locationId: null },
+      data: { locationId: location.id },
+    });
+    if (count === 1) return 'claimed';
+    const row = await client.activity.findFirst({ where: { id: entity.id, tripId }, select: { locationId: true } });
+    return row?.locationId === location.id ? 'already' : 'none';
+  }
+  if (entity.type === 'LODGING') {
+    const { count } = await client.lodging.updateMany({
+      where: { id: entity.id, tripId, locationId: null },
+      data: { locationId: location.id },
+    });
+    if (count === 1) return 'claimed';
+    const row = await client.lodging.findFirst({ where: { id: entity.id, tripId }, select: { locationId: true } });
+    return row?.locationId === location.id ? 'already' : 'none';
+  }
+  return 'none';
+}
+
+/**
+ * Compatibility for clients that delete the old place link by its entity pair: clears the
+ * entity's `locationId` when it points at that location. True when something was cleared.
+ */
+async function releaseEntityLocation(
+  tripId: number,
+  a: { type: EntityType; id: number },
+  b: { type: EntityType; id: number }
+): Promise<boolean> {
+  const [entity, location] = a.type === 'LOCATION' ? [b, a] : [a, b];
+  if (location.type !== 'LOCATION') return false;
+  if (entity.type === 'ACTIVITY') {
+    const { count } = await prisma.activity.updateMany({
+      where: { id: entity.id, tripId, locationId: location.id },
+      data: { locationId: null },
+    });
+    return count > 0;
+  }
+  if (entity.type === 'LODGING') {
+    const { count } = await prisma.lodging.updateMany({
+      where: { id: entity.id, tripId, locationId: location.id },
+      data: { locationId: null },
+    });
+    return count > 0;
+  }
+  return false;
 }
 
 export const entityLinkService = {
@@ -460,6 +529,35 @@ export const entityLinkService = {
     // Prevent self-linking
     if (data.sourceType === data.targetType && data.sourceId === data.targetId) {
       throw new AppError('Cannot link an entity to itself', 400);
+    }
+
+    // Older clients express "activity/lodging is at location" as a link: set the FK instead and
+    // answer in the link shape (the response link is synthetic, see entityLocationLinks.ts).
+    const claim = await claimEntityLocation(
+      prisma,
+      data.tripId,
+      { type: data.sourceType, id: data.sourceId },
+      { type: data.targetType, id: data.targetId }
+    );
+    if (claim === 'already') {
+      throw new AppError('Link already exists between these entities', 400);
+    }
+    if (claim === 'claimed') {
+      const entityIsSource = data.sourceType !== 'LOCATION';
+      const entityType = entityIsSource ? data.sourceType : data.targetType;
+      const entityId = entityIsSource ? data.sourceId : data.targetId;
+      const [synthetic] = await findSyntheticLocationLinks(data.tripId, {
+        entity: { type: entityType as 'ACTIVITY' | 'LODGING', id: entityId },
+      });
+      return entityIsSource
+        ? synthetic
+        : {
+            ...synthetic,
+            sourceType: 'LOCATION',
+            sourceId: synthetic.targetId,
+            targetType: entityType,
+            targetId: entityId,
+          };
     }
 
     // Determine relationship if not provided
@@ -545,9 +643,25 @@ export const entityLinkService = {
 
       skipped = data.targets.length - newLinks.length;
 
-      if (newLinks.length > 0) {
+      // Place links from older clients set the FK of an entity that has none yet.
+      let claimedCount = 0;
+      const rowLinks: typeof newLinks = [];
+      for (const t of newLinks) {
+        const claim = await claimEntityLocation(
+          tx,
+          data.tripId,
+          { type: data.sourceType, id: data.sourceId },
+          { type: t.targetType, id: t.targetId }
+        );
+        if (claim === 'claimed') claimedCount++;
+        else if (claim === 'already') skipped++;
+        else rowLinks.push(t);
+      }
+      created += claimedCount;
+
+      if (rowLinks.length > 0) {
         await tx.entityLink.createMany({
-          data: newLinks.map(t => ({
+          data: rowLinks.map(t => ({
             tripId: data.tripId,
             sourceType: data.sourceType,
             sourceId: data.sourceId,
@@ -558,7 +672,7 @@ export const entityLinkService = {
             notes: t.notes,
           })),
         });
-        created = newLinks.length;
+        created += rowLinks.length;
       }
     });
 
@@ -637,7 +751,7 @@ export const entityLinkService = {
   ): Promise<EnrichedEntityLink[]> {
     await verifyTripAccessWithPermission(userId, data.tripId, 'view');
 
-    const links = await prisma.entityLink.findMany({
+    const rowLinks = await prisma.entityLink.findMany({
       where: {
         tripId: data.tripId,
         sourceType: data.sourceType,
@@ -646,6 +760,17 @@ export const entityLinkService = {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+    // The entity's place (FK) is shown as a link, so clients that predate the FK still see it.
+    const links =
+      (data.sourceType === 'ACTIVITY' || data.sourceType === 'LODGING') &&
+      (data.targetType === undefined || data.targetType === 'LOCATION')
+        ? [
+            ...(await findSyntheticLocationLinks(data.tripId, {
+              entity: { type: data.sourceType, id: data.sourceId },
+            })),
+            ...rowLinks,
+          ]
+        : rowLinks;
 
     // Batch fetch all target entity details
     const targetEntities = links.map(link => ({
@@ -675,7 +800,7 @@ export const entityLinkService = {
   ): Promise<EnrichedEntityLink[]> {
     await verifyTripAccessWithPermission(userId, data.tripId, 'view');
 
-    const links = await prisma.entityLink.findMany({
+    const rowLinks = await prisma.entityLink.findMany({
       where: {
         tripId: data.tripId,
         targetType: data.targetType,
@@ -684,6 +809,16 @@ export const entityLinkService = {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+    // Activities and lodgings at this location (FK) are shown as links for older clients.
+    const links =
+      data.targetType === 'LOCATION'
+        ? [
+            ...(await findSyntheticLocationLinks(data.tripId, { locationId: data.targetId })).filter(
+              (l) => data.sourceType === undefined || l.sourceType === data.sourceType
+            ),
+            ...rowLinks,
+          ]
+        : rowLinks;
 
     // Batch fetch all source entity details
     const sourceEntities = links.map(link => ({
@@ -771,6 +906,13 @@ export const entityLinkService = {
     });
 
     if (!link) {
+      // An older client deleting the place link of an activity/lodging: clear the FK.
+      const released = await releaseEntityLocation(
+        data.tripId,
+        { type: data.sourceType, id: data.sourceId },
+        { type: data.targetType, id: data.targetId }
+      );
+      if (released) return;
       throw new AppError('Link not found', 404);
     }
 
@@ -784,6 +926,19 @@ export const entityLinkService = {
    */
   async deleteLinkById(userId: number, tripId: number, linkId: number): Promise<void> {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    const synthetic = decodeSyntheticLocationLinkId(linkId);
+    if (synthetic) {
+      const where = { id: synthetic.entityId, tripId, locationId: { not: null } };
+      const { count } =
+        synthetic.type === 'ACTIVITY'
+          ? await prisma.activity.updateMany({ where, data: { locationId: null } })
+          : await prisma.lodging.updateMany({ where, data: { locationId: null } });
+      if (count === 0) {
+        throw new AppError('Link not found', 404);
+      }
+      return;
+    }
 
     const link = await prisma.entityLink.findFirst({
       where: { id: linkId, tripId },
@@ -808,6 +963,19 @@ export const entityLinkService = {
     data: UpdateEntityLinkInput
   ): Promise<EntityLinkResponse> {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    // The place link of an activity/lodging is its FK; there is nothing to store a
+    // relationship or note on, so the update is acknowledged unchanged.
+    const synthetic = decodeSyntheticLocationLinkId(linkId);
+    if (synthetic) {
+      const [current] = await findSyntheticLocationLinks(tripId, {
+        entity: { type: synthetic.type, id: synthetic.entityId },
+      });
+      if (!current) {
+        throw new AppError('Link not found', 404);
+      }
+      return current;
+    }
 
     const link = await prisma.entityLink.findFirst({
       where: { id: linkId, tripId },
@@ -853,7 +1021,25 @@ export const entityLinkService = {
       },
     });
 
-    return { deleted: result.count };
+    // The place (FK) is shown as a link too, so "all links" includes it.
+    let cleared = 0;
+    if (entityType === 'ACTIVITY') {
+      cleared = (await prisma.activity.updateMany({
+        where: { id: entityId, tripId, locationId: { not: null } },
+        data: { locationId: null },
+      })).count;
+    } else if (entityType === 'LODGING') {
+      cleared = (await prisma.lodging.updateMany({
+        where: { id: entityId, tripId, locationId: { not: null } },
+        data: { locationId: null },
+      })).count;
+    } else if (entityType === 'LOCATION') {
+      cleared =
+        (await prisma.activity.updateMany({ where: { tripId, locationId: entityId }, data: { locationId: null } })).count +
+        (await prisma.lodging.updateMany({ where: { tripId, locationId: entityId }, data: { locationId: null } })).count;
+    }
+
+    return { deleted: result.count + cleared };
   },
 
   /**
@@ -914,11 +1100,19 @@ export const entityLinkService = {
       },
     });
 
-    return links.map(link => ({
+    const mapped = links.map(link => ({
       sourceType: link.sourceType,
       sourceId: link.sourceId,
       targetId: link.targetId,
     }));
+    if (targetType !== 'LOCATION') return mapped;
+
+    const synthetic = (await findSyntheticLocationLinks(tripId)).map(link => ({
+      sourceType: link.sourceType,
+      sourceId: link.sourceId,
+      targetId: link.targetId,
+    }));
+    return [...synthetic, ...mapped];
   },
 
   /**
@@ -933,12 +1127,13 @@ export const entityLinkService = {
 
     // Safety limit to prevent runaway queries on corrupted data
     const SAFETY_LIMIT = 10000;
-    const links = await prisma.entityLink.findMany({
+    const rowLinks = await prisma.entityLink.findMany({
       where: { tripId },
       take: SAFETY_LIMIT,
     });
+    const links = [...(await findSyntheticLocationLinks(tripId)), ...rowLinks];
 
-    if (links.length === SAFETY_LIMIT) {
+    if (rowLinks.length === SAFETY_LIMIT) {
       logger.warn(`Entity link summary for trip ${tripId} hit the ${SAFETY_LIMIT} row safety limit. Results may be incomplete.`);
     }
 
