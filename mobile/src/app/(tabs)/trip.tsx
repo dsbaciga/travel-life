@@ -4,7 +4,6 @@
  */
 import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
-import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
@@ -13,8 +12,10 @@ import { dayKeyInTimezone, formatDateOnly, resolveTimezone } from '@travel-life/
 
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
+import Icon from '@/components/Icon';
 import MapToButton from '@/components/MapToButton';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import { SkeletonList } from '@/components/Skeleton';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, PendingDot, Row, Screen } from '@/components/ui';
 import {
   adjustTime,
   promoteSavedLink,
@@ -23,6 +24,7 @@ import {
 } from '@/domain/mutations';
 import { buildTripDays, unscheduledItems, type TimelineItem } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { successFeedback, tapFeedback, warningFeedback } from '@/lib/feedback';
 import { ENTITY_FORMS, type FormKind } from '@/lib/entityForms';
 import {
   useActiveTrip,
@@ -34,7 +36,10 @@ import {
 } from '@/lib/hooks';
 import { api } from '@/lib/session';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
-import { spacing, TOUCH_TARGET, usePalette } from '@/lib/theme';
+import { FAB_CLEARANCE, spacing, TOUCH_TARGET, usePalette, useRefreshColors } from '@/lib/theme';
+import { entityTypeLabel } from '@/lib/labels';
+import { formatMoney } from '@/lib/summaries';
+import { showToast } from '@/lib/toast';
 
 type Mode = 'days' | 'types' | 'checklists' | 'review';
 
@@ -71,9 +76,10 @@ function rowTitle(kind: FormKind, row: Record<string, unknown>): string {
 
 export default function TripScreen() {
   const palette = usePalette();
+  const refreshColors = useRefreshColors();
   const now = useNow(60000);
   const userTimezone = useUserTimezone();
-  const { data: trip } = useActiveTrip();
+  const { data: trip, isLoading: tripLoading } = useActiveTrip();
   const { data: timeline } = useTripTimeline(trip);
   const { data: dirty } = useDirtyKeys(trip?.id);
   const syncing = useSync((state) => state.syncing);
@@ -119,14 +125,16 @@ export default function TripScreen() {
   const moveActivity = useCallback(
     async (dayKey: string, entityId: EntityId, direction: -1 | 1) => {
       const day = days.find((d) => d.dayKey === dayKey);
-      if (!day) return;
+      if (!day) return null;
       const order = day.items.filter((i) => i.type === 'ACTIVITY' && !i.allDay).map((i) => i.entityId);
       const from = order.findIndex((id) => String(id) === String(entityId));
       const to = from + direction;
-      if (from < 0 || to < 0 || to >= order.length) return;
+      if (from < 0 || to < 0 || to >= order.length) return null;
+      const before = [...order];
       [order[from], order[to]] = [order[to], order[from]];
       await reorderActivities(await getDb(), order);
       await notifyLocalChange();
+      return before;
     },
     [days]
   );
@@ -135,6 +143,12 @@ export default function TripScreen() {
   const addToDay = useCallback(
     (dayKey: string) => {
       if (!trip) return;
+      const dayLabel = formatDateOnly(`${dayKey}T00:00:00Z`, { weekday: 'short', month: 'short', day: 'numeric' });
+      const scheduled = async () => {
+        tapFeedback();
+        await notifyLocalChange();
+        showToast(`Added to ${dayLabel}`);
+      };
       const actions = [
         ...unscheduled
           .filter((item) => item.entityKind === 'ACTIVITY' || item.entityKind === 'CUSTOM_ITEM')
@@ -149,7 +163,7 @@ export default function TripScreen() {
                 { type: 'moveToDay', dayKey },
                 item.timezone
               );
-              await notifyLocalChange();
+              await scheduled();
             },
           })),
         ...savedLinks.slice(0, 12).map((link) => ({
@@ -161,7 +175,7 @@ export default function TripScreen() {
             if (created) {
               await adjustTime(await getDb(), 'ACTIVITY', created.id, { type: 'moveToDay', dayKey }, tripZone);
             }
-            await notifyLocalChange();
+            await scheduled();
           },
         })),
         {
@@ -182,17 +196,28 @@ export default function TripScreen() {
     (entity: PendingEntity) => {
       const decide = (verb: 'accept' | 'reject') => async () => {
         await api.request(`/pdf-imports/pending/${entity.id}/${verb}`, { method: 'POST', body: {} });
+        if (verb === 'accept') successFeedback();
+        else warningFeedback();
+        showToast(verb === 'accept' ? 'Added to the trip' : 'Rejected');
         await refetchPending();
         // Accepting creates a real entity server-side; pull it into the mirror.
         if (verb === 'accept') void syncNow();
       };
-      showActionSheet(String(entity.data?.name ?? entity.data?.title ?? entity.entityType), [
+      showActionSheet(String(entity.data?.name ?? entity.data?.title ?? entityTypeLabel(entity.entityType)), [
         { label: 'Accept and add to trip', onPress: decide('accept') },
         { label: 'Reject', destructive: true, onPress: decide('reject') },
       ]);
     },
     [refetchPending]
   );
+
+  if (tripLoading) {
+    return (
+      <Screen>
+        <SkeletonList />
+      </Screen>
+    );
+  }
 
   if (!trip) {
     return (
@@ -205,18 +230,25 @@ export default function TripScreen() {
 
   const modeBar = (
     <View style={styles.modeBar}>
-      <AppText variant="title" numberOfLines={1}>
-        {trip.title}
-      </AppText>
-      <AppText muted>
-        {formatDateOnly(trip.startDate)} – {formatDateOnly(trip.endDate)}
-      </AppText>
+      <Row style={styles.between}>
+        <View style={styles.flex}>
+          <AppText variant="title" numberOfLines={1}>
+            {trip.title}
+          </AppText>
+          <AppText muted>
+            {formatDateOnly(trip.startDate)} – {formatDateOnly(trip.endDate)}
+          </AppText>
+        </View>
+        {/* Photos opens its own screen, so it sits with the other header
+            buttons rather than among the chips that switch this view. */}
+        <IconButton icon="photos" accessibilityLabel="Trip photos" onPress={() => router.push('/camera-roll')} />
+        <IconButton icon="settings" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
+      </Row>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         <Chip label="Day by day" selected={mode === 'days'} onPress={() => setMode('days')} />
         <Chip label="By type" selected={mode === 'types'} onPress={() => setMode('types')} />
         <Chip label="Checklists" selected={mode === 'checklists'} onPress={() => setMode('checklists')} />
         <Chip label="Review queue" selected={mode === 'review'} onPress={() => setMode('review')} />
-        <Chip label="Photos" onPress={() => router.push('/camera-roll')} />
       </ScrollView>
     </View>
   );
@@ -230,7 +262,7 @@ export default function TripScreen() {
           getItemType={(row) => row.type}
           ListHeaderComponent={modeBar}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />}
+          refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} {...refreshColors} />}
           ListEmptyComponent={<EmptyState title="No days yet" message="Set trip dates in the web app, or add an activity." />}
           renderItem={({ item: row }) =>
             row.type === 'header' ? (
@@ -249,7 +281,7 @@ export default function TripScreen() {
                   dayKey={row.dayKey}
                   tripTimezone={tripZone}
                   pending={dirty?.has(`${row.item.entityKind}:${row.item.entityId}`) ?? false}
-                  onMove={(id, direction) => void moveActivity(row.dayKey, id, direction)}
+                  onMove={(id, direction) => moveActivity(row.dayKey, id, direction)}
                 />
               </View>
             )
@@ -309,12 +341,10 @@ export default function TripScreen() {
                   <AppText variant="heading" numberOfLines={1} style={styles.flex}>
                     {rowTitle(typeKind, row)}
                   </AppText>
-                  {dirty?.has(`${typeKind}:${row.id}`) ? <Chip label="Not synced" tone="info" /> : null}
+                  {dirty?.has(`${typeKind}:${row.id}`) ? <PendingDot /> : null}
                 </Row>
-                {typeKind === 'EXPENSE' ? (
-                  <AppText muted>
-                    {String(row.amount)} {String(row.currency ?? '')}
-                  </AppText>
+                {typeKind === 'EXPENSE' && typeof row.amount === 'number' ? (
+                  <AppText muted>{formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}</AppText>
                 ) : null}
                 {typeKind === 'FOOD_LOG' ? (
                   <AppText muted>
@@ -360,13 +390,15 @@ export default function TripScreen() {
                     accessibilityLabel={item.name}
                     style={styles.checkRow}
                     onPress={async () => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+                      tapFeedback();
                       await toggleChecklistItem(await getDb(), item.id, !item.isChecked);
                       await notifyLocalChange();
                     }}>
-                    <AppText variant="heading" color={item.isChecked ? palette.success : palette.textMuted}>
-                      {item.isChecked ? '☑' : '☐'}
-                    </AppText>
+                    <Icon
+                      name={item.isChecked ? 'checked' : 'unchecked'}
+                      size={24}
+                      color={item.isChecked ? palette.success : palette.textMuted}
+                    />
                     <AppText muted={item.isChecked} style={[styles.flex, item.isChecked && styles.struck]}>
                       {item.name}
                     </AppText>
@@ -391,9 +423,12 @@ export default function TripScreen() {
         />
       ) : (
         pending.map((entity) => (
-          <Card key={entity.id} onPress={() => reviewPending(entity)} accessibilityLabel={`Review ${entity.entityType}`}>
+          <Card
+            key={entity.id}
+            onPress={() => reviewPending(entity)}
+            accessibilityLabel={`Review ${entityTypeLabel(entity.entityType).toLowerCase()}`}>
             <AppText variant="label" muted>
-              {entity.entityType}
+              {entityTypeLabel(entity.entityType)}
             </AppText>
             <AppText variant="heading">{String(entity.data?.name ?? entity.data?.title ?? 'Extracted item')}</AppText>
             <AppText muted>Tap to accept or reject</AppText>
@@ -409,7 +444,7 @@ const styles = StyleSheet.create({
   mapTo: { alignSelf: 'flex-start' },
   modeBar: { padding: spacing.lg, gap: spacing.sm },
   chips: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },
-  list: { paddingBottom: 140 },
+  list: { paddingBottom: FAB_CLEARANCE },
   rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   dayHeader: { justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   between: { justifyContent: 'space-between', flexWrap: 'nowrap' },

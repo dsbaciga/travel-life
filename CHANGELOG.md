@@ -17,6 +17,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Mobile app: confirmations and Undo.** Copying a confirmation code, nudging an item's time, moving it to another day, making it all-day, reordering, saving, deleting, adding photos and accepting a PDF booking now show a short message at the bottom of the screen, with a small vibration. Time changes and reorders offer **Undo**.
+- **Mobile app: real icons instead of emoji.** The tab bar, the capture button, timeline badges, Quick capture options, checklists and buttons use Material Symbols on Android (SF Symbols on iOS). They take the theme colours and look the same on every phone, where emoji varied by phone maker. The icon font ships inside the app, so icons work offline.
+- **Mobile app: matching headers.** The headers on forms, Sync, Settings and other pushed screens use the app's light and dark colours instead of plain black or white.
+- **Mobile app: touch ripples.** Cards, buttons, chips and menu rows show the Android touch ripple when tapped.
+- **Mobile app: a calmer Today header.** The row of up to seven sync chips is now one pill that shows whatever most needs attention ("2 conflicts", "Offline · 3 to sync"). Tap it for the Sync screen. The budget is a bar of what has been spent, with a tick where spending would be if it kept pace with the trip, plus the amounts in the budget currency.
+- **Mobile app: Settings is one tap away.** A gear button sits in the Today and Trip headers. Before, Settings was only reachable from the Vault.
+- **Mobile app: faster Quick capture.** Photo, Stop here, Expense and Note are large tiles at the top. Everything else is listed below under More.
+- **Mobile app: Save is always in reach.** On add and edit forms, Save is pinned to the bottom of the screen instead of sitting after the last field. Delete moved to a trash button in the header.
+- **Mobile app: easier-to-scan timelines.** "Not synced" is a small dot instead of a chip. Directions and the booking code share one line. Cancelled items are struck through.
+- **Mobile app: Trip tab tidy-up.** Trip photos opens from a header button instead of sitting among the view switches. Expenses in "By type" show as money in their currency (€4.50). The review queue says "Transport", "Stay" or "Place" instead of "TRANSPORTATION".
+- **Mobile app: a roomier map.** The filters sit on one line and the rest of the panel folds away. New buttons jump to where you are and fit every place on screen. On iOS the map now follows the app's own light or dark setting instead of guessing from a colour.
+- **Mobile app: a clearer day strip on Today.** Each day shows its weekday and date, with a dot under today. The selected day scrolls to the centre.
+- **Mobile app: no more blank screens while loading.** Today, Trip, Map and the add/edit forms show placeholder cards while they read the phone's data. Before, they showed an empty screen, and Trip and Map briefly said "No trip selected".
+- **Mobile app: grouped forms.** Activity, place, transport, stay and custom-item forms are split under headings such as When, Booking and Notes.
+- **Mobile app: Undo for transit logs.** "Departed now", "Arrived now" and "Mark cancelled" can be undone from the message that confirms them.
+- **Mobile app: dark map on Android.** The map follows dark mode on Android too, in the app's navy colours.
+- **Mobile app: more polish.**
+  - The capture button sits just above the real tab bar on every phone.
+  - On iPhone, confirmation messages show above pop-up screens such as Quick capture.
+  - Icons draw straight away instead of flashing blank in scrolling lists.
+  - Menus show an icon beside each choice.
+  - The remove buttons on photos and phrasebook languages use the same icon set.
+- **Mobile app: smaller touches.** The pull-to-refresh spinner uses the app colour. Menus have a handle and close with a swipe down. Destructive choices such as "Mark cancelled" are always listed last, just above Cancel.
+
 ## [8.1.1] - 2026-11-20
 
 ### Added

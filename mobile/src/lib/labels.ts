@@ -51,3 +51,18 @@ export function splitLeadingEmoji(label: string): SplitLabel {
   // A label that is only an emoji stays as it is: there are no words to protect.
   return text === '' ? { icon: null, text: label } : { icon: label.slice(0, end), text };
 }
+
+const ENTITY_TYPE_LABELS: Readonly<Record<string, string>> = {
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stay',
+  ACTIVITY: 'Activity',
+  LOCATION: 'Place',
+};
+
+/** "TRANSPORTATION" -> "Transport"; an unknown type becomes "Custom item"-style title case. */
+export function entityTypeLabel(type: string): string {
+  const known = ENTITY_TYPE_LABELS[type];
+  if (known) return known;
+  const words = type.toLowerCase().replace(/_/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : type;
+}

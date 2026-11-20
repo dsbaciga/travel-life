@@ -45,6 +45,11 @@ export type FieldType =
   | 'location';
 
 export interface FormField {
+  /**
+   * Set on the first field of a group: the form shows this as a heading above
+   * it ("When", "Booking"). Fields without one stay in the group above.
+   */
+  section?: string;
   key: string;
   label: string;
   type: FieldType;
@@ -89,16 +94,16 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     schema: activityFormSchema,
     defaults: { name: '', allDay: false },
     fields: [
-      { key: 'name', label: 'Name', type: 'text', placeholder: 'What are you doing?' },
+      { section: 'What', key: 'name', label: 'Name', type: 'text', placeholder: 'What are you doing?' },
       { key: 'category', label: 'Category', type: 'text', placeholder: 'Dining, Sightseeing…' },
-      { key: 'allDay', label: 'All day', type: 'boolean' },
+      { section: 'When', key: 'allDay', label: 'All day', type: 'boolean' },
       { key: 'startTime', label: 'Starts', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'endTime', label: 'Ends', type: 'datetime', timezoneKey: 'timezone' },
-      { key: 'cost', label: 'Cost', type: 'number' },
+      { section: 'Booking', key: 'cost', label: 'Cost', type: 'number' },
       { key: 'currency', label: 'Currency', type: 'text', placeholder: 'EUR' },
       { key: 'bookingReference', label: 'Booking reference', type: 'text' },
       { key: 'bookingUrl', label: 'Booking link', type: 'url' },
-      { key: 'notes', label: 'Notes', type: 'multiline' },
+      { section: 'Notes', key: 'notes', label: 'Notes', type: 'multiline' },
     ],
   },
   LOCATION: {
@@ -108,15 +113,15 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     schema: locationFormSchema,
     defaults: { name: '', isFavorite: false },
     fields: [
-      { key: 'name', label: 'Name', type: 'text', placeholder: 'Where is this?' },
+      { section: 'Place', key: 'name', label: 'Name', type: 'text', placeholder: 'Where is this?' },
       { key: 'address', label: 'Address', type: 'multiline' },
       { key: 'latitude', label: 'Latitude', type: 'number' },
       { key: 'longitude', label: 'Longitude', type: 'number' },
       { key: 'isFavorite', label: 'Favourite', type: 'boolean' },
-      { key: 'visitDatetime', label: 'Visit time', type: 'datetime', timezoneKey: 'timezone' },
+      { section: 'Visit', key: 'visitDatetime', label: 'Visit time', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'visitDurationMinutes', label: 'Visit length (minutes)', type: 'number' },
       { key: 'openingHours', label: 'Opening hours', type: 'text', placeholder: 'Mo-Fr 09:00-17:00' },
-      { key: 'notes', label: 'Notes', type: 'multiline' },
+      { section: 'Notes', key: 'notes', label: 'Notes', type: 'multiline' },
     ],
   },
   TRANSPORTATION: {
@@ -126,24 +131,24 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     schema: transportationFormSchema,
     defaults: { type: 'train', status: 'on_time' },
     fields: [
-      { key: 'type', label: 'Type', type: 'select', options: TRANSPORTATION_TYPES },
+      { section: 'Route', key: 'type', label: 'Type', type: 'select', options: TRANSPORTATION_TYPES },
       { key: 'startLocationId', label: 'From (saved location)', type: 'location' },
       { key: 'startLocationText', label: 'From (text)', type: 'text' },
       { key: 'endLocationId', label: 'To (saved location)', type: 'location' },
       { key: 'endLocationText', label: 'To (text)', type: 'text' },
-      { key: 'scheduledStart', label: 'Scheduled departure', type: 'datetime', timezoneKey: 'startTimezone' },
+      { section: 'Schedule', key: 'scheduledStart', label: 'Scheduled departure', type: 'datetime', timezoneKey: 'startTimezone' },
       { key: 'scheduledEnd', label: 'Scheduled arrival', type: 'datetime', timezoneKey: 'endTimezone' },
       { key: 'actualStart', label: 'Actual departure', type: 'datetime', timezoneKey: 'startTimezone' },
       { key: 'actualEnd', label: 'Actual arrival', type: 'datetime', timezoneKey: 'endTimezone' },
       { key: 'status', label: 'Status', type: 'select', options: TRANSPORTATION_STATUSES },
       { key: 'delayMinutes', label: 'Delay (minutes)', type: 'number' },
-      { key: 'company', label: 'Carrier', type: 'text' },
+      { section: 'Booking', key: 'company', label: 'Carrier', type: 'text' },
       { key: 'referenceNumber', label: 'Flight / train number', type: 'text' },
       { key: 'seatNumber', label: 'Seat', type: 'text' },
       { key: 'bookingReference', label: 'Confirmation', type: 'text' },
       { key: 'cost', label: 'Cost', type: 'number' },
       { key: 'currency', label: 'Currency', type: 'text', placeholder: 'EUR' },
-      { key: 'notes', label: 'Notes', type: 'multiline' },
+      { section: 'Notes', key: 'notes', label: 'Notes', type: 'multiline' },
     ],
   },
   LODGING: {
@@ -153,16 +158,16 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     schema: lodgingFormSchema,
     defaults: { type: 'hotel', name: '' },
     fields: [
-      { key: 'type', label: 'Type', type: 'select', options: LODGING_TYPES },
+      { section: 'Stay', key: 'type', label: 'Type', type: 'select', options: LODGING_TYPES },
       { key: 'name', label: 'Name', type: 'text' },
       { key: 'address', label: 'Address', type: 'multiline' },
-      { key: 'checkInDate', label: 'Check-in', type: 'datetime', timezoneKey: 'timezone' },
+      { section: 'Dates', key: 'checkInDate', label: 'Check-in', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'checkOutDate', label: 'Check-out', type: 'datetime', timezoneKey: 'timezone' },
-      { key: 'confirmationNumber', label: 'Confirmation', type: 'text' },
+      { section: 'Booking', key: 'confirmationNumber', label: 'Confirmation', type: 'text' },
       { key: 'cost', label: 'Cost', type: 'number' },
       { key: 'currency', label: 'Currency', type: 'text', placeholder: 'EUR' },
       { key: 'bookingUrl', label: 'Booking link', type: 'url' },
-      { key: 'notes', label: 'Notes', type: 'multiline' },
+      { section: 'Notes', key: 'notes', label: 'Notes', type: 'multiline' },
     ],
   },
   JOURNAL_ENTRY: {
@@ -198,16 +203,16 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     schema: customItemFormSchema,
     defaults: { name: '', allDay: false },
     fields: [
-      { key: 'name', label: 'Name', type: 'text' },
-      { key: 'allDay', label: 'All day', type: 'boolean' },
+      { section: 'What', key: 'name', label: 'Name', type: 'text' },
+      { section: 'When and where', key: 'allDay', label: 'All day', type: 'boolean' },
       { key: 'startTime', label: 'Starts', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'endTime', label: 'Ends', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'locationId', label: 'Location', type: 'location' },
-      { key: 'cost', label: 'Cost', type: 'number' },
+      { section: 'Booking', key: 'cost', label: 'Cost', type: 'number' },
       { key: 'currency', label: 'Currency', type: 'text', placeholder: 'EUR' },
       { key: 'confirmationNumber', label: 'Confirmation', type: 'text' },
       { key: 'url', label: 'Link', type: 'url' },
-      { key: 'notes', label: 'Notes', type: 'multiline' },
+      { section: 'Notes', key: 'notes', label: 'Notes', type: 'multiline' },
     ],
   },
   EXPENSE: {

@@ -161,7 +161,7 @@ export default function ParkedScreen() {
       <AppText muted>Saves your current GPS position so you can walk straight back.</AppText>
       <Field label="Note" placeholder="Level 3, row C" value={note} onChangeText={setNote} />
       <Row>
-        <Button label={photoUri ? 'Retake photo' : '📷 Add a photo'} variant="secondary" compact onPress={() => void takePhoto()} />
+        <Button label={photoUri ? 'Retake photo' : 'Add a photo'} icon="camera" variant="secondary" compact onPress={() => void takePhoto()} />
         {photoUri ? <Chip label="Photo added" tone="success" /> : null}
       </Row>
       <AppText variant="label" muted>

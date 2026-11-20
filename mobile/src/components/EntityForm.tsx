@@ -2,7 +2,7 @@
  * The generic create/edit form, driven by `ENTITY_FORMS`.
  */
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
 import type { LocationDto } from '@travel-life/shared';
 import {
@@ -172,159 +172,173 @@ export default function EntityForm({
   // Raw text of number inputs, so "12." is not eaten while typing.
   const [numberDrafts, setNumberDrafts] = useState<Record<string, string>>({});
 
+  const renderControl = (field: FormField) => {
+    const value = values[field.key];
+    const error = errors[field.key];
+
+    switch (field.type) {
+      case 'boolean':
+        return (
+          <Row key={field.key} style={styles.switchRow}>
+            <AppText>{field.label}</AppText>
+            <Switch
+              accessibilityLabel={field.label}
+              value={Boolean(value)}
+              onValueChange={(next) => onChange(field.key, next)}
+              trackColor={{ true: palette.primary, false: palette.border }}
+            />
+          </Row>
+        );
+
+      case 'select':
+        return (
+          <View key={field.key} style={styles.block}>
+            <AppText variant="label" muted>
+              {field.label}
+            </AppText>
+            <Row>
+              {(field.options ?? []).map((option) => (
+                <Chip
+                  key={option}
+                  label={option.replace(/_/g, ' ')}
+                  selected={value === option}
+                  onPress={() => onChange(field.key, option)}
+                />
+              ))}
+            </Row>
+            {error ? (
+              <AppText variant="caption" color={palette.danger}>
+                {error}
+              </AppText>
+            ) : null}
+          </View>
+        );
+
+      case 'rating':
+        return (
+          <View key={field.key} style={styles.block}>
+            <AppText variant="label" muted>
+              {field.label}
+            </AppText>
+            <Row>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Pressable
+                  key={star}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${star} star${star === 1 ? '' : 's'}`}
+                  accessibilityState={{ selected: Number(value) >= star }}
+                  onPress={() => onChange(field.key, star)}
+                  style={styles.star}>
+                  <AppText
+                    variant="title"
+                    color={Number(value) >= star ? palette.accent : palette.border}>
+                    ★
+                  </AppText>
+                </Pressable>
+              ))}
+            </Row>
+          </View>
+        );
+
+      case 'datetime':
+      case 'date': {
+        const own = field.timezoneKey ? values[field.timezoneKey] : null;
+        return (
+          <DateTimeField
+            key={field.key}
+            label={field.label}
+            mode={field.type}
+            value={typeof value === 'string' && value ? value : null}
+            timezone={typeof own === 'string' && own ? own : fallbackTimezone}
+            error={error}
+            onChange={(next) => onChange(field.key, next)}
+          />
+        );
+      }
+
+      case 'location':
+        return (
+          <View key={field.key} style={styles.block}>
+            <AppText variant="label" muted>
+              {field.label}
+            </AppText>
+            <Row>
+              <Chip
+                label="None"
+                selected={value === null || value === undefined}
+                onPress={() => onChange(field.key, null)}
+              />
+              {locations.map((location) => (
+                <Chip
+                  key={String(location.id)}
+                  label={location.name}
+                  selected={String(value) === String(location.id)}
+                  onPress={() => onChange(field.key, location.id)}
+                />
+              ))}
+            </Row>
+          </View>
+        );
+
+      case 'number':
+        return (
+          <Field
+            key={field.key}
+            label={field.label}
+            error={error}
+            keyboardType="decimal-pad"
+            placeholder={field.placeholder}
+            value={numberDrafts[field.key] ?? asText(value)}
+            onChangeText={(text) => {
+              setNumberDrafts((prev) => ({ ...prev, [field.key]: text }));
+              const normalized = text.replace(',', '.').trim();
+              if (normalized === '') onChange(field.key, null);
+              else if (Number.isFinite(Number(normalized))) onChange(field.key, Number(normalized));
+            }}
+          />
+        );
+
+      default:
+        return (
+          <Field
+            key={field.key}
+            label={field.label}
+            hideLabel={field.section === field.label}
+            error={error}
+            placeholder={field.placeholder}
+            multiline={field.type === 'multiline'}
+            autoCapitalize={field.type === 'url' ? 'none' : 'sentences'}
+            autoCorrect={field.type !== 'url'}
+            keyboardType={field.type === 'url' ? 'url' : 'default'}
+            value={asText(value)}
+            // An emptied optional field is stored as null, which the update
+            // endpoints read as "clear it".
+            onChangeText={(text) => onChange(field.key, text === '' ? null : text)}
+          />
+        );
+    }
+  };
+
   return (
     <View style={styles.form}>
-      {fields.map((field) => {
-        const value = values[field.key];
-        const error = errors[field.key];
-
-        switch (field.type) {
-          case 'boolean':
-            return (
-              <Row key={field.key} style={styles.switchRow}>
-                <AppText>{field.label}</AppText>
-                <Switch
-                  accessibilityLabel={field.label}
-                  value={Boolean(value)}
-                  onValueChange={(next) => onChange(field.key, next)}
-                  trackColor={{ true: palette.primary, false: palette.border }}
-                />
-              </Row>
-            );
-
-          case 'select':
-            return (
-              <View key={field.key} style={styles.block}>
-                <AppText variant="label" muted>
-                  {field.label}
-                </AppText>
-                <Row>
-                  {(field.options ?? []).map((option) => (
-                    <Chip
-                      key={option}
-                      label={option.replace(/_/g, ' ')}
-                      selected={value === option}
-                      onPress={() => onChange(field.key, option)}
-                    />
-                  ))}
-                </Row>
-                {error ? (
-                  <AppText variant="caption" color={palette.danger}>
-                    {error}
-                  </AppText>
-                ) : null}
-              </View>
-            );
-
-          case 'rating':
-            return (
-              <View key={field.key} style={styles.block}>
-                <AppText variant="label" muted>
-                  {field.label}
-                </AppText>
-                <Row>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Pressable
-                      key={star}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${star} star${star === 1 ? '' : 's'}`}
-                      accessibilityState={{ selected: Number(value) >= star }}
-                      onPress={() => onChange(field.key, star)}
-                      style={styles.star}>
-                      <AppText
-                        variant="title"
-                        color={Number(value) >= star ? palette.accent : palette.border}>
-                        ★
-                      </AppText>
-                    </Pressable>
-                  ))}
-                </Row>
-              </View>
-            );
-
-          case 'datetime':
-          case 'date': {
-            const own = field.timezoneKey ? values[field.timezoneKey] : null;
-            return (
-              <DateTimeField
-                key={field.key}
-                label={field.label}
-                mode={field.type}
-                value={typeof value === 'string' && value ? value : null}
-                timezone={typeof own === 'string' && own ? own : fallbackTimezone}
-                error={error}
-                onChange={(next) => onChange(field.key, next)}
-              />
-            );
-          }
-
-          case 'location':
-            return (
-              <View key={field.key} style={styles.block}>
-                <AppText variant="label" muted>
-                  {field.label}
-                </AppText>
-                <Row>
-                  <Chip
-                    label="None"
-                    selected={value === null || value === undefined}
-                    onPress={() => onChange(field.key, null)}
-                  />
-                  {locations.map((location) => (
-                    <Chip
-                      key={String(location.id)}
-                      label={location.name}
-                      selected={String(value) === String(location.id)}
-                      onPress={() => onChange(field.key, location.id)}
-                    />
-                  ))}
-                </Row>
-              </View>
-            );
-
-          case 'number':
-            return (
-              <Field
-                key={field.key}
-                label={field.label}
-                error={error}
-                keyboardType="decimal-pad"
-                placeholder={field.placeholder}
-                value={numberDrafts[field.key] ?? asText(value)}
-                onChangeText={(text) => {
-                  setNumberDrafts((prev) => ({ ...prev, [field.key]: text }));
-                  const normalized = text.replace(',', '.').trim();
-                  if (normalized === '') onChange(field.key, null);
-                  else if (Number.isFinite(Number(normalized))) onChange(field.key, Number(normalized));
-                }}
-              />
-            );
-
-          default:
-            return (
-              <Field
-                key={field.key}
-                label={field.label}
-                error={error}
-                placeholder={field.placeholder}
-                multiline={field.type === 'multiline'}
-                autoCapitalize={field.type === 'url' ? 'none' : 'sentences'}
-                autoCorrect={field.type !== 'url'}
-                keyboardType={field.type === 'url' ? 'url' : 'default'}
-                value={asText(value)}
-                // An emptied optional field is stored as null, which the update
-                // endpoints read as "clear it".
-                onChangeText={(text) => onChange(field.key, text === '' ? null : text)}
-              />
-            );
-        }
-      })}
+      {fields.map((field) => (
+        <Fragment key={field.key}>
+          {field.section ? (
+            <AppText variant="label" muted style={styles.section} accessibilityRole="header">
+              {field.section.toUpperCase()}
+            </AppText>
+          ) : null}
+          {renderControl(field)}
+        </Fragment>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   form: { gap: spacing.md },
+  // A group heading: extra room above it separates the groups.
+  section: { marginTop: spacing.md, letterSpacing: 0.8 },
   block: { gap: spacing.xs },
   switchRow: { justifyContent: 'space-between', minHeight: TOUCH_TARGET },
   picker: {
