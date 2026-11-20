@@ -21,6 +21,7 @@ import EntityForm from '@/components/EntityForm';
 import EntityLinkSection from '@/components/EntityLinkSection';
 import MapToButton from '@/components/MapToButton';
 import PhotoAttachments, { type PickedPhoto } from '@/components/PhotoAttachments';
+import { SkeletonForm } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { parseIdKey } from '@/db/repository';
 import {
@@ -197,7 +198,13 @@ export default function EntityScreen() {
       </Screen>
     );
   }
-  if (values === null) return <Screen>{null}</Screen>;
+  if (values === null) {
+    return (
+      <Screen>
+        <SkeletonForm fields={Math.min(definition.fields.length, 6)} />
+      </Screen>
+    );
+  }
 
   const save = async () => {
     const checked = validationErrors(kind, values);

@@ -2,14 +2,24 @@
  * Renders the current toast (see `lib/toast.ts`) as a dark pill near the
  * bottom of the screen. Touches outside the pill pass through to the screen.
  */
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tapFeedback } from '../lib/feedback';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
 import { useToast } from '../lib/toast';
 import { AppText } from './ui';
+
+/**
+ * iOS presents modal screens (Quick capture, Trips) in their own window, above
+ * the root view, so a toast drawn in the root view would be hidden behind them.
+ * The full-window overlay sits above every window. Android has one window.
+ */
+function Overlay({ children }: { children: ReactNode }) {
+  return Platform.OS === 'ios' ? <FullWindowOverlay>{children}</FullWindowOverlay> : <Fragment>{children}</Fragment>;
+}
 
 export function ToastHost() {
   const toast = useToast((state) => state.toast);
@@ -32,6 +42,7 @@ export function ToastHost() {
   if (!toast) return null;
 
   return (
+    <Overlay>
     <View
       pointerEvents="box-none"
       style={[styles.host, { bottom: insets.bottom + spacing.lg + bottomOffset }]}>
@@ -68,6 +79,7 @@ export function ToastHost() {
         ) : null}
       </Animated.View>
     </View>
+    </Overlay>
   );
 }
 

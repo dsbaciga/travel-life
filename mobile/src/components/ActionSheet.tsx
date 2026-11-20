@@ -10,12 +10,15 @@ import { Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
+import Icon, { type IconName } from './Icon';
 import { AppText } from './ui';
 
 export interface SheetAction {
   label: string;
   onPress: () => void | Promise<void>;
   destructive?: boolean;
+  /** Leading icon; rows in one sheet either all have one or none do. */
+  icon?: IconName;
 }
 
 interface SheetState {
@@ -99,7 +102,18 @@ export function ActionSheetHost() {
                 { borderColor: palette.border },
                 Platform.OS !== 'android' && pressed && styles.pressed,
               ]}>
-              <AppText color={action.destructive ? palette.danger : palette.text}>{action.label}</AppText>
+              <View style={styles.actionContent}>
+                {action.icon ? (
+                  <Icon
+                    name={action.icon}
+                    size={22}
+                    color={action.destructive ? palette.danger : palette.textMuted}
+                  />
+                ) : null}
+                <AppText color={action.destructive ? palette.danger : palette.text} style={styles.actionLabel}>
+                  {action.label}
+                </AppText>
+              </View>
             </Pressable>
           ))}
         </ScrollView>
@@ -134,6 +148,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.sm,
   },
+  actionContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  actionLabel: { flex: 1 },
   cancel: {
     alignItems: 'center',
     borderRadius: radius.md,

@@ -75,7 +75,9 @@ Key rules:
   - `components/ui.tsx`: `Screen`, `Card`, `Button`, `Chip`, `IconButton`, `Field` and friends. They are themed from `lib/theme.ts` and give Android ripples. `Screen`'s `footer` pins a form's Save button to the bottom edge. `PendingDot` marks an item with unsynced edits.
   - `lib/theme.ts` also holds `FAB_CLEARANCE` (bottom padding for lists under the tab bar, so rows clear the capture button) and `useRefreshColors()` (spread into every `RefreshControl`).
   - `lib/summaries.ts`: the pure wording behind the Today header (`summarizeSync` picks the one sync state worth showing, `describeBudget` feeds `components/BudgetMeter.tsx`).
-  - `components/Icon.tsx`: icons by meaning (`<Icon name="parking" />`, or the `icon` prop on `Button` and `Chip`). Material Symbols on Android, SF Symbols on iOS, through `expo-symbols`. Don't use emoji as icons; add a name to `GLYPHS` instead.
+  - `components/Icon.tsx`: icons by meaning (`<Icon name="parking" />`, or the `icon` prop on `Button`, `Chip` and `SheetAction`). Material Symbols on Android, SF Symbols on iOS, through `expo-symbols`. Don't use emoji as icons. To add one, add a name to `GLYPHS` in `components/iconGlyphs.ts` with the Android code point from `node_modules/expo-symbols/build/android/symbols.json`; a test checks every code point against that file.
+  - `components/Skeleton.tsx`: `SkeletonList`, `SkeletonForm` and `SkeletonBlock` for a screen's first read, instead of rendering nothing.
+  - Form sections: set `section` on the first field of a group in `lib/entityForms.ts` and `EntityForm` draws the heading.
   - `lib/toast.ts`: `showToast(message, { label: 'Undo', onPress })` confirms an action. `components/Toast.tsx` renders it.
   - `lib/feedback.ts`: haptics (`tapFeedback`, `successFeedback`, `warningFeedback`) and `copyWithFeedback`.
   - `components/ActionSheet.tsx`: `showActionSheet` for menus. Don't use `Alert.alert` for menus, because Android drops buttons past the third.

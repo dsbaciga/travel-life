@@ -324,7 +324,8 @@ export default function VaultScreen() {
             {(tripLanguages ?? []).map((language) => (
               <Chip
                 key={language.languageCode}
-                label={`${language.language} ✕`}
+                label={language.language}
+                trailingIcon="close"
                 selected
                 onPress={() =>
                   showActionSheet(`Remove ${language.language}?`, [

@@ -22,6 +22,7 @@ import {
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
 import BudgetMeter from '@/components/BudgetMeter';
+import { SkeletonList } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
@@ -238,7 +239,13 @@ export default function TodayScreen() {
     [todayItems]
   );
 
-  if (isLoading) return <Screen>{null}</Screen>;
+  if (isLoading) {
+    return (
+      <Screen>
+        <SkeletonList />
+      </Screen>
+    );
+  }
 
   if (!trip) {
     return (

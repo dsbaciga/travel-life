@@ -12,6 +12,7 @@ import { getCurrentPosition } from '@/tasks/location';
 import { radius, spacing } from '@/lib/theme';
 import { showActionSheet } from './ActionSheet';
 import { AppText, Banner, Button, Row } from './ui';
+import Icon from './Icon';
 
 export interface PickedPhoto {
   uri: string;
@@ -80,9 +81,7 @@ export default function PhotoAttachments({ photos, onChange, max = 12 }: Props) 
               onPress={() => onChange(photos.filter((_, i) => i !== index))}>
               <Image source={{ uri: photo.uri }} style={styles.thumb} contentFit="cover" />
               <View style={styles.remove}>
-                <AppText variant="caption" color="#FFFFFF">
-                  ✕
-                </AppText>
+                <Icon name="close" size={14} color="#FFFFFF" />
               </View>
             </Pressable>
           ))}

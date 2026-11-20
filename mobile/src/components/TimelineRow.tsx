@@ -101,14 +101,15 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
       const adjust = (adjustment: Parameters<typeof adjustTime>[3], done: string) => () =>
         adjustWithUndo(kind, item.entityId, adjustment, item.timezone, done);
       if (!item.allDay && item.start) {
-        buttons.push({ label: '+30 min', onPress: adjust({ type: 'shift', minutes: 30 }, 'Moved 30 min later') });
-        buttons.push({ label: '+1 hour', onPress: adjust({ type: 'shift', minutes: 60 }, 'Moved 1 hour later') });
-        buttons.push({ label: '−30 min', onPress: adjust({ type: 'shift', minutes: -30 }, 'Moved 30 min earlier') });
+        buttons.push({ label: '+30 min', icon: 'schedule', onPress: adjust({ type: 'shift', minutes: 30 }, 'Moved 30 min later') });
+        buttons.push({ label: '+1 hour', icon: 'schedule', onPress: adjust({ type: 'shift', minutes: 60 }, 'Moved 1 hour later') });
+        buttons.push({ label: '−30 min', icon: 'schedule', onPress: adjust({ type: 'shift', minutes: -30 }, 'Moved 30 min earlier') });
       }
-      buttons.push({ label: 'Move to tomorrow', onPress: adjust({ type: 'moveDays', days: 1 }, 'Moved to tomorrow') });
+      buttons.push({ label: 'Move to tomorrow', icon: 'calendar', onPress: adjust({ type: 'moveDays', days: 1 }, 'Moved to tomorrow') });
       if (!item.allDay) {
         buttons.push({
           label: 'Make all-day',
+          icon: 'today',
           onPress: adjust({ type: 'allDay', fallbackDayKey: dayKey }, 'Made all-day'),
         });
       }
@@ -124,25 +125,39 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove }: Ti
             onPress: () => apply(async () => reorderActivities(await getDb(), before)),
           });
         };
-        buttons.push({ label: 'Move up', onPress: move(-1, 'Moved up') });
-        buttons.push({ label: 'Move down', onPress: move(1, 'Moved down') });
+        buttons.push({ label: 'Move up', icon: 'collapse', onPress: move(-1, 'Moved up') });
+        buttons.push({ label: 'Move down', icon: 'expand', onPress: move(1, 'Moved down') });
       }
     }
 
     if (item.entityKind === 'TRANSPORTATION') {
       const log = (event: Parameters<typeof logTransitActual>[2], done: string) => async () => {
-        await apply(async () => logTransitActual(await getDb(), item.entityId, event));
-        showToast(done);
+        const db = await getDb();
+        const before = await getEntity(db, 'TRANSPORTATION', item.entityId);
+        await apply(async () => logTransitActual(db, item.entityId, event));
+        if (!before) return;
+        // Logging only touches these four fields, so putting them back undoes it.
+        const snapshot = {
+          status: before.status,
+          delayMinutes: before.delayMinutes,
+          actualStart: before.actualStart,
+          actualEnd: before.actualEnd,
+        };
+        showToast(done, {
+          label: 'Undo',
+          onPress: () => apply(async () => updateEntity(await getDb(), 'TRANSPORTATION', item.entityId, snapshot)),
+        });
       };
-      buttons.push({ label: 'Departed now', onPress: log('departed', 'Logged departure') });
-      buttons.push({ label: 'Arrived now', onPress: log('arrived', 'Logged arrival') });
-      buttons.push({ label: 'Mark cancelled', destructive: true, onPress: log('cancelled', 'Marked cancelled') });
+      buttons.push({ label: 'Departed now', icon: 'transit', onPress: log('departed', 'Logged departure') });
+      buttons.push({ label: 'Arrived now', icon: 'place', onPress: log('arrived', 'Logged arrival') });
+      buttons.push({ label: 'Mark cancelled', icon: 'close', destructive: true, onPress: log('cancelled', 'Marked cancelled') });
     }
 
     if (item.confirmation) {
       const code = item.confirmation;
       buttons.push({
         label: `Copy ${code}`,
+        icon: 'copy',
         onPress: () => copyWithFeedback(code),
       });
     }

@@ -174,6 +174,8 @@ interface AppTextProps {
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
   selectable?: boolean;
+  /** `header` lets screen readers jump between headings. */
+  accessibilityRole?: 'header';
 }
 
 export function AppText({
@@ -184,6 +186,7 @@ export function AppText({
   style,
   numberOfLines,
   selectable,
+  accessibilityRole,
 }: AppTextProps) {
   const palette = usePalette();
   const onHero = useContext(HeroContext);
@@ -198,6 +201,7 @@ export function AppText({
     <Text
       numberOfLines={numberOfLines}
       selectable={selectable}
+      accessibilityRole={accessibilityRole}
       style={[
         textStyles[variant],
         { color: color ?? fallback },
@@ -303,9 +307,11 @@ interface ChipProps {
   detail?: string;
   /** Leading icon, drawn in the label colour. */
   icon?: IconName;
+  /** Trailing icon, e.g. `close` on a chip that removes something. */
+  trailingIcon?: IconName;
 }
 
-export function Chip({ label, selected, onPress, tone = 'default', detail, icon }: ChipProps) {
+export function Chip({ label, selected, onPress, tone = 'default', detail, icon, trailingIcon }: ChipProps) {
   const palette = usePalette();
   const toneColor =
     tone === 'success'
@@ -326,14 +332,16 @@ export function Chip({ label, selected, onPress, tone = 'default', detail, icon 
       {detail ? <Text style={styles.chipDetail}> {detail}</Text> : null}
     </Text>
   );
-  const body = icon ? (
-    <View style={styles.chipContent}>
-      <Icon name={icon} size={16} color={labelColor} />
-      {text}
-    </View>
-  ) : (
-    text
-  );
+  const body =
+    icon || trailingIcon ? (
+      <View style={styles.chipContent}>
+        {icon ? <Icon name={icon} size={16} color={labelColor} /> : null}
+        {text}
+        {trailingIcon ? <Icon name={trailingIcon} size={16} color={labelColor} /> : null}
+      </View>
+    ) : (
+      text
+    );
   const chipStyle = [
     styles.chip,
     {
@@ -359,15 +367,19 @@ export function Chip({ label, selected, onPress, tone = 'default', detail, icon 
 interface FieldProps extends Omit<TextInputProps, 'style'> {
   label: string;
   error?: string | null;
+  /** Keep the label for screen readers but not on screen (a heading already says it). */
+  hideLabel?: boolean;
 }
 
-export function Field({ label, error, ...input }: FieldProps) {
+export function Field({ label, error, hideLabel, ...input }: FieldProps) {
   const palette = usePalette();
   return (
     <View style={styles.field}>
-      <AppText variant="label" muted>
-        {label}
-      </AppText>
+      {hideLabel ? null : (
+        <AppText variant="label" muted>
+          {label}
+        </AppText>
+      )}
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={palette.textMuted}

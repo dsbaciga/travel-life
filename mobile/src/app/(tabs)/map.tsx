@@ -5,7 +5,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline, type LongPressEvent, type Region } from 'react-native-maps';
 import type { LocationDto } from '@travel-life/shared';
@@ -20,10 +20,12 @@ import {
 } from '@travel-life/shared';
 
 import { showActionSheet } from '@/components/ActionSheet';
+import { SkeletonBlock } from '@/components/Skeleton';
 import { AppText, Banner, Button, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { listLinks } from '@/db/repository';
 import { loadTrack } from '@/domain/track';
 import { getDb } from '@/lib/db';
+import { DARK_MAP_STYLE } from '@/lib/mapStyle';
 import { useActiveTrip, useEntities, useNow, useUserTimezone } from '@/lib/hooks';
 import { useSync } from '@/lib/sync';
 import { radius, spacing, usePalette, useResolvedColorScheme } from '@/lib/theme';
@@ -41,7 +43,7 @@ export default function MapScreen() {
   const now = useNow(60000);
   const userTimezone = useUserTimezone();
   const version = useSync((state) => state.dataVersion);
-  const { data: trip } = useActiveTrip();
+  const { data: trip, isLoading: tripLoading } = useActiveTrip();
   const { data: locations = [] } = useEntities(trip?.id, 'LOCATION');
   const { data: activities = [] } = useEntities(trip?.id, 'ACTIVITY');
 
@@ -169,10 +171,12 @@ export default function MapScreen() {
     showActionSheet('Add here', [
       {
         label: 'New location at this pin',
+        icon: 'pin',
         onPress: () => router.push({ pathname: '/entity/[kind]/[id]', params: { ...params, kind: 'LOCATION' } }),
       },
       {
         label: 'New activity at this pin',
+        icon: 'place',
         onPress: () =>
           router.push({ pathname: '/entity/[kind]/[id]', params: { ...params, kind: 'ACTIVITY', withLocation: '1' } }),
       },
@@ -199,6 +203,14 @@ export default function MapScreen() {
     }
   };
 
+  if (tripLoading) {
+    return (
+      <Screen>
+        <SkeletonBlock height={320} rounded={16} />
+      </Screen>
+    );
+  }
+
   if (!trip) {
     return (
       <Screen>
@@ -215,7 +227,8 @@ export default function MapScreen() {
         initialRegion={initialRegion}
         showsUserLocation
         onLongPress={onLongPress}
-        userInterfaceStyle={colorScheme}>
+        userInterfaceStyle={colorScheme}
+        customMapStyle={Platform.OS === 'android' && colorScheme === 'dark' ? DARK_MAP_STYLE : undefined}>
         {visible.map((location) => (
           <Marker
             key={String(location.id)}

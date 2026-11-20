@@ -188,13 +188,14 @@ export function useTypeColors(): (typeof typeColors)['light' | 'dark'] {
   return useResolvedColorScheme() === 'dark' ? typeColors.dark : typeColors.light;
 }
 
-/** The Quick capture button floating over the tab screens. */
-export const FAB = { size: 60, bottom: 64 } as const;
+/** The Quick capture button floating over the tab screens, `gap` above the tab bar. */
+export const FAB = { size: 60, gap: 12 } as const;
 /**
  * Bottom padding for a list under the tab bar, so its last row can scroll up
- * past the capture button instead of ending underneath it.
+ * past the capture button instead of ending underneath it. Lists end at the
+ * top of the tab bar, so this is the button plus its gap and some air.
  */
-export const FAB_CLEARANCE = FAB.bottom + FAB.size + spacing.lg;
+export const FAB_CLEARANCE = FAB.gap + FAB.size + spacing.lg;
 
 /** Pull-to-refresh spinner colours (Android `colors`, iOS `tintColor`). */
 export function useRefreshColors(): { colors: string[]; tintColor: string; progressBackgroundColor: string } {

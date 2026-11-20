@@ -14,6 +14,7 @@ import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
 import Icon from '@/components/Icon';
 import MapToButton from '@/components/MapToButton';
+import { SkeletonList } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, PendingDot, Row, Screen } from '@/components/ui';
 import {
   adjustTime,
@@ -78,7 +79,7 @@ export default function TripScreen() {
   const refreshColors = useRefreshColors();
   const now = useNow(60000);
   const userTimezone = useUserTimezone();
-  const { data: trip } = useActiveTrip();
+  const { data: trip, isLoading: tripLoading } = useActiveTrip();
   const { data: timeline } = useTripTimeline(trip);
   const { data: dirty } = useDirtyKeys(trip?.id);
   const syncing = useSync((state) => state.syncing);
@@ -209,6 +210,14 @@ export default function TripScreen() {
     },
     [refetchPending]
   );
+
+  if (tripLoading) {
+    return (
+      <Screen>
+        <SkeletonList />
+      </Screen>
+    );
+  }
 
   if (!trip) {
     return (
