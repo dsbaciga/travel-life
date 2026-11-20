@@ -11,6 +11,9 @@ import { pdfParserService } from './pdfParser.service';
 import { llmEndpointKey, type ResolvedLlmConfig } from './llm.service';
 import { pdfParseQueue } from './pdfParseQueue';
 import { cleanupEntityLinks } from './_shared/entityLinkCleanup';
+import { getUserTimezone, resolveTimezone } from './_shared/timezoneResolution';
+import { isValidTimezone } from './_shared/bulkImportRows';
+import { fromZonedTime } from 'date-fns-tz';
 import type { UpdatePendingEntityInput } from '../types/pdfImport.types';
 import {
   PdfImportStatus,
@@ -48,6 +51,62 @@ function normalizeLodgingType(raw: unknown): LodgingTypeEnum {
 function optStr(raw: unknown): string | undefined {
   return typeof raw === 'string' ? raw : undefined;
 }
+
+/** A parsed IANA zone name, or undefined when absent or unknown to the runtime. */
+function optZone(raw: unknown): string | undefined {
+  const zone = optStr(raw)?.trim();
+  return zone && isValidTimezone(zone) ? zone : undefined;
+}
+
+const PARSED_OFFSET = /(Z|[+-]\d{2}(?::?\d{2})?)$/i;
+const PARSED_WALL_CLOCK = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?$/;
+const PARSED_DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Turns a date/time string the LLM read off a booking into an instant.
+ *
+ * Bookings print local times, so anything without an explicit offset is read
+ * on the clock in `zone` (the entity's zone, resolved entity -> trip -> user),
+ * never as UTC or the server's zone. A bare date has no time of day; it is
+ * anchored at `defaultTime` (HH:mm) on that local day so it shows on the
+ * right calendar day — `new Date('2027-03-12')` is UTC midnight, which is the
+ * evening before anywhere west of UTC.
+ *
+ * @returns `{ date, dateOnly }`, or null for an empty value
+ * @throws AppError 400 when the value is not a recognisable date
+ */
+export function parseBookingDateTime(
+  raw: unknown,
+  zone: string,
+  defaultTime: string,
+  field: string
+): { date: Date; dateOnly: boolean } | null {
+  const value = optStr(raw)?.trim();
+  if (!value) return null;
+
+  let date: Date;
+  let dateOnly = false;
+  if (PARSED_DATE_ONLY.test(value)) {
+    date = fromZonedTime(`${value}T${defaultTime}:00`, zone);
+    dateOnly = true;
+  } else if (PARSED_WALL_CLOCK.test(value)) {
+    date = fromZonedTime(value.replace(' ', 'T'), zone);
+  } else if (PARSED_OFFSET.test(value)) {
+    date = new Date(value);
+  } else {
+    date = new Date(Number.NaN);
+  }
+
+  if (Number.isNaN(date.getTime())) {
+    throw new AppError(`${field} "${value}" is not a valid date`, 400);
+  }
+  return { date, dateOnly };
+}
+
+/** Default times for date-only bookings, matching the lodging form's defaults. */
+const DEFAULT_CHECK_IN_TIME = '15:00';
+const DEFAULT_CHECK_OUT_TIME = '11:00';
+const START_OF_DAY = '00:00';
 
 /**
  * Validate that storedPath does not escape the uploads directory.
@@ -416,6 +475,9 @@ class PdfImportService {
     if (!trip) {
       throw new AppError('Trip not found or access denied', 404);
     }
+    const userTimezone = await getUserTimezone(userId);
+    const zoneFor = (entityZone: string | undefined) =>
+      resolveTimezone(entityZone, trip.timezone, userTimezone);
 
     return prisma.$transaction(async (tx) => {
       // Atomically claim the entity — only succeeds if it's still PENDING.
@@ -442,14 +504,20 @@ class PdfImportService {
 
       switch (entity.entityType) {
         case PendingEntityType.TRANSPORTATION: {
+          const startTimezone = optZone(data.startTimezone);
+          const endTimezone = optZone(data.endTimezone);
+          const start = parseBookingDateTime(data.departureTime, zoneFor(startTimezone), START_OF_DAY, 'departureTime');
+          const end = parseBookingDateTime(data.arrivalTime, zoneFor(endTimezone ?? startTimezone), START_OF_DAY, 'arrivalTime');
           const created = await tx.transportation.create({
             data: {
               tripId,
               type: normalizeTransportationType(data.type),
               startLocationText: optStr(data.fromLocationName) ?? null,
               endLocationText: optStr(data.toLocationName) ?? null,
-              scheduledStart: optStr(data.departureTime) ? new Date(optStr(data.departureTime)!) : null,
-              scheduledEnd: optStr(data.arrivalTime) ? new Date(optStr(data.arrivalTime)!) : null,
+              scheduledStart: start?.date ?? null,
+              scheduledEnd: end?.date ?? null,
+              startTimezone: startTimezone ?? null,
+              endTimezone: endTimezone ?? null,
               company: optStr(data.carrier) ?? null,
               referenceNumber: optStr(data.vehicleNumber) ?? null,
               bookingReference: optStr(data.confirmationNumber) ?? null,
@@ -464,14 +532,22 @@ class PdfImportService {
           if (typeof data.checkInDate !== 'string' || typeof data.checkOutDate !== 'string') {
             throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
           }
+          const lodgingTimezone = optZone(data.timezone);
+          const lodgingZone = zoneFor(lodgingTimezone);
+          const checkIn = parseBookingDateTime(data.checkInDate, lodgingZone, DEFAULT_CHECK_IN_TIME, 'checkInDate');
+          const checkOut = parseBookingDateTime(data.checkOutDate, lodgingZone, DEFAULT_CHECK_OUT_TIME, 'checkOutDate');
+          if (!checkIn || !checkOut) {
+            throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
+          }
           const created = await tx.lodging.create({
             data: {
               tripId,
               type: normalizeLodgingType(data.type),
               name: typeof data.name === 'string' ? data.name : 'Unnamed Lodging',
               address: optStr(data.address) ?? null,
-              checkInDate: new Date(data.checkInDate),
-              checkOutDate: new Date(data.checkOutDate),
+              checkInDate: checkIn.date,
+              checkOutDate: checkOut.date,
+              timezone: lodgingTimezone ?? null,
               confirmationNumber: optStr(data.confirmationNumber) ?? null,
               notes: optStr(data.notes) ?? null,
             },
@@ -484,13 +560,21 @@ class PdfImportService {
           if (typeof data.name !== 'string') {
             throw new AppError('Activity requires a name', 400);
           }
+          const activityTimezone = optZone(data.timezone);
+          const activityZone = zoneFor(activityTimezone);
+          const start = parseBookingDateTime(data.startTime, activityZone, START_OF_DAY, 'startTime');
+          const end = parseBookingDateTime(data.endTime, activityZone, START_OF_DAY, 'endTime');
           const created = await tx.activity.create({
             data: {
               tripId,
               name: data.name,
               description: optStr(data.description) ?? null,
-              startTime: optStr(data.startTime) ? new Date(optStr(data.startTime)!) : null,
-              endTime: optStr(data.endTime) ? new Date(optStr(data.endTime)!) : null,
+              // A bare date carries no time of day: store it as an all-day
+              // activity on that local day rather than inventing a time.
+              allDay: start?.dateOnly === true && (end === null || end.dateOnly),
+              startTime: start?.date ?? null,
+              endTime: end?.date ?? null,
+              timezone: activityTimezone ?? null,
               bookingReference: optStr(data.bookingReference) ?? null,
               notes: optStr(data.notes) ?? null,
             },

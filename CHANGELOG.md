@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Bookings accepted from a PDF import no longer show a day early west of UTC. A date-only check-in or check-out is now placed at 3:00 PM / 11:00 AM on that day in the lodging's timezone (lodging, then trip, then your own), the same defaults the lodging form uses. Flight and activity times with no UTC offset are read on that local clock. A date-only activity becomes an all-day activity. Before, these values were read as UTC, so "2027-03-12" showed as "Mar 11, 7:00 PM EST"
+
 ## [8.1.0] - 2026-11-17
 
 ### Added
