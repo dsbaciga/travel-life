@@ -25,6 +25,11 @@ class PdfParserService {
     return llmService.isConfigured(userId);
   }
 
+  /** Which LLM server this user's PDFs are read by (null: none configured). */
+  async endpointKey(userId?: number): Promise<string | null> {
+    return llmService.endpointKey(userId);
+  }
+
   async extractText(filePath: string): Promise<string> {
     const buffer = await readFile(filePath);
     const parser = new PDFParse({ data: buffer });

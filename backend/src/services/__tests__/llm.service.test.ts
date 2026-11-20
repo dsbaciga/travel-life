@@ -9,6 +9,7 @@
  * - LLM-005: chat throws LlmError when axios request fails
  * - LLM-006: requests use the configurable timeout (5 minutes by default)
  * - LLM-007: a cancelled request rejects without an error-level log
+ * - LLM-008: endpointKey identifies the LLM server per user (shared vs own)
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -179,5 +180,24 @@ describe('LlmService', () => {
     await expect(
       llmService.chat('s', 'u', { userId: 1, signal: controller.signal })
     ).rejects.toThrow('LLM request cancelled');
+  });
+
+  it("LLM-008: endpointKey groups users by the LLM server they'd use", async () => {
+    config.llm.apiKey = 'ollama';
+    config.llm.baseUrl = 'http://Ollama.lan:11434/v1/';
+
+    mockPrismaUserFindUnique.mockResolvedValueOnce(null);
+    expect(await llmService.endpointKey(1)).toBe('http://ollama.lan:11434/v1');
+
+    mockPrismaUserFindUnique.mockResolvedValueOnce({
+      llmApiKey: null,
+      llmBaseUrl: 'https://my-own-llm.example/v1',
+      llmModel: null,
+    });
+    expect(await llmService.endpointKey(2)).toBe('https://my-own-llm.example/v1');
+
+    config.llm.apiKey = '';
+    mockPrismaUserFindUnique.mockResolvedValueOnce(null);
+    expect(await llmService.endpointKey(3)).toBeNull();
   });
 });

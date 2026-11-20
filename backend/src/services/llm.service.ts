@@ -84,6 +84,16 @@ class LlmService {
     return (await this.resolveConfig(userId)) !== null;
   }
 
+  /**
+   * Identifies the LLM server a user's requests go to (its base URL), or null
+   * when no LLM is configured. Users on the instance-wide config share a key;
+   * a user's own endpoint from Settings gets its own.
+   */
+  async endpointKey(userId?: number): Promise<string | null> {
+    const resolved = await this.resolveConfig(userId);
+    return resolved ? resolved.baseUrl.trim().replace(/\/+$/, '').toLowerCase() : null;
+  }
+
   async chat(
     systemPrompt: string,
     userPrompt: string,

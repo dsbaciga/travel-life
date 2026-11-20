@@ -62,9 +62,13 @@ function resolveStoredPath(storedPath: string): string {
 }
 
 /**
- * Only one PDF is read at a time, across every user on the instance. The LLM
- * may be a self-hosted model on modest hardware (e.g. Ollama on a NAS), where
- * two documents at once would just make both slow or time out.
+ * Only one PDF is read at a time per LLM server. The LLM may be a self-hosted
+ * model on modest hardware (e.g. Ollama on a NAS), where two documents at once
+ * would just make both slow or time out.
+ *
+ * Keyed by endpoint (see llmService.endpointKey), not global: everyone on the
+ * instance-wide LLM shares one slot, but a user whose Settings point at their
+ * own (possibly slow or unresponsive) server can only ever block themselves.
  *
  * In-process on purpose: the backend runs as a single container, and a slot
  * held by a process that has since died must not block uploads after restart.
@@ -72,24 +76,35 @@ function resolveStoredPath(storedPath: string): string {
 export const PDF_PARSE_BUSY_MESSAGE =
   'Another PDF is still being read. Try again when it finishes.';
 
-let parsingSlotBusy = false;
+interface ParsingSlot {
+  /** Set once the background parse starts, so Cancel can abort it. */
+  active?: { pdfImportId: number; controller: AbortController };
+}
 
-/** The parse holding the slot, so it can be cancelled (see deletePdfImport). */
-let activeParse: { pdfImportId: number; controller: AbortController } | null = null;
+const parsingSlots = new Map<string, ParsingSlot>();
 
-function claimParsingSlot(): void {
+function claimParsingSlot(endpoint: string): void {
   // Synchronous check-and-set: no await between them, so two requests cannot both win.
-  if (parsingSlotBusy) throw new AppError(PDF_PARSE_BUSY_MESSAGE, 409);
-  parsingSlotBusy = true;
+  if (parsingSlots.has(endpoint)) throw new AppError(PDF_PARSE_BUSY_MESSAGE, 409);
+  parsingSlots.set(endpoint, {});
 }
 
-function releaseParsingSlot(): void {
-  parsingSlotBusy = false;
+function releaseParsingSlot(endpoint: string): void {
+  parsingSlots.delete(endpoint);
 }
 
-/** Test hook: whether a PDF is being read right now. */
-export function isPdfParsingBusy(): boolean {
-  return parsingSlotBusy;
+/** Test hook: whether a PDF is being read right now (on one endpoint, or any). */
+export function isPdfParsingBusy(endpoint?: string): boolean {
+  return endpoint === undefined ? parsingSlots.size > 0 : parsingSlots.has(endpoint);
+}
+
+/** Resolves the user's LLM endpoint, refusing up front when there is none. */
+async function requireLlmEndpoint(userId: number): Promise<string> {
+  const endpoint = await pdfParserService.endpointKey(userId);
+  if (!endpoint) {
+    throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
+  }
+  return endpoint;
 }
 
 class PdfImportService {
@@ -99,18 +114,20 @@ class PdfImportService {
    * Refused with 409 while another PDF is being read (see claimParsingSlot).
    */
   async uploadAndProcess(userId: number, file: MulterFile, hintTripId?: number) {
-    claimParsingSlot();
+    const endpoint = await requireLlmEndpoint(userId);
+    claimParsingSlot(endpoint);
     try {
-      return await this.storeAndStartParsing(userId, file, hintTripId);
+      return await this.storeAndStartParsing(userId, file, endpoint, hintTripId);
     } catch (err) {
       // Never got as far as the background job, which would release it.
-      releaseParsingSlot();
+      releaseParsingSlot(endpoint);
       throw err;
     }
   }
 
   /** Runs the parse and frees the slot whichever way it ends, including a cancel. */
   private launchParsing(
+    endpoint: string,
     pdfImportId: number,
     userId: number,
     absolutePath: string,
@@ -118,7 +135,7 @@ class PdfImportService {
     hintTripId?: number
   ): void {
     const controller = new AbortController();
-    activeParse = { pdfImportId, controller };
+    parsingSlots.set(endpoint, { active: { pdfImportId, controller } });
     this.processInBackground(
       pdfImportId,
       userId,
@@ -129,20 +146,18 @@ class PdfImportService {
     )
       .catch((err) => logger.error('PDF background processing failed', { pdfImportId, err }))
       .finally(() => {
-        if (activeParse?.controller === controller) activeParse = null;
-        releaseParsingSlot();
+        if (parsingSlots.get(endpoint)?.active?.controller === controller) {
+          releaseParsingSlot(endpoint);
+        }
       });
   }
 
   private async storeAndStartParsing(
     userId: number,
     file: MulterFile,
+    endpoint: string,
     hintTripId?: number
   ) {
-    if (!(await pdfParserService.isConfigured(userId))) {
-      throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
-    }
-
     // Validate PDF magic bytes
     if (!file.buffer) {
       throw new AppError('File buffer is missing', 400);
@@ -198,7 +213,7 @@ class PdfImportService {
     }
 
     // Fire background processing (don't await)
-    this.launchParsing(pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
+    this.launchParsing(endpoint, pdfImport.id, userId, absolutePath, file.originalname, hintTripId);
 
     return pdfImport;
   }
@@ -565,7 +580,8 @@ class PdfImportService {
       throw new AppError('Import is currently being parsed', 409);
     }
 
-    claimParsingSlot();
+    const endpoint = await requireLlmEndpoint(userId);
+    claimParsingSlot(endpoint);
     try {
       const absolutePath = resolveStoredPath(record.storedPath);
 
@@ -580,9 +596,9 @@ class PdfImportService {
         data: { status: PdfImportStatus.PARSING, errorMessage: null, processedAt: null },
       });
 
-      this.launchParsing(id, userId, absolutePath, record.originalName);
+      this.launchParsing(endpoint, id, userId, absolutePath, record.originalName);
     } catch (err) {
-      releaseParsingSlot();
+      releaseParsingSlot(endpoint);
       throw err;
     }
   }
@@ -596,9 +612,11 @@ class PdfImportService {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
     if (!record) throw new AppError('PDF import not found', 404);
 
-    if (activeParse?.pdfImportId === id) {
-      logger.info('Cancelling PDF parse in progress', { pdfImportId: id });
-      activeParse.controller.abort();
+    for (const slot of parsingSlots.values()) {
+      if (slot.active?.pdfImportId === id) {
+        logger.info('Cancelling PDF parse in progress', { pdfImportId: id });
+        slot.active.controller.abort();
+      }
     }
 
     const absolutePath = resolveStoredPath(record.storedPath);
