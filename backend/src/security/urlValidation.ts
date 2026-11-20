@@ -207,6 +207,14 @@ function isPrivateIP(hostname: string): boolean {
 }
 
 /**
+ * Whether an IP address (v4 or v6, brackets optional) is loopback, private,
+ * link-local or otherwise internal. Non-IP strings return false.
+ */
+export function isPrivateIpAddress(ip: string): boolean {
+  return isPrivateIP(ip);
+}
+
+/**
  * Validate a URL to prevent SSRF attacks.
  *
  * Checks:

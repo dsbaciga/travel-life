@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Immich and personal LLM URLs are checked on every request, not just when saved.** A hostname that passed the check when you saved it but was later pointed at the server itself, cloud metadata or another private address is now refused (DNS rebinding). LAN servers keep working when `ALLOW_PRIVATE_INTEGRATION_URLS` is on, and the instance-wide `LLM_BASE_URL` is unaffected.
+
 ## [8.1.0] - 2026-11-17
 
 ### Added

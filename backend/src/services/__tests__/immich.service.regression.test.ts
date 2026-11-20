@@ -41,6 +41,11 @@ resetMockAxiosCreate();
 
 // Import the service (and AppError) after mocks
 import immichService from '../immich.service';
+import { config } from '../../config';
+
+// These tests model a LAN Immich (http://localhost:2283), which the
+// request-time SSRF guard only allows with ALLOW_PRIVATE_INTEGRATION_URLS.
+config.security.allowPrivateIntegrationUrls = true;
 import { AppError } from '../../errors/errors';
 
 const TEST_API_URL = 'http://localhost:2283';

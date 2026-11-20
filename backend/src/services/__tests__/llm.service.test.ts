@@ -7,6 +7,7 @@
  * - LLM-003: chat supports local no-auth LLM when llmBaseUrl is set without API key
  * - LLM-004: chat returns empty string when LLM is not configured
  * - LLM-005: chat throws LlmError when axios request fails
+ * - LLM-006..009: request-time SSRF guard (DNS rebinding) on per-user base URLs
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -37,6 +38,7 @@ describe('LlmService', () => {
     config.llm.apiKey = '';
     config.llm.baseUrl = 'https://api.openai.com/v1';
     config.llm.model = 'gpt-4o-mini';
+    config.security.allowPrivateIntegrationUrls = false;
   });
 
   it('LLM-001: decrypts encrypted per-user llmApiKey and sets maxRedirects: 0 on axios request', async () => {
@@ -100,6 +102,8 @@ describe('LlmService', () => {
   });
 
   it('LLM-003: supports local no-auth LLM when llmBaseUrl is set without API key', async () => {
+    // A LAN Ollama is only reachable with ALLOW_PRIVATE_INTEGRATION_URLS.
+    config.security.allowPrivateIntegrationUrls = true;
     mockPrismaUserFindUnique.mockResolvedValue({
       llmApiKey: null,
       llmBaseUrl: 'http://localhost:11434/v1',
@@ -141,5 +145,71 @@ describe('LlmService', () => {
     mockAxios.post.mockRejectedValue(new Error('Connection reset'));
 
     await expect(llmService.chat('sys', 'usr')).rejects.toBeInstanceOf(LlmError);
+  });
+
+  describe('request-time SSRF guard', () => {
+    const okResponse = { data: { choices: [{ message: { content: 'ok' } }] } };
+
+    it('LLM-006: sends a per-user base URL through the guarded agents', async () => {
+      mockPrismaUserFindUnique.mockResolvedValue({
+        llmApiKey: null,
+        llmBaseUrl: 'https://llm.example.com/v1',
+        llmModel: null,
+      });
+      mockAxios.post.mockResolvedValue(okResponse);
+
+      await llmService.chat('sys', 'usr', { userId: 1 });
+
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        'https://llm.example.com/v1/chat/completions',
+        expect.any(Object),
+        expect.objectContaining({
+          maxRedirects: 0,
+          httpAgent: expect.anything(),
+          httpsAgent: expect.anything(),
+          proxy: false,
+        })
+      );
+    });
+
+    it('LLM-007: trusts the admin LLM_BASE_URL (no guard)', async () => {
+      config.llm.apiKey = 'sk-global-key';
+      config.llm.baseUrl = 'http://ollama:11434/v1';
+      mockPrismaUserFindUnique.mockResolvedValue({ llmApiKey: null, llmBaseUrl: null, llmModel: null });
+      mockAxios.post.mockResolvedValue(okResponse);
+
+      await llmService.chat('sys', 'usr', { userId: 1 });
+
+      const options = mockAxios.post.mock.calls[0][2];
+      expect(options).not.toHaveProperty('httpAgent');
+      expect(options).not.toHaveProperty('httpsAgent');
+    });
+
+    it('LLM-008: refuses a stored private base URL when private URLs are not allowed', async () => {
+      mockPrismaUserFindUnique.mockResolvedValue({
+        llmApiKey: null,
+        llmBaseUrl: 'http://169.254.169.254/v1',
+        llmModel: null,
+      });
+
+      await expect(llmService.chat('sys', 'usr', { userId: 1 })).rejects.toBeInstanceOf(LlmError);
+      await expect(
+        llmService.chatWithImage('sys', 'usr', { mimeType: 'image/png', base64: 'AA==' }, { userId: 1 })
+      ).rejects.toBeInstanceOf(LlmError);
+      expect(mockAxios.post).not.toHaveBeenCalled();
+    });
+
+    it('LLM-009: allows a LAN base URL when private URLs are allowed', async () => {
+      config.security.allowPrivateIntegrationUrls = true;
+      mockPrismaUserFindUnique.mockResolvedValue({
+        llmApiKey: null,
+        llmBaseUrl: 'http://192.168.1.50:11434/v1',
+        llmModel: 'llama3',
+      });
+      mockAxios.post.mockResolvedValue(okResponse);
+
+      expect(await llmService.chat('sys', 'usr', { userId: 1 })).toBe('ok');
+      expect(mockAxios.post.mock.calls[0][2]).not.toHaveProperty('httpAgent');
+    });
   });
 });

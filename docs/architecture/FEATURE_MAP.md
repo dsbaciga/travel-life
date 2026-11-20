@@ -114,6 +114,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |
 | Zod helpers (`nullableOptional`, ids, coords, currency, URLs) | `zodHelpers` | `validation/zodHelpers.ts` |
 | Outbound URL safety (SSRF) | `urlValidation` | `security/` |
+| Request-time SSRF guard for user-configured URLs (DNS rebinding) | `integrationRequestOptions` | `security/integrationRequestGuard.ts` |
 | Untrusted text going into an LLM prompt | `promptSafety` | `security/` |
 | Field encryption (stored API keys) | `encryption` | `security/` |
 | Rate limiters | `rateLimit` | `middleware/` |

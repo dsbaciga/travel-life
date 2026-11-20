@@ -21,6 +21,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
 import axios from 'axios';
+import { integrationRequestOptions } from '../security/integrationRequestGuard';
 import ffmpeg from 'fluent-ffmpeg';
 import { config } from '../config';
 import {
@@ -458,6 +459,9 @@ class PhotoService {
             headers: {
               'x-api-key': immichApiKey,
             },
+            timeout: 30000,
+            maxRedirects: 0,
+            ...integrationRequestOptions(user.immichApiUrl),
           }
         );
 
