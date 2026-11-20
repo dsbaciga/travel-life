@@ -17,13 +17,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.1.1] - 2026-11-20
+
+### Added
+
+- **PDF import runs in the background.** The upload dialog closes as soon as the file is uploaded, and a banner tracks it while you keep working: "Waiting to read hotel.pdf · 1 PDF ahead of it", then "Reading hotel.pdf…", then "hotel.pdf is ready · Found 2 bookings to review" with a **Review** link that opens the review for that file. A failed read says why and offers **Try again**. The banner survives page reloads.
+- **Cancel a PDF import** from its banner, while it waits or while it is being read. Cancelling stops the request to the model, so a local model such as Ollama stops working on it too.
+- After accepting a booking from a PDF, a **View** link opens the trip at the new stay, flight or activity.
+- `LLM_TIMEOUT_MS` sets how long the server waits for the model (default 5 minutes, was a fixed 30 seconds), so slower self-hosted models such as Ollama on a NAS can finish reading a booking.
+
+### Changed
+
+- **PDFs are read one at a time per model server, in a fair queue.** Each person can have one PDF waiting or being read; the others wait their turn instead of being refused, and turns alternate between people. Your own model set in Settings has its own queue.
+- PDFs that were waiting or being read when the server restarted are picked up again on startup.
+
 ### Security
 
 - **Immich and personal LLM URLs are checked on every request, not just when saved.** A hostname that passed the check when you saved it but was later pointed at the server itself, cloud metadata or another private address is now refused (DNS rebinding). LAN servers keep working when `ALLOW_PRIVATE_INTEGRATION_URLS` is on, and the instance-wide `LLM_BASE_URL` is unaffected.
 
 ### Fixed
 
-- Bookings accepted from a PDF import no longer show a day early west of UTC. A date-only check-in or check-out is now placed at 3:00 PM / 11:00 AM on that day in the lodging's timezone (lodging, then trip, then your own), the same defaults the lodging form uses. Flight and activity times with no UTC offset are read on that local clock. A date-only activity becomes an all-day activity. Before, these values were read as UTC, so "2027-03-12" showed as "Mar 11, 7:00 PM EST"
+- Bookings accepted from a PDF import no longer show a day early west of UTC. A date-only check-in or check-out is now placed at 3:00 PM / 11:00 AM on that day in the lodging's timezone (lodging, then trip, then your own), the same defaults the lodging form uses. Flight and activity times with no UTC offset are read on that local clock. A date-only activity becomes an all-day activity. Before, these values were read as UTC, so "2027-03-12" showed as "Mar 11, 7:00 PM EST".
+- **Saving AI settings works.** The Settings page failed with "Cannot PUT /api/users/llm-settings" because the route was never registered, so there was no way to point an account at its own model.
+- PDF import now uses the AI settings of the person who uploaded it; it always used the server-wide settings before.
+- An upload that fails now shows the server's reason (for example "LLM not configured") instead of "Upload failed. Please try again."
+- Accepting a booking from a PDF refreshes the trip's lists and tab counts, which used to show 0 next to the new item.
+
+### Deployment
+
+- To use Ollama on the LAN, either set `LLM_BASE_URL=http://<ip>:<port>/v1`, any non-empty `LLM_API_KEY` and `LLM_MODEL`, or set `ALLOW_PRIVATE_INTEGRATION_URLS=true` and enter the address in Settings. `docker-compose.prod.yml` now passes `ALLOW_PRIVATE_INTEGRATION_URLS` and `LLM_TIMEOUT_MS` through. No database migrations in this release.
 
 ## [8.1.0] - 2026-11-17
 
