@@ -155,12 +155,13 @@ class ExpenseSplitService {
     const expenses: SettleUpExpense[] = [];
     for (const row of rows) {
       const paidBy = payerKey(row, ownerCompanionId);
-      // The cost of a booking carries no payer unless somebody assigned one. Until then it is a
-      // budget line, not an unsettled expense: it must not show up under "unsplit" (settle-up
-      // results are the same as before bookings had expense rows).
+      // The cost of a booking carries no payer and no shares unless somebody assigned them. Until
+      // then it is a budget line, not an unsettled expense: it must not show up under "unsplit"
+      // (settle-up results are the same as before bookings had expense rows). Once either is set it
+      // behaves like any other expense, so a half-assigned one is reported as unsplit.
       const isBookingCost =
         row.activityId != null || row.transportationId != null || row.lodgingId != null || row.customItemId != null;
-      if (isBookingCost && (paidBy === null || row.splits.length === 0)) continue;
+      if (isBookingCost && paidBy === null && row.splits.length === 0) continue;
       const shares: ShareEntry[] = row.splits.map((s) => ({
         participant: splitRowKey(s, ownerCompanionId),
         amount: s.amount,

@@ -371,6 +371,15 @@ describe('ExpenseSplitService', () => {
       expect(mockBase).toHaveBeenCalledWith(expect.objectContaining({ id: 5 }), 'USD');
     });
 
+    it('ESP-BOOK2: a booking cost with a payer but no shares yet is reported as unsplit', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
+        row({ id: 6, description: 'Hotel Paris', lodgingId: 68, paidByCompanionId: 5, splits: [] }),
+      ]);
+      const result = await expenseSplitService.getSettleUp(1, 10);
+      expect(result.unsplit).toHaveLength(1);
+      expect(result.isComplete).toBe(false);
+    });
+
     it('treats a split that no longer adds up as unsplit', async () => {
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         row({ splits: [{ companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null }] }),
