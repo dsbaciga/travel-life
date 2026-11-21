@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.2.0] - 2026-11-21
+
 ### Changed
 
 - **Mobile app: confirmations and Undo.** Copying a confirmation code, nudging an item's time, moving it to another day, making it all-day, reordering, saving, deleting, adding photos and accepting a PDF booking now show a short message at the bottom of the screen, with a small vibration. Time changes and reorders offer **Undo**.
@@ -62,6 +64,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleting a place now clears it from the activities and lodgings that used it in a way the Android app notices, so they stop showing a place that is gone.
 - The visa data treated "Britain" as the United States; it is the United Kingdom.
 - Deleting a photo, place, activity, lodging, transport leg, journal entry, album, PDF import, saved link or custom item now always removes the links that pointed at it, enforced by the database as well as by the app.
+
+### Migrations — action required before deploying
+
+Eight migrations (`20261120000000` to `20261126010000`). Four of them drop columns after copying the data elsewhere, so **back up the database first**, then run `npx prisma migrate deploy` as part of the deploy.
+
+- Every migration checks its own result and rolls back completely if a value would be lost or changed.
+- `20261122000000_one_representation_of_who_paid` refuses to run if an expense lists the trip owner twice in one split (once as "owner" and once as their own "Myself" companion). The error names the expense; remove one of the two shares and deploy again.
+- `20261126000000_add_vocabulary_checks` never fails on existing data: a rule that existing rows break is left unvalidated and reported in a `NOTICE`, with the follow-up query in the migration file.
+- Backups are format 1.9.0. Backups from earlier versions still restore.
 
 ## [8.1.1] - 2026-11-20
 
