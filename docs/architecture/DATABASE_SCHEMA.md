@@ -1175,11 +1175,53 @@ Key indexes for performance:
 |-------|-------|---------|
 | trips | (userId, status) | Dashboard filtering |
 | trips | (startDate, endDate) | Date range queries |
-| locations | (tripId) | Trip location listing |
+| locations | (tripId, countryCode) | Trip location listing (its leading column serves a plain `tripId` lookup) |
 | photos | (tripId, takenAt) | Chronological photo listing |
-| entity_links | (tripId, sourceType, sourceId) | Forward link queries |
+| entity_links | unique (tripId, sourceType, sourceId, targetType, targetId) | Forward link queries (its leading columns serve them) |
 | entity_links | (tripId, targetType, targetId) | Reverse link queries |
+| entity_links | (sourceType, sourceId) and (targetType, targetId) | Used by the delete triggers that remove a deleted entity's links (migration `20261120000000`). Do not drop |
 | transportation | (connectionGroupId) | Grouped connections |
+
+### Redundant indexes
+
+An index whose columns are a leading prefix, in the same order, of another index or a unique constraint on the
+same table is not created: the wider one answers the same lookups. Migration `20261126010000_drop_redundant_indexes`
+removed 22 that had crept in (for example `photos(tripId)`, `activities(tripId)`, `trip_invitations(token)`,
+`user_invitations(email)` and `(token)`, `entity_links(tripId)` and `(tripId, sourceType, sourceId)`). Find candidates
+with a catalog query rather than from `schema.prisma`: compare `pg_index.indkey` prefixes of non-partial btree indexes
+per table, then check the covering index has the same operator classes and sort options.
+
+## Vocabulary CHECK constraints
+
+Columns holding one of a fixed set of strings are `VARCHAR` with a `CHECK` named `<table>_<column>_check` (migration
+`20261126000000_add_vocabulary_checks`). Prisma cannot express CHECK constraints, so never `db push`. Each was added
+`NOT VALID` and validated only when no existing row violated it, so a database with legacy values keeps the constraint
+`NOT VALID` (new and updated rows are still checked). Adding a value means a new migration that replaces the constraint
+and the matching Zod enum together.
+
+| Column | Allowed values | Authority |
+|--------|----------------|-----------|
+| `trips.status` | Dream, Planning, Planned, In Progress, Completed, Cancelled, and the column default `planning` | `TripStatus` and the trip Zod schemas |
+| `trips.privacy_level` | Private, Shared, Public, and the column default `private` | `PrivacyLevel` and the trip Zod schemas |
+| `trip_collaborators.permission_level` | view, edit, admin | `collaboration.types.ts` |
+| `trip_invitations.permission_level` | view, edit, admin | `collaboration.types.ts` |
+| `trip_invitations.status` | pending, accepted, declined, expired | `InvitationStatus` |
+| `user_preferences.default_partner_permission` | view, edit, admin | `user.controller.ts` schema, `tripPermissions.ts` |
+| `transportation.status` | on_time, delayed, cancelled | `transportation.types.ts` |
+| `transportation.distance_source` | route, haversine, or NULL | `routing.service.ts` (`source`) |
+| `photos.source` | local, immich | `PhotoSource` |
+| `photos.media_type` | image, video | `MediaType` and the photo Zod schemas |
+| `booking_deadlines.kind` | cancellation, check_in, payment, other | `DEADLINE_KINDS` |
+| `checklists.type` | custom, airports, countries, cities, us_states, souvenirs | `checklist.types.ts` |
+| `locations.opening_hours_source` | osm, manual, or NULL | `location.service.ts`, `bulkImport.service.ts` |
+| `mobile_push_tokens.platform` | ios, android | `MOBILE_PUSH_PLATFORMS` |
+
+Not constrained on purpose: `journal_entries.entry_type` (the Zod schema accepts any string), and the user-extensible
+`transportation.type`, `lodging.type`, `activities.category`, `trips.trip_type` and `trip_expenses.category`.
+
+Restoring an old backup that carries a value outside these sets (an unknown trip `status` or `privacyLevel`, a photo
+`source`, a checklist `type`, a transportation `status` or `distanceSource`, a location `openingHoursSource`) now fails
+with a database error and rolls the restore back; the backup schema still accepts any string for those fields.
 
 ## Cascade Deletes
 

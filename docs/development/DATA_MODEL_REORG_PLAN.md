@@ -249,4 +249,4 @@ Design:
   `saved_links(user_id)`, `email_ingests(user_id)`). Confirm each against the final schema
   before dropping; keep any index that is not provably covered.
 
-- [ ] Step G done
+- [x] Step G done

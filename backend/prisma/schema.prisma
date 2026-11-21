@@ -115,7 +115,7 @@ model UserPreferences {
   // CHECK user_preferences_measurement_system_check (migration 20261124000000_split_user_table) limits it to imperial | metric;
   // Prisma cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
   measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
-  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin
+  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin. CHECK user_preferences_default_partner_permission_check (migration 20261126000000_add_vocabulary_checks)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -130,10 +130,10 @@ model Trip {
   startDate               DateTime? @map("start_date") @db.Date
   endDate                 DateTime? @map("end_date") @db.Date
   timezone                String?   @db.VarChar(100)
-  status                  String    @default("planning") @db.VarChar(50) // Dream, Planning, Planned, In Progress, Completed, Cancelled
+  status                  String    @default("planning") @db.VarChar(50) // Dream, Planning, Planned, In Progress, Completed, Cancelled. CHECK trips_status_check (migration 20261126000000_add_vocabulary_checks) also allows the column default 'planning'
   tripType                String?   @map("trip_type") @db.VarChar(100)
   tripTypeEmoji           String?   @map("trip_type_emoji") @db.VarChar(50)
-  privacyLevel            String    @default("private") @map("privacy_level") @db.VarChar(50) // Private, Shared, Public
+  privacyLevel            String    @default("private") @map("privacy_level") @db.VarChar(50) // Private, Shared, Public. CHECK trips_privacy_level_check (migration 20261126000000_add_vocabulary_checks) also allows the column default 'private'
   shareToken              String?   @unique @map("share_token") @db.VarChar(64)
   shareEnabled            Boolean   @default(false) @map("share_enabled")
   archived                Boolean   @default(false)
@@ -297,7 +297,7 @@ model TripCollaborator {
   id              Int      @id @default(autoincrement())
   tripId          Int      @map("trip_id")
   userId          Int      @map("user_id")
-  permissionLevel String   @map("permission_level") @db.VarChar(50) // view, edit, admin
+  permissionLevel String   @map("permission_level") @db.VarChar(50) // view, edit, admin. CHECK trip_collaborators_permission_level_check (migration 20261126000000_add_vocabulary_checks)
   createdAt       DateTime @default(now()) @map("created_at")
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -312,9 +312,9 @@ model TripInvitation {
   tripId          Int       @map("trip_id")
   invitedByUserId Int       @map("invited_by_user_id")
   email           String    @db.VarChar(255)
-  permissionLevel String    @map("permission_level") @db.VarChar(50) // view, edit, admin
+  permissionLevel String    @map("permission_level") @db.VarChar(50) // view, edit, admin. CHECK trip_invitations_permission_level_check (migration 20261126000000_add_vocabulary_checks)
   token           String    @unique @db.VarChar(255) // Unique token for accepting invitation
-  status          String    @default("pending") @db.VarChar(50) // pending, accepted, declined, expired
+  status          String    @default("pending") @db.VarChar(50) // pending, accepted, declined, expired. CHECK trip_invitations_status_check (migration 20261126000000_add_vocabulary_checks)
   message         String?   @db.Text // Optional personal message
   expiresAt       DateTime  @map("expires_at")
   respondedAt     DateTime? @map("responded_at")
@@ -324,7 +324,6 @@ model TripInvitation {
   invitedBy User @relation("InvitationsSent", fields: [invitedByUserId], references: [id], onDelete: Cascade)
 
   @@index([email])
-  @@index([token])
   @@index([tripId, status])
   @@map("trip_invitations")
 }
@@ -355,7 +354,7 @@ model Location {
   openingHours         String?                                @map("opening_hours") @db.Text
   // Where openingHours came from: 'osm' (auto-populated from Nominatim) or 'manual' (user entered).
   // A 'manual' value is never overwritten by the automatic OSM lookup.
-  openingHoursSource   String?                                @map("opening_hours_source") @db.VarChar(20)
+  openingHoursSource   String?                                @map("opening_hours_source") @db.VarChar(20) // osm, manual or NULL. CHECK locations_opening_hours_source_check (migration 20261126000000_add_vocabulary_checks)
   // IANA timezone of the place itself (NOT the user's or the trip's). Opening hours are
   // wall-clock times in this zone. Auto-derived from coordinates via tz-lookup, user-overridable.
   timezone             String?                                @db.VarChar(100)
@@ -377,7 +376,6 @@ model Location {
   tripStops            TripStop[]
   foodLogEntries       FoodLogEntry[]
 
-  @@index([tripId])
   @@index([parentId])
   @@index([tripId, countryCode])
   @@map("locations")
@@ -431,7 +429,6 @@ model CustomItemType {
   items CustomItem[]
 
   @@unique([userId, name])
-  @@index([userId])
   @@map("custom_item_types")
 }
 
@@ -466,7 +463,6 @@ model CustomItem {
   location    Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
   costExpense TripExpense?
 
-  @@index([tripId])
   @@index([tripId, startTime])
   @@index([typeId])
   @@index([locationId])
@@ -476,8 +472,8 @@ model CustomItem {
 model Photo {
   id            Int                                    @id @default(autoincrement())
   tripId        Int                                    @map("trip_id")
-  source        String                                 @default("local") @db.VarChar(50) // 'local' or 'immich'
-  mediaType     String                                 @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'
+  source        String                                 @default("local") @db.VarChar(50) // 'local' or 'immich'. CHECK photos_source_check (migration 20261126000000_add_vocabulary_checks)
+  mediaType     String                                 @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'. CHECK photos_media_type_check (migration 20261126000000_add_vocabulary_checks)
   immichAssetId String?                                @map("immich_asset_id") @db.VarChar(255)
   localPath     String?                                @map("local_path") @db.VarChar(500)
   thumbnailPath String?                                @map("thumbnail_path") @db.VarChar(500)
@@ -501,7 +497,6 @@ model Photo {
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
   @@index([tripId, isFavorite])
-  @@index([tripId])
   @@index([takenAt])
   @@index([localPath])
   @@index([thumbnailPath])
@@ -541,7 +536,6 @@ model PhotoAlbumAssignment {
   photo Photo      @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@unique([albumId, photoId])
-  @@index([albumId])
   @@index([photoId])
   @@map("photo_album_assignments")
 }
@@ -579,7 +573,6 @@ model Activity {
   foodLogEntries   FoodLogEntry[]
   costExpense      TripExpense?
 
-  @@index([tripId])
   @@index([parentId])
   @@index([locationId])
   @@index([tripId, manualOrder])
@@ -608,14 +601,14 @@ model Transportation {
   bookingUrl         String?   @map("booking_url") @db.VarChar(500)
   // The leg's cost (cost, currency and FX snapshot) is the TripExpense row linked through
   // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
-  status             String    @default("on_time") @db.VarChar(50) // on_time, delayed, cancelled
+  status             String    @default("on_time") @db.VarChar(50) // on_time, delayed, cancelled. CHECK transportation_status_check (migration 20261126000000_add_vocabulary_checks)
   delayMinutes       Int?      @map("delay_minutes")
   notes              String?   @db.Text
   connectionGroupId  String?   @map("connection_group_id") @db.VarChar(100)
   isAutoGenerated    Boolean   @default(false) @map("is_auto_generated")
   calculatedDistance Decimal?  @map("calculated_distance") @db.Decimal(10, 2) // Route distance in kilometers
   calculatedDuration Decimal?  @map("calculated_duration") @db.Decimal(10, 2) // Route duration in minutes
-  distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine'
+  distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine' or NULL. CHECK transportation_distance_source_check (migration 20261126000000_add_vocabulary_checks)
   // Which of the booking user's loyalty programs this leg was booked under. A reference only:
   // the membership number itself stays on LoyaltyProgram and is never copied here.
   loyaltyProgramId   Int?      @map("loyalty_program_id")
@@ -720,7 +713,6 @@ model TripExpense {
   lodging         Lodging?           @relation(fields: [lodgingId], references: [id], onDelete: Cascade)
   customItem      CustomItem?        @relation(fields: [customItemId], references: [id], onDelete: Cascade)
 
-  @@index([tripId])
   @@index([paidByCompanionId])
   // Matches the primary list query (order by date desc, created_at desc) in expense.service.ts
   @@index([tripId, date])
@@ -743,7 +735,6 @@ model TripExpenseSplit {
   companion TravelCompanion @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
 
   @@unique([expenseId, companionId])
-  @@index([expenseId])
   @@index([companionId])
   @@map("trip_expense_splits")
 }
@@ -761,7 +752,7 @@ model BookingDeadline {
   lodgingId        Int?      @map("lodging_id")
   transportationId Int?      @map("transportation_id")
   activityId       Int?      @map("activity_id")
-  kind             String    @db.VarChar(30) // cancellation, check_in, payment, other
+  kind             String    @db.VarChar(30) // cancellation, check_in, payment, other. CHECK booking_deadlines_kind_check (migration 20261126000000_add_vocabulary_checks)
   title            String?   @db.VarChar(200) // names a deadline with no booking; required when lodging/transportation/activity are all null
   dueAt            DateTime  @map("due_at")
   note             String?   @db.VarChar(500)
@@ -885,7 +876,6 @@ model WeatherData {
   // can change between refreshes and the service overwrites it in place), so including
   // it would let a location change re-introduce duplicate rows for the same day.
   @@unique([tripId, date])
-  @@index([tripId])
   @@index([locationId])
   @@map("weather_data")
 }
@@ -919,7 +909,7 @@ model Checklist {
   tripId      Int?     @map("trip_id")
   name        String   @db.VarChar(500)
   description String?  @db.Text
-  type        String   @db.VarChar(50) // 'custom', 'airports', 'countries', 'cities'
+  type        String   @db.VarChar(50) // custom, airports, countries, cities, us_states, souvenirs. CHECK checklists_type_check (migration 20261126000000_add_vocabulary_checks)
   isDefault   Boolean  @default(false) @map("is_default") // true for system-generated lists
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -1052,7 +1042,6 @@ model EntityLink {
   // Prevent duplicate links
   @@unique([tripId, sourceType, sourceId, targetType, targetId])
   // Index for querying "what is linked FROM this entity"
-  @@index([tripId, sourceType, sourceId])
   // Index for querying "what is linked TO this entity"
   @@index([tripId, targetType, targetId])
   // Index for querying by source entity without tripId
@@ -1060,7 +1049,6 @@ model EntityLink {
   // Index for querying by target entity without tripId
   @@index([targetType, targetId])
   // Index for trip-level queries
-  @@index([tripId])
   @@map("entity_links")
 }
 
@@ -1089,7 +1077,6 @@ model DismissedValidationIssue {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, issueType, issueKey])
-  @@index([tripId])
   @@map("dismissed_validation_issues")
 }
 
@@ -1191,7 +1178,6 @@ model VisaRequirement {
   lastVerified           DateTime? @map("last_verified") @db.Date
 
   @@unique([passportCountry, destinationCountry])
-  @@index([passportCountry])
   @@index([destinationCountry])
   @@index([passportCountryCode])
   @@index([destinationCountryCode])
@@ -1247,7 +1233,6 @@ model TripLanguage {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, languageCode])
-  @@index([tripId])
   @@map("trip_languages")
 }
 
@@ -1267,7 +1252,6 @@ model LanguagePhrase {
   notes         String? @db.Text
   sortOrder     Int     @default(0) @map("sort_order")
 
-  @@index([languageCode])
   @@index([category])
   @@index([languageCode, category])
   @@map("language_phrases")
@@ -1288,7 +1272,6 @@ model PdfImport {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   pendingEntities PendingEntity[]
 
-  @@index([userId])
   @@index([userId, status])
   @@map("pdf_imports")
 }
@@ -1345,8 +1328,6 @@ model UserInvitation {
   invitedBy    User? @relation("UserInvitationsSent", fields: [invitedByUserId], references: [id], onDelete: SetNull)
   acceptedUser User? @relation("UserInvitationsAccepted", fields: [acceptedUserId], references: [id], onDelete: SetNull)
 
-  @@index([email])
-  @@index([token])
   @@index([status])
   @@index([invitedByUserId])
   @@index([email, status]) // Composite index for common email+status queries
@@ -1465,7 +1446,6 @@ model SavedLink {
   // SetNull so pruning ingest history never destroys the links it produced.
   emailIngest EmailIngest? @relation(fields: [emailIngestId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
   @@index([userId, tripId])
   @@index([tripId])
   @@index([emailIngestId])
@@ -1514,7 +1494,6 @@ model EmailIngest {
   user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   savedLinks SavedLink[]
 
-  @@index([userId])
   @@index([userId, status])
   @@index([status])
   @@map("email_ingests")
@@ -1567,7 +1546,6 @@ model FoodLogEntryPhoto {
   photo Photo        @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@unique([entryId, photoId])
-  @@index([entryId])
   @@index([photoId])
   @@map("food_log_entry_photos")
 }
@@ -1584,7 +1562,7 @@ model MobilePushToken {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
   token      String   @unique @db.VarChar(255)
-  platform   String   @db.VarChar(20) // 'ios' | 'android'
+  platform   String   @db.VarChar(20) // 'ios' | 'android'. CHECK mobile_push_tokens_platform_check (migration 20261126000000_add_vocabulary_checks)
   deviceName String?  @map("device_name") @db.VarChar(200)
   createdAt  DateTime @default(now()) @map("created_at")
   lastSeenAt DateTime @default(now()) @map("last_seen_at")
