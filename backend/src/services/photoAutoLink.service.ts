@@ -138,7 +138,7 @@ class PhotoAutoLinkService {
       if (!photo) continue;
       let group = grouped.get(match.activityId);
       if (!group) {
-        group = { photos: [], counts: { during: 0, near: 0, same_day: 0 } };
+        group = { photos: [], counts: { during: 0, same_day: 0 } };
         grouped.set(match.activityId, group);
       }
       group.photos.push(photo);

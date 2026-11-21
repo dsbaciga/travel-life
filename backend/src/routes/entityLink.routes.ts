@@ -179,9 +179,9 @@ router.post('/photos', entityLinkController.bulkLinkPhotos);
  *     summary: Suggest an activity for each unlinked photo, by capture time
  *     description: >
  *       Matches every photo that is not linked to an activity yet against the trip's
- *       activities. A photo taken during an activity matches it; failing that, one
- *       taken within 30 minutes of it; failing that, an all-day activity on the same
- *       date. Activities with a start but no end are assumed to last 2 hours. Nothing
+ *       activities. A photo matches the activity it was taken during (between its
+ *       start and end); failing that, an all-day activity on the same date. There is
+ *       no nearest-activity fallback. Activities with a start but no end are assumed to last 2 hours. Nothing
  *       is linked: apply the reviewed result with the POST on this path.
  *     tags: [Entity Links]
  *     security:
@@ -226,8 +226,6 @@ router.post('/photos', entityLinkController.bulkLinkPhotos);
  *                             type: object
  *                             properties:
  *                               during:
- *                                 type: integer
- *                               near:
  *                                 type: integer
  *                               same_day:
  *                                 type: integer

@@ -64,9 +64,9 @@ const response = (
       },
       photoIds: [10, 11, 12],
       previewPhotos: [preview(10), preview(11), preview(12)],
-      matchCounts: { during: 2, near: 1, same_day: 0 },
+      matchCounts: { during: 3, same_day: 0 },
       firstTakenAt: '2026-06-10T07:10:00Z',
-      lastTakenAt: '2026-06-10T09:20:00Z',
+      lastTakenAt: '2026-06-10T09:00:00Z',
     },
     {
       activity: {
@@ -80,7 +80,7 @@ const response = (
       },
       photoIds: [20],
       previewPhotos: [preview(20)],
-      matchCounts: { during: 1, near: 0, same_day: 0 },
+      matchCounts: { during: 1, same_day: 0 },
       firstTakenAt: '2026-06-10T18:30:00Z',
       lastTakenAt: '2026-06-10T18:30:00Z',
     },
@@ -123,7 +123,7 @@ describe('PhotoActivityAutoLinkModal', () => {
 
     expect(await screen.findByText('Colosseum tour')).toBeInTheDocument();
     expect(screen.getByText('Dinner in Trastevere')).toBeInTheDocument();
-    expect(screen.getByText(/3 photos taken .*2 during · 1 within 30 min/)).toBeInTheDocument();
+    expect(screen.getByText(/3 photos taken .*3 during/)).toBeInTheDocument();
     expect(screen.getByText(/1 photo taken .*1 during/)).toBeInTheDocument();
     expect(screen.getByText(/2 photos already linked to an activity/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Link 4 photos' })).toBeEnabled();

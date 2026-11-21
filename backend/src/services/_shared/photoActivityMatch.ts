@@ -32,10 +32,9 @@ export interface MatchablePhoto {
 /**
  * How a photo relates to the activity it was matched with, strongest first:
  * - `during`: taken between the activity's start and end
- * - `near`: taken shortly before it started or after it ended
  * - `same_day`: taken on the calendar day of an all-day activity
  */
-export const PHOTO_MATCH_KINDS = ['during', 'near', 'same_day'] as const;
+export const PHOTO_MATCH_KINDS = ['during', 'same_day'] as const;
 export type PhotoMatchKind = (typeof PHOTO_MATCH_KINDS)[number];
 
 export interface PhotoActivityMatch {
@@ -51,11 +50,6 @@ export const PHOTO_MATCH_RULES = {
    * only ever match a photo taken in that exact second.
    */
   defaultDurationMs: 2 * 60 * 60 * 1000,
-  /**
-   * Slack on either side of the window: people photograph the entrance before a
-   * tour starts and the group afterwards, and planned times are approximate.
-   */
-  paddingMs: 30 * 60 * 1000,
 } as const;
 
 // =============================================================================
@@ -83,10 +77,14 @@ function daySpan(startDay: string, endDay: string): number {
 /**
  * Matches each photo to at most one activity by capture time.
  *
- * A photo goes to the most specific activity that claims it: one it was taken
- * *during* beats one it was merely *near*, which beats an all-day activity on
- * the same date. When several activities overlap (a guided tour inside a "Day
- * in Kyoto" block), the shortest wins, because it says the most about the photo.
+ * The times have to line up: a photo matches a timed activity only when it was
+ * taken between that activity's start and end. There is deliberately no "closest
+ * activity" fallback, because a photo taken between two activities belongs to
+ * neither and a guess would have to be found and undone by hand.
+ *
+ * A timed activity beats an all-day activity on the same date. When several
+ * timed activities overlap (a guided tour inside a "Day in Kyoto" block), the
+ * shortest wins, because it says the most about the photo.
  *
  * Timed activities are compared as instants, so no timezone is involved. All-day
  * activities are calendar dates, so the photo is bucketed onto a day on the
@@ -145,16 +143,12 @@ export function matchPhotosToActivities(
   const matches: PhotoActivityMatch[] = [];
   if (timed.length === 0 && allDay.length === 0) return matches;
 
-  const pad = PHOTO_MATCH_RULES.paddingMs;
-
   for (const photo of photos) {
     if (!photo.takenAt) continue;
     const at = photo.takenAt.getTime();
     if (Number.isNaN(at)) continue;
 
     let during: TimedWindow | null = null;
-    let near: TimedWindow | null = null;
-    let nearGap = Number.POSITIVE_INFINITY;
 
     for (const window of timed) {
       if (at >= window.start && at <= window.end) {
@@ -166,21 +160,11 @@ export function matchPhotosToActivities(
         ) {
           during = window;
         }
-      } else if (!during && at >= window.start - pad && at <= window.end + pad) {
-        const gap = at < window.start ? window.start - at : at - window.end;
-        if (gap < nearGap) {
-          near = window;
-          nearGap = gap;
-        }
       }
     }
 
     if (during) {
       matches.push({ photoId: photo.id, activityId: during.id, kind: 'during' });
-      continue;
-    }
-    if (near) {
-      matches.push({ photoId: photo.id, activityId: near.id, kind: 'near' });
       continue;
     }
 

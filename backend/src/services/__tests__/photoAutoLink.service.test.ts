@@ -82,7 +82,8 @@ describe('PhotoAutoLinkService', () => {
       mockPrisma.photo.findMany.mockResolvedValue([
         photoRow(10, '2026-06-10T09:30:00Z'),
         photoRow(11, '2026-06-10T10:30:00Z'),
-        photoRow(12, '2026-06-10T11:20:00Z'),
+        photoRow(12, '2026-06-10T11:00:00Z'),
+        photoRow(13, '2026-06-10T11:20:00Z'),
       ]);
 
       const result = await photoAutoLinkService.getActivitySuggestions(USER_ID, TRIP_ID);
@@ -91,9 +92,9 @@ describe('PhotoAutoLinkService', () => {
       const [suggestion] = result.suggestions;
       expect(suggestion.activity).toMatchObject({ id: 1, name: 'Colosseum tour' });
       expect(suggestion.photoIds).toEqual([10, 11, 12]);
-      expect(suggestion.matchCounts).toEqual({ during: 2, near: 1, same_day: 0 });
+      expect(suggestion.matchCounts).toEqual({ during: 3, same_day: 0 });
       expect(suggestion.firstTakenAt).toEqual(new Date('2026-06-10T09:30:00Z'));
-      expect(suggestion.lastTakenAt).toEqual(new Date('2026-06-10T11:20:00Z'));
+      expect(suggestion.lastTakenAt).toEqual(new Date('2026-06-10T11:00:00Z'));
       expect(result.summary.matchedPhotos).toBe(3);
     });
 

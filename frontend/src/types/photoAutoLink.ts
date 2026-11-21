@@ -1,10 +1,9 @@
 /**
  * How a photo relates to the activity it was matched with:
  * - `during`: taken between the activity's start and end
- * - `near`: taken shortly before it started or after it ended
  * - `same_day`: taken on the calendar day of an all-day activity
  */
-export type PhotoMatchKind = 'during' | 'near' | 'same_day';
+export type PhotoMatchKind = 'during' | 'same_day';
 
 /** A thumbnail shown in a suggestion's preview strip. */
 export interface PhotoActivitySuggestionPreviewPhoto {

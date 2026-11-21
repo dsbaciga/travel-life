@@ -4,10 +4,9 @@
  * Test cases:
  * - PAM-001: A photo taken between an activity's start and end matches it as `during`
  * - PAM-002: An activity with no end time is assumed to last two hours
- * - PAM-003: A photo just before the start or just after the end matches as `near`
- * - PAM-004: A photo outside the padded window matches nothing
+ * - PAM-003: A photo taken outside the activity, even by a minute, matches nothing
  * - PAM-005: Of overlapping activities, the shortest one wins
- * - PAM-006: `during` beats `near`, and the closest activity wins among `near` ones
+ * - PAM-006: A photo between two activities is not given to the closest one
  * - PAM-007: An all-day activity matches photos on its calendar day in its own zone
  * - PAM-008: An all-day activity falls back to the trip zone, and covers multi-day spans
  * - PAM-009: A timed activity beats an all-day one on the same day
@@ -59,25 +58,16 @@ describe('matchPhotosToActivities', () => {
       'UTC'
     );
 
-    expect(matches).toEqual([
-      { photoId: 10, activityId: 1, kind: 'during' },
-      { photoId: 11, activityId: 1, kind: 'near' },
-    ]);
+    expect(matches).toEqual([{ photoId: 10, activityId: 1, kind: 'during' }]);
   });
 
-  it('PAM-003: matches a photo just outside the window as near', () => {
+  it('PAM-003: leaves a photo taken outside the activity unmatched', () => {
     const matches = matchPhotosToActivities(
-      [photo(10, '2026-06-10T08:30:00Z'), photo(11, '2026-06-10T11:30:00Z')],
-      [activity()],
-      'UTC'
-    );
-
-    expect(matches.map((m) => m.kind)).toEqual(['near', 'near']);
-  });
-
-  it('PAM-004: leaves a photo outside the padded window unmatched', () => {
-    const matches = matchPhotosToActivities(
-      [photo(10, '2026-06-10T08:29:00Z'), photo(11, '2026-06-10T11:31:00Z'), photo(12, '2026-06-11T10:00:00Z')],
+      [
+        photo(10, '2026-06-10T08:59:00Z'), // a minute before it starts
+        photo(11, '2026-06-10T11:01:00Z'), // a minute after it ends
+        photo(12, '2026-06-11T10:00:00Z'), // the next day
+      ],
       [activity()],
       'UTC'
     );
@@ -109,7 +99,7 @@ describe('matchPhotosToActivities', () => {
     ]);
   });
 
-  it('PAM-006: prefers during over near, and the closest near activity', () => {
+  it('PAM-006: does not give a photo between two activities to the closest one', () => {
     const morning = activity({
       id: 1,
       startTime: new Date('2026-06-10T09:00:00Z'),
@@ -123,21 +113,18 @@ describe('matchPhotosToActivities', () => {
 
     const matches = matchPhotosToActivities(
       [
-        // Inside lunch, and within the padding of the morning activity
-        photo(10, '2026-06-10T10:25:00Z'),
-        // In the gap: 5 minutes after the morning activity, 15 before lunch
-        photo(11, '2026-06-10T10:05:00Z'),
-        // In the gap: 15 minutes after the morning activity, 5 before lunch
-        photo(12, '2026-06-10T10:15:00Z'),
+        photo(10, '2026-06-10T09:55:00Z'), // during the morning activity
+        photo(11, '2026-06-10T10:05:00Z'), // in the gap, 5 minutes after it
+        photo(12, '2026-06-10T10:15:00Z'), // in the gap, 5 minutes before lunch
+        photo(13, '2026-06-10T10:25:00Z'), // during lunch
       ],
       [morning, lunch],
       'UTC'
     );
 
     expect(matches).toEqual([
-      { photoId: 10, activityId: 2, kind: 'during' },
-      { photoId: 11, activityId: 1, kind: 'near' },
-      { photoId: 12, activityId: 2, kind: 'near' },
+      { photoId: 10, activityId: 1, kind: 'during' },
+      { photoId: 13, activityId: 2, kind: 'during' },
     ]);
   });
 

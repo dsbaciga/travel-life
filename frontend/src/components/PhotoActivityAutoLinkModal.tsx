@@ -32,7 +32,6 @@ interface PhotoActivityAutoLinkModalProps {
 /** Wording for each way a photo can match, in the order they are listed. */
 const MATCH_LABELS: Array<{ kind: PhotoMatchKind; label: string }> = [
   { kind: "during", label: "during" },
-  { kind: "near", label: "within 30 min" },
   { kind: "same_day", label: "same day" },
 ];
 
@@ -216,9 +215,9 @@ export default function PhotoActivityAutoLinkModal({
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-slate dark:text-warm-gray/80">
-            Each photo is matched to the activity it was taken during, or within 30
-            minutes of. Activities with no end time are assumed to last 2 hours.
-            Untick anything that looks wrong.
+            A photo is matched only to an activity it was taken during. Activities
+            with no end time are assumed to last 2 hours. Untick anything that looks
+            wrong.
           </p>
 
           <label className="flex items-center gap-3 min-h-[44px] text-sm font-medium text-charcoal dark:text-warm-gray cursor-pointer">
