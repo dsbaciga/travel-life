@@ -286,6 +286,42 @@ export async function createAndLink<K extends SyncEntityKind & EntityType>(
   });
 }
 
+/** Kinds whose place is their own `locationId` rather than a link. */
+export const OWN_PLACE_KINDS = ['ACTIVITY', 'LODGING', 'CUSTOM_ITEM', 'FOOD_LOG'] as const;
+export type OwnPlaceKind = (typeof OWN_PLACE_KINDS)[number];
+
+export function hasOwnPlace(kind: string): kind is OwnPlaceKind {
+  return (OWN_PLACE_KINDS as readonly string[]).includes(kind);
+}
+
+/**
+ * "This is at that place". An activity or stay keeps its place in its own `locationId`, so the
+ * first place it is given goes there; any further place (and every place of other kinds) is an
+ * ordinary link.
+ *
+ * @returns `'place'` when the entity's `locationId` was set, `'link'` when a link was created
+ */
+export async function attachPlace(
+  db: SqlDriver,
+  tripId: number,
+  source: { type: EntityType; id: EntityId },
+  locationId: EntityId
+): Promise<'place' | 'link'> {
+  return db.transaction(async (db) => {
+    if (source.type === 'ACTIVITY' || source.type === 'LODGING') {
+      const current = await getEntity(db, source.type, source.id);
+      if (current && (current.locationId === null || current.locationId === undefined)) {
+        await updateEntity(db, source.type, source.id, { locationId });
+        return 'place';
+      }
+      // Already there: nothing to add.
+      if (current && idKey(current.locationId as EntityId) === idKey(locationId)) return 'place';
+    }
+    await createLink(db, tripId, source.type, source.id, { targetType: 'LOCATION', targetId: locationId });
+    return 'link';
+  });
+}
+
 /** Link many photos to one target (the camera-roll review bar's bulk action). */
 export async function bulkLinkPhotos(
   db: SqlDriver,

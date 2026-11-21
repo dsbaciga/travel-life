@@ -27,6 +27,7 @@ import { parseIdKey } from '@/db/repository';
 import {
   createEntity,
   deleteEntity,
+  hasOwnPlace,
   promoteSavedLink,
   updateEntity,
   type LinkSpec,
@@ -220,6 +221,14 @@ export default function EntityScreen() {
         const links: LinkSpec[] = suggestions
           .filter((s) => accepted.has(`${s.targetType}:${s.targetId}`))
           .map((s) => ({ targetType: s.targetType, targetId: s.targetId, relationship: s.relationship }));
+        // An activity, stay, custom item or meal keeps its place in its own locationId, not in a
+        // link: the pin it is created at, else the nearby place that was suggested, goes there.
+        const data: Record<string, unknown> = { ...checked.data };
+        const ownPlace = hasOwnPlace(kind);
+        if (ownPlace && (data.locationId === null || data.locationId === undefined)) {
+          const nearby = links.findIndex((link) => link.targetType === 'LOCATION');
+          if (nearby !== -1) data.locationId = links.splice(nearby, 1)[0].targetId;
+        }
 
         // One transaction: "new activity at this pin" must never leave a place
         // without its activity, or an activity without its link.
@@ -235,13 +244,14 @@ export default function EntityScreen() {
                 longitude: presetLongitude,
               }) as Omit<SyncEntityMap['LOCATION'], 'id' | 'tripId'>
             );
-            links.push({ targetType: 'LOCATION', targetId: place.id });
+            if (ownPlace) data.locationId = place.id;
+            else links.push({ targetType: 'LOCATION', targetId: place.id });
           }
           const created = await createEntity(
             tx,
             kind,
             tripId,
-            completeEntity(kind, checked.data) as Omit<SyncEntityMap[typeof kind], 'id' | 'tripId'>,
+            completeEntity(kind, data) as Omit<SyncEntityMap[typeof kind], 'id' | 'tripId'>,
             isLinkableKind(kind) ? links : []
           );
           if (kind === 'FOOD_LOG') await queueMealPhotos(tx, tripId, created.id, photos);

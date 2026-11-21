@@ -96,9 +96,10 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     fields: [
       { section: 'What', key: 'name', label: 'Name', type: 'text', placeholder: 'What are you doing?' },
       { key: 'category', label: 'Category', type: 'text', placeholder: 'Dining, Sightseeing…' },
-      { section: 'When', key: 'allDay', label: 'All day', type: 'boolean' },
+      { section: 'When and where', key: 'allDay', label: 'All day', type: 'boolean' },
       { key: 'startTime', label: 'Starts', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'endTime', label: 'Ends', type: 'datetime', timezoneKey: 'timezone' },
+      { key: 'locationId', label: 'Location', type: 'location' },
       { section: 'Booking', key: 'cost', label: 'Cost', type: 'number' },
       { key: 'currency', label: 'Currency', type: 'text', placeholder: 'EUR' },
       { key: 'bookingReference', label: 'Booking reference', type: 'text' },
@@ -161,6 +162,7 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
       { section: 'Stay', key: 'type', label: 'Type', type: 'select', options: LODGING_TYPES },
       { key: 'name', label: 'Name', type: 'text' },
       { key: 'address', label: 'Address', type: 'multiline' },
+      { key: 'locationId', label: 'Location', type: 'location' },
       { section: 'Dates', key: 'checkInDate', label: 'Check-in', type: 'datetime', timezoneKey: 'timezone' },
       { key: 'checkOutDate', label: 'Check-out', type: 'datetime', timezoneKey: 'timezone' },
       { section: 'Booking', key: 'confirmationNumber', label: 'Confirmation', type: 'text' },
@@ -261,10 +263,10 @@ export function completeEntity(kind: FormKind, values: Record<string, unknown>):
     blank[field.key] = field.type === 'boolean' ? false : null;
   }
   const extras: Partial<Record<FormKind, Record<string, unknown>>> = {
-    ACTIVITY: { parentId: null, description: null, timezone: null, manualOrder: null },
+    ACTIVITY: { parentId: null, locationId: null, description: null, timezone: null, manualOrder: null },
     LOCATION: { parentId: null, categoryId: null, timezone: null },
     TRANSPORTATION: { startTimezone: null, endTimezone: null },
-    LODGING: { timezone: null },
+    LODGING: { locationId: null, timezone: null },
     CUSTOM_ITEM: { typeId: null, timezone: null },
     FOOD_LOG: { activityId: null },
     SAVED_LINK: { description: null, siteName: null, imageUrl: null },
