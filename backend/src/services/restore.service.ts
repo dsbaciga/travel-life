@@ -1385,6 +1385,16 @@ export async function restoreFromBackup(
     await receiptRef.current?.discardCopies();
     if (error instanceof AppError) throw error;
     console.error('Error restoring from backup:', error);
+    // A value outside a column's fixed vocabulary (a status, permission level, photo source...) is a
+    // problem with the file, not the server: nothing was restored, say which rule it broke.
+    const violated = /violates check constraint "([a-z_]+)"/.exec(error instanceof Error ? error.message : '');
+    if (violated) {
+      throw new AppError(
+        `This backup holds a value that is not allowed (${violated[1]}). Nothing was restored.`,
+        400,
+        { cause: error }
+      );
+    }
     throw new AppError(
       `Failed to restore from backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
