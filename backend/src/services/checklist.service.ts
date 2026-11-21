@@ -26,7 +26,7 @@ interface ChecklistItemCreateData {
   description?: string | null;
   isDefault: boolean;
   sortOrder: number;
-  metadata: Record<string, unknown>;
+  metadata: Prisma.InputJsonObject;
 }
 
 // Template configuration for default checklists
@@ -416,7 +416,7 @@ class ChecklistService {
         checklistId,
         name: itemData.name,
         description: itemData.description,
-        metadata: itemData.metadata,
+        metadata: itemData.metadata as Prisma.InputJsonObject | undefined,
         sortOrder: (maxItem?.sortOrder ?? -1) + 1,
       },
     });
@@ -451,7 +451,7 @@ class ChecklistService {
         description: data.description ?? undefined,
         sortOrder: data.sortOrder ?? undefined,
         isChecked: data.isChecked ?? undefined,
-        metadata: data.metadata ?? undefined,
+        metadata: (data.metadata ?? undefined) as Prisma.InputJsonObject | undefined,
         checkedAt: data.isChecked !== undefined
           ? data.isChecked
             ? new Date()

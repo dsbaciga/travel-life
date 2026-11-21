@@ -135,8 +135,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     // Already in route order (selected with orderBy position); position itself is not stored.
     stops: ((trip.stops ?? []) as Array<Record<string, unknown>>).map((s) => ({
       name: s.name as string,
-      latitude: s.latitude as number,
-      longitude: s.longitude as number,
+      // Decimal(10,8)/(11,8) column: JSON would serialise a Decimal as a string, the file format wants numbers.
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
       nights: (s.nights as number | null) ?? null,
       locationId: (s.locationId as number | null) ?? null,
     })),

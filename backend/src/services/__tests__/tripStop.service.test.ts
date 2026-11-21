@@ -11,9 +11,11 @@
  * - TST-007: List requires only view access and returns stops in order
  * - TST-008: A viewer-only collaborator cannot write (permission error propagates)
  * - TST-009: Zod schemas reject out-of-range coordinates and nights
+ * - TST-010: Decimal(10,8)/(11,8) coordinates come back as plain numbers from list, create, update and reorder
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/errors';
 
 const mockTx = {
@@ -91,6 +93,32 @@ describe('TripStopService', () => {
     const created = await tripStopService.createStop(1, 10, { name: 'A', latitude: 0, longitude: 0 });
 
     expect(created).toMatchObject({ position: 0, nights: null, locationId: null });
+  });
+
+  it('TST-010: Decimal coordinates are returned as plain numbers', async () => {
+    const row = (id: number) => ({
+      id,
+      tripId: 10,
+      name: 'S',
+      latitude: new Prisma.Decimal('-33.86882012'),
+      longitude: new Prisma.Decimal('151.20929551'),
+      position: id,
+      nights: null,
+      locationId: null,
+    });
+    const expected = { latitude: -33.86882012, longitude: 151.20929551 };
+
+    mockPrisma.tripStop.findMany.mockResolvedValue([row(0)]);
+    expect(await tripStopService.getStopsByTrip(1, 10)).toEqual([expect.objectContaining(expected)]);
+
+    mockPrisma.tripStop.findFirst.mockResolvedValue(null);
+    mockPrisma.tripStop.create.mockResolvedValue(row(0));
+    expect(await tripStopService.createStop(1, 10, { name: 'S', latitude: -33.86882012, longitude: 151.20929551 }))
+      .toEqual(expect.objectContaining(expected));
+
+    mockPrisma.tripStop.findFirst.mockResolvedValue(row(0));
+    mockPrisma.tripStop.update.mockResolvedValue(row(0));
+    expect(await tripStopService.updateStop(1, 10, 0, { name: 'T' })).toEqual(expect.objectContaining(expected));
   });
 
   it('TST-002: create rejects a linked location not on the trip', async () => {

@@ -359,7 +359,6 @@ model Location {
   // IANA timezone of the place itself (NOT the user's or the trip's). Opening hours are
   // wall-clock times in this zone. Auto-derived from coordinates via tz-lookup, user-overridable.
   timezone             String?                                @db.VarChar(100)
-  coordinates          Unsupported("geography(Point, 4326)")?
   createdAt            DateTime                               @default(now()) @map("created_at")
   updatedAt            DateTime                               @updatedAt @map("updated_at")
 
@@ -381,7 +380,6 @@ model Location {
   @@index([tripId])
   @@index([parentId])
   @@index([tripId, countryCode])
-  @@index([coordinates], type: Gist)
   @@map("locations")
 }
 
@@ -489,7 +487,6 @@ model Photo {
   longitude     Decimal?                               @db.Decimal(11, 8)
   takenAt       DateTime?                              @map("taken_at")
   isFavorite    Boolean                                @default(false) @map("is_favorite")
-  coordinates   Unsupported("geography(Point, 4326)")?
   uploadedAt    DateTime                               @default(now()) @map("uploaded_at")
   createdAt     DateTime                               @default(now()) @map("created_at")
   updatedAt     DateTime                               @updatedAt @map("updated_at")
@@ -508,7 +505,6 @@ model Photo {
   @@index([takenAt])
   @@index([localPath])
   @@index([thumbnailPath])
-  @@index([coordinates], type: Gist)
   @@map("photos")
 }
 
@@ -796,14 +792,15 @@ model BookingDeadline {
 // ordering and holds every saved place, not just the route). locationId optionally links
 // a stop to a saved place; deleting that place keeps the stop (SetNull) because name and
 // coordinates are stored on the stop itself. Coordinates are range-checked by CHECK
-// constraints in migration 20261116080000_add_trip_stops.
+// constraints in migration 20261116080000_add_trip_stops (kept when 20261125000000 made the
+// columns Decimal). Services return plain numbers via convertDecimals.
 model TripStop {
   id         Int      @id @default(autoincrement())
   tripId     Int      @map("trip_id")
   locationId Int?     @map("location_id")
   name       String   @db.VarChar(200)
-  latitude   Float
-  longitude  Float
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
   position   Int
   nights     Int?
   createdAt  DateTime @default(now()) @map("created_at")

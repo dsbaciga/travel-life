@@ -149,7 +149,7 @@ export const mockPrismaClient = {
   $connect: jest.fn(),
   $disconnect: jest.fn(),
 
-  // Extensions support (used for PostGIS)
+  // Extensions support
   $extends: jest.fn().mockReturnThis(),
 };
 

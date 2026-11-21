@@ -13,7 +13,7 @@ throwaway container that you delete afterwards.
 | Script | What it checks |
 | ------ | -------------- |
 | `provision-empty-db.sh` | Builds an empty database the way `backend/prisma/migrations/README.md` describes, then reports migration status and schema drift |
-| `api-smoke.cjs` | 66 API steps as a new user: sign-up, token refresh, create/edit/delete on every main entity, PostGIS writes, raw-SQL reads, share link and calendar feed without sign-in, trip duplication, backup and restore |
+| `api-smoke.cjs` | 66 API steps as a new user: sign-up, token refresh, create/edit/delete on every main entity, location writes, raw-SQL reads, share link and calendar feed without sign-in, trip duplication, backup and restore |
 | `compare-reads.cjs` | Asks the old and the new backend the same read questions about copies of the same data, for every user and trip, and lists every response that differs |
 | `backup-roundtrip.cjs` | For each existing user: backup, restore over their data, backup again, and compare |
 | `batch-nov-2026-smoke.cjs` | About 400 assertions on the November 2026 batch (expense splits, receipts, photo favorites, loyalty programs, trip stops, units, trip comparison, CSV import, journal day draft, Immich sync, booking deadlines), then a backup round trip (replace and merge), trip duplication and mobile sync |

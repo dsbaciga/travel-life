@@ -98,7 +98,7 @@ describe('BulkImportService', () => {
     const { data } = tx.location.createManyAndReturn.mock.calls[0][0] as { data: Array<{ name: string; tripId: number }> };
     expect(data.map((d) => d.name)).toEqual(['A', 'D']);
     expect(data.every((d) => d.tripId === 9)).toBe(true);
-    expect(tx.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(tx.$executeRaw).not.toHaveBeenCalled();
     expect(result.rows.map((r) => r.status)).toEqual(['created', 'invalid', 'excluded', 'created']);
     expect(result).toMatchObject({ created: 2, invalid: 1, excluded: 1 });
   });

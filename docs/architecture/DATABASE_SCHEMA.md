@@ -1,6 +1,6 @@
 # Database Schema Reference
 
-Travel Life uses PostgreSQL with PostGIS extension for geospatial data. The schema is managed via Prisma ORM.
+Travel Life uses PostgreSQL (with the PostGIS extension installed, though no table has a spatial column since migration `20261125000000`). The schema is managed via Prisma ORM.
 
 The schema defines **51 models** (mapped to **51 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
 
@@ -162,7 +162,6 @@ Points of interest within a trip.
 | visitDatetime | DateTime? | Planned/actual visit time |
 | visitDurationMinutes | Int? | Expected duration |
 | notes | String? | Notes |
-| coordinates | Geography? | PostGIS point (auto-generated) |
 
 ### Photo
 
@@ -434,8 +433,8 @@ One stop of a trip's route in the multi-city planner (migration `20261116080000_
 | tripId | Int | Trip foreign key (cascade) |
 | locationId | Int? | Saved place this stop was made from (`SET NULL` on delete) |
 | name | String | Stop name (a snapshot when linked to a place) |
-| latitude | Float | Latitude |
-| longitude | Float | Longitude |
+| latitude | Decimal(10,8) | Latitude (API returns a plain number; range CHECK -90..90) |
+| longitude | Decimal(11,8) | Longitude (API returns a plain number; range CHECK -180..180) |
 | position | Int | Order within the trip |
 | nights | Int? | Planned nights at the stop |
 
@@ -1177,7 +1176,6 @@ Key indexes for performance:
 | trips | (userId, status) | Dashboard filtering |
 | trips | (startDate, endDate) | Date range queries |
 | locations | (tripId) | Trip location listing |
-| locations | coordinates (GIST) | Geospatial queries |
 | photos | (tripId, takenAt) | Chronological photo listing |
 | entity_links | (tripId, sourceType, sourceId) | Forward link queries |
 | entity_links | (tripId, targetType, targetId) | Reverse link queries |
@@ -1198,22 +1196,15 @@ Deleting a trip automatically deletes:
 
 This provides ~1.1mm precision, more than sufficient for travel applications.
 
-## PostGIS Usage
+## PostGIS
 
-The `coordinates` field on Location and Photo uses PostGIS Geography type for:
-- Efficient spatial indexing
-- Distance calculations
-- Proximity queries
-
-```sql
--- Example: Find locations within 10km of a point
-SELECT * FROM locations
-WHERE ST_DWithin(
-  coordinates,
-  ST_GeogFromText('POINT(-122.4194 37.7749)'),
-  10000
-);
-```
+The `postgis` extension stays installed (`extensions = [postgis]` in `schema.prisma`, `CREATE EXTENSION` in the
+baseline migration and `scripts/migrate-and-start.sh`, `postgis/postgis` images in the compose files), but no
+table has a spatial column. `locations.coordinates` and `photos.coordinates` (`geography(Point, 4326)`, with
+GiST indexes) were rewritten from `latitude`/`longitude` on every write and read by nothing; migration
+`20261125000000_drop_spatial_columns_decimal_trip_stops` dropped them together with the dual-write code. Distances
+and nearest-place logic are computed in application code (`haversineMeters` in `packages/shared`). If a spatial
+query is ever needed, add a generated or indexed column in a new migration.
 
 ## Database Management
 

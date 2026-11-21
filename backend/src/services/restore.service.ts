@@ -369,7 +369,7 @@ export async function restoreFromBackup(
                   isDefault: item.isDefault,
                   isChecked: item.isChecked,
                   checkedAt: item.checkedAt,
-                  metadata: item.metadata === null ? Prisma.JsonNull : item.metadata,
+                  metadata: item.metadata === null ? Prisma.JsonNull : (item.metadata as Prisma.InputJsonValue | undefined),
                 })),
               },
             },
@@ -661,7 +661,7 @@ export async function restoreFromBackup(
                 dietaryTags:
                   activityData.dietaryTags === null
                     ? Prisma.DbNull
-                    : activityData.dietaryTags,
+                    : (activityData.dietaryTags as Prisma.InputJsonValue | undefined),
               },
             });
             if (activityData.id != null) activityMap.set(activityData.id, activity.id);
@@ -1032,7 +1032,7 @@ export async function restoreFromBackup(
                     isDefault: item.isDefault,
                     isChecked: item.isChecked,
                     checkedAt: item.checkedAt,
-                    metadata: item.metadata === null ? Prisma.JsonNull : item.metadata,
+                    metadata: item.metadata === null ? Prisma.JsonNull : (item.metadata as Prisma.InputJsonValue | undefined),
                   })),
                 },
               },

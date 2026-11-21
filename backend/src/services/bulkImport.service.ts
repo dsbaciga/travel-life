@@ -135,7 +135,7 @@ class BulkImportService {
     }
 
     const tripTimezoneSet = await prisma.$transaction(async (tx) => {
-      const created = await tx.location.createManyAndReturn({
+      await tx.location.createManyAndReturn({
         data: plan.toCreate.map(({ data }) => ({
           tripId,
           name: data.name,
@@ -152,19 +152,6 @@ class BulkImportService {
         })),
         select: { id: true },
       });
-
-      // The PostGIS column is kept in step by a Prisma extension on `location.create`, which
-      // runs its follow-up UPDATE on a different connection and so cannot see rows this
-      // transaction has not committed. createManyAndReturn bypasses that hook anyway, so sync
-      // the geography column for the whole batch here, inside the transaction.
-      const located = created.map((c) => c.id);
-      if (located.length > 0) {
-        await tx.$executeRaw`
-          UPDATE locations
-          SET coordinates = ST_SetSRID(ST_MakePoint(longitude::double precision, latitude::double precision), 4326)::geography
-          WHERE id IN (${Prisma.join(located)}) AND latitude IS NOT NULL AND longitude IS NOT NULL
-        `;
-      }
 
       // Same rule as single-create's autoSetTripTimezone, applied once for the batch.
       if (!trip?.timezone) {

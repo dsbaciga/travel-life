@@ -20,6 +20,7 @@ import {
   PdfImportStatus,
   PendingEntityType,
   PendingEntityStatus,
+  type Prisma,
 } from '@prisma/client';
 
 // multer file shape
@@ -294,7 +295,7 @@ class PdfImportService {
               pdfImportId,
               userId,
               entityType: entity.type as PendingEntityType,
-              parsedData: entity.data as Record<string, unknown>,
+              parsedData: entity.data as Prisma.InputJsonObject,
               confidence: entity.confidence,
               matchedTripId: matchedTripId ?? null,
             },
@@ -441,7 +442,7 @@ class PdfImportService {
     return prisma.pendingEntity.update({
       where: { id },
       data: {
-        ...(input.parsedData !== undefined ? { parsedData: input.parsedData as Record<string, unknown> } : {}),
+        ...(input.parsedData !== undefined ? { parsedData: input.parsedData as Prisma.InputJsonObject } : {}),
         ...(input.matchedTripId !== undefined ? { matchedTripId: input.matchedTripId } : {}),
       },
     });

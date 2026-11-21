@@ -225,7 +225,7 @@ Design:
   `Decimal(10,8)` / `Decimal(11,8)`; convert them, keeping the range CHECKs and the API's
   plain-number JSON.
 
-- [ ] Step F done
+- [x] Step F done
 
 ## Step G (cleanup): constrained status strings and redundant indexes
 

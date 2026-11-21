@@ -64,7 +64,7 @@ The backend follows a **layered architecture** with clear separation of concerns
 ┌─────────────────────────────────────────────────────┐
 │          Database (PostgreSQL)                      │
 │  - Accessed via Prisma ORM                          │
-│  - PostGIS extension for geospatial                 │
+│  - PostGIS extension installed (no spatial columns) │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -97,8 +97,7 @@ backend/
   src/
     config/
       index.ts                   # Central configuration (throws if secrets missing or weak)
-      database.ts                # Prisma client (pg driver adapter + PostGIS extension)
-      prismaExtensions.ts        # PostGIS extension (syncs GEOGRAPHY columns from lat/lng)
+      database.ts                # Prisma client (pg driver adapter)
       logger.ts                  # Winston logger setup
       cron.ts                    # Cron job initialisation
       swagger.ts                 # OpenAPI / Swagger setup
@@ -581,17 +580,16 @@ async deleteActivity(userId: number, activityId: number) {
 
 ### Prisma ORM
 
-**Prisma Client** (Prisma 7): Instantiated in `src/config/database.ts` with the `@prisma/adapter-pg` driver adapter over a `pg` connection pool, then extended with the PostGIS extension from `config/prismaExtensions.ts`. Also exports `checkDatabaseConnection()` (retrying startup check).
+**Prisma Client** (Prisma 7): Instantiated in `src/config/database.ts` with the `@prisma/adapter-pg` driver adapter over a `pg` connection pool (no client extensions; the PostGIS dual-write extension was removed in migration `20261125000000`). Also exports `checkDatabaseConnection()` (retrying startup check).
 
 ```typescript
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
-import { postgisExtension } from './prismaExtensions';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const prismaClient = new PrismaClient({ adapter: new PrismaPg(pool) });
-const prisma = prismaClient.$extends(postgisExtension);
+const prisma = prismaClient;
 
 export default prisma;
 ```
