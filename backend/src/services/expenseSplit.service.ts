@@ -16,6 +16,7 @@ import {
   sharesSumTo,
 } from './_shared/settleUp';
 import { payerKey, splitRowKey, withSplitFields } from './_shared/expenseSplitFields';
+import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
 import expenseService from './expense.service';
 import {
   ExpenseParticipant,
@@ -30,11 +31,26 @@ function companionIdOf(key: string): number | null {
   return key === OWNER_KEY ? null : Number(key.slice('companion:'.length));
 }
 
+/**
+ * Participant keys are `owner` or `companion:<id>`. In storage the owner is the TRIP OWNER's
+ * "myself" companion, so a key resolves to a companion id (creating that companion on demand).
+ */
+function companionResolver(tx: Parameters<typeof ensureOwnerCompanionId>[0], ownerId: number) {
+  let ownerCompanionId: number | null = null;
+  return async (key: string): Promise<number> => {
+    const id = companionIdOf(key);
+    if (id !== null) return id;
+    ownerCompanionId ??= await ensureOwnerCompanionId(tx, ownerId);
+    return ownerCompanionId;
+  };
+}
+
 class ExpenseSplitService {
   /**
    * Everyone an expense can be paid by or shared with: the trip owner plus the
-   * companions linked to the trip. The owner's own companion record
-   * (`isMyself`) is left out — the owner is already represented by `owner`.
+   * companions linked to the trip. The owner's own "myself" companion (`isMyself`)
+   * is left out: it is the `owner` entry, so it never appears twice (whether or not
+   * it is assigned to the trip).
    */
   async getParticipants(userId: number, tripId: number): Promise<ExpenseParticipant[]> {
     const access = await verifyTripAccessWithPermission(userId, tripId, 'view');
@@ -55,10 +71,10 @@ class ExpenseSplitService {
         prisma.tripExpenseSplit.deleteMany({ where: { expenseId } }),
         prisma.tripExpense.update({
           where: { id: expenseId },
-          data: { paidByOwner: false, paidByCompanionId: null, splitMethod: null },
+          data: { paidByCompanionId: null, splitMethod: null },
         }),
       ]);
-      return this.loadExpense(expenseId);
+      return this.loadExpense(expenseId, access.trip.userId);
     }
 
     const method = input.method;
@@ -87,34 +103,29 @@ class ExpenseSplitService {
       participants.map((p) => [p.participant, p.percentage ?? null])
     );
 
-    const paidByCompanionId = companionIdOf(input.paidBy);
-    await prisma.$transaction([
-      prisma.tripExpenseSplit.deleteMany({ where: { expenseId } }),
-      prisma.tripExpense.update({
+    // The owner's "myself" companion is created here when the owner has none yet, in the same
+    // transaction as the split itself.
+    await prisma.$transaction(async (tx) => {
+      const resolve = companionResolver(tx, access.trip.userId);
+      const paidByCompanionId = await resolve(input.paidBy as string);
+      const splitRows: Prisma.TripExpenseSplitUncheckedCreateWithoutExpenseInput[] = [];
+      for (const share of shares) {
+        const percentage = percentageByKey.get(share.participant);
+        splitRows.push({
+          companionId: await resolve(share.participant),
+          amount: share.amount,
+          percentage:
+            method === 'percentage' && percentage != null ? new Prisma.Decimal(percentage) : null,
+        });
+      }
+      await tx.tripExpenseSplit.deleteMany({ where: { expenseId } });
+      await tx.tripExpense.update({
         where: { id: expenseId },
-        data: {
-          paidByOwner: input.paidBy === OWNER_KEY,
-          paidByCompanionId,
-          splitMethod: method,
-          splits: {
-            create: shares.map((share) => {
-              const percentage = percentageByKey.get(share.participant);
-              return {
-                isOwner: share.participant === OWNER_KEY,
-                companionId: companionIdOf(share.participant),
-                amount: share.amount,
-                percentage:
-                  method === 'percentage' && percentage != null
-                    ? new Prisma.Decimal(percentage)
-                    : null,
-              };
-            }),
-          },
-        },
-      }),
-    ]);
+        data: { paidByCompanionId, splitMethod: method, splits: { create: splitRows } },
+      });
+    });
 
-    return this.loadExpense(expenseId);
+    return this.loadExpense(expenseId, access.trip.userId);
   }
 
   /**
@@ -135,15 +146,16 @@ class ExpenseSplitService {
       orderBy: [{ date: { sort: 'asc', nulls: 'last' } }, { id: 'asc' }],
     });
 
+    const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
     const participants = await this.loadParticipants(tripId, access.trip.userId);
     const labels = new Map(participants.map((p) => [p.key, p.label]));
     const descriptions = new Map(rows.map((r) => [r.id, r.description]));
 
     const expenses: SettleUpExpense[] = [];
     for (const row of rows) {
-      const paidBy = payerKey(row);
+      const paidBy = payerKey(row, ownerCompanionId);
       const shares: ShareEntry[] = row.splits.map((s) => ({
-        participant: splitRowKey(s),
+        participant: splitRowKey(s, ownerCompanionId),
         amount: s.amount,
       }));
 
@@ -255,12 +267,12 @@ class ExpenseSplitService {
     return shares;
   }
 
-  private async loadExpense(expenseId: number) {
+  private async loadExpense(expenseId: number, ownerId: number) {
     const expense = await prisma.tripExpense.findUniqueOrThrow({
       where: { id: expenseId },
       include: { splits: { orderBy: { id: 'asc' } } },
     });
-    return convertDecimals(withSplitFields(expense));
+    return convertDecimals(withSplitFields(expense, await findOwnerCompanionId(prisma, ownerId)));
   }
 
   private fallbackLabel(key: string): string {

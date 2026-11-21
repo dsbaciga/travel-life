@@ -10,8 +10,9 @@ import {
 import { verifyTripAccessWithPermission } from '../services/_shared/tripAccess';
 import { tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
-import { withSplitFields } from '../services/_shared/expenseSplitFields';
-import { allocateProRata, compareKeys, companionKey, OWNER_KEY } from '../services/_shared/settleUp';
+import { participantKey, withSplitFields } from '../services/_shared/expenseSplitFields';
+import { findOwnerCompanionId } from '../services/_shared/ownerCompanion';
+import { allocateProRata, compareKeys } from '../services/_shared/settleUp';
 import exchangeRateService, { normalizeCurrency } from './exchangeRate.service';
 import { Prisma } from '@prisma/client';
 import { deleteReceiptFiles } from './expenseReceipt.service';
@@ -163,12 +164,14 @@ class ExpenseService {
       },
     });
 
-    return convertDecimals(withSplitFields(expense));
+    return convertDecimals(
+      withSplitFields(expense, await findOwnerCompanionId(prisma, access.trip.userId))
+    );
   }
 
   async getExpensesByTrip(userId: number, tripId: number) {
     // Verify user has view permission on the trip
-    await verifyTripAccessWithPermission(userId, tripId, 'view');
+    const access = await verifyTripAccessWithPermission(userId, tripId, 'view');
 
     const expenses = await prisma.tripExpense.findMany({
       where: { tripId },
@@ -176,12 +179,13 @@ class ExpenseService {
       include: { splits: { orderBy: { id: 'asc' } } },
     });
 
-    return convertDecimals(expenses.map(withSplitFields));
+    const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
+    return convertDecimals(expenses.map((expense) => withSplitFields(expense, ownerCompanionId)));
   }
 
   async getExpenseById(userId: number, tripId: number, expenseId: number) {
     // Verify user has view permission on the trip
-    await verifyTripAccessWithPermission(userId, tripId, 'view');
+    const access = await verifyTripAccessWithPermission(userId, tripId, 'view');
 
     await verifyExpenseInTrip(expenseId, tripId);
     const expense = await prisma.tripExpense.findUniqueOrThrow({
@@ -189,7 +193,9 @@ class ExpenseService {
       include: { splits: { orderBy: { id: 'asc' } } },
     });
 
-    return convertDecimals(withSplitFields(expense));
+    return convertDecimals(
+      withSplitFields(expense, await findOwnerCompanionId(prisma, access.trip.userId))
+    );
   }
 
   async updateExpense(
@@ -263,15 +269,16 @@ class ExpenseService {
     // Shares are stored in the expense's own currency and must keep summing to the
     // amount, so a new amount re-scales them (proportionally; odd cents land on the
     // largest share). The response then carries the re-scaled shares, as a GET would.
+    const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
     if (amountChanged) {
-      await this.rescaleSplits(expenseId, updatedExpense.amount);
+      await this.rescaleSplits(expenseId, updatedExpense.amount, ownerCompanionId);
       updatedExpense.splits = await prisma.tripExpenseSplit.findMany({
         where: { expenseId },
         orderBy: { id: 'asc' },
       });
     }
 
-    return convertDecimals(withSplitFields(updatedExpense));
+    return convertDecimals(withSplitFields(updatedExpense, ownerCompanionId));
   }
 
   async deleteExpense(userId: number, tripId: number, expenseId: number) {
@@ -571,12 +578,15 @@ class ExpenseService {
   // ---------------------------------------------------------------------------
 
   /** Re-spreads an expense's stored shares over a new amount, keeping the sum exact. */
-  private async rescaleSplits(expenseId: number, newAmount: Prisma.Decimal): Promise<void> {
+  private async rescaleSplits(
+    expenseId: number,
+    newAmount: Prisma.Decimal,
+    ownerCompanionId: number | null
+  ): Promise<void> {
     const splits = await prisma.tripExpenseSplit.findMany({ where: { expenseId } });
     if (splits.length === 0) return;
 
-    const keyOf = (s: (typeof splits)[number]) =>
-      s.isOwner || s.companionId === null ? OWNER_KEY : companionKey(s.companionId);
+    const keyOf = (s: (typeof splits)[number]) => participantKey(s.companionId, ownerCompanionId);
     const rescaled = allocateProRata(
       newAmount,
       splits.map((s) => ({ participant: keyOf(s), weight: s.amount }))

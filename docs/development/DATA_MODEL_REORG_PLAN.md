@@ -159,7 +159,7 @@ Design:
 - Backups keep their existing shape (`paidByOwner` plus `paidByCompanionName`); restore maps
   owner payers to the restoring user's "myself" companion.
 
-- [ ] Step C done
+- [x] Step C done
 
 ## Step D: every cost is a `TripExpense`
 

@@ -40,6 +40,9 @@ jest.mock('@prisma/client', () => {
     toString(): string { return this.value; }
     toNumber(): number { return parseFloat(this.value); }
     valueOf(): number { return this.toNumber(); }
+    plus(other: { toNumber(): number } | number): MockDecimal {
+      return new MockDecimal(this.toNumber() + (typeof other === 'number' ? other : other.toNumber()));
+    }
   }
   return {
     Prisma: { Decimal: MockDecimal },
@@ -48,7 +51,8 @@ jest.mock('@prisma/client', () => {
 
 // Transaction mock that passes the mock prisma as tx
 const mockTx = {
-  user: { update: jest.fn(), findUnique: jest.fn() },
+  user: { update: jest.fn(), findUnique: jest.fn(), findUniqueOrThrow: jest.fn() },
+  $executeRaw: jest.fn(),
   // SavedLink.tripId is SetNull rather than Cascade, so clearUserData has to
   // remove saved links explicitly.
   savedLink: {
@@ -67,6 +71,7 @@ const mockTx = {
   travelCompanion: {
     create: jest.fn(),
     deleteMany: jest.fn(),
+    findFirst: jest.fn(),
   },
   locationCategory: {
     create: jest.fn(),
@@ -321,6 +326,11 @@ describe('RestoreService', () => {
     mockTx.tripTag.create.mockImplementation(() =>
       Promise.resolve({ id: tagIdCounter++, name: 'tag' })
     );
+
+    // The restoring user has no "myself" companion unless a test says so.
+    mockTx.travelCompanion.findFirst.mockResolvedValue(null);
+    mockTx.user.findUniqueOrThrow.mockResolvedValue({ username: 'testuser' });
+    mockTx.$executeRaw.mockResolvedValue(1);
 
     let companionIdCounter = 200;
     mockTx.travelCompanion.create.mockImplementation(() =>
@@ -1194,6 +1204,11 @@ describe('RestoreService', () => {
         id: args.data.name === 'Alice' ? 501 : 502,
       })) as never);
 
+      // The owner has no "myself" companion: it is created on demand (find, find, find again).
+      mockTx.travelCompanion.findFirst
+        .mockResolvedValueOnce(null as never)
+        .mockResolvedValueOnce(null as never)
+        .mockResolvedValueOnce({ id: 900 } as never);
       const backup: BackupData = {
         ...minimalBackup,
         version: '1.6.0',
@@ -1240,24 +1255,84 @@ describe('RestoreService', () => {
         (c) => (c[0] as { data: Record<string, unknown> }).data
       );
       const dinner = calls.find((d) => d.description === 'Dinner') as {
-        paidByOwner: boolean;
         paidByCompanionId: number | null;
         splitMethod: string | null;
-        splits: { create: Array<{ isOwner: boolean; companionId: number | null }> };
+        splits: { create: Array<{ companionId: number }> };
       };
-      expect(dinner.paidByOwner).toBe(false);
       expect(dinner.paidByCompanionId).toBe(502);
       expect(dinner.splitMethod).toBe('equal');
       // The unknown companion drops out; owner / Alice / Bob remain, with NEW ids.
-      expect(dinner.splits.create.map((r) => [r.isOwner, r.companionId])).toEqual([
-        [true, null],
-        [false, 501],
-        [false, 502],
-      ]);
+      // The owner is the restoring user's "myself" companion (900).
+      expect(dinner.splits.create.map((r) => r.companionId)).toEqual([900, 501, 502]);
 
       const taxi = calls.find((d) => d.description === 'Taxi') as typeof dinner;
-      expect(taxi.paidByOwner).toBe(true);
-      expect(taxi.paidByCompanionId).toBeNull();
+      expect(taxi.paidByCompanionId).toBe(900);
+      expect(taxi.splits.create.map((r) => r.companionId)).toEqual([900]);
+    });
+
+    it('maps a backup companion flagged isMyself onto the existing one instead of duplicating it', async () => {
+      mockTx.travelCompanion.findFirst.mockResolvedValue({ id: 42 } as never);
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.8.0',
+        companions: [{ name: 'Myself (testuser)', isMyself: true }, { name: 'Alice' }],
+        trips: [
+          {
+            title: 'T',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            companions: ['Myself (testuser)', 'Alice'],
+            expenses: [
+              {
+                description: 'Lunch',
+                category: 'food',
+                amount: 20,
+                paidByOwner: true,
+                splitMethod: 'equal',
+                // The owner listed twice (as owner and as their own companion) folds into one share.
+                splits: [
+                  { isOwner: true, amount: 5 },
+                  { companionName: 'Myself (testuser)', amount: 5 },
+                  { companionName: 'Alice', amount: 10 },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      // Only Alice is created: the flagged one is the existing companion 42.
+      expect(mockTx.travelCompanion.create).toHaveBeenCalledTimes(1);
+      const lunch = (mockTx.tripExpense.create.mock.calls[0][0] as { data: { paidByCompanionId: number; splits: { create: Array<{ companionId: number; amount: { toString(): string } }> } } }).data;
+      expect(lunch.paidByCompanionId).toBe(42);
+      expect(lunch.splits.create.map((r) => [r.companionId, r.amount.toString()])).toEqual([
+        [42, '10'],
+        [200, '10'],
+      ]);
+    });
+
+    it('restores a second isMyself companion in the same backup as an ordinary companion', async () => {
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.8.0',
+        companions: [
+          { name: 'Me', isMyself: true },
+          { name: 'Me again', isMyself: true },
+        ],
+        trips: [],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      const created = mockTx.travelCompanion.create.mock.calls.map(
+        (c) => (c[0] as { data: { isMyself: boolean; linkedUserId: number | null } }).data
+      );
+      expect(created.map((d) => [d.isMyself, d.linkedUserId])).toEqual([
+        [true, 1],
+        [false, null],
+      ]);
     });
   });
 

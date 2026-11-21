@@ -50,9 +50,8 @@ export const companionService = {
       data: {
         name: `Myself (${name})`,
         isMyself: true,
-        user: {
-          connect: { id: userId },
-        },
+        linkedUserId: userId,
+        userId,
       },
     });
   },
@@ -164,6 +163,23 @@ export const companionService = {
 
     if (!companion) {
       throw new AppError('Companion not found', 404);
+    }
+
+    // The "myself" companion carries the trip owner's side of expenses (as payer and as split
+    // participant). Deleting it would silently drop the payer of every expense and cascade away
+    // the owner's shares, so it is refused while any expense still references it.
+    if (companion.isMyself) {
+      const used = await prisma.tripExpense.count({
+        where: {
+          OR: [{ paidByCompanionId: companionId }, { splits: { some: { companionId } } }],
+        },
+      });
+      if (used > 0) {
+        throw new AppError(
+          'Your "Myself" companion is used in expense payers or splits and cannot be deleted',
+          400
+        );
+      }
     }
 
     await prisma.travelCompanion.delete({

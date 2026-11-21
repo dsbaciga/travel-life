@@ -280,7 +280,8 @@ People who travel with the user.
 | email | String? | Email address |
 | phone | String? | Phone number |
 | relationship | String? | Relationship (friend, spouse, etc.) |
-| isMyself | Boolean | Represents the user themselves |
+| isMyself | Boolean | Represents the user themselves. At most one per user (partial unique index `travel_companions_user_id_is_myself_key`, migration `20261122000000`). This row is also how the trip owner appears as an expense payer or split participant |
+| linkedUserId | Int? | The account this companion is: set to `userId` on the `isMyself` row, null otherwise (`SET NULL` on user delete) |
 
 ### Checklist
 
@@ -328,8 +329,7 @@ A logged expense. Carries the currency snapshot columns described under [Currenc
 | currency | String? | Currency code |
 | date | Date? | Calendar date (date-only, stored at UTC midnight) |
 | notes | String? | Notes |
-| paidByOwner | Boolean | The trip owner paid (default `false`) |
-| paidByCompanionId | Int? | The companion who paid (`SET NULL` on delete). At most one payer: the owner or a companion, never both (CHECK `trip_expenses_one_payer`); neither means not recorded |
+| paidByCompanionId | Int? | The companion who paid (`SET NULL` on delete); null means not recorded. When the trip owner paid it is the owner's `isMyself` companion (the former `paid_by_owner` column and `trip_expenses_one_payer` CHECK were dropped in `20261122000000`). The API still speaks `owner` / `companion:<id>` and derives `paidByOwner` |
 | splitMethod | String? | `equal`, `amount` or `percentage`; null when not split |
 | receiptPath | String? | Stored receipt image (`/uploads/receipts/<uuid>.jpg`) |
 | receiptMimeType | String? | Receipt MIME type |
@@ -344,12 +344,11 @@ One participant's share of an expense, in the expense's own currency (migration 
 |-------|------|-------------|
 | id | Int | Primary key |
 | expenseId | Int | Expense foreign key (cascade) |
-| isOwner | Boolean | This share is the trip owner's |
-| companionId | Int? | The companion this share belongs to (cascade). Exactly one of `isOwner` / `companionId` identifies the participant (CHECK `trip_expense_splits_one_participant`) |
+| companionId | Int | The companion this share belongs to (cascade); the trip owner is their `isMyself` companion. Unique per expense (`expense_id`, `companion_id`). The former `is_owner` column and `trip_expense_splits_one_participant` CHECK were dropped in `20261122000000`; responses still derive `isOwner` |
 | amount | Decimal(10,2) | The participant's share; the shares of an expense add up to its amount |
 | percentage | Decimal(7,4)? | Only set for percentage splits |
 
-A participant appears at most once per expense; both rules are enforced in `expenseSplit.service.ts`.
+A participant appears at most once per expense (unique index); the shares adding up to the amount is enforced in `expenseSplit.service.ts`. Deleting the `isMyself` companion is refused (400) while any expense references it.
 
 ## Loyalty Programs
 

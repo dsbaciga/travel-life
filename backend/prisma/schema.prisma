@@ -63,7 +63,8 @@ model User {
 
   trips                   Trip[]
   tags                    TripTag[]
-  companions              TravelCompanion[]
+  companions              TravelCompanion[] @relation("CompanionOwner")
+  linkedCompanions        TravelCompanion[] @relation("CompanionLinkedUser")
   locationCategories      LocationCategory[]
   tripCollaborators       TripCollaborator[]
   checklists              Checklist[]
@@ -221,7 +222,12 @@ model TravelCompanion {
   phone              String?  @db.VarChar(20)
   notes              String?  @db.Text
   relationship       String?  @db.VarChar(255)
+  // The user's own entry in their address book. At most one per user (partial unique index
+  // travel_companions_user_id_is_myself_key WHERE is_myself, migration 20261122000000, which Prisma
+  // cannot represent). It is also how the trip owner appears as an expense payer / split participant.
   isMyself           Boolean  @default(false) @map("is_myself")
+  // The account this companion IS (set for the isMyself row: = userId). Null for other people.
+  linkedUserId       Int?     @map("linked_user_id")
   avatarUrl          String?  @map("avatar_url") @db.VarChar(500)
   dietaryPreferences Json     @default("[]") @map("dietary_preferences")
   // Emergency-card medical fields. `allergies` mirrors `dietaryPreferences`
@@ -234,13 +240,15 @@ model TravelCompanion {
   allergies          Json     @default("[]")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User               @relation("CompanionOwner", fields: [userId], references: [id], onDelete: Cascade)
+  linkedUser      User?              @relation("CompanionLinkedUser", fields: [linkedUserId], references: [id], onDelete: SetNull)
   tripAssignments TripCompanion[]
   paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
   expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
 
   @@index([userId])
   @@index([avatarUrl])
+  @@index([linkedUserId])
   @@map("travel_companions")
 }
 
@@ -681,9 +689,8 @@ model TripExpense {
   baseCurrency      String?   @map("base_currency") @db.VarChar(3)
   date              DateTime? @db.Date
   notes             String?   @db.Text
-  // Expense splitting (#97). The payer is the trip owner (paidByOwner) OR a companion
-  // (paidByCompanionId) - never both (CHECK trip_expenses_one_payer); neither = not recorded.
-  paidByOwner       Boolean   @default(false) @map("paid_by_owner")
+  // Expense splitting (#97). The payer is always a companion; the trip owner is their "myself"
+  // companion (isMyself, see services/_shared/ownerCompanion.ts). Null = not recorded.
   paidByCompanionId Int?      @map("paid_by_companion_id")
   splitMethod       String?   @map("split_method") @db.VarChar(20) // equal, amount, percentage
   // Receipt photo (backlog #122): "/uploads/receipts/<uuid>.jpg" or null. The file is a normalised copy; never exported by backups.
@@ -705,23 +712,22 @@ model TripExpense {
   @@map("trip_expenses")
 }
 
-// One participant's share of an expense, in the EXPENSE's own currency. Exactly one of
-// isOwner / companionId identifies the participant (CHECK trip_expense_splits_one_participant,
-// added in migration 20261116010000_add_expense_splits, which Prisma cannot represent).
-// A participant appears at most once per expense, and the shares sum exactly to the expense
-// amount; both are enforced in expenseSplit.service.ts.
+// One participant's share of an expense, in the EXPENSE's own currency. The participant is always
+// a companion (the trip owner is their "myself" companion), unique per expense. The shares sum
+// exactly to the expense amount, enforced in expenseSplit.service.ts. The old is_owner column and
+// its either-or CHECK were dropped in migration 20261122000000_one_representation_of_who_paid.
 model TripExpenseSplit {
   id          Int      @id @default(autoincrement())
   expenseId   Int      @map("expense_id")
-  isOwner     Boolean  @default(false) @map("is_owner")
-  companionId Int?     @map("companion_id")
+  companionId Int      @map("companion_id")
   amount      Decimal  @db.Decimal(10, 2)
   percentage  Decimal? @db.Decimal(7, 4) // only set for percentage splits
   createdAt   DateTime @default(now()) @map("created_at")
 
   expense   TripExpense      @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  companion TravelCompanion? @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
+  companion TravelCompanion  @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
 
+  @@unique([expenseId, companionId])
   @@index([expenseId])
   @@index([companionId])
   @@map("trip_expense_splits")

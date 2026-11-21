@@ -38,6 +38,7 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
   },
+  travelCompanion: { findFirst: jest.fn() },
   $transaction: jest.fn(),
   activity: {
     findMany: jest.fn(),
@@ -125,6 +126,8 @@ describe('ExpenseService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
+    // The trip owner's "myself" companion (the `owner` participant in storage).
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue({ id: 77 });
     mockPrisma.$transaction.mockResolvedValue([]);
     mockPrisma.trip.findFirst.mockResolvedValue(ownedTrip());
     jest.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -241,9 +244,9 @@ describe('ExpenseService', () => {
       mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
       mockPrisma.tripExpense.update.mockResolvedValue({ id: 5, amount: new Prisma.Decimal('100.00') });
       mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([
-        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00') },
-        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00') },
-        { id: 3, isOwner: false, companionId: 9, amount: new Prisma.Decimal('100.00') },
+        { id: 1, companionId: 77, amount: new Prisma.Decimal('250.00') },
+        { id: 2, companionId: 8, amount: new Prisma.Decimal('250.00') },
+        { id: 3, companionId: 9, amount: new Prisma.Decimal('100.00') },
       ]);
       mockPrisma.tripExpenseSplit.update.mockImplementation(((args: unknown) => args) as never);
 
@@ -265,13 +268,12 @@ describe('ExpenseService', () => {
       mockPrisma.tripExpense.update.mockResolvedValue({
         id: 5,
         amount: new Prisma.Decimal('100.00'),
-        paidByOwner: true,
-        paidByCompanionId: null,
+        paidByCompanionId: 77,
         splits: [],
       });
       const before = [
-        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00'), percentage: null },
-        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 1, companionId: 77, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 2, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
       ];
       mockPrisma.tripExpenseSplit.findMany
         .mockResolvedValueOnce(before)
@@ -284,9 +286,10 @@ describe('ExpenseService', () => {
       const result = await expenseService.updateExpense(1, 10, 5, { amount: 100 });
 
       expect(result.paidBy).toBe('owner');
+      expect(result.paidByOwner).toBe(true);
       expect(result.splits).toEqual([
-        { participant: 'owner', amount: 50, percentage: null },
-        { participant: 'companion:8', amount: 50, percentage: null },
+        { participant: 'owner', isOwner: true, amount: 50, percentage: null },
+        { participant: 'companion:8', isOwner: false, amount: 50, percentage: null },
       ]);
     });
 

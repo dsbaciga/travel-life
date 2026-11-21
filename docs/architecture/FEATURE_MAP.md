@@ -36,7 +36,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
 | Expenses, budget, multi-currency | `expense`, `exchangeRate`, `receipt` | `BudgetManager`, `CostCurrencyFields`, `CurrencySelect`, `utils/formatCurrency`, `constants/currencies` |
-| Expense splitting and settle-up | `expenseSplit`, `services/_shared/settleUp`, `expenseSplitFields` | `ExpenseSplitFields`, `SettleUpPanel` |
+| Expense splitting and settle-up | `expenseSplit`, `services/_shared/settleUp`, `expenseSplitFields`, `services/_shared/ownerCompanion` (the trip owner = their `isMyself` companion: `findOwnerCompanionId`, `ensureOwnerCompanionId`) | `ExpenseSplitFields`, `SettleUpPanel` |
 | Receipt scan (LLM) and receipt images | `receiptScan`, `expenseReceipt`, `llm` (`chatWithImage`) | `ReceiptScanButton`, `ReceiptViewer` |
 | Loyalty programs / membership numbers | `loyaltyProgram` | `LoyaltyProgramManager`, `LoyaltyProgramField` |
 | Booking deadlines | `bookingDeadline` | `DeadlinesManager`, `widgets/DeadlinesWidget` |

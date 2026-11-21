@@ -784,6 +784,7 @@ describe('BackupService', () => {
       mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
       mockPrisma.trip.findUnique.mockResolvedValue({
         id: 1,
+        userId: 1,
         title: 'Split Trip',
         description: null,
         startDate: '2026-04-01',
@@ -814,10 +815,11 @@ describe('BackupService', () => {
             notes: null,
             paidByOwner: false,
             splitMethod: 'equal',
-            paidByCompanion: { name: 'Alice' },
+            paidByCompanion: { name: 'Alice', isMyself: false, linkedUserId: null },
             splits: [
-              { isOwner: true, amount: 45, percentage: null, companion: null },
-              { isOwner: false, amount: 45, percentage: null, companion: { name: 'Alice' } },
+              // The trip owner is their "myself" companion in storage, exported as the owner.
+              { amount: 45, percentage: null, companion: { name: 'Myself (me)', isMyself: true, linkedUserId: 1 } },
+              { amount: 45, percentage: null, companion: { name: 'Alice', isMyself: false, linkedUserId: null } },
             ],
           },
         ],

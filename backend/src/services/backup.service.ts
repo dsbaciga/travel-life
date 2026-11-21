@@ -28,6 +28,10 @@ const PHOTO_BATCH_SIZE = 200;
  * Transform a raw trip from the database into the backup format.
  * This is extracted to reduce memory by processing trips one at a time.
  */
+/** The companion columns the expense export needs to tell the trip owner from everyone else. */
+type BackupExpenseCompanion = { name: string; isMyself: boolean; linkedUserId: number | null };
+const expenseCompanionSelect = { name: true, isMyself: true, linkedUserId: true } as const;
+
 function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip {
   const transportation = trip.transportation as Array<Record<string, unknown>>;
   const journalEntries = trip.journalEntries as Array<Record<string, unknown>>;
@@ -185,23 +189,31 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     })) as BackupTrip['customItems'],
     // Expenses and emergency card info (added in v1.6.0)
     // Payers and split participants travel by companion NAME (ids are reassigned on restore).
+    // The file shape predates "the owner is their myself companion": the trip owner is still
+    // written as `paidByOwner` / `isOwner` with no companion name, and old backups restore too.
     expenses: (
       trip.expenses as
         | Array<
             {
-              paidByCompanion: { name: string } | null;
-              splits: Array<{ companion: { name: string } | null } & Record<string, unknown>>;
+              paidByCompanion: BackupExpenseCompanion | null;
+              splits: Array<{ companion: BackupExpenseCompanion | null } & Record<string, unknown>>;
             } & Record<string, unknown>
           >
         | undefined
-    )?.map(({ paidByCompanion, splits, ...expense }) => ({
-      ...expense,
-      paidByCompanionName: paidByCompanion?.name ?? null,
-      splits: (splits ?? []).map(({ companion, ...split }) => ({
-        ...split,
-        companionName: companion?.name ?? null,
-      })),
-    })) as BackupTrip['expenses'],
+    )?.map(({ paidByCompanion, splits, ...expense }) => {
+      const isOwner = (c: BackupExpenseCompanion | null) =>
+        c != null && c.isMyself && c.linkedUserId === trip.userId;
+      return {
+        ...expense,
+        paidByOwner: isOwner(paidByCompanion),
+        paidByCompanionName: isOwner(paidByCompanion) ? null : paidByCompanion?.name ?? null,
+        splits: (splits ?? []).map(({ companion, ...split }) => ({
+          ...split,
+          isOwner: isOwner(companion),
+          companionName: isOwner(companion) ? null : companion?.name ?? null,
+        })),
+      };
+    }) as BackupTrip['expenses'],
     emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
@@ -495,16 +507,14 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseCurrency: true,
           date: true,
           notes: true,
-          paidByOwner: true,
           splitMethod: true,
-          paidByCompanion: { select: { name: true } },
+          paidByCompanion: { select: expenseCompanionSelect },
           splits: {
             orderBy: { id: 'asc' },
             select: {
-              isOwner: true,
               amount: true,
               percentage: true,
-              companion: { select: { name: true } },
+              companion: { select: expenseCompanionSelect },
             },
           },
           receiptPath: true,
@@ -595,6 +605,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
     // Fetch companions (typically small, bounded by user behavior)
     const companions = await prisma.travelCompanion.findMany({
       where: { userId },
+      orderBy: { id: 'asc' },
       select: {
         name: true,
         email: true,

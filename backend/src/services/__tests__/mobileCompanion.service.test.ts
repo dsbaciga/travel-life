@@ -58,6 +58,7 @@ const mockPrisma = {
   pushSubscription: { findMany: jest.fn() },
   bookingDeadline: { findMany: jest.fn(), update: jest.fn() },
   user: { findUnique: jest.fn() },
+  travelCompanion: { findFirst: jest.fn() },
 };
 jest.mock('../../config/database', () => ({ __esModule: true, default: mockPrisma }));
 
@@ -117,6 +118,7 @@ beforeEach(() => {
   for (const model of ENTITY_MODELS) {
     mockPrisma[model].findMany.mockResolvedValue([]);
   }
+  mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
 });
 
 // =============================================================================
@@ -243,6 +245,31 @@ describe('MobileSyncService', () => {
     expect(snap.trip.budget).toBe(1500.5);
     expect(snap.entities.EXPENSE[0].amount).toBe(12.5);
     expect(snap.trip.permission).toBe('edit');
+  });
+
+  it('MSYNC-006: expense rows keep the old paidByOwner shape (owner payer = trip owner myself companion)', async () => {
+    mockVerifyTrip.mockResolvedValue({
+      trip: { id: TRIP, userId: 2 },
+      isOwner: false,
+      permissionLevel: 'edit',
+    } as never);
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue({ id: 70 });
+    mockPrisma.tripExpense.findMany.mockResolvedValue([
+      { id: 1, paidByCompanionId: 70 },
+      { id: 2, paidByCompanionId: 71 },
+      { id: 3, paidByCompanionId: null },
+    ]);
+
+    const snap = await mobileSyncService.getSnapshot(USER, TRIP);
+
+    expect(mockPrisma.travelCompanion.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 2, isMyself: true } })
+    );
+    expect(snap.entities.EXPENSE).toEqual([
+      { id: 1, paidByOwner: true, paidByCompanionId: null },
+      { id: 2, paidByOwner: false, paidByCompanionId: 71 },
+      { id: 3, paidByOwner: false, paidByCompanionId: null },
+    ]);
   });
 });
 

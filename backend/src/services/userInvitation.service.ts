@@ -249,6 +249,7 @@ export const userInvitationService = {
           name: user.username,
           email: user.email,
           isMyself: true,
+          linkedUserId: user.id,
         },
       });
 

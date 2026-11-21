@@ -6,6 +6,7 @@ import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
 import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
 import { deriveLocationCountryCode, deriveCountryCodeFromName } from './_shared/countryCodes';
+import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
 
@@ -253,7 +254,20 @@ export async function restoreFromBackup(
 
         // Step 4: Import companions
         const companionMap = new Map<string, number>(); // old name -> new ID
+        // A user has at most one "myself" companion (it is also how the trip owner appears in
+        // expense splits). A backup companion flagged isMyself therefore maps onto the user's
+        // existing one instead of creating a second; with none yet it becomes the one.
+        // A backup that (wrongly) flags several companions keeps only its first as "myself"; the
+        // rest are restored as ordinary companions so nothing that named them changes meaning.
+        let myselfCompanionId = await findOwnerCompanionId(tx, userId);
+        let backupMyselfSeen = false;
         for (const companion of backupData.companions) {
+          const isMyself = companion.isMyself === true && !backupMyselfSeen;
+          if (isMyself) backupMyselfSeen = true;
+          if (isMyself && myselfCompanionId !== null) {
+            companionMap.set(companion.name, myselfCompanionId);
+            continue;
+          }
           const created = await tx.travelCompanion.create({
             data: {
               userId,
@@ -262,7 +276,8 @@ export async function restoreFromBackup(
               phone: companion.phone,
               notes: companion.notes,
               relationship: companion.relationship,
-              isMyself: companion.isMyself,
+              isMyself,
+              linkedUserId: isMyself ? userId : null,
               avatarUrl: sanitizeStoredPath(companion.avatarUrl, userId, 'companion.avatarUrl'),
               dietaryPreferences: companion.dietaryPreferences || [],
               medicalNotes: companion.medicalNotes ?? null,
@@ -270,6 +285,7 @@ export async function restoreFromBackup(
             },
           });
           companionMap.set(companion.name, created.id);
+          if (isMyself) myselfCompanionId = created.id;
           stats.companionsImported++;
         }
 
@@ -1024,15 +1040,43 @@ export async function restoreFromBackup(
             const payerCompanionId = expenseData.paidByCompanionName
               ? companionMap.get(expenseData.paidByCompanionName) ?? null
               : null;
+            // The trip owner (the restoring user) is their "myself" companion, created here when
+            // the user has none; it is never duplicated (see the companion import above).
+            const ownerCompanion = async (): Promise<number> => {
+              if (myselfCompanionId === null) myselfCompanionId = await ensureOwnerCompanionId(tx, userId);
+              return myselfCompanionId;
+            };
             type SplitData = NonNullable<typeof expenseData.splits>[number];
-            type SplitRow = { isOwner: boolean; companionId: number | null; split: SplitData };
-            const splitRows = (expenseData.splits || []).flatMap((split): SplitRow[] => {
-              if (split.isOwner || !split.companionName) {
-                return [{ isOwner: true, companionId: null, split }];
-              }
-              const companionId = companionMap.get(split.companionName);
-              return companionId !== undefined ? [{ isOwner: false, companionId, split }] : [];
-            });
+            type SplitRow = { companionId: number; amount: Prisma.Decimal; percentage: Prisma.Decimal | null };
+            const mergedSplits = new Map<number, SplitRow>();
+            for (const split of expenseData.splits || []) {
+              const companionId =
+                split.isOwner || !split.companionName
+                  ? await ownerCompanion()
+                  : companionMap.get(split.companionName);
+              if (companionId === undefined) continue;
+              const amount = new Prisma.Decimal((split as SplitData).amount);
+              const percentage = split.percentage != null ? new Prisma.Decimal(split.percentage) : null;
+              // A person appears once per expense. An old backup may list the owner twice (as the
+              // owner and as their own "myself" companion): fold those into one share.
+              const prior = mergedSplits.get(companionId);
+              mergedSplits.set(
+                companionId,
+                prior
+                  ? {
+                      companionId,
+                      amount: prior.amount.plus(amount),
+                      percentage:
+                        prior.percentage || percentage
+                          ? (prior.percentage ?? new Prisma.Decimal(0)).plus(percentage ?? 0)
+                          : null,
+                    }
+                  : { companionId, amount, percentage }
+              );
+            }
+            const splitRows = [...mergedSplits.values()];
+            const ownerPaid = expenseData.paidByOwner === true && payerCompanionId === null;
+            const paidByCompanionId = ownerPaid ? await ownerCompanion() : payerCompanionId;
             const receiptFields = await receipts.prepare(expenseData);
             await tx.tripExpense.create({
               data: {
@@ -1053,17 +1097,10 @@ export async function restoreFromBackup(
                 baseCurrency: expenseData.baseCurrency ?? null,
                 date: expenseData.date ? new Date(expenseData.date) : null,
                 notes: expenseData.notes ?? null,
-                paidByOwner: expenseData.paidByOwner === true && payerCompanionId === null,
-                paidByCompanionId: payerCompanionId,
+                paidByCompanionId,
                 splitMethod: splitRows.length > 0 ? expenseData.splitMethod ?? null : null,
                 splits: {
-                  create: splitRows.map(({ isOwner, companionId, split }) => ({
-                    isOwner,
-                    companionId,
-                    amount: new Prisma.Decimal(split.amount),
-                    percentage:
-                      split.percentage != null ? new Prisma.Decimal(split.percentage) : null,
-                  })),
+                  create: splitRows,
                 },
               },
             });

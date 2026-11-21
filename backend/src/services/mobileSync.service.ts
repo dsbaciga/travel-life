@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
+import { findOwnerCompanionId } from './_shared/ownerCompanion';
 import { findSyntheticLocationLinks } from './_shared/entityLocationLinks';
 
 /** Only the live fields the Today screen shows; not the tracking internals. */
@@ -169,6 +170,16 @@ class MobileSyncService {
 
     const idsOf = (rows: Array<{ id: number }>): number[] => rows.map((row) => row.id);
 
+    // The installed mobile app still reads `paidByOwner` from the expense rows. Storage now keeps
+    // the owner as their "myself" companion, so hydrate the old shape: the owner payer is
+    // `paidByOwner: true` with no `paidByCompanionId`, exactly as before.
+    const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
+    const expensesForMobile = expenses.map(({ paidByCompanionId: storedPayer, ...row }) => {
+      const paidByCompanionId = storedPayer ?? null;
+      const paidByOwner = paidByCompanionId !== null && paidByCompanionId === ownerCompanionId;
+      return { ...row, paidByOwner, paidByCompanionId: paidByOwner ? null : paidByCompanionId };
+    });
+
     return convertDecimals({
       serverTime: serverTime.toISOString(),
       delta: sinceDate !== null,
@@ -186,7 +197,7 @@ class MobileSyncService {
         SAVED_LINK: savedLinks,
         CUSTOM_ITEM: customItems,
         FOOD_LOG: foodLog,
-        EXPENSE: expenses,
+        EXPENSE: expensesForMobile,
         PHOTO: photos,
         CHECKLIST: checklists,
         CHECKLIST_ITEM: checklistItems,
