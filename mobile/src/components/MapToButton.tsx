@@ -22,7 +22,8 @@ export default function MapToButton({ tripId, kind, id, compact = true }: MapToB
   if (!target) return null;
   return (
     <Button
-      label={`🧭 ${target.label}`}
+      label={target.label}
+      icon="navigate"
       variant="secondary"
       compact={compact}
       accessibilityHint={`Starts navigation to ${target.title}`}

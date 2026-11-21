@@ -2,11 +2,10 @@
  * Today mode (#117): what is next, when, and how to get there.
  */
 import { FlashList } from '@shopify/flash-list';
-import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View, type ScrollViewInstance } from 'react-native';
 import type { EntityId, LocationDto, LodgingDto, TransportationDto, TripDto } from '@travel-life/shared';
 import {
   buildMapsAppLinks,
@@ -22,7 +21,9 @@ import {
 
 import { showActionSheet } from '@/components/ActionSheet';
 import TimelineRow from '@/components/TimelineRow';
-import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
+import BudgetMeter from '@/components/BudgetMeter';
+import { SkeletonList } from '@/components/Skeleton';
+import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
 import {
@@ -33,6 +34,7 @@ import {
   type TimelineItem,
 } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { copyWithFeedback, tapFeedback } from '@/lib/feedback';
 import {
   useActiveTrip,
   useDirtyKeys,
@@ -43,7 +45,9 @@ import {
   useUserTimezone,
 } from '@/lib/hooks';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
-import { spacing, usePalette } from '@/lib/theme';
+import { summarizeSync } from '@/lib/summaries';
+import { FAB_CLEARANCE, radius, spacing, TOUCH_TARGET, usePalette, useRefreshColors } from '@/lib/theme';
+import { showToast } from '@/lib/toast';
 import { useQuery } from '@tanstack/react-query';
 
 interface Destination {
@@ -123,6 +127,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
 
 export default function TodayScreen() {
   const palette = usePalette();
+  const refreshColors = useRefreshColors();
   const now = useNow();
   const userTimezone = useUserTimezone();
   const { data: trip, isLoading } = useActiveTrip();
@@ -159,19 +164,26 @@ export default function TodayScreen() {
   const nextUp = useMemo(() => findNextUp(items, now), [items, now]);
 
   const stripRef = useRef<ScrollViewInstance>(null);
+  const [stripWidth, setStripWidth] = useState(0);
   useEffect(() => {
-    if (activeIndex >= 0) {
-      stripRef.current?.scrollTo({ x: Math.max(0, activeIndex * DAY_CHIP_WIDTH - DAY_CHIP_WIDTH * 2), animated: true });
-    }
-  }, [activeIndex]);
+    if (activeIndex < 0 || stripWidth === 0) return;
+    // Every day chip is the same width, so the selected one can be centred exactly.
+    const step = DAY_CHIP_WIDTH + DAY_CHIP_GAP;
+    const x = DAY_STRIP_PADDING + activeIndex * step - (stripWidth - DAY_CHIP_WIDTH) / 2;
+    stripRef.current?.scrollTo({ x: Math.max(0, x), animated: true });
+  }, [activeIndex, stripWidth]);
 
   const scheduleHere = useCallback(
     async (item: TimelineItem) => {
       if (item.entityKind !== 'ACTIVITY' && item.entityKind !== 'CUSTOM_ITEM') return;
       await adjustTime(await getDb(), item.entityKind, item.entityId, { type: 'moveToDay', dayKey: activeDay }, item.timezone);
+      tapFeedback();
       await notifyLocalChange();
+      showToast(
+        `Added to ${activeDay === todayKey ? 'today' : formatDateOnly(`${activeDay}T00:00:00Z`, { weekday: 'short', day: 'numeric' })}`
+      );
     },
-    [activeDay]
+    [activeDay, todayKey]
   );
   const burn = useMemo(
     () => (trip ? computeBurnRate(trip, expenses, todayKey) : null),
@@ -217,15 +229,23 @@ export default function TodayScreen() {
       const order = todayItems.filter((i) => i.type === 'ACTIVITY' && !i.allDay).map((i) => i.entityId);
       const from = order.findIndex((id) => String(id) === String(entityId));
       const to = from + direction;
-      if (from < 0 || to < 0 || to >= order.length) return;
+      if (from < 0 || to < 0 || to >= order.length) return null;
+      const before = [...order];
       [order[from], order[to]] = [order[to], order[from]];
       await reorderActivities(await getDb(), order);
       await notifyLocalChange();
+      return before;
     },
     [todayItems]
   );
 
-  if (isLoading) return <Screen>{null}</Screen>;
+  if (isLoading) {
+    return (
+      <Screen>
+        <SkeletonList />
+      </Screen>
+    );
+  }
 
   if (!trip) {
     return (
@@ -249,6 +269,7 @@ export default function TodayScreen() {
     if (status === 'CLOSED') hoursLabel = { text: 'Closed now', tone: 'danger' };
   }
   const meter = parking ? meterStatus(parking, now) : null;
+  const syncSummary = summarizeSync({ offline, counts, blocked, lastError });
 
   const header = (
     <View style={styles.header}>
@@ -260,40 +281,32 @@ export default function TodayScreen() {
           <DualClock trip={trip} now={now} />
         </View>
         <Button label="Trips" variant="ghost" compact onPress={() => router.push('/trips')} />
+        <IconButton icon="settings" accessibilityLabel="Settings" onPress={() => router.push('/settings')} />
       </Row>
 
-      <Row>
-        {offline ? <Chip label="Offline" tone="warning" /> : null}
-        {counts.pending > 0 ? (
-          <Chip label={`${counts.pending} to sync`} tone="info" onPress={() => router.push('/sync')} />
-        ) : null}
-        {counts.conflict > 0 ? (
-          <Chip label={`${counts.conflict} conflict`} tone="danger" onPress={() => router.push('/sync')} />
-        ) : null}
-        {blocked > 0 ? (
-          <Chip label={`${blocked} waiting`} tone="warning" onPress={() => router.push('/sync')} />
-        ) : null}
-        {lastError ? <Chip label="Sync problem" tone="danger" onPress={() => router.push('/sync')} /> : null}
-        {counts.failed > 0 ? (
-          <Chip label={`${counts.failed} failed`} tone="danger" onPress={() => router.push('/sync')} />
-        ) : null}
-        {burn ? (
+      {syncSummary ? (
+        // One pill for sync, showing the thing most worth acting on; the Sync
+        // screen has the full breakdown.
+        <Row>
           <Chip
-            label={`Budget ${Math.round(burn.spentFraction * 100)}% · trip ${Math.round(burn.elapsedFraction * 100)}%`}
-            tone={burn.state === 'over' ? 'danger' : burn.state === 'under' ? 'success' : 'default'}
+            label={syncSummary.label}
+            tone={syncSummary.tone}
+            icon={syncSummary.tone === 'danger' ? 'alert' : offline ? 'offline' : 'sync'}
+            onPress={() => router.push('/sync')}
           />
-        ) : null}
-      </Row>
+        </Row>
+      ) : null}
+
+      {burn ? <BudgetMeter burn={burn} currency={trip.budgetCurrency} /> : null}
 
       {counts.conflict > 0 ? (
         <Banner tone="warning" text="Someone else changed an item you edited offline. Tap the conflict chip to choose." />
       ) : null}
 
       <Row style={styles.dayNav}>
-        <Button
-          label="‹"
-          variant="ghost"
-          compact
+        <IconButton
+          icon="chevronLeft"
+          accessibilityLabel="Previous day"
           disabled={activeIndex <= 0}
           onPress={() => setPickedDay(dayKeys[activeIndex - 1] ?? null)}
         />
@@ -302,20 +315,43 @@ export default function TodayScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.flex}
+          onLayout={(event) => setStripWidth(event.nativeEvent.layout.width)}
           contentContainerStyle={styles.dayStrip}>
-          {dayKeys.map((key) => (
-            <Chip
-              key={key}
-              label={`${key === todayKey ? '● ' : ''}${formatDateOnly(`${key}T00:00:00Z`, { weekday: 'short', day: 'numeric' })}`}
-              selected={key === activeDay}
-              onPress={() => setPickedDay(key)}
-            />
-          ))}
+          {dayKeys.map((key) => {
+            const selected = key === activeDay;
+            const today = key === todayKey;
+            const date = `${key}T00:00:00Z`;
+            const ink = selected ? palette.onPrimary : palette.text;
+            return (
+              <Pressable
+                key={key}
+                accessibilityRole="button"
+                accessibilityLabel={`${formatDateOnly(date, { weekday: 'long', month: 'long', day: 'numeric' })}${today ? ', today' : ''}`}
+                accessibilityState={{ selected }}
+                onPress={() => setPickedDay(key)}
+                android_ripple={{ color: palette.ripple }}
+                style={[
+                  styles.dayChip,
+                  {
+                    backgroundColor: selected ? palette.primary : palette.surface,
+                    borderColor: selected ? palette.primary : today ? palette.primary : palette.border,
+                  },
+                ]}>
+                <AppText variant="caption" color={selected ? palette.onPrimary : palette.textMuted}>
+                  {formatDateOnly(date, { weekday: 'short' })}
+                </AppText>
+                <AppText variant="heading" color={ink}>
+                  {formatDateOnly(date, { day: 'numeric' })}
+                </AppText>
+                {/* Today is marked by a dot, so the selection can move away from it. */}
+                <View style={[styles.todayDot, today && { backgroundColor: selected ? palette.onPrimary : palette.primary }]} />
+              </Pressable>
+            );
+          })}
         </ScrollView>
-        <Button
-          label="›"
-          variant="ghost"
-          compact
+        <IconButton
+          icon="chevronRight"
+          accessibilityLabel="Next day"
           disabled={activeIndex < 0 || activeIndex >= dayKeys.length - 1}
           onPress={() => setPickedDay(dayKeys[activeIndex + 1] ?? null)}
         />
@@ -372,13 +408,14 @@ export default function TodayScreen() {
               <AppText selectable>{destination.address}</AppText>
             ) : null}
             <Row>
-              {destination ? <Button label="Directions" compact onPress={openDirections} /> : null}
+              {destination ? <Button label="Directions" icon="navigate" compact onPress={openDirections} /> : null}
               {nextUp.item.confirmation ? (
                 <Button
                   label={`Copy ${nextUp.item.confirmation}`}
+                  icon="copy"
                   variant="secondary"
                   compact
-                  onPress={() => void Clipboard.setStringAsync(nextUp.item.confirmation as string)}
+                  onPress={() => void copyWithFeedback(nextUp.item.confirmation as string)}
                 />
               ) : null}
             </Row>
@@ -392,18 +429,20 @@ export default function TodayScreen() {
       {isToday ? (
       <Row>
         <Button
-          label={parking ? `🚗 ${meter?.label ?? 'Parked'}` : '🚗 Where I parked'}
+          label={parking ? (meter?.label ?? 'Parked') : 'Where I parked'}
+          icon="parking"
           variant={meter?.state === 'soon' || meter?.state === 'expired' ? 'danger' : 'secondary'}
           compact
           onPress={() => router.push('/parked')}
         />
         <Button
-          label="💬 Phrasebook"
+          label="Phrasebook"
+          icon="phrasebook"
           variant="secondary"
           compact
           onPress={() => router.push({ pathname: '/(tabs)/vault', params: { section: 'phrases' } })}
         />
-        <Button label="🍽️ Food nearby" variant="secondary" compact onPress={() => router.push('/food')} />
+        <Button label="Food nearby" icon="food" variant="secondary" compact onPress={() => router.push('/food')} />
       </Row>
       ) : null}
 
@@ -478,22 +517,35 @@ export default function TodayScreen() {
           ) : null
         }
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />}
+        refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} {...refreshColors} />}
       />
     </Screen>
   );
 }
 
-const DAY_CHIP_WIDTH = 84;
+const DAY_CHIP_WIDTH = 52;
+const DAY_CHIP_GAP = spacing.sm;
+const DAY_STRIP_PADDING = spacing.xs;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   dayNav: { flexWrap: 'nowrap', alignItems: 'center' },
-  dayStrip: { gap: spacing.sm, paddingHorizontal: spacing.xs },
+  dayStrip: { gap: DAY_CHIP_GAP, paddingHorizontal: DAY_STRIP_PADDING },
+  dayChip: {
+    width: DAY_CHIP_WIDTH,
+    minHeight: TOUCH_TARGET + 20,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  todayDot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
   unscheduled: { padding: spacing.lg, gap: spacing.sm },
   unscheduledItem: { gap: spacing.xs },
   header: { padding: spacing.lg, gap: spacing.md },
   titleRow: { flexWrap: 'nowrap' },
   rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
-  list: { paddingBottom: 140 },
+  list: { paddingBottom: FAB_CLEARANCE },
 });

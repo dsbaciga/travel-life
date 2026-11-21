@@ -5,16 +5,20 @@
  * buttons and silently drops the rest. Mount `<ActionSheetHost />` once at the
  * root; call `showActionSheet(...)` imperatively.
  */
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useMemo } from 'react';
+import { Modal, PanResponder, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
+import Icon, { type IconName } from './Icon';
 import { AppText } from './ui';
 
 export interface SheetAction {
   label: string;
   onPress: () => void | Promise<void>;
   destructive?: boolean;
+  /** Leading icon; rows in one sheet either all have one or none do. */
+  icon?: IconName;
 }
 
 interface SheetState {
@@ -29,7 +33,14 @@ const useSheet = create<SheetState>((set) => ({
   title: null,
   message: null,
   actions: [],
-  open: (title, actions, message = null) => set({ title, actions, message }),
+  // Destructive actions go last, nearest Cancel and away from the thumb's
+  // first landing spot; the rest keep the order they were given in.
+  open: (title, actions, message = null) =>
+    set({
+      title,
+      message,
+      actions: [...actions.filter((a) => !a.destructive), ...actions.filter((a) => a.destructive)],
+    }),
   close: () => set({ title: null, message: null, actions: [] }),
 }));
 
@@ -41,6 +52,17 @@ export function ActionSheetHost() {
   const { title, message, actions, close } = useSheet();
   const palette = usePalette();
   const insets = useSafeAreaInsets();
+  // A downward swipe on the top of the sheet dismisses it, as the handle suggests.
+  const swipe = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        onPanResponderRelease: (_event, gesture) => {
+          if (gesture.dy > 48 || gesture.vy > 0.8) close();
+        },
+      }),
+    [close]
+  );
 
   return (
     <Modal visible={title !== null} transparent animationType="slide" onRequestClose={close}>
@@ -55,10 +77,13 @@ export function ActionSheetHost() {
           styles.sheet,
           { backgroundColor: palette.surface, paddingBottom: insets.bottom + spacing.md },
         ]}>
-        <AppText variant="heading" numberOfLines={2}>
-          {title}
-        </AppText>
-        {message ? <AppText muted>{message}</AppText> : null}
+        <View {...swipe.panHandlers} style={styles.top}>
+          <View style={[styles.handle, { backgroundColor: palette.border }]} />
+          <AppText variant="heading" numberOfLines={2}>
+            {title}
+          </AppText>
+          {message ? <AppText muted>{message}</AppText> : null}
+        </View>
         <ScrollView style={styles.list}>
           {actions.map((action) => (
             <Pressable
@@ -71,12 +96,24 @@ export function ActionSheetHost() {
                 close();
                 void action.onPress();
               }}
+              android_ripple={{ color: palette.ripple }}
               style={({ pressed }) => [
                 styles.action,
                 { borderColor: palette.border },
-                pressed && styles.pressed,
+                Platform.OS !== 'android' && pressed && styles.pressed,
               ]}>
-              <AppText color={action.destructive ? palette.danger : palette.text}>{action.label}</AppText>
+              <View style={styles.actionContent}>
+                {action.icon ? (
+                  <Icon
+                    name={action.icon}
+                    size={22}
+                    color={action.destructive ? palette.danger : palette.textMuted}
+                  />
+                ) : null}
+                <AppText color={action.destructive ? palette.danger : palette.text} style={styles.actionLabel}>
+                  {action.label}
+                </AppText>
+              </View>
             </Pressable>
           ))}
         </ScrollView>
@@ -84,6 +121,7 @@ export function ActionSheetHost() {
           accessibilityRole="button"
           accessibilityLabel="Cancel"
           onPress={close}
+          android_ripple={{ color: palette.ripple }}
           style={[styles.action, styles.cancel, { backgroundColor: palette.surfaceRaised }]}>
           <AppText variant="label">Cancel</AppText>
         </Pressable>
@@ -101,6 +139,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.lg,
     maxHeight: '75%',
   },
+  top: { gap: spacing.sm },
+  handle: { alignSelf: 'center', width: 36, height: 4, borderRadius: 2, marginBottom: spacing.xs },
   list: { flexGrow: 0 },
   action: {
     minHeight: TOUCH_TARGET + 4,
@@ -108,6 +148,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: spacing.sm,
   },
-  cancel: { alignItems: 'center', borderRadius: radius.md, borderBottomWidth: 0, marginTop: spacing.sm },
+  actionContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  actionLabel: { flex: 1 },
+  cancel: {
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderBottomWidth: 0,
+    marginTop: spacing.sm,
+    overflow: 'hidden',
+  },
   pressed: { opacity: 0.6 },
 });

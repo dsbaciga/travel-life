@@ -50,6 +50,8 @@ export interface Palette {
   warning: string;
   danger: string;
   info: string;
+  /** Android touch ripple on ordinary surfaces. */
+  ripple: string;
 }
 
 export const lightPalette: Palette = {
@@ -71,6 +73,7 @@ export const lightPalette: Palette = {
   warning: '#b45309',
   danger: '#b91c1c',
   info: '#0369a1',
+  ripple: 'rgba(15, 23, 42, 0.08)',
 };
 
 export const darkPalette: Palette = {
@@ -92,6 +95,7 @@ export const darkPalette: Palette = {
   warning: '#fbbf24',
   danger: '#f87171',
   info: '#7dd3fc',
+  ripple: 'rgba(255, 255, 255, 0.12)',
 };
 
 /** Colour families for itinerary item types: [foreground, soft background]. */
@@ -182,4 +186,19 @@ export function usePalette(): Palette {
 
 export function useTypeColors(): (typeof typeColors)['light' | 'dark'] {
   return useResolvedColorScheme() === 'dark' ? typeColors.dark : typeColors.light;
+}
+
+/** The Quick capture button floating over the tab screens, `gap` above the tab bar. */
+export const FAB = { size: 60, gap: 12 } as const;
+/**
+ * Bottom padding for a list under the tab bar, so its last row can scroll up
+ * past the capture button instead of ending underneath it. Lists end at the
+ * top of the tab bar, so this is the button plus its gap and some air.
+ */
+export const FAB_CLEARANCE = FAB.gap + FAB.size + spacing.lg;
+
+/** Pull-to-refresh spinner colours (Android `colors`, iOS `tintColor`). */
+export function useRefreshColors(): { colors: string[]; tintColor: string; progressBackgroundColor: string } {
+  const palette = usePalette();
+  return { colors: [palette.primary], tintColor: palette.primary, progressBackgroundColor: palette.surface };
 }

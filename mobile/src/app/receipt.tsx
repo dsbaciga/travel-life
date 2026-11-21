@@ -223,7 +223,7 @@ export default function ReceiptScreen() {
           <AppText muted>
             Photograph the receipt. The text is read on this phone; only the text — never the image — is sent for refinement when you are online.
           </AppText>
-          <Button label="📷 Scan receipt" onPress={() => void scan('camera')} loading={busy} />
+          <Button label="Scan receipt" icon="camera" onPress={() => void scan('camera')} loading={busy} />
           <Button label="Choose a photo" variant="secondary" onPress={() => void scan('library')} disabled={busy} />
           <Button
             label="Enter by hand"
