@@ -10,18 +10,16 @@ import {
 import { verifyTripAccessWithPermission } from '../services/_shared/tripAccess';
 import { tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
-import { participantKey, withSplitFields } from '../services/_shared/expenseSplitFields';
+import { withSplitFields } from '../services/_shared/expenseSplitFields';
 import { findOwnerCompanionId } from '../services/_shared/ownerCompanion';
-import { allocateProRata, compareKeys } from '../services/_shared/settleUp';
+import { rescaleExpenseSplits } from '../services/_shared/expenseRescale';
+import { expenseLinkedEntityInclude, touchLinkedBooking } from '../services/_shared/bookingCost';
 import exchangeRateService, { normalizeCurrency } from './exchangeRate.service';
 import { Prisma } from '@prisma/client';
 import { deleteReceiptFiles } from './expenseReceipt.service';
 
 /** Buckets the budget summary reports spending under. */
 type BudgetBucket = 'lodging' | 'transportation' | 'activities' | 'food' | 'other';
-
-/** Tables that hold a costed record, used to write an FX snapshot back. */
-type CostedSource = 'expense' | 'activity' | 'transportation' | 'lodging' | 'customItem';
 
 /** The FX snapshot frozen onto a costed record. */
 interface FxSnapshot {
@@ -32,7 +30,6 @@ interface FxSnapshot {
 
 /** A costed record normalised across the four tables that hold one. */
 interface CostedRecord {
-  source: CostedSource;
   id: number;
   bucket: BudgetBucket;
   amount: Prisma.Decimal;
@@ -176,7 +173,7 @@ class ExpenseService {
     const expenses = await prisma.tripExpense.findMany({
       where: { tripId },
       orderBy: [{ date: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
-      include: { splits: { orderBy: { id: 'asc' } } },
+      include: { splits: { orderBy: { id: 'asc' } }, ...expenseLinkedEntityInclude },
     });
 
     const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
@@ -190,7 +187,7 @@ class ExpenseService {
     await verifyExpenseInTrip(expenseId, tripId);
     const expense = await prisma.tripExpense.findUniqueOrThrow({
       where: { id: expenseId },
-      include: { splits: { orderBy: { id: 'asc' } } },
+      include: { splits: { orderBy: { id: 'asc' } }, ...expenseLinkedEntityInclude },
     });
 
     return convertDecimals(
@@ -263,15 +260,19 @@ class ExpenseService {
     const updatedExpense = await prisma.tripExpense.update({
       where: { id: expenseId },
       data: updateData,
-      include: { splits: { orderBy: { id: 'asc' } } },
+      include: { splits: { orderBy: { id: 'asc' } }, ...expenseLinkedEntityInclude },
     });
+    // A booking's cost is this row: tell delta sync the booking changed too.
+    if (amountChanged || currencyChanged || dateChanged || data.description) {
+      await touchLinkedBooking(prisma, updatedExpense);
+    }
 
     // Shares are stored in the expense's own currency and must keep summing to the
     // amount, so a new amount re-scales them (proportionally; odd cents land on the
     // largest share). The response then carries the re-scaled shares, as a GET would.
     const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
     if (amountChanged) {
-      await this.rescaleSplits(expenseId, updatedExpense.amount, ownerCompanionId);
+      await rescaleExpenseSplits(prisma, expenseId, updatedExpense.amount, ownerCompanionId);
       updatedExpense.splits = await prisma.tripExpenseSplit.findMany({
         where: { expenseId },
         orderBy: { id: 'asc' },
@@ -286,7 +287,16 @@ class ExpenseService {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const expense = await verifyExpenseInTrip(expenseId, tripId);
 
-    await prisma.tripExpense.delete({ where: { id: expenseId } });
+    // Deleting a booking's cost row clears the booking's cost (same row): the booking itself stays,
+    // and delta sync is told it changed.
+    if (expense.activityId || expense.transportationId || expense.lodgingId || expense.customItemId) {
+      await prisma.$transaction(async (tx) => {
+        await tx.tripExpense.delete({ where: { id: expenseId } });
+        await touchLinkedBooking(tx, expense);
+      });
+    } else {
+      await prisma.tripExpense.delete({ where: { id: expenseId } });
+    }
     // The row is gone; remove its receipt photo too (failures are logged, never thrown).
     await deleteReceiptFiles([expense.receiptPath]);
 
@@ -297,8 +307,8 @@ class ExpenseService {
    * Computes the budget summary for a trip.
    *
    * Breakdown buckets:
-   * - lodging / transportation / activities: the `cost` fields of those
-   *   entities plus any expenses recorded with the matching category
+   * - lodging / transportation / activities: expenses of that category (a booking's own
+   *   cost is one of them: its linked expense row)
    * - food: expenses with category 'food'
    * - other: all remaining expense categories (shopping, other)
    *
@@ -316,46 +326,11 @@ class ExpenseService {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    const [trip, activities, transportation, lodging, expenses, customItems] = await Promise.all([
+    // Every cost, including a booking's, is a trip expense (Step D): one table, one query.
+    const [trip, expenses] = await Promise.all([
       prisma.trip.findUnique({
         where: { id: tripId },
         select: { userId: true, budget: true, budgetCurrency: true },
-      }),
-      prisma.activity.findMany({
-        where: { tripId, cost: { not: null } },
-        select: {
-          id: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
-          startTime: true,
-        },
-      }),
-      prisma.transportation.findMany({
-        where: { tripId, cost: { not: null } },
-        select: {
-          id: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
-          scheduledStart: true,
-        },
-      }),
-      prisma.lodging.findMany({
-        where: { tripId, cost: { not: null } },
-        select: {
-          id: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
-          checkInDate: true,
-        },
       }),
       prisma.tripExpense.findMany({
         where: { tripId },
@@ -370,83 +345,22 @@ class ExpenseService {
           date: true,
         },
       }),
-      prisma.customItem.findMany({
-        where: { tripId, cost: { not: null } },
-        select: {
-          id: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
-          startTime: true,
-        },
-      }),
     ]);
 
     if (!trip) {
       throw new AppError('Trip not found', 404);
     }
 
-    const records: CostedRecord[] = [
-      ...lodging.map((item): CostedRecord => ({
-        source: 'lodging',
-        id: item.id,
-        bucket: 'lodging',
-        amount: item.cost ?? ZERO,
-        currency: item.currency,
-        exchangeRate: item.exchangeRate,
-        baseAmount: item.baseAmount,
-        baseCurrency: item.baseCurrency,
-        date: item.checkInDate,
-      })),
-      ...transportation.map((item): CostedRecord => ({
-        source: 'transportation',
-        id: item.id,
-        bucket: 'transportation',
-        amount: item.cost ?? ZERO,
-        currency: item.currency,
-        exchangeRate: item.exchangeRate,
-        baseAmount: item.baseAmount,
-        baseCurrency: item.baseCurrency,
-        date: item.scheduledStart,
-      })),
-      ...activities.map((item): CostedRecord => ({
-        source: 'activity',
-        id: item.id,
-        bucket: 'activities',
-        amount: item.cost ?? ZERO,
-        currency: item.currency,
-        exchangeRate: item.exchangeRate,
-        baseAmount: item.baseAmount,
-        baseCurrency: item.baseCurrency,
-        date: item.startTime,
-      })),
-      // Custom items are miscellaneous by definition, so they land in `other`
-      // rather than getting a bucket of their own.
-      ...customItems.map((item): CostedRecord => ({
-        source: 'customItem',
-        id: item.id,
-        bucket: 'other',
-        amount: item.cost ?? ZERO,
-        currency: item.currency,
-        exchangeRate: item.exchangeRate,
-        baseAmount: item.baseAmount,
-        baseCurrency: item.baseCurrency,
-        date: item.startTime,
-      })),
-      ...expenses.map((item): CostedRecord => ({
-        source: 'expense',
-        id: item.id,
-        bucket: bucketForCategory(item.category),
-        amount: item.amount,
-        currency: item.currency,
-        exchangeRate: item.exchangeRate,
-        baseAmount: item.baseAmount,
-        baseCurrency: item.baseCurrency,
-        date: item.date,
-      })),
-    ];
+    const records: CostedRecord[] = expenses.map((item): CostedRecord => ({
+      id: item.id,
+      bucket: bucketForCategory(item.category),
+      amount: item.amount,
+      currency: item.currency,
+      exchangeRate: item.exchangeRate,
+      baseAmount: item.baseAmount,
+      baseCurrency: item.baseCurrency,
+      date: item.date,
+    }));
 
     const reportingCurrency = await resolveReportingCurrency(
       trip.userId,
@@ -558,7 +472,6 @@ class ExpenseService {
   ): Promise<Prisma.Decimal | null> {
     const outcome = await this.resolveRecordAmount(
       {
-        source: 'expense',
         id: expense.id,
         bucket: bucketForCategory(expense.category),
         amount: expense.amount,
@@ -576,34 +489,6 @@ class ExpenseService {
   // ---------------------------------------------------------------------------
   // Internals
   // ---------------------------------------------------------------------------
-
-  /** Re-spreads an expense's stored shares over a new amount, keeping the sum exact. */
-  private async rescaleSplits(
-    expenseId: number,
-    newAmount: Prisma.Decimal,
-    ownerCompanionId: number | null
-  ): Promise<void> {
-    const splits = await prisma.tripExpenseSplit.findMany({ where: { expenseId } });
-    if (splits.length === 0) return;
-
-    const keyOf = (s: (typeof splits)[number]) => participantKey(s.companionId, ownerCompanionId);
-    const rescaled = allocateProRata(
-      newAmount,
-      splits.map((s) => ({ participant: keyOf(s), weight: s.amount }))
-    );
-    const amountByKey = new Map(rescaled.map((r) => [r.participant, r.amount]));
-
-    await prisma.$transaction(
-      [...splits]
-        .sort((a, b) => compareKeys(keyOf(a), keyOf(b)))
-        .map((s) =>
-          prisma.tripExpenseSplit.update({
-            where: { id: s.id },
-            data: { amount: amountByKey.get(keyOf(s)) ?? s.amount },
-          })
-        )
-    );
-  }
 
   /**
    * Works out this record's contribution to the totals, filling in and
@@ -648,7 +533,7 @@ class ExpenseService {
       return { kind: 'unconverted', currency: recordCurrency };
     }
 
-    await this.persistSnapshot(record.source, record.id, {
+    await this.persistSnapshot(record.id, {
       exchangeRate: conversion.exchangeRate,
       baseAmount: conversion.baseAmount,
       baseCurrency: conversion.baseCurrency,
@@ -749,38 +634,15 @@ class ExpenseService {
   }
 
   /**
-   * Writes an FX snapshot back to whichever table the record came from.
+   * Writes an FX snapshot back to the expense row (a booking's cost is one too).
    * A failure here is non-fatal: the summary is already correct, the write is
    * only a cache of that work.
    */
-  private async persistSnapshot(
-    source: CostedSource,
-    id: number,
-    snapshot: FxSnapshot
-  ): Promise<void> {
+  private async persistSnapshot(id: number, snapshot: FxSnapshot): Promise<void> {
     try {
-      switch (source) {
-        case 'expense':
-          await prisma.tripExpense.update({ where: { id }, data: snapshot });
-          break;
-        case 'activity':
-          await prisma.activity.update({ where: { id }, data: snapshot });
-          break;
-        case 'transportation':
-          await prisma.transportation.update({ where: { id }, data: snapshot });
-          break;
-        case 'lodging':
-          await prisma.lodging.update({ where: { id }, data: snapshot });
-          break;
-        case 'customItem':
-          await prisma.customItem.update({ where: { id }, data: snapshot });
-          break;
-      }
+      await prisma.tripExpense.update({ where: { id }, data: snapshot });
     } catch (error) {
-      console.warn(
-        `[Expense Service] Failed to persist FX snapshot for ${source} ${id}:`,
-        error
-      );
+      console.warn(`[Expense Service] Failed to persist FX snapshot for expense ${id}:`, error);
     }
   }
 }

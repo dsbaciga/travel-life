@@ -15,6 +15,7 @@ import {
   splitEqually,
   sharesSumTo,
 } from './_shared/settleUp';
+import { expenseLinkedEntityInclude } from './_shared/bookingCost';
 import { payerKey, splitRowKey, withSplitFields } from './_shared/expenseSplitFields';
 import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
 import expenseService from './expense.service';
@@ -154,6 +155,12 @@ class ExpenseSplitService {
     const expenses: SettleUpExpense[] = [];
     for (const row of rows) {
       const paidBy = payerKey(row, ownerCompanionId);
+      // The cost of a booking carries no payer unless somebody assigned one. Until then it is a
+      // budget line, not an unsettled expense: it must not show up under "unsplit" (settle-up
+      // results are the same as before bookings had expense rows).
+      const isBookingCost =
+        row.activityId != null || row.transportationId != null || row.lodgingId != null || row.customItemId != null;
+      if (isBookingCost && (paidBy === null || row.splits.length === 0)) continue;
       const shares: ShareEntry[] = row.splits.map((s) => ({
         participant: splitRowKey(s, ownerCompanionId),
         amount: s.amount,
@@ -270,7 +277,7 @@ class ExpenseSplitService {
   private async loadExpense(expenseId: number, ownerId: number) {
     const expense = await prisma.tripExpense.findUniqueOrThrow({
       where: { id: expenseId },
-      include: { splits: { orderBy: { id: 'asc' } } },
+      include: { splits: { orderBy: { id: 'asc' } }, ...expenseLinkedEntityInclude },
     });
     return convertDecimals(withSplitFields(expense, await findOwnerCompanionId(prisma, ownerId)));
   }

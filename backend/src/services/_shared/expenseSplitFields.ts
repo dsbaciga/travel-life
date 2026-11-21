@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { OWNER_KEY, companionKey } from './settleUp';
+import { withLinkedEntity } from './bookingCost';
 
 /** The payer column of a TripExpense row. */
 export interface ExpensePayerColumns {
@@ -50,7 +51,8 @@ export function withSplitFields<T extends ExpensePayerColumns & { splits?: Expen
   expense: T,
   ownerCompanionId: number | null
 ) {
-  const { paidByCompanionId, splits, ...rest } = expense;
+  // The booking relation objects (when loaded) become a small `linkedEntity`; ordinary expenses read null.
+  const { paidByCompanionId, splits, ...rest } = withLinkedEntity(expense);
   const paidBy = payerKey({ paidByCompanionId }, ownerCompanionId);
   return {
     ...rest,

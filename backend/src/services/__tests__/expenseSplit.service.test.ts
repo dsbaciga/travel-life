@@ -343,6 +343,34 @@ describe('ExpenseSplitService', () => {
       expect(result.balances.find((b) => b.participant === 'owner')?.paid).toBe(90);
     });
 
+    it('ESP-BOOK: the cost of a booking nobody paid for is a budget line, not an unsettled expense', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
+        row({}),
+        // A hotel's cost row: no payer, no split. It must not show up under "unsplit".
+        row({ id: 4, description: 'Hotel Paris', lodgingId: 68, paidByCompanionId: null, splits: [] }),
+        // The same kind of row once somebody paid and split it takes part like any expense.
+        row({
+          id: 5,
+          description: 'Concert',
+          activityId: 9,
+          amount: D('60.00'),
+          paidByCompanionId: 5,
+          splits: [
+            { companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null },
+            { companionId: 5, amount: D('30.00'), percentage: null },
+          ],
+        }),
+      ]);
+      mockBase.mockImplementation(async (expense) => expense.amount);
+
+      const result = await expenseSplitService.getSettleUp(1, 10);
+
+      expect(result.unsplit).toEqual([]);
+      expect(result.isComplete).toBe(true);
+      expect(mockBase).not.toHaveBeenCalledWith(expect.objectContaining({ id: 4 }), 'USD');
+      expect(mockBase).toHaveBeenCalledWith(expect.objectContaining({ id: 5 }), 'USD');
+    });
+
     it('treats a split that no longer adds up as unsplit', async () => {
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         row({ splits: [{ companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null }] }),

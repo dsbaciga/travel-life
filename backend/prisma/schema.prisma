@@ -63,8 +63,8 @@ model User {
 
   trips                   Trip[]
   tags                    TripTag[]
-  companions              TravelCompanion[] @relation("CompanionOwner")
-  linkedCompanions        TravelCompanion[] @relation("CompanionLinkedUser")
+  companions              TravelCompanion[]  @relation("CompanionOwner")
+  linkedCompanions        TravelCompanion[]  @relation("CompanionLinkedUser")
   locationCategories      LocationCategory[]
   tripCollaborators       TripCollaborator[]
   checklists              Checklist[]
@@ -426,14 +426,8 @@ model CustomItem {
   // unambiguous location. An EntityLink to a LOCATION remains possible and
   // means the weaker "related to".
   locationId         Int?      @map("location_id")
-  // DB-level CHECK ("cost" >= 0) named `custom_item_cost_non_negative`. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal?  @db.Decimal(10, 2)
-  currency           String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?   @map("base_currency") @db.VarChar(3)
+  // The item's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   // Text, not VarChar(500): real booking URLs with query strings exceed 500
   // chars. The SavedLink.url precedent.
   url                String?   @db.Text
@@ -441,9 +435,10 @@ model CustomItem {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  trip     Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  type     CustomItemType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
-  location Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  trip        Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  type        CustomItemType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  location    Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  costExpense TripExpense?
 
   @@index([tripId])
   @@index([tripId, startTime])
@@ -542,15 +537,8 @@ model Activity {
   startTime        DateTime? @map("start_time")
   endTime          DateTime? @map("end_time")
   timezone         String?   @db.VarChar(100)
-  // DB-level CHECK ("cost" >= 0) named `activity_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost             Decimal?  @db.Decimal(10, 2)
-  currency         String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate     Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount       Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency     String?   @map("base_currency") @db.VarChar(3)
+  // The activity's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   bookingUrl       String?   @map("booking_url") @db.VarChar(500)
   bookingReference String?   @map("booking_reference") @db.VarChar(255)
   notes            String?   @db.Text
@@ -565,6 +553,7 @@ model Activity {
   dietaryTags      Json?             @map("dietary_tags")
   bookingDeadlines BookingDeadline[]
   foodLogEntries   FoodLogEntry[]
+  costExpense      TripExpense?
 
   @@index([tripId])
   @@index([parentId])
@@ -593,15 +582,8 @@ model Transportation {
   seatNumber         String?   @map("seat_number") @db.VarChar(50)
   bookingReference   String?   @map("booking_reference") @db.VarChar(255)
   bookingUrl         String?   @map("booking_url") @db.VarChar(500)
-  // DB-level CHECK ("cost" >= 0) named `transportation_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal?  @db.Decimal(10, 2)
-  currency           String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?   @map("base_currency") @db.VarChar(3)
+  // The leg's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   status             String    @default("on_time") @db.VarChar(50) // on_time, delayed, cancelled
   delayMinutes       Int?      @map("delay_minutes")
   notes              String?   @db.Text
@@ -622,6 +604,7 @@ model Transportation {
   flightTracking   FlightTracking?
   bookingDeadlines BookingDeadline[]
   loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
+  costExpense      TripExpense?
 
   @@index([tripId])
   @@index([loyaltyProgramId])
@@ -644,15 +627,8 @@ model Lodging {
   timezone           String?  @db.VarChar(100)
   confirmationNumber String?  @map("confirmation_number") @db.VarChar(255)
   bookingUrl         String?  @map("booking_url") @db.VarChar(500)
-  // DB-level CHECK ("cost" >= 0) named `lodging_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal? @db.Decimal(10, 2)
-  currency           String?  @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal? @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal? @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?  @map("base_currency") @db.VarChar(3)
+  // The stay's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   notes              String?  @db.Text
   // Which of the booking user's loyalty programs this stay was booked under. A reference only:
   // the membership number itself stays on LoyaltyProgram and is never copied here.
@@ -664,6 +640,7 @@ model Lodging {
   location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   bookingDeadlines BookingDeadline[]
   loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
+  costExpense      TripExpense?
 
   @@index([tripId])
   @@index([locationId])
@@ -698,12 +675,26 @@ model TripExpense {
   receiptMimeType   String?   @map("receipt_mime_type") @db.VarChar(50)
   receiptSizeBytes  Int?      @map("receipt_size_bytes")
   receiptUploadedAt DateTime? @map("receipt_uploaded_at")
+  // The booking this expense is the cost of, if any. At most one of the four is set (CHECK
+  // `trip_expenses_at_most_one_booking`, migration 20261123000000_every_cost_is_a_trip_expense) and a
+  // booking has at most one cost row (the unique indexes; NULLs never collide). Deleting the booking
+  // deletes its expense. A booking's cost, currency and FX snapshot live ONLY here. The unique index is
+  // a plain one rather than a partial one: Prisma needs @unique to model the 1:1 relation, and a unique
+  // index over a nullable column already allows any number of NULLs.
+  activityId        Int?      @unique @map("activity_id")
+  transportationId  Int?      @unique @map("transportation_id")
+  lodgingId         Int?      @unique @map("lodging_id")
+  customItemId      Int?      @unique @map("custom_item_id")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
   paidByCompanion TravelCompanion?   @relation("ExpensePaidBy", fields: [paidByCompanionId], references: [id], onDelete: SetNull)
   splits          TripExpenseSplit[]
+  activity        Activity?          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  transportation  Transportation?    @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  lodging         Lodging?           @relation(fields: [lodgingId], references: [id], onDelete: Cascade)
+  customItem      CustomItem?        @relation(fields: [customItemId], references: [id], onDelete: Cascade)
 
   @@index([tripId])
   @@index([paidByCompanionId])
@@ -724,8 +715,8 @@ model TripExpenseSplit {
   percentage  Decimal? @db.Decimal(7, 4) // only set for percentage splits
   createdAt   DateTime @default(now()) @map("created_at")
 
-  expense   TripExpense      @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  companion TravelCompanion  @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
+  expense   TripExpense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  companion TravelCompanion @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
 
   @@unique([expenseId, companionId])
   @@index([expenseId])
@@ -801,9 +792,9 @@ model TripStop {
 // =============================================================================
 // Currency conversion
 // =============================================================================
-// Costed records (TripExpense.amount, Activity/Transportation/Lodging.cost)
-// carry an FX snapshot: `exchangeRate` is the rate that was in effect on the
-// record's own date, `baseAmount` is amount * exchangeRate, and `baseCurrency`
+// Every costed record is a TripExpense (a booking's cost is its linked expense row,
+// see TripExpense.activityId and friends) and carries an FX snapshot: `exchangeRate`
+// is the rate that was in effect on the record's own date, `baseAmount` is amount * exchangeRate, and `baseCurrency`
 // names the currency `baseAmount` is expressed in. The snapshot is taken once
 // and then FROZEN — it is never recomputed from today's rates, so a past trip's
 // reported total does not drift. `baseCurrency` is stored per row precisely so

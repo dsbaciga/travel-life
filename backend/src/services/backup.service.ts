@@ -9,6 +9,7 @@ import {
 } from '../types/backup.types';
 import { maskDocumentNumber } from '../types/travelDocument.types';
 import { AppError } from '../errors/errors';
+import { costExpenseSelect, hydrateBookingCost } from './_shared/bookingCost';
 
 type Decimal = Prisma.Decimal;
 
@@ -32,8 +33,18 @@ const PHOTO_BATCH_SIZE = 200;
 type BackupExpenseCompanion = { name: string; isMyself: boolean; linkedUserId: number | null };
 const expenseCompanionSelect = { name: true, isMyself: true, linkedUserId: true } as const;
 
+/**
+ * Bookings export with their cost fields exactly as before: the cost lives on the booking's expense
+ * row, which is flattened back onto the booking here (and also appears in `expenses`, see below).
+ */
+function withHydratedCost<T>(rows: unknown): T {
+  type Row = Parameters<typeof hydrateBookingCost>[0] & Record<string, unknown>;
+  if (!Array.isArray(rows)) return rows as T;
+  return (rows as Row[]).map((row) => hydrateBookingCost(row)) as T;
+}
+
 function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip {
-  const transportation = trip.transportation as Array<Record<string, unknown>>;
+  const transportation = withHydratedCost<Array<Record<string, unknown>>>(trip.transportation);
   const journalEntries = trip.journalEntries as Array<Record<string, unknown>>;
   const photoAlbums = trip.photoAlbums as Array<Record<string, unknown>>;
   const tagAssignments = trip.tagAssignments as Array<{ tag: { name: string } }>;
@@ -68,8 +79,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     // Related entities
     locations: trip.locations as BackupTrip['locations'],
     photos: trip.photos as BackupTrip['photos'],
-    activities: trip.activities as BackupTrip['activities'],
+    activities: withHydratedCost<BackupTrip['activities']>(trip.activities),
     transportation: transportation.map((t) => ({
+      id: t.id as number,
       type: t.type as string,
       startLocationId: t.startLocationId as number | null,
       startLocationText: t.startLocationText as string | null,
@@ -102,7 +114,7 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       distanceSource: t.distanceSource as string | null,
       flightTracking: t.flightTracking as BackupTransportation['flightTracking'],
     })),
-    lodging: trip.lodging as BackupTrip['lodging'],
+    lodging: withHydratedCost<BackupTrip['lodging']>(trip.lodging),
     bookingDeadlines: ((trip.bookingDeadlines ?? []) as Array<Record<string, unknown>>).map((d) => ({
       // Null for a standalone deadline (no booking).
       entityType: (d.lodgingId
@@ -182,7 +194,7 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     savedLinks: trip.savedLinks as BackupTrip['savedLinks'],
     // Custom items — flatten the joined type down to its name
     customItems: (
-      trip.customItems as Array<{ type: { name: string } | null } & Record<string, unknown>>
+      withHydratedCost<Array<{ type: { name: string } | null } & Record<string, unknown>>>(trip.customItems)
     )?.map(({ type, ...item }) => ({
       ...item,
       typeName: type?.name ?? null,
@@ -195,16 +207,33 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       trip.expenses as
         | Array<
             {
+              activityId: number | null;
+              transportationId: number | null;
+              lodgingId: number | null;
+              customItemId: number | null;
               paidByCompanion: BackupExpenseCompanion | null;
               splits: Array<{ companion: BackupExpenseCompanion | null } & Record<string, unknown>>;
             } & Record<string, unknown>
           >
         | undefined
-    )?.map(({ paidByCompanion, splits, ...expense }) => {
+    )?.map(({ paidByCompanion, splits, activityId, transportationId, lodgingId, customItemId, ...expense }) => {
+      // v1.9.0: an expense that is a booking's cost names the booking (its id in this file), so the
+      // payer, splits and receipt of that cost survive a round trip. The booking itself also exports
+      // `cost`; restore creates one row per booking, never two.
+      const booking = activityId
+        ? { type: 'activity' as const, id: activityId as number }
+        : transportationId
+          ? { type: 'transportation' as const, id: transportationId as number }
+          : lodgingId
+            ? { type: 'lodging' as const, id: lodgingId as number }
+            : customItemId
+              ? { type: 'customItem' as const, id: customItemId as number }
+              : null;
       const isOwner = (c: BackupExpenseCompanion | null) =>
         c != null && c.isMyself && c.linkedUserId === trip.userId;
       return {
         ...expense,
+        ...(booking ? { booking } : {}),
         paidByOwner: isOwner(paidByCompanion),
         paidByCompanionName: isOwner(paidByCompanion) ? null : paidByCompanion?.name ?? null,
         splits: (splits ?? []).map(({ companion, ...split }) => ({
@@ -313,11 +342,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           startTime: true,
           endTime: true,
           timezone: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           bookingUrl: true,
           bookingReference: true,
           notes: true,
@@ -327,6 +352,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
       },
       transportation: {
         include: {
+          costExpense: { select: costExpenseSelect },
           flightTracking: {
             select: {
               flightNumber: true,
@@ -352,11 +378,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           confirmationNumber: true,
           loyaltyProgramId: true,
           bookingUrl: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           notes: true,
         },
       },
@@ -484,11 +506,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           endTime: true,
           timezone: true,
           locationId: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           url: true,
           confirmationNumber: true,
           // The type travels by name, not id — see BackupCustomItemSchema.
@@ -507,6 +525,11 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseCurrency: true,
           date: true,
           notes: true,
+          // The booking this expense is the cost of (null for an ordinary expense)
+          activityId: true,
+          transportationId: true,
+          lodgingId: true,
+          customItemId: true,
           splitMethod: true,
           paidByCompanion: { select: expenseCompanionSelect },
           splits: {

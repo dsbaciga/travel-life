@@ -190,7 +190,7 @@ Design:
   exported with a reference to their booking so splits and receipts survive a round trip;
   restore must not create the cost twice. Bump `BACKUP_VERSION`.
 
-- [ ] Step D done
+- [x] Step D done
 
 ## Step E: split the `User` table
 

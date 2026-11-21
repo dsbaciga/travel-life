@@ -10,6 +10,7 @@ import {
   type EvaluatedRow,
 } from './_shared/bulkImportEvaluators';
 import { deriveLocationCountryCode } from './_shared/countryCodes';
+import { buildBookingCostCreate } from './_shared/bookingCost';
 import type {
   BulkImportResult,
   ImportActivitiesInput,
@@ -193,7 +194,7 @@ class BulkImportService {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
 
     const [trip, user, userTimezone, locations, existing] = await Promise.all([
-      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true } }),
+      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true, user: { select: { timezone: true } } } }),
       prisma.user.findUnique({ where: { id: userId }, select: { activityCategories: true } }),
       getUserTimezone(userId),
       prisma.location.findMany({ where: { tripId }, select: { id: true, name: true } }),
@@ -222,6 +223,16 @@ class BulkImportService {
     await prisma.$transaction(async (tx) => {
       for (const { data } of plan.toCreate) {
         const { activity, costDecimal, locationId } = data;
+        const startTime = activity.startTime ? new Date(activity.startTime) : null;
+        // The cost is the activity's expense row (a Decimal from the canonical string: a float would
+        // round-trip 0.1 + 0.2 style noise).
+        const costExpense = await buildBookingCostCreate(
+          tx,
+          tripId,
+          { kind: 'activity', name: activity.name, startTime, timezone: activity.timezone || null },
+          { cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal), currency: activity.currency },
+          [trip?.timezone ?? null, trip?.user?.timezone ?? null]
+        );
         await tx.activity.create({
           data: {
             tripId,
@@ -231,12 +242,10 @@ class BulkImportService {
             description: activity.description || null,
             category: activity.category || null,
             allDay: activity.allDay ?? false,
-            startTime: activity.startTime ? new Date(activity.startTime) : null,
+            startTime,
             endTime: activity.endTime ? new Date(activity.endTime) : null,
             timezone: activity.timezone || null,
-            // Decimal from the canonical string: a float would round-trip 0.1 + 0.2 style noise.
-            cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal),
-            currency: activity.currency || null,
+            costExpense,
             bookingUrl: activity.bookingUrl || null,
             bookingReference: activity.bookingReference || null,
             notes: activity.notes || null,

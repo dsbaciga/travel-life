@@ -4,6 +4,7 @@ import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
 import { findOwnerCompanionId } from './_shared/ownerCompanion';
 import { findSyntheticLocationLinks } from './_shared/entityLocationLinks';
+import { costExpenseInclude, hydrateBookingCost, notBookingCost } from './_shared/bookingCost';
 
 /** Only the live fields the Today screen shows; not the tracking internals. */
 const flightTrackingSelect = {
@@ -112,17 +113,19 @@ class MobileSyncService {
     ] = await Promise.all([
       prisma.location.findMany({ where: { ...tripScope, ...changed } }),
       prisma.photoAlbum.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.lodging.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.lodging.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.transportation.findMany({
         where: { ...tripScope, ...changed },
-        include: { flightTracking: { select: flightTrackingSelect } },
+        include: { flightTracking: { select: flightTrackingSelect }, ...costExpenseInclude },
       }),
-      prisma.activity.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.activity.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.journalEntry.findMany({ where: { ...tripScope, ...changed } }),
       prisma.savedLink.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.customItem.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.customItem.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.foodLogEntry.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.tripExpense.findMany({ where: { ...tripScope, ...changed } }),
+      // Booking costs ride on the booking rows above (cost, currency, FX fields); the expense list is
+      // the ordinary expenses only, as before, so the app neither double counts nor shows them twice.
+      prisma.tripExpense.findMany({ where: { ...tripScope, ...changed, ...notBookingCost } }),
       prisma.photo.findMany({
         where: { ...tripScope, ...changed },
         select: {
@@ -160,7 +163,7 @@ class MobileSyncService {
       prisma.savedLink.findMany({ where: tripScope, select: { id: true } }),
       prisma.customItem.findMany({ where: tripScope, select: { id: true } }),
       prisma.foodLogEntry.findMany({ where: tripScope, select: { id: true } }),
-      prisma.tripExpense.findMany({ where: tripScope, select: { id: true } }),
+      prisma.tripExpense.findMany({ where: { ...tripScope, ...notBookingCost }, select: { id: true } }),
       prisma.photo.findMany({ where: tripScope, select: { id: true } }),
       prisma.checklistItem.findMany({
         where: { checklistId: { in: checklistIds } },
@@ -190,12 +193,12 @@ class MobileSyncService {
       entities: {
         LOCATION: locations,
         PHOTO_ALBUM: albums,
-        LODGING: lodging,
-        TRANSPORTATION: transportation,
-        ACTIVITY: activities,
+        LODGING: lodging.map((row) => hydrateBookingCost(row)),
+        TRANSPORTATION: transportation.map((row) => hydrateBookingCost(row)),
+        ACTIVITY: activities.map((row) => hydrateBookingCost(row)),
         JOURNAL_ENTRY: journals,
         SAVED_LINK: savedLinks,
-        CUSTOM_ITEM: customItems,
+        CUSTOM_ITEM: customItems.map((row) => hydrateBookingCost(row)),
         FOOD_LOG: foodLog,
         EXPENSE: expensesForMobile,
         PHOTO: photos,

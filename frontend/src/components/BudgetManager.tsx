@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import CurrencySelect from "./CurrencySelect";
+import { Link } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { formatCurrency as sharedFormatCurrency } from "../utils/formatCurrency";
@@ -73,6 +74,20 @@ const EMPTY_EXPENSE_FORM: ExpenseFormState = {
   date: "",
   notes: "",
 };
+
+/** Trip tab and label of each kind of booking an expense can be the cost of. */
+const LINKED_ENTITY_TABS = {
+  activity: "activities",
+  transportation: "transportation",
+  lodging: "lodging",
+  customItem: "custom",
+} as const;
+const LINKED_ENTITY_LABELS = {
+  activity: "Activity",
+  transportation: "Transportation",
+  lodging: "Lodging",
+  customItem: "Custom item",
+} as const;
 
 function isExpenseCategory(value: string): value is ExpenseCategory {
   return EXPENSE_CATEGORIES.some((category) => category === value);
@@ -472,7 +487,9 @@ export default function BudgetManager({
   const handleDeleteExpense = async (expense: TripExpense) => {
     const confirmed = await confirm({
       title: "Delete Expense",
-      message: `Delete "${expense.description}"?`,
+      message: expense.linkedEntity
+        ? `Delete "${expense.description}"? This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays.`
+        : `Delete "${expense.description}"?`,
       confirmLabel: "Delete",
       variant: "danger",
     });
@@ -974,6 +991,16 @@ export default function BudgetManager({
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 dark:bg-navy-900 dark:text-gold capitalize">
                       {EXPENSE_CATEGORY_LABELS[expense.category] ?? expense.category}
                     </span>
+                    {expense.linkedEntity && (
+                      <Link
+                        to={`/trips/${tripId}?tab=${LINKED_ENTITY_TABS[expense.linkedEntity.type]}&edit=${expense.linkedEntity.id}`}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-primary-200 text-primary-700 hover:bg-primary-50 dark:border-gold/30 dark:text-gold dark:hover:bg-navy-900"
+                        title={`This is the cost of ${expense.linkedEntity.name}. Edit the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type]} to change its details.`}
+                        data-testid="linked-booking-badge"
+                      >
+                        {LINKED_ENTITY_LABELS[expense.linkedEntity.type]}: {expense.linkedEntity.name}
+                      </Link>
+                    )}
                   </div>
                   <div className="mt-1 text-sm text-slate dark:text-warm-gray/70 flex items-center gap-2 flex-wrap">
                     {expense.date && <span>{formatExpenseDate(expense.date)}</span>}

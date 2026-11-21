@@ -167,8 +167,7 @@ Planned or completed activities.
 | startTime | DateTime? | Start time |
 | endTime | DateTime? | End time |
 | timezone | String? | Activity timezone |
-| cost | Decimal(10,2)? | Cost |
-| currency | String? | Currency code (USD, EUR, etc.) |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the activity's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses). The API still reads and writes `cost` and `currency` |
 | bookingUrl | String? | Booking URL |
 | bookingReference | String? | Confirmation number |
 | manualOrder | Int? | Custom sort order |
@@ -195,7 +194,7 @@ Travel between locations (flights, trains, etc.).
 | company | String? | Carrier/company name |
 | referenceNumber | String? | Flight/train number |
 | seatNumber | String? | Seat assignment |
-| cost | Decimal(10,2)? | Cost |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the leg's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | status | String | on_time, delayed, cancelled |
 | connectionGroupId | String? | Groups connected segments |
 | calculatedDistance | Decimal? | Route distance (km) |
@@ -221,8 +220,7 @@ Accommodations during trips.
 | confirmationNumber | String? | Booking confirmation |
 | loyaltyProgramId | Int? | Loyalty program the stay was booked under (`LoyaltyProgram`, `SET NULL` on delete) |
 | bookingUrl | String? | Booking URL |
-| cost | Decimal(10,2)? | Total cost |
-| currency | String? | Currency code |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the stay's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | notes | String? | Notes |
 
 ### JournalEntry
@@ -335,6 +333,23 @@ A logged expense. Carries the currency snapshot columns described under [Currenc
 | receiptMimeType | String? | Receipt MIME type |
 | receiptSizeBytes | Int? | Receipt size in bytes |
 | receiptUploadedAt | DateTime? | When the receipt was attached |
+| activityId, transportationId, lodgingId, customItemId | Int? | The booking this expense is the cost of (FK, `CASCADE`, each unique). At most one is set (CHECK `trip_expenses_at_most_one_booking`). See [Booking costs](#booking-costs-are-expenses) |
+
+### Booking costs are expenses
+
+Since `20261123000000_every_cost_is_a_trip_expense` a booking (`Activity`, `Transportation`, `Lodging`,
+`CustomItem`) has no `cost`, `currency`, `exchangeRate`, `baseAmount` or `baseCurrency` columns: its cost is
+one `trip_expenses` row linked by the FK above, so it can be split, carry a receipt and be edited from the
+expense screen. The booking APIs are unchanged: `services/_shared/bookingCost.ts` flattens the row back into
+`cost`, `currency` and the FX fields on every read, and writes it on create and update (a cost of `null`
+deletes the row; `0` is a real cost; a currency without a cost is not stored).
+
+- **Category** is the budget bucket the cost always landed in: `activities`, `transportation`, `lodging`; custom items use `other`.
+- **Description** is the booking's name; a leg is labelled like the calendar feed does (`flight Air France AF123: CDG → JFK`).
+- **Date** is the booking's start (check-in for lodging) as a calendar day on the clock of its own timezone, then the trip's, then the trip owner's, UTC last. Unscheduled bookings have no date. It is kept in step when the booking is renamed or re-dated.
+- **The FX snapshot is copied, never recomputed**, by the migration; changing the amount or currency clears it.
+- Deleting the booking deletes the expense (and its splits); deleting the expense from the expense screen clears the booking's cost and leaves the booking.
+- The expense list returns `activityId`, `transportationId`, `lodgingId`, `customItemId` and a `linkedEntity` (`{ type, id, name }` or null). A booking cost with no payer is a budget line, not an "unsplit" expense in settle-up.
 
 ### TripExpenseSplit
 
@@ -704,7 +719,7 @@ Models added after the sections above were written. `schema.prisma` is the autho
 
 | Model (table) | Purpose | Notes |
 | ------------- | ------- | ----- |
-| `TripExpense` (`trip_expenses`) | A cost on a trip (payer, split method and receipt columns too) | Full columns under [Expenses and Splits](#expenses-and-splits). FX snapshot (`exchangeRate`, `baseAmount`, `baseCurrency`) taken at write time; see [Currency Conversion](#currency-conversion). The `amount >= 0` and one-payer `CHECK`s exist only in migrations; Prisma cannot express them, so never `db push` |
+| `TripExpense` (`trip_expenses`) | A cost on a trip: ordinary expenses and every booking's cost (payer, split method, receipt and booking link columns too) | Full columns under [Expenses and Splits](#expenses-and-splits). FX snapshot (`exchangeRate`, `baseAmount`, `baseCurrency`) taken at write time; see [Currency Conversion](#currency-conversion). The `amount >= 0` and one-payer `CHECK`s exist only in migrations; Prisma cannot express them, so never `db push` |
 | `BookingDeadline` (`booking_deadlines`) | A dated reminder (cancellation, check-in, payment) | Optionally tied to one lodging, transportation or activity (cascade on delete); `title` is required when there is no booking. `notifiedAt` is set once the push reminder is sent; `dismissedAt` hides it |
 | `TripEmergencyInfo` (`trip_emergency_info`) | Insurance and embassy details, one row per trip (`tripId` unique) | |
 | `FoodLogEntry` (`food_log_entries`) | A dish rated at a restaurant | Optional link to an `Activity` and `Location` (`SetNull` on delete) |
@@ -722,7 +737,7 @@ snapshot.
 
 ### Snapshot columns
 
-`TripExpense`, `Activity`, `Transportation`, `Lodging`, and `CustomItem` each carry:
+Every costed record is a `TripExpense` (a booking's cost is its linked expense row) and carries:
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -906,9 +921,7 @@ having them resurrected, and stops a restored backup from colliding with a re-se
 | endTime | DateTime? | End |
 | timezone | String? | IANA timezone |
 | locationId | Int? | Location foreign key (**SetNull**) |
-| cost | Decimal(10,2)? | Cost — DB CHECK `>= 0` |
-| currency | String? | Currency code |
-| exchangeRate / baseAmount / baseCurrency | — | Frozen FX snapshot |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the item's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | url | String (Text)? | Text, not VarChar(500) |
 | confirmationNumber | String? | Confirmation number |
 
@@ -919,8 +932,8 @@ Four behaviours worth knowing:
   It means "the item is *at* this place" and drives the map marker, so it must be a
   single unambiguous location. An `EntityLink` to a `LOCATION` remains possible and
   carries the weaker "related to" meaning.
-- **Changing `cost` or `currency` clears the FX snapshot**, so the budget summary
-  recomputes it. Leaving it would report the old converted amount against the new figure.
+- **Changing the cost or currency clears the FX snapshot** of its expense row, so the budget
+  summary recomputes it. Leaving it would report the old converted amount against the new figure.
 - **Only items with a `startTime` reach the timeline and daily view.** Undated ones stay
   in the Custom tab, and appear under "Unscheduled Items" in the printable itinerary.
 

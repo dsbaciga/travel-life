@@ -11,6 +11,16 @@ import {
   VerifiableEntityType,
 } from '../services/_shared/tripAccess';
 import { getEntityDelegate } from './modelDelegates';
+import { bookingReceiptPaths, BookingKind } from '../services/_shared/bookingCost';
+import { deleteReceiptFiles } from '../services/expenseReceipt.service';
+
+/** The booking kinds whose cost lives on an expense row, by the generic entity type. */
+const BOOKING_KIND_BY_ENTITY: Partial<Record<VerifiableEntityType, BookingKind>> = {
+  activity: 'activity',
+  lodging: 'lodging',
+  transportation: 'transportation',
+  customItem: 'customItem',
+};
 
 // =============================================================================
 // CONTROLLER FACTORY
@@ -305,15 +315,23 @@ export async function deleteEntity(
   // Wrap link cleanup + delete in a transaction for atomicity
   const linkType = entityTypeToLinkType[entityType];
 
+  // The cost row of the entity (and of the child activities a delete cascades to) goes with it; its
+  // receipt file is unlinked once the delete committed.
+  const bookingKind = BOOKING_KIND_BY_ENTITY[entityType];
+  let receiptPaths: string[] = [];
+
   await prisma.$transaction(async (tx) => {
+    // Child activities are cascade-deleted by the database, so their links and cost rows go too:
+    // collect the whole subtree once, for both clean-ups.
+    const treeIds =
+      entityType === 'activity'
+        ? [entityId, ...(await collectActivityDescendantIds(tx, [entityId]))]
+        : [entityId];
+    if (bookingKind) receiptPaths = await bookingReceiptPaths(tx, bookingKind, treeIds);
+
     // Clean up entity links before deleting
     if (linkType) {
-      // Child activities are cascade-deleted by the database, so their links must be
-      // cleaned up here too — nothing else will.
-      const linkedIds =
-        entityType === 'activity'
-          ? [entityId, ...(await collectActivityDescendantIds(tx, [entityId]))]
-          : [entityId];
+      const linkedIds = treeIds;
 
       await tx.entityLink.deleteMany({
         where: {
@@ -331,6 +349,7 @@ export async function deleteEntity(
       where: { id: entityId },
     });
   });
+  await deleteReceiptFiles(receiptPaths);
 
   return { success: true };
 }
@@ -387,17 +406,23 @@ export async function bulkDeleteEntities(
   // Wrap link cleanup + delete in a transaction for atomicity
   const linkType = entityTypeToLinkType[entityType];
 
+  const bookingKind = BOOKING_KIND_BY_ENTITY[entityType];
+  let receiptPaths: string[] = [];
+
   const result = await prisma.$transaction(async (tx) => {
+    const entityIds = entities.map((entity) => entity.id);
+    // Child activities are cascade-deleted by the database, so their links and cost rows go too:
+    // collect the whole subtree once, for both clean-ups.
+    const treeIds =
+      entityType === 'activity'
+        ? [...entityIds, ...(await collectActivityDescendantIds(tx, entityIds))]
+        : entityIds;
+    if (bookingKind) receiptPaths = await bookingReceiptPaths(tx, bookingKind, treeIds);
+
     // Clean up entity links for all entities (every entity was verified to be in `tripId`
     // above, so a single deleteMany over the ID set covers them all)
     if (linkType) {
-      const entityIds = entities.map((entity) => entity.id);
-      // Child activities are cascade-deleted by the database, so their links must be
-      // cleaned up here too — nothing else will.
-      const linkedIds =
-        entityType === 'activity'
-          ? [...entityIds, ...(await collectActivityDescendantIds(tx, entityIds))]
-          : entityIds;
+      const linkedIds = treeIds;
 
       await tx.entityLink.deleteMany({
         where: {
@@ -418,6 +443,8 @@ export async function bulkDeleteEntities(
       },
     });
   });
+
+  await deleteReceiptFiles(receiptPaths);
 
   return { success: true, deletedCount: result.count };
 }

@@ -22,9 +22,20 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 const mockPrisma = {
+  $transaction: jest.fn(),
+  trip: { findUnique: jest.fn() },
+  travelCompanion: { findFirst: jest.fn() },
+  tripExpenseSplit: { findMany: jest.fn(), update: jest.fn() },
+  tripExpense: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
   customItem: {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -73,7 +84,10 @@ describe('CustomItemService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockVerifyEntityAccessWithPermission.mockResolvedValue({ entity: { tripId: TRIP_ID } });
+    mockPrisma.$transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(mockPrisma));
     mockPrisma.customItem.update.mockImplementation((args: unknown) => Promise.resolve(args));
+    mockPrisma.customItem.findUniqueOrThrow.mockResolvedValue({ id: 7, costExpense: null });
+    mockPrisma.tripExpense.findUnique.mockResolvedValue(null);
     mockPrisma.customItem.create.mockResolvedValue({ id: 7 });
     mockPrisma.customItemType.findMany.mockResolvedValue([]);
   });
@@ -222,39 +236,51 @@ describe('CustomItemService', () => {
   });
 
   describe('FX snapshot invalidation', () => {
-    const snapshotCleared = {
-      exchangeRate: null,
-      baseAmount: null,
-      baseCurrency: null,
-    };
+    // The cost is the item's expense row: changing its amount or currency clears the frozen snapshot
+    // (the budget summary re-fills it lazily); anything else leaves it alone.
+    const existing = { id: 900, amount: 20, currency: 'USD', receiptPath: null, tripId: TRIP_ID };
+    const snapshotCleared = { exchangeRate: null, baseAmount: null, baseCurrency: null };
+
+    beforeEach(() => {
+      mockPrisma.tripExpense.findUnique.mockResolvedValue(existing);
+      mockPrisma.tripExpense.update.mockResolvedValue({ id: 900, amount: 25 });
+      mockPrisma.customItem.findUnique.mockResolvedValue({
+        id: 7, tripId: TRIP_ID, name: 'Pass', startTime: null, timezone: null,
+      });
+      mockPrisma.customItem.findUniqueOrThrow.mockResolvedValue({ id: 7, costExpense: null });
+      mockPrisma.trip.findUnique.mockResolvedValue({ userId: 1, timezone: null, user: { timezone: null } });
+      mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
+      mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
+    });
 
     it('CI-012: clears the snapshot when cost changes', async () => {
       await customItemService.updateCustomItem(USER_ID, 7, { cost: 25 });
 
-      const args = mockPrisma.customItem.update.mock.calls[0][0] as {
-        data: Record<string, unknown>;
-      };
-      expect(args.data).toMatchObject(snapshotCleared);
+      const args = mockPrisma.tripExpense.update.mock.calls[0][0] as { where: unknown; data: Record<string, unknown> };
+      expect(args.where).toEqual({ id: 900 });
+      expect(args.data).toMatchObject({ amount: 25, ...snapshotCleared });
+      // The item row itself never carries the cost.
+      expect((mockPrisma.customItem.update.mock.calls[0][0] as { data: object }).data).not.toHaveProperty('cost');
     });
 
     it('CI-013: clears the snapshot when currency changes', async () => {
       await customItemService.updateCustomItem(USER_ID, 7, { currency: 'EUR' });
 
-      const args = mockPrisma.customItem.update.mock.calls[0][0] as {
-        data: Record<string, unknown>;
-      };
-      expect(args.data).toMatchObject(snapshotCleared);
+      const args = mockPrisma.tripExpense.update.mock.calls[0][0] as { data: Record<string, unknown> };
+      expect(args.data).toMatchObject({ currency: 'EUR', ...snapshotCleared });
     });
 
     it('CI-014: leaves the snapshot alone when neither changes', async () => {
+      await customItemService.updateCustomItem(USER_ID, 7, { cost: 20, currency: 'USD' });
+
+      expect(mockPrisma.tripExpense.update).not.toHaveBeenCalled();
+    });
+
+    it('CI-014b: renaming the item renames its expense, without touching the snapshot', async () => {
       await customItemService.updateCustomItem(USER_ID, 7, { name: 'Renamed' });
 
-      const args = mockPrisma.customItem.update.mock.calls[0][0] as {
-        data: Record<string, unknown>;
-      };
-      expect(args.data).not.toHaveProperty('exchangeRate');
-      expect(args.data).not.toHaveProperty('baseAmount');
-      expect(args.data).not.toHaveProperty('baseCurrency');
+      const args = mockPrisma.tripExpense.update.mock.calls[0][0] as { data: Record<string, unknown> };
+      expect(args.data).toEqual({ description: 'Pass', date: null });
     });
   });
 

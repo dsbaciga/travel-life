@@ -15,7 +15,12 @@ import { z } from 'zod';
 //          promotes to the FK.
 // v1.8.0 - Locations carry countryCode and travel documents issuingCountryCode (ISO alpha-2);
 //          restore derives them from the address / country name when a file has none.
-export const BACKUP_VERSION = '1.8.0';
+// v1.9.0 - A booking's cost is an expense row. Bookings still export `cost`, `currency` and the FX
+//          snapshot (hydrated), and transportation now exports its `id`. An expense that is the cost
+//          of a booking carries `booking: { type, id }` (id = the booking's id in this file) so its
+//          payer, splits and receipt survive; restore creates one cost row per booking. Older files
+//          (cost on the booking, no linked expenses) restore into the same shape.
+export const BACKUP_VERSION = '1.9.0';
 
 // =============================================================================
 // Shared/Reusable Schemas
@@ -576,6 +581,14 @@ const BackupExpenseSchema = z.object({
   receiptMimeType: z.string().max(50).nullable().optional(),
   receiptSizeBytes: z.number().int().nonnegative().nullable().optional(),
   receiptUploadedAt: FlexibleDateSchema,
+  // v1.9.0: set when this expense is the cost of a booking in the same file (the booking's own id there).
+  booking: z
+    .object({
+      type: z.enum(['activity', 'transportation', 'lodging', 'customItem']),
+      id: z.number(),
+    })
+    .nullable()
+    .optional(),
 });
 
 // Trip emergency info schema (added in v1.6.0)

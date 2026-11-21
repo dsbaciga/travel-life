@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import { Prisma } from '@prisma/client';
+import { costExpenseInclude } from './_shared/bookingCost';
 import travelTimeService from './travelTime.service';
 import travelDocumentService from './travelDocument.service';
 import visaRequirementService from './visaRequirement.service';
@@ -144,7 +144,8 @@ class TripValidatorService {
         transportation: true,
         locations: true,
         journalEntries: true,
-        customItems: true,
+        // A custom item's cost is its expense row (checked for a missing currency below).
+        customItems: { include: costExpenseInclude },
         dismissedValidationIssues: true,
       },
     });
@@ -644,9 +645,9 @@ class TripValidatorService {
     // Custom items with a cost but no currency. Without a currency the amount
     // cannot be converted, so it is silently excluded from the budget total —
     // worth flagging rather than letting the trip quietly under-report spend.
-    type CustomItemRecord = { id: number; cost: Prisma.Decimal | null; currency: string | null };
-    const customItemsMissingCurrency = ((trip.customItems ?? []) as CustomItemRecord[]).filter(
-      (item) => item.cost !== null && !item.currency
+    type CustomItemRecord = { id: number; costExpense?: { currency: string | null } | null };
+    const customItemsMissingCurrency = ((trip.customItems ?? []) as unknown as CustomItemRecord[]).filter(
+      (item) => item.costExpense != null && !item.costExpense.currency
     );
     if (customItemsMissingCurrency.length > 0) {
       const issueKey = 'custom_items_without_currency';

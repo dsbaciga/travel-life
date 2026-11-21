@@ -122,10 +122,16 @@ describe('BulkImportService', () => {
       dryRun: false,
       excludeRows: [],
     });
-    const created = tx.activity.create.mock.calls[0][0] as { data: { cost: Prisma.Decimal; category: string; currency: string } };
-    expect(created.data.cost).toBeInstanceOf(Prisma.Decimal);
-    expect(created.data.cost.toString()).toBe('12.5');
-    expect(created.data.currency).toBe('EUR');
+    const created = tx.activity.create.mock.calls[0][0] as {
+      data: { category: string; costExpense: { create: { amount: Prisma.Decimal; currency: string; category: string; description: string } } };
+    };
+    // The cost is the activity's expense row, created with it (an exact Decimal, not a float).
+    const cost = created.data.costExpense.create;
+    expect(cost.amount).toBeInstanceOf(Prisma.Decimal);
+    expect(cost.amount.toString()).toBe('12.5');
+    expect(cost.currency).toBe('EUR');
+    expect(cost.category).toBe('activities');
+    expect(cost.description).toBe('Visit');
     expect(created.data.category).toBe('Dining');
     expect(tx.activity.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ tripId: 9, locationId: 42 }) })

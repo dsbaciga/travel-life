@@ -7,6 +7,7 @@
  * The ICS output is hand-rolled (no dependencies): CRLF line endings,
  * 75-octet line folding, and proper text escaping.
  */
+import { transportationLabel } from './_shared/bookingCost';
 import crypto from 'crypto';
 import prisma from '../config/database';
 import { AppError } from '../errors/errors';
@@ -250,22 +251,8 @@ export function buildTransportationEvent(transport: TransportationRecord): IcsEv
   if (!transport.scheduledStart) {
     return null;
   }
-  const from = transport.startLocationText ?? transport.startLocation?.name ?? null;
-  const to = transport.endLocationText ?? transport.endLocation?.name ?? null;
-
-  const summaryParts: string[] = [transport.type];
-  if (transport.company) {
-    summaryParts.push(transport.company);
-  }
-  if (transport.referenceNumber) {
-    summaryParts.push(transport.referenceNumber);
-  }
-  let summary = summaryParts.join(' ');
-  if (from && to) {
-    summary += `: ${from} → ${to}`;
-  } else if (from || to) {
-    summary += `: ${from ?? to}`;
-  }
+  // The same label a leg's cost row carries as its description (services/_shared/bookingCost.ts).
+  const summary = transportationLabel(transport);
 
   const start = localDateTimeToUtc(transport.scheduledStart, transport.startTimezone);
   const end = transport.scheduledEnd

@@ -163,6 +163,7 @@ const mockTx = {
   },
   tripExpense: {
     create: jest.fn(),
+    update: jest.fn(),
     findFirst: jest.fn(),
   },
   tripEmergencyInfo: {
@@ -1169,8 +1170,16 @@ describe('RestoreService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             name: 'Sushi Lunch',
-            baseCurrency: 'EUR',
             dietaryTags: ['fish'],
+            // The cost (with its frozen FX snapshot) is the activity's expense row, created with it.
+            costExpense: {
+              create: expect.objectContaining({
+                category: 'activities',
+                currency: 'JPY',
+                baseCurrency: 'EUR',
+                description: 'Sushi Lunch',
+              }),
+            },
           }),
         })
       );
@@ -1393,6 +1402,72 @@ describe('RestoreService', () => {
       expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
       expect(createdData(0).receiptPath).toBeUndefined();
       expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 1 });
+    });
+
+    it('RST-COST-001: an expense that is a booking cost updates that booking cost row, never a second one', async () => {
+      const backup = {
+        ...minimalBackup,
+        version: '1.9.0',
+        trips: [
+          {
+            ...baseTrip,
+            activities: [{ id: 5, name: 'Concert', cost: 80, currency: 'EUR' }],
+            expenses: [
+              expense({
+                description: 'Concert',
+                category: 'activities',
+                amount: 80,
+                currency: 'EUR',
+                booking: { type: 'activity', id: 5 },
+                receiptPath: '/uploads/receipts/a.jpg',
+              }),
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+      mockTx.activity.create.mockResolvedValue({ id: 501 });
+      // (the receipt check also uses findFirst: only the booking-link lookup finds a row)
+      mockTx.tripExpense.findFirst.mockImplementation(async (args: unknown) =>
+        (args as { where: Record<string, unknown> }).where.activityId ? { id: 900 } : null
+      );
+
+      await restoreFromBackup(1, backup);
+
+      // The activity import created the one cost row (nested in the activity create)...
+      const activityData = (mockTx.activity.create.mock.calls[0][0] as { data: { costExpense: { create: { amount: unknown } } } }).data;
+      expect(Number(activityData.costExpense.create.amount)).toBe(80);
+      // ...and the expense of the booking looks it up by the NEW booking id and updates it.
+      expect(mockTx.tripExpense.findFirst).toHaveBeenCalledWith({ where: { activityId: 501 }, select: { id: true } });
+      expect(mockTx.tripExpense.update).toHaveBeenCalledTimes(1);
+      expect(mockTx.tripExpense.update.mock.calls[0][0]).toMatchObject({
+        where: { id: 900 },
+        data: { receiptPath: '/uploads/receipts/a.jpg' },
+      });
+      expect(mockTx.tripExpense.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-COST-002: an older file (cost on the booking, no linked expenses) restores into the same shape', async () => {
+      const backup = {
+        ...minimalBackup,
+        version: '1.8.0',
+        trips: [{ ...baseTrip, lodging: [{ id: 3, type: 'hotel', name: 'Inn', checkInDate: '2026-05-01T14:00:00Z', checkOutDate: '2026-05-03T10:00:00Z', cost: 200, currency: 'USD' }] }],
+      } as unknown as BackupData;
+      mockTx.lodging.create.mockResolvedValue({ id: 31 });
+
+      await restoreFromBackup(1, backup);
+
+      const lodgingData = (mockTx.lodging.create.mock.calls[0][0] as { data: { costExpense: { create: Record<string, unknown> } } }).data;
+      expect(lodgingData.costExpense.create).toMatchObject({ description: 'Inn', category: 'lodging', currency: 'USD' });
+      expect(mockTx.tripExpense.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-COST-003: a linked expense whose booking is missing from the file is kept as an ordinary expense', async () => {
+      const backup = withExpenses([expense({ booking: { type: 'activity', id: 99 } })]);
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
+      expect(createdData(0)).not.toHaveProperty('activityId');
     });
 
     it('rejects traversal, absolute and foreign-directory paths in the backup', () => {

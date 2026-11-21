@@ -38,6 +38,13 @@ export type ExpenseParticipant = {
   kind: 'owner' | 'companion';
 };
 
+/** The booking an expense is the cost of (the cost of an activity, leg, stay or custom item). */
+export type LinkedExpenseEntity = {
+  type: 'activity' | 'transportation' | 'lodging' | 'customItem';
+  id: number;
+  name: string;
+};
+
 export type TripExpense = {
   id: number;
   tripId: number;
@@ -60,6 +67,12 @@ export type TripExpense = {
   /** Stored receipt photo ("/uploads/receipts/..."), or null. Load it with getFullAssetUrl. */
   receiptPath?: string | null;
   receiptUploadedAt?: string | null;
+  /** Set when this expense is a booking's cost (the booking's own cost field is this row). */
+  linkedEntity?: LinkedExpenseEntity | null;
+  activityId?: number | null;
+  transportationId?: number | null;
+  lodgingId?: number | null;
+  customItemId?: number | null;
   createdAt: string;
   updatedAt: string;
 };

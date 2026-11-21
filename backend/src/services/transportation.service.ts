@@ -18,6 +18,15 @@ import { cleanupEntityLinks } from '../services/_shared/entityLinkCleanup';
 import { locationWithAddressSelect } from '../prisma/prismaIncludes';
 import routingService from './routing.service';
 import loyaltyProgramService from './loyaltyProgram.service';
+import {
+  buildBookingCostCreate,
+  bookingReceiptPaths,
+  costExpenseInclude,
+  costExpenseSelect,
+  hydrateBookingCost,
+  syncBookingCost,
+} from '../services/_shared/bookingCost';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
 // Type for transportation with included relations
 type TransportationWithRelations = Prisma.TransportationGetPayload<{
@@ -25,6 +34,7 @@ type TransportationWithRelations = Prisma.TransportationGetPayload<{
     startLocation: { select: typeof locationWithAddressSelect };
     endLocation: { select: typeof locationWithAddressSelect };
     flightTracking: true;
+    costExpense: { select: typeof costExpenseSelect };
   };
 }>;
 
@@ -82,7 +92,7 @@ interface TransportationFrontend {
 // Helper to map database fields to frontend field names
 const mapTransportationToFrontend = (t: TransportationWithRelations): TransportationFrontend => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- convertDecimals converts Decimal->number at runtime but its return type remains T; every field is explicitly mapped below
-  const converted = convertDecimals(t) as any;
+  const converted = convertDecimals(hydrateBookingCost(t)) as any;
   return {
     id: converted.id,
     tripId: converted.tripId,
@@ -144,6 +154,34 @@ class TransportationService {
       await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
     }
 
+    // The label of the leg (the description of its cost row) names the places, by text or by location.
+    const [fromLocation, toLocation] = await Promise.all([
+      !data.fromLocationName && data.fromLocationId
+        ? prisma.location.findUnique({ where: { id: data.fromLocationId }, select: { name: true } })
+        : null,
+      !data.toLocationName && data.toLocationId
+        ? prisma.location.findUnique({ where: { id: data.toLocationId }, select: { name: true } })
+        : null,
+    ]);
+    const scheduledStart = data.departureTime ? new Date(data.departureTime) : null;
+    const costExpense = await buildBookingCostCreate(
+      prisma,
+      data.tripId,
+      {
+        kind: 'transportation',
+        type: data.type,
+        company: data.carrier || null,
+        referenceNumber: data.vehicleNumber || null,
+        startLocationText: data.fromLocationName || null,
+        endLocationText: data.toLocationName || null,
+        startLocation: fromLocation,
+        endLocation: toLocation,
+        scheduledStart,
+        startTimezone: data.startTimezone || null,
+      },
+      { cost: data.cost, currency: data.currency }
+    );
+
     const transportation = await prisma.transportation.create({
       data: {
         tripId: data.tripId,
@@ -152,7 +190,7 @@ class TransportationService {
         endLocationId: data.toLocationId || null,
         startLocationText: data.fromLocationName || null,
         endLocationText: data.toLocationName || null,
-        scheduledStart: data.departureTime ? new Date(data.departureTime) : null,
+        scheduledStart,
         scheduledEnd: data.arrivalTime ? new Date(data.arrivalTime) : null,
         startTimezone: data.startTimezone || null,
         endTimezone: data.endTimezone || null,
@@ -160,8 +198,7 @@ class TransportationService {
         referenceNumber: data.vehicleNumber || null,
         bookingReference: data.confirmationNumber || null,
         loyaltyProgramId: data.loyaltyProgramId || null,
-        cost: data.cost !== undefined ? data.cost : null,
-        currency: data.currency || null,
+        costExpense,
         notes: data.notes || null,
       },
       include: {
@@ -172,6 +209,7 @@ class TransportationService {
           select: locationWithAddressSelect,
         },
         flightTracking: true,
+        ...costExpenseInclude,
       },
     });
 
@@ -197,6 +235,7 @@ class TransportationService {
           select: locationWithAddressSelect,
         },
         flightTracking: true,
+        ...costExpenseInclude,
       },
       orderBy: [{ scheduledStart: 'asc' }, { createdAt: 'asc' }],
     });
@@ -239,6 +278,7 @@ class TransportationService {
             select: locationWithAddressSelect,
           },
           flightTracking: true,
+        ...costExpenseInclude,
         },
         orderBy: [{ scheduledStart: 'asc' }, { createdAt: 'asc' }],
         skip,
@@ -380,6 +420,7 @@ class TransportationService {
           },
         },
         flightTracking: true,
+        ...costExpenseInclude,
       },
     });
 
@@ -427,8 +468,6 @@ class TransportationService {
       referenceNumber: data.vehicleNumber,
       bookingReference: data.confirmationNumber,
       loyaltyProgramId: data.loyaltyProgramId,
-      cost: data.cost,
-      currency: data.currency,
       notes: data.notes,
       actualStart: data.actualDepartureTime,
       actualEnd: data.actualArrivalTime,
@@ -449,20 +488,43 @@ class TransportationService {
       },
     });
 
-    const updatedTransportation = await prisma.transportation.update({
-      where: { id: transportationId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
-      data: updateData,
-      include: {
-        startLocation: {
-          select: locationWithAddressSelect,
+    // The cost lives on the expense row of the leg (see syncBookingCost), not on the transportation.
+    const { updatedTransportation, receiptPaths } = await prisma.$transaction(async (tx) => {
+      const row = await tx.transportation.update({
+        where: { id: transportationId },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
+        data: updateData,
+        include: {
+          startLocation: {
+            select: locationWithAddressSelect,
+          },
+          endLocation: {
+            select: locationWithAddressSelect,
+          },
+          flightTracking: true,
         },
-        endLocation: {
-          select: locationWithAddressSelect,
-        },
-        flightTracking: true,
-      },
+      });
+      const sync = await syncBookingCost(tx, 'transportation', transportationId, {
+        cost: data.cost,
+        currency: data.currency,
+        refresh:
+          data.type !== undefined ||
+          data.carrier !== undefined ||
+          data.vehicleNumber !== undefined ||
+          data.fromLocationId !== undefined ||
+          data.toLocationId !== undefined ||
+          data.fromLocationName !== undefined ||
+          data.toLocationName !== undefined ||
+          data.departureTime !== undefined ||
+          data.startTimezone !== undefined,
+      });
+      const costExpense = await tx.tripExpense.findUnique({
+        where: { transportationId },
+        select: costExpenseSelect,
+      });
+      return { updatedTransportation: { ...row, costExpense }, receiptPaths: sync.receiptPaths };
     });
+    await deleteReceiptFiles(receiptPaths);
 
     // Recalculate route distance if locations changed
     if (
@@ -590,13 +652,16 @@ class TransportationService {
       'edit'
     );
 
-    // Clean up entity links and delete atomically in a transaction
+    // Clean up entity links and delete atomically in a transaction (the cost row goes with the leg;
+    // its receipt file is removed once the delete committed)
+    const receiptPaths = await bookingReceiptPaths(prisma, 'transportation', [transportationId]);
     await prisma.$transaction(async (tx) => {
       await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportationId, tx);
       await tx.transportation.delete({
         where: { id: transportationId },
       });
     });
+    await deleteReceiptFiles(receiptPaths);
 
     return { success: true };
   }
@@ -622,7 +687,8 @@ class TransportationService {
       throw new AppError('One or more transportation items not found or do not belong to this trip', 404);
     }
 
-    // Clean up entity links and delete atomically in a transaction
+    // Clean up entity links and delete atomically in a transaction (cost rows go with the legs)
+    const receiptPaths = await bookingReceiptPaths(prisma, 'transportation', data.ids);
     const result = await prisma.$transaction(async (tx) => {
       for (const transportation of transportations) {
         await cleanupEntityLinks(transportation.tripId, 'TRANSPORTATION', transportation.id, tx);
@@ -634,6 +700,8 @@ class TransportationService {
         },
       });
     });
+
+    await deleteReceiptFiles(receiptPaths);
 
     return { success: true, deletedCount: result.count };
   }

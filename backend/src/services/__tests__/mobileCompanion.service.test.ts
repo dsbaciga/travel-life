@@ -145,6 +145,40 @@ describe('MobileSyncService', () => {
     mockPrisma.trip.findUnique.mockResolvedValue(tripRow as never);
   });
 
+  it('MSYNC-001b: booking costs ride on the booking rows and stay out of the expense list', async () => {
+    mockPrisma.checklist.findMany.mockResolvedValue([]);
+    mockPrisma.activity.findMany.mockImplementation(async (args?: unknown) => {
+      const where = (args as { where?: Record<string, unknown> } | undefined)?.where ?? {};
+      if ('locationId' in where) return [];
+      return [
+        {
+          id: 7,
+          name: 'Gondola',
+          costExpense: {
+            amount: new Prisma.Decimal('40.50'),
+            currency: 'EUR',
+            exchangeRate: new Prisma.Decimal('1.1'),
+            baseAmount: new Prisma.Decimal('44.55'),
+            baseCurrency: 'USD',
+          },
+        },
+      ];
+    });
+    mockPrisma.entityLink.findMany.mockResolvedValue([]);
+
+    const snap = await mobileSyncService.getSnapshot(USER, TRIP);
+
+    expect(snap.entities.ACTIVITY).toEqual([
+      { id: 7, name: 'Gondola', cost: 40.5, currency: 'EUR', exchangeRate: 1.1, baseAmount: 44.55, baseCurrency: 'USD' },
+    ]);
+    // Booking costs are not in EXPENSE (neither the rows nor the id list), so the app cannot count them twice.
+    const expenseCalls = mockPrisma.tripExpense.findMany.mock.calls as Array<[{ where: Record<string, unknown> }]>;
+    expect(expenseCalls).toHaveLength(2);
+    for (const [args] of expenseCalls) {
+      expect(args.where).toMatchObject({ tripId: TRIP, activityId: null, transportationId: null, lodgingId: null, customItemId: null });
+    }
+  });
+
   it('MSYNC-001: full snapshot returns every kind, all ids, and the permission', async () => {
     mockPrisma.checklist.findMany.mockResolvedValue([{ id: 3 }]);
     // The synthetic place-link query (where.locationId set) sees the FK-backed activity 7 -> location 20;
@@ -179,7 +213,10 @@ describe('MobileSyncService', () => {
         'TRANSPORTATION',
       ].sort()
     );
-    expect(snap.entities.ACTIVITY).toEqual([{ id: 7, name: 'Gondola' }]);
+    // A booking row carries its cost fields exactly as before (here: no cost), hydrated from its expense row.
+    expect(snap.entities.ACTIVITY).toEqual([
+      { id: 7, name: 'Gondola', cost: null, currency: null, exchangeRate: null, baseAmount: null, baseCurrency: null },
+    ]);
     expect(snap.ids.ACTIVITY).toEqual([7]);
     expect(snap.ids.CHECKLIST).toEqual([3]);
     // linkIds: the synthetic FK place link of activity 7 (negative id, -(2 * 7)) plus the real row
