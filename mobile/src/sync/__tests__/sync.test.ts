@@ -9,6 +9,7 @@
  * - SYNC-010: Offline create -> flush assigns a server id and remaps the entity row
  * - SYNC-011: Offline Location + Activity + EntityLink sync in causal order with remapped link ends
  * - SYNC-012: Parent/child and foreign-key references are remapped (child location, transport legs, food log)
+ * - SYNC-017: A place given to an activity offline becomes its locationId; a second place is a link
  * - SYNC-013: Editing an unsynced entity folds into its create (one request)
  * - SYNC-014: Deleting an unsynced entity sends nothing and drops its queued links
  * - SYNC-015: Update-only fields on a new row go out as a follow-up update
@@ -45,6 +46,7 @@ import {
 } from '../../db/repository';
 import {
   adjustTime,
+  attachPlace,
   createAndLink,
   createEntity,
   createLink,
@@ -523,6 +525,31 @@ describe('sync engine', () => {
     const online = await syncTrip(db, server, TRIP);
     expect(online).toMatchObject({ sent: 1, interrupted: false });
     expect(server.all('ACTIVITY')).toHaveLength(1);
+  });
+
+  it('SYNC-017: a place given to an activity offline becomes its locationId; a second place is a link', async () => {
+    await pullTrip(db, server, TRIP);
+    const activity = await createEntity(db, 'ACTIVITY', TRIP, activityInput());
+    const first = await createEntity(db, 'LOCATION', TRIP, locationInput());
+    const second = await createEntity(db, 'LOCATION', TRIP, locationInput({ name: 'Second place' }));
+    const source = { type: 'ACTIVITY' as const, id: activity.id };
+
+    expect(await attachPlace(db, TRIP, source, first.id)).toBe('place');
+    // The same place again changes nothing; another place is an ordinary link.
+    expect(await attachPlace(db, TRIP, source, first.id)).toBe('place');
+    expect(await attachPlace(db, TRIP, source, second.id)).toBe('link');
+    expect((await getEntity(db, 'ACTIVITY', activity.id))?.locationId).toBe(first.id);
+    expect(await listLinks(db, TRIP)).toHaveLength(1);
+
+    await flushOutbox(db, server);
+
+    const serverActivity = server.all('ACTIVITY')[0];
+    const serverFirst = server.all('LOCATION').find((l) => l.name !== 'Second place');
+    const serverSecond = server.all('LOCATION').find((l) => l.name === 'Second place');
+    expect(serverActivity.locationId).toBe(serverFirst?.id);
+    expect([...server.links.values()]).toMatchObject([
+      { sourceType: 'ACTIVITY', sourceId: serverActivity.id, targetType: 'LOCATION', targetId: serverSecond?.id },
+    ]);
   });
 
   it('SYNC-031: losing signal mid-flush leaves the remaining graph consistent', async () => {

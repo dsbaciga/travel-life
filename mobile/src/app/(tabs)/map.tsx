@@ -76,17 +76,20 @@ export default function MapScreen() {
       ),
   });
 
-  // Locations that today's activities are linked to.
+  // Locations of today's activities.
   const { data: todayLocationIds = new Set<string>() } = useQuery({
     queryKey: ['today-locations', trip?.id, todayKey, version],
     enabled: Boolean(trip),
     queryFn: async () => {
-      const todays = new Set(
-        activities
-          .filter((a) => a.startTime && dayKeyInTimezone(a.startTime, resolveTimezone(a.timezone, tripZone)) === todayKey)
-          .map((a) => String(a.id))
+      const todaysActivities = activities.filter(
+        (a) => a.startTime && dayKeyInTimezone(a.startTime, resolveTimezone(a.timezone, tripZone)) === todayKey
       );
+      const todays = new Set(todaysActivities.map((a) => String(a.id)));
+      // An activity's place is its own locationId; other places it is linked to count too.
       const ids = new Set<string>();
+      for (const activity of todaysActivities) {
+        if (activity.locationId !== null && activity.locationId !== undefined) ids.add(String(activity.locationId));
+      }
       for (const link of await listLinks(await getDb(), trip?.id as number)) {
         if (link.sourceType === 'ACTIVITY' && link.targetType === 'LOCATION' && todays.has(String(link.sourceId))) {
           ids.add(String(link.targetId));

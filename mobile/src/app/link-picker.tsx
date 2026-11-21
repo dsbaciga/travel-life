@@ -17,8 +17,8 @@ import {
 
 import { entityLabel } from '@/components/EntityLinkSection';
 import { AppText, Button, Card, Chip, EmptyState, Field, Screen } from '@/components/ui';
-import { listEntities, listLinksFor, parseIdKey } from '@/db/repository';
-import { bulkLinkPhotos, createAndLink, createLink } from '@/domain/mutations';
+import { getEntity, listEntities, listLinksFor, parseIdKey } from '@/db/repository';
+import { attachPlace, bulkLinkPhotos, createAndLink, createEntity, createLink } from '@/domain/mutations';
 import { getDb } from '@/lib/db';
 import { completeEntity } from '@/lib/entityForms';
 import { notifyLocalChange, syncNow, useSync } from '@/lib/sync';
@@ -60,13 +60,20 @@ export default function LinkPickerScreen() {
     queryKey: ['link-existing', tripId, sourceType, params.sourceId, version],
     enabled: sourceType !== null && sourceIds.length === 1,
     queryFn: async () => {
-      const links = await listLinksFor(await getDb(), tripId, sourceType as EntityType, sourceIds[0]);
-      return new Set(
+      const db = await getDb();
+      const links = await listLinksFor(db, tripId, sourceType as EntityType, sourceIds[0]);
+      const keys = new Set(
         links.flatMap((link) => [
           `${link.targetType}:${link.targetId}`,
           `${link.sourceType}:${link.sourceId}`,
         ])
       );
+      // An activity's or stay's own place counts as linked.
+      if (sourceType === 'ACTIVITY' || sourceType === 'LODGING') {
+        const own = await getEntity(db, sourceType, sourceIds[0]);
+        if (own?.locationId !== null && own?.locationId !== undefined) keys.add(`LOCATION:${own.locationId}`);
+      }
+      return keys;
     },
   });
 
@@ -100,7 +107,9 @@ export default function LinkPickerScreen() {
         await bulkLinkPhotos(db, tripId, sourceIds, { targetType, targetId });
       } else {
         for (const sourceId of sourceIds) {
-          await createLink(db, tripId, sourceType, sourceId, { targetType, targetId });
+          // A place given to an activity or stay becomes its own place (locationId) when it has none.
+          if (targetType === 'LOCATION') await attachPlace(db, tripId, { type: sourceType, id: sourceId }, targetId);
+          else await createLink(db, tripId, sourceType, sourceId, { targetType, targetId });
         }
       }
       await finish();
@@ -122,7 +131,10 @@ export default function LinkPickerScreen() {
           latitude: position ? Number(position.latitude.toFixed(6)) : null,
           longitude: position ? Number(position.longitude.toFixed(6)) : null,
         }) as Omit<SyncEntityMap['LOCATION'], 'id' | 'tripId'>;
-        await createAndLink(db, tripId, { type: sourceType, id: sourceIds[0] }, 'LOCATION', input);
+        await db.transaction(async (tx) => {
+          const place = await createEntity(tx, 'LOCATION', tripId, input);
+          await attachPlace(tx, tripId, { type: sourceType, id: sourceIds[0] }, place.id);
+        });
       } else {
         const input = completeEntity('ACTIVITY', {
           name,

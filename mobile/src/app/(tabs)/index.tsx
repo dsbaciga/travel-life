@@ -24,6 +24,7 @@ import TimelineRow from '@/components/TimelineRow';
 import BudgetMeter from '@/components/BudgetMeter';
 import { SkeletonList } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
+import { getEntity } from '@/db/repository';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
 import {
@@ -92,6 +93,10 @@ async function resolveDestination(
 
   const db = await getDb();
   if (item.entityKind === 'ACTIVITY' || item.entityKind === 'LODGING') {
+    // Its own place first (locationId); a linked place is the fallback for rows without one.
+    const own = await getEntity(db, item.entityKind, item.entityId);
+    const place = own ? byId(own.locationId ?? null) : null;
+    if (place) return fromLocation(place);
     const linked = await listLinkedEntities(db, tripId, { type: item.entityKind, id: item.entityId }, 'LOCATION');
     if (linked.length > 0) return fromLocation(linked[0]);
   }
