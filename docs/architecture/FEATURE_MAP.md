@@ -54,7 +54,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
 | Photos, albums, EXIF, thumbnails | `photo`, `photoAlbum`, `albumSuggestion` (uses `sharp`, `exifr`) | `PhotoGallery`, `PhotoUpload`, `PhotoLightbox`, `AlbumsPage`, `GlobalAlbumsPage`, `PhotosMapView` |
-| Auto-link photos to activities by capture time (review, then apply) | `photoAutoLink`, `services/_shared/photoActivityMatch` | `PhotoActivityAutoLinkModal` (opened from `trip-detail/TripPhotosTab`) |
+| Auto-link photos to activities by capture time (review, then apply) | `photoAutoLink`, `services/_shared/photoActivityMatch`; all-trips backfill with no review: `src/scripts/backfillPhotoActivityLinks.ts` (run as `node dist/scripts/backfillPhotoActivityLinks.js [--dry-run]`) | `PhotoActivityAutoLinkModal` (opened from `trip-detail/TripPhotosTab`) |
 | Photo favorites and trip highlights | `photo` (`isFavorite`, `favoritesOnly`) | `FavoriteStarButton`, `trip-detail/TripHighlights`, `useTripEditAccess` |
 | Immich integration (filters, smart search, bulk link, album sync, export) | `immich`, `immichSync` | `ImmichBrowser`, `ImmichBulkImportDialog`, `ImmichAlbumPanel`, `ImmichSettings`, `useImmichThumbnail` |
 

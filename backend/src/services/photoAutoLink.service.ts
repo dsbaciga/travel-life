@@ -55,6 +55,134 @@ function pickPreviewPhotos(photos: SuggestionPhotoRow[]): PhotoActivitySuggestio
 }
 
 /**
+ * Loads a trip's photos and activities and matches the photos that are not
+ * linked to an activity yet. Shared by the reviewed flow and the backfill, so
+ * both link exactly the same pairs.
+ *
+ * No access check: callers verify permission (or are the operator script).
+ *
+ * @param timezoneUserId - Whose timezone ends the fallback chain for all-day
+ *   activities: the requesting user for the reviewed flow, the trip owner for the backfill
+ */
+async function loadTripMatches(tripId: number, timezoneUserId: number) {
+  const [trip, activities, photos, existingLinks] = await Promise.all([
+    prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true } }),
+    prisma.activity.findMany({
+      where: { tripId },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        allDay: true,
+        startTime: true,
+        endTime: true,
+        timezone: true,
+      },
+    }),
+    prisma.photo.findMany({
+      where: { tripId },
+      select: {
+        id: true,
+        takenAt: true,
+        thumbnailPath: true,
+        localPath: true,
+        source: true,
+        immichAssetId: true,
+        mediaType: true,
+        caption: true,
+      },
+      orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
+    }),
+    // A link may have been created from either end.
+    prisma.entityLink.findMany({
+      where: {
+        tripId,
+        OR: [
+          { sourceType: 'PHOTO', targetType: 'ACTIVITY' },
+          { sourceType: 'ACTIVITY', targetType: 'PHOTO' },
+        ],
+      },
+      select: { sourceType: true, sourceId: true, targetId: true },
+    }),
+  ]);
+
+  const linkedPhotoIds = new Set(
+    existingLinks.map((link) => (link.sourceType === 'PHOTO' ? link.sourceId : link.targetId))
+  );
+
+  const candidates = photos.filter((photo) => !linkedPhotoIds.has(photo.id));
+  const datedCandidates = candidates.filter((photo) => photo.takenAt);
+
+  // All-day activities are calendar dates on somebody's clock: the activity's
+  // own zone first, then the trip's, then the given user's.
+  const fallbackTimezone = resolveTimezone(trip?.timezone, await getUserTimezone(timezoneUserId));
+  const matches = matchPhotosToActivities(datedCandidates, activities, fallbackTimezone);
+
+  return { activities, photos, candidates, datedCandidates, matches };
+}
+
+export interface PhotoActivityBackfillResult {
+  totalPhotos: number;
+  /** Photos that fit an activity and were (or, on a dry run, would be) linked. */
+  matchedPhotos: number;
+  /** Links actually written; 0 on a dry run. */
+  created: number;
+  alreadyLinkedPhotos: number;
+  photosWithoutTime: number;
+  unmatchedPhotos: number;
+}
+
+/**
+ * Links every matching photo of one trip to its activity, with no review step.
+ *
+ * FOR THE OPERATOR SCRIPT ONLY (`src/scripts/backfillPhotoActivityLinks.ts`):
+ * there is deliberately no user and no permission check, so this must never be
+ * reachable from a route. Requests go through the reviewed
+ * `getActivitySuggestions` / `applyActivityLinks` pair instead.
+ *
+ * Safe to re-run: a photo that already has an activity link (including one this
+ * created earlier) is skipped, so a second run adds nothing.
+ *
+ * @param ownerUserId - The trip owner, whose timezone is the last fallback for
+ *   all-day activities
+ */
+export async function backfillTripPhotoActivityLinks(
+  tripId: number,
+  ownerUserId: number,
+  options: { dryRun?: boolean } = {}
+): Promise<PhotoActivityBackfillResult> {
+  const { photos, candidates, datedCandidates, matches } = await loadTripMatches(
+    tripId,
+    ownerUserId
+  );
+
+  let created = 0;
+  if (!options.dryRun && matches.length > 0) {
+    const result = await prisma.entityLink.createMany({
+      data: matches.map((match) => ({
+        tripId,
+        sourceType: 'PHOTO' as const,
+        sourceId: match.photoId,
+        targetType: 'ACTIVITY' as const,
+        targetId: match.activityId,
+        relationship: 'RELATED' as const,
+      })),
+      skipDuplicates: true,
+    });
+    created = result.count;
+  }
+
+  return {
+    totalPhotos: photos.length,
+    matchedPhotos: matches.length,
+    created,
+    alreadyLinkedPhotos: photos.length - candidates.length,
+    photosWithoutTime: candidates.length - datedCandidates.length,
+    unmatchedPhotos: datedCandidates.length - matches.length,
+  };
+}
+
+/**
  * Auto-linking photos to activities by when they were taken.
  *
  * Two steps, so nothing is linked without the user seeing it first: the client
@@ -78,58 +206,10 @@ class PhotoAutoLinkService {
   ): Promise<PhotoActivitySuggestionsResponse> {
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    const [trip, activities, photos, existingLinks] = await Promise.all([
-      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true } }),
-      prisma.activity.findMany({
-        where: { tripId },
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          allDay: true,
-          startTime: true,
-          endTime: true,
-          timezone: true,
-        },
-      }),
-      prisma.photo.findMany({
-        where: { tripId },
-        select: {
-          id: true,
-          takenAt: true,
-          thumbnailPath: true,
-          localPath: true,
-          source: true,
-          immichAssetId: true,
-          mediaType: true,
-          caption: true,
-        },
-        orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
-      }),
-      // A link may have been created from either end.
-      prisma.entityLink.findMany({
-        where: {
-          tripId,
-          OR: [
-            { sourceType: 'PHOTO', targetType: 'ACTIVITY' },
-            { sourceType: 'ACTIVITY', targetType: 'PHOTO' },
-          ],
-        },
-        select: { sourceType: true, sourceId: true, targetId: true },
-      }),
-    ]);
-
-    const linkedPhotoIds = new Set(
-      existingLinks.map((link) => (link.sourceType === 'PHOTO' ? link.sourceId : link.targetId))
+    const { activities, photos, candidates, datedCandidates, matches } = await loadTripMatches(
+      tripId,
+      userId
     );
-
-    const candidates = photos.filter((photo) => !linkedPhotoIds.has(photo.id));
-    const datedCandidates = candidates.filter((photo) => photo.takenAt);
-
-    // All-day activities are calendar dates on somebody's clock: the activity's
-    // own zone first, then the trip's, then this user's.
-    const fallbackTimezone = resolveTimezone(trip?.timezone, await getUserTimezone(userId));
-    const matches = matchPhotosToActivities(datedCandidates, activities, fallbackTimezone);
 
     const photoById = new Map(candidates.map((photo) => [photo.id, photo]));
     const grouped = new Map<number, { photos: SuggestionPhotoRow[]; counts: Record<PhotoMatchKind, number> }>();

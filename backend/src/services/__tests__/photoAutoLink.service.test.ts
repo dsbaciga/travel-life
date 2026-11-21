@@ -12,6 +12,9 @@
  * - PAL-008: Apply creates PHOTO to ACTIVITY links and reports duplicates as skipped
  * - PAL-009: Apply rejects photos or activities from another trip
  * - PAL-010: Apply does not double a link that exists from the activity's side
+ * - PAL-011: Backfill links every match without review and reports what it skipped
+ * - PAL-012: Backfill dry run writes nothing
+ * - PAL-013: Backfill leaves alone photos that already have an activity link
  */
 
 const mockPrisma = {
@@ -33,7 +36,7 @@ jest.mock('../_shared/tripAccess', () => ({
   verifyTripAccessWithPermission: (...args: unknown[]) => mockVerifyTripAccess(...args),
 }));
 
-import photoAutoLinkService from '../photoAutoLink.service';
+import photoAutoLinkService, { backfillTripPhotoActivityLinks } from '../photoAutoLink.service';
 import { AppError } from '../../errors/errors';
 
 const USER_ID = 1;
@@ -286,6 +289,62 @@ describe('PhotoAutoLinkService', () => {
       expect(result).toEqual({ created: 1, skipped: 1 });
       const { data } = mockPrisma.entityLink.createMany.mock.calls[0][0];
       expect(data.map((row: { sourceId: number }) => row.sourceId)).toEqual([11]);
+    });
+  });
+
+  describe('backfillTripPhotoActivityLinks', () => {
+    beforeEach(() => {
+      mockPrisma.activity.findMany.mockResolvedValue([activityRow()]);
+      mockPrisma.photo.findMany.mockResolvedValue([
+        photoRow(10, '2026-06-10T09:30:00Z'),
+        photoRow(11, '2026-06-10T10:30:00Z'),
+        photoRow(12, '2026-06-10T11:20:00Z'), // after the activity ended
+        photoRow(13, null),
+      ]);
+      mockPrisma.entityLink.createMany.mockResolvedValue({ count: 2 });
+    });
+
+    it('PAL-011: links every match without review and reports what it skipped', async () => {
+      const result = await backfillTripPhotoActivityLinks(TRIP_ID, USER_ID);
+
+      expect(mockPrisma.entityLink.createMany).toHaveBeenCalledWith({
+        data: [
+          { tripId: TRIP_ID, sourceType: 'PHOTO', sourceId: 10, targetType: 'ACTIVITY', targetId: 1, relationship: 'RELATED' },
+          { tripId: TRIP_ID, sourceType: 'PHOTO', sourceId: 11, targetType: 'ACTIVITY', targetId: 1, relationship: 'RELATED' },
+        ],
+        skipDuplicates: true,
+      });
+      expect(result).toEqual({
+        totalPhotos: 4,
+        matchedPhotos: 2,
+        created: 2,
+        alreadyLinkedPhotos: 0,
+        photosWithoutTime: 1,
+        unmatchedPhotos: 1,
+      });
+      // The trip owner's zone ends the fallback chain for all-day activities
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: USER_ID } })
+      );
+    });
+
+    it('PAL-012: writes nothing on a dry run', async () => {
+      const result = await backfillTripPhotoActivityLinks(TRIP_ID, USER_ID, { dryRun: true });
+
+      expect(mockPrisma.entityLink.createMany).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ matchedPhotos: 2, created: 0 });
+    });
+
+    it('PAL-013: leaves alone photos that already have an activity link', async () => {
+      mockPrisma.entityLink.findMany.mockResolvedValue([
+        { sourceType: 'PHOTO', sourceId: 10, targetId: 99 },
+        { sourceType: 'ACTIVITY', sourceId: 1, targetId: 11 },
+      ]);
+
+      const result = await backfillTripPhotoActivityLinks(TRIP_ID, USER_ID);
+
+      expect(mockPrisma.entityLink.createMany).not.toHaveBeenCalled();
+      expect(result).toMatchObject({ matchedPhotos: 0, created: 0, alreadyLinkedPhotos: 2 });
     });
   });
 });
