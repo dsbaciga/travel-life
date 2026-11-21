@@ -2,6 +2,9 @@ import prisma from '../config/database';
 import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
+import { findOwnerCompanionId } from './_shared/ownerCompanion';
+import { findSyntheticLocationLinks } from './_shared/entityLocationLinks';
+import { costExpenseInclude, hydrateBookingCost, notBookingCost } from './_shared/bookingCost';
 
 /** Only the live fields the Today screen shows; not the tracking internals. */
 const flightTrackingSelect = {
@@ -110,17 +113,19 @@ class MobileSyncService {
     ] = await Promise.all([
       prisma.location.findMany({ where: { ...tripScope, ...changed } }),
       prisma.photoAlbum.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.lodging.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.lodging.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.transportation.findMany({
         where: { ...tripScope, ...changed },
-        include: { flightTracking: { select: flightTrackingSelect } },
+        include: { flightTracking: { select: flightTrackingSelect }, ...costExpenseInclude },
       }),
-      prisma.activity.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.activity.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.journalEntry.findMany({ where: { ...tripScope, ...changed } }),
       prisma.savedLink.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.customItem.findMany({ where: { ...tripScope, ...changed } }),
+      prisma.customItem.findMany({ where: { ...tripScope, ...changed }, include: costExpenseInclude }),
       prisma.foodLogEntry.findMany({ where: { ...tripScope, ...changed } }),
-      prisma.tripExpense.findMany({ where: { ...tripScope, ...changed } }),
+      // Booking costs ride on the booking rows above (cost, currency, FX fields); the expense list is
+      // the ordinary expenses only, as before, so the app neither double counts nor shows them twice.
+      prisma.tripExpense.findMany({ where: { ...tripScope, ...changed, ...notBookingCost } }),
       prisma.photo.findMany({
         where: { ...tripScope, ...changed },
         select: {
@@ -142,7 +147,13 @@ class MobileSyncService {
       prisma.checklistItem.findMany({
         where: { checklistId: { in: checklistIds }, ...changed },
       }),
-      prisma.entityLink.findMany({ where: tripScope }),
+      // The place of an activity/lodging is its own `locationId` (carried on the rows). It is also
+      // listed here as a synthetic OCCURRED_AT link (negative id) so app versions that read the
+      // place from the link graph keep working; newer code prefers `locationId`.
+      Promise.all([
+        findSyntheticLocationLinks(tripId),
+        prisma.entityLink.findMany({ where: tripScope }),
+      ]).then(([synthetic, rows]) => [...synthetic, ...rows]),
       prisma.location.findMany({ where: tripScope, select: { id: true } }),
       prisma.photoAlbum.findMany({ where: tripScope, select: { id: true } }),
       prisma.lodging.findMany({ where: tripScope, select: { id: true } }),
@@ -152,7 +163,7 @@ class MobileSyncService {
       prisma.savedLink.findMany({ where: tripScope, select: { id: true } }),
       prisma.customItem.findMany({ where: tripScope, select: { id: true } }),
       prisma.foodLogEntry.findMany({ where: tripScope, select: { id: true } }),
-      prisma.tripExpense.findMany({ where: tripScope, select: { id: true } }),
+      prisma.tripExpense.findMany({ where: { ...tripScope, ...notBookingCost }, select: { id: true } }),
       prisma.photo.findMany({ where: tripScope, select: { id: true } }),
       prisma.checklistItem.findMany({
         where: { checklistId: { in: checklistIds } },
@@ -161,6 +172,16 @@ class MobileSyncService {
     ]);
 
     const idsOf = (rows: Array<{ id: number }>): number[] => rows.map((row) => row.id);
+
+    // The installed mobile app still reads `paidByOwner` from the expense rows. Storage now keeps
+    // the owner as their "myself" companion, so hydrate the old shape: the owner payer is
+    // `paidByOwner: true` with no `paidByCompanionId`, exactly as before.
+    const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
+    const expensesForMobile = expenses.map(({ paidByCompanionId: storedPayer, ...row }) => {
+      const paidByCompanionId = storedPayer ?? null;
+      const paidByOwner = paidByCompanionId !== null && paidByCompanionId === ownerCompanionId;
+      return { ...row, paidByOwner, paidByCompanionId: paidByOwner ? null : paidByCompanionId };
+    });
 
     return convertDecimals({
       serverTime: serverTime.toISOString(),
@@ -172,14 +193,14 @@ class MobileSyncService {
       entities: {
         LOCATION: locations,
         PHOTO_ALBUM: albums,
-        LODGING: lodging,
-        TRANSPORTATION: transportation,
-        ACTIVITY: activities,
+        LODGING: lodging.map((row) => hydrateBookingCost(row)),
+        TRANSPORTATION: transportation.map((row) => hydrateBookingCost(row)),
+        ACTIVITY: activities.map((row) => hydrateBookingCost(row)),
         JOURNAL_ENTRY: journals,
         SAVED_LINK: savedLinks,
-        CUSTOM_ITEM: customItems,
+        CUSTOM_ITEM: customItems.map((row) => hydrateBookingCost(row)),
         FOOD_LOG: foodLog,
-        EXPENSE: expenses,
+        EXPENSE: expensesForMobile,
         PHOTO: photos,
         CHECKLIST: checklists,
         CHECKLIST_ITEM: checklistItems,

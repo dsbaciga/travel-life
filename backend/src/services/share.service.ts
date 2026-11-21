@@ -243,15 +243,6 @@ class ShareService {
           where: { source: 'local', mediaType: 'image' },
           orderBy: [{ takenAt: 'asc' }, { id: 'asc' }],
         },
-        entityLinks: {
-          where: {
-            OR: [
-              { sourceType: 'ACTIVITY', targetType: 'LOCATION' },
-              { sourceType: 'LOCATION', targetType: 'ACTIVITY' },
-            ],
-          },
-          select: { sourceType: true, sourceId: true, targetId: true },
-        },
       },
     });
 
@@ -259,19 +250,10 @@ class ShareService {
       throw new AppError('Shared trip not found', 404);
     }
 
-    // Map activity -> linked location name (associations use EntityLink, not FKs)
+    // Activity -> location name, from the activity's own locationId
     const locationNameById = new Map<number, string>();
     for (const location of trip.locations) {
       locationNameById.set(location.id, location.name);
-    }
-    const activityLocationName = new Map<number, string>();
-    for (const link of trip.entityLinks) {
-      const activityId = link.sourceType === 'ACTIVITY' ? link.sourceId : link.targetId;
-      const locationId = link.sourceType === 'ACTIVITY' ? link.targetId : link.sourceId;
-      const name = locationNameById.get(locationId);
-      if (name && !activityLocationName.has(activityId)) {
-        activityLocationName.set(activityId, name);
-      }
     }
 
     // Trip dates are DATE columns; expose only the date part to avoid
@@ -304,7 +286,7 @@ class ShareService {
         startTime: toIso(activity.startTime),
         endTime: toIso(activity.endTime),
         timezone: activity.timezone,
-        locationName: activityLocationName.get(activity.id) ?? null,
+        locationName: (activity.locationId != null ? locationNameById.get(activity.locationId) : undefined) ?? null,
         notes: activity.notes,
       })),
       transportation: trip.transportation.map((transport) => ({

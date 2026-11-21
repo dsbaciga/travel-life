@@ -32,10 +32,18 @@ export function isLodgingType(value: string): value is LodgingType {
   return LODGING_TYPES.some((type) => type === value);
 }
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// The stay's place is its own locationId (a direct FK), not an entity link
 export type Lodging = {
   id: number;
   tripId: number;
+  locationId: number | null;
+  location?: {
+    id: number;
+    name: string;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
   type: LodgingType;
   name: string;
   address: string | null;
@@ -56,6 +64,7 @@ export type Lodging = {
 // Note: Location association is handled via EntityLink system, not direct FK
 export type CreateLodgingInput = {
   tripId: number;
+  locationId?: number | null;
   type: LodgingType;
   name: string;
   address?: string;
@@ -72,6 +81,7 @@ export type CreateLodgingInput = {
 
 // Note: Location association is handled via EntityLink system, not direct FK
 export type UpdateLodgingInput = {
+  locationId?: number | null;
   type?: LodgingType;
   name?: string;
   address?: string | null;

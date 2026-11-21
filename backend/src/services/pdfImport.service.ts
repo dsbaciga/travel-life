@@ -11,6 +11,7 @@ import { pdfParserService } from './pdfParser.service';
 import { llmEndpointKey, type ResolvedLlmConfig } from './llm.service';
 import { pdfParseQueue } from './pdfParseQueue';
 import { cleanupEntityLinks } from './_shared/entityLinkCleanup';
+import { deriveLocationCountryCode } from './_shared/countryCodes';
 import { getUserTimezone, resolveTimezone } from './_shared/timezoneResolution';
 import { isValidTimezone } from './_shared/bulkImportRows';
 import { fromZonedTime } from 'date-fns-tz';
@@ -19,6 +20,7 @@ import {
   PdfImportStatus,
   PendingEntityType,
   PendingEntityStatus,
+  type Prisma,
 } from '@prisma/client';
 
 // multer file shape
@@ -293,7 +295,7 @@ class PdfImportService {
               pdfImportId,
               userId,
               entityType: entity.type as PendingEntityType,
-              parsedData: entity.data as Record<string, unknown>,
+              parsedData: entity.data as Prisma.InputJsonObject,
               confidence: entity.confidence,
               matchedTripId: matchedTripId ?? null,
             },
@@ -440,7 +442,7 @@ class PdfImportService {
     return prisma.pendingEntity.update({
       where: { id },
       data: {
-        ...(input.parsedData !== undefined ? { parsedData: input.parsedData as Record<string, unknown> } : {}),
+        ...(input.parsedData !== undefined ? { parsedData: input.parsedData as Prisma.InputJsonObject } : {}),
         ...(input.matchedTripId !== undefined ? { matchedTripId: input.matchedTripId } : {}),
       },
     });
@@ -592,6 +594,7 @@ class PdfImportService {
               tripId,
               name: data.name,
               address: optStr(data.address) ?? null,
+              countryCode: deriveLocationCountryCode(null, optStr(data.address)),
             },
             select: { id: true },
           });

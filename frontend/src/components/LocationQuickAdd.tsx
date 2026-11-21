@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import geocodingService from '../services/geocoding.service';
+import geocodingService, { countryCodeFromGeocode } from '../services/geocoding.service';
 import locationService from '../services/location.service';
 import type { GeocodingResult } from '../services/geocoding.service';
 import toast from 'react-hot-toast';
@@ -61,6 +61,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         tripId,
         name,
         address,
+        countryCode: countryCodeFromGeocode(result),
         latitude: lat,
         longitude: lng,
       });

@@ -13,6 +13,7 @@ import journalService from '../../services/journalEntry.service';
 import locationService from '../../services/location.service';
 import photoService from '../../services/photo.service';
 import entityLinkService from '../../services/entityLink.service';
+import { buildEntityLocationIdsMap } from '../../utils/entityLocations';
 import weatherService from '../../services/weather.service';
 import { getWeatherIcon } from '../../utils/weatherIcons';
 import { parseDateOnlyAsLocal } from '../../utils/timezone';
@@ -155,16 +156,12 @@ export default function DailyView({
         const albums = albumsResult.albums;
 
         // Build entity-to-location IDs map from the bulk fetch (for unscheduled activity matching)
-        const entityLocIdsMap: EntityLocationIdsMap = {};
-        if (Array.isArray(locationLinks)) {
-          for (const link of locationLinks) {
-            const key = `${link.sourceType}:${link.sourceId}`;
-            if (!entityLocIdsMap[key]) {
-              entityLocIdsMap[key] = [];
-            }
-            entityLocIdsMap[key].push(link.targetId);
-          }
-        }
+        // An activity's or lodging's own place (locationId) leads; loose location links follow.
+        const entityLocIdsMap: EntityLocationIdsMap = buildEntityLocationIdsMap(
+          Array.isArray(locationLinks) ? locationLinks : [],
+          Array.isArray(activities) ? activities : [],
+          Array.isArray(lodging) ? lodging : []
+        );
         setEntityLocationIdsMap(entityLocIdsMap);
 
         // Build location lookup map for displaying location names
@@ -263,6 +260,29 @@ export default function DailyView({
         // Build linked locations and albums maps by fetching links for entities
         const locationsMap: LinkedLocationsMap = {};
         const albumsMap: LinkedAlbumsMap = {};
+        // Activities and lodging read their place from their own locationId (no link fetch needed)
+        const ownLocationCount = (entityType: EntityType, entityId: number): number => {
+          const own =
+            entityType === 'ACTIVITY'
+              ? activities.find((a) => a.id === entityId)?.locationId
+              : entityType === 'LODGING'
+                ? lodging.find((l) => l.id === entityId)?.locationId
+                : null;
+          return own != null ? 1 : 0;
+        };
+        for (const [key, ids] of Object.entries(entityLocIdsMap)) {
+          if (!key.startsWith('ACTIVITY:') && !key.startsWith('LODGING:')) continue;
+          const [entityType, rawId] = key.split(':');
+          const own =
+            entityType === 'ACTIVITY'
+              ? activities.find((a) => a.id === Number(rawId))?.locationId
+              : lodging.find((l) => l.id === Number(rawId))?.locationId;
+          if (own == null) continue;
+          const place = locations.find((loc) => loc.id === own);
+          if (place && ids.length > 0) {
+            locationsMap[getEntityKey(entityType as EntityType, Number(rawId))] = [place];
+          }
+        }
         const entityTypes: EntityType[] = ['ACTIVITY', 'TRANSPORTATION', 'LODGING', 'JOURNAL_ENTRY'];
 
         // Get all entities that have location or album links based on link summary
@@ -275,7 +295,12 @@ export default function DailyView({
           if (!entityTypes.includes(entityType)) continue;
 
           // Fetch location links
-          if (summary.linkCounts.LOCATION && summary.linkCounts.LOCATION > 0) {
+          // The own place is already in the map; only fetch when there are further (loose) links.
+          // The link summary counts it as a link too, hence the subtraction.
+          if (
+            summary.linkCounts.LOCATION &&
+            summary.linkCounts.LOCATION > ownLocationCount(entityType, entityId)
+          ) {
             linkFetchPromises.push(
               entityLinkService.getLinksFrom(tripId, entityType, entityId, 'LOCATION')
                 .then((links) => {
@@ -284,7 +309,10 @@ export default function DailyView({
                     .map((link) => link.targetId);
                   const linkedLocs = locations.filter((loc) => locationIds.includes(loc.id));
                   if (linkedLocs.length > 0) {
-                    locationsMap[getEntityKey(entityType, entityId)] = linkedLocs;
+                    // Keep the entity's own place first
+                    const key = getEntityKey(entityType, entityId);
+                    const own = locationsMap[key] ?? [];
+                    locationsMap[key] = [...own, ...linkedLocs.filter((loc) => !own.some((o) => o.id === loc.id))];
                   }
                 })
                 .catch(() => {

@@ -1568,3 +1568,99 @@ function isUnitedStatesState(segment: string): boolean {
   const postcodeMatch = TRAILING_POSTCODE.exec(segment);
   return postcodeMatch !== null && US_STATE_NAMES.has(postcodeMatch[1]);
 }
+
+/* ------------------------------------------------------------------ */
+/* Structured country codes (Location, VisaRequirement, TravelDocument) */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Names that only ever appear as a *whole* country field (a passport's issuing
+ * country, a visa table row) and so are safe there, but would misfire if used to
+ * scan an address: "South America" must never resolve to the United States.
+ * These are the aliases the legacy visa data file recognised, plus bare codes
+ * people type that are not ISO ("UK").
+ */
+const WHOLE_NAME_ONLY_ALIASES: Readonly<Record<string, string>> = {
+  america: "US",
+  us: "US",
+  dubai: "AE",
+  rok: "KR",
+  uk: "GB",
+};
+
+/** True for a well-formed upper-case ISO 3166-1 alpha-2 string (format only). */
+export function isCountryCodeFormat(value: unknown): value is string {
+  return typeof value === "string" && /^[A-Z]{2}$/.test(value);
+}
+
+/**
+ * Trim and upper-case a client-supplied code. Returns undefined for anything that
+ * is not exactly two letters, so a bad value is dropped rather than stored.
+ * Does not require the code to be in the bundled dataset: a valid code such as
+ * `TM` is kept even though there are no facts for it.
+ */
+export function normalizeCountryCode(value: string | null | undefined): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const upper = value.trim().toUpperCase();
+  return isCountryCodeFormat(upper) ? upper : undefined;
+}
+
+/**
+ * Map a country *name* (the whole field, not an address) to ISO alpha-2: official
+ * names, the aliases used in addresses, the visa-file aliases ("USA", "UK",
+ * "America") and bare two-letter codes. Case, accents and punctuation are
+ * ignored. Returns undefined when the name is not recognised.
+ */
+export function resolveCountryCodeFromName(name: string | null | undefined): string | undefined {
+  if (!name) return undefined;
+  const key = normalize(name);
+  if (!key) return undefined;
+  const direct = NAME_TO_CODE.get(key) ?? WHOLE_NAME_ONLY_ALIASES[key];
+  if (direct) return direct;
+  if (key.length === 2) {
+    const code = key.toUpperCase();
+    if (COUNTRY_FACTS[code]) return code;
+  }
+  return undefined;
+}
+
+/**
+ * The country a location is in: the stored/supplied code when it is well formed,
+ * otherwise whatever the address text resolves to, otherwise undefined.
+ */
+export function resolveLocationCountryCode(input: {
+  countryCode?: string | null;
+  address?: string | null;
+}): string | undefined {
+  return normalizeCountryCode(input.countryCode) ?? resolveCountryFromAddress(input.address);
+}
+
+/** One recognised country name, normalised (see `normalize`), with its ISO code. */
+export interface CountryNameEntry {
+  name: string;
+  code: string;
+  /** True for names that are only safe as a whole field, never when scanning an address. */
+  wholeNameOnly: boolean;
+}
+
+/**
+ * Every normalised country name this module recognises (official names, address
+ * aliases and whole-name-only aliases). Exposed so the SQL backfill in migration
+ * `20261121000000_add_structured_country_codes` can be generated from, and tested
+ * against, the one table instead of a second list.
+ */
+export function listCountryNameEntries(): readonly CountryNameEntry[] {
+  const entries = new Map<string, CountryNameEntry>();
+  for (const [name, code] of NAME_TO_CODE) {
+    entries.set(name, { name, code, wholeNameOnly: false });
+  }
+  for (const [name, code] of Object.entries(WHOLE_NAME_ONLY_ALIASES)) {
+    if (!entries.has(name)) entries.set(name, { name, code, wholeNameOnly: true });
+  }
+  return [...entries.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Normalised US state names (a whole address segment naming one means US). */
+export function listUnitedStatesStateNames(): readonly string[] {
+  return [...US_STATE_NAMES].sort();
+}

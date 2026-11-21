@@ -180,6 +180,23 @@ export const timezone = (maxLength = 100) => z.string().max(maxLength);
 export const optionalTimezone = (maxLength = 100) =>
   z.string().max(maxLength).optional().nullable();
 
+/**
+ * ISO 3166-1 alpha-2 country code. Accepts either case (Nominatim returns lower case) and
+ * normalises to upper case, which is what the database CHECK constraints require.
+ */
+export const countryCode = () =>
+  z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/, 'Country code must be a two-letter ISO 3166-1 alpha-2 code')
+    .transform((value) => value.toUpperCase());
+
+/**
+ * Optional country code that can be null. Use for update schemas, where null clears the code
+ * (the service then re-derives it from the name or address where it can).
+ */
+export const optionalCountryCode = () => countryCode().optional().nullable();
+
 // ============================================================================
 // Date/Time Helpers
 // ============================================================================

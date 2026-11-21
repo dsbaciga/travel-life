@@ -7,6 +7,7 @@ import { verifyTripAccess } from '../services/_shared/tripAccess';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { isAxiosError } from '../types/prisma-helpers';
 import { decryptSecret } from '../security/encryption';
+import { getUserIntegrations } from './_shared/userSettings';
 
 interface OpenWeatherResponse {
   daily: {
@@ -92,13 +93,6 @@ class WeatherService {
     // Get user's API key
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      include: {
-        user: {
-          select: {
-            weatherApiKey: true,
-          },
-        },
-      },
     });
 
     if (!trip) {
@@ -111,7 +105,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
+    const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       console.warn('No weather API key configured');
@@ -645,19 +639,11 @@ class WeatherService {
       orderBy: { startTime: 'asc' },
     });
 
-    // Activity locations are now via EntityLink - fetch linked location
+    // The activity's place is its locationId FK
     if (activity) {
-      const activityLocationLink = await prisma.entityLink.findFirst({
-        where: {
-          tripId,
-          sourceType: 'ACTIVITY',
-          sourceId: activity.id,
-          targetType: 'LOCATION',
-        },
-      });
-      if (activityLocationLink) {
+      if (activity.locationId) {
         const linkedLocation = await prisma.location.findUnique({
-          where: { id: activityLocationLink.targetId },
+          where: { id: activity.locationId },
         });
         if (linkedLocation?.latitude && linkedLocation?.longitude) {
           return {
@@ -683,19 +669,11 @@ class WeatherService {
       orderBy: { checkInDate: 'asc' },
     });
 
-    // Lodging locations are now via EntityLink - fetch linked location
+    // The lodging's place is its locationId FK
     if (lodging) {
-      const lodgingLocationLink = await prisma.entityLink.findFirst({
-        where: {
-          tripId,
-          sourceType: 'LODGING',
-          sourceId: lodging.id,
-          targetType: 'LOCATION',
-        },
-      });
-      if (lodgingLocationLink) {
+      if (lodging.locationId) {
         const linkedLocation = await prisma.location.findUnique({
-          where: { id: lodgingLocationLink.targetId },
+          where: { id: lodging.locationId },
         });
         if (linkedLocation?.latitude && linkedLocation?.longitude) {
           return {
@@ -737,24 +715,16 @@ class WeatherService {
       };
     }
 
-    // 2. Fallback: check activities with linked locations (via EntityLink)
+    // 2. Fallback: check activities with a location
     const activity = await prisma.activity.findFirst({
       where: { tripId },
       orderBy: { startTime: 'asc' },
     });
 
     if (activity) {
-      const activityLocationLink = await prisma.entityLink.findFirst({
-        where: {
-          tripId,
-          sourceType: 'ACTIVITY',
-          sourceId: activity.id,
-          targetType: 'LOCATION',
-        },
-      });
-      if (activityLocationLink) {
+      if (activity.locationId) {
         const linkedLocation = await prisma.location.findUnique({
-          where: { id: activityLocationLink.targetId },
+          where: { id: activity.locationId },
         });
         if (linkedLocation?.latitude && linkedLocation?.longitude) {
           return {
@@ -767,24 +737,16 @@ class WeatherService {
       }
     }
 
-    // 3. Fallback: check lodging with linked locations (via EntityLink)
+    // 3. Fallback: check lodging with a location
     const lodging = await prisma.lodging.findFirst({
       where: { tripId },
       orderBy: { checkInDate: 'asc' },
     });
 
     if (lodging) {
-      const lodgingLocationLink = await prisma.entityLink.findFirst({
-        where: {
-          tripId,
-          sourceType: 'LODGING',
-          sourceId: lodging.id,
-          targetType: 'LOCATION',
-        },
-      });
-      if (lodgingLocationLink) {
+      if (lodging.locationId) {
         const linkedLocation = await prisma.location.findUnique({
-          where: { id: lodgingLocationLink.targetId },
+          where: { id: lodging.locationId },
         });
         if (linkedLocation?.latitude && linkedLocation?.longitude) {
           return {
@@ -841,13 +803,6 @@ class WeatherService {
     // Get user's API key
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      include: {
-        user: {
-          select: {
-            weatherApiKey: true,
-          },
-        },
-      },
     });
 
     if (!trip) {
@@ -855,7 +810,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
+    const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       throw new AppError('No weather API key configured', 400);

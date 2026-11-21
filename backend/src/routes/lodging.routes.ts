@@ -25,6 +25,10 @@ router.use(authenticate);
  *             properties:
  *               tripId:
  *                 type: integer
+ *               locationId:
+ *                 type: integer
+ *                 nullable: true
+ *                 description: Location (of the same trip) the stay is at; null clears it
  *               type:
  *                 type: string
  *                 enum: [hotel, hostel, airbnb, vacation_rental, camping, resort, motel, bed_and_breakfast, apartment, friends_family, other]

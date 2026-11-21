@@ -44,6 +44,9 @@ const mockPrisma = {
     update: jest.fn(),
     delete: jest.fn(),
   },
+  userPreferences: {
+    findUnique: jest.fn(),
+  },
   $queryRaw: jest.fn(),
   $transaction: jest.fn(),
 };
@@ -71,8 +74,13 @@ import { AppError } from '../../errors/errors';
 interface LockedUserRow {
   id: number;
   travel_partner_id: number | null;
-  default_partner_permission: string | null;
 }
+
+/**
+ * The permission level lives in user_preferences, not on the locked users row. Tests declare it next
+ * to the lock rows (`default_partner_permission`); the preferences lookup answers from this map.
+ */
+const permissionByUser = new Map<number, string | null>();
 
 /** Args the service passes to `trip.findMany` when collecting trips to back-share. */
 interface TripFindManyArgs {
@@ -110,14 +118,15 @@ const createMockRequest = (overrides: Record<string, unknown> = {}) => ({
  * user id it is asked about, in whatever order the service asks.
  */
 const mockLockedUsers = (
-  rows: Array<
-    Omit<LockedUserRow, 'default_partner_permission'> & { default_partner_permission?: string | null }
-  >
+  rows: Array<LockedUserRow & { default_partner_permission?: string | null }>
 ) => {
+  permissionByUser.clear();
+  for (const row of rows) {
+    permissionByUser.set(row.id, row.default_partner_permission === undefined ? 'edit' : row.default_partner_permission);
+  }
   const remaining: LockedUserRow[] = rows.map((row) => ({
     id: row.id,
     travel_partner_id: row.travel_partner_id,
-    default_partner_permission: row.default_partner_permission ?? 'edit',
   }));
   mockPrisma.$queryRaw.mockImplementation(async () => {
     const next = remaining.shift();
@@ -182,6 +191,11 @@ const expectAppErrorFrom = async (
 describe('TravelPartnerRequestService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    permissionByUser.clear();
+    mockPrisma.userPreferences.findUnique.mockImplementation(async ({ where }: { where: { userId: number } }) => ({
+      userId: where.userId,
+      defaultPartnerPermission: permissionByUser.has(where.userId) ? permissionByUser.get(where.userId) : 'edit',
+    }));
     mockPrisma.$transaction.mockImplementation(
       async (callback: (tx: typeof mockPrisma) => Promise<unknown>) => callback(mockPrisma)
     );

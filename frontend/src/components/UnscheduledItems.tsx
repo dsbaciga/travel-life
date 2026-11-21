@@ -9,7 +9,6 @@ import type { ActivityCategory } from "../types/user";
 import activityService from "../services/activity.service";
 import transportationService from "../services/transportation.service";
 import lodgingService from "../services/lodging.service";
-import entityLinkService from "../services/entityLink.service";
 import { useInvalidateEntityLinks } from "../hooks/useInvalidateEntityLinks";
 import userService from "../services/user.service";
 import toast from "react-hot-toast";
@@ -125,15 +124,12 @@ export default function UnscheduledItems({
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Track original lodging location ID when editing to detect changes (for entity linking)
   // True when the stay being edited already has an address saved on it.
   const [hadLodgingAddress, setHadLodgingAddress] = useState(false);
-  const [originalLodgingLocationId, setOriginalLodgingLocationId] = useState<number | null>(null);
 
   // Activity-specific state for shared form
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingActivityLocationId, setEditingActivityLocationId] = useState<number | null>(null);
-  const [originalActivityLocationId, setOriginalActivityLocationId] = useState<number | null>(null);
   const [activityFormKey, setActivityFormKey] = useState(0);
 
   const transportationForm = useFormFields<TransportationFormFields>(
@@ -209,7 +205,6 @@ export default function UnscheduledItems({
     setShowFormModal(false);
     setEditingActivity(null);
     setEditingActivityLocationId(null);
-    setOriginalActivityLocationId(null);
     setActivityFormKey((k) => k + 1);
   };
 
@@ -253,24 +248,14 @@ export default function UnscheduledItems({
     setShowFormModal(true);
   };
 
-  const handleEditActivity = async (activity: Activity) => {
-    // Fetch linked location via entity linking system
-    let locationId: number | null = null;
-    try {
-      const links = await entityLinkService.getLinksFrom(tripId, 'ACTIVITY', activity.id, 'LOCATION');
-      if (links.length > 0 && links[0].targetId) {
-        locationId = links[0].targetId;
-      }
-    } catch {
-      // If fetching links fails, proceed without location
-    }
+  const handleEditActivity = (activity: Activity) => {
+    const locationId: number | null = activity.locationId ?? null;
 
     setEditingId(activity.id);
     setEditingType("activity");
     setActiveSection("activity");
     setEditingActivity(activity);
     setEditingActivityLocationId(locationId);
-    setOriginalActivityLocationId(locationId);
     setShowFormModal(true);
   };
 
@@ -279,8 +264,9 @@ export default function UnscheduledItems({
     try {
       if (isCreating) {
         // Create the activity
-        const createdActivity = await activityService.createActivity({
+        await activityService.createActivity({
           tripId,
+          locationId: newLocationId,
           name: data.name,
           description: data.description || undefined,
           category: data.category || undefined,
@@ -297,23 +283,10 @@ export default function UnscheduledItems({
         });
         toast.success("Activity created");
 
-        // Create location link if a location was selected
-        if (newLocationId) {
-          try {
-            await entityLinkService.createLink(tripId, {
-              sourceType: 'ACTIVITY',
-              sourceId: createdActivity.id,
-              targetType: 'LOCATION',
-              targetId: newLocationId,
-            });
-          } catch (linkError) {
-            console.error('Failed to create location link:', linkError);
-            toast.error('Activity saved but failed to link location');
-          }
-        }
       } else if (editingId) {
         // Update the activity
         await activityService.updateActivity(editingId, {
+          locationId: newLocationId,
           name: data.name,
           description: data.description,
           category: data.category,
@@ -330,31 +303,6 @@ export default function UnscheduledItems({
         });
         toast.success("Activity updated");
 
-        // Handle location link changes via entity linking
-        const locationChanged = newLocationId !== originalActivityLocationId;
-        if (locationChanged) {
-          try {
-            if (originalActivityLocationId) {
-              await entityLinkService.deleteLink(tripId, {
-                sourceType: 'ACTIVITY',
-                sourceId: editingId,
-                targetType: 'LOCATION',
-                targetId: originalActivityLocationId,
-              });
-            }
-            if (newLocationId) {
-              await entityLinkService.createLink(tripId, {
-                sourceType: 'ACTIVITY',
-                sourceId: editingId,
-                targetType: 'LOCATION',
-                targetId: newLocationId,
-              });
-            }
-          } catch (error) {
-            console.error('Failed to update location link:', error);
-            toast.error('Activity saved but failed to update location link');
-          }
-        }
       }
 
       resetForm();
@@ -454,28 +402,14 @@ export default function UnscheduledItems({
     setShowFormModal(true);
   };
 
-  const handleEditLodging = async (lodgingItem: Lodging) => {
+  const handleEditLodging = (lodgingItem: Lodging) => {
     setEditingId(lodgingItem.id);
     setEditingType("lodging");
     setActiveSection("lodging");
     lodgingForm.handleChange("type", lodgingItem.type);
     lodgingForm.handleChange("name", lodgingItem.name);
 
-    // Fetch linked location via entity linking system
-    try {
-      const links = await entityLinkService.getLinksFrom(tripId, 'LODGING', lodgingItem.id, 'LOCATION');
-      if (links.length > 0 && links[0].targetId) {
-        lodgingForm.handleChange("locationId", links[0].targetId);
-        setOriginalLodgingLocationId(links[0].targetId);
-      } else {
-        lodgingForm.handleChange("locationId", undefined);
-        setOriginalLodgingLocationId(null);
-      }
-    } catch {
-      // If fetching links fails, proceed without location
-      lodgingForm.handleChange("locationId", undefined);
-      setOriginalLodgingLocationId(null);
-    }
+    lodgingForm.handleChange("locationId", lodgingItem.locationId ?? undefined);
 
     lodgingForm.handleChange("address", lodgingItem.address || "");
     setHadLodgingAddress(!!lodgingItem.address);
@@ -594,7 +528,7 @@ export default function UnscheduledItems({
 
     setIsSubmitting(true);
     try {
-      // Lodging data without locationId (using entity links instead)
+      // Lodging data (the place is sent as locationId below)
       // `|| null` on the text fields is deliberate — see the note in
       // handleSubmitTransportation: "" from an empty input must become null.
       const updateData = {
@@ -619,8 +553,9 @@ export default function UnscheduledItems({
         // createLodgingSchema declares its optional fields `.optional()` without
         // `.nullable()`, so an explicit null is rejected — omit empty fields
         // instead. Update keeps the nulls, where they mean "clear this field".
-        const createdLodging = await lodgingService.createLodging({
+        await lodgingService.createLodging({
           tripId,
+          locationId: newLocationId,
           type: updateData.type,
           name: updateData.name,
           address: updateData.address ?? undefined,
@@ -635,53 +570,11 @@ export default function UnscheduledItems({
         });
         toast.success("Lodging created");
 
-        // Then create location link if a location was selected
-        if (newLocationId) {
-          try {
-            await entityLinkService.createLink(tripId, {
-              sourceType: 'LODGING',
-              sourceId: createdLodging.id,
-              targetType: 'LOCATION',
-              targetId: newLocationId,
-            });
-          } catch (linkError) {
-            console.error('Failed to create location link:', linkError);
-            toast.error('Lodging created but failed to link location');
-          }
-        }
       } else if (editingId !== null) {
         // Update existing lodging
-        await lodgingService.updateLodging(editingId, updateData);
+        await lodgingService.updateLodging(editingId, { ...updateData, locationId: newLocationId });
         toast.success("Lodging updated");
 
-        // Handle location link changes via entity linking
-        const locationChanged = newLocationId !== originalLodgingLocationId;
-
-        if (locationChanged) {
-          try {
-            // Remove old link if there was one
-            if (originalLodgingLocationId) {
-              await entityLinkService.deleteLink(tripId, {
-                sourceType: 'LODGING',
-                sourceId: editingId,
-                targetType: 'LOCATION',
-                targetId: originalLodgingLocationId,
-              });
-            }
-            // Create new link if there's a new location
-            if (newLocationId) {
-              await entityLinkService.createLink(tripId, {
-                sourceType: 'LODGING',
-                sourceId: editingId,
-                targetType: 'LOCATION',
-                targetId: newLocationId,
-              });
-            }
-          } catch (linkError) {
-            console.error('Failed to update location link:', linkError);
-            toast.error('Lodging saved but failed to update location link');
-          }
-        }
       }
 
       resetForm();

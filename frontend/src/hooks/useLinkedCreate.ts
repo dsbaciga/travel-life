@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import locationService from '../services/location.service';
 import activityService from '../services/activity.service';
 import lodgingService from '../services/lodging.service';
-import entityLinkService from '../services/entityLink.service';
 import { useInvalidateEntityLinks } from './useInvalidateEntityLinks';
 import type { Location } from '../types/location';
 
@@ -49,8 +48,8 @@ export function useLinkedCreate(tripId: number) {
   );
 
   /**
-   * Create an activity or lodging named after an existing Place and link it
-   * to that Place. Both start unscheduled, with no dates.
+   * Create an activity or lodging named after an existing Place, located at
+   * that Place (its locationId). Both start unscheduled, with no dates.
    */
   const createCompanionForPlace = useCallback(
     async (
@@ -59,32 +58,21 @@ export function useLinkedCreate(tripId: number) {
     ): Promise<boolean> => {
       const label = kind === 'activity' ? 'activity' : 'lodging';
       try {
-        const created =
-          kind === 'activity'
-            ? await activityService.createActivity({ tripId, name: place.name })
-            : await lodgingService.createLodging({
-                tripId,
-                type: 'hotel',
-                name: place.name,
-                address: place.address || undefined,
-              });
+        if (kind === 'activity') {
+          await activityService.createActivity({ tripId, locationId: place.id, name: place.name });
+        } else {
+          await lodgingService.createLodging({
+            tripId,
+            locationId: place.id,
+            type: 'hotel',
+            name: place.name,
+            address: place.address || undefined,
+          });
+        }
         queryClient.invalidateQueries({
           queryKey: [kind === 'activity' ? 'activities' : 'lodging', tripId],
         });
-
-        try {
-          await entityLinkService.createLink(tripId, {
-            sourceType: kind === 'activity' ? 'ACTIVITY' : 'LODGING',
-            sourceId: created.id,
-            targetType: 'LOCATION',
-            targetId: place.id,
-          });
-          invalidateEntityLinks(tripId);
-        } catch (error) {
-          console.error(`Failed to link ${label} to place:`, error);
-          toast.error(`The ${label} was added but could not be linked to the place`);
-          return false;
-        }
+        invalidateEntityLinks(tripId);
         toast.success(`Also added ${label} "${place.name}"`);
         return true;
       } catch (error) {

@@ -109,6 +109,7 @@ describe('EmergencyInfoService', () => {
       expect(card.tripTitle).toBe('Lisbon');
       expect(card.info?.insurancePolicyNumber).toBe('AC-12345');
       expect(card.locationAddresses).toEqual(['Rua Augusta, Lisbon, Portugal']);
+      expect(card.locationCountryCodes).toEqual([]);
       expect(card.companions).toEqual([
         {
           id: 5,
@@ -156,6 +157,19 @@ describe('EmergencyInfoService', () => {
       // the stored override only, and never infers a country from an address. That
       // inference lives in the client so the card still works offline.
       expect(card.countryCode).toBeNull();
+    });
+
+    it('should expose the structured location country codes in trip order, skipping uncoded rows', async () => {
+      mockPrisma.location.findMany.mockResolvedValue([
+        { address: 'Kyoto, Japan', countryCode: 'JP' },
+        { address: 'Somewhere', countryCode: null },
+        { address: null, countryCode: 'FR' },
+      ]);
+
+      const card = await emergencyInfoService.getEmergencyCard(1, 10);
+
+      expect(card.locationCountryCodes).toEqual(['JP', 'FR']);
+      expect(card.locationAddresses).toEqual(['Kyoto, Japan', 'Somewhere']);
     });
 
     it('should carry the override from Trip.countryCode, not from the emergency record', async () => {

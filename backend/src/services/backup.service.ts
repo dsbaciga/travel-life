@@ -9,6 +9,8 @@ import {
 } from '../types/backup.types';
 import { maskDocumentNumber } from '../types/travelDocument.types';
 import { AppError } from '../errors/errors';
+import { costExpenseSelect, hydrateBookingCost } from './_shared/bookingCost';
+import { getUserIntegrations, getUserPreferences } from './_shared/userSettings';
 
 type Decimal = Prisma.Decimal;
 
@@ -28,8 +30,22 @@ const PHOTO_BATCH_SIZE = 200;
  * Transform a raw trip from the database into the backup format.
  * This is extracted to reduce memory by processing trips one at a time.
  */
+/** The companion columns the expense export needs to tell the trip owner from everyone else. */
+type BackupExpenseCompanion = { name: string; isMyself: boolean; linkedUserId: number | null };
+const expenseCompanionSelect = { name: true, isMyself: true, linkedUserId: true } as const;
+
+/**
+ * Bookings export with their cost fields exactly as before: the cost lives on the booking's expense
+ * row, which is flattened back onto the booking here (and also appears in `expenses`, see below).
+ */
+function withHydratedCost<T>(rows: unknown): T {
+  type Row = Parameters<typeof hydrateBookingCost>[0] & Record<string, unknown>;
+  if (!Array.isArray(rows)) return rows as T;
+  return (rows as Row[]).map((row) => hydrateBookingCost(row)) as T;
+}
+
 function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip {
-  const transportation = trip.transportation as Array<Record<string, unknown>>;
+  const transportation = withHydratedCost<Array<Record<string, unknown>>>(trip.transportation);
   const journalEntries = trip.journalEntries as Array<Record<string, unknown>>;
   const photoAlbums = trip.photoAlbums as Array<Record<string, unknown>>;
   const tagAssignments = trip.tagAssignments as Array<{ tag: { name: string } }>;
@@ -64,8 +80,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     // Related entities
     locations: trip.locations as BackupTrip['locations'],
     photos: trip.photos as BackupTrip['photos'],
-    activities: trip.activities as BackupTrip['activities'],
+    activities: withHydratedCost<BackupTrip['activities']>(trip.activities),
     transportation: transportation.map((t) => ({
+      id: t.id as number,
       type: t.type as string,
       startLocationId: t.startLocationId as number | null,
       startLocationText: t.startLocationText as string | null,
@@ -98,7 +115,7 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
       distanceSource: t.distanceSource as string | null,
       flightTracking: t.flightTracking as BackupTransportation['flightTracking'],
     })),
-    lodging: trip.lodging as BackupTrip['lodging'],
+    lodging: withHydratedCost<BackupTrip['lodging']>(trip.lodging),
     bookingDeadlines: ((trip.bookingDeadlines ?? []) as Array<Record<string, unknown>>).map((d) => ({
       // Null for a standalone deadline (no booking).
       entityType: (d.lodgingId
@@ -118,8 +135,9 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     // Already in route order (selected with orderBy position); position itself is not stored.
     stops: ((trip.stops ?? []) as Array<Record<string, unknown>>).map((s) => ({
       name: s.name as string,
-      latitude: s.latitude as number,
-      longitude: s.longitude as number,
+      // Decimal(10,8)/(11,8) column: JSON would serialise a Decimal as a string, the file format wants numbers.
+      latitude: Number(s.latitude),
+      longitude: Number(s.longitude),
       nights: (s.nights as number | null) ?? null,
       locationId: (s.locationId as number | null) ?? null,
     })),
@@ -178,30 +196,55 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
     savedLinks: trip.savedLinks as BackupTrip['savedLinks'],
     // Custom items — flatten the joined type down to its name
     customItems: (
-      trip.customItems as Array<{ type: { name: string } | null } & Record<string, unknown>>
+      withHydratedCost<Array<{ type: { name: string } | null } & Record<string, unknown>>>(trip.customItems)
     )?.map(({ type, ...item }) => ({
       ...item,
       typeName: type?.name ?? null,
     })) as BackupTrip['customItems'],
     // Expenses and emergency card info (added in v1.6.0)
     // Payers and split participants travel by companion NAME (ids are reassigned on restore).
+    // The file shape predates "the owner is their myself companion": the trip owner is still
+    // written as `paidByOwner` / `isOwner` with no companion name, and old backups restore too.
     expenses: (
       trip.expenses as
         | Array<
             {
-              paidByCompanion: { name: string } | null;
-              splits: Array<{ companion: { name: string } | null } & Record<string, unknown>>;
+              activityId: number | null;
+              transportationId: number | null;
+              lodgingId: number | null;
+              customItemId: number | null;
+              paidByCompanion: BackupExpenseCompanion | null;
+              splits: Array<{ companion: BackupExpenseCompanion | null } & Record<string, unknown>>;
             } & Record<string, unknown>
           >
         | undefined
-    )?.map(({ paidByCompanion, splits, ...expense }) => ({
-      ...expense,
-      paidByCompanionName: paidByCompanion?.name ?? null,
-      splits: (splits ?? []).map(({ companion, ...split }) => ({
-        ...split,
-        companionName: companion?.name ?? null,
-      })),
-    })) as BackupTrip['expenses'],
+    )?.map(({ paidByCompanion, splits, activityId, transportationId, lodgingId, customItemId, ...expense }) => {
+      // v1.9.0: an expense that is a booking's cost names the booking (its id in this file), so the
+      // payer, splits and receipt of that cost survive a round trip. The booking itself also exports
+      // `cost`; restore creates one row per booking, never two.
+      const booking = activityId
+        ? { type: 'activity' as const, id: activityId as number }
+        : transportationId
+          ? { type: 'transportation' as const, id: transportationId as number }
+          : lodgingId
+            ? { type: 'lodging' as const, id: lodgingId as number }
+            : customItemId
+              ? { type: 'customItem' as const, id: customItemId as number }
+              : null;
+      const isOwner = (c: BackupExpenseCompanion | null) =>
+        c != null && c.isMyself && c.linkedUserId === trip.userId;
+      return {
+        ...expense,
+        ...(booking ? { booking } : {}),
+        paidByOwner: isOwner(paidByCompanion),
+        paidByCompanionName: isOwner(paidByCompanion) ? null : paidByCompanion?.name ?? null,
+        splits: (splits ?? []).map(({ companion, ...split }) => ({
+          ...split,
+          isOwner: isOwner(companion),
+          companionName: isOwner(companion) ? null : companion?.name ?? null,
+        })),
+      };
+    }) as BackupTrip['expenses'],
     emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
@@ -293,6 +336,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
         select: {
           id: true,
           parentId: true,
+          locationId: true,
           name: true,
           description: true,
           category: true,
@@ -300,11 +344,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           startTime: true,
           endTime: true,
           timezone: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           bookingUrl: true,
           bookingReference: true,
           notes: true,
@@ -314,6 +354,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
       },
       transportation: {
         include: {
+          costExpense: { select: costExpenseSelect },
           flightTracking: {
             select: {
               flightNumber: true,
@@ -329,6 +370,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
       lodging: {
         select: {
           id: true,
+          locationId: true,
           type: true,
           name: true,
           address: true,
@@ -338,11 +380,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           confirmationNumber: true,
           loyaltyProgramId: true,
           bookingUrl: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           notes: true,
         },
       },
@@ -470,11 +508,7 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           endTime: true,
           timezone: true,
           locationId: true,
-          cost: true,
-          currency: true,
-          exchangeRate: true,
-          baseAmount: true,
-          baseCurrency: true,
+          costExpense: { select: costExpenseSelect },
           url: true,
           confirmationNumber: true,
           // The type travels by name, not id — see BackupCustomItemSchema.
@@ -493,16 +527,19 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           baseCurrency: true,
           date: true,
           notes: true,
-          paidByOwner: true,
+          // The booking this expense is the cost of (null for an ordinary expense)
+          activityId: true,
+          transportationId: true,
+          lodgingId: true,
+          customItemId: true,
           splitMethod: true,
-          paidByCompanion: { select: { name: true } },
+          paidByCompanion: { select: expenseCompanionSelect },
           splits: {
             orderBy: { id: 'asc' },
             select: {
-              isOwner: true,
               amount: true,
               percentage: true,
-              companion: { select: { name: true } },
+              companion: { select: expenseCompanionSelect },
             },
           },
           receiptPath: true,
@@ -563,22 +600,15 @@ export async function createBackup(userId: number): Promise<BackupData> {
         username: true,
         email: true,
         timezone: true,
-        activityCategories: true,
-        tripTypes: true,
-        dietaryPreferences: true,
-        useCustomMapStyle: true,
-        baseCurrency: true,
-        measurementSystem: true,
-        preferredMapsApp: true,
-        immichApiUrl: true,
-        llmBaseUrl: true,
-        llmModel: true,
       },
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
+
+    const preferences = await getUserPreferences(userId);
+    const integrations = await getUserIntegrations(userId);
 
     // Fetch tags (typically small, bounded by user behavior)
     const tags = await prisma.tripTag.findMany({
@@ -593,6 +623,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
     // Fetch companions (typically small, bounded by user behavior)
     const companions = await prisma.travelCompanion.findMany({
       where: { userId },
+      orderBy: { id: 'asc' },
       select: {
         name: true,
         email: true,
@@ -663,6 +694,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
       select: {
         type: true,
         issuingCountry: true,
+        issuingCountryCode: true,
         documentNumber: true,
         issueDate: true,
         expiryDate: true,
@@ -751,24 +783,24 @@ export async function createBackup(userId: number): Promise<BackupData> {
       username: user.username,
       email: user.email,
       timezone: user.timezone,
-      activityCategories: user.activityCategories as BackupData['user']['activityCategories'],
-      tripTypes: user.tripTypes as BackupData['user']['tripTypes'],
-      dietaryPreferences: (user.dietaryPreferences as string[]) ?? [],
-      useCustomMapStyle: user.useCustomMapStyle,
-      baseCurrency: user.baseCurrency,
+      activityCategories: preferences.activityCategories as BackupData['user']['activityCategories'],
+      tripTypes: preferences.tripTypes as BackupData['user']['tripTypes'],
+      dietaryPreferences: (preferences.dietaryPreferences as string[]) ?? [],
+      useCustomMapStyle: preferences.useCustomMapStyle,
+      baseCurrency: preferences.baseCurrency,
       measurementSystem:
-        user.measurementSystem === 'imperial' || user.measurementSystem === 'metric'
-          ? user.measurementSystem
+        preferences.measurementSystem === 'imperial' || preferences.measurementSystem === 'metric'
+          ? preferences.measurementSystem
           : null,
-      preferredMapsApp: user.preferredMapsApp,
-      immichApiUrl: user.immichApiUrl,
+      preferredMapsApp: preferences.preferredMapsApp,
+      immichApiUrl: integrations.immichApiUrl,
       immichApiKey: null,
       weatherApiKey: null,
       aviationstackApiKey: null,
       openrouteserviceApiKey: null,
       llmApiKey: null,
-      llmBaseUrl: user.llmBaseUrl,
-      llmModel: user.llmModel,
+      llmBaseUrl: integrations.llmBaseUrl,
+      llmModel: integrations.llmModel,
       smtpPassword: null,
     };
 
@@ -818,6 +850,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
       travelDocuments: travelDocuments.map((doc) => ({
         type: doc.type,
         issuingCountry: doc.issuingCountry,
+        issuingCountryCode: doc.issuingCountryCode,
         // Mask document number: show only last 4 characters
         documentNumber: maskDocumentNumber(doc.documentNumber),
         issueDate: doc.issueDate,

@@ -77,6 +77,8 @@ interface LocationManagerProps {
 interface LocationFormFields {
   name: string;
   address: string;
+  /** ISO alpha-2 from the geocoder; cleared when the address is typed by hand so the backend re-derives it. */
+  countryCode: string | undefined;
   notes: string;
   latitude: number | undefined;
   longitude: number | undefined;
@@ -91,6 +93,7 @@ interface LocationFormFields {
 const initialFormState: LocationFormFields = {
   name: "",
   address: "",
+  countryCode: undefined,
   notes: "",
   latitude: undefined,
   longitude: undefined,
@@ -244,6 +247,7 @@ export default function LocationManager({
   const handleLocationSelect = (data: {
     name: string;
     address: string;
+    countryCode?: string;
     latitude: number;
     longitude: number;
   }) => {
@@ -254,6 +258,7 @@ export default function LocationManager({
       nameRef.current = data.name;
     }
     handleChange("address", data.address);
+    handleChange("countryCode", data.countryCode);
     handleChange("latitude", data.latitude);
     handleChange("longitude", data.longitude);
   };
@@ -297,6 +302,9 @@ export default function LocationManager({
       const updateData = {
         name: values.name,
         address: values.address || undefined,
+        // Only sent when the geocoder just supplied it; otherwise the backend keeps the stored
+        // code for an unchanged address and re-derives it for a changed one.
+        countryCode: values.countryCode,
         notes: values.notes || undefined,
         latitude: values.latitude,
         longitude: values.longitude,
@@ -317,6 +325,7 @@ export default function LocationManager({
         tripId,
         name: values.name,
         address: values.address || undefined,
+        countryCode: values.countryCode,
         notes: values.notes || undefined,
         latitude: values.latitude,
         longitude: values.longitude,
@@ -901,7 +910,11 @@ export default function LocationManager({
                 name="address"
                 autoComplete="off"
                 value={values.address}
-                onChange={(e) => handleChange("address", e.target.value)}
+                onChange={(e) => {
+                  handleChange("address", e.target.value);
+                  // A hand-edited address no longer matches the geocoder's country.
+                  handleChange("countryCode", undefined);
+                }}
                 className="input"
                 placeholder="Paris, France"
               />

@@ -107,6 +107,7 @@ function buildSensitiveTripRow() {
     activities: [
       {
         id: 21,
+        locationId: 11,
         name: 'Colosseum tour',
         category: 'Sightseeing',
         allDay: false,
@@ -186,9 +187,6 @@ function buildSensitiveTripRow() {
         longitude: 12.48,
       },
     ] as TripRowPhoto[],
-    entityLinks: [
-      { sourceType: 'ACTIVITY', sourceId: 21, targetId: 11 },
-    ],
   };
 }
 
@@ -443,10 +441,20 @@ describe('ShareService.getPublicTrip — sensitive field exclusion', () => {
       notes: 'Book ahead',
       excludeFromMap: false,
     });
-    // Activity->location association comes from EntityLink, not a FK.
+    // Activity->location name comes from the activity's own locationId.
     expect(payload.activities[0].locationName).toBe('Colosseum');
     expect(payload.transportation[0].from).toBe('JFK');
     expect(payload.transportation[0].to).toBe('FCO');
+  });
+
+  it('gives a null locationName when the activity has no locationId or an unknown one', async () => {
+    const row = buildSensitiveTripRow();
+    row.activities[0].locationId = null;
+    mockPrismaClient.trip.findFirst.mockResolvedValue(row);
+    expect((await shareService.getPublicTrip(VALID_TOKEN)).activities[0].locationName).toBeNull();
+
+    row.activities[0].locationId = 999;
+    expect((await shareService.getPublicTrip(VALID_TOKEN)).activities[0].locationName).toBeNull();
   });
 
   it('exposes the favorite flag on shared photos', async () => {

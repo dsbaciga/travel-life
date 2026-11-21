@@ -136,14 +136,15 @@ export function buildNavTargets(sources: NavSources): Map<string, NavTarget> {
 
   for (const stay of sources.lodging) {
     const own = placeOf({ name: stay.name, address: stay.address });
-    const fromLink = linkedPlace('LODGING', stay.id);
+    // The stay's own place (locationId) wins; links are the fallback for rows without it.
+    const fromLink = byLocationId(stay.locationId ?? null) ?? linkedPlace('LODGING', stay.id);
     // The linked place has the coordinates; the stay's own address is the fallback.
     const place = fromLink && fromLink.latitude !== null ? { ...fromLink, name: stay.name } : (own ?? fromLink);
     set('LODGING', stay.id, place, stay.name);
   }
 
   for (const activity of sources.activities) {
-    set('ACTIVITY', activity.id, linkedPlace('ACTIVITY', activity.id), activity.name);
+    set('ACTIVITY', activity.id, byLocationId(activity.locationId ?? null) ?? linkedPlace('ACTIVITY', activity.id), activity.name);
   }
 
   for (const item of sources.customItems) {

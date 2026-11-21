@@ -1,8 +1,9 @@
 import prisma from '../config/database';
-import { Prisma } from '@prisma/client';
+import { costExpenseInclude } from './_shared/bookingCost';
 import travelTimeService from './travelTime.service';
 import travelDocumentService from './travelDocument.service';
 import visaRequirementService from './visaRequirement.service';
+import { normalizeCountryCode, resolveCountryCodeFromName } from './_shared/vendored/countryFacts';
 import openingHoursService from './openingHours.service';
 import { formatInTimeZone } from 'date-fns-tz';
 import { TripWithRelations } from '../types/prisma-helpers';
@@ -143,7 +144,8 @@ class TripValidatorService {
         transportation: true,
         locations: true,
         journalEntries: true,
-        customItems: true,
+        // A custom item's cost is its expense row (checked for a missing currency below).
+        customItems: { include: costExpenseInclude },
         dismissedValidationIssues: true,
       },
     });
@@ -600,23 +602,12 @@ class TripValidatorService {
   private async checkMissingInformation(trip: TripWithRelations, dismissedSet: Set<string>): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
 
-    type ActivityRecord = { id: number; startTime: Date | null; allDay: boolean };
+    type ActivityRecord = { id: number; startTime: Date | null; allDay: boolean; locationId: number | null };
     const activities = trip.activities as ActivityRecord[];
 
-    // Activities without locations (now checked via EntityLink system)
-    const activityIds = activities.map((a: ActivityRecord) => a.id);
-    if (activityIds.length > 0) {
-      const activityLocationLinks = await prisma.entityLink.findMany({
-        where: {
-          tripId: trip.id,
-          sourceType: 'ACTIVITY',
-          sourceId: { in: activityIds },
-          targetType: 'LOCATION',
-        },
-        select: { sourceId: true },
-      });
-      const activitiesWithLocation = new Set(activityLocationLinks.map((l: { sourceId: number }) => l.sourceId));
-      const activitiesWithoutLocation = activities.filter((a: ActivityRecord) => !activitiesWithLocation.has(a.id));
+    // Activities without locations (the activity's own locationId)
+    if (activities.length > 0) {
+      const activitiesWithoutLocation = activities.filter((a: ActivityRecord) => a.locationId == null);
 
       if (activitiesWithoutLocation.length > 0) {
         const issueKey = 'activities_without_location';
@@ -654,9 +645,9 @@ class TripValidatorService {
     // Custom items with a cost but no currency. Without a currency the amount
     // cannot be converted, so it is silently excluded from the budget total —
     // worth flagging rather than letting the trip quietly under-report spend.
-    type CustomItemRecord = { id: number; cost: Prisma.Decimal | null; currency: string | null };
-    const customItemsMissingCurrency = ((trip.customItems ?? []) as CustomItemRecord[]).filter(
-      (item) => item.cost !== null && !item.currency
+    type CustomItemRecord = { id: number; costExpense?: { currency: string | null } | null };
+    const customItemsMissingCurrency = ((trip.customItems ?? []) as unknown as CustomItemRecord[]).filter(
+      (item) => item.costExpense != null && !item.costExpense.currency
     );
     if (customItemsMissingCurrency.length > 0) {
       const issueKey = 'custom_items_without_currency';
@@ -732,7 +723,7 @@ class TripValidatorService {
   private async checkTravelTimeAlerts(trip: TripWithRelations, dismissedSet: Set<string>): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
 
-    type TravelActivityRecord = { id: number; name: string; startTime: Date | null; endTime: Date | null };
+    type TravelActivityRecord = { id: number; name: string; startTime: Date | null; endTime: Date | null; locationId: number | null };
     const activities = trip.activities as TravelActivityRecord[];
 
     // Get activities with times, sorted by time
@@ -744,25 +735,13 @@ class TripValidatorService {
       return issues;
     }
 
-    // Get location links for these activities (via EntityLink system)
-    const activityIds = activitiesWithTimes.map((a: TravelActivityRecord) => a.id);
-    const locationLinks = await prisma.entityLink.findMany({
-      where: {
-        tripId: trip.id,
-        sourceType: 'ACTIVITY',
-        sourceId: { in: activityIds },
-        targetType: 'LOCATION',
-      },
-    });
-
-    // Build a map of activity ID -> location ID
-    type LinkRecord = { sourceId: number; targetId: number };
+    // Build a map of activity ID -> location ID (the activity's own locationId)
     const activityLocationMap = new Map<number, number>();
-    (locationLinks as LinkRecord[]).forEach((link: LinkRecord) => {
-      activityLocationMap.set(link.sourceId, link.targetId);
-    });
+    for (const a of activitiesWithTimes) {
+      if (a.locationId != null) activityLocationMap.set(a.id, a.locationId);
+    }
 
-    // Filter to only activities that have linked locations
+    // Filter to only activities that have a location
     const activitiesWithLocationIds = activitiesWithTimes.filter((a: TravelActivityRecord) => activityLocationMap.has(a.id));
 
     if (activitiesWithLocationIds.length < 2) {
@@ -979,18 +958,27 @@ class TripValidatorService {
 
       const passportCountry = passport.issuingCountry;
 
-      // Extract destination countries from trip locations
-      type LocationRecord = { id: number; name: string; address: string | null };
-      const destinationCountries = new Map<string, LocationRecord[]>(); // country -> locations
+      // Group the trip's locations by destination country. The structured
+      // Location.countryCode wins; only a location with no code falls back to parsing its
+      // address text (older rows the migration could not map, or clients that sent neither).
+      type LocationRecord = { id: number; name: string; address: string | null; countryCode?: string | null };
+      const destinationCountries = new Map<string, LocationRecord[]>(); // display name -> locations
+      const destinationCodes = new Map<string, string | null>(); // display name -> ISO code
 
       for (const location of trip.locations as LocationRecord[]) {
-        if (location.address) {
-          const country = visaRequirementService.extractCountryFromAddress(location.address);
-          if (country) {
-            const existing = destinationCountries.get(country) || [];
-            existing.push(location);
-            destinationCountries.set(country, existing);
-          }
+        let code: string | null = normalizeCountryCode(location.countryCode) ?? null;
+        let country: string | null = code ? visaRequirementService.getCountryName(code) : null;
+
+        if (!country && location.address) {
+          country = visaRequirementService.extractCountryFromAddress(location.address);
+          code = country ? resolveCountryCodeFromName(country) ?? null : null;
+        }
+
+        if (country) {
+          const existing = destinationCountries.get(country) || [];
+          existing.push(location);
+          destinationCountries.set(country, existing);
+          destinationCodes.set(country, code);
         }
       }
 
@@ -999,10 +987,14 @@ class TripValidatorService {
       }
 
       // Check visa requirements for each destination country
-      const destinations = Array.from(destinationCountries.keys());
+      const destinations = Array.from(destinationCountries.keys()).map((name) => ({
+        name,
+        countryCode: destinationCodes.get(name) ?? null,
+      }));
       const bulkResult = visaRequirementService.getVisaRequirementsForDestinations(
         passportCountry,
-        destinations
+        destinations,
+        passport.issuingCountryCode
       );
 
       // Create issues for destinations requiring visa action

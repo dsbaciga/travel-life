@@ -83,6 +83,7 @@ jest.mock('../visaRequirement.service', () => ({
     isReady: jest.fn().mockReturnValue(false),
     extractCountryFromAddress: jest.fn(),
     getVisaRequirementsForDestinations: jest.fn(),
+    getCountryName: jest.fn(),
   },
 }));
 
@@ -90,6 +91,7 @@ jest.mock('../visaRequirement.service', () => ({
 import tripValidatorService from '../tripValidator.service';
 import travelTimeService from '../travelTime.service';
 import travelDocumentService from '../travelDocument.service';
+import visaRequirementService from '../visaRequirement.service';
 
 describe('TripValidatorService', () => {
   beforeEach(() => {
@@ -128,9 +130,9 @@ describe('TripValidatorService', () => {
         ],
         // Activities on all days
         activities: [
-          { id: 1, name: 'Day 1 Activity', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
-          { id: 2, name: 'Day 2 Activity', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
-          { id: 3, name: 'Day 3 Activity', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
+          { id: 1, locationId: 10, name: 'Day 1 Activity', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: 11, name: 'Day 2 Activity', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+          { id: 3, locationId: 12, name: 'Day 3 Activity', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
         ],
         // Has locations and transport
         locations: [{ id: 1, name: 'Place 1' }],
@@ -139,14 +141,7 @@ describe('TripValidatorService', () => {
 
       mockPrisma.trip.findFirst.mockResolvedValue(trip);
 
-      // Mock entity links for activities -> locations (all have locations)
-      // Include targetId so travel time checks can resolve locations
-      const entityLinks = [
-        { sourceId: 1, targetId: 10 },
-        { sourceId: 2, targetId: 11 },
-        { sourceId: 3, targetId: 12 },
-      ];
-      mockPrisma.entityLink.findMany.mockResolvedValue(entityLinks);
+      // Every activity has its own locationId (10, 11, 12), which travel time checks resolve below
 
       // Mock location.findMany for travel time checks - return locations with coordinates
       mockPrisma.location.findMany.mockResolvedValue([
@@ -321,12 +316,12 @@ describe('TripValidatorService', () => {
       expect(transportIssues[0].message).toContain('no transportation');
     });
 
-    it('VAL-006: detects activities without location', async () => {
+    it('VAL-006: detects activities without location (locationId null)', async () => {
       const trip = createTripWithRelations({
         activities: [
-          { id: 1, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
-          { id: 2, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
-          { id: 3, name: 'Activity 3', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
+          { id: 1, locationId: 5, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: null, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+          { id: 3, locationId: null, name: 'Activity 3', startTime: new Date('2024-07-03T10:00:00Z'), endTime: new Date('2024-07-03T12:00:00Z'), allDay: false },
         ],
         locations: [{ id: 1 }],
         transportation: [{ id: 1 }],
@@ -334,9 +329,6 @@ describe('TripValidatorService', () => {
       });
 
       mockPrisma.trip.findFirst.mockResolvedValue(trip);
-
-      // Only activity 1 has a location link
-      mockPrisma.entityLink.findMany.mockResolvedValue([{ sourceId: 1 }]);
 
       const result = await tripValidatorService.validateTrip(1, 1);
 
@@ -346,6 +338,28 @@ describe('TripValidatorService', () => {
 
       expect(locationIssues.length).toBeGreaterThan(0);
       expect(locationIssues[0].message).toContain('without location');
+      // Only the activities with a null locationId are affected; activity 1 has a place
+      expect(locationIssues[0].affectedItems).toEqual(expect.arrayContaining([2, 3]));
+      expect(locationIssues[0].affectedItems).not.toContain(1);
+    });
+
+    it('VAL-006b: does not flag activities that all have a locationId, and never reads entity links for it', async () => {
+      const trip = createTripWithRelations({
+        activities: [
+          { id: 1, locationId: 5, name: 'Activity 1', startTime: new Date('2024-07-01T10:00:00Z'), endTime: new Date('2024-07-01T12:00:00Z'), allDay: false },
+          { id: 2, locationId: 6, name: 'Activity 2', startTime: new Date('2024-07-02T10:00:00Z'), endTime: new Date('2024-07-02T12:00:00Z'), allDay: false },
+        ],
+        locations: [{ id: 5 }, { id: 6 }],
+        transportation: [{ id: 1 }],
+        lodging: [{ checkInDate: new Date('2024-07-01'), checkOutDate: new Date('2024-07-03') }],
+      });
+
+      mockPrisma.trip.findFirst.mockResolvedValue(trip);
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+
+      expect(result.issuesByCategory.COMPLETENESS.filter(i => i.type === 'missing_location')).toHaveLength(0);
+      expect(mockPrisma.entityLink.findMany).not.toHaveBeenCalled();
     });
 
     it('VAL-007: detects activities without scheduled time', async () => {
@@ -772,6 +786,123 @@ describe('TripValidatorService', () => {
       expect(args.where.tripId).toBe(1);
       expect(args.where.dismissedAt).toBeNull();
       expect(args.where.dueAt.lte.getTime()).toBeGreaterThan(Date.now());
+    });
+  });
+
+  describe('visa checks use structured country codes (Step B)', () => {
+    const visa = visaRequirementService as unknown as {
+      isReady: jest.Mock;
+      extractCountryFromAddress: jest.Mock;
+      getVisaRequirementsForDestinations: jest.Mock;
+      getCountryName: jest.Mock;
+    };
+
+    const plannedTrip = (locations: unknown[]) =>
+      createTripWithRelations({
+        status: 'Planned',
+        lodging: [{ checkInDate: new Date('2024-07-01'), checkOutDate: new Date('2024-07-03') }],
+        activities: [{ id: 1, startTime: new Date('2024-07-01T10:00:00Z'), allDay: false }],
+        locations,
+        transportation: [{ id: 1 }],
+      });
+
+    beforeEach(() => {
+      visa.isReady.mockReturnValue(true);
+      visa.getCountryName.mockImplementation((code: string) => ({ FR: 'France', JP: 'Japan' }[code] ?? code));
+      visa.getVisaRequirementsForDestinations.mockReturnValue({
+        passportCountry: 'United States',
+        destinations: [],
+        requiresVisa: [],
+        visaFree: [],
+        unknown: [],
+      });
+      (travelDocumentService.getPrimaryPassport as jest.Mock).mockResolvedValue({
+        id: 1,
+        name: 'US Passport',
+        expiryDate: '2031-07-02',
+        issuingCountry: 'USA',
+        issuingCountryCode: 'US',
+      });
+    });
+
+    afterEach(() => {
+      visa.isReady.mockReturnValue(false);
+      visa.extractCountryFromAddress.mockReset();
+      visa.getCountryName.mockReset();
+      visa.getVisaRequirementsForDestinations.mockReset();
+    });
+
+    it('VAL-030: groups by Location.countryCode and never parses the address of a coded location', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(
+        plannedTrip([
+          // Address text would parse to a different country: the structured code must win.
+          { id: 1, name: 'Louvre', address: 'Rue de Rivoli, Tokyo, Japan', countryCode: 'FR' },
+          { id: 2, name: 'Eiffel', address: null, countryCode: 'FR' },
+        ])
+      );
+
+      await tripValidatorService.validateTrip(1, 1);
+
+      expect(visa.extractCountryFromAddress).not.toHaveBeenCalled();
+      expect(visa.getVisaRequirementsForDestinations).toHaveBeenCalledWith(
+        'USA',
+        [{ name: 'France', countryCode: 'FR' }],
+        'US'
+      );
+    });
+
+    it('VAL-031: a location without a code falls back to parsing its address', async () => {
+      visa.extractCountryFromAddress.mockReturnValue('Japan');
+      mockPrisma.trip.findFirst.mockResolvedValue(
+        plannedTrip([
+          { id: 1, name: 'Louvre', address: 'Paris', countryCode: 'FR' },
+          { id: 2, name: 'Senso-ji', address: 'Asakusa, Tokyo, Japan', countryCode: null },
+        ])
+      );
+
+      await tripValidatorService.validateTrip(1, 1);
+
+      expect(visa.extractCountryFromAddress).toHaveBeenCalledTimes(1);
+      expect(visa.extractCountryFromAddress).toHaveBeenCalledWith('Asakusa, Tokyo, Japan');
+      const destinations = visa.getVisaRequirementsForDestinations.mock.calls[0][1] as Array<{ name: string; countryCode: string | null }>;
+      expect(destinations).toEqual([
+        { name: 'France', countryCode: 'FR' },
+        { name: 'Japan', countryCode: 'JP' },
+      ]);
+    });
+
+    it('VAL-032: coded and fallback-parsed locations in the same country share one issue', async () => {
+      visa.extractCountryFromAddress.mockReturnValue('France');
+      visa.getVisaRequirementsForDestinations.mockReturnValue({
+        passportCountry: 'USA',
+        destinations: [],
+        requiresVisa: [
+          {
+            passportCountry: 'USA',
+            destinationCountry: 'France',
+            found: true,
+            requirement: { visaType: 'e_visa', maxStayDays: 30 },
+            visaTypeInfo: { label: 'e-Visa' },
+            needsAction: true,
+            actionRequired: 'Apply for e-Visa online before travel',
+          },
+        ],
+        visaFree: [],
+        unknown: [],
+      });
+      mockPrisma.trip.findFirst.mockResolvedValue(
+        plannedTrip([
+          { id: 1, name: 'A', address: null, countryCode: 'FR' },
+          { id: 2, name: 'B', address: 'Lyon, France', countryCode: null },
+        ])
+      );
+
+      const result = await tripValidatorService.validateTrip(1, 1);
+
+      const visaIssues = result.issuesByCategory.DOCUMENTS.filter((i) => i.type === 'visa_required');
+      expect(visaIssues).toHaveLength(1);
+      expect(visaIssues[0].affectedItems).toEqual([1, 2]);
+      expect(visaIssues[0].message).toContain('France');
     });
   });
 });

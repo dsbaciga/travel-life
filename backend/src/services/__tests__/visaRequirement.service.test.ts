@@ -310,4 +310,83 @@ describe('VisaRequirementService', () => {
       expect(loaded).toBe(true);
     });
   });
+
+  // ============================================================
+  // VR-010: Structured ISO codes (data model reorganization, Step B)
+  // ============================================================
+  describe('VR-010: matching on ISO codes first', () => {
+    it('derives codes for the data rows at load time', () => {
+      const result = visaService.checkVisaRequirement('United States', 'France');
+      expect(result.requirement!.passportCountryCode).toBe('US');
+      expect(result.requirement!.destinationCountryCode).toBe('FR');
+      expect(result.destinationCountryCode).toBe('FR');
+    });
+
+    it('matches by code even when the name is something the name table does not know', () => {
+      const result = visaService.checkVisaRequirement('Made-up passport name', 'Not a real name', {
+        passportCountryCode: 'US',
+        destinationCountryCode: 'FR',
+      });
+      expect(result.found).toBe(true);
+      expect(result.requirement!.destinationCountry).toBe('France');
+    });
+
+    it('lowercase codes are accepted (normalised)', () => {
+      const result = visaService.checkVisaRequirement('x', 'y', {
+        passportCountryCode: 'us',
+        destinationCountryCode: 'jp',
+      });
+      expect(result.found).toBe(true);
+      expect(result.requirement!.destinationCountry).toBe('Japan');
+    });
+
+    it('a code takes precedence over a contradicting name', () => {
+      const result = visaService.checkVisaRequirement('United States', 'France', {
+        destinationCountryCode: 'AU',
+      });
+      expect(result.requirement!.destinationCountry).toBe('Australia');
+    });
+
+    it('resolves names and aliases to codes when no code is supplied', () => {
+      expect(visaService.checkVisaRequirement('USA', 'JAPAN').found).toBe(true);
+      expect(visaService.checkVisaRequirement('uk', 'France').found).toBe(false); // no GB row in the fixture
+    });
+
+    it('detects domestic travel by code regardless of the spelling of the names', () => {
+      const result = visaService.checkVisaRequirement('USA', 'United States of America');
+      expect(result.found).toBe(true);
+      expect(result.requirement!.notes).toContain('domestic');
+    });
+
+    it('falls back to the name key when a code pair has no row', () => {
+      // TM has no row; the names are unknown too, so nothing is found, and nothing throws.
+      const result = visaService.checkVisaRequirement('United States', 'Turkmenistan', {
+        destinationCountryCode: 'TM',
+      });
+      expect(result.found).toBe(false);
+      expect(result.destinationCountryCode).toBe('TM');
+    });
+
+    it('bulk check collapses destinations that share a code and honours the passport code', () => {
+      const bulk = visaService.getVisaRequirementsForDestinations(
+        'Anything',
+        [
+          { name: 'France', countryCode: 'FR' },
+          { name: 'La France', countryCode: 'fr' },
+          'USA',
+          { name: 'Unknown land', countryCode: null },
+        ],
+        'US'
+      );
+      expect(bulk.destinations.map((d) => d.destinationCountry)).toEqual(['France', 'USA', 'Unknown land']);
+      expect(bulk.visaFree.map((d) => d.destinationCountry)).toContain('France');
+      expect(bulk.unknown.map((d) => d.destinationCountry)).toEqual(['Unknown land']);
+    });
+
+    it('getCountryName prefers the data file name, then the bundled name, then the code', () => {
+      expect(visaService.getCountryName('FR')).toBe('France');
+      expect(visaService.getCountryName('de')).toBe('Germany'); // bundled facts name
+      expect(visaService.getCountryName('TM')).toBe('TM');
+    });
+  });
 });

@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../utils/mapUtils';
-import geocodingService from '../services/geocoding.service';
+import geocodingService, { countryCodeFromGeocode } from '../services/geocoding.service';
 import type { GeocodingResult } from '../services/geocoding.service';
 import { useMapTiles } from '../hooks/useMapTiles';
 import toast from 'react-hot-toast';
@@ -12,6 +12,8 @@ interface LocationSearchMapProps {
   onLocationSelect: (data: {
     name: string;
     address: string;
+    /** ISO alpha-2 from the geocoder, when it reported one. */
+    countryCode?: string;
     latitude: number;
     longitude: number;
   }) => void;
@@ -121,6 +123,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
     onLocationSelect({
       name: result.display_name.split(',')[0],
       address: result.display_name,
+      countryCode: countryCodeFromGeocode(result),
       latitude: lat,
       longitude: lng,
     });
@@ -141,6 +144,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
         onLocationSelect({
           name,
           address,
+          countryCode: countryCodeFromGeocode(result),
           latitude: latlng.lat,
           longitude: latlng.lng,
         });

@@ -1,5 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import {
+  getCountryFacts,
+  normalizeCountryCode,
+  resolveCountryCodeFromName,
+} from './_shared/vendored/countryFacts';
 
 // =============================================================================
 // TYPES
@@ -19,6 +24,10 @@ export type VisaType =
 export interface VisaRequirement {
   passportCountry: string;
   destinationCountry: string;
+  /** ISO 3166-1 alpha-2 of passportCountry; derived from the name when the data file has none. */
+  passportCountryCode?: string;
+  /** ISO 3166-1 alpha-2 of destinationCountry; derived from the name when the data file has none. */
+  destinationCountryCode?: string;
   visaRequired: boolean;
   visaType: VisaType;
   maxStayDays: number;
@@ -33,9 +42,23 @@ export interface VisaTypeInfo {
   color: 'green' | 'yellow' | 'red';
 }
 
+/** Optional structured codes for a check; names are the fallback when a code is absent. */
+export interface VisaCheckCodes {
+  passportCountryCode?: string | null;
+  destinationCountryCode?: string | null;
+}
+
+/** A destination to check: a display name plus the ISO code when the caller knows it. */
+export interface VisaDestination {
+  name: string;
+  countryCode?: string | null;
+}
+
 export interface VisaCheckResult {
   passportCountry: string;
   destinationCountry: string;
+  /** ISO code the check was matched on, when one was known or derivable. */
+  destinationCountryCode?: string;
   found: boolean;
   requirement: VisaRequirement | null;
   visaTypeInfo: VisaTypeInfo | null;
@@ -70,6 +93,10 @@ interface VisaData {
 class VisaRequirementService {
   private data: VisaData | null = null;
   private requirementMap: Map<string, VisaRequirement> = new Map();
+  /** Same rows keyed `PASSPORT_CODE|DESTINATION_CODE`; tried before the name keys. */
+  private requirementByCode: Map<string, VisaRequirement> = new Map();
+  /** ISO code -> the name the data file uses for it, for stable display and issue ids. */
+  private destinationNameByCode: Map<string, string> = new Map();
   private knownCountries: Set<string> = new Set();
   private loaded = false;
   private loadPromise: Promise<void> | null = null;
@@ -92,6 +119,18 @@ class VisaRequirementService {
       for (const req of this.data.requirements) {
         const key = this.buildKey(req.passportCountry, req.destinationCountry);
         this.requirementMap.set(key, req);
+
+        // Structured codes, derived from the names (the data file predates them). A name the
+        // shared table does not know keeps no code and is only reachable through the name key.
+        req.passportCountryCode = req.passportCountryCode ?? resolveCountryCodeFromName(req.passportCountry);
+        req.destinationCountryCode =
+          req.destinationCountryCode ?? resolveCountryCodeFromName(req.destinationCountry);
+        if (req.destinationCountryCode && !this.destinationNameByCode.has(req.destinationCountryCode)) {
+          this.destinationNameByCode.set(req.destinationCountryCode, req.destinationCountry);
+        }
+        if (req.passportCountryCode && req.destinationCountryCode) {
+          this.requirementByCode.set(`${req.passportCountryCode}|${req.destinationCountryCode}`, req);
+        }
       }
 
       // Build known countries set for fast lookup (includes aliases)
@@ -186,7 +225,17 @@ class VisaRequirementService {
   /**
    * Check visa requirement for a single passport-destination pair
    */
-  checkVisaRequirement(passportCountry: string, destinationCountry: string): VisaCheckResult {
+  checkVisaRequirement(
+    passportCountry: string,
+    destinationCountry: string,
+    codes: VisaCheckCodes = {}
+  ): VisaCheckResult {
+    // Structured codes first (supplied, else derived from the name); names are the fallback.
+    const passportCode =
+      normalizeCountryCode(codes.passportCountryCode) ?? resolveCountryCodeFromName(passportCountry);
+    const destinationCode =
+      normalizeCountryCode(codes.destinationCountryCode) ?? resolveCountryCodeFromName(destinationCountry);
+
     if (!this.loaded || !this.data) {
       return {
         passportCountry,
@@ -200,10 +249,15 @@ class VisaRequirementService {
     }
 
     // Same country - no visa needed
-    if (this.normalizeCountry(passportCountry) === this.normalizeCountry(destinationCountry)) {
+    const sameCountry =
+      passportCode && destinationCode
+        ? passportCode === destinationCode
+        : this.normalizeCountry(passportCountry) === this.normalizeCountry(destinationCountry);
+    if (sameCountry) {
       return {
         passportCountry,
         destinationCountry,
+        destinationCountryCode: destinationCode,
         found: true,
         requirement: {
           passportCountry,
@@ -221,13 +275,16 @@ class VisaRequirementService {
       };
     }
 
-    const key = this.buildKey(passportCountry, destinationCountry);
-    const requirement = this.requirementMap.get(key);
+    const requirement =
+      (passportCode && destinationCode
+        ? this.requirementByCode.get(`${passportCode}|${destinationCode}`)
+        : undefined) ?? this.requirementMap.get(this.buildKey(passportCountry, destinationCountry));
 
     if (!requirement) {
       return {
         passportCountry,
         destinationCountry,
+        destinationCountryCode: destinationCode,
         found: false,
         requirement: null,
         visaTypeInfo: null,
@@ -239,6 +296,7 @@ class VisaRequirementService {
     return {
       passportCountry,
       destinationCountry,
+      destinationCountryCode: destinationCode,
       found: true,
       requirement,
       visaTypeInfo: this.getVisaTypeInfo(requirement.visaType),
@@ -252,18 +310,30 @@ class VisaRequirementService {
    */
   getVisaRequirementsForDestinations(
     passportCountry: string,
-    destinations: string[]
+    destinations: Array<string | VisaDestination>,
+    passportCountryCode?: string | null
   ): BulkVisaCheckResult {
     const results: VisaCheckResult[] = [];
     const requiresVisa: VisaCheckResult[] = [];
     const visaFree: VisaCheckResult[] = [];
     const unknown: VisaCheckResult[] = [];
 
-    // Remove duplicates
-    const uniqueDestinations = [...new Set(destinations.map((d) => d.trim()))];
+    // Remove duplicates: by ISO code when there is one (so "USA" and "United States" collapse),
+    // otherwise by trimmed name.
+    const unique = new Map<string, VisaDestination>();
+    for (const entry of destinations) {
+      const destination: VisaDestination =
+        typeof entry === 'string' ? { name: entry.trim() } : { ...entry, name: entry.name.trim() };
+      const code = normalizeCountryCode(destination.countryCode) ?? resolveCountryCodeFromName(destination.name);
+      const key = code ? `code:${code}` : `name:${destination.name.toLowerCase()}`;
+      if (!unique.has(key)) unique.set(key, destination);
+    }
 
-    for (const destination of uniqueDestinations) {
-      const result = this.checkVisaRequirement(passportCountry, destination);
+    for (const destination of unique.values()) {
+      const result = this.checkVisaRequirement(passportCountry, destination.name, {
+        passportCountryCode,
+        destinationCountryCode: destination.countryCode,
+      });
       results.push(result);
 
       if (!result.found) {
@@ -355,6 +425,16 @@ class VisaRequirementService {
 
     const canonical = countriesInData.get(trimmed.toLowerCase());
     return canonical || trimmed;
+  }
+
+  /**
+   * The display name for an ISO country code: the name the visa data uses (so issue ids stay
+   * stable), else the bundled country name, else the code itself.
+   */
+  getCountryName(code: string): string {
+    const normalized = normalizeCountryCode(code);
+    if (!normalized) return code;
+    return this.destinationNameByCode.get(normalized) ?? getCountryFacts(normalized)?.name ?? normalized;
   }
 
   /**

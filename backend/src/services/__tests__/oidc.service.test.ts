@@ -52,6 +52,9 @@ const mockPrisma = {
     update: jest.fn(),
     create: jest.fn(),
   },
+  userPreferences: {
+    findUnique: jest.fn(),
+  },
 };
 
 jest.mock('../../config/database', () => ({
@@ -157,6 +160,7 @@ describe('OidcService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockOidcConfig.autoProvision = true;
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, measurementSystem: null });
     service = new OidcService();
     mockIdpEndpoints();
   });
@@ -211,6 +215,7 @@ describe('OidcService', () => {
       expect(mockPrisma.user.create).not.toHaveBeenCalled();
       expect(result.user).toEqual({
         id: 1,
+        measurementSystem: null,
         username: 'traveler',
         email: 'traveler@example.com',
         avatarUrl: null,
@@ -257,6 +262,9 @@ describe('OidcService', () => {
           email: 'traveler@example.com',
           passwordHash: 'random-hash',
           oidcSubject: 'https://idp.example.com|subject-123',
+          // The new account gets its integrations and preferences rows in the same statement.
+          integrations: { create: {} },
+          preferences: { create: {} },
         },
       });
       expect(result.user.id).toBe(2);

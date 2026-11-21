@@ -43,6 +43,9 @@ const mockPrisma = {
     // Refresh-token reuse bumps passwordVersion to kill every live session.
     update: jest.fn(),
   },
+  userPreferences: {
+    findUnique: jest.fn(),
+  },
 };
 
 jest.mock('../../config/database', () => ({
@@ -118,6 +121,8 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Users have not chosen a measurement system unless a test says otherwise.
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, measurementSystem: null });
     // Refresh tokens are single-use, and the blacklist is module-level state
     // that also persists to disk. Clear it so one test's consumed token cannot
     // make another test's (identically-signed) token look replayed.
@@ -174,6 +179,9 @@ describe('AuthService', () => {
           username: validRegisterData.username,
           email: validRegisterData.email,
           passwordHash: 'hashed_SecureP@ss123',
+          // Both settings rows are created in the same statement as the user.
+          integrations: { create: {} },
+          preferences: { create: {} },
         },
       });
       expect(mockCompanionService.createMyselfCompanion).toHaveBeenCalledWith(1, 'testuser');
@@ -303,12 +311,13 @@ describe('AuthService', () => {
     });
 
     it('carries the measurement system in the session user (null when never chosen)', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, measurementSystem: 'metric' });
+      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockCompanionService.createMyselfCompanion.mockResolvedValue({ id: 1 });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, measurementSystem: 'metric' });
       const chosen = await authService.login(validLoginData);
       expect(chosen.user.measurementSystem).toBe('metric');
 
-      mockPrisma.user.findUnique.mockResolvedValue({ ...mockUser, measurementSystem: null });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, measurementSystem: null });
       const legacy = await authService.login(validLoginData);
       expect(legacy.user.measurementSystem).toBeNull();
     });
@@ -465,6 +474,7 @@ describe('AuthService', () => {
         username: 'testuser',
         email: 'test@example.com',
         avatarUrl: null,
+        measurementSystem: null,
       });
     });
 
@@ -591,7 +601,7 @@ describe('AuthService', () => {
 
       const result = await authService.getCurrentUser(1);
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual({ ...mockUser, measurementSystem: null });
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
         select: {
@@ -600,7 +610,6 @@ describe('AuthService', () => {
           email: true,
           avatarUrl: true,
           timezone: true,
-          measurementSystem: true,
           createdAt: true,
         },
       });

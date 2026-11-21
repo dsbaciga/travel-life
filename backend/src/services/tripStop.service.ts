@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { AppError } from '../errors/errors';
+import { convertDecimals } from './_shared/decimalConversion';
 import { haversineMeters } from './_shared/vendored/geo';
 import { verifyEntityInTrip, verifyTripAccessWithPermission } from './_shared/tripAccess';
 import {
@@ -63,7 +64,9 @@ function assertNearLocation(
 class TripStopService {
   async getStopsByTrip(userId: number, tripId: number) {
     await verifyTripAccessWithPermission(userId, tripId, 'view');
-    return prisma.tripStop.findMany({ where: { tripId }, orderBy: { position: 'asc' } });
+    return convertDecimals(
+      await prisma.tripStop.findMany({ where: { tripId }, orderBy: { position: 'asc' } })
+    );
   }
 
   async createStop(userId: number, tripId: number, data: CreateTripStopInput) {
@@ -94,7 +97,7 @@ class TripStopService {
       select: { position: true },
     });
 
-    return prisma.tripStop.create({
+    const created = await prisma.tripStop.create({
       data: {
         tripId,
         name,
@@ -105,14 +108,15 @@ class TripStopService {
         position: last ? last.position + 1 : 0,
       },
     });
+    return convertDecimals(created);
   }
 
   async updateStop(userId: number, tripId: number, stopId: number, data: UpdateTripStopInput) {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
     const existing = await findInTrip(stopId, tripId);
     const position = {
-      latitude: data.latitude ?? existing.latitude,
-      longitude: data.longitude ?? existing.longitude,
+      latitude: data.latitude ?? Number(existing.latitude),
+      longitude: data.longitude ?? Number(existing.longitude),
     };
     if (data.locationId != null) {
       assertNearLocation(position, await loadLinkedLocation(data.locationId, tripId));
@@ -135,7 +139,7 @@ class TripStopService {
       }
     }
 
-    return prisma.tripStop.update({
+    const updated = await prisma.tripStop.update({
       where: { id: stopId },
       data: {
         ...(data.name !== undefined && { name: data.name }),
@@ -145,6 +149,7 @@ class TripStopService {
         ...(data.locationId !== undefined && { locationId: data.locationId }),
       },
     });
+    return convertDecimals(updated);
   }
 
   async deleteStop(userId: number, tripId: number, stopId: number) {
@@ -193,7 +198,9 @@ class TripStopService {
       for (const [position, id] of ids.entries()) {
         await tx.tripStop.update({ where: { id }, data: { position } });
       }
-      return tx.tripStop.findMany({ where: { tripId }, orderBy: { position: 'asc' } });
+      return convertDecimals(
+        await tx.tripStop.findMany({ where: { tripId }, orderBy: { position: 'asc' } })
+      );
     });
   }
 }

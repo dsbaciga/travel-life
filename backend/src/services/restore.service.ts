@@ -4,7 +4,11 @@ import { BackupData, RestoreOptions, isStoredUploadPath } from '../types/backup.
 import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
+import { updateUserIntegrations, updateUserPreferences, type UserIntegrationsInput } from './_shared/userSettings';
 import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
+import { deriveLocationCountryCode, deriveCountryCodeFromName } from './_shared/countryCodes';
+import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
+import { BOOKING_EXPENSE_FK, buildBookingCostCreate, type BookingKind } from './_shared/bookingCost';
 
 type TransactionClient = Omit<typeof prisma, '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'>;
 
@@ -42,8 +46,20 @@ interface RestoreStats {
  * v1.6.0 - Added expenses, emergencyInfo, unfiledSavedLinks, companion medical fields,
  *          trip budget/countryCode/archived/excludeFromAutoShare, user preferences,
  *          activity dietaryTags, and FX snapshots on costed items
+ * v1.7.0 - Activities and lodging carry locationId (the place is a direct FK). Older backups
+ *          express it as an ACTIVITY/LODGING <-> LOCATION entity link; restore promotes it to
+ *          the FK (OCCURRED_AT first, then file order) and drops that link, exactly as the
+ *          20261120000000 migration does for existing rows.
+ * v1.8.0 - Locations carry countryCode and travel documents issuingCountryCode (ISO alpha-2).
+ *          Older backups have neither; restore derives them from the address / country name,
+ *          the same rule as the 20261121000000 migration and the live create paths.
+ * v1.9.0 - A booking's cost is a trip expense row (migration 20261123000000). Bookings still carry
+ *          `cost`, `currency` and the FX snapshot, and an expense that is a booking's cost carries
+ *          `booking: { type, id }`. Restore creates exactly one cost row per booking: from the
+ *          booking's own fields, which the linked expense (payer, splits, receipt) then updates.
+ *          Files up to 1.8.0 have the cost on the booking only and restore into the same shape.
  */
-const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
+const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.8.0', '1.9.0'];
 
 /**
  * Second layer of defence for file paths coming out of an uploaded backup.
@@ -160,7 +176,7 @@ export async function restoreFromBackup(
         // non-null plaintext value (legacy v1.0.0–v1.2.0 backups). For null/
         // missing values we leave the existing DB value untouched so a user
         // restoring a recent backup doesn't lose their currently-configured keys.
-        const secretUpdates: Prisma.UserUpdateInput = {};
+        const secretUpdates: UserIntegrationsInput = {};
         const legacySecretsPresent: string[] = [];
         if (backupData.user.immichApiKey != null) {
           // Only restore the Immich key if the URL passed SSRF validation
@@ -197,10 +213,15 @@ export async function restoreFromBackup(
           });
         }
 
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            ...(backupTimezone ? { timezone: backupTimezone } : {}),
+        // Identity row: only the timezone lives on `users`.
+        if (backupTimezone) {
+          await tx.user.update({ where: { id: userId }, data: { timezone: backupTimezone }, select: { id: true } });
+        }
+
+        // Preferences (user_preferences).
+        await updateUserPreferences(
+          userId,
+          {
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
             ...(backupData.user.dietaryPreferences !== undefined
@@ -218,6 +239,14 @@ export async function restoreFromBackup(
             ...(backupData.user.preferredMapsApp !== undefined
               ? { preferredMapsApp: backupData.user.preferredMapsApp }
               : {}),
+          },
+          tx
+        );
+
+        // Integrations (user_integrations).
+        await updateUserIntegrations(
+          userId,
+          {
             immichApiUrl: sanitizedImmichUrl,
             // If we have no Immich URL after sanitization, also clear any existing
             // Immich key — an orphan key without a URL is meaningless and confusing.
@@ -226,7 +255,8 @@ export async function restoreFromBackup(
             llmModel: backupData.user.llmModel ?? null,
             ...secretUpdates,
           },
-        });
+          tx
+        );
 
         // Step 3: Import tags
         const tagMap = new Map<string, number>(); // old name -> new ID
@@ -245,7 +275,20 @@ export async function restoreFromBackup(
 
         // Step 4: Import companions
         const companionMap = new Map<string, number>(); // old name -> new ID
+        // A user has at most one "myself" companion (it is also how the trip owner appears in
+        // expense splits). A backup companion flagged isMyself therefore maps onto the user's
+        // existing one instead of creating a second; with none yet it becomes the one.
+        // A backup that (wrongly) flags several companions keeps only its first as "myself"; the
+        // rest are restored as ordinary companions so nothing that named them changes meaning.
+        let myselfCompanionId = await findOwnerCompanionId(tx, userId);
+        let backupMyselfSeen = false;
         for (const companion of backupData.companions) {
+          const isMyself = companion.isMyself === true && !backupMyselfSeen;
+          if (isMyself) backupMyselfSeen = true;
+          if (isMyself && myselfCompanionId !== null) {
+            companionMap.set(companion.name, myselfCompanionId);
+            continue;
+          }
           const created = await tx.travelCompanion.create({
             data: {
               userId,
@@ -254,7 +297,8 @@ export async function restoreFromBackup(
               phone: companion.phone,
               notes: companion.notes,
               relationship: companion.relationship,
-              isMyself: companion.isMyself,
+              isMyself,
+              linkedUserId: isMyself ? userId : null,
               avatarUrl: sanitizeStoredPath(companion.avatarUrl, userId, 'companion.avatarUrl'),
               dietaryPreferences: companion.dietaryPreferences || [],
               medicalNotes: companion.medicalNotes ?? null,
@@ -262,6 +306,7 @@ export async function restoreFromBackup(
             },
           });
           companionMap.set(companion.name, created.id);
+          if (isMyself) myselfCompanionId = created.id;
           stats.companionsImported++;
         }
 
@@ -324,7 +369,7 @@ export async function restoreFromBackup(
                   isDefault: item.isDefault,
                   isChecked: item.isChecked,
                   checkedAt: item.checkedAt,
-                  metadata: item.metadata === null ? Prisma.JsonNull : item.metadata,
+                  metadata: item.metadata === null ? Prisma.JsonNull : (item.metadata as Prisma.InputJsonValue | undefined),
                 })),
               },
             },
@@ -389,6 +434,7 @@ export async function restoreFromBackup(
                   userId,
                   type: docData.type,
                   issuingCountry: docData.issuingCountry,
+                  issuingCountryCode: deriveCountryCodeFromName(docData.issuingCountryCode, docData.issuingCountry),
                   // Document number is masked in backup, don't restore it
                   // User will need to re-enter after restore
                   documentNumber: null,
@@ -443,6 +489,16 @@ export async function restoreFromBackup(
         }
 
         // Step 7: Import trips with all related data
+        // A booking's cost is an expense row (Step D). Its calendar day is resolved on the booking's own
+        // zone, then the trip's, then the restoring user's.
+        let restoringUserZone: string | null | undefined;
+        const bookingZones = (tripZone: string | null | undefined) => async () => {
+          if (restoringUserZone === undefined) {
+            restoringUserZone =
+              (await tx.user.findUnique({ where: { id: userId }, select: { timezone: true } }))?.timezone ?? null;
+          }
+          return [tripZone ?? null, restoringUserZone];
+        };
         for (const tripData of backupData.trips) {
           // Map seriesId from old to new
           const mappedSeriesId = tripData.seriesId ? seriesMap.get(tripData.seriesId) || null : null;
@@ -493,6 +549,8 @@ export async function restoreFromBackup(
                 parentId: null, // Set later in second pass
                 name: locationData.name,
                 address: locationData.address,
+                // Absent in pre-1.8.0 backups: derived from the address text.
+                countryCode: deriveLocationCountryCode(locationData.countryCode, locationData.address),
                 latitude: locationData.latitude,
                 longitude: locationData.longitude,
                 categoryId,
@@ -559,13 +617,16 @@ export async function restoreFromBackup(
           }
 
           // Import activities (build ID mapping)
-          // Note: Location associations are now handled via EntityLink system (restored separately below)
+          // The place is the activity's locationId (old id remapped through locationMap)
           const activityMap = new Map<number, number>(); // old ID -> new ID
           for (const activityData of tripData.activities || []) {
             const activity = await tx.activity.create({
               data: {
                 tripId: trip.id,
                 parentId: null, // Set later in second pass
+                locationId: activityData.locationId
+                  ? (locationMap.get(activityData.locationId) ?? null)
+                  : null,
                 name: activityData.name,
                 description: activityData.description,
                 category: activityData.category,
@@ -573,17 +634,26 @@ export async function restoreFromBackup(
                 startTime: activityData.startTime ? new Date(activityData.startTime) : null,
                 endTime: activityData.endTime ? new Date(activityData.endTime) : null,
                 timezone: activityData.timezone,
-                cost: activityData.cost,
-                currency: activityData.currency,
-                exchangeRate:
-                  activityData.exchangeRate != null
-                    ? new Prisma.Decimal(activityData.exchangeRate)
-                    : null,
-                baseAmount:
-                  activityData.baseAmount != null
-                    ? new Prisma.Decimal(activityData.baseAmount)
-                    : null,
-                baseCurrency: activityData.baseCurrency ?? null,
+                // Files before v1.9.0 carry the cost on the booking; later ones carry it there too
+                // (hydrated) plus the expense with its payer/splits/receipt, which updates this row.
+                costExpense: await buildBookingCostCreate(
+                  tx,
+                  trip.id,
+                  {
+                    kind: 'activity',
+                    name: activityData.name,
+                    startTime: activityData.startTime ? new Date(activityData.startTime) : null,
+                    timezone: activityData.timezone ?? null,
+                  },
+                  {
+                    cost: activityData.cost != null ? new Prisma.Decimal(activityData.cost) : null,
+                    currency: activityData.currency,
+                    exchangeRate: activityData.exchangeRate != null ? new Prisma.Decimal(activityData.exchangeRate) : null,
+                    baseAmount: activityData.baseAmount != null ? new Prisma.Decimal(activityData.baseAmount) : null,
+                    baseCurrency: activityData.baseCurrency ?? null,
+                  },
+                  bookingZones(tripData.timezone)
+                ),
                 bookingUrl: activityData.bookingUrl,
                 bookingReference: activityData.bookingReference,
                 notes: activityData.notes,
@@ -591,7 +661,7 @@ export async function restoreFromBackup(
                 dietaryTags:
                   activityData.dietaryTags === null
                     ? Prisma.DbNull
-                    : activityData.dietaryTags,
+                    : (activityData.dietaryTags as Prisma.InputJsonValue | undefined),
               },
             });
             if (activityData.id != null) activityMap.set(activityData.id, activity.id);
@@ -610,6 +680,12 @@ export async function restoreFromBackup(
                 });
               }
             }
+          }
+
+          // Names of the backup's locations, for labelling a leg that names its places by location only.
+          const locationNameMap = new Map<number, string>();
+          for (const locationData of tripData.locations || []) {
+            if (locationData.id != null) locationNameMap.set(locationData.id, locationData.name);
           }
 
           // Import transportation
@@ -641,17 +717,34 @@ export async function restoreFromBackup(
                   ? (loyaltyProgramMap.get(transportData.loyaltyProgramId) ?? null)
                   : null,
                 bookingUrl: transportData.bookingUrl,
-                cost: transportData.cost,
-                currency: transportData.currency,
-                exchangeRate:
-                  transportData.exchangeRate != null
-                    ? new Prisma.Decimal(transportData.exchangeRate)
-                    : null,
-                baseAmount:
-                  transportData.baseAmount != null
-                    ? new Prisma.Decimal(transportData.baseAmount)
-                    : null,
-                baseCurrency: transportData.baseCurrency ?? null,
+                costExpense: await buildBookingCostCreate(
+                  tx,
+                  trip.id,
+                  {
+                    kind: 'transportation',
+                    type: transportData.type,
+                    company: transportData.company ?? null,
+                    referenceNumber: transportData.referenceNumber ?? null,
+                    startLocationText: transportData.startLocationText ?? null,
+                    endLocationText: transportData.endLocationText ?? null,
+                    startLocation: transportData.startLocationId
+                      ? { name: locationNameMap.get(transportData.startLocationId) ?? '' }
+                      : null,
+                    endLocation: transportData.endLocationId
+                      ? { name: locationNameMap.get(transportData.endLocationId) ?? '' }
+                      : null,
+                    scheduledStart: transportData.scheduledStart ? new Date(transportData.scheduledStart) : null,
+                    startTimezone: transportData.startTimezone ?? null,
+                  },
+                  {
+                    cost: transportData.cost != null ? new Prisma.Decimal(transportData.cost) : null,
+                    currency: transportData.currency,
+                    exchangeRate: transportData.exchangeRate != null ? new Prisma.Decimal(transportData.exchangeRate) : null,
+                    baseAmount: transportData.baseAmount != null ? new Prisma.Decimal(transportData.baseAmount) : null,
+                    baseCurrency: transportData.baseCurrency ?? null,
+                  },
+                  bookingZones(tripData.timezone)
+                ),
                 status: transportData.status,
                 delayMinutes: transportData.delayMinutes,
                 notes: transportData.notes,
@@ -682,12 +775,15 @@ export async function restoreFromBackup(
           }
 
           // Import lodging
-          // Note: Location associations are now handled via EntityLink system (restored separately below)
+          // The place is the lodging's locationId (old id remapped through locationMap)
           const lodgingMap = new Map<number, number>(); // old ID -> new ID
           for (const lodgingData of tripData.lodging || []) {
             const lodging = await tx.lodging.create({
               data: {
                 tripId: trip.id,
+                locationId: lodgingData.locationId
+                  ? (locationMap.get(lodgingData.locationId) ?? null)
+                  : null,
                 type: lodgingData.type,
                 name: lodgingData.name,
                 address: lodgingData.address,
@@ -699,17 +795,24 @@ export async function restoreFromBackup(
                   ? (loyaltyProgramMap.get(lodgingData.loyaltyProgramId) ?? null)
                   : null,
                 bookingUrl: lodgingData.bookingUrl,
-                cost: lodgingData.cost,
-                currency: lodgingData.currency,
-                exchangeRate:
-                  lodgingData.exchangeRate != null
-                    ? new Prisma.Decimal(lodgingData.exchangeRate)
-                    : null,
-                baseAmount:
-                  lodgingData.baseAmount != null
-                    ? new Prisma.Decimal(lodgingData.baseAmount)
-                    : null,
-                baseCurrency: lodgingData.baseCurrency ?? null,
+                costExpense: await buildBookingCostCreate(
+                  tx,
+                  trip.id,
+                  {
+                    kind: 'lodging',
+                    name: lodgingData.name,
+                    checkInDate: new Date(lodgingData.checkInDate),
+                    timezone: lodgingData.timezone ?? null,
+                  },
+                  {
+                    cost: lodgingData.cost != null ? new Prisma.Decimal(lodgingData.cost) : null,
+                    currency: lodgingData.currency,
+                    exchangeRate: lodgingData.exchangeRate != null ? new Prisma.Decimal(lodgingData.exchangeRate) : null,
+                    baseAmount: lodgingData.baseAmount != null ? new Prisma.Decimal(lodgingData.baseAmount) : null,
+                    baseCurrency: lodgingData.baseCurrency ?? null,
+                  },
+                  bookingZones(tripData.timezone)
+                ),
                 notes: lodgingData.notes,
               },
             });
@@ -929,7 +1032,7 @@ export async function restoreFromBackup(
                     isDefault: item.isDefault,
                     isChecked: item.isChecked,
                     checkedAt: item.checkedAt,
-                    metadata: item.metadata === null ? Prisma.JsonNull : item.metadata,
+                    metadata: item.metadata === null ? Prisma.JsonNull : (item.metadata as Prisma.InputJsonValue | undefined),
                   })),
                 },
               },
@@ -980,17 +1083,24 @@ export async function restoreFromBackup(
                 locationId: itemData.locationId
                   ? locationMap.get(itemData.locationId) ?? null
                   : null,
-                cost: itemData.cost != null ? new Prisma.Decimal(itemData.cost) : null,
-                currency: itemData.currency,
-                exchangeRate:
-                  itemData.exchangeRate != null
-                    ? new Prisma.Decimal(itemData.exchangeRate)
-                    : null,
-                baseAmount:
-                  itemData.baseAmount != null
-                    ? new Prisma.Decimal(itemData.baseAmount)
-                    : null,
-                baseCurrency: itemData.baseCurrency ?? null,
+                costExpense: await buildBookingCostCreate(
+                  tx,
+                  trip.id,
+                  {
+                    kind: 'customItem',
+                    name: itemData.name,
+                    startTime: itemData.startTime ? new Date(itemData.startTime) : null,
+                    timezone: itemData.timezone ?? null,
+                  },
+                  {
+                    cost: itemData.cost != null ? new Prisma.Decimal(itemData.cost) : null,
+                    currency: itemData.currency,
+                    exchangeRate: itemData.exchangeRate != null ? new Prisma.Decimal(itemData.exchangeRate) : null,
+                    baseAmount: itemData.baseAmount != null ? new Prisma.Decimal(itemData.baseAmount) : null,
+                    baseCurrency: itemData.baseCurrency ?? null,
+                  },
+                  bookingZones(tripData.timezone)
+                ),
                 url: itemData.url,
                 confirmationNumber: itemData.confirmationNumber,
               },
@@ -1007,20 +1117,65 @@ export async function restoreFromBackup(
             const payerCompanionId = expenseData.paidByCompanionName
               ? companionMap.get(expenseData.paidByCompanionName) ?? null
               : null;
+            // The trip owner (the restoring user) is their "myself" companion, created here when
+            // the user has none; it is never duplicated (see the companion import above).
+            const ownerCompanion = async (): Promise<number> => {
+              if (myselfCompanionId === null) myselfCompanionId = await ensureOwnerCompanionId(tx, userId);
+              return myselfCompanionId;
+            };
             type SplitData = NonNullable<typeof expenseData.splits>[number];
-            type SplitRow = { isOwner: boolean; companionId: number | null; split: SplitData };
-            const splitRows = (expenseData.splits || []).flatMap((split): SplitRow[] => {
-              if (split.isOwner || !split.companionName) {
-                return [{ isOwner: true, companionId: null, split }];
-              }
-              const companionId = companionMap.get(split.companionName);
-              return companionId !== undefined ? [{ isOwner: false, companionId, split }] : [];
-            });
+            type SplitRow = { companionId: number; amount: Prisma.Decimal; percentage: Prisma.Decimal | null };
+            const mergedSplits = new Map<number, SplitRow>();
+            for (const split of expenseData.splits || []) {
+              const companionId =
+                split.isOwner || !split.companionName
+                  ? await ownerCompanion()
+                  : companionMap.get(split.companionName);
+              if (companionId === undefined) continue;
+              const amount = new Prisma.Decimal((split as SplitData).amount);
+              const percentage = split.percentage != null ? new Prisma.Decimal(split.percentage) : null;
+              // A person appears once per expense. An old backup may list the owner twice (as the
+              // owner and as their own "myself" companion): fold those into one share.
+              const prior = mergedSplits.get(companionId);
+              mergedSplits.set(
+                companionId,
+                prior
+                  ? {
+                      companionId,
+                      amount: prior.amount.plus(amount),
+                      percentage:
+                        prior.percentage || percentage
+                          ? (prior.percentage ?? new Prisma.Decimal(0)).plus(percentage ?? 0)
+                          : null,
+                    }
+                  : { companionId, amount, percentage }
+              );
+            }
+            const splitRows = [...mergedSplits.values()];
+            const ownerPaid = expenseData.paidByOwner === true && payerCompanionId === null;
+            const paidByCompanionId = ownerPaid ? await ownerCompanion() : payerCompanionId;
             const receiptFields = await receipts.prepare(expenseData);
-            await tx.tripExpense.create({
-              data: {
+
+            // v1.9.0: an expense that is the cost of a booking in this file updates the row that
+            // booking's import already created, so the booking has exactly one cost row.
+            const bookingRef = expenseData.booking;
+            const linkedBookingId = bookingRef
+              ? ({
+                  activity: activityMap,
+                  transportation: transportationMap,
+                  lodging: lodgingMap,
+                  customItem: customItemMap,
+                } satisfies Record<BookingKind, Map<number, number>>)[bookingRef.type].get(bookingRef.id)
+              : undefined;
+            const linkedExpense =
+              bookingRef && linkedBookingId !== undefined
+                ? await tx.tripExpense.findFirst({
+                    where: { [BOOKING_EXPENSE_FK[bookingRef.type]]: linkedBookingId },
+                    select: { id: true },
+                  })
+                : null;
+            const expenseFields = {
                 ...receiptFields,
-                tripId: trip.id,
                 description: expenseData.description,
                 category: expenseData.category,
                 amount: new Prisma.Decimal(expenseData.amount),
@@ -1036,20 +1191,26 @@ export async function restoreFromBackup(
                 baseCurrency: expenseData.baseCurrency ?? null,
                 date: expenseData.date ? new Date(expenseData.date) : null,
                 notes: expenseData.notes ?? null,
-                paidByOwner: expenseData.paidByOwner === true && payerCompanionId === null,
-                paidByCompanionId: payerCompanionId,
+                paidByCompanionId,
                 splitMethod: splitRows.length > 0 ? expenseData.splitMethod ?? null : null,
                 splits: {
-                  create: splitRows.map(({ isOwner, companionId, split }) => ({
-                    isOwner,
-                    companionId,
-                    amount: new Prisma.Decimal(split.amount),
-                    percentage:
-                      split.percentage != null ? new Prisma.Decimal(split.percentage) : null,
-                  })),
+                  create: splitRows,
                 },
-              },
-            });
+            };
+            if (linkedExpense) {
+              await tx.tripExpense.update({ where: { id: linkedExpense.id }, data: expenseFields });
+            } else {
+              await tx.tripExpense.create({
+                data: {
+                  ...expenseFields,
+                  tripId: trip.id,
+                  // The booking is gone from the file: keep the money as an ordinary expense.
+                  ...(bookingRef && linkedBookingId !== undefined
+                    ? { [BOOKING_EXPENSE_FK[bookingRef.type]]: linkedBookingId }
+                    : {}),
+                },
+              });
+            }
           }
 
           // Import trip emergency info (added in v1.6.0)
@@ -1096,9 +1257,70 @@ export async function restoreFromBackup(
             }
           };
 
-          for (const linkData of tripData.entityLinks || []) {
+          // Backups before v1.7.0 express "this activity/lodging is at this place" as a link.
+          // Promote one per entity (OCCURRED_AT first, then file order) to the entity's
+          // locationId and do not restore that link; other place links stay as RELATED.
+          const legacyPlaceLinks =
+            SUPPORTED_BACKUP_VERSIONS.indexOf(backupData.version) < SUPPORTED_BACKUP_VERSIONS.indexOf('1.7.0');
+          const placeOf = (
+            link: { sourceType: string; sourceId: number; targetType: string; targetId: number }
+          ): { entityType: 'ACTIVITY' | 'LODGING'; entityId: number; locationId: number } | null => {
+            const sourceIsEntity = link.sourceType === 'ACTIVITY' || link.sourceType === 'LODGING';
+            const targetIsEntity = link.targetType === 'ACTIVITY' || link.targetType === 'LODGING';
+            if (sourceIsEntity && link.targetType === 'LOCATION') {
+              const entityId = getNewEntityId(link.sourceType, link.sourceId);
+              const locationId = getNewEntityId('LOCATION', link.targetId);
+              return entityId && locationId
+                ? { entityType: link.sourceType as 'ACTIVITY' | 'LODGING', entityId, locationId }
+                : null;
+            }
+            if (link.sourceType === 'LOCATION' && targetIsEntity) {
+              const entityId = getNewEntityId(link.targetType, link.targetId);
+              const locationId = getNewEntityId('LOCATION', link.sourceId);
+              return entityId && locationId
+                ? { entityType: link.targetType as 'ACTIVITY' | 'LODGING', entityId, locationId }
+                : null;
+            }
+            return null;
+          };
+          const promotedPlace = new Map<string, { index: number; locationId: number }>();
+          if (legacyPlaceLinks) {
+            (tripData.entityLinks || []).forEach((linkData, index) => {
+              const place = placeOf(linkData);
+              if (!place) return;
+              const key = `${place.entityType}:${place.entityId}`;
+              const current = promotedPlace.get(key);
+              const currentIsOccurredAt =
+                current !== undefined &&
+                (tripData.entityLinks || [])[current.index].relationship === 'OCCURRED_AT';
+              if (!current || (linkData.relationship === 'OCCURRED_AT' && !currentIsOccurredAt)) {
+                promotedPlace.set(key, { index, locationId: place.locationId });
+              }
+            });
+            for (const [key, chosen] of promotedPlace) {
+              const [entityType, entityId] = key.split(':');
+              if (entityType === 'ACTIVITY') {
+                await tx.activity.update({ where: { id: Number(entityId) }, data: { locationId: chosen.locationId } });
+              } else {
+                await tx.lodging.update({ where: { id: Number(entityId) }, data: { locationId: chosen.locationId } });
+              }
+            }
+          }
+
+          for (const [linkIndex, linkData] of (tripData.entityLinks || []).entries()) {
             const newSourceId = getNewEntityId(linkData.sourceType, linkData.sourceId);
             const newTargetId = getNewEntityId(linkData.targetType, linkData.targetId);
+
+            let relationship = linkData.relationship;
+            if (legacyPlaceLinks) {
+              const place = placeOf(linkData);
+              if (place) {
+                const chosen = promotedPlace.get(`${place.entityType}:${place.entityId}`);
+                // The chosen link (and a duplicate of it in the other direction) is the FK now
+                if (chosen && (chosen.index === linkIndex || chosen.locationId === place.locationId)) continue;
+                if (relationship === 'OCCURRED_AT') relationship = 'RELATED';
+              }
+            }
 
             // Only create the link if both source and target entities were restored
             if (newSourceId && newTargetId) {
@@ -1109,7 +1331,7 @@ export async function restoreFromBackup(
                   sourceId: newSourceId,
                   targetType: linkData.targetType,
                   targetId: newTargetId,
-                  relationship: linkData.relationship,
+                  relationship,
                   sortOrder: linkData.sortOrder,
                   notes: linkData.notes,
                 },
@@ -1163,6 +1385,16 @@ export async function restoreFromBackup(
     await receiptRef.current?.discardCopies();
     if (error instanceof AppError) throw error;
     console.error('Error restoring from backup:', error);
+    // A value outside a column's fixed vocabulary (a status, permission level, photo source...) is a
+    // problem with the file, not the server: nothing was restored, say which rule it broke.
+    const violated = /violates check constraint "([a-z_]+)"/.exec(error instanceof Error ? error.message : '');
+    if (violated) {
+      throw new AppError(
+        `This backup holds a value that is not allowed (${violated[1]}). Nothing was restored.`,
+        400,
+        { cause: error }
+      );
+    }
     throw new AppError(
       `Failed to restore from backup: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,

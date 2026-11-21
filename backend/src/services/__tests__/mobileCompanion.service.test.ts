@@ -58,6 +58,8 @@ const mockPrisma = {
   pushSubscription: { findMany: jest.fn() },
   bookingDeadline: { findMany: jest.fn(), update: jest.fn() },
   user: { findUnique: jest.fn() },
+  userPreferences: { findUnique: jest.fn() },
+  travelCompanion: { findFirst: jest.fn() },
 };
 jest.mock('../../config/database', () => ({ __esModule: true, default: mockPrisma }));
 
@@ -117,6 +119,7 @@ beforeEach(() => {
   for (const model of ENTITY_MODELS) {
     mockPrisma[model].findMany.mockResolvedValue([]);
   }
+  mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
 });
 
 // =============================================================================
@@ -143,9 +146,50 @@ describe('MobileSyncService', () => {
     mockPrisma.trip.findUnique.mockResolvedValue(tripRow as never);
   });
 
+  it('MSYNC-001b: booking costs ride on the booking rows and stay out of the expense list', async () => {
+    mockPrisma.checklist.findMany.mockResolvedValue([]);
+    mockPrisma.activity.findMany.mockImplementation(async (args?: unknown) => {
+      const where = (args as { where?: Record<string, unknown> } | undefined)?.where ?? {};
+      if ('locationId' in where) return [];
+      return [
+        {
+          id: 7,
+          name: 'Gondola',
+          costExpense: {
+            amount: new Prisma.Decimal('40.50'),
+            currency: 'EUR',
+            exchangeRate: new Prisma.Decimal('1.1'),
+            baseAmount: new Prisma.Decimal('44.55'),
+            baseCurrency: 'USD',
+          },
+        },
+      ];
+    });
+    mockPrisma.entityLink.findMany.mockResolvedValue([]);
+
+    const snap = await mobileSyncService.getSnapshot(USER, TRIP);
+
+    expect(snap.entities.ACTIVITY).toEqual([
+      { id: 7, name: 'Gondola', cost: 40.5, currency: 'EUR', exchangeRate: 1.1, baseAmount: 44.55, baseCurrency: 'USD' },
+    ]);
+    // Booking costs are not in EXPENSE (neither the rows nor the id list), so the app cannot count them twice.
+    const expenseCalls = mockPrisma.tripExpense.findMany.mock.calls as Array<[{ where: Record<string, unknown> }]>;
+    expect(expenseCalls).toHaveLength(2);
+    for (const [args] of expenseCalls) {
+      expect(args.where).toMatchObject({ tripId: TRIP, activityId: null, transportationId: null, lodgingId: null, customItemId: null });
+    }
+  });
+
   it('MSYNC-001: full snapshot returns every kind, all ids, and the permission', async () => {
     mockPrisma.checklist.findMany.mockResolvedValue([{ id: 3 }]);
-    mockPrisma.activity.findMany.mockResolvedValue([{ id: 7, name: 'Gondola' }]);
+    // The synthetic place-link query (where.locationId set) sees the FK-backed activity 7 -> location 20;
+    // the data and id queries see the plain row.
+    mockPrisma.activity.findMany.mockImplementation(async (args?: unknown) => {
+      const where = (args as { where?: Record<string, unknown> } | undefined)?.where ?? {};
+      return 'locationId' in where
+        ? [{ id: 7, tripId: TRIP, locationId: 20, createdAt: new Date('2026-06-01T00:00:00Z') }]
+        : [{ id: 7, name: 'Gondola' }];
+    });
     mockPrisma.entityLink.findMany.mockResolvedValue([{ id: 99 }]);
 
     const snap = await mobileSyncService.getSnapshot(USER, TRIP);
@@ -170,14 +214,24 @@ describe('MobileSyncService', () => {
         'TRANSPORTATION',
       ].sort()
     );
-    expect(snap.entities.ACTIVITY).toEqual([{ id: 7, name: 'Gondola' }]);
+    // A booking row carries its cost fields exactly as before (here: no cost), hydrated from its expense row.
+    expect(snap.entities.ACTIVITY).toEqual([
+      { id: 7, name: 'Gondola', cost: null, currency: null, exchangeRate: null, baseAmount: null, baseCurrency: null },
+    ]);
     expect(snap.ids.ACTIVITY).toEqual([7]);
     expect(snap.ids.CHECKLIST).toEqual([3]);
-    expect(snap.linkIds).toEqual([99]);
+    // linkIds: the synthetic FK place link of activity 7 (negative id, -(2 * 7)) plus the real row
+    expect(snap.linkIds).toEqual([-14, 99]);
+    expect(snap.links).toEqual([
+      expect.objectContaining({ id: -14, sourceType: 'ACTIVITY', sourceId: 7, targetType: 'LOCATION', targetId: 20, relationship: 'OCCURRED_AT' }),
+      { id: 99 },
+    ]);
     expect(Number.isNaN(new Date(snap.serverTime).getTime())).toBe(false);
 
     // No updatedAt filter on a full pull.
-    const full = mockPrisma.activity.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    const full = (mockPrisma.activity.findMany.mock.calls as Array<[{ where: Record<string, unknown> }]>)
+      .map((c) => c[0])
+      .find((a) => !('locationId' in a.where) && !('select' in a)) as { where: Record<string, unknown> };
     expect(full.where).toEqual({ tripId: TRIP });
     // Checklist items are scoped through the trip's checklists.
     const items = mockPrisma.checklistItem.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
@@ -229,6 +283,31 @@ describe('MobileSyncService', () => {
     expect(snap.trip.budget).toBe(1500.5);
     expect(snap.entities.EXPENSE[0].amount).toBe(12.5);
     expect(snap.trip.permission).toBe('edit');
+  });
+
+  it('MSYNC-006: expense rows keep the old paidByOwner shape (owner payer = trip owner myself companion)', async () => {
+    mockVerifyTrip.mockResolvedValue({
+      trip: { id: TRIP, userId: 2 },
+      isOwner: false,
+      permissionLevel: 'edit',
+    } as never);
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue({ id: 70 });
+    mockPrisma.tripExpense.findMany.mockResolvedValue([
+      { id: 1, paidByCompanionId: 70 },
+      { id: 2, paidByCompanionId: 71 },
+      { id: 3, paidByCompanionId: null },
+    ]);
+
+    const snap = await mobileSyncService.getSnapshot(USER, TRIP);
+
+    expect(mockPrisma.travelCompanion.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 2, isMyself: true } })
+    );
+    expect(snap.entities.EXPENSE).toEqual([
+      { id: 1, paidByOwner: true, paidByCompanionId: null },
+      { id: 2, paidByOwner: false, paidByCompanionId: 71 },
+      { id: 3, paidByOwner: false, paidByCompanionId: null },
+    ]);
   });
 });
 
@@ -477,6 +556,7 @@ describe('AuthService.issueTokensForUser', () => {
       timezone: 'Europe/Rome',
       passwordVersion: 3,
     } as never);
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 4, measurementSystem: 'metric' } as never);
 
     const result = await authService.issueTokensForUser(4);
 
@@ -486,6 +566,7 @@ describe('AuthService.issueTokensForUser', () => {
       email: 'dana@example.com',
       avatarUrl: null,
       timezone: 'Europe/Rome',
+      measurementSystem: 'metric',
     });
     const decoded = verifyAccessToken(result.accessToken);
     expect(decoded.userId).toBe(4);
@@ -507,6 +588,7 @@ describe('vendored shared modules', () => {
   const pairs: Array<[string, string]> = [
     ['utils/geo.ts', 'geo.ts'],
     ['receipt/receiptParser.ts', 'receiptParser.ts'],
+    ['constants/countryFacts.ts', 'countryFacts.ts'],
   ];
   const sharedSrc = path.resolve(__dirname, '../../../../packages/shared/src');
   const vendoredDir = path.resolve(__dirname, '../_shared/vendored');

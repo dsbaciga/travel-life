@@ -10,8 +10,20 @@ import {
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
+import { locationWithAddressSelect } from '../prisma/prismaIncludes';
+import {
+  buildBookingCostCreate,
+  costExpenseInclude,
+  childCostExpenseSelect,
+  costExpenseSelect,
+  hydrateActivityCost,
+  hydrateBookingCost,
+  syncBookingCost,
+} from '../services/_shared/bookingCost';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// The activity's place is the direct `locationId` FK (not an EntityLink). Responses carry
+// `locationId` plus a small `location` object.
 
 class ActivityService {
   async createActivity(userId: number, data: CreateActivityInput) {
@@ -23,46 +35,59 @@ class ActivityService {
       await verifyEntityInTrip('activity', data.parentId, data.tripId);
     }
 
-    // Note: Location association is handled via EntityLink system after creation
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, data.tripId);
+    }
+
+    const startTime = data.startTime ? new Date(data.startTime) : null;
+    const costExpense = await buildBookingCostCreate(
+      prisma,
+      data.tripId,
+      { kind: 'activity', name: data.name, startTime, timezone: data.timezone || null },
+      { cost: data.cost, currency: data.currency }
+    );
+
     const activity = await prisma.activity.create({
       data: {
         tripId: data.tripId,
         parentId: data.parentId || null,
+        locationId: data.locationId || null,
         name: data.name,
         description: data.description || null,
         category: data.category || null,
         allDay: data.allDay ?? false,
-        startTime: data.startTime ? new Date(data.startTime) : null,
+        startTime,
         endTime: data.endTime ? new Date(data.endTime) : null,
         timezone: data.timezone || null,
-        cost: data.cost !== undefined ? data.cost : null,
-        currency: data.currency || null,
+        costExpense,
         bookingUrl: data.bookingUrl || null,
         bookingReference: data.bookingReference || null,
         notes: data.notes || null,
         dietaryTags: data.dietaryTags ?? undefined,
       },
       include: {
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
             name: true,
           },
         },
+        ...costExpenseInclude,
       },
     });
 
-    return convertDecimals(activity);
+    return convertDecimals(hydrateActivityCost(activity));
   }
 
   async getActivitiesByTrip(userId: number, tripId: number) {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const activities = await prisma.activity.findMany({
       where: { tripId },
       include: {
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
@@ -73,19 +98,20 @@ class ActivityService {
           select: {
             id: true,
             name: true,
+            locationId: true,
             description: true,
             startTime: true,
             endTime: true,
             timezone: true,
             category: true,
-            cost: true,
-            currency: true,
+            ...childCostExpenseSelect,
             bookingReference: true,
             notes: true,
             dietaryTags: true,
           },
           orderBy: [{ startTime: 'asc' }, { createdAt: 'asc' }],
         },
+        ...costExpenseInclude,
       },
       orderBy: [
         { manualOrder: { sort: 'asc', nulls: 'last' } },
@@ -94,18 +120,18 @@ class ActivityService {
       ],
     });
 
-    return convertDecimals(activities);
+    return convertDecimals(activities.map((activity) => hydrateActivityCost(activity)));
   }
 
   async getActivityById(userId: number, activityId: number) {
     // Verify user has view permission on the activity's trip
     await verifyEntityAccessWithPermission('activity', activityId, userId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
       include: {
         trip: true,
+        location: { select: locationWithAddressSelect },
         parent: {
           select: {
             id: true,
@@ -116,23 +142,24 @@ class ActivityService {
           select: {
             id: true,
             name: true,
+            locationId: true,
             description: true,
             startTime: true,
             endTime: true,
             timezone: true,
             category: true,
-            cost: true,
-            currency: true,
+            ...childCostExpenseSelect,
             bookingReference: true,
             notes: true,
             dietaryTags: true,
           },
           orderBy: [{ startTime: 'asc' }, { createdAt: 'asc' }],
         },
+        ...costExpenseInclude,
       },
     });
 
-    return convertDecimals(activity);
+    return convertDecimals(activity ? hydrateActivityCost(activity) : activity);
   }
 
   async updateActivity(
@@ -157,8 +184,13 @@ class ActivityService {
       await verifyEntityInTrip('activity', data.parentId, activity.tripId);
     }
 
-    // Note: Location association is handled via EntityLink system, not direct FK
-    const updateData: Prisma.ActivityUncheckedUpdateInput = buildConditionalUpdateData(data, {
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, activity.tripId);
+    }
+
+    // The cost lives on the activity's expense row (see syncBookingCost), not on the activity.
+    const { cost, currency, ...activityData } = data;
+    const updateData: Prisma.ActivityUncheckedUpdateInput = buildConditionalUpdateData(activityData, {
       transformers: {
         startTime: (val: string | null) => (val ? new Date(val) : null),
         endTime: (val: string | null) => (val ? new Date(val) : null),
@@ -167,21 +199,32 @@ class ActivityService {
       },
     });
 
-    const updatedActivity = await prisma.activity.update({
-      where: { id: activityId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
-      data: updateData,
-      include: {
-        parent: {
-          select: {
-            id: true,
-            name: true,
+    const { updatedActivity, costExpense, receiptPaths } = await prisma.$transaction(async (tx) => {
+      const row = await tx.activity.update({
+        where: { id: activityId },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
+        data: updateData,
+        include: {
+          location: { select: locationWithAddressSelect },
+          parent: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
+      });
+      const sync = await syncBookingCost(tx, 'activity', activityId, {
+        cost,
+        currency,
+        refresh: data.name !== undefined || data.startTime !== undefined || data.timezone !== undefined,
+      });
+      const linked = await tx.tripExpense.findUnique({ where: { activityId }, select: costExpenseSelect });
+      return { updatedActivity: row, costExpense: linked, receiptPaths: sync.receiptPaths };
     });
+    await deleteReceiptFiles(receiptPaths);
 
-    return convertDecimals(updatedActivity);
+    return convertDecimals(hydrateBookingCost({ ...updatedActivity, costExpense }));
   }
 
   async deleteActivity(userId: number, activityId: number) {

@@ -39,6 +39,7 @@ export function createLocationStub(
     tripId,
     parentId: null,
     address: null,
+    countryCode: null,
     latitude: null,
     longitude: null,
     categoryId: null,

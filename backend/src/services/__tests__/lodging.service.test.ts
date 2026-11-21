@@ -43,7 +43,18 @@ jest.mock('@prisma/client', () => {
 const mockPrisma = {
   trip: {
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
+  $transaction: jest.fn(),
+  tripExpense: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  travelCompanion: { findFirst: jest.fn() },
+  tripExpenseSplit: { findMany: jest.fn(), update: jest.fn() },
   lodging: {
     create: jest.fn(),
     findMany: jest.fn(),
@@ -71,6 +82,7 @@ jest.mock('../../services/_shared/tripAccess', () => {
     ...originalModule,
     verifyTripAccessWithPermission: jest.fn(),
     verifyEntityAccessWithPermission: jest.fn(),
+    verifyEntityInTrip: jest.fn(),
   };
 });
 
@@ -87,11 +99,18 @@ jest.mock('../../prisma/crudHelpers', () => ({
 }));
 
 import lodgingService from '../lodging.service';
-import { verifyTripAccessWithPermission, verifyEntityAccessWithPermission } from '../../services/_shared/tripAccess';
+import { verifyTripAccessWithPermission, verifyEntityAccessWithPermission, verifyEntityInTrip } from '../../services/_shared/tripAccess';
 import { cleanupEntityLinks } from '../../services/_shared/entityLinkCleanup';
 import { deleteEntity } from '../../prisma/crudHelpers';
 import { AppError } from '../../errors/errors';
+import { locationWithAddressSelect } from '../../prisma/prismaIncludes';
 import { LodgingType } from '../../types/lodging.types';
+import { withCost } from '../../__tests__/helpers/bookingCostRows';
+import { costExpenseInclude } from '../_shared/bookingCost';
+
+const LOC_INCLUDE = { location: { select: locationWithAddressSelect } };
+// Reads also load the stay's cost (its expense row).
+const LOC_COST_INCLUDE = { ...LOC_INCLUDE, ...costExpenseInclude };
 
 describe('LodgingService', () => {
   const mockUserId = 1;
@@ -140,6 +159,11 @@ describe('LodgingService', () => {
     });
     (cleanupEntityLinks as jest.Mock).mockResolvedValue(undefined);
     (deleteEntity as jest.Mock).mockResolvedValue({ success: true });
+    mockPrisma.$transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(mockPrisma));
+    mockPrisma.tripExpense.findUnique.mockResolvedValue(null);
+    mockPrisma.trip.findUnique.mockResolvedValue({ userId: 1, timezone: null, user: { timezone: null } });
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
+    mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
   });
 
   describe('LODG-001: Create lodging with dates', () => {
@@ -162,7 +186,7 @@ describe('LodgingService', () => {
         notes: null,
       };
 
-      mockPrisma.lodging.create.mockResolvedValue(expectedLodging);
+      mockPrisma.lodging.create.mockResolvedValue(withCost(expectedLodging));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -175,8 +199,9 @@ describe('LodgingService', () => {
           checkInDate: expect.any(Date),
           checkOutDate: expect.any(Date),
         }),
+        include: LOC_COST_INCLUDE,
       });
-      expect(result).toEqual(expectedLodging);
+      expect(result).toEqual({ ...expectedLodging, exchangeRate: null, baseAmount: null, baseCurrency: null });
     });
 
     it('should use current date if no dates provided', async () => {
@@ -186,12 +211,12 @@ describe('LodgingService', () => {
         name: 'Quick Stay Hotel',
       };
 
-      mockPrisma.lodging.create.mockResolvedValue({
+      mockPrisma.lodging.create.mockResolvedValue(withCost({
         ...mockLodging,
         name: 'Quick Stay Hotel',
         checkInDate: new Date(),
         checkOutDate: new Date(),
-      });
+      }));
 
       await lodgingService.createLodging(mockUserId, createInput);
 
@@ -200,6 +225,7 @@ describe('LodgingService', () => {
           checkInDate: expect.any(Date),
           checkOutDate: expect.any(Date),
         }),
+        include: LOC_COST_INCLUDE,
       });
     });
   });
@@ -223,7 +249,7 @@ describe('LodgingService', () => {
         checkOutDate: new Date('2025-06-15T11:00:00Z'),
       };
 
-      mockPrisma.lodging.create.mockResolvedValue(createdLodging);
+      mockPrisma.lodging.create.mockResolvedValue(withCost(createdLodging));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -259,11 +285,11 @@ describe('LodgingService', () => {
           checkOutDate: '2025-06-18T11:00:00Z',
         };
 
-        mockPrisma.lodging.create.mockResolvedValue({
+        mockPrisma.lodging.create.mockResolvedValue(withCost({
           ...mockLodging,
           type,
           name,
-        });
+        }));
 
         const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -284,10 +310,10 @@ describe('LodgingService', () => {
         checkOutDate: '2025-06-18T11:00:00Z',
       };
 
-      mockPrisma.lodging.create.mockResolvedValue({
+      mockPrisma.lodging.create.mockResolvedValue(withCost({
         ...mockLodging,
         confirmationNumber: 'BOOKING-ABC-123',
-      });
+      }));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -295,6 +321,7 @@ describe('LodgingService', () => {
         data: expect.objectContaining({
           confirmationNumber: 'BOOKING-ABC-123',
         }),
+        include: LOC_COST_INCLUDE,
       });
       expect(result.confirmationNumber).toBe('BOOKING-ABC-123');
     });
@@ -308,10 +335,10 @@ describe('LodgingService', () => {
         checkOutDate: '2025-06-18T11:00:00Z',
       };
 
-      mockPrisma.lodging.create.mockResolvedValue({
+      mockPrisma.lodging.create.mockResolvedValue(withCost({
         ...mockLodging,
         confirmationNumber: null,
-      });
+      }));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -319,6 +346,7 @@ describe('LodgingService', () => {
         data: expect.objectContaining({
           confirmationNumber: null,
         }),
+        include: LOC_COST_INCLUDE,
       });
       expect(result.confirmationNumber).toBeNull();
     });
@@ -337,21 +365,24 @@ describe('LodgingService', () => {
         checkOutDate: '2025-06-18T11:00:00Z',
       };
 
-      mockPrisma.lodging.create.mockResolvedValue({
+      mockPrisma.lodging.create.mockResolvedValue(withCost({
         ...mockLodging,
         bookingUrl: 'https://hotels.com/premium-hotel/booking/12345',
         cost: 599.99,
         currency: 'EUR',
-      });
+      }));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
       expect(mockPrisma.lodging.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           bookingUrl: 'https://hotels.com/premium-hotel/booking/12345',
-          cost: 599.99,
-          currency: 'EUR',
+          // The stay's cost is created with it, as its expense row.
+          costExpense: {
+            create: expect.objectContaining({ amount: 599.99, currency: 'EUR', category: 'lodging', description: 'Premium Hotel' }),
+          },
         }),
+        include: LOC_COST_INCLUDE,
       });
       expect(result.bookingUrl).toBe('https://hotels.com/premium-hotel/booking/12345');
       expect(result.cost).toBe(599.99);
@@ -368,13 +399,13 @@ describe('LodgingService', () => {
         checkOutDate: '2025-06-18T11:00:00Z',
       };
 
-      mockPrisma.lodging.create.mockResolvedValue({
+      mockPrisma.lodging.create.mockResolvedValue(withCost({
         ...mockLodging,
         type: LodgingType.CAMPING,
         cost: 0,
         currency: null,
         bookingUrl: null,
-      });
+      }));
 
       const result = await lodgingService.createLodging(mockUserId, createInput);
 
@@ -385,7 +416,7 @@ describe('LodgingService', () => {
 
   describe('LODG-006: Update lodging', () => {
     beforeEach(() => {
-      mockPrisma.lodging.findUnique.mockResolvedValue(mockLodging);
+      mockPrisma.lodging.findUnique.mockResolvedValue(withCost(mockLodging));
     });
 
     it('should update lodging name', async () => {
@@ -393,10 +424,10 @@ describe('LodgingService', () => {
         name: 'Updated Hotel Name',
       };
 
-      mockPrisma.lodging.update.mockResolvedValue({
+      mockPrisma.lodging.update.mockResolvedValue(withCost({
         ...mockLodging,
         name: 'Updated Hotel Name',
-      });
+      }));
 
       const result = await lodgingService.updateLodging(
         mockUserId,
@@ -410,6 +441,7 @@ describe('LodgingService', () => {
         data: expect.objectContaining({
           name: 'Updated Hotel Name',
         }),
+        include: LOC_INCLUDE,
       });
       expect(result.name).toBe('Updated Hotel Name');
     });
@@ -420,11 +452,11 @@ describe('LodgingService', () => {
         checkOutDate: '2025-07-05T10:00:00Z',
       };
 
-      mockPrisma.lodging.update.mockResolvedValue({
+      mockPrisma.lodging.update.mockResolvedValue(withCost({
         ...mockLodging,
         checkInDate: new Date('2025-07-01T14:00:00Z'),
         checkOutDate: new Date('2025-07-05T10:00:00Z'),
-      });
+      }));
 
       const result = await lodgingService.updateLodging(
         mockUserId,
@@ -438,6 +470,7 @@ describe('LodgingService', () => {
           checkInDate: expect.any(Date),
           checkOutDate: expect.any(Date),
         }),
+        include: LOC_INCLUDE,
       });
       expect(result.checkInDate).toEqual(new Date('2025-07-01T14:00:00Z'));
       expect(result.checkOutDate).toEqual(new Date('2025-07-05T10:00:00Z'));
@@ -448,10 +481,10 @@ describe('LodgingService', () => {
         type: LodgingType.RESORT as const,
       };
 
-      mockPrisma.lodging.update.mockResolvedValue({
+      mockPrisma.lodging.update.mockResolvedValue(withCost({
         ...mockLodging,
         type: LodgingType.RESORT,
-      });
+      }));
 
       const result = await lodgingService.updateLodging(
         mockUserId,
@@ -472,10 +505,16 @@ describe('LodgingService', () => {
         notes: 'Upgraded to ocean view',
       };
 
-      mockPrisma.lodging.update.mockResolvedValue({
+      mockPrisma.lodging.update.mockResolvedValue(withCost({
         ...mockLodging,
         ...updateInput,
-      });
+      }));
+      // The cost is the stay's expense row: found to be changed, then read back for the response.
+      mockPrisma.tripExpense.findUnique
+        .mockResolvedValueOnce({ id: 900, amount: 450, currency: 'USD', receiptPath: null, tripId: mockTripId })
+        .mockResolvedValueOnce({ id: 900, amount: 799.99, currency: 'USD', exchangeRate: null, baseAmount: null, baseCurrency: null });
+      mockPrisma.tripExpense.update.mockResolvedValue({ id: 900, amount: 799.99 });
+      mockPrisma.lodging.findUnique.mockResolvedValue(withCost(mockLodging));
 
       const result = await lodgingService.updateLodging(
         mockUserId,
@@ -496,12 +535,12 @@ describe('LodgingService', () => {
         bookingUrl: null,
       };
 
-      mockPrisma.lodging.update.mockResolvedValue({
+      mockPrisma.lodging.update.mockResolvedValue(withCost({
         ...mockLodging,
         notes: null,
         confirmationNumber: null,
         bookingUrl: null,
-      });
+      }));
 
       const result = await lodgingService.updateLodging(
         mockUserId,
@@ -548,13 +587,14 @@ describe('LodgingService', () => {
         { ...mockLodging, id: 3, checkInDate: new Date('2025-06-20') },
       ];
 
-      mockPrisma.lodging.findMany.mockResolvedValue(lodgings);
+      mockPrisma.lodging.findMany.mockResolvedValue(withCost(lodgings));
 
       const result = await lodgingService.getLodgingByTrip(mockUserId, mockTripId);
 
       expect(verifyTripAccessWithPermission).toHaveBeenCalledWith(mockUserId, mockTripId, 'view');
       expect(mockPrisma.lodging.findMany).toHaveBeenCalledWith({
         where: { tripId: mockTripId },
+        include: LOC_COST_INCLUDE,
         orderBy: [{ checkInDate: 'asc' }, { createdAt: 'asc' }],
       });
       expect(result).toHaveLength(3);
@@ -562,24 +602,24 @@ describe('LodgingService', () => {
   });
 
   describe('getLodgingById', () => {
-    it('should return lodging by id with trip included', async () => {
-      mockPrisma.lodging.findUnique.mockResolvedValue(mockLodging);
+    it('should return lodging by id with trip and location included', async () => {
+      mockPrisma.lodging.findUnique.mockResolvedValue(withCost(mockLodging));
 
       const result = await lodgingService.getLodgingById(mockUserId, mockLodgingId);
 
       expect(mockPrisma.lodging.findUnique).toHaveBeenCalledWith({
         where: { id: mockLodgingId },
-        include: { trip: true },
+        include: { trip: true, ...LOC_COST_INCLUDE },
       });
       expect(verifyEntityAccessWithPermission).toHaveBeenCalled();
-      expect(result).toEqual(mockLodging);
+      expect(result).toEqual({ ...mockLodging, exchangeRate: null, baseAmount: null, baseCurrency: null });
     });
   });
 
   describe('LODG-008: Loyalty program link', () => {
     it('stores the program id when the user owns the program', async () => {
       mockPrisma.loyaltyProgram.findFirst.mockResolvedValue({ id: 5 });
-      mockPrisma.lodging.create.mockResolvedValue({ ...mockLodging, loyaltyProgramId: 5 });
+      mockPrisma.lodging.create.mockResolvedValue(withCost({ ...mockLodging, loyaltyProgramId: 5 }));
 
       await lodgingService.createLodging(mockUserId, {
         tripId: mockTripId,
@@ -593,6 +633,7 @@ describe('LodgingService', () => {
       );
       expect(mockPrisma.lodging.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ loyaltyProgramId: 5 }),
+        include: LOC_COST_INCLUDE,
       });
     });
 
@@ -620,13 +661,97 @@ describe('LodgingService', () => {
     });
 
     it('lets the link be cleared with null without an ownership lookup', async () => {
-      mockPrisma.lodging.update.mockResolvedValue({ ...mockLodging, loyaltyProgramId: null });
+      mockPrisma.lodging.update.mockResolvedValue(withCost({ ...mockLodging, loyaltyProgramId: null }));
 
       await lodgingService.updateLodging(mockUserId, mockLodgingId, { loyaltyProgramId: null });
 
       expect(mockPrisma.loyaltyProgram.findFirst).not.toHaveBeenCalled();
       expect(mockPrisma.lodging.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ loyaltyProgramId: null }) })
+      );
+    });
+  });
+
+  describe('LODG-009: Lodging location (locationId FK)', () => {
+    beforeEach(() => {
+      (verifyEntityInTrip as jest.Mock).mockReset();
+      (verifyEntityInTrip as jest.Mock).mockResolvedValue({});
+    });
+
+    it('create accepts a locationId from the same trip and returns the location', async () => {
+      const location = { id: 7, name: 'Hotel Site', address: '1 Rue' };
+      mockPrisma.lodging.create.mockResolvedValue(withCost({ ...mockLodging, locationId: 7, location }));
+
+      const result = await lodgingService.createLodging(mockUserId, {
+        tripId: mockTripId,
+        type: LodgingType.HOTEL,
+        name: 'Grand Hotel',
+        locationId: 7,
+      });
+
+      expect(verifyEntityInTrip).toHaveBeenCalledWith('location', 7, mockTripId);
+      expect(mockPrisma.lodging.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: 7 }), include: LOC_COST_INCLUDE })
+      );
+      expect(result.locationId).toBe(7);
+      expect(result.location).toEqual(location);
+    });
+
+    it('create stores null locationId when none is given', async () => {
+      mockPrisma.lodging.create.mockResolvedValue(withCost({ ...mockLodging, locationId: null }));
+
+      await lodgingService.createLodging(mockUserId, { tripId: mockTripId, type: LodgingType.HOTEL, name: 'X' });
+
+      expect(verifyEntityInTrip).not.toHaveBeenCalled();
+      expect(mockPrisma.lodging.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: null }) })
+      );
+    });
+
+    it('create rejects a locationId from another trip with 404 and saves nothing', async () => {
+      (verifyEntityInTrip as jest.Mock).mockRejectedValue(new AppError('Location not found in this trip', 404));
+
+      await expect(
+        lodgingService.createLodging(mockUserId, {
+          tripId: mockTripId,
+          type: LodgingType.HOTEL,
+          name: 'Grand Hotel',
+          locationId: 999,
+        })
+      ).rejects.toMatchObject({ statusCode: 404 });
+      expect(mockPrisma.lodging.create).not.toHaveBeenCalled();
+    });
+
+    it('update rejects a locationId from another trip with 404, checked against the lodging trip', async () => {
+      (verifyEntityInTrip as jest.Mock).mockRejectedValue(new AppError('Location not found in this trip', 404));
+
+      await expect(
+        lodgingService.updateLodging(mockUserId, mockLodgingId, { locationId: 999 })
+      ).rejects.toMatchObject({ statusCode: 404 });
+      expect(verifyEntityInTrip).toHaveBeenCalledWith('location', 999, mockTripId);
+      expect(mockPrisma.lodging.update).not.toHaveBeenCalled();
+    });
+
+    it('update accepts a locationId and returns it', async () => {
+      mockPrisma.lodging.update.mockResolvedValue(withCost({ ...mockLodging, locationId: 7 }));
+
+      const result = await lodgingService.updateLodging(mockUserId, mockLodgingId, { locationId: 7 });
+
+      expect(verifyEntityInTrip).toHaveBeenCalledWith('location', 7, mockTripId);
+      expect(mockPrisma.lodging.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: 7 }), include: LOC_INCLUDE })
+      );
+      expect(result.locationId).toBe(7);
+    });
+
+    it('update with locationId null clears the location without a trip lookup', async () => {
+      mockPrisma.lodging.update.mockResolvedValue(withCost({ ...mockLodging, locationId: null }));
+
+      await lodgingService.updateLodging(mockUserId, mockLodgingId, { locationId: null });
+
+      expect(verifyEntityInTrip).not.toHaveBeenCalled();
+      expect(mockPrisma.lodging.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: null }) })
       );
     });
   });

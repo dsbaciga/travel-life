@@ -16,7 +16,7 @@ import {
 } from '../constants/countryFacts';
 
 /** How the destination country was arrived at, so the UI can be honest about it. */
-export type CountrySource = 'override' | 'address' | 'unknown';
+export type CountrySource = 'override' | 'location' | 'address' | 'unknown';
 
 export interface ResolvedTripCountry {
   /** ISO 3166-1 alpha-2, or undefined when nothing resolved confidently. */
@@ -32,8 +32,9 @@ export interface ResolvedTripCountry {
  * Order is most-trustworthy-first:
  *
  * 1. The trip's explicit `Trip.countryCode` override.
- * 2. The first trip location whose free-text address resolves confidently.
- * 3. Nothing — reported as `unknown` rather than guessed.
+ * 2. The first trip location with a structured `Location.countryCode`.
+ * 3. The first trip location whose free-text address resolves confidently (rows with no code).
+ * 4. Nothing — reported as `unknown` rather than guessed.
  *
  * A code that resolves but is outside the bundled dataset (say `TM`) still comes
  * back with its `source`, just with no `facts`; the caller shows "we don't have
@@ -41,6 +42,7 @@ export interface ResolvedTripCountry {
  *
  * @param overrideCode - The stored `Trip.countryCode`, if the traveller set one
  * @param addresses - Location addresses in trip order
+ * @param locationCodes - Structured `Location.countryCode` values in trip order (absent in payloads cached before they existed)
  * @returns The resolved code, its facts, and how it was resolved
  *
  * @example
@@ -50,10 +52,18 @@ export interface ResolvedTripCountry {
 export function resolveTripCountry(
   overrideCode: string | null | undefined,
   addresses: readonly string[] = [],
+  locationCodes: readonly string[] = [],
 ): ResolvedTripCountry {
   const override = overrideCode?.trim().toUpperCase();
   if (override) {
     return { code: override, facts: getCountryFacts(override), source: 'override' };
+  }
+
+  for (const raw of locationCodes) {
+    const code = raw?.trim().toUpperCase();
+    if (code) {
+      return { code, facts: getCountryFacts(code), source: 'location' };
+    }
   }
 
   for (const address of addresses) {

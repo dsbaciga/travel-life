@@ -422,7 +422,7 @@ describe('smart context', () => {
     expect(suggestLinks('LOCATION', context, here, new Date('2026-06-02T10:30:00Z')).map((s) => s.targetType)).toEqual(['ACTIVITY']);
     const forActivity = suggestLinks('ACTIVITY', context, here, new Date('2026-06-02T10:30:00Z'));
     expect(forActivity.map((s) => s.targetType)).toEqual(['LOCATION']);
-    expect(forActivity[0].relationship).toBe('OCCURRED_AT');
+    expect(forActivity[0].relationship).toBe('RELATED');
     expect(suggestLinks('PHOTO', context, { latitude: 0, longitude: 0 }, new Date('2026-05-01T00:00:00Z'))).toEqual([]);
   });
 

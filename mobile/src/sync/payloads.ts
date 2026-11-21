@@ -29,7 +29,8 @@ export const REFERENCE_FIELDS: Readonly<
   Partial<Record<OutboxKind, Readonly<Record<string, SyncEntityKind | 'BY_TYPE_FIELD'>>>>
 > = {
   LOCATION: { parentId: 'LOCATION' },
-  ACTIVITY: { parentId: 'ACTIVITY' },
+  ACTIVITY: { parentId: 'ACTIVITY', locationId: 'LOCATION' },
+  LODGING: { locationId: 'LOCATION' },
   TRANSPORTATION: { startLocationId: 'LOCATION', endLocationId: 'LOCATION' },
   CUSTOM_ITEM: { locationId: 'LOCATION' },
   FOOD_LOG: { activityId: 'ACTIVITY', locationId: 'LOCATION' },
@@ -72,6 +73,7 @@ const CREATE_FIELDS: Readonly<Record<SyncEntityKind, readonly string[]>> = {
     'parentId',
     'name',
     'address',
+    'countryCode',
     'latitude',
     'longitude',
     'categoryId',
@@ -83,6 +85,7 @@ const CREATE_FIELDS: Readonly<Record<SyncEntityKind, readonly string[]>> = {
   ],
   ACTIVITY: [
     'parentId',
+    'locationId',
     'name',
     'description',
     'category',
@@ -114,6 +117,7 @@ const CREATE_FIELDS: Readonly<Record<SyncEntityKind, readonly string[]>> = {
     'notes',
   ],
   LODGING: [
+    'locationId',
     'type',
     'name',
     'address',

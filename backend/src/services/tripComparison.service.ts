@@ -11,6 +11,7 @@ import type {
   TripComparisonTrip,
 } from '../types/tripComparison.types';
 import type { BudgetSummary } from '../types/expense.types';
+import { findUserPreferences } from './_shared/userSettings';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -30,6 +31,20 @@ function inclusiveDays(start: Date | null, end: Date | null): number | null {
 
 function dateOnlyIso(value: Date | null): string | null {
   return value ? value.toISOString().split('T')[0] : null;
+}
+
+/** The most common code in a tally (ties go to the code seen first), or null when empty. */
+function dominantCountry(tally: Map<string, number> | undefined): string | null {
+  if (!tally) return null;
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [code, count] of tally) {
+    if (count > bestCount) {
+      best = code;
+      bestCount = count;
+    }
+  }
+  return best;
 }
 
 class TripComparisonService {
@@ -109,13 +124,14 @@ class TripComparisonService {
             tripId: true,
             name: true,
             address: true,
+            countryCode: true,
             latitude: true,
             longitude: true,
             excludeFromMap: true,
           },
           orderBy: { id: 'asc' },
         }),
-        prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
+        findUserPreferences(userId),
       ]);
 
     const countMap = (rows: Array<{ tripId: number; _count: { _all: number } }>) =>
@@ -126,9 +142,16 @@ class TripComparisonService {
     const distances = new Map(distanceSums.map((row) => [row.tripId, row._sum.calculatedDistance]));
 
     const locationCounts = new Map<number, number>();
+    // Per trip: how many of its locations are in each country, for the "which country" fallback.
+    const countryTallies = new Map<number, Map<string, number>>();
     const mapLocations: TripComparisonLocation[] = [];
     for (const loc of locationRows) {
       locationCounts.set(loc.tripId, (locationCounts.get(loc.tripId) ?? 0) + 1);
+      if (loc.countryCode) {
+        const tally = countryTallies.get(loc.tripId) ?? new Map<string, number>();
+        tally.set(loc.countryCode, (tally.get(loc.countryCode) ?? 0) + 1);
+        countryTallies.set(loc.tripId, tally);
+      }
       if (loc.excludeFromMap || loc.latitude === null || loc.longitude === null) continue;
       mapLocations.push({
         id: loc.id,
@@ -166,7 +189,8 @@ class TripComparisonService {
         startDate: dateOnlyIso(trip.startDate),
         endDate: dateOnlyIso(trip.endDate),
         days,
-        countryCode: trip.countryCode,
+        // The trip's manual override wins; otherwise the country most of its locations are in.
+        countryCode: trip.countryCode ?? dominantCountry(countryTallies.get(id)),
         isOwner: trip.userId === userId,
         locationCount: locationCounts.get(id) ?? 0,
         activityCount: activities.get(id) ?? 0,

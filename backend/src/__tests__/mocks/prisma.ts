@@ -122,6 +122,10 @@ export const mockPrismaClient = {
   // EntityLink model
   entityLink: createMockModelDelegate(),
 
+  // TripExpense model (a booking's cost is its linked expense row)
+  tripExpense: createMockModelDelegate(),
+  tripExpenseSplit: createMockModelDelegate(),
+
   // Transaction support
   $transaction: jest.fn((callback: unknown) => {
     // If callback is a function, execute it with the mock client
@@ -145,7 +149,7 @@ export const mockPrismaClient = {
   $connect: jest.fn(),
   $disconnect: jest.fn(),
 
-  // Extensions support (used for PostGIS)
+  // Extensions support
   $extends: jest.fn().mockReturnThis(),
 };
 
@@ -191,6 +195,10 @@ export const resetPrismaMocks = (): void => {
   resetModel(mockPrismaClient.checklistItem);
   resetModel(mockPrismaClient.routeCache);
   resetModel(mockPrismaClient.entityLink);
+  resetModel(mockPrismaClient.tripExpense);
+  resetModel(mockPrismaClient.tripExpenseSplit);
+  // Deleting a booking looks up the receipt files of its cost row first: none by default.
+  mockPrismaClient.tripExpense.findMany.mockResolvedValue([]);
 
   // Reset top-level methods
   mockPrismaClient.$transaction.mockReset();

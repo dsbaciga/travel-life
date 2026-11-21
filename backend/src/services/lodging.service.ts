@@ -9,13 +9,24 @@ import {
 import {
   verifyTripAccessWithPermission,
   verifyEntityAccessWithPermission,
+  verifyEntityInTrip,
 } from '../services/_shared/tripAccess';
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import loyaltyProgramService from './loyaltyProgram.service';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
+import { locationWithAddressSelect } from '../prisma/prismaIncludes';
+import {
+  buildBookingCostCreate,
+  costExpenseInclude,
+  costExpenseSelect,
+  hydrateBookingCost,
+  syncBookingCost,
+} from '../services/_shared/bookingCost';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// The stay's place is the direct `locationId` FK (not an EntityLink). Responses carry
+// `locationId` plus a small `location` object.
 
 class LodgingService {
   async createLodging(userId: number, data: CreateLodgingInput) {
@@ -26,54 +37,67 @@ class LodgingService {
       await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
     }
 
-    // Note: Location association is handled via EntityLink system after creation
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, data.tripId);
+    }
+
+    const checkInDate = data.checkInDate ? new Date(data.checkInDate) : new Date();
+    const costExpense = await buildBookingCostCreate(
+      prisma,
+      data.tripId,
+      { kind: 'lodging', name: data.name, checkInDate, timezone: data.timezone || null },
+      { cost: data.cost, currency: data.currency }
+    );
+
     const lodging = await prisma.lodging.create({
       data: {
         tripId: data.tripId,
+        locationId: data.locationId || null,
         type: data.type,
         name: data.name,
         address: data.address || null,
-        checkInDate: data.checkInDate ? new Date(data.checkInDate) : new Date(),
+        checkInDate,
         checkOutDate: data.checkOutDate ? new Date(data.checkOutDate) : new Date(),
         timezone: data.timezone || null,
         confirmationNumber: data.confirmationNumber || null,
         loyaltyProgramId: data.loyaltyProgramId || null,
-        cost: data.cost !== undefined ? data.cost : null,
-        currency: data.currency || null,
+        costExpense,
         bookingUrl: data.bookingUrl || null,
         notes: data.notes || null,
       },
+      include: { location: { select: locationWithAddressSelect }, ...costExpenseInclude },
     });
 
-    return convertDecimals(lodging);
+    return convertDecimals(hydrateBookingCost(lodging));
   }
 
   async getLodgingByTrip(userId: number, tripId: number) {
     // Verify user has view permission on the trip
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const lodgings = await prisma.lodging.findMany({
       where: { tripId },
+      include: { location: { select: locationWithAddressSelect }, ...costExpenseInclude },
       orderBy: [{ checkInDate: 'asc' }, { createdAt: 'asc' }],
     });
 
-    return convertDecimals(lodgings);
+    return convertDecimals(lodgings.map((lodging) => hydrateBookingCost(lodging)));
   }
 
   async getLodgingById(userId: number, lodgingId: number) {
     // Verify user has view permission on the lodging's trip
     await verifyEntityAccessWithPermission('lodging', lodgingId, userId, 'view');
 
-    // Note: Location association is fetched via EntityLink system, not direct FK
     const lodging = await prisma.lodging.findUnique({
       where: { id: lodgingId },
       include: {
         trip: true,
+        location: { select: locationWithAddressSelect },
+        ...costExpenseInclude,
       },
     });
 
-    return convertDecimals(lodging);
+    return convertDecimals(lodging ? hydrateBookingCost(lodging) : lodging);
   }
 
   async updateLodging(
@@ -82,10 +106,14 @@ class LodgingService {
     data: UpdateLodgingInput
   ) {
     // Verify user has edit permission on the lodging's trip
-    await verifyEntityAccessWithPermission('lodging', lodgingId, userId, 'edit');
+    const { entity: existing } = await verifyEntityAccessWithPermission<{ tripId: number }>('lodging', lodgingId, userId, 'edit');
 
     if (data.loyaltyProgramId) {
       await loyaltyProgramService.assertOwnedBy(userId, data.loyaltyProgramId);
+    }
+
+    if (data.locationId) {
+      await verifyEntityInTrip('location', data.locationId, existing.tripId);
     }
 
     // Transformer for date fields: convert to Date if truthy, skip update if null/undefined.
@@ -94,21 +122,33 @@ class LodgingService {
     const dateTransformer = (val: string | null | undefined) =>
       val ? new Date(val) : undefined;
 
-    // Note: Location association is handled via EntityLink system, not direct FK
-    const updateData: Prisma.LodgingUncheckedUpdateInput = buildConditionalUpdateData(data, {
+    // The cost lives on the expense row of the stay (see syncBookingCost), not on the lodging.
+    const { cost, currency, ...lodgingData } = data;
+    const updateData: Prisma.LodgingUncheckedUpdateInput = buildConditionalUpdateData(lodgingData, {
       transformers: {
         checkInDate: dateTransformer,
         checkOutDate: dateTransformer,
       },
     });
 
-    const updatedLodging = await prisma.lodging.update({
-      where: { id: lodgingId },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
-      data: updateData,
+    const { updatedLodging, costExpense, receiptPaths } = await prisma.$transaction(async (tx) => {
+      const row = await tx.lodging.update({
+        where: { id: lodgingId },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- buildConditionalUpdateData returns Partial which is incompatible with Prisma's Exact type
+        data: updateData,
+        include: { location: { select: locationWithAddressSelect } },
+      });
+      const sync = await syncBookingCost(tx, 'lodging', lodgingId, {
+        cost,
+        currency,
+        refresh: data.name !== undefined || data.checkInDate !== undefined || data.timezone !== undefined,
+      });
+      const linked = await tx.tripExpense.findUnique({ where: { lodgingId }, select: costExpenseSelect });
+      return { updatedLodging: row, costExpense: linked, receiptPaths: sync.receiptPaths };
     });
+    await deleteReceiptFiles(receiptPaths);
 
-    return convertDecimals(updatedLodging);
+    return convertDecimals(hydrateBookingCost({ ...updatedLodging, costExpense }));
   }
 
   async deleteLodging(userId: number, lodgingId: number) {

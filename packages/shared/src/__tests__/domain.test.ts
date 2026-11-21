@@ -77,8 +77,8 @@ describe('entity link rules', () => {
     expect(getDefaultRelationship('PHOTO', 'LOCATION')).toBe('TAKEN_AT');
     expect(getDefaultRelationship('PHOTO', 'PHOTO_ALBUM')).toBe('FEATURED_IN');
     expect(getDefaultRelationship('PHOTO', 'JOURNAL_ENTRY')).toBe('FEATURED_IN');
-    expect(getDefaultRelationship('ACTIVITY', 'LOCATION')).toBe('OCCURRED_AT');
-    expect(getDefaultRelationship('LODGING', 'LOCATION')).toBe('OCCURRED_AT');
+    expect(getDefaultRelationship('ACTIVITY', 'LOCATION')).toBe('RELATED');
+    expect(getDefaultRelationship('LODGING', 'LOCATION')).toBe('RELATED');
     expect(getDefaultRelationship('JOURNAL_ENTRY', 'ACTIVITY')).toBe('DOCUMENTS');
     expect(getDefaultRelationship('SAVED_LINK', 'ACTIVITY')).toBe('RELATED');
     expect(getDefaultRelationship('PHOTO', 'ACTIVITY')).toBe('RELATED');

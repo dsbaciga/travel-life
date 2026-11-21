@@ -19,51 +19,19 @@ model User {
   passwordHash           String   @map("password_hash") @db.VarChar(255)
   avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
   timezone               String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
-  activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
-  tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
-  dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
-  immichApiUrl           String?  @map("immich_api_url") @db.VarChar(500)
-  immichApiKey           String?  @map("immich_api_key") @db.VarChar(500)
-  weatherApiKey          String?  @map("weather_api_key") @db.VarChar(500)
-  aviationstackApiKey    String?  @map("aviationstack_api_key") @db.VarChar(500)
-  openrouteserviceApiKey String?  @map("openrouteservice_api_key") @db.VarChar(500)
-  llmApiKey              String?  @map("llm_api_key") @db.VarChar(500)
-  llmBaseUrl             String?  @map("llm_base_url") @db.VarChar(500)
-  llmModel               String?  @map("llm_model") @db.VarChar(200)
-  smtpProvider           String?  @map("smtp_provider") @db.VarChar(50)
-  smtpHost               String?  @map("smtp_host") @db.VarChar(500)
-  smtpPort               Int?     @map("smtp_port")
-  smtpSecure             Boolean? @map("smtp_secure")
-  smtpUser               String?  @map("smtp_user") @db.VarChar(500)
-  smtpPassword           String?  @map("smtp_password") @db.VarChar(500)
-  smtpFrom               String?  @map("smtp_from") @db.VarChar(500)
   passwordVersion        Int      @default(0) @map("password_version")
   oidcSubject            String?  @unique @map("oidc_subject") @db.VarChar(500) // "issuer|sub" identity from OIDC single sign-on
   calendarToken          String?  @unique @map("calendar_token") @db.VarChar(64) // Secret token for the read-only iCal feed URL
-  // Extra From addresses trusted to forward links to the ingest mailbox, on top
-  // of this user's own `email`. Per-user rather than a global env list, because
-  // a global list cannot say which user an address belongs to.
-  linkIngestSenders      Json     @default("[]") @map("link_ingest_senders")
-  useCustomMapStyle      Boolean  @default(true) @map("use_custom_map_style")
-  // Home currency (ISO 4217) that mixed-currency budget totals are reported in.
-  // Null means "no home currency chosen" — totals fall back to the trip's
-  // budgetCurrency, then to the most common currency among the costed items.
-  baseCurrency           String?  @map("base_currency") @db.VarChar(3)
-  // Which external maps/rideshare app the "Directions" deep links open by
-  // default (apple | google | citymapper | uber | lyft). Null = no preference,
-  // the UI then just lists every app that can handle the route.
-  preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
-  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
-  // Travel Partner Settings (bidirectional - both users share with each other)
+  // Travel partner link (the permission level lives in user_preferences.defaultPartnerPermission)
   travelPartnerId          Int?   @map("travel_partner_id")
-  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin
 
   trips                   Trip[]
   tags                    TripTag[]
-  companions              TravelCompanion[]
+  companions              TravelCompanion[]  @relation("CompanionOwner")
+  linkedCompanions        TravelCompanion[]  @relation("CompanionLinkedUser")
   locationCategories      LocationCategory[]
   tripCollaborators       TripCollaborator[]
   checklists              Checklist[]
@@ -89,8 +57,69 @@ model User {
   travelPartner User?  @relation("TravelPartner", fields: [travelPartnerId], references: [id], onDelete: SetNull)
   partnerOf     User[] @relation("TravelPartner")
 
+  integrations UserIntegrations?
+  preferences  UserPreferences?
+
   @@index([travelPartnerId])
   @@map("users")
+}
+
+// Third-party integration settings of one user (Immich, weather, flight tracking, routing, LLM, SMTP),
+// split out of `users` in migration 20261124000000_split_user_table so that loading a user never loads
+// a secret by accident. Every user has exactly one row (created with the user; the accessors in
+// services/_shared/userSettings.ts also create a missing one on demand). API keys and the SMTP password are
+// stored as ciphertext produced by security/encryption.ts, exactly as they were on `users`.
+model UserIntegrations {
+  userId                 Int      @id @map("user_id")
+  immichApiUrl           String?  @map("immich_api_url") @db.VarChar(500)
+  immichApiKey           String?  @map("immich_api_key") @db.VarChar(500)
+  weatherApiKey          String?  @map("weather_api_key") @db.VarChar(500)
+  aviationstackApiKey    String?  @map("aviationstack_api_key") @db.VarChar(500)
+  openrouteserviceApiKey String?  @map("openrouteservice_api_key") @db.VarChar(500)
+  llmApiKey              String?  @map("llm_api_key") @db.VarChar(500)
+  llmBaseUrl             String?  @map("llm_base_url") @db.VarChar(500)
+  llmModel               String?  @map("llm_model") @db.VarChar(200)
+  smtpProvider           String?  @map("smtp_provider") @db.VarChar(50)
+  smtpHost               String?  @map("smtp_host") @db.VarChar(500)
+  smtpPort               Int?     @map("smtp_port")
+  smtpSecure             Boolean? @map("smtp_secure")
+  smtpUser               String?  @map("smtp_user") @db.VarChar(500)
+  smtpPassword           String?  @map("smtp_password") @db.VarChar(500)
+  smtpFrom               String?  @map("smtp_from") @db.VarChar(500)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_integrations")
+}
+
+// Display and behaviour preferences of one user, split out of `users` in migration
+// 20261124000000_split_user_table. Every user has exactly one row, created with the user.
+model UserPreferences {
+  userId                   Int      @id @map("user_id")
+  activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
+  tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
+  dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
+  // Extra From addresses trusted to forward links to the ingest mailbox, on top
+  // of this user's own `email`. Per-user rather than a global env list, because
+  // a global list cannot say which user an address belongs to.
+  linkIngestSenders      Json     @default("[]") @map("link_ingest_senders")
+  useCustomMapStyle      Boolean  @default(true) @map("use_custom_map_style")
+  // Home currency (ISO 4217) that mixed-currency budget totals are reported in.
+  // Null means "no home currency chosen" — totals fall back to the trip's
+  // budgetCurrency, then to the most common currency among the costed items.
+  baseCurrency           String?  @map("base_currency") @db.VarChar(3)
+  // Which external maps/rideshare app the "Directions" deep links open by
+  // default (apple | google | citymapper | uber | lyft). Null = no preference,
+  // the UI then just lists every app that can handle the route.
+  preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  // CHECK user_preferences_measurement_system_check (migration 20261124000000_split_user_table) limits it to imperial | metric;
+  // Prisma cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
+  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
+  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin. CHECK user_preferences_default_partner_permission_check (migration 20261126000000_add_vocabulary_checks)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }
 
 model Trip {
@@ -101,10 +130,10 @@ model Trip {
   startDate               DateTime? @map("start_date") @db.Date
   endDate                 DateTime? @map("end_date") @db.Date
   timezone                String?   @db.VarChar(100)
-  status                  String    @default("planning") @db.VarChar(50) // Dream, Planning, Planned, In Progress, Completed, Cancelled
+  status                  String    @default("planning") @db.VarChar(50) // Dream, Planning, Planned, In Progress, Completed, Cancelled. CHECK trips_status_check (migration 20261126000000_add_vocabulary_checks) also allows the column default 'planning'
   tripType                String?   @map("trip_type") @db.VarChar(100)
   tripTypeEmoji           String?   @map("trip_type_emoji") @db.VarChar(50)
-  privacyLevel            String    @default("private") @map("privacy_level") @db.VarChar(50) // Private, Shared, Public
+  privacyLevel            String    @default("private") @map("privacy_level") @db.VarChar(50) // Private, Shared, Public. CHECK trips_privacy_level_check (migration 20261126000000_add_vocabulary_checks) also allows the column default 'private'
   shareToken              String?   @unique @map("share_token") @db.VarChar(64)
   shareEnabled            Boolean   @default(false) @map("share_enabled")
   archived                Boolean   @default(false)
@@ -221,7 +250,12 @@ model TravelCompanion {
   phone              String?  @db.VarChar(20)
   notes              String?  @db.Text
   relationship       String?  @db.VarChar(255)
+  // The user's own entry in their address book. At most one per user (partial unique index
+  // travel_companions_user_id_is_myself_key WHERE is_myself, migration 20261122000000, which Prisma
+  // cannot represent). It is also how the trip owner appears as an expense payer / split participant.
   isMyself           Boolean  @default(false) @map("is_myself")
+  // The account this companion IS (set for the isMyself row: = userId). Null for other people.
+  linkedUserId       Int?     @map("linked_user_id")
   avatarUrl          String?  @map("avatar_url") @db.VarChar(500)
   dietaryPreferences Json     @default("[]") @map("dietary_preferences")
   // Emergency-card medical fields. `allergies` mirrors `dietaryPreferences`
@@ -234,13 +268,15 @@ model TravelCompanion {
   allergies          Json     @default("[]")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User               @relation("CompanionOwner", fields: [userId], references: [id], onDelete: Cascade)
+  linkedUser      User?              @relation("CompanionLinkedUser", fields: [linkedUserId], references: [id], onDelete: SetNull)
   tripAssignments TripCompanion[]
   paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
   expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
 
   @@index([userId])
   @@index([avatarUrl])
+  @@index([linkedUserId])
   @@map("travel_companions")
 }
 
@@ -261,7 +297,7 @@ model TripCollaborator {
   id              Int      @id @default(autoincrement())
   tripId          Int      @map("trip_id")
   userId          Int      @map("user_id")
-  permissionLevel String   @map("permission_level") @db.VarChar(50) // view, edit, admin
+  permissionLevel String   @map("permission_level") @db.VarChar(50) // view, edit, admin. CHECK trip_collaborators_permission_level_check (migration 20261126000000_add_vocabulary_checks)
   createdAt       DateTime @default(now()) @map("created_at")
 
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -276,9 +312,9 @@ model TripInvitation {
   tripId          Int       @map("trip_id")
   invitedByUserId Int       @map("invited_by_user_id")
   email           String    @db.VarChar(255)
-  permissionLevel String    @map("permission_level") @db.VarChar(50) // view, edit, admin
+  permissionLevel String    @map("permission_level") @db.VarChar(50) // view, edit, admin. CHECK trip_invitations_permission_level_check (migration 20261126000000_add_vocabulary_checks)
   token           String    @unique @db.VarChar(255) // Unique token for accepting invitation
-  status          String    @default("pending") @db.VarChar(50) // pending, accepted, declined, expired
+  status          String    @default("pending") @db.VarChar(50) // pending, accepted, declined, expired. CHECK trip_invitations_status_check (migration 20261126000000_add_vocabulary_checks)
   message         String?   @db.Text // Optional personal message
   expiresAt       DateTime  @map("expires_at")
   respondedAt     DateTime? @map("responded_at")
@@ -288,7 +324,6 @@ model TripInvitation {
   invitedBy User @relation("InvitationsSent", fields: [invitedByUserId], references: [id], onDelete: Cascade)
 
   @@index([email])
-  @@index([token])
   @@index([tripId, status])
   @@map("trip_invitations")
 }
@@ -299,6 +334,10 @@ model Location {
   parentId             Int?                                   @map("parent_id")
   name                 String                                 @db.VarChar(500)
   address              String?                                @db.Text
+  // ISO 3166-1 alpha-2, upper case. CHECK locations_country_code_format_check (migration
+  // 20261121000000_add_structured_country_codes). Set from the geocoder when the client knows it,
+  // otherwise derived from the address text; null when neither is recognisable.
+  countryCode          String?                                @map("country_code") @db.VarChar(2)
   latitude             Decimal?                               @db.Decimal(10, 8)
   longitude            Decimal?                               @db.Decimal(11, 8)
   categoryId           Int?                                   @map("category_id")
@@ -315,11 +354,10 @@ model Location {
   openingHours         String?                                @map("opening_hours") @db.Text
   // Where openingHours came from: 'osm' (auto-populated from Nominatim) or 'manual' (user entered).
   // A 'manual' value is never overwritten by the automatic OSM lookup.
-  openingHoursSource   String?                                @map("opening_hours_source") @db.VarChar(20)
+  openingHoursSource   String?                                @map("opening_hours_source") @db.VarChar(20) // osm, manual or NULL. CHECK locations_opening_hours_source_check (migration 20261126000000_add_vocabulary_checks)
   // IANA timezone of the place itself (NOT the user's or the trip's). Opening hours are
   // wall-clock times in this zone. Auto-derived from coordinates via tz-lookup, user-overridable.
   timezone             String?                                @db.VarChar(100)
-  coordinates          Unsupported("geography(Point, 4326)")?
   createdAt            DateTime                               @default(now()) @map("created_at")
   updatedAt            DateTime                               @updatedAt @map("updated_at")
 
@@ -327,18 +365,20 @@ model Location {
   category             LocationCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   parent               Location?         @relation("LocationChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children             Location[]        @relation("LocationChildren")
-  // Note: Activity, Lodging, and PhotoAlbum associations are handled via EntityLink system, not direct FKs
+  // Activity and Lodging point here through a direct FK (location_id); PhotoAlbum associations
+  // still go through the EntityLink system.
+  activities           Activity[]
+  lodgings             Lodging[]
   transportationStarts Transportation[]  @relation("StartLocation")
   transportationEnds   Transportation[]  @relation("EndLocation")
   weatherData          WeatherData[]
   customItems          CustomItem[]
   tripStops            TripStop[]
+  foodLogEntries       FoodLogEntry[]
 
-  @@index([tripId])
   @@index([parentId])
-  @@index([coordinates], type: Gist)
+  @@index([tripId, countryCode])
   @@map("locations")
-  foodLogEntries FoodLogEntry[]
 }
 
 model LocationCategory {
@@ -389,7 +429,6 @@ model CustomItemType {
   items CustomItem[]
 
   @@unique([userId, name])
-  @@index([userId])
   @@map("custom_item_types")
 }
 
@@ -410,14 +449,8 @@ model CustomItem {
   // unambiguous location. An EntityLink to a LOCATION remains possible and
   // means the weaker "related to".
   locationId         Int?      @map("location_id")
-  // DB-level CHECK ("cost" >= 0) named `custom_item_cost_non_negative`. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal?  @db.Decimal(10, 2)
-  currency           String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?   @map("base_currency") @db.VarChar(3)
+  // The item's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   // Text, not VarChar(500): real booking URLs with query strings exceed 500
   // chars. The SavedLink.url precedent.
   url                String?   @db.Text
@@ -425,11 +458,11 @@ model CustomItem {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
 
-  trip     Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  type     CustomItemType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
-  location Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  trip        Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  type        CustomItemType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  location    Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  costExpense TripExpense?
 
-  @@index([tripId])
   @@index([tripId, startTime])
   @@index([typeId])
   @@index([locationId])
@@ -439,8 +472,8 @@ model CustomItem {
 model Photo {
   id            Int                                    @id @default(autoincrement())
   tripId        Int                                    @map("trip_id")
-  source        String                                 @default("local") @db.VarChar(50) // 'local' or 'immich'
-  mediaType     String                                 @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'
+  source        String                                 @default("local") @db.VarChar(50) // 'local' or 'immich'. CHECK photos_source_check (migration 20261126000000_add_vocabulary_checks)
+  mediaType     String                                 @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'. CHECK photos_media_type_check (migration 20261126000000_add_vocabulary_checks)
   immichAssetId String?                                @map("immich_asset_id") @db.VarChar(255)
   localPath     String?                                @map("local_path") @db.VarChar(500)
   thumbnailPath String?                                @map("thumbnail_path") @db.VarChar(500)
@@ -450,7 +483,6 @@ model Photo {
   longitude     Decimal?                               @db.Decimal(11, 8)
   takenAt       DateTime?                              @map("taken_at")
   isFavorite    Boolean                                @default(false) @map("is_favorite")
-  coordinates   Unsupported("geography(Point, 4326)")?
   uploadedAt    DateTime                               @default(now()) @map("uploaded_at")
   createdAt     DateTime                               @default(now()) @map("created_at")
   updatedAt     DateTime                               @updatedAt @map("updated_at")
@@ -465,11 +497,9 @@ model Photo {
   @@unique([tripId, immichAssetId])
   @@index([tripId, takenAt])
   @@index([tripId, isFavorite])
-  @@index([tripId])
   @@index([takenAt])
   @@index([localPath])
   @@index([thumbnailPath])
-  @@index([coordinates], type: Gist)
   @@map("photos")
 }
 
@@ -506,7 +536,6 @@ model PhotoAlbumAssignment {
   photo Photo      @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@unique([albumId, photoId])
-  @@index([albumId])
   @@index([photoId])
   @@map("photo_album_assignments")
 }
@@ -515,6 +544,10 @@ model Activity {
   id               Int       @id @default(autoincrement())
   tripId           Int       @map("trip_id")
   parentId         Int?      @map("parent_id")
+  // Where the activity takes place: the single source of truth for "is at" (replaces the
+  // ACTIVITY -> LOCATION entity link). ON DELETE SET NULL, added in migration
+  // 20261120000000_add_activity_lodging_location_fk.
+  locationId       Int?      @map("location_id")
   name             String    @db.VarChar(500)
   description      String?   @db.Text
   category         String?   @db.VarChar(100) // sightseeing, dining, adventure, entertainment, etc.
@@ -522,15 +555,8 @@ model Activity {
   startTime        DateTime? @map("start_time")
   endTime          DateTime? @map("end_time")
   timezone         String?   @db.VarChar(100)
-  // DB-level CHECK ("cost" >= 0) named `activity_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost             Decimal?  @db.Decimal(10, 2)
-  currency         String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate     Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount       Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency     String?   @map("base_currency") @db.VarChar(3)
+  // The activity's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   bookingUrl       String?   @map("booking_url") @db.VarChar(500)
   bookingReference String?   @map("booking_reference") @db.VarChar(255)
   notes            String?   @db.Text
@@ -539,18 +565,19 @@ model Activity {
   updatedAt        DateTime  @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  // Note: Location association is handled via EntityLink system, not direct FK
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   parent           Activity?         @relation("ActivityChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children         Activity[]        @relation("ActivityChildren")
   dietaryTags      Json?             @map("dietary_tags")
   bookingDeadlines BookingDeadline[]
+  foodLogEntries   FoodLogEntry[]
+  costExpense      TripExpense?
 
-  @@index([tripId])
   @@index([parentId])
+  @@index([locationId])
   @@index([tripId, manualOrder])
   @@index([startTime])
   @@map("activities")
-  foodLogEntries FoodLogEntry[]
 }
 
 model Transportation {
@@ -572,23 +599,16 @@ model Transportation {
   seatNumber         String?   @map("seat_number") @db.VarChar(50)
   bookingReference   String?   @map("booking_reference") @db.VarChar(255)
   bookingUrl         String?   @map("booking_url") @db.VarChar(500)
-  // DB-level CHECK ("cost" >= 0) named `transportation_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal?  @db.Decimal(10, 2)
-  currency           String?   @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal?  @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal?  @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?   @map("base_currency") @db.VarChar(3)
-  status             String    @default("on_time") @db.VarChar(50) // on_time, delayed, cancelled
+  // The leg's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
+  status             String    @default("on_time") @db.VarChar(50) // on_time, delayed, cancelled. CHECK transportation_status_check (migration 20261126000000_add_vocabulary_checks)
   delayMinutes       Int?      @map("delay_minutes")
   notes              String?   @db.Text
   connectionGroupId  String?   @map("connection_group_id") @db.VarChar(100)
   isAutoGenerated    Boolean   @default(false) @map("is_auto_generated")
   calculatedDistance Decimal?  @map("calculated_distance") @db.Decimal(10, 2) // Route distance in kilometers
   calculatedDuration Decimal?  @map("calculated_duration") @db.Decimal(10, 2) // Route duration in minutes
-  distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine'
+  distanceSource     String?   @map("distance_source") @db.VarChar(20) // 'route' or 'haversine' or NULL. CHECK transportation_distance_source_check (migration 20261126000000_add_vocabulary_checks)
   // Which of the booking user's loyalty programs this leg was booked under. A reference only:
   // the membership number itself stays on LoyaltyProgram and is never copied here.
   loyaltyProgramId   Int?      @map("loyalty_program_id")
@@ -601,6 +621,7 @@ model Transportation {
   flightTracking   FlightTracking?
   bookingDeadlines BookingDeadline[]
   loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
+  costExpense      TripExpense?
 
   @@index([tripId])
   @@index([loyaltyProgramId])
@@ -612,6 +633,9 @@ model Transportation {
 model Lodging {
   id                 Int      @id @default(autoincrement())
   tripId             Int      @map("trip_id")
+  // Where the stay is: the single source of truth for "is at" (replaces the LODGING -> LOCATION
+  // entity link). ON DELETE SET NULL, added in migration 20261120000000_add_activity_lodging_location_fk.
+  locationId         Int?     @map("location_id")
   type               String   @db.VarChar(50)
   name               String   @db.VarChar(500)
   address            String?  @db.VarChar(1000)
@@ -620,15 +644,8 @@ model Lodging {
   timezone           String?  @db.VarChar(100)
   confirmationNumber String?  @map("confirmation_number") @db.VarChar(255)
   bookingUrl         String?  @map("booking_url") @db.VarChar(500)
-  // DB-level CHECK ("cost" >= 0) named `lodging_cost_non_negative` — added in
-  // migration 20260220000000_add_cost_check_constraints_and_defaults. Prisma
-  // cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  cost               Decimal? @db.Decimal(10, 2)
-  currency           String?  @db.VarChar(3)
-  // FX snapshot — see the "Currency conversion" note above ExchangeRate.
-  exchangeRate       Decimal? @map("exchange_rate") @db.Decimal(20, 10)
-  baseAmount         Decimal? @map("base_amount") @db.Decimal(12, 2)
-  baseCurrency       String?  @map("base_currency") @db.VarChar(3)
+  // The stay's cost (cost, currency and FX snapshot) is the TripExpense row linked through
+  // `costExpense`; services/_shared/bookingCost.ts hydrates it back into the API shape.
   notes              String?  @db.Text
   // Which of the booking user's loyalty programs this stay was booked under. A reference only:
   // the membership number itself stays on LoyaltyProgram and is never copied here.
@@ -637,11 +654,13 @@ model Lodging {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   trip             Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  // Note: Location association is handled via EntityLink system, not direct FK
+  location         Location?         @relation(fields: [locationId], references: [id], onDelete: SetNull)
   bookingDeadlines BookingDeadline[]
   loyaltyProgram   LoyaltyProgram?   @relation(fields: [loyaltyProgramId], references: [id], onDelete: SetNull)
+  costExpense      TripExpense?
 
   @@index([tripId])
+  @@index([locationId])
   @@index([loyaltyProgramId])
   @@index([checkInDate])
   @@index([checkOutDate])
@@ -664,9 +683,8 @@ model TripExpense {
   baseCurrency      String?   @map("base_currency") @db.VarChar(3)
   date              DateTime? @db.Date
   notes             String?   @db.Text
-  // Expense splitting (#97). The payer is the trip owner (paidByOwner) OR a companion
-  // (paidByCompanionId) - never both (CHECK trip_expenses_one_payer); neither = not recorded.
-  paidByOwner       Boolean   @default(false) @map("paid_by_owner")
+  // Expense splitting (#97). The payer is always a companion; the trip owner is their "myself"
+  // companion (isMyself, see services/_shared/ownerCompanion.ts). Null = not recorded.
   paidByCompanionId Int?      @map("paid_by_companion_id")
   splitMethod       String?   @map("split_method") @db.VarChar(20) // equal, amount, percentage
   // Receipt photo (backlog #122): "/uploads/receipts/<uuid>.jpg" or null. The file is a normalised copy; never exported by backups.
@@ -674,38 +692,49 @@ model TripExpense {
   receiptMimeType   String?   @map("receipt_mime_type") @db.VarChar(50)
   receiptSizeBytes  Int?      @map("receipt_size_bytes")
   receiptUploadedAt DateTime? @map("receipt_uploaded_at")
+  // The booking this expense is the cost of, if any. At most one of the four is set (CHECK
+  // `trip_expenses_at_most_one_booking`, migration 20261123000000_every_cost_is_a_trip_expense) and a
+  // booking has at most one cost row (the unique indexes; NULLs never collide). Deleting the booking
+  // deletes its expense. A booking's cost, currency and FX snapshot live ONLY here. The unique index is
+  // a plain one rather than a partial one: Prisma needs @unique to model the 1:1 relation, and a unique
+  // index over a nullable column already allows any number of NULLs.
+  activityId        Int?      @unique @map("activity_id")
+  transportationId  Int?      @unique @map("transportation_id")
+  lodgingId         Int?      @unique @map("lodging_id")
+  customItemId      Int?      @unique @map("custom_item_id")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   trip            Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
   paidByCompanion TravelCompanion?   @relation("ExpensePaidBy", fields: [paidByCompanionId], references: [id], onDelete: SetNull)
   splits          TripExpenseSplit[]
+  activity        Activity?          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  transportation  Transportation?    @relation(fields: [transportationId], references: [id], onDelete: Cascade)
+  lodging         Lodging?           @relation(fields: [lodgingId], references: [id], onDelete: Cascade)
+  customItem      CustomItem?        @relation(fields: [customItemId], references: [id], onDelete: Cascade)
 
-  @@index([tripId])
   @@index([paidByCompanionId])
   // Matches the primary list query (order by date desc, created_at desc) in expense.service.ts
   @@index([tripId, date])
   @@map("trip_expenses")
 }
 
-// One participant's share of an expense, in the EXPENSE's own currency. Exactly one of
-// isOwner / companionId identifies the participant (CHECK trip_expense_splits_one_participant,
-// added in migration 20261116010000_add_expense_splits, which Prisma cannot represent).
-// A participant appears at most once per expense, and the shares sum exactly to the expense
-// amount; both are enforced in expenseSplit.service.ts.
+// One participant's share of an expense, in the EXPENSE's own currency. The participant is always
+// a companion (the trip owner is their "myself" companion), unique per expense. The shares sum
+// exactly to the expense amount, enforced in expenseSplit.service.ts. The old is_owner column and
+// its either-or CHECK were dropped in migration 20261122000000_one_representation_of_who_paid.
 model TripExpenseSplit {
   id          Int      @id @default(autoincrement())
   expenseId   Int      @map("expense_id")
-  isOwner     Boolean  @default(false) @map("is_owner")
-  companionId Int?     @map("companion_id")
+  companionId Int      @map("companion_id")
   amount      Decimal  @db.Decimal(10, 2)
   percentage  Decimal? @db.Decimal(7, 4) // only set for percentage splits
   createdAt   DateTime @default(now()) @map("created_at")
 
-  expense   TripExpense      @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  companion TravelCompanion? @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
+  expense   TripExpense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  companion TravelCompanion @relation("ExpenseSplitCompanion", fields: [companionId], references: [id], onDelete: Cascade)
 
-  @@index([expenseId])
+  @@unique([expenseId, companionId])
   @@index([companionId])
   @@map("trip_expense_splits")
 }
@@ -723,7 +752,7 @@ model BookingDeadline {
   lodgingId        Int?      @map("lodging_id")
   transportationId Int?      @map("transportation_id")
   activityId       Int?      @map("activity_id")
-  kind             String    @db.VarChar(30) // cancellation, check_in, payment, other
+  kind             String    @db.VarChar(30) // cancellation, check_in, payment, other. CHECK booking_deadlines_kind_check (migration 20261126000000_add_vocabulary_checks)
   title            String?   @db.VarChar(200) // names a deadline with no booking; required when lodging/transportation/activity are all null
   dueAt            DateTime  @map("due_at")
   note             String?   @db.VarChar(500)
@@ -754,14 +783,15 @@ model BookingDeadline {
 // ordering and holds every saved place, not just the route). locationId optionally links
 // a stop to a saved place; deleting that place keeps the stop (SetNull) because name and
 // coordinates are stored on the stop itself. Coordinates are range-checked by CHECK
-// constraints in migration 20261116080000_add_trip_stops.
+// constraints in migration 20261116080000_add_trip_stops (kept when 20261125000000 made the
+// columns Decimal). Services return plain numbers via convertDecimals.
 model TripStop {
   id         Int      @id @default(autoincrement())
   tripId     Int      @map("trip_id")
   locationId Int?     @map("location_id")
   name       String   @db.VarChar(200)
-  latitude   Float
-  longitude  Float
+  latitude   Decimal  @db.Decimal(10, 8)
+  longitude  Decimal  @db.Decimal(11, 8)
   position   Int
   nights     Int?
   createdAt  DateTime @default(now()) @map("created_at")
@@ -778,9 +808,9 @@ model TripStop {
 // =============================================================================
 // Currency conversion
 // =============================================================================
-// Costed records (TripExpense.amount, Activity/Transportation/Lodging.cost)
-// carry an FX snapshot: `exchangeRate` is the rate that was in effect on the
-// record's own date, `baseAmount` is amount * exchangeRate, and `baseCurrency`
+// Every costed record is a TripExpense (a booking's cost is its linked expense row,
+// see TripExpense.activityId and friends) and carries an FX snapshot: `exchangeRate`
+// is the rate that was in effect on the record's own date, `baseAmount` is amount * exchangeRate, and `baseCurrency`
 // names the currency `baseAmount` is expressed in. The snapshot is taken once
 // and then FROZEN — it is never recomputed from today's rates, so a past trip's
 // reported total does not drift. `baseCurrency` is stored per row precisely so
@@ -846,7 +876,6 @@ model WeatherData {
   // can change between refreshes and the service overwrites it in place), so including
   // it would let a location change re-introduce duplicate rows for the same day.
   @@unique([tripId, date])
-  @@index([tripId])
   @@index([locationId])
   @@map("weather_data")
 }
@@ -880,7 +909,7 @@ model Checklist {
   tripId      Int?     @map("trip_id")
   name        String   @db.VarChar(500)
   description String?  @db.Text
-  type        String   @db.VarChar(50) // 'custom', 'airports', 'countries', 'cities'
+  type        String   @db.VarChar(50) // custom, airports, countries, cities, us_states, souvenirs. CHECK checklists_type_check (migration 20261126000000_add_vocabulary_checks)
   isDefault   Boolean  @default(false) @map("is_default") // true for system-generated lists
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -984,6 +1013,12 @@ enum LinkRelationship {
   FEATURED_IN // Photo featured in album/journal
 }
 
+// Referential integrity: Prisma cannot express the AFTER DELETE triggers that remove a link when
+// either end is deleted (one per table an EntityType can name; function
+// entity_links_delete_for_deleted_row, migration 20261120000000_add_activity_lodging_location_fk).
+// `prisma db push` would NOT create them, so application code still calls cleanupEntityLinks.
+// "Activity / lodging is at a location" is NOT a link any more: see Activity.locationId and
+// Lodging.locationId.
 model EntityLink {
   id     Int @id @default(autoincrement())
   tripId Int @map("trip_id")
@@ -1007,7 +1042,6 @@ model EntityLink {
   // Prevent duplicate links
   @@unique([tripId, sourceType, sourceId, targetType, targetId])
   // Index for querying "what is linked FROM this entity"
-  @@index([tripId, sourceType, sourceId])
   // Index for querying "what is linked TO this entity"
   @@index([tripId, targetType, targetId])
   // Index for querying by source entity without tripId
@@ -1015,7 +1049,6 @@ model EntityLink {
   // Index for querying by target entity without tripId
   @@index([targetType, targetId])
   // Index for trip-level queries
-  @@index([tripId])
   @@map("entity_links")
 }
 
@@ -1044,7 +1077,6 @@ model DismissedValidationIssue {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, issueType, issueKey])
-  @@index([tripId])
   @@map("dismissed_validation_issues")
 }
 
@@ -1062,19 +1094,22 @@ enum TravelDocumentType {
 }
 
 model TravelDocument {
-  id              Int                @id @default(autoincrement())
-  userId          Int                @map("user_id")
-  type            TravelDocumentType
-  issuingCountry  String             @map("issuing_country") @db.VarChar(100)
-  documentNumber  String?            @map("document_number") @db.VarChar(255)
-  issueDate       DateTime?          @map("issue_date") @db.Date
-  expiryDate      DateTime?          @map("expiry_date") @db.Date
-  name            String             @db.VarChar(500) // Name on document or descriptive name
-  notes           String?            @db.Text
-  isPrimary       Boolean            @default(false) @map("is_primary")
-  alertDaysBefore Int                @default(180) @map("alert_days_before")
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  id                 Int                @id @default(autoincrement())
+  userId             Int                @map("user_id")
+  type               TravelDocumentType
+  issuingCountry     String             @map("issuing_country") @db.VarChar(100)
+  // ISO alpha-2 of issuingCountry (name kept for display). CHECK travel_documents_issuing_country_code_format_check
+  // (migration 20261121000000_add_structured_country_codes); null when the name is not recognised.
+  issuingCountryCode String?            @map("issuing_country_code") @db.VarChar(2)
+  documentNumber     String?            @map("document_number") @db.VarChar(255)
+  issueDate          DateTime?          @map("issue_date") @db.Date
+  expiryDate         DateTime?          @map("expiry_date") @db.Date
+  name               String             @db.VarChar(500) // Name on document or descriptive name
+  notes              String?            @db.Text
+  isPrimary          Boolean            @default(false) @map("is_primary")
+  alertDaysBefore    Int                @default(180) @map("alert_days_before")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1128,19 +1163,24 @@ model LoyaltyProgram {
 // Static reference data for visa requirements between countries
 
 model VisaRequirement {
-  id                 Int       @id @default(autoincrement())
-  passportCountry    String    @map("passport_country") @db.VarChar(100)
-  destinationCountry String    @map("destination_country") @db.VarChar(100)
-  visaRequired       Boolean   @map("visa_required")
-  visaType           String    @map("visa_type") @db.VarChar(50) // visa_free, visa_on_arrival, e_visa, visa_required
-  maxStayDays        Int?      @map("max_stay_days")
-  notes              String?   @db.Text
-  sourceUrl          String?   @map("source_url") @db.VarChar(500)
-  lastVerified       DateTime? @map("last_verified") @db.Date
+  id                     Int       @id @default(autoincrement())
+  passportCountry        String    @map("passport_country") @db.VarChar(100)
+  destinationCountry     String    @map("destination_country") @db.VarChar(100)
+  // ISO alpha-2 of the two name columns; CHECKs visa_requirements_{passport,destination}_country_code_format_check
+  // (migration 20261121000000_add_structured_country_codes). Lookups match codes first, then names.
+  passportCountryCode    String?   @map("passport_country_code") @db.VarChar(2)
+  destinationCountryCode String?   @map("destination_country_code") @db.VarChar(2)
+  visaRequired           Boolean   @map("visa_required")
+  visaType               String    @map("visa_type") @db.VarChar(50) // visa_free, visa_on_arrival, e_visa, visa_required
+  maxStayDays            Int?      @map("max_stay_days")
+  notes                  String?   @db.Text
+  sourceUrl              String?   @map("source_url") @db.VarChar(500)
+  lastVerified           DateTime? @map("last_verified") @db.Date
 
   @@unique([passportCountry, destinationCountry])
-  @@index([passportCountry])
   @@index([destinationCountry])
+  @@index([passportCountryCode])
+  @@index([destinationCountryCode])
   @@map("visa_requirements")
 }
 
@@ -1193,7 +1233,6 @@ model TripLanguage {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@unique([tripId, languageCode])
-  @@index([tripId])
   @@map("trip_languages")
 }
 
@@ -1213,7 +1252,6 @@ model LanguagePhrase {
   notes         String? @db.Text
   sortOrder     Int     @default(0) @map("sort_order")
 
-  @@index([languageCode])
   @@index([category])
   @@index([languageCode, category])
   @@map("language_phrases")
@@ -1234,7 +1272,6 @@ model PdfImport {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   pendingEntities PendingEntity[]
 
-  @@index([userId])
   @@index([userId, status])
   @@map("pdf_imports")
 }
@@ -1291,8 +1328,6 @@ model UserInvitation {
   invitedBy    User? @relation("UserInvitationsSent", fields: [invitedByUserId], references: [id], onDelete: SetNull)
   acceptedUser User? @relation("UserInvitationsAccepted", fields: [acceptedUserId], references: [id], onDelete: SetNull)
 
-  @@index([email])
-  @@index([token])
   @@index([status])
   @@index([invitedByUserId])
   @@index([email, status]) // Composite index for common email+status queries
@@ -1411,7 +1446,6 @@ model SavedLink {
   // SetNull so pruning ingest history never destroys the links it produced.
   emailIngest EmailIngest? @relation(fields: [emailIngestId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
   @@index([userId, tripId])
   @@index([tripId])
   @@index([emailIngestId])
@@ -1460,7 +1494,6 @@ model EmailIngest {
   user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   savedLinks SavedLink[]
 
-  @@index([userId])
   @@index([userId, status])
   @@index([status])
   @@map("email_ingests")
@@ -1513,7 +1546,6 @@ model FoodLogEntryPhoto {
   photo Photo        @relation(fields: [photoId], references: [id], onDelete: Cascade)
 
   @@unique([entryId, photoId])
-  @@index([entryId])
   @@index([photoId])
   @@map("food_log_entry_photos")
 }
@@ -1530,7 +1562,7 @@ model MobilePushToken {
   id         Int      @id @default(autoincrement())
   userId     Int      @map("user_id")
   token      String   @unique @db.VarChar(255)
-  platform   String   @db.VarChar(20) // 'ios' | 'android'
+  platform   String   @db.VarChar(20) // 'ios' | 'android'. CHECK mobile_push_tokens_platform_check (migration 20261126000000_add_vocabulary_checks)
   deviceName String?  @map("device_name") @db.VarChar(200)
   createdAt  DateTime @default(now()) @map("created_at")
   lastSeenAt DateTime @default(now()) @map("last_seen_at")

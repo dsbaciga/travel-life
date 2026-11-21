@@ -8,6 +8,7 @@ import logger from '../config/logger';
 import { RegisterInput, LoginInput, AuthResponse } from '../types/auth.types';
 import { companionService } from './companion.service';
 import { claimToken, hashToken } from './tokenBlacklist.service';
+import { defaultUserSettingsCreate, getUserPreferences } from './_shared/userSettings';
 
 /**
  * Remaining lifetime (ms) of a JWT from its `exp` claim.
@@ -86,6 +87,8 @@ export class AuthService {
         username: data.username,
         email: data.email,
         passwordHash,
+        // Every user has an integrations row and a preferences row from the start.
+        ...defaultUserSettingsCreate,
       },
     });
 
@@ -103,7 +106,7 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
-        measurementSystem: user.measurementSystem,
+        measurementSystem: null, // a new user has no preference yet
       },
       accessToken,
       refreshToken,
@@ -134,6 +137,8 @@ export class AuthService {
     // Ensure "Myself" companion exists for existing users (migration support)
     await companionService.createMyselfCompanion(user.id, user.username);
 
+    const prefs = await getUserPreferences(user.id);
+
     // Generate tokens with passwordVersion to support invalidation on password change
     const accessToken = generateAccessToken({ id: user.id, userId: user.id, email: user.email, passwordVersion: user.passwordVersion ?? 0 });
     const refreshToken = generateRefreshToken({ id: user.id, userId: user.id, email: user.email, passwordVersion: user.passwordVersion ?? 0 });
@@ -145,7 +150,7 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
-        measurementSystem: user.measurementSystem,
+        measurementSystem: prefs.measurementSystem,
       },
       accessToken,
       refreshToken,
@@ -219,7 +224,6 @@ export class AuthService {
           email: true,
           avatarUrl: true,
           timezone: true,
-          measurementSystem: true,
           passwordVersion: true,
         },
       });
@@ -235,6 +239,7 @@ export class AuthService {
       }
 
       // Generate new tokens with current passwordVersion
+      const prefs = await getUserPreferences(user.id);
       const accessToken = generateAccessToken({ id: user.id, userId: user.id, email: user.email, passwordVersion: user.passwordVersion });
       const refreshToken = generateRefreshToken({ id: user.id, userId: user.id, email: user.email, passwordVersion: user.passwordVersion });
 
@@ -252,7 +257,7 @@ export class AuthService {
           email: user.email,
           avatarUrl: user.avatarUrl,
           timezone: user.timezone,
-          measurementSystem: user.measurementSystem,
+          measurementSystem: prefs.measurementSystem,
         }
       };
 
@@ -284,6 +289,7 @@ export class AuthService {
     if (!user) {
       throw new AppError('User not found', 404);
     }
+    const prefs = await getUserPreferences(user.id);
     const payload = {
       id: user.id,
       userId: user.id,
@@ -297,7 +303,7 @@ export class AuthService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
-        measurementSystem: user.measurementSystem,
+        measurementSystem: prefs.measurementSystem,
       },
       accessToken: generateAccessToken(payload),
       refreshToken: generateRefreshToken(payload),
@@ -313,7 +319,6 @@ export class AuthService {
         email: true,
         avatarUrl: true,
         timezone: true,
-        measurementSystem: true,
         createdAt: true,
       },
     });
@@ -322,7 +327,17 @@ export class AuthService {
       throw new AppError('User not found', 404);
     }
 
-    return user;
+    const prefs = await getUserPreferences(userId);
+
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      timezone: user.timezone,
+      measurementSystem: prefs.measurementSystem,
+      createdAt: user.createdAt,
+    };
   }
 }
 

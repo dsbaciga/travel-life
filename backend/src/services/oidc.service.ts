@@ -10,6 +10,7 @@ import { hashPassword } from '../auth/password';
 import { generateAccessToken, generateRefreshToken } from '../auth/jwt';
 import { companionService } from './companion.service';
 import { AuthResponse } from '../types/auth.types';
+import { defaultUserSettingsCreate, getUserPreferences } from './_shared/userSettings';
 
 interface OidcDiscoveryDocument {
   issuer: string;
@@ -295,6 +296,8 @@ export class OidcService {
     // Ensure "Myself" companion exists (mirrors password login)
     await companionService.createMyselfCompanion(user.id, user.username);
 
+    const prefs = await getUserPreferences(user.id);
+
     // passwordVersion is non-nullable in the schema (@default(0)), so no fallback needed
     const payload = {
       id: user.id,
@@ -310,7 +313,7 @@ export class OidcService {
         email: user.email,
         avatarUrl: user.avatarUrl,
         timezone: user.timezone,
-        measurementSystem: user.measurementSystem,
+        measurementSystem: prefs.measurementSystem,
       },
       accessToken: generateAccessToken(payload),
       refreshToken: generateRefreshToken(payload),
@@ -445,6 +448,7 @@ export class OidcService {
         email,
         passwordHash,
         oidcSubject: subject,
+        ...defaultUserSettingsCreate,
       },
     });
   }

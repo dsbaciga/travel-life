@@ -4,6 +4,8 @@ import {
   optionalStringWithMax,
   optionalBoolean,
   optionalNotes,
+  countryCode,
+  optionalCountryCode,
 } from '../validation/zodHelpers';
 
 // Document types matching Prisma enum
@@ -39,6 +41,8 @@ export function maskDocumentNumber(documentNumber: string | null | undefined): s
 export const createTravelDocumentSchema = z.object({
   type: z.enum(DOCUMENT_TYPES),
   issuingCountry: requiredStringWithMax(100),
+  // ISO 3166-1 alpha-2; omit and the backend derives it from issuingCountry when it can.
+  issuingCountryCode: countryCode().optional().nullable(),
   documentNumber: z.string().max(255).optional(),
   issueDate: z.string().optional(),
   expiryDate: z.string().optional(),
@@ -54,6 +58,8 @@ export const updateTravelDocumentSchema = z.object({
   // issuingCountry and name are NOT NULL in the database: omit to leave unchanged,
   // but they can never be cleared
   issuingCountry: requiredStringWithMax(100).optional(),
+  // Changing issuingCountry without a code re-derives the code from the new name.
+  issuingCountryCode: optionalCountryCode(),
   documentNumber: optionalStringWithMax(255),
   issueDate: z.string().optional().nullable(),
   expiryDate: z.string().optional().nullable(),
@@ -73,6 +79,8 @@ export interface TravelDocumentResponse {
   userId: number;
   type: DocumentType;
   issuingCountry: string;
+  /** ISO 3166-1 alpha-2 of issuingCountry, or null when the name is not recognised. */
+  issuingCountryCode: string | null;
   documentNumber: string | null; // Always masked in responses
   issueDate: string | null;
   expiryDate: string | null;

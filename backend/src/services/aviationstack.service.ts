@@ -6,6 +6,7 @@ import { verifyTripAccess } from '../services/_shared/tripAccess';
 import { isAxiosError } from '../types/prisma-helpers';
 import pushNotificationService from './pushNotification.service';
 import { decryptSecret } from '../security/encryption';
+import { getUserIntegrations } from './_shared/userSettings';
 
 /**
  * AviationStack API Response Types
@@ -161,15 +162,7 @@ class AviationstackService {
     const transportation = await prisma.transportation.findUnique({
       where: { id: transportationId },
       include: {
-        trip: {
-          include: {
-            user: {
-              select: {
-                aviationstackApiKey: true,
-              },
-            },
-          },
-        },
+        trip: true,
         flightTracking: true,
       },
     });
@@ -187,7 +180,7 @@ class AviationstackService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = decryptSecret(transportation.trip.user.aviationstackApiKey) || this.API_KEY;
+    const apiKey = decryptSecret((await getUserIntegrations(transportation.trip.userId)).aviationstackApiKey) || this.API_KEY;
 
     if (!apiKey) {
       // No API key available - return existing cached data or null

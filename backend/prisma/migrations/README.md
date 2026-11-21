@@ -162,7 +162,7 @@ card and the local-norms card.
 | `20260728000000_add_weather_data_trip_date_unique` | De-duplicates `weather_data` (keeps the most recently fetched row per trip-day), then adds `UNIQUE (trip_id, date)`. Weather rows are a re-fetchable cache. |
 | `20260728010000_add_trip_expense_trip_date_index` | Adds `INDEX (trip_id, date)` on `trip_expenses`, matching the list query's sort. |
 | `20260728020000_add_trip_expense_amount_check` | Adds `CHECK (amount >= 0)` as `NOT VALID`, then validates it only if no negative rows exist. Cannot fail on legacy data. |
-| `20260728030000_backfill_postgis_coordinates` | One-time backfill of `locations.coordinates` / `photos.coordinates` from `latitude`/`longitude` where they are still `NULL`. |
+| `20260728030000_backfill_postgis_coordinates` | One-time backfill of `locations.coordinates` / `photos.coordinates` from `latitude`/`longitude` where they are still `NULL`. (Those columns were dropped later by `20261125000000_drop_spatial_columns_decimal_trip_stops`.) |
 
 All four are guarded (`IF NOT EXISTS` / `DO` blocks / narrow `WHERE` clauses), so they
 are idempotent and safe to re-run.

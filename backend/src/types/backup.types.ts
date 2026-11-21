@@ -10,7 +10,17 @@ import { z } from 'zod';
 //          trip budget/countryCode/archived/excludeFromAutoShare, user dietaryPreferences/
 //          useCustomMapStyle/baseCurrency/preferredMapsApp, activity dietaryTags, and FX
 //          snapshots on costed items
-export const BACKUP_VERSION = '1.6.0';
+// v1.7.0 - Activities and lodging carry locationId (old id of an entry in `locations`): the place
+//          is a direct FK now. Backups before 1.7.0 express it as an entity link, which restore
+//          promotes to the FK.
+// v1.8.0 - Locations carry countryCode and travel documents issuingCountryCode (ISO alpha-2);
+//          restore derives them from the address / country name when a file has none.
+// v1.9.0 - A booking's cost is an expense row. Bookings still export `cost`, `currency` and the FX
+//          snapshot (hydrated), and transportation now exports its `id`. An expense that is the cost
+//          of a booking carries `booking: { type, id }` (id = the booking's id in this file) so its
+//          payer, splits and receipt survive; restore creates one cost row per booking. Older files
+//          (cost on the booking, no linked expenses) restore into the same shape.
+export const BACKUP_VERSION = '1.9.0';
 
 // =============================================================================
 // Shared/Reusable Schemas
@@ -166,6 +176,7 @@ const DOCUMENT_TYPES = ['PASSPORT', 'VISA', 'ID_CARD', 'GLOBAL_ENTRY', 'VACCINAT
 const BackupTravelDocumentSchema = z.object({
   type: z.enum(DOCUMENT_TYPES),
   issuingCountry: z.string(),
+  issuingCountryCode: z.string().nullable().optional(), // ISO alpha-2 (v1.8.0); derived from the name when absent
   documentNumber: z.string().nullable().optional(), // Masked in backups
   issueDate: FlexibleDateSchema, // ISO date string or Date object
   expiryDate: FlexibleDateSchema, // ISO date string or Date object
@@ -236,6 +247,7 @@ const BackupLocationBaseSchema = z.object({
   parentId: z.number().nullable().optional(),
   name: z.string(),
   address: z.string().nullable().optional(),
+  countryCode: z.string().nullable().optional(), // ISO alpha-2 (v1.8.0); derived from the address when absent
   // Flexible, like photos: these are Decimal columns, and a Decimal serialises
   // to a JSON *string* ("48.8566"), so a backup the server itself produced was
   // rejected on restore whenever a location had coordinates.
@@ -287,6 +299,7 @@ const BackupPhotoSchema = z.object({
 const BackupActivitySchema = z.object({
   id: z.number().optional(), // For EntityLink mapping
   parentId: z.number().nullable().optional(),
+  locationId: z.number().nullable().optional(), // Old id of a backup locations entry (v1.7.0)
   name: z.string(),
   description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -355,6 +368,7 @@ const BackupTransportationSchema = z.object({
 // Lodging schema within a trip
 const BackupLodgingSchema = z.object({
   id: z.number().optional(), // For EntityLink mapping
+  locationId: z.number().nullable().optional(), // Old id of a backup locations entry (v1.7.0)
   type: z.string(),
   name: z.string(),
   address: z.string().nullable().optional(),
@@ -567,6 +581,14 @@ const BackupExpenseSchema = z.object({
   receiptMimeType: z.string().max(50).nullable().optional(),
   receiptSizeBytes: z.number().int().nonnegative().nullable().optional(),
   receiptUploadedAt: FlexibleDateSchema,
+  // v1.9.0: set when this expense is the cost of a booking in the same file (the booking's own id there).
+  booking: z
+    .object({
+      type: z.enum(['activity', 'transportation', 'lodging', 'customItem']),
+      id: z.number(),
+    })
+    .nullable()
+    .optional(),
 });
 
 // Trip emergency info schema (added in v1.6.0)

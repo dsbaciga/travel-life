@@ -16,6 +16,7 @@
  * - BKP-012: createBackup batches trip loading for large datasets
  */
 
+import { withTripBookingCosts } from '../../__tests__/helpers/bookingCostRows';
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // Mock @prisma/client BEFORE any imports that depend on it
@@ -37,6 +38,12 @@ jest.mock('@prisma/client', () => {
 // Mock the database config
 const mockPrisma = {
   user: {
+    findUnique: jest.fn(),
+  },
+  userPreferences: {
+    findUnique: jest.fn(),
+  },
+  userIntegrations: {
     findUnique: jest.fn(),
   },
   trip: {
@@ -186,7 +193,11 @@ describe('BackupService', () => {
     jest.clearAllMocks();
 
     // Setup default mock returns
+    // Identity from users; display preferences and integration settings from their own tables
+    // (mockUser carries the columns of all three, each lookup reads the ones it owns).
     mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, ...mockUser });
+    mockPrisma.userIntegrations.findUnique.mockResolvedValue({ userId: 1, ...mockUser });
     mockPrisma.tripTag.findMany.mockResolvedValue(mockTags);
     mockPrisma.travelCompanion.findMany.mockResolvedValue(mockCompanions);
     mockPrisma.locationCategory.findMany.mockResolvedValue(mockLocationCategories);
@@ -590,9 +601,9 @@ describe('BackupService', () => {
       expect(result.checklists).toHaveLength(0);
     });
 
-    it('BKP-012: exports v1.6.0 fields (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
+    it('BKP-012: exports v1.9.0 fields (incl. activity/lodging locationId) (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
       mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
-      mockPrisma.trip.findUnique.mockResolvedValue({
+      mockPrisma.trip.findUnique.mockResolvedValue(withTripBookingCosts({
         id: 1,
         title: 'Japan Trip',
         description: null,
@@ -619,6 +630,7 @@ describe('BackupService', () => {
           {
             id: 1,
             parentId: null,
+            locationId: 7,
             name: 'Ramen Dinner',
             description: null,
             category: 'Dining',
@@ -675,6 +687,7 @@ describe('BackupService', () => {
         lodging: [
           {
             id: 1,
+            locationId: 8,
             type: 'hotel',
             name: 'Ryokan',
             address: null,
@@ -743,11 +756,11 @@ describe('BackupService', () => {
           embassyAddress: '1-10-5 Akasaka, Minato-ku',
           notes: 'Keep copy in daypack',
         },
-      });
+      }));
 
       const result = await createBackup(1);
 
-      expect(result.version).toBe('1.6.0');
+      expect(result.version).toBe('1.9.0');
       expect(result.user.dietaryPreferences).toEqual(['gluten-free']);
       expect(result.user.useCustomMapStyle).toBe(false);
       expect(result.user.baseCurrency).toBe('USD');
@@ -763,6 +776,8 @@ describe('BackupService', () => {
       expect(trip.budget).toBe(5000);
       expect(trip.budgetCurrency).toBe('USD');
       expect(trip.countryCode).toBe('JP');
+      expect(trip.activities![0].locationId).toBe(7);
+      expect(trip.lodging![0].locationId).toBe(8);
       expect(trip.activities![0].dietaryTags).toEqual(['pork']);
       expect(trip.activities![0].exchangeRate).toBe(0.0067);
       expect(trip.transportation![0].baseAmount).toBe(93.8);
@@ -772,7 +787,7 @@ describe('BackupService', () => {
       expect(trip.expenses![0].description).toBe('Suica top-up');
       expect(trip.emergencyInfo?.insuranceProvider).toBe('WorldNomads');
 
-      // Validate that BackupDataSchema accepts the full v1.6.0 output
+      // Validate that BackupDataSchema accepts the full v1.8.0 output
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
 
@@ -780,6 +795,7 @@ describe('BackupService', () => {
       mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
       mockPrisma.trip.findUnique.mockResolvedValue({
         id: 1,
+        userId: 1,
         title: 'Split Trip',
         description: null,
         startDate: '2026-04-01',
@@ -810,10 +826,11 @@ describe('BackupService', () => {
             notes: null,
             paidByOwner: false,
             splitMethod: 'equal',
-            paidByCompanion: { name: 'Alice' },
+            paidByCompanion: { name: 'Alice', isMyself: false, linkedUserId: null },
             splits: [
-              { isOwner: true, amount: 45, percentage: null, companion: null },
-              { isOwner: false, amount: 45, percentage: null, companion: { name: 'Alice' } },
+              // The trip owner is their "myself" companion in storage, exported as the owner.
+              { amount: 45, percentage: null, companion: { name: 'Myself (me)', isMyself: true, linkedUserId: 1 } },
+              { amount: 45, percentage: null, companion: { name: 'Alice', isMyself: false, linkedUserId: null } },
             ],
           },
         ],
@@ -829,6 +846,61 @@ describe('BackupService', () => {
         { isOwner: true, amount: 45, percentage: null, companionName: null },
         { isOwner: false, amount: 45, percentage: null, companionName: 'Alice' },
       ]);
+      expect(() => BackupDataSchema.parse(result)).not.toThrow();
+    });
+
+    it('BKP-012c: an expense that is a booking cost names its booking, and the booking still exports its cost', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        userId: 1,
+        title: 'Cost Trip',
+        description: null,
+        startDate: '2026-04-01',
+        endDate: '2026-04-14',
+        status: 'Planned',
+        privacyLevel: 'Private',
+        locations: [],
+        photos: [],
+        activities: [
+          { id: 5, name: 'Concert', costExpense: { amount: 80, currency: 'EUR', exchangeRate: null, baseAmount: null, baseCurrency: null } },
+        ],
+        transportation: [
+          { id: 6, type: 'train', costExpense: null },
+        ],
+        lodging: [],
+        journalEntries: [],
+        photoAlbums: [],
+        weatherData: [],
+        tagAssignments: [],
+        companionAssignments: [],
+        checklists: [],
+        languages: [],
+        entityLinks: [],
+        expenses: [
+          {
+            id: 10, description: 'Concert', category: 'activities', amount: 80, currency: 'EUR', date: null, notes: null,
+            activityId: 5, transportationId: null, lodgingId: null, customItemId: null,
+            splitMethod: null, paidByCompanion: null, splits: [], receiptPath: '/uploads/receipts/x.jpg',
+          },
+          {
+            id: 11, description: 'Taxi', category: 'transportation', amount: 20, currency: 'EUR', date: null, notes: null,
+            activityId: null, transportationId: null, lodgingId: null, customItemId: null,
+            splitMethod: null, paidByCompanion: null, splits: [],
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+      const trip = result.trips[0];
+
+      // The booking exports its cost as before, and transportation now exports its id.
+      expect(trip.activities![0]).toMatchObject({ id: 5, cost: 80, currency: 'EUR' });
+      expect(trip.transportation![0]).toMatchObject({ id: 6, cost: null });
+      // The expense of the booking carries the booking's id in this file; an ordinary expense has none.
+      expect(trip.expenses![0]).toMatchObject({ booking: { type: 'activity', id: 5 }, receiptPath: '/uploads/receipts/x.jpg' });
+      expect(trip.expenses![0]).not.toHaveProperty('activityId');
+      expect(trip.expenses![1]).not.toHaveProperty('booking');
       expect(() => BackupDataSchema.parse(result)).not.toThrow();
     });
 

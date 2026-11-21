@@ -10,6 +10,9 @@ import { convertDecimals } from '../services/_shared/decimalConversion';
 import { getUserTimezone, resolveTimezone } from '../services/_shared/timezoneResolution';
 import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tripListOrder';
 import { deleteReceiptFiles } from './expenseReceipt.service';
+import { deriveLocationCountryCode } from './_shared/countryCodes';
+import { insertBookingCost } from './_shared/bookingCost';
+import { getUserPreferences } from './_shared/userSettings';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -74,9 +77,11 @@ export class TripService {
       select: {
         timezone: true,
         travelPartnerId: true,
-        defaultPartnerPermission: true,
       },
     });
+    const partnerPermission = user?.travelPartnerId
+      ? (await getUserPreferences(userId)).defaultPartnerPermission
+      : null;
 
     const timezone = resolveTimezone(data.timezone, user?.timezone);
 
@@ -125,7 +130,7 @@ export class TripService {
           data: {
             tripId: newTrip.id,
             userId: user.travelPartnerId,
-            permissionLevel: toSafePermissionLevel(user.defaultPartnerPermission, 'edit'),
+            permissionLevel: toSafePermissionLevel(partnerPermission, 'edit'),
           },
         });
       }
@@ -638,6 +643,26 @@ export class TripService {
         })
       : [];
 
+    // A booking's cost is its linked expense row. Each is copied once, with the copy of the booking
+    // (the trip's other expenses are not copied, so nothing is counted twice).
+    const sourceCostRows = await prisma.tripExpense.findMany({
+      where: {
+        tripId: sourceTripId,
+        OR: [
+          { activityId: { not: null } },
+          { transportationId: { not: null } },
+          { lodgingId: { not: null } },
+          { customItemId: { not: null } },
+        ],
+      },
+    });
+    const costByBooking = {
+      activity: new Map(sourceCostRows.flatMap((c) => (c.activityId ? [[c.activityId, c] as const] : []))),
+      transportation: new Map(sourceCostRows.flatMap((c) => (c.transportationId ? [[c.transportationId, c] as const] : []))),
+      lodging: new Map(sourceCostRows.flatMap((c) => (c.lodgingId ? [[c.lodgingId, c] as const] : []))),
+      customItem: new Map(sourceCostRows.flatMap((c) => (c.customItemId ? [[c.customItemId, c] as const] : []))),
+    };
+
     // Get user's timezone for new trip
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -689,6 +714,7 @@ export class TripService {
             tripId: newTrip.id,
             name: location.name,
             address: location.address,
+            countryCode: location.countryCode ?? deriveLocationCountryCode(null, location.address),
             latitude: location.latitude,
             longitude: location.longitude,
             categoryId: location.categoryId,
@@ -715,6 +741,7 @@ export class TripService {
             parentId: newParentId || null,
             name: location.name,
             address: location.address,
+            countryCode: location.countryCode ?? deriveLocationCountryCode(null, location.address),
             latitude: location.latitude,
             longitude: location.longitude,
             categoryId: location.categoryId,
@@ -763,6 +790,7 @@ export class TripService {
         const newActivity = await tx.activity.create({
           data: {
             tripId: newTrip.id,
+            locationId: activity.locationId ? locationIdMap.get(activity.locationId) ?? null : null,
             name: activity.name,
             description: activity.description,
             category: activity.category,
@@ -770,8 +798,6 @@ export class TripService {
             startTime: null,
             endTime: null,
             timezone: activity.timezone,
-            cost: activity.cost,
-            currency: activity.currency,
             bookingUrl: activity.bookingUrl,
             bookingReference: activity.bookingReference,
             notes: activity.notes,
@@ -779,6 +805,17 @@ export class TripService {
           },
         });
         activityIdMap.set(activity.id, newActivity.id);
+        const cost = costByBooking.activity.get(activity.id);
+        if (cost) {
+          await insertBookingCost(
+            tx,
+            'activity',
+            newActivity.id,
+            newTrip.id,
+            { kind: 'activity', name: activity.name, startTime: null, timezone: activity.timezone },
+            { amount: cost.amount, currency: cost.currency }
+          );
+        }
       }
 
       // Second pass: child activities need sequential creation due to parent FK
@@ -789,6 +826,7 @@ export class TripService {
           data: {
             tripId: newTrip.id,
             parentId: newParentId || null,
+            locationId: activity.locationId ? locationIdMap.get(activity.locationId) ?? null : null,
             name: activity.name,
             description: activity.description,
             category: activity.category,
@@ -796,8 +834,6 @@ export class TripService {
             startTime: null,
             endTime: null,
             timezone: activity.timezone,
-            cost: activity.cost,
-            currency: activity.currency,
             bookingUrl: activity.bookingUrl,
             bookingReference: activity.bookingReference,
             notes: activity.notes,
@@ -805,6 +841,17 @@ export class TripService {
           },
         });
         activityIdMap.set(activity.id, newActivity.id);
+        const cost = costByBooking.activity.get(activity.id);
+        if (cost) {
+          await insertBookingCost(
+            tx,
+            'activity',
+            newActivity.id,
+            newTrip.id,
+            { kind: 'activity', name: activity.name, startTime: null, timezone: activity.timezone },
+            { amount: cost.amount, currency: cost.currency }
+          );
+        }
       }
     }
 
@@ -832,8 +879,6 @@ export class TripService {
             bookingReference: transport.bookingReference,
             bookingUrl: transport.bookingUrl,
             loyaltyProgramId: transport.loyaltyProgramId,
-            cost: transport.cost,
-            currency: transport.currency,
             status: 'on_time',
             delayMinutes: null,
             notes: transport.notes,
@@ -857,6 +902,28 @@ export class TripService {
           startLocationText: string | null;
         }) => JSON.stringify([t.type, t.referenceNumber, t.company, t.startLocationText]);
         mapCopiesByCompositeKey(transportationIdMap, transportations, newTransports, buildTransportKey);
+        for (const transport of transportations) {
+          const cost = costByBooking.transportation.get(transport.id);
+          const newId = transportationIdMap.get(transport.id);
+          if (!cost || newId === undefined) continue;
+          await insertBookingCost(
+            tx,
+            'transportation',
+            newId,
+            newTrip.id,
+            {
+              kind: 'transportation',
+              type: transport.type,
+              company: transport.company,
+              referenceNumber: transport.referenceNumber,
+              startLocationText: transport.startLocationText,
+              endLocationText: transport.endLocationText,
+              scheduledStart: null,
+              startTimezone: transport.startTimezone,
+            },
+            { amount: cost.amount, currency: cost.currency }
+          );
+        }
       }
     }
 
@@ -867,6 +934,7 @@ export class TripService {
         await tx.lodging.createMany({
           data: lodgings.map((lodging) => ({
             tripId: newTrip.id,
+            locationId: lodging.locationId ? locationIdMap.get(lodging.locationId) ?? null : null,
             type: lodging.type,
             name: lodging.name,
             address: lodging.address,
@@ -876,8 +944,6 @@ export class TripService {
             confirmationNumber: lodging.confirmationNumber,
             bookingUrl: lodging.bookingUrl,
             loyaltyProgramId: lodging.loyaltyProgramId,
-            cost: lodging.cost,
-            currency: lodging.currency,
             notes: lodging.notes,
           })),
         });
@@ -891,6 +957,19 @@ export class TripService {
         const buildLodgingKey = (l: { name: string; address: string | null; confirmationNumber: string | null }) =>
           `${l.name}|${l.address ?? ''}|${l.confirmationNumber ?? ''}`;
         mapCopiesByCompositeKey(lodgingIdMap, lodgings, newLodgings, buildLodgingKey);
+        for (const lodging of lodgings) {
+          const cost = costByBooking.lodging.get(lodging.id);
+          const newId = lodgingIdMap.get(lodging.id);
+          if (!cost || newId === undefined) continue;
+          await insertBookingCost(
+            tx,
+            'lodging',
+            newId,
+            newTrip.id,
+            { kind: 'lodging', name: lodging.name, checkInDate: new Date(), timezone: lodging.timezone },
+            { amount: cost.amount, currency: cost.currency }
+          );
+        }
       }
     }
 
@@ -1119,16 +1198,29 @@ export class TripService {
           endTime: item.endTime,
           timezone: item.timezone,
           locationId: item.locationId ? locationIdMap.get(item.locationId) || null : null,
-          cost: item.cost,
-          currency: item.currency,
-          exchangeRate: item.exchangeRate,
-          baseAmount: item.baseAmount,
-          baseCurrency: item.baseCurrency,
           url: item.url,
           confirmationNumber: item.confirmationNumber,
         },
       });
       customItemIdMap.set(item.id, copy.id);
+      const cost = costByBooking.customItem.get(item.id);
+      if (cost) {
+        // Custom items keep their frozen FX snapshot in the copy (as before).
+        await insertBookingCost(
+          tx,
+          'customItem',
+          copy.id,
+          newTrip.id,
+          { kind: 'customItem', name: item.name, startTime: item.startTime, timezone: item.timezone },
+          {
+            amount: cost.amount,
+            currency: cost.currency,
+            exchangeRate: cost.exchangeRate,
+            baseAmount: cost.baseAmount,
+            baseCurrency: cost.baseCurrency,
+          }
+        );
+      }
     }
 
     // Copy entity links using bulk insert (must be done after all entities are copied)

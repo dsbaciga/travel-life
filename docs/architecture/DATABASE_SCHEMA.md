@@ -1,8 +1,8 @@
 # Database Schema Reference
 
-Travel Life uses PostgreSQL with PostGIS extension for geospatial data. The schema is managed via Prisma ORM.
+Travel Life uses PostgreSQL (with the PostGIS extension installed, though no table has a spatial column since migration `20261125000000`). The schema is managed via Prisma ORM.
 
-The schema defines **49 models** (mapped to **49 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
+The schema defines **51 models** (mapped to **51 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
 
 ## Schema Location
 
@@ -65,7 +65,9 @@ backend/prisma/schema.prisma
 
 ### User
 
-Primary user account model with authentication and settings.
+Identity and login only. Everything else a user configures lives in two one-row-per-user tables
+(see [UserIntegrations](#userintegrations) and [UserPreferences](#userpreferences)), so loading a user never
+loads a secret.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -73,15 +75,47 @@ Primary user account model with authentication and settings.
 | username | String | Unique username |
 | email | String | Unique email address |
 | passwordHash | String | Bcrypt hashed password |
-| timezone | String? | User's home timezone (null until chosen; there is no default, and nothing falls back to UTC for display) |
-| activityCategories | Json | Custom activity category list |
-| immichApiUrl | String? | Immich server URL |
-| immichApiKey | String? | Immich API key |
-| weatherApiKey | String? | OpenWeatherMap API key |
-| aviationstackApiKey | String? | Flight tracking API key |
-| openrouteserviceApiKey | String? | Road routing API key |
-| measurementSystem | String? | `imperial` or `metric`; null means the app default (imperial) |
-| createdAt | DateTime | Account creation timestamp |
+| passwordVersion | Int | Bumped on a password change or refresh-token reuse; older tokens stop working |
+| avatarUrl | String? | Profile picture path |
+| timezone | String? | User's home timezone (null until chosen; there is no default, and nothing falls back to UTC for display). On the session payload, so it stays here |
+| oidcSubject | String? | Unique `issuer\|sub` identity from single sign-on |
+| calendarToken | String? | Unique secret of the read-only iCal feed URL |
+| travelPartnerId | Int? | The user's travel partner (`SET NULL` on delete); the permission level is `UserPreferences.defaultPartnerPermission` |
+| createdAt, updatedAt | DateTime | `updatedAt` is also stamped whenever a settings row below is written |
+
+### UserIntegrations
+
+Third-party settings, one row per user (`userId` is the primary key, `ON DELETE CASCADE`). Since
+`20261124000000_split_user_table`; before that these were columns of `users`. Every user has a row from
+creation (`defaultUserSettingsCreate`); `services/_shared/userSettings.ts` is the only code that reads or
+writes the table and creates a missing row on demand. API keys and the SMTP password are stored as
+ciphertext (`security/encryption.ts`, `enc:v1:...`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| userId | Int | Primary key, foreign key to `users` |
+| immichApiUrl, immichApiKey | String? | Immich server URL and (encrypted) API key |
+| weatherApiKey | String? | OpenWeatherMap API key (encrypted) |
+| aviationstackApiKey | String? | Flight tracking API key (encrypted) |
+| openrouteserviceApiKey | String? | Road routing API key (encrypted) |
+| llmApiKey, llmBaseUrl, llmModel | String? | Per-user LLM overrides; the key is encrypted |
+| smtpProvider, smtpHost, smtpPort, smtpSecure, smtpUser, smtpPassword, smtpFrom | mixed | Per-user mail server; the password is encrypted |
+
+### UserPreferences
+
+Display and behaviour preferences, one row per user (same key and lifecycle as `UserIntegrations`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| userId | Int | Primary key, foreign key to `users` |
+| activityCategories, tripTypes | Json | The user's category and trip type lists (with defaults) |
+| dietaryPreferences | Json | The user's own dietary preferences (`[]`) |
+| linkIngestSenders | Json | Extra From addresses trusted to forward links to the ingest mailbox |
+| useCustomMapStyle | Boolean | Default `true` |
+| baseCurrency | String? | Home currency (ISO 4217) that mixed-currency budget totals are reported in |
+| preferredMapsApp | String? | Which maps/rideshare app the "Directions" links open |
+| measurementSystem | String? | `imperial` or `metric` (CHECK `user_preferences_measurement_system_check`); null means the app default (imperial) |
+| defaultPartnerPermission | String | Permission a travel partner gets on this user's trips: `view`, `edit` (default) or `admin` |
 
 ### Trip
 
@@ -121,13 +155,13 @@ Points of interest within a trip.
 | parentId | Int? | Parent location (for nested locations) |
 | name | String | Location name |
 | address | String? | Full address |
+| countryCode | VarChar(2)? | ISO 3166-1 alpha-2, upper case (CHECK `locations_country_code_format_check`). From the geocoder when the client sends it, else derived from the address text on create/update; null when unknown. Indexed with `tripId` |
 | latitude | Decimal(10,8)? | Latitude coordinate |
 | longitude | Decimal(11,8)? | Longitude coordinate |
 | categoryId | Int? | Location category foreign key |
 | visitDatetime | DateTime? | Planned/actual visit time |
 | visitDurationMinutes | Int? | Expected duration |
 | notes | String? | Notes |
-| coordinates | Geography? | PostGIS point (auto-generated) |
 
 ### Photo
 
@@ -158,6 +192,7 @@ Planned or completed activities.
 | id | Int | Primary key |
 | tripId | Int | Trip foreign key |
 | parentId | Int? | Parent activity (for sub-activities) |
+| locationId | Int? | Where the activity is (`Location`, `SET NULL` on delete; indexed). The single source of truth for "is at": not an `EntityLink` |
 | name | String | Activity name |
 | description | String? | Description |
 | category | String? | Category (sightseeing, dining, etc.) |
@@ -165,8 +200,7 @@ Planned or completed activities.
 | startTime | DateTime? | Start time |
 | endTime | DateTime? | End time |
 | timezone | String? | Activity timezone |
-| cost | Decimal(10,2)? | Cost |
-| currency | String? | Currency code (USD, EUR, etc.) |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the activity's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses). The API still reads and writes `cost` and `currency` |
 | bookingUrl | String? | Booking URL |
 | bookingReference | String? | Confirmation number |
 | manualOrder | Int? | Custom sort order |
@@ -193,7 +227,7 @@ Travel between locations (flights, trains, etc.).
 | company | String? | Carrier/company name |
 | referenceNumber | String? | Flight/train number |
 | seatNumber | String? | Seat assignment |
-| cost | Decimal(10,2)? | Cost |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the leg's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | status | String | on_time, delayed, cancelled |
 | connectionGroupId | String? | Groups connected segments |
 | calculatedDistance | Decimal? | Route distance (km) |
@@ -209,6 +243,7 @@ Accommodations during trips.
 |-------|------|-------------|
 | id | Int | Primary key |
 | tripId | Int | Trip foreign key |
+| locationId | Int? | Where the stay is (`Location`, `SET NULL` on delete; indexed). The single source of truth for "is at": not an `EntityLink` |
 | type | String | Hotel, Airbnb, Hostel, Camping, etc. |
 | name | String | Property name |
 | address | String? | Address |
@@ -218,8 +253,7 @@ Accommodations during trips.
 | confirmationNumber | String? | Booking confirmation |
 | loyaltyProgramId | Int? | Loyalty program the stay was booked under (`LoyaltyProgram`, `SET NULL` on delete) |
 | bookingUrl | String? | Booking URL |
-| cost | Decimal(10,2)? | Total cost |
-| currency | String? | Currency code |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the stay's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | notes | String? | Notes |
 
 ### JournalEntry
@@ -277,7 +311,8 @@ People who travel with the user.
 | email | String? | Email address |
 | phone | String? | Phone number |
 | relationship | String? | Relationship (friend, spouse, etc.) |
-| isMyself | Boolean | Represents the user themselves |
+| isMyself | Boolean | Represents the user themselves. At most one per user (partial unique index `travel_companions_user_id_is_myself_key`, migration `20261122000000`). This row is also how the trip owner appears as an expense payer or split participant |
+| linkedUserId | Int? | The account this companion is: set to `userId` on the `isMyself` row, null otherwise (`SET NULL` on user delete) |
 
 ### Checklist
 
@@ -325,13 +360,29 @@ A logged expense. Carries the currency snapshot columns described under [Currenc
 | currency | String? | Currency code |
 | date | Date? | Calendar date (date-only, stored at UTC midnight) |
 | notes | String? | Notes |
-| paidByOwner | Boolean | The trip owner paid (default `false`) |
-| paidByCompanionId | Int? | The companion who paid (`SET NULL` on delete). At most one payer: the owner or a companion, never both (CHECK `trip_expenses_one_payer`); neither means not recorded |
+| paidByCompanionId | Int? | The companion who paid (`SET NULL` on delete); null means not recorded. When the trip owner paid it is the owner's `isMyself` companion (the former `paid_by_owner` column and `trip_expenses_one_payer` CHECK were dropped in `20261122000000`). The API still speaks `owner` / `companion:<id>` and derives `paidByOwner` |
 | splitMethod | String? | `equal`, `amount` or `percentage`; null when not split |
 | receiptPath | String? | Stored receipt image (`/uploads/receipts/<uuid>.jpg`) |
 | receiptMimeType | String? | Receipt MIME type |
 | receiptSizeBytes | Int? | Receipt size in bytes |
 | receiptUploadedAt | DateTime? | When the receipt was attached |
+| activityId, transportationId, lodgingId, customItemId | Int? | The booking this expense is the cost of (FK, `CASCADE`, each unique). At most one is set (CHECK `trip_expenses_at_most_one_booking`). See [Booking costs](#booking-costs-are-expenses) |
+
+### Booking costs are expenses
+
+Since `20261123000000_every_cost_is_a_trip_expense` a booking (`Activity`, `Transportation`, `Lodging`,
+`CustomItem`) has no `cost`, `currency`, `exchangeRate`, `baseAmount` or `baseCurrency` columns: its cost is
+one `trip_expenses` row linked by the FK above, so it can be split, carry a receipt and be edited from the
+expense screen. The booking APIs are unchanged: `services/_shared/bookingCost.ts` flattens the row back into
+`cost`, `currency` and the FX fields on every read, and writes it on create and update (a cost of `null`
+deletes the row; `0` is a real cost; a currency without a cost is not stored).
+
+- **Category** is the budget bucket the cost always landed in: `activities`, `transportation`, `lodging`; custom items use `other`.
+- **Description** is the booking's name; a leg is labelled like the calendar feed does (`flight Air France AF123: CDG → JFK`).
+- **Date** is the booking's start (check-in for lodging) as a calendar day on the clock of its own timezone, then the trip's, then the trip owner's, UTC last. Unscheduled bookings have no date. It is kept in step when the booking is renamed or re-dated.
+- **The FX snapshot is copied, never recomputed**, by the migration; changing the amount or currency clears it.
+- Deleting the booking deletes the expense (and its splits); deleting the expense from the expense screen clears the booking's cost and leaves the booking.
+- The expense list returns `activityId`, `transportationId`, `lodgingId`, `customItemId` and a `linkedEntity` (`{ type, id, name }` or null). A booking cost with no payer is a budget line, not an "unsplit" expense in settle-up.
 
 ### TripExpenseSplit
 
@@ -341,12 +392,11 @@ One participant's share of an expense, in the expense's own currency (migration 
 |-------|------|-------------|
 | id | Int | Primary key |
 | expenseId | Int | Expense foreign key (cascade) |
-| isOwner | Boolean | This share is the trip owner's |
-| companionId | Int? | The companion this share belongs to (cascade). Exactly one of `isOwner` / `companionId` identifies the participant (CHECK `trip_expense_splits_one_participant`) |
+| companionId | Int | The companion this share belongs to (cascade); the trip owner is their `isMyself` companion. Unique per expense (`expense_id`, `companion_id`). The former `is_owner` column and `trip_expense_splits_one_participant` CHECK were dropped in `20261122000000`; responses still derive `isOwner` |
 | amount | Decimal(10,2) | The participant's share; the shares of an expense add up to its amount |
 | percentage | Decimal(7,4)? | Only set for percentage splits |
 
-A participant appears at most once per expense; both rules are enforced in `expenseSplit.service.ts`.
+A participant appears at most once per expense (unique index); the shares adding up to the amount is enforced in `expenseSplit.service.ts`. Deleting the `isMyself` companion is refused (400) while any expense references it.
 
 ## Loyalty Programs
 
@@ -383,8 +433,8 @@ One stop of a trip's route in the multi-city planner (migration `20261116080000_
 | tripId | Int | Trip foreign key (cascade) |
 | locationId | Int? | Saved place this stop was made from (`SET NULL` on delete) |
 | name | String | Stop name (a snapshot when linked to a place) |
-| latitude | Float | Latitude |
-| longitude | Float | Longitude |
+| latitude | Decimal(10,8) | Latitude (API returns a plain number; range CHECK -90..90) |
+| longitude | Decimal(11,8) | Longitude (API returns a plain number; range CHECK -180..180) |
 | position | Int | Order within the trip |
 | nights | Int? | Planned nights at the stop |
 
@@ -563,7 +613,8 @@ Stores user travel documents (passports, visas, etc.).
 | id | Int | Primary key |
 | userId | Int | Owner foreign key |
 | type | TravelDocumentType | PASSPORT, VISA, ID_CARD, GLOBAL_ENTRY, VACCINATION |
-| issuingCountry | String | Issuing country |
+| issuingCountry | String | Issuing country (name, for display) |
+| issuingCountryCode | VarChar(2)? | ISO alpha-2 of `issuingCountry`, derived from the name; null when not recognised (CHECK on format) |
 | documentNumber | String? | Document number |
 | issueDate | Date? | Issue date |
 | expiryDate | Date? | Expiry date |
@@ -581,6 +632,8 @@ Static reference data for visa requirements between countries.
 | id | Int | Primary key |
 | passportCountry | String | Passport-holder country |
 | destinationCountry | String | Destination country |
+| passportCountryCode | VarChar(2)? | ISO alpha-2 of `passportCountry` (CHECK on format) |
+| destinationCountryCode | VarChar(2)? | ISO alpha-2 of `destinationCountry` (CHECK on format) |
 | visaRequired | Boolean | Whether a visa is required |
 | visaType | String | visa_free, visa_on_arrival, e_visa, visa_required |
 | maxStayDays | Int? | Maximum stay length |
@@ -588,7 +641,9 @@ Static reference data for visa requirements between countries.
 | sourceUrl | String? | Source reference URL |
 | lastVerified | Date? | When the data was last verified |
 
-Unique on `(passportCountry, destinationCountry)`.
+Unique on `(passportCountry, destinationCountry)`. Lookups match the codes first, then the names.
+The running app reads `backend/data/visa-requirements.json`, not this table (nothing seeds it); the
+service derives the codes from the names at load time.
 
 ### TripLanguage
 
@@ -697,7 +752,7 @@ Models added after the sections above were written. `schema.prisma` is the autho
 
 | Model (table) | Purpose | Notes |
 | ------------- | ------- | ----- |
-| `TripExpense` (`trip_expenses`) | A cost on a trip (payer, split method and receipt columns too) | Full columns under [Expenses and Splits](#expenses-and-splits). FX snapshot (`exchangeRate`, `baseAmount`, `baseCurrency`) taken at write time; see [Currency Conversion](#currency-conversion). The `amount >= 0` and one-payer `CHECK`s exist only in migrations; Prisma cannot express them, so never `db push` |
+| `TripExpense` (`trip_expenses`) | A cost on a trip: ordinary expenses and every booking's cost (payer, split method, receipt and booking link columns too) | Full columns under [Expenses and Splits](#expenses-and-splits). FX snapshot (`exchangeRate`, `baseAmount`, `baseCurrency`) taken at write time; see [Currency Conversion](#currency-conversion). The `amount >= 0` and one-payer `CHECK`s exist only in migrations; Prisma cannot express them, so never `db push` |
 | `BookingDeadline` (`booking_deadlines`) | A dated reminder (cancellation, check-in, payment) | Optionally tied to one lodging, transportation or activity (cascade on delete); `title` is required when there is no booking. `notifiedAt` is set once the push reminder is sent; `dismissedAt` hides it |
 | `TripEmergencyInfo` (`trip_emergency_info`) | Insurance and embassy details, one row per trip (`tripId` unique) | |
 | `FoodLogEntry` (`food_log_entries`) | A dish rated at a restaurant | Optional link to an `Activity` and `Location` (`SetNull` on delete) |
@@ -715,7 +770,7 @@ snapshot.
 
 ### Snapshot columns
 
-`TripExpense`, `Activity`, `Transportation`, `Lodging`, and `CustomItem` each carry:
+Every costed record is a `TripExpense` (a booking's cost is its linked expense row) and carries:
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -899,9 +954,7 @@ having them resurrected, and stops a restored backup from colliding with a re-se
 | endTime | DateTime? | End |
 | timezone | String? | IANA timezone |
 | locationId | Int? | Location foreign key (**SetNull**) |
-| cost | Decimal(10,2)? | Cost — DB CHECK `>= 0` |
-| currency | String? | Currency code |
-| exchangeRate / baseAmount / baseCurrency | — | Frozen FX snapshot |
+| cost, currency, FX snapshot | (none) | No columns: the cost is the item's `TripExpense` row, see [Booking costs](#booking-costs-are-expenses) |
 | url | String (Text)? | Text, not VarChar(500) |
 | confirmationNumber | String? | Confirmation number |
 
@@ -912,8 +965,8 @@ Four behaviours worth knowing:
   It means "the item is *at* this place" and drives the map marker, so it must be a
   single unambiguous location. An `EntityLink` to a `LOCATION` remains possible and
   carries the weaker "related to" meaning.
-- **Changing `cost` or `currency` clears the FX snapshot**, so the budget summary
-  recomputes it. Leaving it would report the old converted amount against the new figure.
+- **Changing the cost or currency clears the FX snapshot** of its expense row, so the budget
+  summary recomputes it. Leaving it would report the old converted amount against the new figure.
 - **Only items with a `startTime` reach the timeline and daily view.** Undated ones stay
   in the Custom tab, and appear under "Unscheduled Items" in the printable itinerary.
 
@@ -938,6 +991,28 @@ The `EntityLink` model provides a polymorphic linking system for connecting any 
 | relationship | LinkRelationship | Type of relationship |
 | sortOrder | Int? | Custom ordering |
 | notes | String? | Link notes |
+
+### Referential integrity (triggers)
+
+`entity_links` has no foreign keys to the entities it joins, so migration
+`20261120000000_add_activity_lodging_location_fk` adds one row-level `AFTER DELETE` trigger per
+table an `EntityType` can name (`photos`, `locations`, `activities`, `lodging`,
+`transportation`, `journal_entries`, `photo_albums`, `pdf_imports`, `saved_links`,
+`custom_items`). Each runs `entity_links_delete_for_deleted_row('<TYPE>')`, which deletes the
+links where the deleted row is the source or the target. Prisma cannot express triggers, so a
+database built with `prisma db push` has none: `cleanupEntityLinks` and
+`cleanupOrphanedEntityLinks` stay as the application-level guarantee. **A new `EntityType`
+value needs its own trigger in a new migration.**
+
+### Where an activity or lodging is
+
+`Activity.locationId` and `Lodging.locationId` hold that fact (see their tables above); the
+migration moved it out of `entity_links` (one link per entity: `OCCURRED_AT` first, then the
+lowest link id; a location of another trip is never used) and deleted the link it replaced.
+Any other activity/lodging <-> location link is a loose `RELATED` association. For clients that
+predate the FK the link API still *shows* the FK as a synthetic `OCCURRED_AT` link with a
+negative id and accepts the old calls against it
+(`services/_shared/entityLocationLinks.ts`, `claimEntityLocation` in `entityLink.service.ts`).
 
 ### EntityType Enum
 
@@ -1100,12 +1175,53 @@ Key indexes for performance:
 |-------|-------|---------|
 | trips | (userId, status) | Dashboard filtering |
 | trips | (startDate, endDate) | Date range queries |
-| locations | (tripId) | Trip location listing |
-| locations | coordinates (GIST) | Geospatial queries |
+| locations | (tripId, countryCode) | Trip location listing (its leading column serves a plain `tripId` lookup) |
 | photos | (tripId, takenAt) | Chronological photo listing |
-| entity_links | (tripId, sourceType, sourceId) | Forward link queries |
+| entity_links | unique (tripId, sourceType, sourceId, targetType, targetId) | Forward link queries (its leading columns serve them) |
 | entity_links | (tripId, targetType, targetId) | Reverse link queries |
+| entity_links | (sourceType, sourceId) and (targetType, targetId) | Used by the delete triggers that remove a deleted entity's links (migration `20261120000000`). Do not drop |
 | transportation | (connectionGroupId) | Grouped connections |
+
+### Redundant indexes
+
+An index whose columns are a leading prefix, in the same order, of another index or a unique constraint on the
+same table is not created: the wider one answers the same lookups. Migration `20261126010000_drop_redundant_indexes`
+removed 22 that had crept in (for example `photos(tripId)`, `activities(tripId)`, `trip_invitations(token)`,
+`user_invitations(email)` and `(token)`, `entity_links(tripId)` and `(tripId, sourceType, sourceId)`). Find candidates
+with a catalog query rather than from `schema.prisma`: compare `pg_index.indkey` prefixes of non-partial btree indexes
+per table, then check the covering index has the same operator classes and sort options.
+
+## Vocabulary CHECK constraints
+
+Columns holding one of a fixed set of strings are `VARCHAR` with a `CHECK` named `<table>_<column>_check` (migration
+`20261126000000_add_vocabulary_checks`). Prisma cannot express CHECK constraints, so never `db push`. Each was added
+`NOT VALID` and validated only when no existing row violated it, so a database with legacy values keeps the constraint
+`NOT VALID` (new and updated rows are still checked). Adding a value means a new migration that replaces the constraint
+and the matching Zod enum together.
+
+| Column | Allowed values | Authority |
+|--------|----------------|-----------|
+| `trips.status` | Dream, Planning, Planned, In Progress, Completed, Cancelled, and the column default `planning` | `TripStatus` and the trip Zod schemas |
+| `trips.privacy_level` | Private, Shared, Public, and the column default `private` | `PrivacyLevel` and the trip Zod schemas |
+| `trip_collaborators.permission_level` | view, edit, admin | `collaboration.types.ts` |
+| `trip_invitations.permission_level` | view, edit, admin | `collaboration.types.ts` |
+| `trip_invitations.status` | pending, accepted, declined, expired | `InvitationStatus` |
+| `user_preferences.default_partner_permission` | view, edit, admin | `user.controller.ts` schema, `tripPermissions.ts` |
+| `transportation.status` | on_time, delayed, cancelled | `transportation.types.ts` |
+| `transportation.distance_source` | route, haversine, or NULL | `routing.service.ts` (`source`) |
+| `photos.source` | local, immich | `PhotoSource` |
+| `photos.media_type` | image, video | `MediaType` and the photo Zod schemas |
+| `booking_deadlines.kind` | cancellation, check_in, payment, other | `DEADLINE_KINDS` |
+| `checklists.type` | custom, airports, countries, cities, us_states, souvenirs | `checklist.types.ts` |
+| `locations.opening_hours_source` | osm, manual, or NULL | `location.service.ts`, `bulkImport.service.ts` |
+| `mobile_push_tokens.platform` | ios, android | `MOBILE_PUSH_PLATFORMS` |
+
+Not constrained on purpose: `journal_entries.entry_type` (the Zod schema accepts any string), and the user-extensible
+`transportation.type`, `lodging.type`, `activities.category`, `trips.trip_type` and `trip_expenses.category`.
+
+Restoring an old backup that carries a value outside these sets (an unknown trip `status` or `privacyLevel`, a photo
+`source`, a checklist `type`, a transportation `status` or `distanceSource`, a location `openingHoursSource`) now fails
+with a database error and rolls the restore back; the backup schema still accepts any string for those fields.
 
 ## Cascade Deletes
 
@@ -1122,22 +1238,15 @@ Deleting a trip automatically deletes:
 
 This provides ~1.1mm precision, more than sufficient for travel applications.
 
-## PostGIS Usage
+## PostGIS
 
-The `coordinates` field on Location and Photo uses PostGIS Geography type for:
-- Efficient spatial indexing
-- Distance calculations
-- Proximity queries
-
-```sql
--- Example: Find locations within 10km of a point
-SELECT * FROM locations
-WHERE ST_DWithin(
-  coordinates,
-  ST_GeogFromText('POINT(-122.4194 37.7749)'),
-  10000
-);
-```
+The `postgis` extension stays installed (`extensions = [postgis]` in `schema.prisma`, `CREATE EXTENSION` in the
+baseline migration and `scripts/migrate-and-start.sh`, `postgis/postgis` images in the compose files), but no
+table has a spatial column. `locations.coordinates` and `photos.coordinates` (`geography(Point, 4326)`, with
+GiST indexes) were rewritten from `latitude`/`longitude` on every write and read by nothing; migration
+`20261125000000_drop_spatial_columns_decimal_trip_stops` dropped them together with the dual-write code. Distances
+and nearest-place logic are computed in application code (`haversineMeters` in `packages/shared`). If a spatial
+query is ever needed, add a generated or indexed column in a new migration.
 
 ## Database Management
 

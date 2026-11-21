@@ -16,7 +16,7 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 const mockPrisma = {
   trip: { findFirst: jest.fn() },
-  user: { findUnique: jest.fn() },
+  user: { findUnique: jest.fn(), findUniqueOrThrow: jest.fn() },
   tripExpense: {
     findFirst: jest.fn(),
     findMany: jest.fn(),
@@ -25,7 +25,8 @@ const mockPrisma = {
   },
   tripExpenseSplit: { deleteMany: jest.fn() },
   tripCompanion: { findMany: jest.fn() },
-  travelCompanion: { findMany: jest.fn() },
+  travelCompanion: { findMany: jest.fn(), findFirst: jest.fn() },
+  $executeRaw: jest.fn(),
   $transaction: jest.fn(),
 };
 
@@ -53,6 +54,9 @@ const mockBase = expenseService.resolveExpenseBaseAmount as jest.MockedFunction<
   typeof expenseService.resolveExpenseBaseAmount
 >;
 
+/** Id of the trip owner's "myself" companion in these tests. */
+const OWNER_COMPANION = 90;
+
 const D = (v: string | number) => new Prisma.Decimal(v);
 
 function stubTrip(overrides: Record<string, unknown> = {}) {
@@ -78,10 +82,9 @@ function stubParticipants() {
 function lastUpdateData() {
   const call = mockPrisma.tripExpense.update.mock.calls[0][0] as {
     data: {
-      paidByOwner: boolean;
       paidByCompanionId: number | null;
       splitMethod: string | null;
-      splits?: { create: Array<{ isOwner: boolean; companionId: number | null; amount: Prisma.Decimal; percentage: Prisma.Decimal | null }> };
+      splits?: { create: Array<{ companionId: number; amount: Prisma.Decimal; percentage: Prisma.Decimal | null }> };
     };
   };
   return call.data;
@@ -96,11 +99,13 @@ describe('ExpenseSplitService', () => {
     mockPrisma.tripExpense.findUniqueOrThrow.mockResolvedValue({
       id: 1,
       amount: D('100.00'),
-      paidByOwner: true,
-      paidByCompanionId: null,
+      paidByCompanionId: OWNER_COMPANION,
       splits: [],
     });
-    mockPrisma.$transaction.mockResolvedValue([]);
+    // The trip owner's "myself" companion; interactive transactions run against the same mock.
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue({ id: OWNER_COMPANION });
+    mockPrisma.$transaction.mockImplementation((async (arg: unknown) =>
+      typeof arg === 'function' ? (arg as (tx: unknown) => unknown)(mockPrisma) : []) as never);
   });
 
   describe('ESP-001: equal split', () => {
@@ -112,12 +117,11 @@ describe('ExpenseSplitService', () => {
       });
 
       const data = lastUpdateData();
-      expect(data.paidByOwner).toBe(true);
-      expect(data.paidByCompanionId).toBeNull();
+      expect(data.paidByCompanionId).toBe(OWNER_COMPANION);
       expect(data.splitMethod).toBe('equal');
       const rows = data.splits?.create ?? [];
       expect(rows.map((r) => r.amount.toString())).toEqual(['33.34', '33.33', '33.33']);
-      expect(rows[0].isOwner).toBe(true);
+      expect(rows.map((r) => r.companionId)).toEqual([OWNER_COMPANION, 5, 6]);
       expect(rows.reduce((s, r) => s.add(r.amount), D(0)).eq(D(100))).toBe(true);
     });
 
@@ -128,8 +132,35 @@ describe('ExpenseSplitService', () => {
         participants: [{ participant: 'owner' }, { participant: 'companion:5' }],
       });
       const data = lastUpdateData();
-      expect(data.paidByOwner).toBe(false);
       expect(data.paidByCompanionId).toBe(5);
+    });
+  });
+
+  describe('ESP-001b: the owner is the owner of the trip, as their myself companion', () => {
+    it('creates it on demand (named after the trip owner) in the same transaction', async () => {
+      // A collaborator (user 2) edits a trip owned by user 1 that has no "myself" companion yet.
+      stubTrip({ userId: 1, collaborators: [{ userId: 2, permissionLevel: 'edit' }] });
+      mockPrisma.travelCompanion.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 123 });
+      mockPrisma.user.findUniqueOrThrow.mockResolvedValue({ username: 'dana' });
+
+      await expenseSplitService.setSplit(2, 10, 1, {
+        paidBy: 'owner',
+        method: 'equal',
+        participants: [{ participant: 'owner' }, { participant: 'companion:5' }],
+      });
+
+      expect(mockPrisma.travelCompanion.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 1, isMyself: true } })
+      );
+      expect(mockPrisma.user.findUniqueOrThrow).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1);
+      const data = lastUpdateData();
+      expect(data.paidByCompanionId).toBe(123);
+      expect(data.splits?.create.map((r) => r.companionId)).toEqual([123, 5]);
     });
   });
 
@@ -240,7 +271,7 @@ describe('ExpenseSplitService', () => {
     it('removes shares and the payer when paidBy is null', async () => {
       await expenseSplitService.setSplit(1, 10, 1, { paidBy: null });
       expect(mockPrisma.tripExpenseSplit.deleteMany).toHaveBeenCalledWith({ where: { expenseId: 1 } });
-      expect(lastUpdateData()).toEqual({ paidByOwner: false, paidByCompanionId: null, splitMethod: null });
+      expect(lastUpdateData()).toEqual({ paidByCompanionId: null, splitMethod: null });
     });
   });
 
@@ -255,12 +286,11 @@ describe('ExpenseSplitService', () => {
       baseAmount: null,
       baseCurrency: null,
       date: null,
-      paidByOwner: true,
-      paidByCompanionId: null,
+      paidByCompanionId: OWNER_COMPANION,
       splits: [
-        { isOwner: true, companionId: null, amount: D('30.00'), percentage: null },
-        { isOwner: false, companionId: 5, amount: D('30.00'), percentage: null },
-        { isOwner: false, companionId: 6, amount: D('30.00'), percentage: null },
+        { companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null },
+        { companionId: 5, amount: D('30.00'), percentage: null },
+        { companionId: 6, amount: D('30.00'), percentage: null },
       ],
       ...overrides,
     });
@@ -293,10 +323,10 @@ describe('ExpenseSplitService', () => {
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         row({}),
         row({ id: 2, description: 'Taxi', currency: 'XYZ', amount: D('50.00'), splits: [
-          { isOwner: true, companionId: null, amount: D('25.00'), percentage: null },
-          { isOwner: false, companionId: 5, amount: D('25.00'), percentage: null },
+          { companionId: OWNER_COMPANION, amount: D('25.00'), percentage: null },
+          { companionId: 5, amount: D('25.00'), percentage: null },
         ] }),
-        row({ id: 3, description: 'Museum', paidByOwner: false, splits: [] }),
+        row({ id: 3, description: 'Museum', paidByCompanionId: null, splits: [] }),
       ]);
       mockBase.mockImplementation(async (expense) => (expense.currency === 'XYZ' ? null : expense.amount));
 
@@ -313,9 +343,46 @@ describe('ExpenseSplitService', () => {
       expect(result.balances.find((b) => b.participant === 'owner')?.paid).toBe(90);
     });
 
+    it('ESP-BOOK: the cost of a booking nobody paid for is a budget line, not an unsettled expense', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
+        row({}),
+        // A hotel's cost row: no payer, no split. It must not show up under "unsplit".
+        row({ id: 4, description: 'Hotel Paris', lodgingId: 68, paidByCompanionId: null, splits: [] }),
+        // The same kind of row once somebody paid and split it takes part like any expense.
+        row({
+          id: 5,
+          description: 'Concert',
+          activityId: 9,
+          amount: D('60.00'),
+          paidByCompanionId: 5,
+          splits: [
+            { companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null },
+            { companionId: 5, amount: D('30.00'), percentage: null },
+          ],
+        }),
+      ]);
+      mockBase.mockImplementation(async (expense) => expense.amount);
+
+      const result = await expenseSplitService.getSettleUp(1, 10);
+
+      expect(result.unsplit).toEqual([]);
+      expect(result.isComplete).toBe(true);
+      expect(mockBase).not.toHaveBeenCalledWith(expect.objectContaining({ id: 4 }), 'USD');
+      expect(mockBase).toHaveBeenCalledWith(expect.objectContaining({ id: 5 }), 'USD');
+    });
+
+    it('ESP-BOOK2: a booking cost with a payer but no shares yet is reported as unsplit', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
+        row({ id: 6, description: 'Hotel Paris', lodgingId: 68, paidByCompanionId: 5, splits: [] }),
+      ]);
+      const result = await expenseSplitService.getSettleUp(1, 10);
+      expect(result.unsplit).toHaveLength(1);
+      expect(result.isComplete).toBe(false);
+    });
+
     it('treats a split that no longer adds up as unsplit', async () => {
       mockPrisma.tripExpense.findMany.mockResolvedValue([
-        row({ splits: [{ isOwner: true, companionId: null, amount: D('30.00'), percentage: null }] }),
+        row({ splits: [{ companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null }] }),
       ]);
       const result = await expenseSplitService.getSettleUp(1, 10);
       expect(result.unsplit).toHaveLength(1);
@@ -326,8 +393,8 @@ describe('ExpenseSplitService', () => {
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         row({
           splits: [
-            { isOwner: true, companionId: null, amount: D('45.00'), percentage: null },
-            { isOwner: false, companionId: 77, amount: D('45.00'), percentage: null },
+            { companionId: OWNER_COMPANION, amount: D('45.00'), percentage: null },
+            { companionId: 77, amount: D('45.00'), percentage: null },
           ],
         }),
       ]);

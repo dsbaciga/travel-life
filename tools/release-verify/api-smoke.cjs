@@ -1,6 +1,6 @@
 // End-to-end smoke test of a running Travel Life backend against a real database.
 // Exercises the Prisma client through the HTTP API: creates, reads, updates,
-// raw-SQL paths (PostGIS, memories, photo groupings), a backup round trip and deletes.
+// raw-SQL paths (memories, photo groupings), a backup round trip and deletes.
 // Usage: node api-smoke.cjs <baseUrl> <outFile>
 const fs = require('fs');
 const base = process.argv[2].replace(/\/$/, '');
@@ -53,7 +53,7 @@ async function call(name, method, path, body, { expect = [200, 201], raw = false
   await call('get trip', 'GET', `/api/trips/${tripId}`);
   await call('update trip', 'PUT', `/api/trips/${tripId}`, { title: 'Smoke trip (edited)', budget: 1500, budgetCurrency: 'EUR' }, { expect: [200, 400] });
 
-  const parent = await call('create location (PostGIS)', 'POST', '/api/locations', {
+  const parent = await call('create location', 'POST', '/api/locations', {
     tripId, name: 'Paris', latitude: 48.8566, longitude: 2.3522, address: 'Paris, France',
   });
   const child = await call('create child location', 'POST', '/api/locations', {

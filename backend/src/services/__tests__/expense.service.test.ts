@@ -24,7 +24,7 @@ const mockPrisma = {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
   },
-  user: {
+  userPreferences: {
     findUnique: jest.fn(),
   },
   tripExpense: {
@@ -38,6 +38,7 @@ const mockPrisma = {
     findMany: jest.fn(),
     update: jest.fn(),
   },
+  travelCompanion: { findFirst: jest.fn() },
   $transaction: jest.fn(),
   activity: {
     findMany: jest.fn(),
@@ -113,18 +114,16 @@ function stubEmptyBudgetData() {
     budget: null,
     budgetCurrency: null,
   });
-  mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: null });
-  mockPrisma.activity.findMany.mockResolvedValue([]);
-  mockPrisma.transportation.findMany.mockResolvedValue([]);
-  mockPrisma.lodging.findMany.mockResolvedValue([]);
+  mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: null });
   mockPrisma.tripExpense.findMany.mockResolvedValue([]);
-  mockPrisma.customItem.findMany.mockResolvedValue([]);
 }
 
 describe('ExpenseService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
+    // The trip owner's "myself" companion (the `owner` participant in storage).
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue({ id: 77 });
     mockPrisma.$transaction.mockResolvedValue([]);
     mockPrisma.trip.findFirst.mockResolvedValue(ownedTrip());
     jest.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -136,7 +135,7 @@ describe('ExpenseService', () => {
   describe('EXP-001: Create expense freezes an FX snapshot', () => {
     it('should persist exchangeRate, baseAmount and baseCurrency', async () => {
       mockPrisma.trip.findUnique.mockResolvedValue({ budgetCurrency: 'USD' });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockConvert.mockResolvedValue(conversion('1.1426', '571.30'));
       mockPrisma.tripExpense.create.mockResolvedValue({ id: 1 });
 
@@ -167,7 +166,7 @@ describe('ExpenseService', () => {
   describe('EXP-002: Create expense with no available rate', () => {
     it('should store null snapshot fields rather than inventing a rate', async () => {
       mockPrisma.trip.findUnique.mockResolvedValue({ budgetCurrency: 'USD' });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockConvert.mockResolvedValue(null);
       mockPrisma.tripExpense.create.mockResolvedValue({ id: 1 });
 
@@ -187,7 +186,7 @@ describe('ExpenseService', () => {
 
     it('should defer the snapshot when no reporting currency is configured', async () => {
       mockPrisma.trip.findUnique.mockResolvedValue({ budgetCurrency: null });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: null });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: null });
       mockPrisma.tripExpense.create.mockResolvedValue({ id: 1 });
 
       await expenseService.createExpense(1, 10, {
@@ -222,7 +221,7 @@ describe('ExpenseService', () => {
     beforeEach(() => {
       mockPrisma.tripExpense.findFirst.mockResolvedValue(existing);
       mockPrisma.trip.findUnique.mockResolvedValue({ budgetCurrency: 'USD' });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.update.mockResolvedValue({ id: 5 });
     });
 
@@ -241,9 +240,9 @@ describe('ExpenseService', () => {
       mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
       mockPrisma.tripExpense.update.mockResolvedValue({ id: 5, amount: new Prisma.Decimal('100.00') });
       mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([
-        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00') },
-        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00') },
-        { id: 3, isOwner: false, companionId: 9, amount: new Prisma.Decimal('100.00') },
+        { id: 1, companionId: 77, amount: new Prisma.Decimal('250.00') },
+        { id: 2, companionId: 8, amount: new Prisma.Decimal('250.00') },
+        { id: 3, companionId: 9, amount: new Prisma.Decimal('100.00') },
       ]);
       mockPrisma.tripExpenseSplit.update.mockImplementation(((args: unknown) => args) as never);
 
@@ -265,13 +264,12 @@ describe('ExpenseService', () => {
       mockPrisma.tripExpense.update.mockResolvedValue({
         id: 5,
         amount: new Prisma.Decimal('100.00'),
-        paidByOwner: true,
-        paidByCompanionId: null,
+        paidByCompanionId: 77,
         splits: [],
       });
       const before = [
-        { id: 1, isOwner: true, companionId: null, amount: new Prisma.Decimal('250.00'), percentage: null },
-        { id: 2, isOwner: false, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 1, companionId: 77, amount: new Prisma.Decimal('250.00'), percentage: null },
+        { id: 2, companionId: 8, amount: new Prisma.Decimal('250.00'), percentage: null },
       ];
       mockPrisma.tripExpenseSplit.findMany
         .mockResolvedValueOnce(before)
@@ -284,9 +282,10 @@ describe('ExpenseService', () => {
       const result = await expenseService.updateExpense(1, 10, 5, { amount: 100 });
 
       expect(result.paidBy).toBe('owner');
+      expect(result.paidByOwner).toBe(true);
       expect(result.splits).toEqual([
-        { participant: 'owner', amount: 50, percentage: null },
-        { participant: 'companion:8', amount: 50, percentage: null },
+        { participant: 'owner', isOwner: true, amount: 50, percentage: null },
+        { participant: 'companion:8', isOwner: false, amount: 50, percentage: null },
       ]);
     });
 
@@ -327,19 +326,19 @@ describe('ExpenseService', () => {
   describe('EXP-004: Budget summary converts mixed currencies', () => {
     it('should NOT add differing currencies at face value', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
-      mockPrisma.lodging.findMany.mockResolvedValue([
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
+          // The cost of a lodging stay: an ordinary expense row as far as the summary is concerned.
           id: 1,
-          cost: new Prisma.Decimal('500'),
+          amount: new Prisma.Decimal('500'),
           currency: 'EUR',
           exchangeRate: new Prisma.Decimal('1.1426'),
           baseAmount: new Prisma.Decimal('571.30'),
           baseCurrency: 'USD',
-          checkInDate: new Date('2026-03-10T00:00:00.000Z'),
+          category: 'lodging',
+          date: new Date('2026-03-10T00:00:00.000Z'),
         },
-      ]);
-      mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 2,
           amount: new Prisma.Decimal('500'),
@@ -371,7 +370,7 @@ describe('ExpenseService', () => {
   describe('EXP-005: Budget summary reports unconvertible amounts', () => {
     it('should exclude them from spent and list them separately', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 1,
@@ -424,7 +423,7 @@ describe('ExpenseService', () => {
   describe('EXP-006: Frozen snapshots', () => {
     it('should use the stored rate without re-fetching', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 1,
@@ -448,7 +447,7 @@ describe('ExpenseService', () => {
 
     it('should ignore a snapshot frozen against a different base currency', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'GBP' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'GBP' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 1,
@@ -477,18 +476,20 @@ describe('ExpenseService', () => {
   describe('EXP-007: Lazy backfill', () => {
     it('should convert a dated legacy row at its own date and persist it', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
-      mockPrisma.activity.findMany.mockResolvedValue([
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 42,
-          cost: new Prisma.Decimal('200'),
+          amount: new Prisma.Decimal('200'),
           currency: 'EUR',
           exchangeRate: null,
           baseAmount: null,
           baseCurrency: null,
-          startTime: new Date('2026-03-10T09:00:00.000Z'),
+          category: 'activities',
+          date: new Date('2026-03-10T00:00:00.000Z'),
         },
       ]);
+      mockPrisma.tripExpense.update.mockResolvedValue({});
       mockConvert.mockResolvedValue(conversion('1.1426', '228.52'));
 
       const summary = await expenseService.getBudgetSummary(1, 10);
@@ -502,18 +503,18 @@ describe('ExpenseService', () => {
       expect(summary.conversion.isComplete).toBe(true);
 
       // The rate is looked up for the record's own date, not today.
-      expect(mockConvert.mock.calls[0][3]).toEqual(new Date('2026-03-10T09:00:00.000Z'));
+      expect(mockConvert.mock.calls[0][3]).toEqual(new Date('2026-03-10T00:00:00.000Z'));
 
       // The filled-in snapshot is written back so the next read is a lookup.
-      expect(mockPrisma.activity.update).toHaveBeenCalledTimes(1);
-      const write = mockPrisma.activity.update.mock.calls[0][0];
+      expect(mockPrisma.tripExpense.update).toHaveBeenCalledTimes(1);
+      const write = mockPrisma.tripExpense.update.mock.calls[0][0];
       expect(write.where).toEqual({ id: 42 });
       expect(write.data.baseCurrency).toBe('USD');
     });
 
     it('should flag an undated legacy row as estimated', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 7,
@@ -538,7 +539,7 @@ describe('ExpenseService', () => {
 
     it('should still report the total when the write-back fails', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 1,
@@ -566,7 +567,7 @@ describe('ExpenseService', () => {
   describe('EXP-008: Records with no currency', () => {
     it('should count them at face value and report the assumption', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockPrisma.tripExpense.findMany.mockResolvedValue([
         {
           id: 1,
@@ -599,14 +600,14 @@ describe('ExpenseService', () => {
         budget: null,
         budgetCurrency: 'EUR',
       });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'GBP' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'GBP' });
 
       const summary = await expenseService.getBudgetSummary(1, 10);
 
       expect(summary.currency).toBe('GBP');
       // Resolved against the OWNER, not the requesting user.
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: 1 } })
+      expect(mockPrisma.userPreferences.findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 1 } })
       );
     });
 
@@ -685,7 +686,7 @@ describe('ExpenseService', () => {
         budget: new Prisma.Decimal('1000'),
         budgetCurrency: 'EUR',
       });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockConvert.mockResolvedValue(conversion('1.1426', '1142.60'));
 
       const summary = await expenseService.getBudgetSummary(1, 10);
@@ -703,7 +704,7 @@ describe('ExpenseService', () => {
         budget: new Prisma.Decimal('1000'),
         budgetCurrency: 'XYZ',
       });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
       mockConvert.mockResolvedValue(null);
 
       const summary = await expenseService.getBudgetSummary(1, 10);
@@ -720,7 +721,7 @@ describe('ExpenseService', () => {
         budget: new Prisma.Decimal('1000'),
         budgetCurrency: 'USD',
       });
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
 
       const summary = await expenseService.getBudgetSummary(1, 10);
 
@@ -733,9 +734,9 @@ describe('ExpenseService', () => {
   // EXP-011: Breakdown bucket routing
   // ============================================================
   describe('EXP-011: Breakdown bucket routing', () => {
-    it('should route entity costs and expense categories to the right buckets', async () => {
+    it('should route every expense category (booking costs included) to the right bucket', async () => {
       stubEmptyBudgetData();
-      mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
 
       const base = {
         currency: 'USD',
@@ -744,16 +745,11 @@ describe('ExpenseService', () => {
         baseCurrency: null,
       };
 
-      mockPrisma.lodging.findMany.mockResolvedValue([
-        { id: 1, cost: new Prisma.Decimal('100'), ...base, checkInDate: null },
-      ]);
-      mockPrisma.transportation.findMany.mockResolvedValue([
-        { id: 2, cost: new Prisma.Decimal('200'), ...base, scheduledStart: null },
-      ]);
-      mockPrisma.activity.findMany.mockResolvedValue([
-        { id: 3, cost: new Prisma.Decimal('300'), ...base, startTime: null },
-      ]);
+      // Booking costs are expense rows with the category of their kind (custom items: `other`).
       mockPrisma.tripExpense.findMany.mockResolvedValue([
+        { id: 1, amount: new Prisma.Decimal('100'), ...base, category: 'lodging', date: null },
+        { id: 2, amount: new Prisma.Decimal('200'), ...base, category: 'transportation', date: null },
+        { id: 3, amount: new Prisma.Decimal('300'), ...base, category: 'activities', date: null },
         { id: 4, amount: new Prisma.Decimal('10'), ...base, category: 'food', date: null },
         { id: 5, amount: new Prisma.Decimal('20'), ...base, category: 'shopping', date: null },
         { id: 6, amount: new Prisma.Decimal('30'), ...base, category: 'other', date: null },
@@ -770,6 +766,64 @@ describe('ExpenseService', () => {
         other: 50,
       });
       expect(summary.spent).toBe(700);
+    });
+  });
+
+  // ============================================================
+  // EXP-013: An expense that is a booking's cost
+  // ============================================================
+  describe('EXP-013: Booking-linked expenses', () => {
+    const linked = {
+      id: 5,
+      tripId: 10,
+      amount: new Prisma.Decimal('500'),
+      currency: 'EUR',
+      date: new Date('2026-03-10T00:00:00.000Z'),
+      activityId: 42,
+      transportationId: null,
+      lodgingId: null,
+      customItemId: null,
+      receiptPath: null,
+    };
+
+    beforeEach(() => {
+      mockPrisma.tripExpense.findFirst.mockResolvedValue(linked);
+      mockPrisma.trip.findUnique.mockResolvedValue({ budgetCurrency: 'USD' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
+      mockPrisma.$transaction.mockImplementation((async (cb: (tx: unknown) => unknown) => cb(mockPrisma)) as never);
+      mockPrisma.activity.update.mockResolvedValue({});
+    });
+
+    it('EXP-013a: the list names the booking each expense is the cost of', async () => {
+      mockPrisma.tripExpense.findMany.mockResolvedValue([
+        { ...linked, splits: [], paidByCompanionId: null, activity: { id: 42, name: 'Concert' }, lodging: null, customItem: null, transportation: null },
+        { id: 6, tripId: 10, splits: [], paidByCompanionId: null, activity: null, lodging: null, customItem: null, transportation: null },
+      ]);
+
+      const list = (await expenseService.getExpensesByTrip(1, 10)) as Array<Record<string, unknown>>;
+
+      expect(list[0].linkedEntity).toEqual({ type: 'activity', id: 42, name: 'Concert' });
+      expect(list[0]).not.toHaveProperty('activity');
+      expect(list[1].linkedEntity).toBeNull();
+      expect(mockPrisma.tripExpense.findMany.mock.calls[0][0].include).toMatchObject({ activity: expect.anything(), transportation: expect.anything() });
+    });
+
+    it('EXP-013b: editing the amount from the expense screen moves the booking updatedAt (delta sync)', async () => {
+      mockConvert.mockResolvedValue(conversion('1.1426', '685.56'));
+      mockPrisma.tripExpense.update.mockResolvedValue({ ...linked, amount: new Prisma.Decimal('600') });
+
+      await expenseService.updateExpense(1, 10, 5, { amount: 600 });
+
+      expect(mockPrisma.activity.update).toHaveBeenCalledWith({ where: { id: 42 }, data: { updatedAt: expect.any(Date) } });
+    });
+
+    it('EXP-013c: deleting it clears the booking cost (same row) and tells delta sync', async () => {
+      mockPrisma.tripExpense.delete.mockResolvedValue({});
+
+      await expenseService.deleteExpense(1, 10, 5);
+
+      expect(mockPrisma.tripExpense.delete).toHaveBeenCalledWith({ where: { id: 5 } });
+      expect(mockPrisma.activity.update).toHaveBeenCalledWith({ where: { id: 42 }, data: { updatedAt: expect.any(Date) } });
     });
   });
 

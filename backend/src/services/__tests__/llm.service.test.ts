@@ -23,9 +23,11 @@ const mockPrismaUserFindUnique = jest.fn();
 jest.mock('../../config/database', () => ({
   __esModule: true,
   default: {
-    user: {
+    userIntegrations: {
       findUnique: (...args: unknown[]) => mockPrismaUserFindUnique(...args),
     },
+    // The user row itself is only consulted when there is no integrations row (an unknown user).
+    user: { findUnique: () => Promise.resolve(null) },
   },
 }));
 

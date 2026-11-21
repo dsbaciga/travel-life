@@ -51,6 +51,15 @@ const mockPrisma = {
     findFirst: jest.fn(),
     findMany: jest.fn(),
     update: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
+  },
+  userIntegrations: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+  },
+  userPreferences: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
   },
   trip: {
     updateMany: jest.fn(),
@@ -112,10 +121,22 @@ describe('UserService', () => {
     timezone: 'America/New_York',
     activityCategories: [{ name: 'Sightseeing', emoji: '🏛️' }],
     tripTypes: [{ name: 'Vacation', emoji: '🏖️' }],
-    dietaryPreferences: [],
-    useCustomMapStyle: false,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
+  };
+
+  // The display preferences of mockUser, as stored in user_preferences.
+  const mockPrefs = {
+    userId: 1,
+    activityCategories: [{ name: 'Sightseeing', emoji: '🏛️' }],
+    tripTypes: [{ name: 'Vacation', emoji: '🏖️' }],
+    dietaryPreferences: [],
+    linkIngestSenders: [],
+    useCustomMapStyle: false,
+    baseCurrency: 'EUR',
+    preferredMapsApp: null,
+    measurementSystem: 'metric',
+    defaultPartnerPermission: 'edit',
   };
 
   // ============================================================
@@ -124,6 +145,7 @@ describe('UserService', () => {
   describe('USR-001: Get user by ID', () => {
     it('should return user profile when found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      mockPrisma.userPreferences.findUnique.mockResolvedValue(mockPrefs);
 
       const result = await userService.getUserById(1);
 
@@ -139,6 +161,15 @@ describe('UserService', () => {
       });
       expect(result.id).toBe(1);
       expect(result.username).toBe('testuser');
+      // Identity from users, display preferences from user_preferences, in the API field order.
+      expect(Object.keys(result)).toEqual([
+        'id', 'username', 'email', 'avatarUrl', 'timezone', 'activityCategories', 'tripTypes',
+        'dietaryPreferences', 'useCustomMapStyle', 'baseCurrency', 'measurementSystem', 'createdAt', 'updatedAt',
+      ]);
+      expect(result.baseCurrency).toBe('EUR');
+      expect(result.measurementSystem).toBe('metric');
+      // No secret ever travels with the profile.
+      expect(mockPrisma.userIntegrations.findUnique).not.toHaveBeenCalled();
     });
   });
 
@@ -157,30 +188,45 @@ describe('UserService', () => {
   // USR-003: Update user settings
   // ============================================================
   describe('USR-003: Update user settings', () => {
-    it('should update user settings successfully', async () => {
-      const updatedUser = { ...mockUser, timezone: 'Europe/London' };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+    it('writes the timezone to users and the rest to user_preferences', async () => {
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.user.findUniqueOrThrow.mockResolvedValue({ ...mockUser, timezone: 'Europe/London' });
+      mockPrisma.userPreferences.upsert.mockResolvedValue({ ...mockPrefs, baseCurrency: 'GBP' });
 
-      const result = await userService.updateUserSettings(1, { timezone: 'Europe/London' });
+      const result = await userService.updateUserSettings(1, { timezone: 'Europe/London', baseCurrency: 'GBP' });
 
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: expect.objectContaining({ timezone: 'Europe/London' }),
-        select: expect.any(Object),
+        data: { timezone: 'Europe/London' },
+        select: { id: true },
+      });
+      expect(mockPrisma.userPreferences.upsert).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        update: { baseCurrency: 'GBP' },
+        create: { userId: 1, baseCurrency: 'GBP' },
       });
       expect(result.timezone).toBe('Europe/London');
+      expect(result.baseCurrency).toBe('GBP');
     });
 
     it('should update activity categories', async () => {
       const newCategories = [{ name: 'Dining', emoji: '🍽️' }];
-      const updatedUser = { ...mockUser, activityCategories: newCategories };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.user.findUniqueOrThrow.mockResolvedValue(mockUser);
+      mockPrisma.userPreferences.upsert.mockResolvedValue({ ...mockPrefs, activityCategories: newCategories });
 
       const result = await userService.updateUserSettings(1, {
         activityCategories: newCategories,
       });
 
       expect(result.activityCategories).toEqual(newCategories);
+      // The users row is only stamped (updated_at), its columns are not written.
+      expect(mockPrisma.user.update).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { updatedAt: expect.any(Date) },
+        select: { id: true },
+      });
     });
   });
 
@@ -189,42 +235,30 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-004: Update Immich settings', () => {
     it('should encrypt Immich API key at rest when updating settings', async () => {
-      const updatedUser = {
-        id: 1,
-        username: 'testuser',
-        email: 'test@example.com',
-        immichApiUrl: 'http://localhost:2283',
-        immichApiKey: 'enc:v1:encrypted',
-      };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userIntegrations.upsert.mockImplementation(async ({ update }: { update: object }) => ({ userId: 1, ...update }));
 
       const result = await userService.updateImmichSettings(1, {
         immichApiUrl: 'http://localhost:2283',
         immichApiKey: 'test-key',
       });
 
-      expect(mockPrisma.user.update).toHaveBeenCalledWith({
-        where: { id: 1 },
-        data: expect.objectContaining({
+      expect(mockPrisma.userIntegrations.upsert).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        update: expect.objectContaining({
           immichApiUrl: 'http://localhost:2283',
           immichApiKey: expect.stringMatching(/^enc:v1:/),
         }),
-        select: expect.any(Object),
+        create: expect.objectContaining({ userId: 1, immichApiUrl: 'http://localhost:2283' }),
       });
-      const savedKey = mockPrisma.user.update.mock.calls[0][0].data.immichApiKey as string;
+      const savedKey = mockPrisma.userIntegrations.upsert.mock.calls[0][0].update.immichApiKey as string;
       expect(decryptSecret(savedKey)).toBe('test-key');
       expect(result.immichApiUrl).toBe('http://localhost:2283');
     });
 
     it('should clear Immich settings by setting null', async () => {
-      const updatedUser = {
-        id: 1,
-        username: 'testuser',
-        email: 'test@example.com',
-        immichApiUrl: null,
-        immichApiKey: null,
-      };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userIntegrations.upsert.mockImplementation(async ({ update }: { update: object }) => ({ userId: 1, ...update }));
 
       const result = await userService.updateImmichSettings(1, {
         immichApiUrl: null,
@@ -232,6 +266,7 @@ describe('UserService', () => {
       });
 
       expect(result.immichApiUrl).toBeNull();
+      expect(result.immichApiKey).toBeNull();
     });
   });
 
@@ -240,7 +275,8 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-005: Get Immich settings', () => {
     it('should return Immich settings status when configured', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         immichApiUrl: 'http://localhost:2283',
         immichApiKey: 'test-key',
       });
@@ -253,7 +289,8 @@ describe('UserService', () => {
     });
 
     it('should return unconfigured status when not set', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         immichApiUrl: null,
         immichApiKey: null,
       });
@@ -265,6 +302,7 @@ describe('UserService', () => {
     });
 
     it('should throw 404 when user not found', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.getImmichSettings(999)).rejects.toThrow('User not found');
@@ -276,19 +314,14 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-006: Update weather settings', () => {
     it('should encrypt weather API key at rest', async () => {
-      const updatedUser = {
-        id: 1,
-        username: 'testuser',
-        email: 'test@example.com',
-        weatherApiKey: 'enc:v1:encrypted',
-      };
-      mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userIntegrations.upsert.mockResolvedValue({ userId: 1, weatherApiKey: 'enc:v1:encrypted' });
 
       await userService.updateWeatherSettings(1, {
         weatherApiKey: 'new-weather-key',
       });
 
-      const savedKey = mockPrisma.user.update.mock.calls[0][0].data.weatherApiKey as string;
+      const savedKey = mockPrisma.userIntegrations.upsert.mock.calls[0][0].update.weatherApiKey as string;
       expect(savedKey).toMatch(/^enc:v1:/);
       expect(decryptSecret(savedKey)).toBe('new-weather-key');
     });
@@ -299,7 +332,8 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-007: Get weather settings', () => {
     it('should return weather key set status', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         weatherApiKey: 'some-key',
       });
 
@@ -309,7 +343,8 @@ describe('UserService', () => {
     });
 
     it('should return false when weather key not set', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         weatherApiKey: null,
       });
 
@@ -319,6 +354,7 @@ describe('UserService', () => {
     });
 
     it('should throw 404 when user not found', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.getWeatherSettings(999)).rejects.toThrow('User not found');
@@ -333,6 +369,7 @@ describe('UserService', () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
       const updatedUser = { ...mockUser, username: 'newusername' };
       mockPrisma.user.update.mockResolvedValue(updatedUser);
+      mockPrisma.userPreferences.findUnique.mockResolvedValue(mockPrefs);
       (companionService.updateMyselfCompanionName as jest.Mock).mockResolvedValue(null);
 
       const result = await userService.updateUsername(1, 'newusername');
@@ -483,7 +520,8 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-015: Get aviationstack settings', () => {
     it('should return aviationstack key set status', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         aviationstackApiKey: 'some-key',
       });
 
@@ -493,6 +531,7 @@ describe('UserService', () => {
     });
 
     it('should throw 404 when user not found', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.getAviationstackSettings(999)).rejects.toThrow('User not found');
@@ -504,7 +543,8 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-016: Get openrouteservice settings', () => {
     it('should return openrouteservice key set status', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         openrouteserviceApiKey: 'some-key',
       });
 
@@ -514,6 +554,7 @@ describe('UserService', () => {
     });
 
     it('should throw 404 when user not found', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.getOpenrouteserviceSettings(999)).rejects.toThrow('User not found');
@@ -525,16 +566,25 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-017: Rename trip type', () => {
     it('should rename a trip type and update trips', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({
+        userId: 1,
         tripTypes: [
           { name: 'Vacation', emoji: '🏖️' },
           { name: 'Business', emoji: '💼' },
         ],
       });
       mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userPreferences.upsert.mockResolvedValue({});
       mockPrisma.trip.updateMany.mockResolvedValue({ count: 2 });
 
       const result = await userService.renameTripType(1, 'Vacation', 'Holiday');
+
+      expect(mockPrisma.userPreferences.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: 1 },
+          update: { tripTypes: [{ name: 'Holiday', emoji: '🏖️' }, { name: 'Business', emoji: '💼' }] },
+        })
+      );
 
       expect(result).toEqual([
         { name: 'Holiday', emoji: '🏖️' },
@@ -543,6 +593,7 @@ describe('UserService', () => {
     });
 
     it('should throw 404 when user not found', async () => {
+      mockPrisma.userPreferences.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.renameTripType(999, 'Old', 'New')).rejects.toThrow(
@@ -556,13 +607,15 @@ describe('UserService', () => {
   // ============================================================
   describe('USR-018: Delete trip type', () => {
     it('should delete a trip type and clear from trips', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({
+        userId: 1,
         tripTypes: [
           { name: 'Vacation', emoji: '🏖️' },
           { name: 'Business', emoji: '💼' },
         ],
       });
       mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userPreferences.upsert.mockResolvedValue({});
       mockPrisma.trip.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await userService.deleteTripType(1, 'Vacation');
@@ -576,35 +629,96 @@ describe('UserService', () => {
   });
 
   // ============================================================
+  // USR-020: Settings that moved tables keep their API
+  // ============================================================
+  describe('USR-020: Preferences and integrations are read from their own tables', () => {
+    it('link ingest settings combine the account email with the stored senders', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ email: 'me@example.com' });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ ...mockPrefs, linkIngestSenders: ['a@x.com', 7, 'b@x.com'] });
+
+      const result = await userService.getLinkIngestSettings(1);
+
+      expect(result.accountEmail).toBe('me@example.com');
+      expect(result.linkIngestSenders).toEqual(['a@x.com', 'b@x.com']);
+    });
+
+    it('link ingest senders are normalised and written to user_preferences', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ email: 'me@example.com' });
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userPreferences.upsert.mockResolvedValue({ ...mockPrefs });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ ...mockPrefs });
+
+      await userService.updateLinkIngestSettings(1, [' A@X.com ', 'a@x.com', '']);
+
+      expect(mockPrisma.userPreferences.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({ update: { linkIngestSenders: ['a@x.com'] } })
+      );
+    });
+
+    it('maps settings read and write user_preferences', async () => {
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ ...mockPrefs, preferredMapsApp: 'google' });
+      expect(await userService.getMapsSettings(1)).toEqual({ preferredMapsApp: 'google' });
+
+      mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userPreferences.upsert.mockResolvedValue({ ...mockPrefs, preferredMapsApp: 'apple' });
+      expect(await userService.updateMapsSettings(1, { preferredMapsApp: 'apple' })).toEqual({ preferredMapsApp: 'apple' });
+    });
+
+    it('smtp settings never return the password, only whether it is set', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1, smtpProvider: 'custom', smtpHost: 'h', smtpPort: 587, smtpSecure: false,
+        smtpUser: 'u', smtpPassword: 'enc:v1:x', smtpFrom: null,
+      });
+      const result = await userService.getSmtpSettings(1);
+      expect(result).not.toHaveProperty('smtpPassword');
+      expect(result.smtpPasswordSet).toBe(true);
+      expect(result.smtpConfigured).toBe(true);
+    });
+
+    it('a user without an integrations row has no SMTP override', async () => {
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      expect(await userService.getEffectiveSmtpConfig(1)).toBeNull();
+    });
+
+    it('travel partner settings take the permission level from user_preferences', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ travelPartnerId: 2, travelPartner: { id: 2, username: 'p', email: 'p@x.com', avatarUrl: null } });
+      mockPrisma.userPreferences.findUnique.mockResolvedValue({ ...mockPrefs, defaultPartnerPermission: 'view' });
+      const result = await userService.getTravelPartnerSettings(1);
+      expect(result).toMatchObject({ travelPartnerId: 2, defaultPartnerPermission: 'view' });
+    });
+  });
+
+  // ============================================================
   // USR-019: Encrypt and decrypt per-user API keys & SMTP password
   // ============================================================
   describe('USR-019: Per-user secret encryption and decryption', () => {
     it('encrypts aviationstack, openrouteservice, llm API keys and smtpPassword on save', async () => {
       mockPrisma.user.update.mockResolvedValue({});
+      mockPrisma.userIntegrations.upsert.mockResolvedValue({ userId: 1 });
+      const saved = (n: number, field: string) =>
+        mockPrisma.userIntegrations.upsert.mock.calls[n][0].update[field] as string;
 
       await userService.updateAviationstackSettings(1, { aviationstackApiKey: 'av-secret' });
-      const savedAv = mockPrisma.user.update.mock.calls[0][0].data.aviationstackApiKey as string;
-      expect(savedAv).toMatch(/^enc:v1:/);
-      expect(decryptSecret(savedAv)).toBe('av-secret');
+      expect(saved(0, 'aviationstackApiKey')).toMatch(/^enc:v1:/);
+      expect(decryptSecret(saved(0, 'aviationstackApiKey'))).toBe('av-secret');
 
       await userService.updateOpenrouteserviceSettings(1, { openrouteserviceApiKey: 'ors-secret' });
-      const savedOrs = mockPrisma.user.update.mock.calls[1][0].data.openrouteserviceApiKey as string;
-      expect(savedOrs).toMatch(/^enc:v1:/);
-      expect(decryptSecret(savedOrs)).toBe('ors-secret');
+      expect(saved(1, 'openrouteserviceApiKey')).toMatch(/^enc:v1:/);
+      expect(decryptSecret(saved(1, 'openrouteserviceApiKey'))).toBe('ors-secret');
 
       await userService.updateLlmSettings(1, { llmApiKey: 'sk-llm-secret' });
-      const savedLlm = mockPrisma.user.update.mock.calls[2][0].data.llmApiKey as string;
-      expect(savedLlm).toMatch(/^enc:v1:/);
-      expect(decryptSecret(savedLlm)).toBe('sk-llm-secret');
+      expect(saved(2, 'llmApiKey')).toMatch(/^enc:v1:/);
+      expect(decryptSecret(saved(2, 'llmApiKey'))).toBe('sk-llm-secret');
 
       await userService.updateSmtpSettings(1, { smtpPassword: 'smtp-password-123' });
-      const savedSmtp = mockPrisma.user.update.mock.calls[3][0].data.smtpPassword as string;
-      expect(savedSmtp).toMatch(/^enc:v1:/);
-      expect(decryptSecret(savedSmtp)).toBe('smtp-password-123');
+      expect(saved(3, 'smtpPassword')).toMatch(/^enc:v1:/);
+      expect(decryptSecret(saved(3, 'smtpPassword'))).toBe('smtp-password-123');
     });
 
     it('decrypts encrypted smtpPassword in getEffectiveSmtpConfig', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: 1,
         smtpHost: 'smtp.example.com',
         smtpPort: 587,
         smtpSecure: false,

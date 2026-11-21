@@ -59,10 +59,20 @@ jest.mock('@prisma/client', () => {
 });
 
 // Mock the database config
+const mockTripFindUnique = jest.fn();
 const mockPrisma = {
   trip: {
     findFirst: jest.fn(),
-    findUnique: jest.fn(),
+    findUnique: mockTripFindUnique,
+  },
+  // The trip owner's key lives in user_integrations. These tests declare it on the trip fixture
+  // (`user: { weatherApiKey }`), so the integrations lookup answers with whatever the last trip read carried.
+  userIntegrations: {
+    findUnique: jest.fn(async () => {
+      const last = mockTripFindUnique.mock.results.at(-1);
+      const trip = (await last?.value) as { user?: { weatherApiKey?: string | null } } | undefined;
+      return { userId: 1, weatherApiKey: trip?.user?.weatherApiKey ?? null };
+    }),
   },
   location: {
     findFirst: jest.fn(),
@@ -510,17 +520,9 @@ describe('WeatherService', () => {
         .mockResolvedValueOnce(null)  // Day-specific location query
         .mockResolvedValueOnce(null); // Trip-wide fallback location query
 
-      // Activity found for this day
-      const mockActivity = { id: 5, tripId: 1 };
+      // Activity found for this day, with its place as the locationId FK
+      const mockActivity = { id: 5, tripId: 1, locationId: 10 };
       mockPrisma.activity.findFirst.mockResolvedValue(mockActivity);
-
-      // Entity link found for activity -> location
-      mockPrisma.entityLink.findFirst.mockResolvedValue({
-        sourceType: 'ACTIVITY',
-        sourceId: 5,
-        targetType: 'LOCATION',
-        targetId: 10,
-      });
 
       // Linked location has coordinates
       mockPrisma.location.findUnique.mockResolvedValue({
@@ -556,7 +558,32 @@ describe('WeatherService', () => {
 
       expect(result).toBeDefined();
       expect(mockPrisma.activity.findFirst).toHaveBeenCalled();
-      expect(mockPrisma.entityLink.findFirst).toHaveBeenCalled();
+      // The coordinates come from the activity's own locationId, not from an entity link
+      expect(mockPrisma.location.findUnique).toHaveBeenCalledWith({ where: { id: 10 } });
+      expect(mockPrisma.entityLink.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('WEA-014b: falls back to the lodging locationId when the activity has no location', async () => {
+      const trip = {
+        id: 1,
+        userId: 1,
+        startDate: new Date('2024-07-01'),
+        endDate: new Date('2024-07-01'),
+        user: { weatherApiKey: 'user-key' },
+      };
+      mockPrisma.trip.findUnique.mockResolvedValue(trip);
+      mockPrisma.location.findFirst.mockResolvedValue(null);
+      mockPrisma.activity.findFirst.mockResolvedValue({ id: 5, tripId: 1, locationId: null });
+      mockPrisma.lodging.findFirst.mockResolvedValue({ id: 8, tripId: 1, locationId: 12 });
+      mockPrisma.location.findUnique.mockResolvedValue({ id: 12, latitude: 41.9, longitude: 12.5, name: 'Hotel' });
+      mockPrisma.weatherData.findFirst.mockResolvedValue(null);
+      mockAxios.get.mockResolvedValue({ data: { daily: [] } });
+
+      await weatherService.getWeatherForTrip(1, 1).catch(() => undefined);
+
+      expect(mockPrisma.location.findUnique).toHaveBeenCalledWith({ where: { id: 12 } });
+      expect(mockPrisma.location.findUnique).not.toHaveBeenCalledWith({ where: { id: 10 } });
+      expect(mockPrisma.entityLink.findFirst).not.toHaveBeenCalled();
     });
   });
 

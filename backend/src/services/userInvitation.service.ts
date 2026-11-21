@@ -8,6 +8,7 @@ import { emailService } from './email.service';
 import userService from './user.service';
 import type { SendUserInvitationInput, AcceptInvitationInput } from '../types/userInvitation.types';
 import { UserInvitationStatusValues } from '../types/userInvitation.types';
+import { defaultUserSettingsCreate } from './_shared/userSettings';
 
 // Default invitation expiry: 7 days
 const INVITATION_EXPIRY_DAYS = 7;
@@ -232,6 +233,8 @@ export const userInvitationService = {
           username: data.username,
           email: data.email.toLowerCase(),
           passwordHash,
+          // Every user has an integrations row and a preferences row from the start.
+          ...defaultUserSettingsCreate,
         },
         select: {
           id: true,
@@ -249,6 +252,7 @@ export const userInvitationService = {
           name: user.username,
           email: user.email,
           isMyself: true,
+          linkedUserId: user.id,
         },
       });
 

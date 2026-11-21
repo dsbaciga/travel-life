@@ -1,8 +1,18 @@
-// Note: Location association is handled via EntityLink system, not direct FK
+export type ActivityLocation = {
+  id: number;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+// The activity's place is its own locationId (a direct FK), not an entity link
 export type Activity = {
   id: number;
   tripId: number;
   parentId: number | null;
+  locationId: number | null;
+  location?: ActivityLocation | null;
   name: string;
   description: string | null;
   category: string | null;
@@ -38,10 +48,10 @@ export type Activity = {
   }[];
 };
 
-// Note: Location association is handled via EntityLink system, not direct FK
 export type CreateActivityInput = {
   tripId: number;
   parentId?: number | null;
+  locationId?: number | null;
   name: string;
   description?: string;
   category?: string;
@@ -57,9 +67,9 @@ export type CreateActivityInput = {
   dietaryTags?: string[];
 };
 
-// Note: Location association is handled via EntityLink system, not direct FK
 export type UpdateActivityInput = {
   parentId?: number | null;
+  locationId?: number | null;
   name?: string;
   description?: string | null;
   category?: string | null;

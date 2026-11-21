@@ -19,6 +19,10 @@ const mockPrisma = {
     findUnique: jest.fn(),
     create: jest.fn(),
   },
+  // The inviter has no SMTP override of their own, so the global mailer is used.
+  userIntegrations: {
+    findUnique: jest.fn().mockResolvedValue({ userId: 1, smtpHost: null, smtpUser: null, smtpPassword: null }),
+  },
   userInvitation: {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
@@ -274,6 +278,12 @@ describe('UserInvitationService', () => {
       expect(result.id).toBe(10);
       expect(result.username).toBe('newuser');
       expect(mockPrisma.travelCompanion.create).toHaveBeenCalled(); // "Myself" companion
+      // The new account starts with its integrations and preferences rows, created in the same statement.
+      expect(mockPrisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ integrations: { create: {} }, preferences: { create: {} } }),
+        })
+      );
     });
 
     it('should reject expired invitation', async () => {

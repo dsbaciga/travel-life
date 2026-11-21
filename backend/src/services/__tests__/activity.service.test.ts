@@ -6,10 +6,11 @@
  * - ACT-002: Create all-day activity
  * - ACT-003: Assign custom category
  * - ACT-004: Track cost and currency
- * - ACT-005: Link to location (via EntityLink system)
+ * - ACT-005: Create without a location (location is the locationId FK, see ACT-009)
  * - ACT-006: Get activities by trip
  * - ACT-007: Update activity
  * - ACT-008: Delete activity
+ * - ACT-009: Activity location (locationId FK)
  */
 
 // Mock @prisma/client BEFORE any imports that depend on it
@@ -54,6 +55,7 @@ jest.mock('@prisma/client', () => {
 const mockPrisma = {
   trip: {
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
   activity: {
     create: jest.fn(),
@@ -65,6 +67,18 @@ const mockPrisma = {
   },
   entityLink: {
     deleteMany: jest.fn(),
+  },
+  location: {
+    findFirst: jest.fn(),
+  },
+  travelCompanion: { findFirst: jest.fn() },
+  tripExpenseSplit: { findMany: jest.fn(), update: jest.fn() },
+  tripExpense: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
   },
   $transaction: jest.fn(),
 };
@@ -85,6 +99,12 @@ describe('ActivityService', () => {
     jest.clearAllMocks();
     // Default: trip access succeeds for owner (includes collaborators for permission checks)
     mockPrisma.trip.findFirst.mockResolvedValue(createMockTrip(100, 1));
+    mockPrisma.$transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(mockPrisma));
+    mockPrisma.tripExpense.findUnique.mockResolvedValue(null);
+    mockPrisma.tripExpense.findMany.mockResolvedValue([]);
+    mockPrisma.trip.findUnique.mockResolvedValue({ userId: 1, timezone: null, user: { timezone: null } });
+    mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
+    mockPrisma.tripExpenseSplit.findMany.mockResolvedValue([]);
   });
 
   // Helper to create a mock trip (includes collaborators for permission checks)
@@ -119,7 +139,7 @@ describe('ActivityService', () => {
     parent: { id: number; name: string } | null;
     children: unknown[];
     trip: { id: number; userId: number };
-  }> = {}) => ({
+  }> = {}) => withCostExpense({
     id: 1,
     tripId: 100,
     parentId: null,
@@ -143,6 +163,19 @@ describe('ActivityService', () => {
     trip: { id: 100, userId: 1 },
     ...overrides,
   });
+
+  // A booking's cost lives on its expense row: a row with a cost carries it as `costExpense`, like the
+  // service's queries return it.
+  function withCostExpense<T extends { cost: unknown; currency: string | null }>(row: T) {
+    const { cost, currency, ...rest } = row;
+    return {
+      ...rest,
+      costExpense:
+        cost === null || cost === undefined
+          ? null
+          : { id: 900, amount: cost, currency, exchangeRate: null, baseAmount: null, baseCurrency: null },
+    };
+  }
 
   // ============================================================
   // ACT-001: Create timed activity
@@ -446,10 +479,12 @@ describe('ActivityService', () => {
 
       const result = await activityService.createActivity(userId, input);
 
+      // The cost is created with the activity as its expense row (category of its kind).
       expect(mockPrisma.activity.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          cost: input.cost,
-          currency: 'EUR',
+          costExpense: {
+            create: expect.objectContaining({ tripId: 100, description: 'Concert Tickets', category: 'activities', amount: 250, currency: 'EUR', date: null }),
+          },
         }),
         include: expect.any(Object),
       });
@@ -536,7 +571,7 @@ describe('ActivityService', () => {
   });
 
   // ============================================================
-  // ACT-005: Link to location (via EntityLink system)
+  // ACT-005: Create without a location (location is the locationId FK, see ACT-009)
   // ============================================================
   describe('ACT-005: Link to location', () => {
     // Note: Location linking is handled via the EntityLink system, not direct FK
@@ -599,6 +634,92 @@ describe('ActivityService', () => {
 
       expect(result.parentId).toBe(parentActivityId);
       expect(result.parent?.name).toBe('Parent Activity');
+    });
+  });
+
+  // ============================================================
+  // ACT-009: Activity location (locationId FK)
+  // ============================================================
+  describe('ACT-009: Activity location (locationId FK)', () => {
+    const userId = 1;
+    const location = { id: 7, name: 'Colosseum', address: 'Rome' };
+
+    it('create accepts a locationId from the same trip and returns the location', async () => {
+      mockPrisma.location.findFirst.mockResolvedValue({ id: 7, tripId: 100 });
+      mockPrisma.activity.create.mockResolvedValue({
+        ...createMockActivity({ id: 10, name: 'Tour' }),
+        locationId: 7,
+        location,
+      });
+
+      const result = await activityService.createActivity(userId, { tripId: 100, name: 'Tour', locationId: 7 });
+
+      expect(mockPrisma.location.findFirst).toHaveBeenCalledWith({ where: { id: 7, tripId: 100 } });
+      expect(mockPrisma.activity.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ locationId: 7 }),
+          include: expect.objectContaining({ location: expect.any(Object) }),
+        })
+      );
+      expect(result.locationId).toBe(7);
+      expect(result.location).toEqual(location);
+    });
+
+    it('create rejects a locationId from another trip with 404 and saves nothing', async () => {
+      mockPrisma.location.findFirst.mockResolvedValue(null);
+
+      await expect(
+        activityService.createActivity(userId, { tripId: 100, name: 'Tour', locationId: 999 })
+      ).rejects.toMatchObject({ statusCode: 404 });
+      expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+    });
+
+    it('create stores a null locationId when none is given', async () => {
+      mockPrisma.activity.create.mockResolvedValue(createMockActivity({ id: 11 }));
+
+      await activityService.createActivity(userId, { tripId: 100, name: 'No place' });
+
+      expect(mockPrisma.location.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.activity.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: null }) })
+      );
+    });
+
+    it('update accepts a locationId and returns it', async () => {
+      mockPrisma.activity.findUnique.mockResolvedValue(createMockActivity({ id: 1 }));
+      mockPrisma.location.findFirst.mockResolvedValue({ id: 7, tripId: 100 });
+      mockPrisma.activity.update.mockResolvedValue({ ...createMockActivity({ id: 1 }), locationId: 7, location });
+
+      const result = await activityService.updateActivity(userId, 1, { locationId: 7 });
+
+      expect(mockPrisma.location.findFirst).toHaveBeenCalledWith({ where: { id: 7, tripId: 100 } });
+      expect(mockPrisma.activity.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: 7 }) })
+      );
+      expect(result.locationId).toBe(7);
+    });
+
+    it('update rejects a locationId from another trip with 404', async () => {
+      mockPrisma.activity.findUnique.mockResolvedValue(createMockActivity({ id: 1 }));
+      mockPrisma.location.findFirst.mockResolvedValue(null);
+
+      await expect(activityService.updateActivity(userId, 1, { locationId: 999 })).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      expect(mockPrisma.activity.update).not.toHaveBeenCalled();
+    });
+
+    it('update with locationId null clears the location without a trip lookup', async () => {
+      mockPrisma.activity.findUnique.mockResolvedValue(createMockActivity({ id: 1 }));
+      mockPrisma.activity.update.mockResolvedValue({ ...createMockActivity({ id: 1 }), locationId: null, location: null });
+
+      const result = await activityService.updateActivity(userId, 1, { locationId: null });
+
+      expect(mockPrisma.location.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.activity.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ locationId: null }) })
+      );
+      expect(result.locationId).toBeNull();
     });
   });
 
@@ -850,9 +971,20 @@ describe('ActivityService', () => {
 
       mockPrisma.activity.findUnique.mockResolvedValue(mockExistingActivity);
       mockPrisma.activity.update.mockResolvedValue(mockUpdatedActivity);
+      // The cost is the activity's expense row: found first (to change it), read again for the response.
+      mockPrisma.tripExpense.findUnique
+        .mockResolvedValueOnce({ id: 900, amount: new Prisma.Decimal(100), currency: 'USD', receiptPath: null, tripId: 100 })
+        .mockResolvedValueOnce({ id: 900, amount: new Prisma.Decimal(150), currency: 'GBP', exchangeRate: null, baseAmount: null, baseCurrency: null });
+      mockPrisma.tripExpense.update.mockResolvedValue({ id: 900, amount: new Prisma.Decimal(150) });
 
       const result = await activityService.updateActivity(userId, activityId, updateData);
 
+      // The activity row is not given the cost; its expense row is, and the frozen FX snapshot is cleared.
+      expect(mockPrisma.activity.update.mock.calls[0][0].data).not.toHaveProperty('cost');
+      expect(mockPrisma.tripExpense.update).toHaveBeenCalledWith({
+        where: { id: 900 },
+        data: { amount: 150, currency: 'GBP', exchangeRate: null, baseAmount: null, baseCurrency: null },
+      });
       expect(result.cost).toBe(150);
       expect(result.currency).toBe('GBP');
     });
@@ -1000,6 +1132,7 @@ describe('ActivityService', () => {
         return callback({
           entityLink: { deleteMany: mockTxEntityLinkDeleteMany },
           activity: { delete: mockTxActivityDelete, findMany: mockTxActivityFindMany },
+          tripExpense: { findMany: jest.fn().mockResolvedValue([]) },
         });
       });
 
@@ -1078,6 +1211,7 @@ describe('ActivityService', () => {
         return callback({
           entityLink: { deleteMany: mockTxEntityLinkDeleteMany },
           activity: { delete: mockTxActivityDelete, findMany: mockTxActivityFindMany },
+          tripExpense: { findMany: jest.fn().mockResolvedValue([]) },
         });
       });
 

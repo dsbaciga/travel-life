@@ -43,10 +43,10 @@ const lodgingTypeEnum = z.enum([
   LodgingType.OTHER,
 ]);
 
-// Note: Location association is handled via EntityLink system, not direct FK
 export interface Lodging {
   id: number;
   tripId: number;
+  locationId: number | null;
   type: LodgingTypeEnum;
   name: string;
   address: string | null;
@@ -63,10 +63,11 @@ export interface Lodging {
   updatedAt: Date;
 }
 
-// Note: Location association is handled via EntityLink system, not direct FK
 // Validation schemas
+// locationId is the stay's place (a direct FK; validated to be in the same trip by the service)
 export const createLodgingSchema = z.object({
   tripId: z.number(),
+  locationId: optionalNumericId(),
   type: lodgingTypeEnum,
   name: requiredStringWithMax(500),
   address: z.string().max(1000).optional(),
@@ -81,8 +82,9 @@ export const createLodgingSchema = z.object({
   notes: z.string().max(2000).optional(),
 });
 
-// Note: Location association is handled via EntityLink system, not direct FK
+// locationId is the stay's place; null clears it
 export const updateLodgingSchema = z.object({
+  locationId: optionalNumericId(),
   type: lodgingTypeEnum.optional(),
   // name is NOT NULL in the database, so it may be omitted but never cleared
   name: requiredStringWithMax(500).optional(),

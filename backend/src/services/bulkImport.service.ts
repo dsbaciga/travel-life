@@ -9,12 +9,15 @@ import {
   evaluateLocationRows,
   type EvaluatedRow,
 } from './_shared/bulkImportEvaluators';
+import { deriveLocationCountryCode } from './_shared/countryCodes';
+import { buildBookingCostCreate } from './_shared/bookingCost';
 import type {
   BulkImportResult,
   ImportActivitiesInput,
   ImportLocationsInput,
   ImportRowResult,
 } from '../types/bulkImport.types';
+import { findUserPreferences } from './_shared/userSettings';
 
 /** 500 sequential inserts in one transaction can outlast Prisma's 5 s default. */
 const IMPORT_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 60_000 };
@@ -132,11 +135,12 @@ class BulkImportService {
     }
 
     const tripTimezoneSet = await prisma.$transaction(async (tx) => {
-      const created = await tx.location.createManyAndReturn({
+      await tx.location.createManyAndReturn({
         data: plan.toCreate.map(({ data }) => ({
           tripId,
           name: data.name,
           address: data.address ?? null,
+          countryCode: deriveLocationCountryCode(null, data.address),
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
           categoryId: data.categoryId ?? null,
@@ -148,19 +152,6 @@ class BulkImportService {
         })),
         select: { id: true },
       });
-
-      // The PostGIS column is kept in step by a Prisma extension on `location.create`, which
-      // runs its follow-up UPDATE on a different connection and so cannot see rows this
-      // transaction has not committed. createManyAndReturn bypasses that hook anyway, so sync
-      // the geography column for the whole batch here, inside the transaction.
-      const located = created.map((c) => c.id);
-      if (located.length > 0) {
-        await tx.$executeRaw`
-          UPDATE locations
-          SET coordinates = ST_SetSRID(ST_MakePoint(longitude::double precision, latitude::double precision), 4326)::geography
-          WHERE id IN (${Prisma.join(located)}) AND latitude IS NOT NULL AND longitude IS NOT NULL
-        `;
-      }
 
       // Same rule as single-create's autoSetTripTimezone, applied once for the batch.
       if (!trip?.timezone) {
@@ -191,8 +182,8 @@ class BulkImportService {
     await verifyTripAccessWithPermission(userId, tripId, 'edit');
 
     const [trip, user, userTimezone, locations, existing] = await Promise.all([
-      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { activityCategories: true } }),
+      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true, user: { select: { timezone: true } } } }),
+      findUserPreferences(userId),
       getUserTimezone(userId),
       prisma.location.findMany({ where: { tripId }, select: { id: true, name: true } }),
       prisma.activity.findMany({ where: { tripId }, select: { name: true, startTime: true } }),
@@ -218,44 +209,37 @@ class BulkImportService {
     }
 
     await prisma.$transaction(async (tx) => {
-      const links: Prisma.EntityLinkCreateManyInput[] = [];
-
       for (const { data } of plan.toCreate) {
         const { activity, costDecimal, locationId } = data;
-        const created = await tx.activity.create({
+        const startTime = activity.startTime ? new Date(activity.startTime) : null;
+        // The cost is the activity's expense row (a Decimal from the canonical string: a float would
+        // round-trip 0.1 + 0.2 style noise).
+        const costExpense = await buildBookingCostCreate(
+          tx,
+          tripId,
+          { kind: 'activity', name: activity.name, startTime, timezone: activity.timezone || null },
+          { cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal), currency: activity.currency },
+          [trip?.timezone ?? null, trip?.user?.timezone ?? null]
+        );
+        await tx.activity.create({
           data: {
             tripId,
+            // The place is the activity's own FK (locationId was matched within this trip)
+            locationId: locationId ?? null,
             name: activity.name,
             description: activity.description || null,
             category: activity.category || null,
             allDay: activity.allDay ?? false,
-            startTime: activity.startTime ? new Date(activity.startTime) : null,
+            startTime,
             endTime: activity.endTime ? new Date(activity.endTime) : null,
             timezone: activity.timezone || null,
-            // Decimal from the canonical string: a float would round-trip 0.1 + 0.2 style noise.
-            cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal),
-            currency: activity.currency || null,
+            costExpense,
             bookingUrl: activity.bookingUrl || null,
             bookingReference: activity.bookingReference || null,
             notes: activity.notes || null,
           },
           select: { id: true },
         });
-
-        if (locationId !== undefined) {
-          links.push({
-            tripId,
-            sourceType: 'ACTIVITY',
-            sourceId: created.id,
-            targetType: 'LOCATION',
-            targetId: locationId,
-            relationship: 'OCCURRED_AT',
-          });
-        }
-      }
-
-      if (links.length > 0) {
-        await tx.entityLink.createMany({ data: links, skipDuplicates: true });
       }
     }, IMPORT_TRANSACTION_OPTIONS);
 

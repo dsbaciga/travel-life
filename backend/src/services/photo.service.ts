@@ -31,6 +31,7 @@ import {
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { resolveTimezone, getUserTimezone } from '../services/_shared/timezoneResolution';
 import { cleanupEntityLinks } from '../services/_shared/entityLinkCleanup';
+import { findUserIntegrations } from './_shared/userSettings';
 
 // Same directory the static `/uploads` handler serves from (UPLOAD_DIR, default ./uploads).
 const UPLOADS_ROOT = path.resolve(config.upload.dir);
@@ -437,13 +438,7 @@ class PhotoService {
     await verifyTripAccessWithPermission(userId, data.tripId, 'edit');
 
     // Get user's Immich settings
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        immichApiUrl: true,
-        immichApiKey: true,
-      },
-    });
+    const user = await findUserIntegrations(userId);
 
     // Default media type and duration from input (can be overridden by Immich metadata)
     let mediaType = data.mediaType || MediaType.IMAGE;
@@ -454,14 +449,14 @@ class PhotoService {
     if (user?.immichApiUrl && immichApiKey) {
       try {
         const response = await axios.get(
-          `${user.immichApiUrl}/api/assets/${data.immichAssetId}`,
+          `${user?.immichApiUrl}/api/assets/${data.immichAssetId}`,
           {
             headers: {
               'x-api-key': immichApiKey,
             },
             timeout: 30000,
             maxRedirects: 0,
-            ...integrationRequestOptions(user.immichApiUrl),
+            ...integrationRequestOptions(user?.immichApiUrl),
           }
         );
 

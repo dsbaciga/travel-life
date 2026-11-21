@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { AppError } from '../errors/errors';
 import logger from '../config/logger';
 import { toSafePermissionLevel } from './_shared/tripPermissions';
+import { getUserPreferences } from './_shared/userSettings';
 import {
   TravelPartnerRequestStatusValues,
   type SendTravelPartnerRequestInput,
@@ -286,18 +287,19 @@ export const travelPartnerRequestService = {
             Array<{
               id: number;
               travel_partner_id: number | null;
-              default_partner_permission: string | null;
             }>
           >`
-            SELECT id, travel_partner_id, default_partner_permission
+            SELECT id, travel_partner_id
             FROM users WHERE id = ${id} FOR UPDATE
           `;
           if (!row) {
             throw new AppError('User not found', 404);
           }
+          // The permission level lives in user_preferences; the users row lock above is what serialises this.
+          const prefs = await getUserPreferences(row.id, tx);
           locked.set(row.id, {
             travelPartnerId: row.travel_partner_id,
-            defaultPartnerPermission: row.default_partner_permission,
+            defaultPartnerPermission: prefs.defaultPartnerPermission,
           });
         }
 
@@ -372,7 +374,6 @@ export const travelPartnerRequestService = {
           where: { id: userId },
           select: {
             travelPartnerId: true,
-            defaultPartnerPermission: true,
             travelPartner: {
               select: {
                 id: true,
@@ -384,6 +385,8 @@ export const travelPartnerRequestService = {
           },
         });
 
+        const updatedPrefs = await getUserPreferences(userId, tx);
+
         logger.info('Travel partner request accepted', {
           requestId: request.id,
           requesterId: request.requesterId,
@@ -394,7 +397,7 @@ export const travelPartnerRequestService = {
 
         return {
           travelPartnerId: updatedUser?.travelPartnerId ?? null,
-          defaultPartnerPermission: updatedUser?.defaultPartnerPermission ?? 'edit',
+          defaultPartnerPermission: updatedPrefs.defaultPartnerPermission,
           travelPartner: updatedUser?.travelPartner ?? null,
           /** Existing trips of the accepting user now shared with the requester. */
           sharedTripCount,

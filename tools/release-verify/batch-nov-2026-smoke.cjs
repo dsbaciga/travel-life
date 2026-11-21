@@ -487,9 +487,9 @@ async function addCollaborator(owner, tripId, user, level) {
   check('real run created the valid rows only', r.data.created >= 1 && r.data.rows[0].status === 'created' && r.data.rows[1].status === 'invalid', r.text.slice(0, 900));
   const nCreated = r.data.created;
   check('database holds exactly the created rows', (await countLocs()) === nCreated, `created=${nCreated}`);
-  const wkt = psql(`select name || '|' || ST_X(coordinates::geometry) || '|' || ST_Y(coordinates::geometry) from locations where trip_id = ${impT.id} and name = 'Eiffel Tower' order by id limit 1`);
-  check('PostGIS coordinates populated for the imported location', /^Eiffel Tower\|2\.2945\|48\.8584$/.test(wkt), wkt);
-  check('no imported location is left without a PostGIS point (where it has coordinates)', psql(`select count(*) from locations where trip_id = ${impT.id} and latitude is not null and coordinates is null`) === '0', 'null coordinates column');
+  const storedLoc = psql(`select name || '|' || latitude || '|' || longitude from locations where trip_id = ${impT.id} and name = 'Eiffel Tower' order by id limit 1`);
+  check('latitude/longitude stored for the imported location', /^Eiffel Tower\|48\.8584\d*\|2\.2945\d*$/.test(storedLoc), storedLoc);
+  check('the imported batch has no spatial column left to fill (dropped in 20261125000000)', psql(`select count(*) from information_schema.columns where table_name = 'locations' and column_name = 'coordinates'`) === '0', 'coordinates column still exists');
   r = await call('second import: duplicates against existing rows are flagged', 'POST', `${IM}/locations`, { rows: [{ name: 'Eiffel Tower', latitude: '48.8584', longitude: '2.2945' }], dryRun: true }, { token: O.token });
   check('duplicate_existing reported', r.data.rows[0].errors.concat(r.data.rows[0].warnings).some((i) => i.code === 'duplicate_existing'), JSON.stringify(r.data.rows[0]));
   r = await call('second real import of the same row', 'POST', `${IM}/locations`, { rows: [{ name: 'Eiffel Tower', latitude: '48.8584', longitude: '2.2945' }] }, { token: O.token });

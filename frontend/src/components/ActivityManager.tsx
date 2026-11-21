@@ -5,7 +5,6 @@ import type { Location } from "../types/location";
 import { createLocationStub } from "../utils/locationHelpers";
 import type { ActivityCategory } from "../types/user";
 import activityService from "../services/activity.service";
-import entityLinkService from "../services/entityLink.service";
 import userService from "../services/user.service";
 import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
@@ -22,7 +21,6 @@ import {
 import { useManagerCRUD } from "../hooks/useManagerCRUD";
 import { useFormReset } from "../hooks/useFormReset";
 import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
-import { useEntityLinkSync } from "../hooks/useEntityLinkSync";
 import { useEditFromUrlParam } from "../hooks/useEditFromUrlParam";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useBulkSelection } from "../hooks/useBulkSelection";
@@ -102,7 +100,6 @@ export default function ActivityManager({
 
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const { getLinkSummary, invalidate: invalidateLinkSummary } = useTripLinkSummary(tripId);
-  const { syncLocationLinkOnUpdate, syncLocationLinkOnCreate } = useEntityLinkSync();
 
   // Bulk selection state
   const bulkSelection = useBulkSelection<Activity>();
@@ -117,7 +114,6 @@ export default function ActivityManager({
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const deadlines = useBookingDeadlineDrafts({ tripId, entityType: "activity", entityId: manager.editingId, active: manager.showForm, entityTimezone: editingActivity?.timezone, tripTimezone, onUpdate });
   const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
-  const [originalLocationId, setOriginalLocationId] = useState<number | null>(null);
   const [formKey, setFormKey] = useState(0); // Key to force form reset
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "category">("date");
@@ -143,12 +139,10 @@ export default function ActivityManager({
     if (state === null) {
       setEditingActivity(null);
       setEditingLocationId(null);
-      setOriginalLocationId(null);
       setFormKey((k) => k + 1); // Force form component to reset
     } else {
       setEditingActivity(state.activity);
       setEditingLocationId(state.locationId);
-      setOriginalLocationId(state.locationId);
     }
   }, []);
 
@@ -170,23 +164,11 @@ export default function ActivityManager({
   }, [locations]);
 
   // handleEdit must be defined before handleEditFromUrl since it's used as a dependency
-  const handleEdit = useCallback(async (activity: Activity) => {
-    // Fetch linked location via entity linking system
-    let locationId: number | null = null;
-    try {
-      const links = await entityLinkService.getLinksFrom(tripId, 'ACTIVITY', activity.id, 'LOCATION');
-      if (links.length > 0 && links[0].targetId) {
-        locationId = links[0].targetId;
-      }
-    } catch {
-      // If fetching links fails, proceed without location
-    }
-
+  const handleEdit = useCallback((activity: Activity) => {
     setEditingActivity(activity);
-    setEditingLocationId(locationId);
-    setOriginalLocationId(locationId);
+    setEditingLocationId(activity.locationId ?? null);
     manager.openEditForm(activity.id);
-  }, [tripId, manager]);
+  }, [manager]);
 
   // Stable callback for URL-based edit navigation
   const handleEditFromUrl = useCallback((activity: Activity) => {
@@ -245,21 +227,14 @@ export default function ActivityManager({
         bookingReference: data.bookingReference,
         notes: data.notes,
         dietaryTags: data.dietaryTags,
+        // The place is the activity's own FK; null clears it
+        locationId: newLocationId,
       };
 
       const success = await manager.handleUpdate(manager.editingId, updateData);
       if (success) {
         await deadlines.apply(manager.editingId, data.timezone);
-        // Handle location link changes via entity linking
-        await syncLocationLinkOnUpdate({
-          tripId,
-          sourceType: 'ACTIVITY',
-          sourceId: manager.editingId,
-          newLocationId,
-          originalLocationId,
-          entityLabel: 'Activity',
-          invalidateLinkSummary,
-        });
+        invalidateLinkSummary();
         resetForm();
         manager.closeForm();
       }
@@ -267,6 +242,7 @@ export default function ActivityManager({
       // Create new activity
       const createData: CreateActivityInput = {
         tripId,
+        locationId: newLocationId,
         name: data.name,
         description: data.description || undefined,
         category: data.category || undefined,
@@ -287,17 +263,7 @@ export default function ActivityManager({
         const createdActivity = await activityService.createActivity(createData);
         toast.success('Activity added successfully');
         await deadlines.apply(createdActivity.id, createdActivity.timezone);
-
-        // Create location link if a location was selected
-        await syncLocationLinkOnCreate({
-          tripId,
-          sourceType: 'ACTIVITY',
-          sourceId: createdActivity.id,
-          newLocationId,
-          originalLocationId: null,
-          entityLabel: 'Activity',
-          invalidateLinkSummary,
-        });
+        invalidateLinkSummary();
 
         await manager.loadItems();
         onUpdate?.();

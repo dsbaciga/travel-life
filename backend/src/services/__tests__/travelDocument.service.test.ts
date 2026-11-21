@@ -152,6 +152,41 @@ describe('TravelDocumentService', () => {
   // ============================================================
   // TD-002: Create a primary document (unsets other primaries)
   // ============================================================
+  describe('TD-001b: issuingCountryCode (structured country)', () => {
+    const base = { type: 'PASSPORT' as const, name: 'P' };
+
+    it('derives the code from the country name when none is sent', async () => {
+      mockPrisma.travelDocument.create.mockResolvedValue(createMockDocument());
+      await travelDocumentService.create(1, { ...base, issuingCountry: 'USA', isPrimary: false, alertDaysBefore: 180 });
+      expect(mockPrisma.travelDocument.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ issuingCountryCode: 'US' }),
+      });
+    });
+
+    it('stores a supplied code, and null when the name is unrecognised', async () => {
+      mockPrisma.travelDocument.create.mockResolvedValue(createMockDocument());
+      await travelDocumentService.create(1, { ...base, issuingCountry: 'Whatever', issuingCountryCode: 'ca', isPrimary: false, alertDaysBefore: 180 });
+      expect(mockPrisma.travelDocument.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ issuingCountryCode: 'CA' }),
+      });
+      await travelDocumentService.create(1, { ...base, issuingCountry: 'Atlantis', isPrimary: false, alertDaysBefore: 180 });
+      expect(mockPrisma.travelDocument.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ issuingCountryCode: null }),
+      });
+    });
+
+    it('update: a new country name re-derives the code; an unchanged name leaves it', async () => {
+      mockPrisma.travelDocument.findFirst.mockResolvedValue(createMockDocument());
+      mockPrisma.travelDocument.update.mockResolvedValue(createMockDocument());
+      await travelDocumentService.update(1, 1, { issuingCountry: 'France' });
+      expect(mockPrisma.travelDocument.update.mock.calls[0][0].data).toMatchObject({ issuingCountryCode: 'FR' });
+
+      mockPrisma.travelDocument.update.mockClear();
+      await travelDocumentService.update(1, 1, { issuingCountry: 'United States', notes: 'x' });
+      expect(mockPrisma.travelDocument.update.mock.calls[0][0].data).not.toHaveProperty('issuingCountryCode');
+    });
+  });
+
   describe('TD-002: Create a primary document', () => {
     it('should unset other primary documents of the same type when creating a primary', async () => {
       const userId = 1;

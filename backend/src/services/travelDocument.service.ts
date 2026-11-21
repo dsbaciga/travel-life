@@ -11,6 +11,7 @@ import {
 } from '../types/travelDocument.types';
 import { buildConditionalUpdateData, tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { Prisma, TravelDocument } from '@prisma/client';
+import { deriveCountryCodeFromName } from './_shared/countryCodes';
 
 /**
  * Calculates the expiration status based on days until expiry
@@ -63,6 +64,7 @@ function toResponse(doc: TravelDocument): TravelDocumentResponse {
     userId: doc.userId,
     type: doc.type,
     issuingCountry: doc.issuingCountry,
+    issuingCountryCode: doc.issuingCountryCode,
     documentNumber: maskDocumentNumber(doc.documentNumber),
     issueDate: doc.issueDate ? doc.issueDate.toISOString().split('T')[0] : null,
     expiryDate: doc.expiryDate ? doc.expiryDate.toISOString().split('T')[0] : null,
@@ -97,6 +99,7 @@ class TravelDocumentService {
           userId,
           type: data.type,
           issuingCountry: data.issuingCountry,
+          issuingCountryCode: deriveCountryCodeFromName(data.issuingCountryCode, data.issuingCountry),
           // `||` rather than `??` is deliberate: an empty string is stored as NULL so a
           // cleared field reads back as absent. This matches the update path, where
           // buildConditionalUpdateData's emptyStringToNull does the same conversion.
@@ -186,6 +189,16 @@ class TravelDocumentService {
           expiryDate: (val: string | null) => tripDateTransformer(val),
         },
       });
+
+      // A code in the request is kept; a new country name without one re-derives it, so the
+      // code can never describe the previous country.
+      const nameChanged = data.issuingCountry !== undefined && data.issuingCountry !== existing.issuingCountry;
+      if (data.issuingCountryCode !== undefined || nameChanged) {
+        updateData.issuingCountryCode = deriveCountryCodeFromName(
+          data.issuingCountryCode,
+          data.issuingCountry ?? existing.issuingCountry
+        );
+      }
 
       return tx.travelDocument.update({
         where: { id: documentId },

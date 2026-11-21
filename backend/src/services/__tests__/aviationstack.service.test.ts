@@ -42,13 +42,23 @@ jest.mock('@prisma/client', () => {
 });
 
 // Mock the database config
+const mockTransportationFindUnique = jest.fn();
 const mockPrisma = {
   trip: {
     findFirst: jest.fn(),
   },
   transportation: {
-    findUnique: jest.fn(),
+    findUnique: mockTransportationFindUnique,
     findMany: jest.fn(),
+  },
+  // The trip owner's key lives in user_integrations. These tests declare it on the booking fixture
+  // (`trip.user.aviationstackApiKey`), so the integrations lookup answers with whatever the last read carried.
+  userIntegrations: {
+    findUnique: jest.fn(async () => {
+      const last = mockTransportationFindUnique.mock.results.at(-1);
+      const row = (await last?.value) as { trip?: { user?: { aviationstackApiKey?: string | null } } } | undefined;
+      return { userId: 1, aviationstackApiKey: row?.trip?.user?.aviationstackApiKey ?? null };
+    }),
   },
   flightTracking: {
     upsert: jest.fn(),

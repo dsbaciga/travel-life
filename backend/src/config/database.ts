@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import logger from './logger';
-import { postgisExtension } from './prismaExtensions';
 
 // Create a PostgreSQL connection pool
 const pool = new Pool({
@@ -22,8 +21,7 @@ const prismaClient = new PrismaClient({
   ],
 });
 
-// Apply extensions
-const prisma = prismaClient.$extends(postgisExtension);
+const prisma = prismaClient;
 
 /**
  * Checks the database connection and retries if it fails.

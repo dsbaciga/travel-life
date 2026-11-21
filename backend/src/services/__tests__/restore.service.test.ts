@@ -40,6 +40,9 @@ jest.mock('@prisma/client', () => {
     toString(): string { return this.value; }
     toNumber(): number { return parseFloat(this.value); }
     valueOf(): number { return this.toNumber(); }
+    plus(other: { toNumber(): number } | number): MockDecimal {
+      return new MockDecimal(this.toNumber() + (typeof other === 'number' ? other : other.toNumber()));
+    }
   }
   return {
     Prisma: { Decimal: MockDecimal },
@@ -48,7 +51,10 @@ jest.mock('@prisma/client', () => {
 
 // Transaction mock that passes the mock prisma as tx
 const mockTx = {
-  user: { update: jest.fn(), findUnique: jest.fn() },
+  user: { update: jest.fn(), findUnique: jest.fn(), findUniqueOrThrow: jest.fn() },
+  userPreferences: { upsert: jest.fn() },
+  userIntegrations: { upsert: jest.fn() },
+  $executeRaw: jest.fn(),
   // SavedLink.tripId is SetNull rather than Cascade, so clearUserData has to
   // remove saved links explicitly.
   savedLink: {
@@ -67,6 +73,7 @@ const mockTx = {
   travelCompanion: {
     create: jest.fn(),
     deleteMany: jest.fn(),
+    findFirst: jest.fn(),
   },
   locationCategory: {
     create: jest.fn(),
@@ -117,6 +124,7 @@ const mockTx = {
   },
   lodging: {
     create: jest.fn(),
+    update: jest.fn(),
   },
   journalEntry: {
     create: jest.fn(),
@@ -157,6 +165,7 @@ const mockTx = {
   },
   tripExpense: {
     create: jest.fn(),
+    update: jest.fn(),
     findFirst: jest.fn(),
   },
   tripEmergencyInfo: {
@@ -321,6 +330,11 @@ describe('RestoreService', () => {
       Promise.resolve({ id: tagIdCounter++, name: 'tag' })
     );
 
+    // The restoring user has no "myself" companion unless a test says so.
+    mockTx.travelCompanion.findFirst.mockResolvedValue(null);
+    mockTx.user.findUniqueOrThrow.mockResolvedValue({ username: 'testuser' });
+    mockTx.$executeRaw.mockResolvedValue(1);
+
     let companionIdCounter = 200;
     mockTx.travelCompanion.create.mockImplementation(() =>
       Promise.resolve({ id: companionIdCounter++, name: 'companion' })
@@ -393,9 +407,12 @@ describe('RestoreService', () => {
     mockTx.customItem.create.mockResolvedValue({ id: 1 });
     mockTx.customItemType.create.mockResolvedValue({ id: 1 });
     mockTx.user.update.mockResolvedValue({});
+    mockTx.userPreferences.upsert.mockResolvedValue({});
+    mockTx.userIntegrations.upsert.mockResolvedValue({});
     mockTx.trip.update.mockResolvedValue({});
     mockTx.location.update.mockResolvedValue({});
     mockTx.activity.update.mockResolvedValue({});
+    mockTx.lodging.update.mockResolvedValue({});
 
     // deleteMany returns
     mockTx.trip.deleteMany.mockResolvedValue({ count: 0 });
@@ -435,6 +452,33 @@ describe('RestoreService', () => {
       mockTx.user.update.mockClear();
       await restoreFromBackup(1, { ...minimalBackup, user: { ...minimalBackup.user, timezone: ' Europe/Rome ' } });
       expect(mockTx.user.update.mock.calls[0][0].data.timezone).toBe('Europe/Rome');
+    });
+
+    it('RST-019c: integration settings are written to user_integrations, secrets only when the backup carries them', async () => {
+      await restoreFromBackup(1, {
+        ...minimalBackup,
+        user: { ...minimalBackup.user, llmModel: 'gpt-x', weatherApiKey: 'legacy-plain-key' },
+      });
+
+      expect(mockTx.userIntegrations.upsert).toHaveBeenCalledTimes(1);
+      const call = mockTx.userIntegrations.upsert.mock.calls[0][0];
+      expect(call.where).toEqual({ userId: 1 });
+      // A legacy (pre-1.3.0) backup restores its plaintext key as given; absent secrets are not touched.
+      expect(call.update).toMatchObject({ llmModel: 'gpt-x', llmBaseUrl: null, weatherApiKey: 'legacy-plain-key' });
+      expect(call.update).not.toHaveProperty('llmApiKey');
+      expect(call.update).not.toHaveProperty('smtpPassword');
+    });
+
+    it('RST-019d: an Immich URL that fails the SSRF check is dropped together with its key', async () => {
+      await restoreFromBackup(1, {
+        ...minimalBackup,
+        user: { ...minimalBackup.user, immichApiUrl: 'http://localhost:2283', immichApiKey: 'k' },
+      });
+
+      expect(mockTx.userIntegrations.upsert.mock.calls[0][0].update).toMatchObject({
+        immichApiUrl: null,
+        immichApiKey: null,
+      });
     });
 
     it('RST-002: rejects unsupported backup version', async () => {
@@ -689,19 +733,113 @@ describe('RestoreService', () => {
       expect(mockTx.foodLogEntryPhoto.create).not.toHaveBeenCalled();
     });
 
-    it('RST-008: imports entity links with mapped IDs', async () => {
+    it('RST-008: a pre-1.7.0 OCCURRED_AT activity->location link is promoted to activity.locationId (no link row)', async () => {
       await restoreFromBackup(1, fullBackup);
 
-      // Entity link should be created with new IDs (not original IDs)
-      expect(mockTx.entityLink.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            sourceType: 'ACTIVITY',
-            targetType: 'LOCATION',
-            relationship: 'OCCURRED_AT',
-          }),
-        })
-      );
+      // Old ids (activity 1, location 1) are mapped to the new ids (60, 10)
+      expect(mockTx.activity.update).toHaveBeenCalledWith({
+        where: { id: 60 },
+        data: { locationId: 10 },
+      });
+      expect(mockTx.entityLink.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-008b: a 1.7.0 backup restores activity and lodging locationId through the location map', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.7.0',
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Colosseum', address: 'Rome', latitude: 41.89, longitude: 12.49 },
+              { id: 2, name: 'Hotel site', address: 'Rome', latitude: 41.9, longitude: 12.5 },
+            ],
+            activities: [{ id: 1, name: 'Visit Colosseum', locationId: 1 }, { id: 2, name: 'Free time', locationId: null }],
+            lodging: [
+              { id: 1, type: 'hotel', name: 'Hotel Roma', checkInDate: '2024-07-01', checkOutDate: '2024-07-15', locationId: 2 },
+              { id: 2, type: 'hotel', name: 'Unknown', checkInDate: '2024-07-01', checkOutDate: '2024-07-15', locationId: 777 },
+            ],
+            entityLinks: [],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      const activityCalls = mockTx.activity.create.mock.calls.map((c) => (c[0] as { data: { locationId: number | null } }).data.locationId);
+      expect(activityCalls).toEqual([10, null]);
+      const lodgingCalls = mockTx.lodging.create.mock.calls.map((c) => (c[0] as { data: { locationId: number | null } }).data.locationId);
+      // location 2 -> new id 11; an id that is not in the backup is dropped rather than invented
+      expect(lodgingCalls).toEqual([11, null]);
+      // Nothing to promote for a 1.7.0 backup
+      expect(mockTx.activity.update).not.toHaveBeenCalledWith(expect.objectContaining({ data: { locationId: expect.anything() } }));
+      expect(mockTx.lodging.update).not.toHaveBeenCalled();
+      expect(mockTx.entityLink.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-008c: a 1.6.0 backup with two place links on one activity promotes OCCURRED_AT and restores the other as RELATED', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.6.0',
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Colosseum', address: 'Rome', latitude: 41.89, longitude: 12.49 },
+              { id: 2, name: 'Forum', address: 'Rome', latitude: 41.9, longitude: 12.48 },
+            ],
+            entityLinks: [
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LOCATION', targetId: 1, relationship: 'RELATED' },
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LOCATION', targetId: 2, relationship: 'OCCURRED_AT' },
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      // The OCCURRED_AT one (Forum, old id 2 -> new id 11) becomes the FK
+      expect(mockTx.activity.update).toHaveBeenCalledWith({ where: { id: 60 }, data: { locationId: 11 } });
+      // The other place link is kept as an ordinary RELATED link to Colosseum (new id 10)
+      expect(mockTx.entityLink.create).toHaveBeenCalledTimes(1);
+      expect(mockTx.entityLink.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          sourceType: 'ACTIVITY',
+          sourceId: 60,
+          targetType: 'LOCATION',
+          targetId: 10,
+          relationship: 'RELATED',
+        }),
+      });
+    });
+
+    it('RST-008d: a pre-1.7.0 lodging place link is promoted to lodging.locationId; non-place links are untouched', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.5.0',
+        trips: [
+          {
+            ...trip,
+            lodging: [{ id: 1, type: 'hotel', name: 'Hotel Roma', checkInDate: '2024-07-01', checkOutDate: '2024-07-15' }],
+            entityLinks: [
+              { sourceType: 'LODGING', sourceId: 1, targetType: 'LOCATION', targetId: 1, relationship: 'OCCURRED_AT' },
+              { sourceType: 'ACTIVITY', sourceId: 1, targetType: 'LODGING', targetId: 1, relationship: 'RELATED' },
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.lodging.update).toHaveBeenCalledWith({ where: { id: 80 }, data: { locationId: 10 } });
+      expect(mockTx.entityLink.create).toHaveBeenCalledTimes(1);
+      expect(mockTx.entityLink.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ sourceType: 'ACTIVITY', targetType: 'LODGING', relationship: 'RELATED' }),
+      });
     });
 
     it('RST-009: imports flight tracking data', async () => {
@@ -723,6 +861,39 @@ describe('RestoreService', () => {
 
       expect(mockTx.travelDocument.create).toHaveBeenCalled();
       expect(result.stats.travelDocumentsImported).toBe(1);
+    });
+
+    it('RST-010c: a backup with no country codes (pre-1.8.0) gets them derived on restore', async () => {
+      const trip = fullBackup.trips[0];
+      const backup = {
+        ...fullBackup,
+        version: '1.7.0',
+        travelDocuments: [
+          { type: 'PASSPORT', issuingCountry: 'United States', name: 'A' },
+          { type: 'PASSPORT', issuingCountry: 'Atlantis', name: 'B' },
+          { type: 'PASSPORT', issuingCountry: 'Germany', issuingCountryCode: 'at', name: 'C' },
+        ],
+        trips: [
+          {
+            ...trip,
+            locations: [
+              { id: 1, name: 'Louvre', address: 'Rue de Rivoli, Paris, France' },
+              { id: 2, name: 'Nowhere', address: '221B Baker Street' },
+              { id: 3, name: 'Coded', address: 'Rome, Italy', countryCode: 'sm' },
+            ],
+            activities: [],
+            lodging: [],
+            entityLinks: [],
+          },
+        ],
+      } as unknown as BackupData;
+
+      await restoreFromBackup(1, backup);
+
+      const locationCodes = mockTx.location.create.mock.calls.map((c) => (c[0] as { data: { countryCode: string | null } }).data.countryCode);
+      expect(locationCodes).toEqual(['FR', null, 'SM']);
+      const docCodes = mockTx.travelDocument.create.mock.calls.map((c) => (c[0] as { data: { issuingCountryCode: string | null } }).data.issuingCountryCode);
+      expect(docCodes).toEqual(['US', null, 'AT']);
     });
 
     it('RST-010b: restores loyalty programs in full and re-links bookings to them', async () => {
@@ -983,9 +1154,11 @@ describe('RestoreService', () => {
       expect(result.success).toBe(true);
       expect(result.stats.savedLinksImported).toBe(1);
 
-      expect(mockTx.user.update).toHaveBeenCalledWith(
+      // Preferences go to user_preferences, in the same transaction.
+      expect(mockTx.userPreferences.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
+          where: { userId: 1 },
+          update: expect.objectContaining({
             dietaryPreferences: ['vegan'],
             useCustomMapStyle: false,
             baseCurrency: 'EUR',
@@ -1030,8 +1203,16 @@ describe('RestoreService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             name: 'Sushi Lunch',
-            baseCurrency: 'EUR',
             dietaryTags: ['fish'],
+            // The cost (with its frozen FX snapshot) is the activity's expense row, created with it.
+            costExpense: {
+              create: expect.objectContaining({
+                category: 'activities',
+                currency: 'JPY',
+                baseCurrency: 'EUR',
+                description: 'Sushi Lunch',
+              }),
+            },
           }),
         })
       );
@@ -1065,6 +1246,11 @@ describe('RestoreService', () => {
         id: args.data.name === 'Alice' ? 501 : 502,
       })) as never);
 
+      // The owner has no "myself" companion: it is created on demand (find, find, find again).
+      mockTx.travelCompanion.findFirst
+        .mockResolvedValueOnce(null as never)
+        .mockResolvedValueOnce(null as never)
+        .mockResolvedValueOnce({ id: 900 } as never);
       const backup: BackupData = {
         ...minimalBackup,
         version: '1.6.0',
@@ -1111,24 +1297,84 @@ describe('RestoreService', () => {
         (c) => (c[0] as { data: Record<string, unknown> }).data
       );
       const dinner = calls.find((d) => d.description === 'Dinner') as {
-        paidByOwner: boolean;
         paidByCompanionId: number | null;
         splitMethod: string | null;
-        splits: { create: Array<{ isOwner: boolean; companionId: number | null }> };
+        splits: { create: Array<{ companionId: number }> };
       };
-      expect(dinner.paidByOwner).toBe(false);
       expect(dinner.paidByCompanionId).toBe(502);
       expect(dinner.splitMethod).toBe('equal');
       // The unknown companion drops out; owner / Alice / Bob remain, with NEW ids.
-      expect(dinner.splits.create.map((r) => [r.isOwner, r.companionId])).toEqual([
-        [true, null],
-        [false, 501],
-        [false, 502],
-      ]);
+      // The owner is the restoring user's "myself" companion (900).
+      expect(dinner.splits.create.map((r) => r.companionId)).toEqual([900, 501, 502]);
 
       const taxi = calls.find((d) => d.description === 'Taxi') as typeof dinner;
-      expect(taxi.paidByOwner).toBe(true);
-      expect(taxi.paidByCompanionId).toBeNull();
+      expect(taxi.paidByCompanionId).toBe(900);
+      expect(taxi.splits.create.map((r) => r.companionId)).toEqual([900]);
+    });
+
+    it('maps a backup companion flagged isMyself onto the existing one instead of duplicating it', async () => {
+      mockTx.travelCompanion.findFirst.mockResolvedValue({ id: 42 } as never);
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.8.0',
+        companions: [{ name: 'Myself (testuser)', isMyself: true }, { name: 'Alice' }],
+        trips: [
+          {
+            title: 'T',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            companions: ['Myself (testuser)', 'Alice'],
+            expenses: [
+              {
+                description: 'Lunch',
+                category: 'food',
+                amount: 20,
+                paidByOwner: true,
+                splitMethod: 'equal',
+                // The owner listed twice (as owner and as their own companion) folds into one share.
+                splits: [
+                  { isOwner: true, amount: 5 },
+                  { companionName: 'Myself (testuser)', amount: 5 },
+                  { companionName: 'Alice', amount: 10 },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      // Only Alice is created: the flagged one is the existing companion 42.
+      expect(mockTx.travelCompanion.create).toHaveBeenCalledTimes(1);
+      const lunch = (mockTx.tripExpense.create.mock.calls[0][0] as { data: { paidByCompanionId: number; splits: { create: Array<{ companionId: number; amount: { toString(): string } }> } } }).data;
+      expect(lunch.paidByCompanionId).toBe(42);
+      expect(lunch.splits.create.map((r) => [r.companionId, r.amount.toString()])).toEqual([
+        [42, '10'],
+        [200, '10'],
+      ]);
+    });
+
+    it('restores a second isMyself companion in the same backup as an ordinary companion', async () => {
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.8.0',
+        companions: [
+          { name: 'Me', isMyself: true },
+          { name: 'Me again', isMyself: true },
+        ],
+        trips: [],
+      };
+
+      await restoreFromBackup(1, backup);
+
+      const created = mockTx.travelCompanion.create.mock.calls.map(
+        (c) => (c[0] as { data: { isMyself: boolean; linkedUserId: number | null } }).data
+      );
+      expect(created.map((d) => [d.isMyself, d.linkedUserId])).toEqual([
+        [true, 1],
+        [false, null],
+      ]);
     });
   });
 
@@ -1189,6 +1435,72 @@ describe('RestoreService', () => {
       expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
       expect(createdData(0).receiptPath).toBeUndefined();
       expect(result.stats).toMatchObject({ receiptsRestored: 0, receiptsNotRestored: 1 });
+    });
+
+    it('RST-COST-001: an expense that is a booking cost updates that booking cost row, never a second one', async () => {
+      const backup = {
+        ...minimalBackup,
+        version: '1.9.0',
+        trips: [
+          {
+            ...baseTrip,
+            activities: [{ id: 5, name: 'Concert', cost: 80, currency: 'EUR' }],
+            expenses: [
+              expense({
+                description: 'Concert',
+                category: 'activities',
+                amount: 80,
+                currency: 'EUR',
+                booking: { type: 'activity', id: 5 },
+                receiptPath: '/uploads/receipts/a.jpg',
+              }),
+            ],
+          },
+        ],
+      } as unknown as BackupData;
+      mockTx.activity.create.mockResolvedValue({ id: 501 });
+      // (the receipt check also uses findFirst: only the booking-link lookup finds a row)
+      mockTx.tripExpense.findFirst.mockImplementation(async (args: unknown) =>
+        (args as { where: Record<string, unknown> }).where.activityId ? { id: 900 } : null
+      );
+
+      await restoreFromBackup(1, backup);
+
+      // The activity import created the one cost row (nested in the activity create)...
+      const activityData = (mockTx.activity.create.mock.calls[0][0] as { data: { costExpense: { create: { amount: unknown } } } }).data;
+      expect(Number(activityData.costExpense.create.amount)).toBe(80);
+      // ...and the expense of the booking looks it up by the NEW booking id and updates it.
+      expect(mockTx.tripExpense.findFirst).toHaveBeenCalledWith({ where: { activityId: 501 }, select: { id: true } });
+      expect(mockTx.tripExpense.update).toHaveBeenCalledTimes(1);
+      expect(mockTx.tripExpense.update.mock.calls[0][0]).toMatchObject({
+        where: { id: 900 },
+        data: { receiptPath: '/uploads/receipts/a.jpg' },
+      });
+      expect(mockTx.tripExpense.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-COST-002: an older file (cost on the booking, no linked expenses) restores into the same shape', async () => {
+      const backup = {
+        ...minimalBackup,
+        version: '1.8.0',
+        trips: [{ ...baseTrip, lodging: [{ id: 3, type: 'hotel', name: 'Inn', checkInDate: '2026-05-01T14:00:00Z', checkOutDate: '2026-05-03T10:00:00Z', cost: 200, currency: 'USD' }] }],
+      } as unknown as BackupData;
+      mockTx.lodging.create.mockResolvedValue({ id: 31 });
+
+      await restoreFromBackup(1, backup);
+
+      const lodgingData = (mockTx.lodging.create.mock.calls[0][0] as { data: { costExpense: { create: Record<string, unknown> } } }).data;
+      expect(lodgingData.costExpense.create).toMatchObject({ description: 'Inn', category: 'lodging', currency: 'USD' });
+      expect(mockTx.tripExpense.create).not.toHaveBeenCalled();
+    });
+
+    it('RST-COST-003: a linked expense whose booking is missing from the file is kept as an ordinary expense', async () => {
+      const backup = withExpenses([expense({ booking: { type: 'activity', id: 99 } })]);
+
+      await restoreFromBackup(1, backup);
+
+      expect(mockTx.tripExpense.create).toHaveBeenCalledTimes(1);
+      expect(createdData(0)).not.toHaveProperty('activityId');
     });
 
     it('rejects traversal, absolute and foreign-directory paths in the backup', () => {

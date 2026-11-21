@@ -17,6 +17,13 @@ import {
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { deleteEntity, bulkDeleteEntities, bulkUpdateEntities } from '../prisma/crudHelpers';
+import {
+  buildBookingCostCreate,
+  costExpenseInclude,
+  hydrateBookingCost,
+  syncBookingCost,
+} from '../services/_shared/bookingCost';
+import { deleteReceiptFiles } from './expenseReceipt.service';
 
 /**
  * Starter types seeded on a user's first read of the registry.
@@ -36,6 +43,7 @@ const DEFAULT_CUSTOM_ITEM_TYPES: ReadonlyArray<{ name: string; icon: string; col
 const ITEM_INCLUDE = {
   type: { select: { id: true, name: true, icon: true, color: true } },
   location: { select: { id: true, name: true, latitude: true, longitude: true } },
+  ...costExpenseInclude,
 } as const;
 
 class CustomItemService {
@@ -167,6 +175,14 @@ class CustomItemService {
       await verifyEntityInTrip('location', data.locationId, data.tripId);
     }
 
+    const startTime = data.startTime ? new Date(data.startTime) : null;
+    const costExpense = await buildBookingCostCreate(
+      prisma,
+      data.tripId,
+      { kind: 'customItem', name: data.name, startTime, timezone: data.timezone || null },
+      { cost: data.cost, currency: data.currency }
+    );
+
     const item = await prisma.customItem.create({
       data: {
         tripId: data.tripId,
@@ -174,19 +190,18 @@ class CustomItemService {
         name: data.name,
         notes: data.notes || null,
         allDay: data.allDay ?? false,
-        startTime: data.startTime ? new Date(data.startTime) : null,
+        startTime,
         endTime: data.endTime ? new Date(data.endTime) : null,
         timezone: data.timezone || null,
         locationId: data.locationId || null,
-        cost: data.cost !== undefined ? data.cost : null,
-        currency: data.currency || null,
+        costExpense,
         url: data.url || null,
         confirmationNumber: data.confirmationNumber || null,
       },
       include: ITEM_INCLUDE,
     });
 
-    return convertDecimals(item);
+    return convertDecimals(hydrateBookingCost(item));
   }
 
   async getCustomItemsByTrip(userId: number, tripId: number) {
@@ -203,7 +218,7 @@ class CustomItemService {
       ],
     });
 
-    return convertDecimals(items);
+    return convertDecimals(items.map((item) => hydrateBookingCost(item)));
   }
 
   async getCustomItemById(userId: number, itemId: number) {
@@ -214,7 +229,7 @@ class CustomItemService {
       include: { ...ITEM_INCLUDE, trip: true },
     });
 
-    return convertDecimals(item);
+    return convertDecimals(item ? hydrateBookingCost(item) : item);
   }
 
   async updateCustomItem(userId: number, itemId: number, data: UpdateCustomItemInput) {
@@ -233,29 +248,30 @@ class CustomItemService {
       await verifyEntityInTrip('location', data.locationId, item.tripId);
     }
 
-    const updateData: Prisma.CustomItemUncheckedUpdateInput = buildConditionalUpdateData(data, {
+    // The cost lives on the expense row of the item (see syncBookingCost), not on the item.
+    const { cost, currency, ...itemData } = data;
+    const updateData: Prisma.CustomItemUncheckedUpdateInput = buildConditionalUpdateData(itemData, {
       transformers: {
         startTime: (val: string | null) => (val ? new Date(val) : null),
         endTime: (val: string | null) => (val ? new Date(val) : null),
       },
     });
 
-    // Changing cost or currency invalidates the frozen FX snapshot. Clearing it
-    // makes the budget summary recompute lazily; leaving it would report the old
-    // converted amount against the new figure.
-    if (data.cost !== undefined || data.currency !== undefined) {
-      updateData.exchangeRate = null;
-      updateData.baseAmount = null;
-      updateData.baseCurrency = null;
-    }
-
-    const updated = await prisma.customItem.update({
-      where: { id: itemId },
-      data: updateData,
-      include: ITEM_INCLUDE,
+    // Changing the cost or currency invalidates the frozen FX snapshot: syncBookingCost clears it so the
+    // budget summary recomputes lazily (leaving it would report the old converted amount).
+    const { updated, receiptPaths } = await prisma.$transaction(async (tx) => {
+      await tx.customItem.update({ where: { id: itemId }, data: updateData });
+      const sync = await syncBookingCost(tx, 'customItem', itemId, {
+        cost,
+        currency,
+        refresh: data.name !== undefined || data.startTime !== undefined || data.timezone !== undefined,
+      });
+      const row = await tx.customItem.findUniqueOrThrow({ where: { id: itemId }, include: ITEM_INCLUDE });
+      return { updated: row, receiptPaths: sync.receiptPaths };
     });
+    await deleteReceiptFiles(receiptPaths);
 
-    return convertDecimals(updated);
+    return convertDecimals(hydrateBookingCost(updated));
   }
 
   async deleteCustomItem(userId: number, itemId: number) {

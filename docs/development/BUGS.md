@@ -742,7 +742,7 @@ defect and there is no version of the code in which it is "done" — see
 
 #### PostGIS `coordinates` is written on every Location/Photo mutation but never read
 
-- **Reported**: 2026-07-25 | **Status**: Open | **Priority**: Low | **Component**: Database | **Category**: Performance
+- **Reported**: 2026-07-25 | **Status**: Fixed 2026-11 (migration `20261125000000`: columns, indexes and extension code removed) | **Priority**: Low | **Component**: Database | **Category**: Performance
 - **Location**: `backend/src/config/prismaExtensions.ts:22-82`; `backend/prisma/schema.prisma` lines 266, 314
 - **Issue**: A Prisma client extension fires a raw `UPDATE ... ST_SetSRID(ST_MakePoint(...))` after every `location.create/update` and `photo.create/update` (four separate round-trips). A repo-wide search for `ST_DWithin`, `ST_Distance`, or any raw query filtering on `coordinates` finds nothing in `backend/src` — no spatial query exists.
 - **Impact**: Every location/photo write pays an extra UPDATE plus GiST index maintenance for a column with no readers. Not a correctness bug (CLAUDE.md notes PostGIS is "not heavily used yet"), but it is on the hot write path for two of the most-written tables.
@@ -750,7 +750,7 @@ defect and there is no version of the code in which it is "done" — see
 
 #### PostGIS `coordinates` was never backfilled for pre-existing rows
 
-- **Reported**: 2026-07-25 | **Status**: Open | **Priority**: Low | **Component**: Database | **Category**: Migration risk
+- **Reported**: 2026-07-25 | **Status**: Moot 2026-11 (the column was dropped in `20261125000000`) | **Priority**: Low | **Component**: Database | **Category**: Migration risk
 - **Location**: `backend/prisma/migrations/20260103_add_postgis_coordinates/migration.sql`
 - **Issue**: The migration adds the columns and GiST indexes but performs no `UPDATE ... SET coordinates = ...` backfill from the existing `latitude`/`longitude` columns. Sync-on-write exists only in the application-layer extension added separately.
 - **Impact**: Any row written before this migration and not edited since has populated lat/lng but `NULL` coordinates forever. Latent today (nothing queries the column), but it means the column cannot be trusted as "populated wherever lat/lng is" by whoever builds the nearby-search feature.

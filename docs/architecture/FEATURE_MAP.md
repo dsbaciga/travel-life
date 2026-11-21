@@ -35,12 +35,12 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
-| Expenses, budget, multi-currency | `expense`, `exchangeRate`, `receipt` | `BudgetManager`, `CostCurrencyFields`, `CurrencySelect`, `utils/formatCurrency`, `constants/currencies` |
-| Expense splitting and settle-up | `expenseSplit`, `services/_shared/settleUp`, `expenseSplitFields` | `ExpenseSplitFields`, `SettleUpPanel` |
+| Expenses, budget, multi-currency (a booking's cost is its expense row: read/write it through `services/_shared/bookingCost` — `costExpenseInclude` + `hydrateBookingCost` on reads, `buildBookingCostCreate` on create, `syncBookingCost` on update, `withLinkedEntity` for the expense list) | `expense`, `exchangeRate`, `receipt`, `services/_shared/bookingCost`, `services/_shared/expenseRescale` | `BudgetManager`, `CostCurrencyFields`, `CurrencySelect`, `utils/formatCurrency`, `constants/currencies` |
+| Expense splitting and settle-up | `expenseSplit`, `services/_shared/settleUp`, `expenseSplitFields`, `services/_shared/ownerCompanion` (the trip owner = their `isMyself` companion: `findOwnerCompanionId`, `ensureOwnerCompanionId`) | `ExpenseSplitFields`, `SettleUpPanel` |
 | Receipt scan (LLM) and receipt images | `receiptScan`, `expenseReceipt`, `llm` (`chatWithImage`) | `ReceiptScanButton`, `ReceiptViewer` |
 | Loyalty programs / membership numbers | `loyaltyProgram` | `LoyaltyProgramManager`, `LoyaltyProgramField` |
 | Booking deadlines | `bookingDeadline` | `DeadlinesManager`, `widgets/DeadlinesWidget` |
-| Travel documents / visas | `travelDocument`, `visaRequirement` | `TravelDocumentManager`, `DocumentAlerts` |
+| Travel documents / visas | `travelDocument`, `visaRequirement`, `services/_shared/countryCodes` | `TravelDocumentManager`, `DocumentAlerts` |
 | Emergency info / local norms | `emergencyInfo` | `EmergencyCard`, `components/emergency/`, `LocalNormsCard` |
 | Checklists and packing | `checklist`, `packingSuggestion`, `data/checklist-defaults` | `ChecklistsPage`, `ChecklistDetailPage`, `PackingSuggestions` |
 | Weather | `weather` | `WeatherCard`, `WeatherSettings` |
@@ -63,7 +63,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | ------- | ------- | -------- |
 | Auth (password, refresh, CSRF) | `auth`, `auth/`, `middleware/auth`, `security/csrf`, `tokenBlacklist` | `authStore`, `lib/tokenManager`, `lib/axios`, `LoginPage` |
 | SSO / OIDC | `oidc.service`, `oidc.controller` (routes are in `auth.routes`), `http/mobileSignInPages` | `LoginPage` |
-| Users, settings, invitations (incl. units setting) | `user`, `userInvitation` | `SettingsPage`, `components/settings/`, `InviteUserModal`, `AcceptInvitePage` |
+| Users, settings, invitations (incl. units setting; a user's integration secrets and display preferences live in `user_integrations` / `user_preferences`, read and written only through `services/_shared/userSettings`) | `user`, `userInvitation`, `services/_shared/userSettings` | `SettingsPage`, `components/settings/`, `InviteUserModal`, `AcceptInvitePage` |
 | Collaboration (trip collaborators, permissions) | `collaboration`, `services/_shared/tripAccess`, `tripPermissions`, `travelPartnerRequest` | `CollaboratorsManager`, `TravelPartnerSettings` |
 | Public share links | `share`, `validation/share` | `ShareTripModal`, `PublicTripPage` |
 | Calendar feed (iCal subscription) | `calendarFeed`, `calendar.routes` | `CalendarFeedSettings`, `TripCalendarPage` |
@@ -108,7 +108,11 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Trip permission check | `tripAccess`, `tripPermissions` | `services/_shared/` |
 | Partial-update data from nullable/optional Zod input | `buildConditionalUpdateData` | `services/_shared/prismaUpdateData.ts` |
 | Decimal ⇄ number | `decimalConversion` | `services/_shared/` |
-| Delete a row's entity links | `cleanupEntityLinks` | `services/_shared/entityLinkCleanup.ts` |
+| Country code (ISO alpha-2) of a location / passport / visa name; keeping it fresh on update | `deriveLocationCountryCode`, `deriveCountryCodeFromName`, `resolveLocationCountryCodeUpdate` (shared table: `resolveCountryCodeFromName`, `resolveLocationCountryCode`, `normalizeCountryCode` in `packages/shared/.../countryFacts.ts`, vendored to the backend, copied to `frontend/src/constants/countryFacts.ts`) | `services/_shared/countryCodes.ts` |
+| Delete a row's entity links | `cleanupEntityLinks` (the database triggers do it too) | `services/_shared/entityLinkCleanup.ts` |
+| Where an activity/lodging is (`locationId` FK) and how old clients see it as a link | `findSyntheticLocationLinks`, `syntheticLocationLinkId`, `claimEntityLocation` | `services/_shared/entityLocationLinks.ts`, `services/entityLink.service.ts` |
+| An activity's/lodging's place ids, own FK first then loose links | `buildEntityLocationIdsMap` | `utils/entityLocations.ts` (frontend) |
+| A user's integration settings (Immich/weather/LLM/SMTP keys, ciphertext) or preferences (categories, currency, units, partner permission): read, update, create the missing row; give a new user both rows | `getUserIntegrations`, `getUserPreferences`, `findUser*` (null for a missing user), `updateUserIntegrations`, `updateUserPreferences`, `defaultUserSettingsCreate` (nested create in `user.create`), `findUserIdBySender` | `services/_shared/userSettings.ts` |
 | Timezone fallback chain | `resolveTimezone`, `getUserTimezone` | `services/_shared/timezoneResolution.ts` |
 | Trip list ordering (open trips before Completed) | `tripListOrder` | `services/_shared/` |
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |

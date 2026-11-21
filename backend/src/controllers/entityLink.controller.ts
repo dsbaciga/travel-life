@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { decodeSyntheticLocationLinkId } from '../services/_shared/entityLocationLinks';
 import { entityLinkService, cleanupOrphanedEntityLinks } from '../services/entityLink.service';
 import {
   createEntityLinkSchema,
@@ -13,6 +14,17 @@ import { asyncHandler } from '../http/asyncHandler';
 import { parseId } from '../http/parseId';
 import { requireUserId } from '../auth/controllerHelpers';
 import { verifyTripAccessWithPermission } from '../services/_shared/tripAccess';
+
+/**
+ * A link id: positive for a stored link, negative for the synthetic link that shows an
+ * activity's or lodging's place to older clients (see services/_shared/entityLocationLinks.ts).
+ */
+function parseLinkId(value: string): number {
+  if (/^-\d+$/.test(value) && decodeSyntheticLocationLinkId(Number(value))) {
+    return Number(value);
+  }
+  return parseId(value, 'linkId');
+}
 
 export const entityLinkController = {
   /**
@@ -188,7 +200,7 @@ export const entityLinkController = {
   deleteLinkById: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
     const tripId = parseId(req.params.tripId, 'tripId');
-    const linkId = parseId(req.params.linkId, 'linkId');
+    const linkId = parseLinkId(req.params.linkId);
     await entityLinkService.deleteLinkById(userId, tripId, linkId);
     res.status(200).json({ status: 'success', message: 'Entity link deleted' });
   }),
@@ -200,7 +212,7 @@ export const entityLinkController = {
   updateLink: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
     const tripId = parseId(req.params.tripId, 'tripId');
-    const linkId = parseId(req.params.linkId, 'linkId');
+    const linkId = parseLinkId(req.params.linkId);
     const data = updateEntityLinkSchema.parse(req.body);
     const link = await entityLinkService.updateLink(userId, tripId, linkId, data);
     res.json({ status: 'success', data: link });
