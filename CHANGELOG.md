@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Link photos to activities automatically.** The Photos tab has a new **Link to activities** button that matches each photo to an activity by the time it was taken: during the activity, within 30 minutes of it, or on the same date for an all-day activity (an activity with no end time is assumed to last 2 hours). You review the matches, grouped by activity with thumbnails, and untick anything wrong before linking. Photos already linked to an activity are left alone, and the dialog says how many photos were left out and why.
+
 ## [8.2.0] - 2026-11-21
 
 ### Changed

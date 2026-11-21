@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import type { Trip } from "../../types/trip";
@@ -24,6 +24,9 @@ import {
 const PhotoGallery = lazy(() => import("../PhotoGallery"));
 const PhotoUpload = lazy(() => import("../PhotoUpload"));
 const AlbumSuggestions = lazy(() => import("../AlbumSuggestions"));
+const PhotoActivityAutoLinkModal = lazy(
+  () => import("../PhotoActivityAutoLinkModal")
+);
 
 type ConfirmOptions = Omit<
   ConfirmDialogProps,
@@ -78,6 +81,7 @@ export default function TripPhotosTab({
   const [showAlbumsMobileDrawer, setShowAlbumsMobileDrawer] = useState(false);
   const [showAddPhotosModal, setShowAddPhotosModal] = useState(false);
   const [showHighlights, setShowHighlights] = useState(false);
+  const [showAutoLinkModal, setShowAutoLinkModal] = useState(false);
   const { canEdit } = useTripEditAccess(trip.id);
 
   // Favorites filter: server-side, scoped like the gallery (trip, unsorted or
@@ -292,6 +296,17 @@ export default function TripPhotosTab({
                 <span aria-hidden="true">⭐</span>
                 Highlights
               </button>
+              {canEdit && totalPhotosCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAutoLinkModal(true)}
+                  title="Match photos to activities by the time they were taken"
+                  className="px-3 py-2 text-sm rounded whitespace-nowrap flex items-center gap-2 border-2 transition-colors bg-white dark:bg-dusk-800 border-gray-200 dark:border-dusk-700 text-gray-700 dark:text-dusk-300 hover:border-primary-300 dark:hover:border-gold/40"
+                >
+                  <span aria-hidden="true">🔗</span>
+                  Link to activities
+                </button>
+              )}
               {/* Add Photos button - only show when viewing a specific album */}
               {selectedAlbumId !== null && selectedAlbumId > 0 && (
                 <button
@@ -538,6 +553,20 @@ export default function TripPhotosTab({
             toast.success("Photos added to album");
           }}
         />
+      )}
+
+      {/* Auto-link photos to activities by capture time */}
+      {showAutoLinkModal && (
+        // Own boundary: the chunk loading must not swap the whole tab for the
+        // page-level fallback.
+        <Suspense fallback={null}>
+          <PhotoActivityAutoLinkModal
+            isOpen
+            onClose={() => setShowAutoLinkModal(false)}
+            tripId={trip.id}
+            tripTimezone={trip.timezone}
+          />
+        </Suspense>
       )}
     </div>
   );

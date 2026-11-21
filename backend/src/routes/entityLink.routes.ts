@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { entityLinkController } from '../controllers/entityLink.controller';
+import { photoAutoLinkController } from '../controllers/photoAutoLink.controller';
 
 const router = Router({ mergeParams: true }); // mergeParams to access :tripId from parent
 
@@ -170,6 +171,157 @@ router.post('/bulk', entityLinkController.bulkCreateLinks);
  *         description: Unauthorized
  */
 router.post('/photos', entityLinkController.bulkLinkPhotos);
+
+/**
+ * @openapi
+ * /api/trips/{tripId}/links/photos/activity-suggestions:
+ *   get:
+ *     summary: Suggest an activity for each unlinked photo, by capture time
+ *     description: >
+ *       Matches every photo that is not linked to an activity yet against the trip's
+ *       activities. A photo taken during an activity matches it; failing that, one
+ *       taken within 30 minutes of it; failing that, an all-day activity on the same
+ *       date. Activities with a start but no end are assumed to last 2 hours. Nothing
+ *       is linked: apply the reviewed result with the POST on this path.
+ *     tags: [Entity Links]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The trip ID
+ *     responses:
+ *       200:
+ *         description: Suggestions in itinerary order, with counts of what was skipped
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     suggestions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           activity:
+ *                             type: object
+ *                           photoIds:
+ *                             type: array
+ *                             items:
+ *                               type: integer
+ *                           previewPhotos:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                           matchCounts:
+ *                             type: object
+ *                             properties:
+ *                               during:
+ *                                 type: integer
+ *                               near:
+ *                                 type: integer
+ *                               same_day:
+ *                                 type: integer
+ *                           firstTakenAt:
+ *                             type: string
+ *                             format: date-time
+ *                           lastTakenAt:
+ *                             type: string
+ *                             format: date-time
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         totalPhotos:
+ *                           type: integer
+ *                         matchedPhotos:
+ *                           type: integer
+ *                         alreadyLinkedPhotos:
+ *                           type: integer
+ *                         photosWithoutTime:
+ *                           type: integer
+ *                         unmatchedPhotos:
+ *                           type: integer
+ *                         activitiesWithoutTime:
+ *                           type: integer
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Trip not found or access denied
+ *   post:
+ *     summary: Link reviewed photos to their activities
+ *     description: >
+ *       Creates a PHOTO to ACTIVITY link for every pair given. Pairs that are already
+ *       linked (from either end) are skipped, so the call is safe to repeat.
+ *     tags: [Entity Links]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: tripId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The trip ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [links]
+ *             properties:
+ *               links:
+ *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 500
+ *                 items:
+ *                   type: object
+ *                   required: [activityId, photoIds]
+ *                   properties:
+ *                     activityId:
+ *                       type: integer
+ *                     photoIds:
+ *                       type: array
+ *                       minItems: 1
+ *                       maxItems: 5000
+ *                       items:
+ *                         type: integer
+ *     responses:
+ *       201:
+ *         description: Links created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     created:
+ *                       type: integer
+ *                     skipped:
+ *                       type: integer
+ *       400:
+ *         description: Validation error, or an id that is not in this trip
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Trip not found or access denied
+ */
+router.get('/photos/activity-suggestions', photoAutoLinkController.getActivitySuggestions);
+router.post('/photos/activity-suggestions', photoAutoLinkController.applyActivityLinks);
 
 /**
  * @openapi
