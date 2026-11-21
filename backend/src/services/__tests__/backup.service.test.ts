@@ -40,6 +40,12 @@ const mockPrisma = {
   user: {
     findUnique: jest.fn(),
   },
+  userPreferences: {
+    findUnique: jest.fn(),
+  },
+  userIntegrations: {
+    findUnique: jest.fn(),
+  },
   trip: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
@@ -187,7 +193,11 @@ describe('BackupService', () => {
     jest.clearAllMocks();
 
     // Setup default mock returns
+    // Identity from users; display preferences and integration settings from their own tables
+    // (mockUser carries the columns of all three, each lookup reads the ones it owns).
     mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, ...mockUser });
+    mockPrisma.userIntegrations.findUnique.mockResolvedValue({ userId: 1, ...mockUser });
     mockPrisma.tripTag.findMany.mockResolvedValue(mockTags);
     mockPrisma.travelCompanion.findMany.mockResolvedValue(mockCompanions);
     mockPrisma.locationCategory.findMany.mockResolvedValue(mockLocationCategories);

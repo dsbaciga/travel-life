@@ -39,7 +39,7 @@ jest.mock('@prisma/client', () => {
 // ---------------------------------------------------------------------------
 
 const MODELS = [
-  'user', 'trip', 'tripTag', 'tripTagAssignment', 'travelCompanion', 'tripCompanion',
+  'user', 'userPreferences', 'userIntegrations', 'trip', 'tripTag', 'tripTagAssignment', 'travelCompanion', 'tripCompanion',
   'locationCategory', 'checklist', 'travelDocument', 'loyaltyProgram', 'tripSeries', 'location', 'photo',
   'activity', 'transportation', 'flightTracking', 'lodging', 'journalEntry', 'photoAlbum',
   'photoAlbumAssignment', 'weatherData', 'entityLink', 'tripLanguage', 'savedLink',
@@ -201,6 +201,8 @@ function resetTx(): void {
   // Sensible defaults so the restore walk can complete.
   mockTx.user.findUnique.mockResolvedValue({ timezone: 'UTC' });
   mockTx.user.update.mockResolvedValue({ id: USER_ID });
+  mockTx.userPreferences.upsert.mockResolvedValue({});
+  mockTx.userIntegrations.upsert.mockResolvedValue({});
   mockTx.trip.create.mockResolvedValue({ id: 100 });
   mockTx.trip.update.mockResolvedValue({ id: 100 });
   mockTx.travelCompanion.create.mockResolvedValue({ id: 200 });

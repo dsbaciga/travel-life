@@ -10,6 +10,7 @@ import {
 import { maskDocumentNumber } from '../types/travelDocument.types';
 import { AppError } from '../errors/errors';
 import { costExpenseSelect, hydrateBookingCost } from './_shared/bookingCost';
+import { getUserIntegrations, getUserPreferences } from './_shared/userSettings';
 
 type Decimal = Prisma.Decimal;
 
@@ -598,22 +599,15 @@ export async function createBackup(userId: number): Promise<BackupData> {
         username: true,
         email: true,
         timezone: true,
-        activityCategories: true,
-        tripTypes: true,
-        dietaryPreferences: true,
-        useCustomMapStyle: true,
-        baseCurrency: true,
-        measurementSystem: true,
-        preferredMapsApp: true,
-        immichApiUrl: true,
-        llmBaseUrl: true,
-        llmModel: true,
       },
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
+
+    const preferences = await getUserPreferences(userId);
+    const integrations = await getUserIntegrations(userId);
 
     // Fetch tags (typically small, bounded by user behavior)
     const tags = await prisma.tripTag.findMany({
@@ -788,24 +782,24 @@ export async function createBackup(userId: number): Promise<BackupData> {
       username: user.username,
       email: user.email,
       timezone: user.timezone,
-      activityCategories: user.activityCategories as BackupData['user']['activityCategories'],
-      tripTypes: user.tripTypes as BackupData['user']['tripTypes'],
-      dietaryPreferences: (user.dietaryPreferences as string[]) ?? [],
-      useCustomMapStyle: user.useCustomMapStyle,
-      baseCurrency: user.baseCurrency,
+      activityCategories: preferences.activityCategories as BackupData['user']['activityCategories'],
+      tripTypes: preferences.tripTypes as BackupData['user']['tripTypes'],
+      dietaryPreferences: (preferences.dietaryPreferences as string[]) ?? [],
+      useCustomMapStyle: preferences.useCustomMapStyle,
+      baseCurrency: preferences.baseCurrency,
       measurementSystem:
-        user.measurementSystem === 'imperial' || user.measurementSystem === 'metric'
-          ? user.measurementSystem
+        preferences.measurementSystem === 'imperial' || preferences.measurementSystem === 'metric'
+          ? preferences.measurementSystem
           : null,
-      preferredMapsApp: user.preferredMapsApp,
-      immichApiUrl: user.immichApiUrl,
+      preferredMapsApp: preferences.preferredMapsApp,
+      immichApiUrl: integrations.immichApiUrl,
       immichApiKey: null,
       weatherApiKey: null,
       aviationstackApiKey: null,
       openrouteserviceApiKey: null,
       llmApiKey: null,
-      llmBaseUrl: user.llmBaseUrl,
-      llmModel: user.llmModel,
+      llmBaseUrl: integrations.llmBaseUrl,
+      llmModel: integrations.llmModel,
       smtpPassword: null,
     };
 

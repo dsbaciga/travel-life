@@ -63,7 +63,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | ------- | ------- | -------- |
 | Auth (password, refresh, CSRF) | `auth`, `auth/`, `middleware/auth`, `security/csrf`, `tokenBlacklist` | `authStore`, `lib/tokenManager`, `lib/axios`, `LoginPage` |
 | SSO / OIDC | `oidc.service`, `oidc.controller` (routes are in `auth.routes`), `http/mobileSignInPages` | `LoginPage` |
-| Users, settings, invitations (incl. units setting) | `user`, `userInvitation` | `SettingsPage`, `components/settings/`, `InviteUserModal`, `AcceptInvitePage` |
+| Users, settings, invitations (incl. units setting; a user's integration secrets and display preferences live in `user_integrations` / `user_preferences`, read and written only through `services/_shared/userSettings`) | `user`, `userInvitation`, `services/_shared/userSettings` | `SettingsPage`, `components/settings/`, `InviteUserModal`, `AcceptInvitePage` |
 | Collaboration (trip collaborators, permissions) | `collaboration`, `services/_shared/tripAccess`, `tripPermissions`, `travelPartnerRequest` | `CollaboratorsManager`, `TravelPartnerSettings` |
 | Public share links | `share`, `validation/share` | `ShareTripModal`, `PublicTripPage` |
 | Calendar feed (iCal subscription) | `calendarFeed`, `calendar.routes` | `CalendarFeedSettings`, `TripCalendarPage` |
@@ -112,6 +112,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Delete a row's entity links | `cleanupEntityLinks` (the database triggers do it too) | `services/_shared/entityLinkCleanup.ts` |
 | Where an activity/lodging is (`locationId` FK) and how old clients see it as a link | `findSyntheticLocationLinks`, `syntheticLocationLinkId`, `claimEntityLocation` | `services/_shared/entityLocationLinks.ts`, `services/entityLink.service.ts` |
 | An activity's/lodging's place ids, own FK first then loose links | `buildEntityLocationIdsMap` | `utils/entityLocations.ts` (frontend) |
+| A user's integration settings (Immich/weather/LLM/SMTP keys, ciphertext) or preferences (categories, currency, units, partner permission): read, update, create the missing row; give a new user both rows | `getUserIntegrations`, `getUserPreferences`, `findUser*` (null for a missing user), `updateUserIntegrations`, `updateUserPreferences`, `defaultUserSettingsCreate` (nested create in `user.create`), `findUserIdBySender` | `services/_shared/userSettings.ts` |
 | Timezone fallback chain | `resolveTimezone`, `getUserTimezone` | `services/_shared/timezoneResolution.ts` |
 | Trip list ordering (open trips before Completed) | `tripListOrder` | `services/_shared/` |
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |

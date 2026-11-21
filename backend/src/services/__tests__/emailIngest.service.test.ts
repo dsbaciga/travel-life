@@ -28,6 +28,8 @@ const mockPrisma = {
   },
   user: {
     findFirst: jest.fn(),
+  },
+  userPreferences: {
     findMany: jest.fn(),
   },
 };
@@ -137,7 +139,7 @@ describe('EmailIngestService', () => {
     mockPrisma.emailIngest.create.mockResolvedValue({ id: 1 });
     mockPrisma.emailIngest.update.mockResolvedValue({ id: 1 });
     mockPrisma.user.findFirst.mockResolvedValue({ id: USER_ID });
-    mockPrisma.user.findMany.mockResolvedValue([]);
+    mockPrisma.userPreferences.findMany.mockResolvedValue([]);
     mockExtractLinks.mockReturnValue(['https://example.com/ramen']);
     mockCreateFromEmail.mockResolvedValue({ id: 55 });
     mockConnect.mockResolvedValue(undefined);
@@ -188,8 +190,8 @@ describe('EmailIngestService', () => {
       // No user owns this address directly...
       mockPrisma.user.findFirst.mockResolvedValue(null);
       // ...but one lists it as a trusted forwarding address.
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: USER_ID, linkIngestSenders: ['work@company.com'] },
+      mockPrisma.userPreferences.findMany.mockResolvedValue([
+        { userId: USER_ID, linkIngestSenders: ['work@company.com'] },
       ]);
 
       stageMessage(
@@ -207,8 +209,8 @@ describe('EmailIngestService', () => {
 
     it('EI-005: rejects an unknown sender but still archives', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: USER_ID, linkIngestSenders: [] },
+      mockPrisma.userPreferences.findMany.mockResolvedValue([
+        { userId: USER_ID, linkIngestSenders: [] },
       ]);
 
       stageMessage(

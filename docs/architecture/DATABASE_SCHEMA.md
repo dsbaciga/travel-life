@@ -2,7 +2,7 @@
 
 Travel Life uses PostgreSQL with PostGIS extension for geospatial data. The schema is managed via Prisma ORM.
 
-The schema defines **49 models** (mapped to **49 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
+The schema defines **51 models** (mapped to **51 tables**) and **13 enums**. Count them with `grep -c '^model ' backend/prisma/schema.prisma` rather than trusting this line.
 
 ## Schema Location
 
@@ -65,7 +65,9 @@ backend/prisma/schema.prisma
 
 ### User
 
-Primary user account model with authentication and settings.
+Identity and login only. Everything else a user configures lives in two one-row-per-user tables
+(see [UserIntegrations](#userintegrations) and [UserPreferences](#userpreferences)), so loading a user never
+loads a secret.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -73,15 +75,47 @@ Primary user account model with authentication and settings.
 | username | String | Unique username |
 | email | String | Unique email address |
 | passwordHash | String | Bcrypt hashed password |
-| timezone | String? | User's home timezone (null until chosen; there is no default, and nothing falls back to UTC for display) |
-| activityCategories | Json | Custom activity category list |
-| immichApiUrl | String? | Immich server URL |
-| immichApiKey | String? | Immich API key |
-| weatherApiKey | String? | OpenWeatherMap API key |
-| aviationstackApiKey | String? | Flight tracking API key |
-| openrouteserviceApiKey | String? | Road routing API key |
-| measurementSystem | String? | `imperial` or `metric`; null means the app default (imperial) |
-| createdAt | DateTime | Account creation timestamp |
+| passwordVersion | Int | Bumped on a password change or refresh-token reuse; older tokens stop working |
+| avatarUrl | String? | Profile picture path |
+| timezone | String? | User's home timezone (null until chosen; there is no default, and nothing falls back to UTC for display). On the session payload, so it stays here |
+| oidcSubject | String? | Unique `issuer\|sub` identity from single sign-on |
+| calendarToken | String? | Unique secret of the read-only iCal feed URL |
+| travelPartnerId | Int? | The user's travel partner (`SET NULL` on delete); the permission level is `UserPreferences.defaultPartnerPermission` |
+| createdAt, updatedAt | DateTime | `updatedAt` is also stamped whenever a settings row below is written |
+
+### UserIntegrations
+
+Third-party settings, one row per user (`userId` is the primary key, `ON DELETE CASCADE`). Since
+`20261124000000_split_user_table`; before that these were columns of `users`. Every user has a row from
+creation (`defaultUserSettingsCreate`); `services/_shared/userSettings.ts` is the only code that reads or
+writes the table and creates a missing row on demand. API keys and the SMTP password are stored as
+ciphertext (`security/encryption.ts`, `enc:v1:...`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| userId | Int | Primary key, foreign key to `users` |
+| immichApiUrl, immichApiKey | String? | Immich server URL and (encrypted) API key |
+| weatherApiKey | String? | OpenWeatherMap API key (encrypted) |
+| aviationstackApiKey | String? | Flight tracking API key (encrypted) |
+| openrouteserviceApiKey | String? | Road routing API key (encrypted) |
+| llmApiKey, llmBaseUrl, llmModel | String? | Per-user LLM overrides; the key is encrypted |
+| smtpProvider, smtpHost, smtpPort, smtpSecure, smtpUser, smtpPassword, smtpFrom | mixed | Per-user mail server; the password is encrypted |
+
+### UserPreferences
+
+Display and behaviour preferences, one row per user (same key and lifecycle as `UserIntegrations`).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| userId | Int | Primary key, foreign key to `users` |
+| activityCategories, tripTypes | Json | The user's category and trip type lists (with defaults) |
+| dietaryPreferences | Json | The user's own dietary preferences (`[]`) |
+| linkIngestSenders | Json | Extra From addresses trusted to forward links to the ingest mailbox |
+| useCustomMapStyle | Boolean | Default `true` |
+| baseCurrency | String? | Home currency (ISO 4217) that mixed-currency budget totals are reported in |
+| preferredMapsApp | String? | Which maps/rideshare app the "Directions" links open |
+| measurementSystem | String? | `imperial` or `metric` (CHECK `user_preferences_measurement_system_check`); null means the app default (imperial) |
+| defaultPartnerPermission | String | Permission a travel partner gets on this user's trips: `view`, `edit` (default) or `admin` |
 
 ### Trip
 

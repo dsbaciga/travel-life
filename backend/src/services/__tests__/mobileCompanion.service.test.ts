@@ -58,6 +58,7 @@ const mockPrisma = {
   pushSubscription: { findMany: jest.fn() },
   bookingDeadline: { findMany: jest.fn(), update: jest.fn() },
   user: { findUnique: jest.fn() },
+  userPreferences: { findUnique: jest.fn() },
   travelCompanion: { findFirst: jest.fn() },
 };
 jest.mock('../../config/database', () => ({ __esModule: true, default: mockPrisma }));
@@ -555,6 +556,7 @@ describe('AuthService.issueTokensForUser', () => {
       timezone: 'Europe/Rome',
       passwordVersion: 3,
     } as never);
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 4, measurementSystem: 'metric' } as never);
 
     const result = await authService.issueTokensForUser(4);
 
@@ -564,6 +566,7 @@ describe('AuthService.issueTokensForUser', () => {
       email: 'dana@example.com',
       avatarUrl: null,
       timezone: 'Europe/Rome',
+      measurementSystem: 'metric',
     });
     const decoded = verifyAccessToken(result.accessToken);
     expect(decoded.userId).toBe(4);

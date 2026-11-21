@@ -7,6 +7,7 @@ import { verifyTripAccess } from '../services/_shared/tripAccess';
 import { convertDecimals } from '../services/_shared/decimalConversion';
 import { isAxiosError } from '../types/prisma-helpers';
 import { decryptSecret } from '../security/encryption';
+import { getUserIntegrations } from './_shared/userSettings';
 
 interface OpenWeatherResponse {
   daily: {
@@ -92,13 +93,6 @@ class WeatherService {
     // Get user's API key
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      include: {
-        user: {
-          select: {
-            weatherApiKey: true,
-          },
-        },
-      },
     });
 
     if (!trip) {
@@ -111,7 +105,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
+    const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       console.warn('No weather API key configured');
@@ -809,13 +803,6 @@ class WeatherService {
     // Get user's API key
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      include: {
-        user: {
-          select: {
-            weatherApiKey: true,
-          },
-        },
-      },
     });
 
     if (!trip) {
@@ -823,7 +810,7 @@ class WeatherService {
     }
 
     // Get API key (user's key or system key)
-    const apiKey = decryptSecret(trip.user.weatherApiKey) || this.API_KEY;
+    const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
       throw new AppError('No weather API key configured', 400);

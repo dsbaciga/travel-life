@@ -52,6 +52,8 @@ jest.mock('@prisma/client', () => {
 // Transaction mock that passes the mock prisma as tx
 const mockTx = {
   user: { update: jest.fn(), findUnique: jest.fn(), findUniqueOrThrow: jest.fn() },
+  userPreferences: { upsert: jest.fn() },
+  userIntegrations: { upsert: jest.fn() },
   $executeRaw: jest.fn(),
   // SavedLink.tripId is SetNull rather than Cascade, so clearUserData has to
   // remove saved links explicitly.
@@ -405,6 +407,8 @@ describe('RestoreService', () => {
     mockTx.customItem.create.mockResolvedValue({ id: 1 });
     mockTx.customItemType.create.mockResolvedValue({ id: 1 });
     mockTx.user.update.mockResolvedValue({});
+    mockTx.userPreferences.upsert.mockResolvedValue({});
+    mockTx.userIntegrations.upsert.mockResolvedValue({});
     mockTx.trip.update.mockResolvedValue({});
     mockTx.location.update.mockResolvedValue({});
     mockTx.activity.update.mockResolvedValue({});
@@ -448,6 +452,33 @@ describe('RestoreService', () => {
       mockTx.user.update.mockClear();
       await restoreFromBackup(1, { ...minimalBackup, user: { ...minimalBackup.user, timezone: ' Europe/Rome ' } });
       expect(mockTx.user.update.mock.calls[0][0].data.timezone).toBe('Europe/Rome');
+    });
+
+    it('RST-019c: integration settings are written to user_integrations, secrets only when the backup carries them', async () => {
+      await restoreFromBackup(1, {
+        ...minimalBackup,
+        user: { ...minimalBackup.user, llmModel: 'gpt-x', weatherApiKey: 'legacy-plain-key' },
+      });
+
+      expect(mockTx.userIntegrations.upsert).toHaveBeenCalledTimes(1);
+      const call = mockTx.userIntegrations.upsert.mock.calls[0][0];
+      expect(call.where).toEqual({ userId: 1 });
+      // A legacy (pre-1.3.0) backup restores its plaintext key as given; absent secrets are not touched.
+      expect(call.update).toMatchObject({ llmModel: 'gpt-x', llmBaseUrl: null, weatherApiKey: 'legacy-plain-key' });
+      expect(call.update).not.toHaveProperty('llmApiKey');
+      expect(call.update).not.toHaveProperty('smtpPassword');
+    });
+
+    it('RST-019d: an Immich URL that fails the SSRF check is dropped together with its key', async () => {
+      await restoreFromBackup(1, {
+        ...minimalBackup,
+        user: { ...minimalBackup.user, immichApiUrl: 'http://localhost:2283', immichApiKey: 'k' },
+      });
+
+      expect(mockTx.userIntegrations.upsert.mock.calls[0][0].update).toMatchObject({
+        immichApiUrl: null,
+        immichApiKey: null,
+      });
     });
 
     it('RST-002: rejects unsupported backup version', async () => {
@@ -1123,9 +1154,11 @@ describe('RestoreService', () => {
       expect(result.success).toBe(true);
       expect(result.stats.savedLinksImported).toBe(1);
 
-      expect(mockTx.user.update).toHaveBeenCalledWith(
+      // Preferences go to user_preferences, in the same transaction.
+      expect(mockTx.userPreferences.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
+          where: { userId: 1 },
+          update: expect.objectContaining({
             dietaryPreferences: ['vegan'],
             useCustomMapStyle: false,
             baseCurrency: 'EUR',

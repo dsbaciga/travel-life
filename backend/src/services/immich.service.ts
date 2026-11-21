@@ -2,7 +2,6 @@ import axios, { AxiosInstance } from 'axios';
 import { z } from 'zod';
 import { AppError } from '../errors/errors';
 import logger from '../config/logger';
-import prisma from '../config/database';
 import { decryptSecret } from '../security/encryption';
 import { integrationRequestOptions } from '../security/integrationRequestGuard';
 import {
@@ -13,6 +12,7 @@ import {
   isAxiosError,
   getErrorMessage,
 } from '../types/prisma-helpers';
+import { findUserIntegrations } from './_shared/userSettings';
 
 // Re-export types for backward compatibility
 export type { ImmichAsset, ImmichAlbum, ImmichAssetOptions };
@@ -921,10 +921,7 @@ class ImmichService {
    * reachable when `ALLOW_PRIVATE_INTEGRATION_URLS` is on.
    */
   async getUserSettings(userId: number): Promise<{ apiUrl: string; apiKey: string }> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { immichApiUrl: true, immichApiKey: true },
-    });
+    const user = await findUserIntegrations(userId);
 
     const apiKey = decryptSecret(user?.immichApiKey);
     if (!user?.immichApiUrl || !apiKey) {

@@ -16,6 +16,7 @@
 
 import { Prisma } from '@prisma/client';
 import prisma from '../src/config/database';
+import { findUserPreferences } from '../src/services/_shared/userSettings';
 import exchangeRateService, { normalizeCurrency } from '../src/services/exchangeRate.service';
 
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -37,11 +38,12 @@ const totals: Totals = { converted: 0, alreadyDone: 0, noCurrency: 0, noRate: 0 
 async function resolveReportingCurrency(tripId: number): Promise<string | null> {
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    select: { budgetCurrency: true, user: { select: { baseCurrency: true } } },
+    select: { budgetCurrency: true, userId: true },
   });
 
   if (!trip) return null;
-  return normalizeCurrency(trip.user.baseCurrency) ?? normalizeCurrency(trip.budgetCurrency);
+  const prefs = await findUserPreferences(trip.userId);
+  return normalizeCurrency(prefs?.baseCurrency) ?? normalizeCurrency(trip.budgetCurrency);
 }
 
 async function backfillRecord(

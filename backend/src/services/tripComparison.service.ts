@@ -11,6 +11,7 @@ import type {
   TripComparisonTrip,
 } from '../types/tripComparison.types';
 import type { BudgetSummary } from '../types/expense.types';
+import { findUserPreferences } from './_shared/userSettings';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -130,7 +131,7 @@ class TripComparisonService {
           },
           orderBy: { id: 'asc' },
         }),
-        prisma.user.findUnique({ where: { id: userId }, select: { baseCurrency: true } }),
+        findUserPreferences(userId),
       ]);
 
     const countMap = (rows: Array<{ tripId: number; _count: { _all: number } }>) =>

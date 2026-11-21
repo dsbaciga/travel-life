@@ -214,7 +214,7 @@ Design:
   return a user's integrations and preferences; nothing else reads the tables directly.
 - API responses and the backup format are unchanged.
 
-- [ ] Step E done
+- [x] Step E done
 
 ## Step F (cleanup): spatial columns and coordinate types
 

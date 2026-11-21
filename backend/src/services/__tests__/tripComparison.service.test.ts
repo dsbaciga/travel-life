@@ -21,7 +21,7 @@ const mockPrisma = {
   photo: { groupBy: jest.fn<(...args: unknown[]) => Promise<unknown>>() },
   transportation: { groupBy: jest.fn<(...args: unknown[]) => Promise<unknown>>() },
   location: { findMany: jest.fn<(...args: unknown[]) => Promise<unknown>>() },
-  user: { findUnique: jest.fn<(...args: unknown[]) => Promise<unknown>>() },
+  userPreferences: { findUnique: jest.fn<(...args: unknown[]) => Promise<unknown>>() },
 };
 
 jest.mock('../../config/database', () => ({
@@ -93,7 +93,7 @@ describe('TripComparisonService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     setupEmptyAggregates();
-    mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: 'USD' });
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: 'USD' });
   });
 
   it('CMP-001: rejects too few, too many and duplicate ids', async () => {
@@ -264,7 +264,7 @@ describe('TripComparisonService', () => {
   });
 
   it('falls back to the first trip summary currency when the viewer has no base currency', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({ baseCurrency: null });
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, baseCurrency: null });
     mockPrisma.trip.findMany.mockResolvedValue([tripRow(1), tripRow(2)]);
     mockGetBudgetSummary.mockResolvedValue(summary('GBP', 10));
 

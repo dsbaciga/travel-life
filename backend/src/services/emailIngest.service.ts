@@ -6,6 +6,7 @@ import config from '../config';
 import logger from '../config/logger';
 import { extractLinksFromEmail } from './emailLinkExtractor.service';
 import savedLinkService from './savedLink.service';
+import { findUserIdBySender } from './_shared/userSettings';
 
 /**
  * Polls a dedicated IMAP mailbox and turns forwarded messages into SavedLinks.
@@ -78,22 +79,10 @@ class EmailIngestService {
     });
     if (byEmail) return { userId: byEmail.id };
 
-    // linkIngestSenders is a JSON array; filter in application code rather than
-    // relying on JSON path queries so matching stays case-insensitive.
-    const candidates = await prisma.user.findMany({
-      select: { id: true, linkIngestSenders: true },
-    });
-
-    for (const candidate of candidates) {
-      const senders = Array.isArray(candidate.linkIngestSenders)
-        ? candidate.linkIngestSenders
-        : [];
-      const matched = senders.some(
-        (entry) =>
-          typeof entry === 'string' && entry.toLowerCase().trim() === fromAddress
-      );
-      if (matched) return { userId: candidate.id };
-    }
+    // linkIngestSenders is a JSON array; matching happens in application code so it stays
+    // case-insensitive (see findUserIdBySender).
+    const trustedUserId = await findUserIdBySender(fromAddress);
+    if (trustedUserId !== null) return { userId: trustedUserId };
 
     return null;
   }

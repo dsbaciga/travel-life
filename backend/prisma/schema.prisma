@@ -19,47 +19,14 @@ model User {
   passwordHash           String   @map("password_hash") @db.VarChar(255)
   avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
   timezone               String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
-  activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
-  tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
-  dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
-  immichApiUrl           String?  @map("immich_api_url") @db.VarChar(500)
-  immichApiKey           String?  @map("immich_api_key") @db.VarChar(500)
-  weatherApiKey          String?  @map("weather_api_key") @db.VarChar(500)
-  aviationstackApiKey    String?  @map("aviationstack_api_key") @db.VarChar(500)
-  openrouteserviceApiKey String?  @map("openrouteservice_api_key") @db.VarChar(500)
-  llmApiKey              String?  @map("llm_api_key") @db.VarChar(500)
-  llmBaseUrl             String?  @map("llm_base_url") @db.VarChar(500)
-  llmModel               String?  @map("llm_model") @db.VarChar(200)
-  smtpProvider           String?  @map("smtp_provider") @db.VarChar(50)
-  smtpHost               String?  @map("smtp_host") @db.VarChar(500)
-  smtpPort               Int?     @map("smtp_port")
-  smtpSecure             Boolean? @map("smtp_secure")
-  smtpUser               String?  @map("smtp_user") @db.VarChar(500)
-  smtpPassword           String?  @map("smtp_password") @db.VarChar(500)
-  smtpFrom               String?  @map("smtp_from") @db.VarChar(500)
   passwordVersion        Int      @default(0) @map("password_version")
   oidcSubject            String?  @unique @map("oidc_subject") @db.VarChar(500) // "issuer|sub" identity from OIDC single sign-on
   calendarToken          String?  @unique @map("calendar_token") @db.VarChar(64) // Secret token for the read-only iCal feed URL
-  // Extra From addresses trusted to forward links to the ingest mailbox, on top
-  // of this user's own `email`. Per-user rather than a global env list, because
-  // a global list cannot say which user an address belongs to.
-  linkIngestSenders      Json     @default("[]") @map("link_ingest_senders")
-  useCustomMapStyle      Boolean  @default(true) @map("use_custom_map_style")
-  // Home currency (ISO 4217) that mixed-currency budget totals are reported in.
-  // Null means "no home currency chosen" — totals fall back to the trip's
-  // budgetCurrency, then to the most common currency among the costed items.
-  baseCurrency           String?  @map("base_currency") @db.VarChar(3)
-  // Which external maps/rideshare app the "Directions" deep links open by
-  // default (apple | google | citymapper | uber | lyft). Null = no preference,
-  // the UI then just lists every app that can handle the route.
-  preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
-  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
-  // Travel Partner Settings (bidirectional - both users share with each other)
+  // Travel partner link (the permission level lives in user_preferences.defaultPartnerPermission)
   travelPartnerId          Int?   @map("travel_partner_id")
-  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin
 
   trips                   Trip[]
   tags                    TripTag[]
@@ -90,8 +57,69 @@ model User {
   travelPartner User?  @relation("TravelPartner", fields: [travelPartnerId], references: [id], onDelete: SetNull)
   partnerOf     User[] @relation("TravelPartner")
 
+  integrations UserIntegrations?
+  preferences  UserPreferences?
+
   @@index([travelPartnerId])
   @@map("users")
+}
+
+// Third-party integration settings of one user (Immich, weather, flight tracking, routing, LLM, SMTP),
+// split out of `users` in migration 20261124000000_split_user_table so that loading a user never loads
+// a secret by accident. Every user has exactly one row (created with the user; the accessors in
+// services/_shared/userSettings.ts also create a missing one on demand). API keys and the SMTP password are
+// stored as ciphertext produced by security/encryption.ts, exactly as they were on `users`.
+model UserIntegrations {
+  userId                 Int      @id @map("user_id")
+  immichApiUrl           String?  @map("immich_api_url") @db.VarChar(500)
+  immichApiKey           String?  @map("immich_api_key") @db.VarChar(500)
+  weatherApiKey          String?  @map("weather_api_key") @db.VarChar(500)
+  aviationstackApiKey    String?  @map("aviationstack_api_key") @db.VarChar(500)
+  openrouteserviceApiKey String?  @map("openrouteservice_api_key") @db.VarChar(500)
+  llmApiKey              String?  @map("llm_api_key") @db.VarChar(500)
+  llmBaseUrl             String?  @map("llm_base_url") @db.VarChar(500)
+  llmModel               String?  @map("llm_model") @db.VarChar(200)
+  smtpProvider           String?  @map("smtp_provider") @db.VarChar(50)
+  smtpHost               String?  @map("smtp_host") @db.VarChar(500)
+  smtpPort               Int?     @map("smtp_port")
+  smtpSecure             Boolean? @map("smtp_secure")
+  smtpUser               String?  @map("smtp_user") @db.VarChar(500)
+  smtpPassword           String?  @map("smtp_password") @db.VarChar(500)
+  smtpFrom               String?  @map("smtp_from") @db.VarChar(500)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_integrations")
+}
+
+// Display and behaviour preferences of one user, split out of `users` in migration
+// 20261124000000_split_user_table. Every user has exactly one row, created with the user.
+model UserPreferences {
+  userId                   Int      @id @map("user_id")
+  activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
+  tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
+  dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
+  // Extra From addresses trusted to forward links to the ingest mailbox, on top
+  // of this user's own `email`. Per-user rather than a global env list, because
+  // a global list cannot say which user an address belongs to.
+  linkIngestSenders      Json     @default("[]") @map("link_ingest_senders")
+  useCustomMapStyle      Boolean  @default(true) @map("use_custom_map_style")
+  // Home currency (ISO 4217) that mixed-currency budget totals are reported in.
+  // Null means "no home currency chosen" — totals fall back to the trip's
+  // budgetCurrency, then to the most common currency among the costed items.
+  baseCurrency           String?  @map("base_currency") @db.VarChar(3)
+  // Which external maps/rideshare app the "Directions" deep links open by
+  // default (apple | google | citymapper | uber | lyft). Null = no preference,
+  // the UI then just lists every app that can handle the route.
+  preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  // CHECK user_preferences_measurement_system_check (migration 20261124000000_split_user_table) limits it to imperial | metric;
+  // Prisma cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
+  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
+  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }
 
 model Trip {

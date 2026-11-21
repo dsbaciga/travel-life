@@ -17,6 +17,7 @@ import type {
   ImportLocationsInput,
   ImportRowResult,
 } from '../types/bulkImport.types';
+import { findUserPreferences } from './_shared/userSettings';
 
 /** 500 sequential inserts in one transaction can outlast Prisma's 5 s default. */
 const IMPORT_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 60_000 };
@@ -195,7 +196,7 @@ class BulkImportService {
 
     const [trip, user, userTimezone, locations, existing] = await Promise.all([
       prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true, user: { select: { timezone: true } } } }),
-      prisma.user.findUnique({ where: { id: userId }, select: { activityCategories: true } }),
+      findUserPreferences(userId),
       getUserTimezone(userId),
       prisma.location.findMany({ where: { tripId }, select: { id: true, name: true } }),
       prisma.activity.findMany({ where: { tripId }, select: { name: true, startTime: true } }),

@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { config } from '../config';
-import prisma from '../config/database';
 import logger from '../config/logger';
 import { decryptSecret } from '../security/encryption';
 import { integrationRequestOptions } from '../security/integrationRequestGuard';
+import { findUserIntegrations } from './_shared/userSettings';
 
 interface LlmOptions {
   maxTokens?: number;
@@ -84,10 +84,7 @@ class LlmService {
     let userModel: string | null = null;
 
     if (userId !== undefined) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { llmApiKey: true, llmBaseUrl: true, llmModel: true },
-      });
+      const user = await findUserIntegrations(userId);
       userApiKey = decryptSecret(user?.llmApiKey);
       userBaseUrl = user?.llmBaseUrl ?? null;
       userModel = user?.llmModel ?? null;

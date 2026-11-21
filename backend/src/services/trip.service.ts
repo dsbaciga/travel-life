@@ -12,6 +12,7 @@ import { compareTripsForList, todayKeyInTimezone } from '../services/_shared/tri
 import { deleteReceiptFiles } from './expenseReceipt.service';
 import { deriveLocationCountryCode } from './_shared/countryCodes';
 import { insertBookingCost } from './_shared/bookingCost';
+import { getUserPreferences } from './_shared/userSettings';
 
 /**
  * Maps each source row to a *distinct* copy, matching on a composite key.
@@ -76,9 +77,11 @@ export class TripService {
       select: {
         timezone: true,
         travelPartnerId: true,
-        defaultPartnerPermission: true,
       },
     });
+    const partnerPermission = user?.travelPartnerId
+      ? (await getUserPreferences(userId)).defaultPartnerPermission
+      : null;
 
     const timezone = resolveTimezone(data.timezone, user?.timezone);
 
@@ -127,7 +130,7 @@ export class TripService {
           data: {
             tripId: newTrip.id,
             userId: user.travelPartnerId,
-            permissionLevel: toSafePermissionLevel(user.defaultPartnerPermission, 'edit'),
+            permissionLevel: toSafePermissionLevel(partnerPermission, 'edit'),
           },
         });
       }

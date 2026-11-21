@@ -9,6 +9,7 @@ import {
   type ReceiptCategory,
 } from './_shared/vendored/receiptParser';
 import type { ParseReceiptInput } from '../types/mobile.types';
+import { getUserPreferences } from './_shared/userSettings';
 
 export interface ReceiptParseResult extends ParsedReceipt {
   /** Which path produced the final values. */
@@ -90,10 +91,13 @@ class ReceiptService {
 
     const trip = await prisma.trip.findUnique({
       where: { id: tripId },
-      select: { budgetCurrency: true, user: { select: { baseCurrency: true } } },
+      select: { budgetCurrency: true, userId: true },
     });
     const defaultCurrency =
-      data.defaultCurrency ?? trip?.budgetCurrency ?? trip?.user.baseCurrency ?? null;
+      data.defaultCurrency ??
+      trip?.budgetCurrency ??
+      (trip ? (await getUserPreferences(trip.userId)).baseCurrency : null) ??
+      null;
 
     const heuristic = parseReceiptText(data.text, {
       defaultCurrency,

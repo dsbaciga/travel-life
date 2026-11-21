@@ -4,6 +4,7 @@ import { BackupData, RestoreOptions, isStoredUploadPath } from '../types/backup.
 import { AppError } from '../errors/errors';
 import { validateUrlNotInternal } from '../security/urlValidation';
 import logger from '../config/logger';
+import { updateUserIntegrations, updateUserPreferences, type UserIntegrationsInput } from './_shared/userSettings';
 import { ReceiptRestorer, deleteReceiptFiles } from './expenseReceipt.service';
 import { deriveLocationCountryCode, deriveCountryCodeFromName } from './_shared/countryCodes';
 import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
@@ -175,7 +176,7 @@ export async function restoreFromBackup(
         // non-null plaintext value (legacy v1.0.0–v1.2.0 backups). For null/
         // missing values we leave the existing DB value untouched so a user
         // restoring a recent backup doesn't lose their currently-configured keys.
-        const secretUpdates: Prisma.UserUpdateInput = {};
+        const secretUpdates: UserIntegrationsInput = {};
         const legacySecretsPresent: string[] = [];
         if (backupData.user.immichApiKey != null) {
           // Only restore the Immich key if the URL passed SSRF validation
@@ -212,10 +213,15 @@ export async function restoreFromBackup(
           });
         }
 
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            ...(backupTimezone ? { timezone: backupTimezone } : {}),
+        // Identity row: only the timezone lives on `users`.
+        if (backupTimezone) {
+          await tx.user.update({ where: { id: userId }, data: { timezone: backupTimezone }, select: { id: true } });
+        }
+
+        // Preferences (user_preferences).
+        await updateUserPreferences(
+          userId,
+          {
             activityCategories: backupData.user.activityCategories as Prisma.JsonArray,
             ...(backupData.user.tripTypes ? { tripTypes: backupData.user.tripTypes as Prisma.JsonArray } : {}),
             ...(backupData.user.dietaryPreferences !== undefined
@@ -233,6 +239,14 @@ export async function restoreFromBackup(
             ...(backupData.user.preferredMapsApp !== undefined
               ? { preferredMapsApp: backupData.user.preferredMapsApp }
               : {}),
+          },
+          tx
+        );
+
+        // Integrations (user_integrations).
+        await updateUserIntegrations(
+          userId,
+          {
             immichApiUrl: sanitizedImmichUrl,
             // If we have no Immich URL after sanitization, also clear any existing
             // Immich key — an orphan key without a URL is meaningless and confusing.
@@ -241,7 +255,8 @@ export async function restoreFromBackup(
             llmModel: backupData.user.llmModel ?? null,
             ...secretUpdates,
           },
-        });
+          tx
+        );
 
         // Step 3: Import tags
         const tagMap = new Map<string, number>(); // old name -> new ID

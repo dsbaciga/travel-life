@@ -8,56 +8,83 @@ import { companionService } from './companion.service';
 import { invalidatePasswordVersionCache } from '../middleware/auth';
 import { buildConditionalUpdateData } from '../services/_shared/prismaUpdateData';
 import { encryptSecret, decryptSecret } from '../security/encryption';
+import {
+  findUserIntegrations,
+  getUserIntegrations,
+  getUserPreferences,
+  updateUserIntegrations,
+  updateUserPreferences,
+  type UserPreferencesInput,
+} from './_shared/userSettings';
+
+/**
+ * The profile payload of `/users/me` and the settings updates: identity from `users`, display
+ * preferences from `user_preferences`, in the field order the API has always used.
+ */
+function toProfile(
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    avatarUrl: string | null;
+    timezone: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  },
+  prefs: Awaited<ReturnType<typeof getUserPreferences>>
+) {
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    avatarUrl: user.avatarUrl,
+    timezone: user.timezone,
+    activityCategories: prefs.activityCategories,
+    tripTypes: prefs.tripTypes,
+    dietaryPreferences: prefs.dietaryPreferences,
+    useCustomMapStyle: prefs.useCustomMapStyle,
+    baseCurrency: prefs.baseCurrency,
+    measurementSystem: prefs.measurementSystem,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+const PROFILE_USER_SELECT = {
+  id: true,
+  username: true,
+  email: true,
+  avatarUrl: true,
+  timezone: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 class UserService {
   async getUserById(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        avatarUrl: true,
-        timezone: true,
-        activityCategories: true,
-        tripTypes: true,
-        dietaryPreferences: true,
-        useCustomMapStyle: true,
-        baseCurrency: true,
-        measurementSystem: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: PROFILE_USER_SELECT,
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    return user;
+    return toProfile(user, await getUserPreferences(userId));
   }
 
   async updateUserSettings(userId: number, data: UpdateUserSettingsInput) {
-    const updateData = buildConditionalUpdateData(data);
+    const { timezone, ...preferenceData } = buildConditionalUpdateData(data);
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        avatarUrl: true,
-        timezone: true,
-        activityCategories: true,
-        tripTypes: true,
-        dietaryPreferences: true,
-        useCustomMapStyle: true,
-        baseCurrency: true,
-        measurementSystem: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+    // `timezone` is part of the user's identity row, everything else is a preference.
+    const user = await prisma.$transaction(async (tx) => {
+      if (timezone !== undefined) {
+        await tx.user.update({ where: { id: userId }, data: { timezone }, select: { id: true } });
+      }
+      const prefs = await updateUserPreferences(userId, preferenceData as UserPreferencesInput, tx);
+      const identity = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: PROFILE_USER_SELECT });
+      return toProfile(identity, prefs);
     });
 
     return user;
@@ -73,33 +100,11 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        immichApiUrl: true,
-        immichApiKey: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   async getImmichSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        immichApiUrl: true,
-        immichApiKey: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       immichApiUrl: user.immichApiUrl,
@@ -119,31 +124,11 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        weatherApiKey: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   async getWeatherSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        weatherApiKey: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       // Return whether key is set, but not the actual key for security
@@ -161,31 +146,11 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        aviationstackApiKey: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   async getAviationstackSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        aviationstackApiKey: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       // Return whether key is set, but not the actual key for security
@@ -203,31 +168,11 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        openrouteserviceApiKey: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   async getOpenrouteserviceSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        openrouteserviceApiKey: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       // Return whether key is set, but not the actual key for security
@@ -245,35 +190,11 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        llmApiKey: true,
-        llmBaseUrl: true,
-        llmModel: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   async getLlmSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        llmApiKey: true,
-        llmBaseUrl: true,
-        llmModel: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       // Never return the actual key — only whether it's set
@@ -291,16 +212,9 @@ class UserService {
    * route instead of highlighting one.
    */
   async getMapsSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { preferredMapsApp: true },
-    });
+    const prefs = await getUserPreferences(userId);
 
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
-
-    return { preferredMapsApp: user.preferredMapsApp };
+    return { preferredMapsApp: prefs.preferredMapsApp };
   }
 
   async updateMapsSettings(
@@ -309,13 +223,9 @@ class UserService {
   ) {
     const updateData = buildConditionalUpdateData(data);
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: { preferredMapsApp: true },
-    });
+    const prefs = await updateUserPreferences(userId, updateData);
 
-    return { preferredMapsApp: user.preferredMapsApp };
+    return { preferredMapsApp: prefs.preferredMapsApp };
   }
 
   /**
@@ -326,15 +236,16 @@ class UserService {
   async getLinkIngestSettings(userId: number) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, linkIngestSenders: true },
+      select: { email: true },
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    const senders = Array.isArray(user.linkIngestSenders)
-      ? user.linkIngestSenders.filter(
+    const prefs = await getUserPreferences(userId);
+    const senders = Array.isArray(prefs.linkIngestSenders)
+      ? prefs.linkIngestSenders.filter(
           (entry): entry is string => typeof entry === 'string'
         )
       : [];
@@ -359,31 +270,13 @@ class UserService {
       )
     );
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { linkIngestSenders: normalized },
-    });
+    await updateUserPreferences(userId, { linkIngestSenders: normalized });
 
     return this.getLinkIngestSettings(userId);
   }
 
   async getSmtpSettings(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        smtpProvider: true,
-        smtpHost: true,
-        smtpPort: true,
-        smtpSecure: true,
-        smtpUser: true,
-        smtpPassword: true,
-        smtpFrom: true,
-      },
-    });
-
-    if (!user) {
-      throw new AppError('User not found', 404);
-    }
+    const user = await getUserIntegrations(userId);
 
     return {
       smtpProvider: user.smtpProvider,
@@ -415,39 +308,15 @@ class UserService {
       },
     });
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-      select: {
-        id: true,
-        smtpProvider: true,
-        smtpHost: true,
-        smtpPort: true,
-        smtpSecure: true,
-        smtpUser: true,
-        smtpPassword: true,
-        smtpFrom: true,
-      },
-    });
-
-    return user;
+    return updateUserIntegrations(userId, updateData);
   }
 
   /**
    * Get the effective SMTP config for a user (user override > env var default)
    */
   async getEffectiveSmtpConfig(userId: number) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        smtpHost: true,
-        smtpPort: true,
-        smtpSecure: true,
-        smtpUser: true,
-        smtpPassword: true,
-        smtpFrom: true,
-      },
-    });
+    // A user that no longer exists simply has no override.
+    const user = await findUserIntegrations(userId);
 
     const smtpPassword = decryptSecret(user?.smtpPassword);
 
@@ -483,27 +352,13 @@ class UserService {
     const user = await prisma.user.update({
       where: { id: userId },
       data: { username: newUsername },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        avatarUrl: true,
-        timezone: true,
-        activityCategories: true,
-        tripTypes: true,
-        dietaryPreferences: true,
-        useCustomMapStyle: true,
-        baseCurrency: true,
-        measurementSystem: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: PROFILE_USER_SELECT,
     });
 
     // Update "Myself" companion name to match new username
     await companionService.updateMyselfCompanionName(userId, newUsername);
 
-    return user;
+    return toProfile(user, await getUserPreferences(userId));
   }
 
   /**
@@ -512,25 +367,15 @@ class UserService {
   async renameTripType(userId: number, oldName: string, newName: string) {
     return await prisma.$transaction(async (tx) => {
       // Get current trip types
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-        select: { tripTypes: true },
-      });
+      const prefs = await getUserPreferences(userId, tx);
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      const tripTypes = user.tripTypes as Array<{ name: string; emoji: string }>;
+      const tripTypes = prefs.tripTypes as Array<{ name: string; emoji: string }>;
       const updatedTypes = tripTypes.map((t) =>
         t.name === oldName ? { ...t, name: newName } : t
       );
 
       // Update user's trip types
-      await tx.user.update({
-        where: { id: userId },
-        data: { tripTypes: updatedTypes },
-      });
+      await updateUserPreferences(userId, { tripTypes: updatedTypes }, tx);
 
       // Update all trips using the old name
       await tx.trip.updateMany({
@@ -548,23 +393,13 @@ class UserService {
   async deleteTripType(userId: number, typeName: string) {
     return await prisma.$transaction(async (tx) => {
       // Get current trip types
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-        select: { tripTypes: true },
-      });
+      const prefs = await getUserPreferences(userId, tx);
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      const tripTypes = user.tripTypes as Array<{ name: string; emoji: string }>;
+      const tripTypes = prefs.tripTypes as Array<{ name: string; emoji: string }>;
       const updatedTypes = tripTypes.filter((t) => t.name !== typeName);
 
       // Update user's trip types
-      await tx.user.update({
-        where: { id: userId },
-        data: { tripTypes: updatedTypes },
-      });
+      await updateUserPreferences(userId, { tripTypes: updatedTypes }, tx);
 
       // Clear trip type from all trips using it
       await tx.trip.updateMany({
@@ -578,25 +413,15 @@ class UserService {
 
   async renameCategory(userId: number, oldName: string, newName: string) {
     return await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-        select: { activityCategories: true },
-      });
+      const prefs = await getUserPreferences(userId, tx);
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      const categories = user.activityCategories as Array<{ name: string; emoji: string }>;
+      const categories = prefs.activityCategories as Array<{ name: string; emoji: string }>;
       const updatedCategories = categories.map((c) =>
         c.name === oldName ? { ...c, name: newName } : c
       );
 
       // Update user's categories
-      await tx.user.update({
-        where: { id: userId },
-        data: { activityCategories: updatedCategories },
-      });
+      await updateUserPreferences(userId, { activityCategories: updatedCategories }, tx);
 
       // Update all activities using the old category name
       await tx.activity.updateMany({
@@ -610,23 +435,13 @@ class UserService {
 
   async deleteCategory(userId: number, categoryName: string) {
     return await prisma.$transaction(async (tx) => {
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-        select: { activityCategories: true },
-      });
+      const prefs = await getUserPreferences(userId, tx);
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      const categories = user.activityCategories as Array<{ name: string; emoji: string }>;
+      const categories = prefs.activityCategories as Array<{ name: string; emoji: string }>;
       const updatedCategories = categories.filter((c) => c.name !== categoryName);
 
       // Update user's categories
-      await tx.user.update({
-        where: { id: userId },
-        data: { activityCategories: updatedCategories },
-      });
+      await updateUserPreferences(userId, { activityCategories: updatedCategories }, tx);
 
       // Clear category from all activities using it
       await tx.activity.updateMany({
@@ -725,7 +540,6 @@ class UserService {
       where: { id: userId },
       select: {
         travelPartnerId: true,
-        defaultPartnerPermission: true,
         travelPartner: {
           select: {
             id: true,
@@ -741,9 +555,11 @@ class UserService {
       throw new AppError('User not found', 404);
     }
 
+    const prefs = await getUserPreferences(userId);
+
     return {
       travelPartnerId: user.travelPartnerId,
-      defaultPartnerPermission: user.defaultPartnerPermission,
+      defaultPartnerPermission: prefs.defaultPartnerPermission,
       travelPartner: user.travelPartner,
     };
   }
@@ -805,11 +621,11 @@ class UserService {
         // target's own travelPartnerId is theirs alone to set.
         await tx.user.update({
           where: { id: userId },
-          data: {
-            travelPartnerId: data.travelPartnerId,
-            ...(data.defaultPartnerPermission && { defaultPartnerPermission: data.defaultPartnerPermission }),
-          },
+          data: { travelPartnerId: data.travelPartnerId },
         });
+        if (data.defaultPartnerPermission) {
+          await updateUserPreferences(userId, { defaultPartnerPermission: data.defaultPartnerPermission }, tx);
+        }
       } else if (data.travelPartnerId === null) {
         // Clearing the partnership - only this user's side
         const currentUser = await lockAndFetchUser(userId);
@@ -833,10 +649,7 @@ class UserService {
         if (data.defaultPartnerPermission !== undefined) {
           // Just updating current user's permission level - only affects THIS user
           // Each user controls their own permission level independently
-          await tx.user.update({
-            where: { id: userId },
-            data: { defaultPartnerPermission: data.defaultPartnerPermission },
-          });
+          await updateUserPreferences(userId, { defaultPartnerPermission: data.defaultPartnerPermission }, tx);
         }
       }
 
@@ -845,7 +658,6 @@ class UserService {
         where: { id: userId },
         select: {
           travelPartnerId: true,
-          defaultPartnerPermission: true,
           travelPartner: {
             select: {
               id: true,
@@ -857,9 +669,11 @@ class UserService {
         },
       });
 
+      const prefs = await getUserPreferences(userId, tx);
+
       return {
         travelPartnerId: updatedUser?.travelPartnerId ?? null,
-        defaultPartnerPermission: updatedUser?.defaultPartnerPermission ?? 'edit',
+        defaultPartnerPermission: prefs.defaultPartnerPermission,
         travelPartner: updatedUser?.travelPartner ?? null,
       };
     }, {

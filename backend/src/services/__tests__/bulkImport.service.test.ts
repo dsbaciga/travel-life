@@ -14,6 +14,7 @@
 const mockPrisma = {
   trip: { findUnique: jest.fn(), findFirst: jest.fn() },
   user: { findUnique: jest.fn() },
+  userPreferences: { findUnique: jest.fn() },
   location: { findMany: jest.fn() },
   locationCategory: { findMany: jest.fn() },
   activity: { findMany: jest.fn() },
@@ -44,8 +45,9 @@ describe('BulkImportService', () => {
     jest.clearAllMocks();
     mockVerifyAccess.mockResolvedValue(undefined);
     mockPrisma.trip.findUnique.mockResolvedValue({ timezone: 'Europe/Paris' });
-    mockPrisma.user.findUnique.mockResolvedValue({
-      timezone: 'America/Chicago',
+    mockPrisma.user.findUnique.mockResolvedValue({ timezone: 'America/Chicago' });
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({
+      userId: 1,
       activityCategories: [{ name: 'Dining', emoji: 'x' }],
     });
     mockPrisma.location.findMany.mockResolvedValue([]);
@@ -148,7 +150,8 @@ describe('BulkImportService', () => {
     expect(viaUser.defaultTimezone).toEqual({ zone: 'America/Chicago', source: 'user' });
     expect(viaUser.rows[0].normalized.startTime).toBe('2026-07-01T17:00:00.000Z');
 
-    mockPrisma.user.findUnique.mockResolvedValue({ timezone: null, activityCategories: [] });
+    mockPrisma.user.findUnique.mockResolvedValue({ timezone: null });
+    mockPrisma.userPreferences.findUnique.mockResolvedValue({ userId: 1, activityCategories: [] });
     const viaUtc = await bulkImportService.importActivities(1, 9, { rows: [row], dryRun: true, excludeRows: [] });
     expect(viaUtc.defaultTimezone).toEqual({ zone: 'UTC', source: 'utc' });
   });

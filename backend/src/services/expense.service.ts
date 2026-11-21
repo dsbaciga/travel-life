@@ -17,6 +17,7 @@ import { expenseLinkedEntityInclude, touchLinkedBooking } from '../services/_sha
 import exchangeRateService, { normalizeCurrency } from './exchangeRate.service';
 import { Prisma } from '@prisma/client';
 import { deleteReceiptFiles } from './expenseReceipt.service';
+import { findUserPreferences } from './_shared/userSettings';
 
 /** Buckets the budget summary reports spending under. */
 type BudgetBucket = 'lodging' | 'transportation' | 'activities' | 'food' | 'other';
@@ -72,10 +73,7 @@ async function resolveConfiguredCurrency(
   ownerId: number,
   budgetCurrency: string | null
 ): Promise<string | null> {
-  const owner = await prisma.user.findUnique({
-    where: { id: ownerId },
-    select: { baseCurrency: true },
-  });
+  const owner = await findUserPreferences(ownerId);
 
   return normalizeCurrency(owner?.baseCurrency ?? null) ?? normalizeCurrency(budgetCurrency);
 }

@@ -71,7 +71,7 @@ const mockPrisma = {
   trip: {
     findFirst: jest.fn(),
   },
-  user: {
+  userIntegrations: {
     findUnique: jest.fn(),
   },
   tripCollaborator: {
@@ -918,8 +918,8 @@ describe('PhotoService', () => {
     const mockImmichAssetId = 'immich-asset-123';
 
     beforeEach(() => {
-      mockPrisma.user.findUnique.mockResolvedValue({
-        id: mockUserId,
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: mockUserId,
         immichApiUrl: 'https://immich.example.com',
         immichApiKey: 'test-api-key',
       });
@@ -1028,8 +1028,8 @@ describe('PhotoService', () => {
   // ============================================
   describe('PHOTO-013: linkImmichPhoto - Handle Immich connection failure', () => {
     it('should proceed with linking even if Immich API fails', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
-        id: mockUserId,
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: mockUserId,
         immichApiUrl: 'https://immich.example.com',
         immichApiKey: 'test-api-key',
       });
@@ -1054,8 +1054,8 @@ describe('PhotoService', () => {
     });
 
     it('should proceed without metadata if user has no Immich configured', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({
-        id: mockUserId,
+      mockPrisma.userIntegrations.findUnique.mockResolvedValue({
+        userId: mockUserId,
         immichApiUrl: null,
         immichApiKey: null,
       });
