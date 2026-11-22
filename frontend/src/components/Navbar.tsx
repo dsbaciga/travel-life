@@ -8,6 +8,7 @@ import CaptureSheet from "./CaptureSheet";
 import BrandLogo from "./BrandLogo";
 import pdfImportService from "../services/pdfImport.service";
 import savedLinkService from "../services/savedLink.service";
+import { usePdfImportTrackerStore } from "../store/pdfImportTrackerStore";
 
 /** A destination in the primary navigation, rendered in both the desktop bar and the mobile menu. */
 interface NavLinkEntry {
@@ -17,6 +18,8 @@ interface NavLinkEntry {
   onClick?: () => void;
   /** Optional count pill, e.g. unassigned saved links. Hidden when 0. */
   badge?: number;
+  /** Shows a small spinner: something here is in progress (a PDF being read). */
+  busy?: boolean;
   /** Extra path prefixes that also mark this item active. */
   alsoActiveFor?: string[];
   /** Destinations grouped under this item: a dropdown on desktop, an indented list in the drawer. */
@@ -38,6 +41,7 @@ function NavLink({
   isActive,
   onCloseMobileMenu,
   badge,
+  busy,
 }: NavLinkProps) {
   return (
     <Link
@@ -64,6 +68,14 @@ function NavLink({
           >
             {badge > 99 ? "99+" : badge}
           </span>
+        )}
+        {busy && (
+          <span
+            data-testid="nav-busy"
+            className="ml-1.5 inline-block align-[-2px] w-3 h-3 rounded-full border-2 border-primary-600 dark:border-gold border-t-transparent animate-spin motion-reduce:animate-none"
+            role="img"
+            aria-label="Reading a PDF"
+          />
         )}
       </span>
       {!mobile && (
@@ -107,6 +119,8 @@ const Navbar = memo(function Navbar() {
     enabled: !!user,
   });
   const savedLinksInboxCount = savedLinksInboxData?.count ?? 0;
+  // PDFs still being read: the Inbox shows a spinner instead of a banner.
+  const readingPdfs = usePdfImportTrackerStore((state) => state.tracked.length);
 
   const handleLogout = () => {
     logout();
@@ -207,7 +221,7 @@ const Navbar = memo(function Navbar() {
       ],
     },
     // Saved links waiting to be filed plus parsed bookings waiting for review.
-    { path: "/saved-links", label: "Inbox", badge: savedLinksInboxCount + pendingCount },
+    { path: "/saved-links", label: "Inbox", badge: savedLinksInboxCount + pendingCount, busy: readingPdfs > 0 },
   ];
 
   return (
@@ -225,7 +239,7 @@ const Navbar = memo(function Navbar() {
             {navLinks.map((link) => {
               if (!link.children) {
                 return (
-                  <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} isActive={isEntryActive(link)} badge={link.badge} />
+                  <NavLink key={link.path} path={link.path} label={link.label} onClick={link.onClick} isActive={isEntryActive(link)} badge={link.badge} busy={link.busy} />
                 );
               }
               const groupActive = isEntryActive(link);
@@ -523,6 +537,7 @@ const Navbar = memo(function Navbar() {
                   isActive={link.children ? isActivePath(link.path) : isEntryActive(link)}
                   onCloseMobileMenu={closeMobileMenu}
                   badge={link.badge}
+                  busy={link.busy}
                   mobile
                 />
                 {link.children && (

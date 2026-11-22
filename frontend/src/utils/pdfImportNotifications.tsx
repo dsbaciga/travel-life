@@ -37,14 +37,14 @@ export function describeImportInProgress(
     return {
       tone: 'working',
       title: `Waiting to read ${name}`,
-      body: `${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of it. You can keep working; we'll let you know when it's ready.`,
+      body: `${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of it. Follow it in your Inbox; we'll let you know when it's ready.`,
       action: { label: 'Cancel', onClick: onCancel },
     };
   }
   return {
     tone: 'working',
     title: `Reading ${name}…`,
-    body: "You can keep working. We'll let you know when it's ready.",
+    body: "Follow it in your Inbox. We'll let you know when it's ready.",
     action: { label: 'Cancel', onClick: onCancel },
   };
 }

@@ -10,6 +10,7 @@ import { useClearPosition } from '../store/scrollStore';
 import { useUser } from '../store/authStore';
 import pdfImportService from '../services/pdfImport.service';
 import savedLinkService from '../services/savedLink.service';
+import { usePdfImportTrackerStore } from '../store/pdfImportTrackerStore';
 import CaptureSheet from './CaptureSheet';
 
 /** Routes that live under the Library tab on mobile. */
@@ -46,6 +47,8 @@ const MobileBottomNav = memo(function MobileBottomNav() {
     enabled: !!user,
   });
   const inboxCount = (savedLinksInboxData?.count ?? 0) + (pendingCountData?.count ?? 0);
+  // PDFs still being read: the Inbox shows a spinner instead of a banner.
+  const readingPdfs = usePdfImportTrackerStore((state) => state.tracked.length);
 
   const isActive = (paths: string[]) =>
     paths.some((path) => location.pathname.startsWith(path));
@@ -64,6 +67,8 @@ const MobileBottomNav = memo(function MobileBottomNav() {
         icon: React.ReactNode;
         label: string;
         badge?: number;
+        /** Something for this destination is in progress (a PDF being read). */
+        busy?: boolean;
         onClick?: () => void;
       }
     | { kind: 'capture'; label: string };
@@ -112,6 +117,7 @@ const MobileBottomNav = memo(function MobileBottomNav() {
       ),
       label: 'Inbox',
       badge: inboxCount,
+      busy: readingPdfs > 0,
     },
   ];
 
@@ -171,10 +177,17 @@ const MobileBottomNav = memo(function MobileBottomNav() {
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}
+                  {item.busy && (
+                    <span
+                      data-testid="nav-busy"
+                      className="absolute -bottom-1 -right-2 w-3.5 h-3.5 rounded-full border-2 border-primary-600 dark:border-gold border-t-transparent bg-white dark:bg-navy-900 animate-spin motion-reduce:animate-none"
+                    />
+                  )}
                 </div>
                 <span className={`text-xs font-medium mt-1 ${active ? 'font-semibold' : ''}`}>
                   {item.label}
                   {badge > 0 && <span className="sr-only">, {badge} waiting</span>}
+                  {item.busy && <span className="sr-only">, reading a PDF</span>}
                 </span>
               </Link>
             );

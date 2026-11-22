@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **PDF reading no longer covers the page.** The "Reading…" notice after uploading a PDF now goes away after a few seconds instead of staying up until the PDF is read. While a PDF is being read, the Inbox tab shows a small spinner, and the Inbox page lists each PDF being read with its place in line and a **Cancel** button. You still get a notice when it is ready.
 - **One link control per card.** Places, activities, transport, lodging, journal entries and timeline items showed their links twice: the **Linked items** list and a separate link icon with a count. Once something is linked, only the list remains, with an **Edit links** button in its header that opens the linking dialog. The link icon still appears when nothing is linked yet, so you can add the first link.
 
 ### Fixed

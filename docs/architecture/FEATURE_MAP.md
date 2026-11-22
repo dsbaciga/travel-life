@@ -75,7 +75,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
 | LLM client + prompt safety | `llm`, `security/promptSafety` | `LlmSettings` |
-| PDF import (itinerary/booking PDFs) | `pdfImport`, `pdfParser` | `PdfImportButton`, `PdfUploadModal`, `PdfReviewModal`, `PendingImportsPanel`, `usePdfImportPolling` |
+| PDF import (itinerary/booking PDFs) | `pdfImport`, `pdfParser` | `PdfImportButton`, `PdfUploadModal`, `PdfReviewModal`, `PendingImportsPanel`, `ImportsInProgressPanel` (Inbox list of PDFs being read), `PdfImportWatcher`, `useCancelPdfImport`, `usePdfImportPolling` |
 | AI suggestions (links, packing, albums) | `aiSuggestion`, `packingSuggestion` | `AlbumSuggestions`, `PackingSuggestions` |
 | Push notifications | `pushNotification`, `push.routes`, `config/cron` | `PushNotificationSettings`, `push.service`, `sw.ts` |
 | On This Day / Year in Review | `memories` | `widgets/OnThisDayWidget`, `YearInReviewPage` |
@@ -143,7 +143,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Distance/temperature display in the user's units | `useUnits`, `utils/units` | `hooks/`, `utils/` |
 | Modals and form footers | `Modal`, `FormModal`, `shared/FormModalFooter`, `ConfirmDialog`, `useConfirmDialog` | `components/` |
 | Bulk select / actions | `useBulkSelection`, `useBulkOperations`, `BulkActionBar` | `hooks/`, `components/` |
-| Toasts | `utils/toast` | `utils/` |
+| Toasts | `utils/toast`, `components/AppToaster` (the app's Toaster: tap to dismiss, no touch pause) | `utils/` |
 | Error message extraction | `lib/errors` | `lib/` |
 | Map tiles / config | `useMapTiles`, `utils/mapConfig`, `AppTileLayer` | `hooks/`, `utils/`, `components/` |
 | Stop a map trapping page scroll on touch screens | `map/MapTouchGuard` (child of `MapContainer`) | `components/` |
