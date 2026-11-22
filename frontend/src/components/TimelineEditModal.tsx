@@ -35,6 +35,7 @@ import FormModal from "./FormModal";
 import TimezoneSelect from "./TimezoneSelect";
 import CostCurrencyFields from "./CostCurrencyFields";
 import BookingFields from "./BookingFields";
+import LoyaltyProgramField from "./LoyaltyProgramField";
 import LocationQuickAdd from "./LocationQuickAdd";
 
 /**
@@ -80,6 +81,7 @@ interface TransportationFormState {
   carrier: string;
   vehicleNumber: string;
   confirmationNumber: string;
+  loyaltyProgramId: number | null;
   cost: string;
   currency: string;
   notes: string;
@@ -95,6 +97,7 @@ interface LodgingFormState {
   timezone: string;
   confirmationNumber: string;
   bookingUrl: string;
+  loyaltyProgramId: number | null;
   cost: string;
   currency: string;
   notes: string;
@@ -193,6 +196,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       carrier: "",
       vehicleNumber: "",
       confirmationNumber: "",
+      loyaltyProgramId: null,
       cost: "",
       currency: "USD",
       notes: "",
@@ -209,6 +213,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
     timezone: "",
     confirmationNumber: "",
     bookingUrl: "",
+    loyaltyProgramId: null,
     cost: "",
     currency: "USD",
     notes: "",
@@ -361,6 +366,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         carrier: transportation.carrier || "",
         vehicleNumber: transportation.vehicleNumber || "",
         confirmationNumber: transportation.confirmationNumber || "",
+        loyaltyProgramId: transportation.loyaltyProgramId ?? null,
         cost: transportation.cost?.toString() || "",
         currency: transportation.currency || "USD",
         notes: transportation.notes || "",
@@ -408,6 +414,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         timezone: lodging.timezone || "",
         confirmationNumber: lodging.confirmationNumber || "",
         bookingUrl: lodging.bookingUrl || "",
+        loyaltyProgramId: lodging.loyaltyProgramId ?? null,
         cost: lodging.cost?.toString() || "",
         currency: lodging.currency || "USD",
         notes: lodging.notes || "",
@@ -689,6 +696,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       carrier: transportationForm.carrier || null,
       vehicleNumber: transportationForm.vehicleNumber || null,
       confirmationNumber: transportationForm.confirmationNumber || null,
+      loyaltyProgramId: transportationForm.loyaltyProgramId,
       cost: transportationForm.cost
         ? parseFloat(transportationForm.cost)
         : null,
@@ -733,6 +741,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       timezone: lodgingForm.timezone || null,
       confirmationNumber: lodgingForm.confirmationNumber || null,
       bookingUrl: lodgingForm.bookingUrl || null,
+      loyaltyProgramId: lodgingForm.loyaltyProgramId,
       cost: lodgingForm.cost ? parseFloat(lodgingForm.cost) : null,
       currency: lodgingForm.currency || null,
       notes: lodgingForm.notes || null,
@@ -1336,6 +1345,17 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         hideBookingUrl={true}
       />
 
+      <LoyaltyProgramField
+        kind="transportation"
+        name={transportationForm.carrier}
+        vehicleNumber={transportationForm.vehicleNumber}
+        transportType={transportationForm.type}
+        value={transportationForm.loyaltyProgramId}
+        onChange={(id) =>
+          setTransportationForm((prev) => ({ ...prev, loyaltyProgramId: id }))
+        }
+      />
+
       {/* Cost */}
       <CostCurrencyFields
         cost={transportationForm.cost}
@@ -1557,6 +1577,15 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           setLodgingForm((prev) => ({ ...prev, bookingUrl: value }))
         }
         confirmationLabel="Confirmation Number"
+      />
+
+      <LoyaltyProgramField
+        kind="lodging"
+        name={lodgingForm.name}
+        value={lodgingForm.loyaltyProgramId}
+        onChange={(id) =>
+          setLodgingForm((prev) => ({ ...prev, loyaltyProgramId: id }))
+        }
       />
 
       {/* Cost */}
