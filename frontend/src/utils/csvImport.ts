@@ -64,6 +64,34 @@ export const IMPORT_FIELDS: Record<ImportEntity, ImportFieldDef[]> = {
     { key: 'bookingReference', label: 'Booking reference', templateHeader: 'booking_reference', required: false, aliases: ['bookingreference', 'reference', 'confirmation', 'confirmationnumber', 'confirmationcode', 'bookingref', 'ref'] },
     { key: 'notes', label: 'Notes', templateHeader: 'notes', required: false, aliases: ['notes', 'note', 'comments', 'comment'] },
   ],
+  lodging: [
+    { key: 'type', label: 'Type', templateHeader: 'type', required: true, hint: 'hotel, hostel, airbnb, vacation_rental, camping, resort, motel, bed_and_breakfast, apartment, friends_family or other', aliases: ['type', 'lodgingtype', 'accommodationtype', 'propertytype', 'kind'] },
+    { key: 'name', label: 'Name', templateHeader: 'name', required: true, aliases: ['name', 'title', 'hotel', 'property', 'lodging', 'accommodation', 'propertyname'] },
+    { key: 'address', label: 'Address', templateHeader: 'address', required: false, aliases: ['address', 'streetaddress', 'addr', 'fulladdress', 'location'] },
+    { key: 'checkInDate', label: 'Check-in', templateHeader: 'check_in', required: true, hint: 'YYYY-MM-DD HH:mm, ISO 8601, or a date (midnight)', aliases: ['checkin', 'checkindate', 'checkintime', 'arrival', 'arrive', 'start', 'startdate', 'from'] },
+    { key: 'checkOutDate', label: 'Check-out', templateHeader: 'check_out', required: true, hint: 'Must be after check-in', aliases: ['checkout', 'checkoutdate', 'checkouttime', 'departure', 'depart', 'end', 'enddate', 'to'] },
+    { key: 'timezone', label: 'Timezone', templateHeader: 'timezone', required: false, hint: 'Zone for times without an offset; defaults to the trip timezone', aliases: ['timezone', 'tz', 'timezoneid'] },
+    { key: 'confirmationNumber', label: 'Confirmation number', templateHeader: 'confirmation_number', required: false, aliases: ['confirmationnumber', 'confirmation', 'confirmationcode', 'bookingreference', 'reference', 'bookingref', 'ref'] },
+    { key: 'bookingUrl', label: 'Booking URL', templateHeader: 'booking_url', required: false, aliases: ['bookingurl', 'url', 'link', 'bookinglink', 'website'] },
+    { key: 'cost', label: 'Cost', templateHeader: 'cost', required: false, hint: 'Plain number such as 1234.50', aliases: ['cost', 'price', 'amount', 'total'] },
+    { key: 'currency', label: 'Currency', templateHeader: 'currency', required: false, hint: '3-letter code such as EUR', aliases: ['currency', 'curr', 'currencycode'] },
+    { key: 'notes', label: 'Notes', templateHeader: 'notes', required: false, aliases: ['notes', 'note', 'comments', 'comment', 'description'] },
+  ],
+  transportation: [
+    { key: 'type', label: 'Type', templateHeader: 'type', required: true, hint: 'flight, train, bus, car, ferry, bicycle, walk or other', aliases: ['type', 'transporttype', 'transportationtype', 'mode', 'kind'] },
+    { key: 'fromLocationName', label: 'From', templateHeader: 'from', required: false, hint: 'Text; give a From or a To', aliases: ['from', 'origin', 'fromlocation', 'departurecity', 'departureplace', 'departureairport', 'startlocation'] },
+    { key: 'toLocationName', label: 'To', templateHeader: 'to', required: false, aliases: ['to', 'destination', 'tolocation', 'arrivalcity', 'arrivalplace', 'arrivalairport', 'endlocation'] },
+    { key: 'departureTime', label: 'Departure', templateHeader: 'departure', required: false, hint: 'YYYY-MM-DD HH:mm or ISO 8601, read in the start timezone', aliases: ['departure', 'departuretime', 'departuredate', 'departs', 'depart', 'start', 'starttime', 'scheduledstart'] },
+    { key: 'arrivalTime', label: 'Arrival', templateHeader: 'arrival', required: false, hint: 'Read in the end timezone; must not be before the departure', aliases: ['arrival', 'arrivaltime', 'arrivaldate', 'arrives', 'arrive', 'end', 'endtime', 'scheduledend'] },
+    { key: 'startTimezone', label: 'Start timezone', templateHeader: 'start_timezone', required: false, hint: 'IANA name for the departure; defaults to the trip timezone', aliases: ['starttimezone', 'departuretimezone', 'fromtimezone', 'origintimezone', 'timezone', 'tz'] },
+    { key: 'endTimezone', label: 'End timezone', templateHeader: 'end_timezone', required: false, hint: 'IANA name for the arrival; defaults to the start timezone', aliases: ['endtimezone', 'arrivaltimezone', 'totimezone', 'destinationtimezone'] },
+    { key: 'carrier', label: 'Carrier', templateHeader: 'carrier', required: false, aliases: ['carrier', 'airline', 'company', 'operator', 'provider'] },
+    { key: 'vehicleNumber', label: 'Vehicle number', templateHeader: 'vehicle_number', required: false, hint: 'Flight, train or route number', aliases: ['vehiclenumber', 'flightnumber', 'flight', 'trainnumber', 'routenumber', 'number', 'vehicle'] },
+    { key: 'confirmationNumber', label: 'Confirmation number', templateHeader: 'confirmation_number', required: false, aliases: ['confirmationnumber', 'confirmation', 'confirmationcode', 'bookingreference', 'reference', 'bookingref', 'ref'] },
+    { key: 'cost', label: 'Cost', templateHeader: 'cost', required: false, hint: 'Plain number such as 1234.50', aliases: ['cost', 'price', 'amount', 'total'] },
+    { key: 'currency', label: 'Currency', templateHeader: 'currency', required: false, hint: '3-letter code such as EUR', aliases: ['currency', 'curr', 'currencycode'] },
+    { key: 'notes', label: 'Notes', templateHeader: 'notes', required: false, aliases: ['notes', 'note', 'comments', 'comment', 'description'] },
+  ],
 };
 
 // =============================================================================
@@ -257,6 +285,14 @@ const TEMPLATE_ROWS: Record<ImportEntity, Record<string, string>[]> = {
   activities: [
     { name: 'Louvre visit', description: 'Skip-the-line tickets', start_time: '2026-04-03 10:00', end_time: '2026-04-03 12:30', timezone: 'Europe/Paris', all_day: 'false', cost: '45.00', currency: 'EUR', booking_url: 'https://example.com/tickets', booking_reference: 'ABC123', notes: 'Meet at the pyramid' },
     { name: 'Seine cruise', start_time: '2026-04-03T19:00:00+02:00', end_time: '2026-04-03T20:00:00+02:00', cost: '18.5', currency: 'EUR' },
+  ],
+  lodging: [
+    { type: 'hotel', name: 'Hotel Lutetia', address: '45 Boulevard Raspail, 75006 Paris', check_in: '2026-04-03 15:00', check_out: '2026-04-06 11:00', timezone: 'Europe/Paris', confirmation_number: 'HL-48213', booking_url: 'https://example.com/booking/48213', cost: '960.00', currency: 'EUR', notes: 'Late arrival, call ahead' },
+    { type: 'airbnb', name: 'Canal view apartment', check_in: '2026-04-06', check_out: '2026-04-09', cost: '420', currency: 'EUR' },
+  ],
+  transportation: [
+    { type: 'flight', from: 'JFK', to: 'CDG', departure: '2026-04-02 19:30', arrival: '2026-04-03 08:45', start_timezone: 'America/New_York', end_timezone: 'Europe/Paris', carrier: 'Air France', vehicle_number: 'AF007', confirmation_number: 'XK92LM', cost: '640.00', currency: 'USD', notes: 'Seat 23A' },
+    { type: 'train', from: 'Paris Gare de Lyon', to: 'Lyon Part-Dieu', departure: '2026-04-09 09:12', arrival: '2026-04-09 11:14', carrier: 'SNCF', vehicle_number: 'TGV 6609', cost: '58', currency: 'EUR' },
   ],
 };
 

@@ -8,6 +8,7 @@
  * - BIM-004: Missing required mapping blocks the preview
  * - BIM-005: Oversized and over-long files are rejected before any request
  * - BIM-006: A failed import reports an error and stays on the preview so it can be retried
+ * - BIM-007: Lodging and transportation can be chosen, mapped and previewed with their own columns
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -95,7 +96,7 @@ describe('BulkImportModal', () => {
     expect(screen.getByRole('button', { name: 'Import 1 row' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Import 1 row' }));
-    expect(await screen.findByText(/1 locations was imported\./)).toBeInTheDocument();
+    expect(await screen.findByText(/1 location was imported\./)).toBeInTheDocument();
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Download error report (CSV)' })).toBeInTheDocument();
   });
@@ -190,5 +191,82 @@ describe('BulkImportModal', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Import 1 row' })).toBeEnabled());
     expect(onComplete).not.toHaveBeenCalled();
     expect(screen.getByText('Preview import')).toBeInTheDocument();
+  });
+
+  it('BIM-007: lodging and transportation use their own columns and endpoint', async () => {
+    const user = userEvent.setup();
+    renderModal();
+
+    const stayRow = {
+      index: 0,
+      status: 'valid' as const,
+      errors: [],
+      warnings: [],
+      normalized: {
+        type: 'hotel',
+        name: 'Lutetia',
+        checkInDate: '2026-04-05T13:00:00.000Z',
+        checkOutDate: '2026-04-08T09:00:00.000Z',
+        timezone: 'Europe/Paris',
+        cost: '480.00',
+        currency: 'EUR',
+      },
+    };
+    mockImportRows.mockResolvedValueOnce({ ...dryRunResult, total: 1, valid: 1, rows: [stayRow] });
+    mockImportRows.mockResolvedValueOnce({ ...dryRunResult, dryRun: false, total: 1, valid: 1, created: 1, rows: [{ ...stayRow, status: 'created' }] });
+
+    await user.click(screen.getByLabelText('Lodging'));
+    expect(screen.getByRole('button', { name: 'Download transportation template' })).toBeInTheDocument();
+    await upload(user, 'Hotel,Type,Check In,Check Out,Total,Currency\nLutetia,Hotel,2026-04-05 15:00,2026-04-08 11:00,480,EUR\n', 'stays.csv');
+    await screen.findByText(/1 row, 6 columns/);
+    await user.click(screen.getByRole('button', { name: 'Next: map columns' }));
+
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('0');
+    expect(screen.getByLabelText(/^Type/)).toHaveValue('1');
+    expect(screen.getByLabelText(/^Check-in/)).toHaveValue('2');
+    expect(screen.getByLabelText(/^Check-out/)).toHaveValue('3');
+    await user.click(screen.getByRole('button', { name: 'Next: preview' }));
+
+    expect(mockImportRows).toHaveBeenNthCalledWith(1, 5, 'lodging', {
+      rows: [{ type: 'Hotel', name: 'Lutetia', checkInDate: '2026-04-05 15:00', checkOutDate: '2026-04-08 11:00', cost: '480', currency: 'EUR' }],
+      dryRun: true,
+      excludeRows: [],
+    });
+    expect(await screen.findByText('Check-in')).toBeInTheDocument();
+    expect(screen.getByText('480.00 EUR')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Import 1 row' }));
+    expect(await screen.findByText(/1 stay was imported\./)).toBeInTheDocument();
+  });
+
+  it('BIM-007: the transportation preview shows from, to, departure and arrival', async () => {
+    const user = userEvent.setup();
+    renderModal();
+    mockImportRows.mockResolvedValueOnce({
+      ...dryRunResult,
+      total: 1,
+      valid: 1,
+      rows: [
+        {
+          index: 0,
+          status: 'valid',
+          errors: [],
+          warnings: [{ field: 'endTimezone', code: 'timezone_assumed', message: 'No end timezone: the arrival was read as Europe/Paris time' }],
+          normalized: { type: 'flight', fromLocationName: 'CDG', toLocationName: 'JFK', departureTime: '2026-04-10T09:00:00.000Z', arrivalTime: '2026-04-10T17:30:00.000Z', startTimezone: 'Europe/Paris', endTimezone: 'America/New_York', cost: null, currency: null },
+        },
+      ],
+    });
+
+    await user.click(screen.getByLabelText('Transportation'));
+    await upload(user, 'type,from,to,departure,arrival\nflight,CDG,JFK,2026-04-10 11:00,2026-04-10 13:30\n', 'legs.csv');
+    await screen.findByText(/1 row, 5 columns/);
+    await user.click(screen.getByRole('button', { name: 'Next: map columns' }));
+    await user.click(screen.getByRole('button', { name: 'Next: preview' }));
+
+    expect(mockImportRows).toHaveBeenCalledWith(5, 'transportation', expect.objectContaining({ dryRun: true }));
+    expect(await screen.findByText('CDG')).toBeInTheDocument();
+    expect(screen.getByText('JFK')).toBeInTheDocument();
+    expect(screen.getByText(/No end timezone/)).toBeInTheDocument();
+    expect(screen.getByText('Arrival')).toBeInTheDocument();
   });
 });

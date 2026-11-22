@@ -317,18 +317,22 @@ Locations are a flat resource. The owning trip is referenced by `tripId` in the 
 
 ### CSV Bulk Import (`/api/trips/:tripId/import`)
 
-Imports locations or activities from CSV rows. The browser parses the file and maps columns; every value is re-parsed and validated here with the same Zod schemas as the single-create endpoints. Requires edit access to the trip.
+Imports locations, activities, lodging or transportation from CSV rows. The browser parses the file and maps columns; every value is re-parsed and validated here with the same Zod schemas as the single-create endpoints. Requires edit access to the trip.
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | POST | `/locations` | Validate (`dryRun: true`) or create locations from rows | Yes |
 | POST | `/activities` | Validate (`dryRun: true`) or create activities from rows | Yes |
+| POST | `/lodging` | Validate (`dryRun: true`) or create lodging stays from rows | Yes |
+| POST | `/transportation` | Validate (`dryRun: true`) or create transportation legs from rows | Yes |
 
-Body: `{ rows: [...], dryRun?: boolean, excludeRows?: number[] }`. Rows are objects of raw strings (locations: `name`, `address`, `latitude`, `longitude`, `category`, `notes`, `openingHours`, `timezone`; activities: `name`, `description`, `category`, `location`, `startTime`, `endTime`, `timezone`, `allDay`, `cost`, `currency`, `bookingUrl`, `bookingReference`, `notes`). At most 500 rows and about 1 MB of JSON per request.
+Body: `{ rows: [...], dryRun?: boolean, excludeRows?: number[] }`. Rows are objects of raw strings (locations: `name`, `address`, `latitude`, `longitude`, `category`, `notes`, `openingHours`, `timezone`; activities: `name`, `description`, `category`, `location`, `startTime`, `endTime`, `timezone`, `allDay`, `cost`, `currency`, `bookingUrl`, `bookingReference`, `notes`; lodging: `type`, `name`, `address`, `checkInDate`, `checkOutDate`, `timezone`, `confirmationNumber`, `bookingUrl`, `cost`, `currency`, `notes`; transportation: `type`, `fromLocationName`, `toLocationName`, `departureTime`, `arrivalTime`, `startTimezone`, `endTimezone`, `carrier`, `vehicleNumber`, `confirmationNumber`, `cost`, `currency`, `notes`). At most 500 rows and about 1 MB of JSON per request.
 
-Response: `{ dryRun, total, valid, invalid, excluded, created, rows: [{ index, status, errors, warnings, normalized }], tripTimezoneSet, defaultTimezone }`. Row `status` is `valid`, `invalid`, `excluded` or `created`. Errors block a row; warnings (unknown category, no coordinates, duplicates, unmatched location, cost without currency) do not. A real run creates all valid, non-excluded rows in one transaction; an unexpected failure creates nothing.
+Response: `{ dryRun, total, valid, invalid, excluded, created, rows: [{ index, status, errors, warnings, normalized }], tripTimezoneSet, defaultTimezone }`. Row `status` is `valid`, `invalid`, `excluded` or `created`. Errors block a row; warnings (unknown category, no coordinates, duplicates, unmatched location, cost without currency, an arrival read in the departure timezone) do not. A real run creates all valid, non-excluded rows in one transaction; an unexpected failure creates nothing.
 
 Rules worth knowing: times without an offset are wall-clock times in the row timezone, else the trip timezone, else the user timezone (never UTC unless nothing is set); `YYYY-MM-DD HH:mm` and ISO 8601 are accepted and `03/04/2026` is rejected; costs are dot-decimal strings such as `1234.50`; address-only locations are imported without coordinates and are not geocoded; no OpenStreetMap opening-hours lookup is made during import.
+
+Lodging and transportation rules: `type` is required and must be one of the single-create values (lodging: `hotel`, `hostel`, `airbnb`, `vacation_rental`, `camping`, `resort`, `motel`, `bed_and_breakfast`, `apartment`, `friends_family`, `other`; transportation: `flight`, `train`, `bus`, `car`, `ferry`, `bicycle`, `walk`, `other`), matched ignoring case and spaces. A stay needs `name`, `checkInDate` and `checkOutDate` (a bare `YYYY-MM-DD` means midnight in the stay's zone) and check-out must be after check-in. A leg needs a `fromLocationName` or `toLocationName` (kept as text, not linked to trip locations) and its arrival may not be before its departure; the departure is read in `startTimezone` and the arrival in `endTimezone`, each falling back to the trip timezone, then the user timezone (an arrival with only a start timezone is read in it and gets a `timezone_assumed` warning). The zone used is stored on the stay or leg. Duplicates are flagged as warnings: same name and check-in for a stay; same departure, carrier and vehicle number for a leg (type and from/to names when both carrier and vehicle number are blank). Loyalty programs and place links are not imported.
 
 ### Entity Links (`/api/trips/:tripId/links`)
 

@@ -14,6 +14,13 @@ interface BulkImportPreviewTableProps {
 const text = (value: string | number | boolean | null | undefined): string =>
   value === null || value === undefined || value === '' ? '' : String(value);
 
+const PREVIEW_COLUMNS: Record<ImportEntity, string[]> = {
+  locations: ['Name', 'Address', 'Lat', 'Lng', 'Category'],
+  activities: ['Name', 'Start', 'End', 'Location', 'Cost'],
+  lodging: ['Name', 'Type', 'Check-in', 'Check-out', 'Cost'],
+  transportation: ['Type', 'From', 'To', 'Departure', 'Arrival', 'Cost'],
+};
+
 /**
  * Every parsed row, with the values the server understood and the errors and warnings it
  * found. Valid rows have a checkbox so warnings (typically duplicates) can be included or left
@@ -27,24 +34,33 @@ export default function BulkImportPreviewTable({
   formatTime,
   disabled,
 }: BulkImportPreviewTableProps) {
-  const columns =
-    entity === 'locations'
-      ? ['Name', 'Address', 'Lat', 'Lng', 'Category']
-      : ['Name', 'Start', 'End', 'Location', 'Cost'];
+  const columns = PREVIEW_COLUMNS[entity];
+
+  const cost = (n: ImportRowResult['normalized']): string =>
+    n.cost === null || n.cost === undefined ? '' : `${text(n.cost)} ${text(n.currency)}`.trim();
+
+  const time = (iso: unknown, zone: unknown): string =>
+    typeof iso === 'string' ? formatTime(iso, typeof zone === 'string' ? zone : null) : '';
 
   const cells = (row: ImportRowResult): string[] => {
     const n = row.normalized;
     if (entity === 'locations') {
       return [text(n.name), text(n.address), text(n.latitude), text(n.longitude), text(n.category)];
     }
-    const zone = typeof n.timezone === 'string' ? n.timezone : null;
-    return [
-      text(n.name),
-      typeof n.startTime === 'string' ? formatTime(n.startTime, zone) : '',
-      typeof n.endTime === 'string' ? formatTime(n.endTime, zone) : '',
-      text(n.location),
-      n.cost === null || n.cost === undefined ? '' : `${text(n.cost)} ${text(n.currency)}`.trim(),
-    ];
+    if (entity === 'lodging') {
+      return [text(n.name), text(n.type), time(n.checkInDate, n.timezone), time(n.checkOutDate, n.timezone), cost(n)];
+    }
+    if (entity === 'transportation') {
+      return [
+        text(n.type),
+        text(n.fromLocationName),
+        text(n.toLocationName),
+        time(n.departureTime, n.startTimezone),
+        time(n.arrivalTime, n.endTimezone),
+        cost(n),
+      ];
+    }
+    return [text(n.name), time(n.startTime, n.timezone), time(n.endTime, n.timezone), text(n.location), cost(n)];
   };
 
   return (
@@ -95,7 +111,7 @@ export default function BulkImportPreviewTable({
                 <td className="sm:px-3 sm:py-2 align-top text-stone-500 dark:text-dusk-400 whitespace-nowrap before:content-['Row_'] sm:before:hidden">{row.index + 1}</td>
                 {cells(row).map((value, i) => (
                   <td
-                    key={columns[i]}
+                    key={`${columns[i]}-${i}`}
                     data-label={columns[i]}
                     className={`align-top text-stone-800 dark:text-dusk-200 break-words [overflow-wrap:anywhere] sm:px-3 sm:py-2 sm:max-w-[16rem] sm:truncate sm:break-normal ${
                       i === 0
