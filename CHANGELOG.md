@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Trip actions menu on phones.** The ⋮ menu on a trip's page opened off the left edge of the screen when the button sat below the trip title; it now opens toward whichever side has room.
+
 ## [8.2.0] - 2026-11-21
 
 ### Changed

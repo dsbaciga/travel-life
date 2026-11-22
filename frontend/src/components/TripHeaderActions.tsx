@@ -38,6 +38,11 @@ export default function TripHeaderActions({
   variant = 'plain',
 }: TripHeaderActionsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Which edge of the trigger the menu hangs from. The header wraps on
+  // phones, so the trigger can sit at the left edge of the screen (below the
+  // title) or at the right (beside it); a right-anchored menu opened from the
+  // left edge ran off screen.
+  const [menuAlign, setMenuAlign] = useState<'left' | 'right'>('right');
   const [isPdfImportOpen, setIsPdfImportOpen] = useState(false);
   const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -93,7 +98,13 @@ export default function TripHeaderActions({
       <div className="sm:hidden relative flex-none" ref={menuRef}>
         <button
           type="button"
-          onClick={() => setIsMenuOpen((open) => !open)}
+          onClick={(event) => {
+            if (!isMenuOpen) {
+              const rect = event.currentTarget.getBoundingClientRect();
+              setMenuAlign(rect.left + rect.width / 2 < window.innerWidth / 2 ? 'left' : 'right');
+            }
+            setIsMenuOpen((open) => !open);
+          }}
           aria-haspopup="menu"
           aria-expanded={isMenuOpen}
           aria-label="Trip actions"
@@ -105,7 +116,7 @@ export default function TripHeaderActions({
         {isMenuOpen && (
           <div
             role="menu"
-            className="absolute right-0 top-12 z-40 w-56 overflow-hidden rounded-xl border border-primary-100 bg-white shadow-xl dark:border-gold/20 dark:bg-navy-800"
+            className={`absolute ${menuAlign === 'left' ? 'left-0' : 'right-0'} top-12 z-40 w-56 overflow-hidden rounded-xl border border-primary-100 bg-white shadow-xl dark:border-gold/20 dark:bg-navy-800`}
           >
             <button type="button" role="menuitem" className={menuItemClasses} onClick={() => { setIsMenuOpen(false); onManageTags(); }}>
               Manage tags ({tagsCount})
