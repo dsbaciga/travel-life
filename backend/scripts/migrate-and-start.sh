@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2016  # backticks in the sed patterns are literal (Prisma quotes names with them)
 set -e
 
 echo "========================================="
@@ -72,12 +73,55 @@ fi
 # Run Prisma migrations
 echo "Running prisma migrate deploy..."
 cd /app
-if npx prisma migrate deploy; then
+#
+# Runs exactly once and never repairs a failure on its own: no `prisma db push`, no
+# `prisma migrate resolve`, no edits to `_prisma_migrations`. On failure the container
+# stops rather than serving on a half-migrated schema.
+MIGRATION_LOG=$(mktemp)
+set +e
+npx prisma migrate deploy > "$MIGRATION_LOG" 2>&1
+MIGRATION_EXIT_CODE=$?
+set -e
+cat "$MIGRATION_LOG"
+
+if [ "$MIGRATION_EXIT_CODE" -eq 0 ]; then
+  rm -f "$MIGRATION_LOG"
   echo "✓ Migrations applied successfully."
 else
-  echo "✗ Migration deployment failed. Refusing to start with inconsistent schema."
-  echo "  Please fix the migration issues manually before restarting."
-  echo "  See: https://www.prisma.io/docs/guides/deployment/deploy-database-changes-with-prisma-migrate"
+  # Best effort: name the migration Prisma reports as failing (BusyBox compatible, no grep -P)
+  FAILED_MIGRATION=$(sed -n 's/^Migration name: \(.*\)$/\1/p' "$MIGRATION_LOG" | head -1)
+  if [ -z "$FAILED_MIGRATION" ]; then
+    FAILED_MIGRATION=$(sed -n 's/.*Applying migration `\([^`]*\)`.*/\1/p' "$MIGRATION_LOG" | head -1)
+  fi
+  if [ -z "$FAILED_MIGRATION" ]; then
+    FAILED_MIGRATION=$(sed -n 's/.*The `\([^`]*\)` migration.*failed.*/\1/p' "$MIGRATION_LOG" | head -1)
+  fi
+  rm -f "$MIGRATION_LOG"
+
+  echo ""
+  echo "========================================="
+  echo "✗ ERROR: prisma migrate deploy failed (exit code $MIGRATION_EXIT_CODE)."
+  echo "========================================="
+  if [ -n "$FAILED_MIGRATION" ]; then
+    echo "Failed migration: $FAILED_MIGRATION"
+  else
+    echo "Prisma did not name a failed migration; see its output above."
+  fi
+  echo ""
+  echo "This container did NOT modify the database to work around the failure: it did not"
+  echo "run 'prisma db push', 'prisma migrate resolve', or edit _prisma_migrations."
+  echo "Refusing to start the application on a half-migrated schema."
+  echo ""
+  echo "To recover:"
+  echo "  1. Read the Prisma error above and fix the cause (or restore from a backup taken"
+  echo "     before the upgrade; back up before retrying)."
+  echo "  2. Mark the failed migration as rolled back so it can be retried (run this in a"
+  echo "     one-off container, since this one has exited; see the README below):"
+  echo "       npx prisma migrate resolve --rolled-back ${FAILED_MIGRATION:-<migration_name>}"
+  echo "  3. Restart the backend container; it will run 'prisma migrate deploy' again."
+  echo ""
+  echo "Details and the full procedure: backend/prisma/migrations/README.md"
+  echo "(see 'Recovering after the baseline has already failed (P3009)')."
   exit 1
 fi
 

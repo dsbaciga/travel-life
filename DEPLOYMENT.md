@@ -381,6 +381,13 @@ docker exec travel-life-backend npx prisma migrate deploy
 docker exec travel-life-backend npx prisma migrate status
 ```
 
+The backend container also runs `prisma migrate deploy` once every time it starts. If that
+fails, the container prints Prisma's output, names the failed migration, and **exits with an
+error instead of starting**. It never repairs the database on its own: it does not run
+`prisma db push`, `prisma migrate resolve`, or edit `_prisma_migrations`, so a failed
+migration cannot overwrite your data or make the migration history disagree with the real
+schema. See [Migration failed on startup](#migration-failed-on-startup).
+
 ### Database Backup
 
 ```bash
@@ -688,6 +695,28 @@ docker logs travel-life-backend
 # - Port conflict: change ports in .env.production
 # - Missing env vars: verify .env.production
 ```
+
+### Migration failed on startup
+
+If the backend container exits right after start and its log ends with
+`ERROR: prisma migrate deploy failed`, a database migration did not apply. The log names the
+failed migration (when Prisma reports it) and states that the container did not modify the
+database. Nothing was force-synced and `_prisma_migrations` was not edited; the container
+stops on purpose so it does not serve a half-migrated schema.
+
+1. Read the Prisma error in `docker logs travel-life-backend` and fix the cause.
+2. If you cannot fix it, restore the database from the backup you took before upgrading
+   (see [Database Restore](#database-restore)) and roll back to the previous version
+   (see [Rollback](#rollback)).
+3. After fixing the cause, mark the failed migration as rolled back so it can be retried, then
+   start the container again. Because the backend container has exited, run the command in a
+   one-off container with the same image, network and `DATABASE_URL`; the exact command is in
+   [`backend/prisma/migrations/README.md`](backend/prisma/migrations/README.md)
+   ("Recovering after the baseline has already failed"). The command itself is
+   `npx prisma migrate resolve --rolled-back <migration_name>`.
+
+Do not run `prisma db push` against a real database: it skips CHECK constraints and triggers
+that exist only in migration SQL, and can drop data.
 
 ### Database connection failed
 
