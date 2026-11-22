@@ -25,7 +25,7 @@ import { useUnits } from '../../hooks/useUnits';
 import { useTripEditAccess } from '../../hooks/useTripEditAccess';
 import AddStopPanel from './AddStopPanel';
 import type { NewStopFromSearch } from './AddStopPanel';
-import type { TripStop } from '../../types/tripStop';
+import type { TripStop, TripStopLeg } from '../../types/tripStop';
 import { formatDateOnly } from '../../utils/timezone';
 import {
   computeSchedule,
@@ -267,11 +267,25 @@ function StopRow({
   );
 }
 
+const legsKey = (tripId: number) => ['tripStopLegs', tripId] as const;
+
+/** One leg as shown: road figures from the server when available, else the browser's own estimate. */
+interface PlannerLeg {
+  km: number;
+  minutes: number;
+  mode: 'drive' | 'flight';
+  /** True when km and minutes are road figures; false for the straight-line estimate. */
+  routed: boolean;
+}
+
 /**
  * Multi-City Trip Planner: the trip's route as an ordered, draggable list of stops beside
- * a map. Distances are great-circle (haversine) and the times beside them are rough
- * estimates from distance alone, all computed in the browser so a drag updates instantly
- * and makes no external request. Only the final order is sent to the server.
+ * a map. The browser computes a straight-line (haversine) distance and a rough time for
+ * every leg at once, so a drag updates instantly and works offline. The server's road
+ * distances and times (GET /stops/legs, OpenRouteService with straight-line fallback)
+ * replace those per leg when they arrive; a leg that is still a straight-line estimate is
+ * labelled as one. Route optimisation keeps using straight-line distances. Only the final
+ * order is sent to the server.
  */
 export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locations }: RoutePlannerProps) {
   const queryClient = useQueryClient();
@@ -306,10 +320,20 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     setNoGain(false);
   }, [signature, fixFirst, fixLast]);
 
+  const legPairs = useMemo(() => stops.slice(1).map((s, i) => `${stops[i].id}>${s.id}`), [stops]);
+  const { data: serverLegs } = useQuery({
+    // The signature (order and coordinates) is in the key, so a reorder asks again.
+    queryKey: [...legsKey(tripId), signature],
+    queryFn: () => tripStopService.getLegs(tripId),
+    enabled: stops.length >= 2,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
   const byId = useMemo(() => new Map(stops.map((s) => [s.id, s])), [stops]);
 
   // ---- derived plan --------------------------------------------------------
-  const legs = useMemo(
+  const straightLegs = useMemo(
     () =>
       stops.slice(1).map((stop, i) => {
         const km = haversineKm(stops[i], stop);
@@ -317,8 +341,23 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       }),
     [stops]
   );
+  const legs: PlannerLeg[] = useMemo(() => {
+    const routedByPair = new Map<string, TripStopLeg>();
+    for (const leg of serverLegs?.legs ?? []) {
+      if (leg.routed && leg.durationMinutes !== null) routedByPair.set(`${leg.fromStopId}>${leg.toStopId}`, leg);
+    }
+    return straightLegs.map((estimate, i) => {
+      const routed = routedByPair.get(legPairs[i]);
+      return routed
+        ? { km: routed.distanceKm, minutes: routed.durationMinutes ?? 0, mode: 'drive' as const, routed: true }
+        : { ...estimate, routed: false };
+    });
+  }, [straightLegs, serverLegs, legPairs]);
   const totalKm = legs.reduce((sum, leg) => sum + leg.km, 0);
   const totalTravelMinutes = legs.reduce((sum, leg) => sum + leg.minutes, 0);
+  const straightLegCount = legs.filter((leg) => !leg.routed).length;
+  // The optimiser works on straight-line distances, so its saving is shown against those.
+  const straightTotalKm = straightLegs.reduce((sum, leg) => sum + leg.km, 0);
   const totalNights = stops.reduce((sum, s) => sum + (s.nights ?? 0), 0);
   const schedule = useMemo(
     () => computeSchedule(stops.map((s) => s.nights), tripStartDate),
@@ -343,7 +382,11 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       try {
         const saved = await tripStopService.reorderStops(tripId, ids);
         // A newer reorder is already in flight; its answer wins.
-        if (request === requestCounter.current) queryClient.setQueryData(key, saved);
+        if (request === requestCounter.current) {
+          queryClient.setQueryData(key, saved);
+          // The road figures asked for during the optimistic state may predate the save.
+          void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
+        }
         return true;
       } catch {
         if (request === requestCounter.current) {
@@ -378,6 +421,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     try {
       const created = await tripStopService.createStop(tripId, input);
       queryClient.setQueryData<TripStop[]>(key, (current = []) => [...current, created]);
+      void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
       toast.error('Could not add the stop');
     } finally {
@@ -407,6 +451,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     );
     try {
       await tripStopService.deleteStop(tripId, stop.id);
+      void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
       queryClient.setQueryData(key, previous);
       toast.error('Could not remove the stop');
@@ -538,7 +583,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                         <Fragment key={stop.id}>
                           {leg && (
                             <li
-                              aria-label={`${formatDistance(leg.km)}, about ${formatTravelMinutes(leg.minutes)} ${
+                              aria-label={`${leg.routed ? '' : 'Straight-line estimate, '}${formatDistance(leg.km)}, about ${formatTravelMinutes(leg.minutes)} ${
                                 leg.mode === 'flight' ? 'by air' : 'by road'
                               } from ${stops[index - 1].name} to ${stop.name}`}
                               className="list-none flex items-center gap-2 pl-14 py-1.5 text-sm text-slate dark:text-dusk-300"
@@ -546,11 +591,25 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                               <svg className="w-4 h-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                               </svg>
-                              <span className="tabular-nums">{formatDistance(leg.km)}</span>
-                              <span aria-hidden="true">·</span>
-                              <span title="Estimated from the straight-line distance, not a routed time">
-                                ~{formatTravelMinutes(leg.minutes)} {leg.mode === 'flight' ? 'flight' : 'drive'} (est.)
+                              <span className="tabular-nums">
+                                {leg.routed ? '' : '≈ '}
+                                {formatDistance(leg.km)}
                               </span>
+                              <span aria-hidden="true">·</span>
+                              {leg.routed ? (
+                                <span title="Road distance and driving time from the routing service">
+                                  {formatTravelMinutes(leg.minutes)} drive
+                                </span>
+                              ) : (
+                                <span title="Estimated from the straight-line distance, not a routed time">
+                                  ~{formatTravelMinutes(leg.minutes)} {leg.mode === 'flight' ? 'flight' : 'drive'} (est.)
+                                </span>
+                              )}
+                              {!leg.routed && (
+                                <span className="text-xs rounded-full border border-primary-500/20 dark:border-navy-600 px-2 py-0.5">
+                                  straight line
+                                </span>
+                              )}
                             </li>
                           )}
                           <StopRow
@@ -582,12 +641,18 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
               <dl className="mt-4 grid grid-cols-3 gap-2 rounded-xl border border-primary-500/10 dark:border-navy-700 p-3 text-center">
                 <div>
                   <dt className="text-xs text-slate dark:text-dusk-400">Distance</dt>
-                  <dd className="font-semibold text-charcoal dark:text-white tabular-nums">{formatDistance(totalKm)}</dd>
+                  <dd className="font-semibold text-charcoal dark:text-white tabular-nums">
+                    {straightLegCount > 0 && '≈ '}
+                    {formatDistance(totalKm)}
+                  </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-slate dark:text-dusk-400">Travel (est.)</dt>
+                  <dt className="text-xs text-slate dark:text-dusk-400">
+                    {straightLegCount === 0 ? 'Travel' : 'Travel (est.)'}
+                  </dt>
                   <dd className="font-semibold text-charcoal dark:text-white tabular-nums">
-                    ~{formatTravelMinutes(totalTravelMinutes)}
+                    {straightLegCount > 0 && '~'}
+                    {formatTravelMinutes(totalTravelMinutes)}
                   </dd>
                 </div>
                 <div>
@@ -599,8 +664,17 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                 </div>
               </dl>
               <p className="mt-2 text-xs text-slate dark:text-dusk-400">
-                Distances are straight-line. Times are rough estimates from distance (driving under {formatDistance(FLIGHT_THRESHOLD_KM)}, otherwise
-                a flight with airport time), not routed times.
+                {straightLegCount === 0
+                  ? 'All legs show road distances and driving times.'
+                  : legs.some((leg) => leg.routed)
+                    ? `${straightLegCount} of ${legs.length} legs are straight-line estimates; the others show road distances and driving times.`
+                    : 'Distances are straight-line (not road distances).'}{' '}
+                {straightLegCount > 0 && (
+                  <>
+                    Straight-line times are rough estimates (driving under {formatDistance(FLIGHT_THRESHOLD_KM)}, otherwise a
+                    flight with airport time).
+                  </>
+                )}
               </p>
 
               {overBy > 0 && (
@@ -653,8 +727,9 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                   >
                     <p className="font-medium text-charcoal dark:text-white">
                       {formatDistance(activeProposal.savedKm)} shorter ({formatDistance(activeProposal.optimizedKm)} instead of{' '}
-                      {formatDistance(totalKm)})
+                      {formatDistance(straightTotalKm)})
                     </p>
+                    <p className="text-xs text-slate dark:text-dusk-400">Compared by straight-line distance.</p>
                     <ol className="mt-2 list-decimal pl-5 text-sm text-charcoal dark:text-warm-gray">
                       {proposedNames.map((name, i) => (
                         <li key={`${name}-${i}`}>{name}</li>

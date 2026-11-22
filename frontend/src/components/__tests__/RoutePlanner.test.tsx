@@ -20,6 +20,12 @@
  * - RPL-016: A linked stop links to its saved place, and a repeat shows as a return visit
  * - RPL-017: A view-only viewer sees the list, map, distances and totals but no editing controls
  * - RPL-018: No editing controls show while the permission is still loading
+ * - RPL-019: Straight-line legs are labelled while the road figures have not arrived (or the server has none)
+ * - RPL-020: Routed legs show road distance and driving time without the straight-line label
+ * - RPL-021: A mixed result labels only the straight-line legs and the totals say so
+ * - RPL-022: Road distances follow the user's units
+ * - RPL-023: A failed legs request leaves the straight-line values in place
+ * - RPL-024: The optimise preview says it compares straight-line distances
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -36,6 +42,7 @@ vi.mock('../../services/tripStop.service', () => ({
     updateStop: vi.fn(),
     deleteStop: vi.fn(),
     reorderStops: vi.fn(),
+    getLegs: vi.fn(),
   },
 }));
 vi.mock('../../services/geocoding.service', () => ({
@@ -140,6 +147,8 @@ describe('RoutePlanner', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setSystem('metric');
+    // By default the server has no road figures: the planner shows its own straight-line values.
+    mocks.getLegs.mockResolvedValue({ profile: 'driving-car', legs: [] });
     vi.mocked(collaborationService.getPermissionLevel).mockResolvedValue({
       isOwner: true,
       permissionLevel: 'admin',
@@ -476,5 +485,105 @@ describe('RoutePlanner', () => {
     expect(screen.getByRole('button', { name: 'Move Lisbon later' })).toBeInTheDocument();
     expect(screen.getAllByRole('spinbutton')).toHaveLength(5);
     expect(screen.getByRole('button', { name: 'Optimise route' })).toBeInTheDocument();
+  });
+  describe('road distances', () => {
+    const legFor = (from: number, to: number, distanceKm: number, durationMinutes: number | null, routed: boolean) => ({
+      fromStopId: from,
+      toStopId: to,
+      distanceKm,
+      durationMinutes,
+      routed,
+    });
+    const allRouted = () => ({
+      profile: 'driving-car',
+      legs: [
+        legFor(1, 2, 3400, 2400, true),
+        legFor(2, 3, 2900, 1800, true),
+        legFor(3, 4, 2300, 1500, true),
+        legFor(4, 5, 1050, 600, true),
+      ],
+    });
+
+    it('RPL-019: straight-line legs are labelled', async () => {
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
+      expect(leg).toHaveTextContent(/^\s*≈\s*[\d,]+ km/);
+      expect(leg).toHaveTextContent('straight line');
+      expect(screen.getAllByText('straight line')).toHaveLength(4);
+      expect(screen.getByText('Distance').parentElement).toHaveTextContent(/^Distance≈/);
+      expect(screen.getByText(/Distances are straight-line/)).toBeInTheDocument();
+    });
+
+    it('RPL-020: routed legs show road distance and drive time with no straight-line label', async () => {
+      mocks.getLegs.mockResolvedValue(allRouted());
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      await waitFor(() => expect(screen.queryByText('straight line')).not.toBeInTheDocument());
+      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
+      expect(leg).toHaveTextContent('3,400 km');
+      expect(leg).toHaveTextContent('40 h drive');
+      expect(leg).not.toHaveTextContent('≈');
+      expect(leg).not.toHaveTextContent('(est.)');
+      const totals = screen.getByText('Distance').parentElement!;
+      expect(totals).toHaveTextContent('9,650 km');
+      expect(totals).not.toHaveTextContent('≈');
+      expect(screen.getByText('All legs show road distances and driving times.')).toBeInTheDocument();
+    });
+
+    it('RPL-021: only the straight-line legs are labelled in a mixed result', async () => {
+      mocks.getLegs.mockResolvedValue({
+        profile: 'driving-car',
+        legs: [
+          legFor(1, 2, 3400, 2400, true),
+          legFor(2, 3, 2900, null, false),
+          legFor(3, 4, 2300, 1500, true),
+          legFor(4, 5, 1050, null, false),
+        ],
+      });
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      await waitFor(() => expect(screen.getAllByText('straight line')).toHaveLength(2));
+      expect(screen.getByLabelText(/from Lisbon to Warsaw/)).not.toHaveTextContent('straight line');
+      expect(screen.getByLabelText(/from Warsaw to Madrid/)).toHaveTextContent('straight line');
+      expect(screen.getByLabelText(/from Berlin to Paris/)).toHaveTextContent('straight line');
+      expect(screen.getByText(/2 of 4 legs are straight-line estimates/)).toBeInTheDocument();
+      expect(screen.getByText('Distance').parentElement).toHaveTextContent(/≈/);
+    });
+
+    it('RPL-022: road distances follow the units setting', async () => {
+      setSystem('imperial');
+      mocks.getLegs.mockResolvedValue(allRouted());
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      await waitFor(() => expect(screen.queryByText('straight line')).not.toBeInTheDocument());
+      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
+      expect(leg).toHaveTextContent(/2,1\d\d mi/);
+      expect(leg).not.toHaveTextContent(/ km/);
+    });
+
+    it('RPL-023: a failed legs request keeps the straight-line values', async () => {
+      mocks.getLegs.mockRejectedValue(new Error('boom'));
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      await waitFor(() => expect(mocks.getLegs).toHaveBeenCalled());
+      expect(screen.getAllByText('straight line')).toHaveLength(4);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('RPL-024: the optimise preview compares straight-line distances', async () => {
+      mocks.getLegs.mockResolvedValue(allRouted());
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Optimise route' }));
+      const region = await screen.findByRole('region', { name: 'Proposed route' });
+      expect(region).toHaveTextContent('Compared by straight-line distance.');
+    });
   });
 });

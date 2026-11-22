@@ -29,3 +29,19 @@ export interface UpdateTripStopInput {
   nights?: number | null;
   locationId?: number | null;
 }
+
+/** Road distance and time between two consecutive stops, as returned by the legs endpoint. */
+export interface TripStopLeg {
+  fromStopId: number;
+  toStopId: number;
+  /** Road distance when `routed`, otherwise the straight-line distance. */
+  distanceKm: number;
+  /** Road travel time; null when `routed` is false. */
+  durationMinutes: number | null;
+  routed: boolean;
+}
+
+export interface TripStopLegs {
+  profile: string;
+  legs: TripStopLeg[];
+}

@@ -131,6 +131,8 @@ The application automatically selects the appropriate routing profile based on t
 | Walk, Walking | `foot-walking` | Pedestrian paths and walkways |
 | Other types | `driving-car` | Default fallback |
 
+The Route Planner (Itinerary > Route Planner) also uses this service: `GET /api/trips/:tripId/stops/legs` routes each pair of consecutive stops with `driving-car` and falls back to a straight line, per leg, when the key is missing or ORS fails. Failed legs are not cached.
+
 ### Caching
 
 To minimize API calls and improve performance:

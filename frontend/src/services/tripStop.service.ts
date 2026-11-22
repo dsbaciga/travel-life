@@ -1,9 +1,17 @@
 import axios from '../lib/axios';
-import type { TripStop, CreateTripStopInput, UpdateTripStopInput } from '../types/tripStop';
+import type { TripStop, TripStopLegs, CreateTripStopInput, UpdateTripStopInput } from '../types/tripStop';
 
 export const tripStopService = {
   async getStopsByTrip(tripId: number): Promise<TripStop[]> {
     const response = await axios.get<TripStop[]>(`/trips/${tripId}/stops`);
+    return response.data;
+  },
+
+  /** Road distance and time between consecutive stops; legs that cannot be routed come back with routed false. */
+  async getLegs(tripId: number): Promise<TripStopLegs> {
+    const response = await axios.get<TripStopLegs>(`/trips/${tripId}/stops/legs`, {
+      params: { profile: 'driving-car' },
+    });
     return response.data;
   },
 

@@ -52,6 +52,30 @@ export const reorderTripStopsSchema = z.object({
   stopIds: z.array(numericId()),
 });
 
+/** Routing profiles the legs endpoint accepts (the ones RoutingService supports). */
+export const LEG_PROFILES = ['driving-car', 'cycling-regular', 'foot-walking'] as const;
+export type LegProfile = (typeof LEG_PROFILES)[number];
+
+export const tripStopLegsQuerySchema = z.object({
+  profile: z.enum(LEG_PROFILES).default('driving-car'),
+});
+
+export interface TripStopLeg {
+  fromStopId: number;
+  toStopId: number;
+  /** Road distance when `routed`, otherwise the straight-line distance. */
+  distanceKm: number;
+  /** Road travel time; null when the leg is not routed (the client estimates it). */
+  durationMinutes: number | null;
+  /** True when the figures come from a road route (fresh or cached), false for straight-line. */
+  routed: boolean;
+}
+
+export interface TripStopLegsResult {
+  profile: LegProfile;
+  legs: TripStopLeg[];
+}
+
 export type CreateTripStopInput = z.infer<typeof createTripStopSchema>;
 export type UpdateTripStopInput = z.infer<typeof updateTripStopSchema>;
 export type ReorderTripStopsInput = z.infer<typeof reorderTripStopsSchema>;
