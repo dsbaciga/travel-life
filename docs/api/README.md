@@ -341,6 +341,8 @@ An activity's or lodging's place is its own `locationId` (set through the activi
 | POST | `/` | Create a link between two entities | Yes |
 | POST | `/bulk` | Create multiple links from one source to many targets | Yes |
 | POST | `/photos` | Link multiple photos to a target entity | Yes |
+| GET | `/photos/activity-suggestions` | Suggest an activity for each photo not linked to one yet, by capture time (links nothing) | Yes |
+| POST | `/photos/activity-suggestions` | Link reviewed photos to their activities: `{ links: [{ activityId, photoIds }] }` | Yes |
 | POST | `/cleanup-orphans` | Remove links whose source or target no longer exists | Yes |
 | GET | `/summary` | Get link counts grouped by entity type for the trip | Yes |
 | GET | `/target-type/:targetType` | Get all links pointing to a given target type | Yes |

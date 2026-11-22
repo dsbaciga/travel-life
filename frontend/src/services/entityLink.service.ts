@@ -13,6 +13,10 @@ import type {
   TripLinkSummary,
 } from '../types/entityLink';
 import type { Photo } from '../types/photo';
+import type {
+  ApplyPhotoActivityLinksInput,
+  PhotoActivitySuggestionsResponse,
+} from '../types/photoAutoLink';
 
 const entityLinkService = {
   /**
@@ -39,6 +43,31 @@ const entityLinkService = {
    */
   async bulkLinkPhotos(tripId: number, data: BulkLinkPhotosInput): Promise<BulkLinkResult> {
     const response = await axios.post(`/trips/${tripId}/links/photos`, data);
+    return response.data;
+  },
+
+  /**
+   * Suggest an activity for each unlinked photo, by when it was taken.
+   * Nothing is linked until the reviewed result goes to `applyPhotoActivityLinks`.
+   */
+  async getPhotoActivitySuggestions(tripId: number): Promise<PhotoActivitySuggestionsResponse> {
+    const response = await axios.get<PhotoActivitySuggestionsResponse>(
+      `/trips/${tripId}/links/photos/activity-suggestions`
+    );
+    return response.data;
+  },
+
+  /**
+   * Link the photos the user kept to their suggested activities
+   */
+  async applyPhotoActivityLinks(
+    tripId: number,
+    data: ApplyPhotoActivityLinksInput
+  ): Promise<BulkLinkResult> {
+    const response = await axios.post<BulkLinkResult>(
+      `/trips/${tripId}/links/photos/activity-suggestions`,
+      data
+    );
     return response.data;
   },
 

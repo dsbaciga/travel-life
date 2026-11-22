@@ -54,6 +54,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
 | Photos, albums, EXIF, thumbnails | `photo`, `photoAlbum`, `albumSuggestion` (uses `sharp`, `exifr`) | `PhotoGallery`, `PhotoUpload`, `PhotoLightbox`, `AlbumsPage`, `GlobalAlbumsPage`, `PhotosMapView` |
+| Auto-link photos to activities by capture time (review, then apply) | `photoAutoLink`, `services/_shared/photoActivityMatch`; all-trips backfill with no review: `src/scripts/backfillPhotoActivityLinks.ts` (run as `node dist/scripts/backfillPhotoActivityLinks.js [--dry-run]`) | `PhotoActivityAutoLinkModal` (opened from `trip-detail/TripPhotosTab`) |
 | Photo favorites and trip highlights | `photo` (`isFavorite`, `favoritesOnly`) | `FavoriteStarButton`, `trip-detail/TripHighlights`, `useTripEditAccess` |
 | Immich integration (filters, smart search, bulk link, album sync, export) | `immich`, `immichSync` | `ImmichBrowser`, `ImmichBulkImportDialog`, `ImmichAlbumPanel`, `ImmichSettings`, `useImmichThumbnail` |
 
@@ -110,6 +111,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | Decimal ⇄ number | `decimalConversion` | `services/_shared/` |
 | Country code (ISO alpha-2) of a location / passport / visa name; keeping it fresh on update | `deriveLocationCountryCode`, `deriveCountryCodeFromName`, `resolveLocationCountryCodeUpdate` (shared table: `resolveCountryCodeFromName`, `resolveLocationCountryCode`, `normalizeCountryCode` in `packages/shared/.../countryFacts.ts`, vendored to the backend, copied to `frontend/src/constants/countryFacts.ts`) | `services/_shared/countryCodes.ts` |
 | Delete a row's entity links | `cleanupEntityLinks` (the database triggers do it too) | `services/_shared/entityLinkCleanup.ts` |
+| Which activity a photo was taken at, from timestamps alone | `matchPhotosToActivities`, `PHOTO_MATCH_RULES` | `services/_shared/photoActivityMatch.ts` |
 | Where an activity/lodging is (`locationId` FK) and how old clients see it as a link | `findSyntheticLocationLinks`, `syntheticLocationLinkId`, `claimEntityLocation` | `services/_shared/entityLocationLinks.ts`, `services/entityLink.service.ts` |
 | An activity's/lodging's place ids, own FK first then loose links | `buildEntityLocationIdsMap` | `utils/entityLocations.ts` (frontend) |
 | A user's integration settings (Immich/weather/LLM/SMTP keys, ciphertext) or preferences (categories, currency, units, partner permission): read, update, create the missing row; give a new user both rows | `getUserIntegrations`, `getUserPreferences`, `findUser*` (null for a missing user), `updateUserIntegrations`, `updateUserPreferences`, `defaultUserSettingsCreate` (nested create in `user.create`), `findUserIdBySender` | `services/_shared/userSettings.ts` |
