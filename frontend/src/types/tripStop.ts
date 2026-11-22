@@ -34,9 +34,11 @@ export interface UpdateTripStopInput {
 export interface TripStopLeg {
   fromStopId: number;
   toStopId: number;
+  /** 'flight' for a leg at or above the flight threshold: no road time, no estimate. Absent on older servers. */
+  mode?: 'drive' | 'flight';
   /** Road distance when `routed`, otherwise the straight-line distance. */
   distanceKm: number;
-  /** Road travel time; null when `routed` is false. */
+  /** Road travel time; null when `routed` is false, and always null for a flight. */
   durationMinutes: number | null;
   routed: boolean;
 }

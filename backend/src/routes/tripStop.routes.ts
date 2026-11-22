@@ -40,7 +40,9 @@ import { tripStopController } from '../controllers/tripStop.controller';
  *       Uses OpenRouteService through the shared routing cache. A leg that cannot be routed
  *       (no OPENROUTESERVICE_API_KEY, a routing error or rate limit, or a leg over 2500 km
  *       straight-line) is returned as a straight-line figure with routed false; one failed
- *       leg never fails the response. View access is enough.
+ *       leg never fails the response. A leg of 600 km or more straight-line is a flight: it
+ *       is never routed (no OpenRouteService call), with mode flight, routed false and a
+ *       null duration. View access is enough.
  *     tags: [Trip Stops]
  *     security:
  *       - bearerAuth: []
@@ -68,8 +70,9 @@ import { tripStopController } from '../controllers/tripStop.controller';
  *                         properties:
  *                           fromStopId: { type: integer }
  *                           toStopId: { type: integer }
+ *                           mode: { type: string, enum: [drive, flight], description: 'flight when the straight-line distance is 600 km or more; no time is given for a flight' }
  *                           distanceKm: { type: number, description: Road distance when routed, otherwise straight-line }
- *                           durationMinutes: { type: number, nullable: true, description: Null when not routed }
+ *                           durationMinutes: { type: number, nullable: true, description: Null when not routed, and always null for a flight }
  *                           routed: { type: boolean }
  *       400: { description: Unknown profile }
  *       404: { description: Trip not found or no access }

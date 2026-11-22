@@ -131,7 +131,7 @@ The application automatically selects the appropriate routing profile based on t
 | Walk, Walking | `foot-walking` | Pedestrian paths and walkways |
 | Other types | `driving-car` | Default fallback |
 
-The Route Planner (Itinerary > Route Planner) also uses this service: `GET /api/trips/:tripId/stops/legs` routes each pair of consecutive stops with `driving-car` and falls back to a straight line, per leg, when the key is missing or ORS fails. Failed legs are not cached.
+The Route Planner (Itinerary > Route Planner) also uses this service: `GET /api/trips/:tripId/stops/legs` routes each pair of consecutive stops with `driving-car` and falls back to a straight line, per leg, when the key is missing or ORS fails. Failed legs are not cached. A leg of 600 km or more in a straight line is treated as a flight: it is never sent to ORS, the planner shows only its distance (by air, no time), and the travel-time total leaves flights out ("plus N flights"). The distance total still includes them.
 
 ### Caching
 

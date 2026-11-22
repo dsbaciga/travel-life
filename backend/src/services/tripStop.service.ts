@@ -10,6 +10,7 @@ import {
   ReorderTripStopsInput,
   LegProfile,
   TripStopLeg,
+  FLIGHT_LEG_THRESHOLD_KM,
   TripStopLegsResult,
 } from '../types/tripStop.types';
 
@@ -61,7 +62,7 @@ function assertNearLocation(
   }
 }
 
-/** Legs longer than this (straight-line) are not sent to the router: they are flights or sea crossings. */
+/** Legs longer than this (straight-line) are not sent to the router. Flight legs (FLIGHT_LEG_THRESHOLD_KM) are skipped sooner, so this is only a safety cap. */
 const MAX_ROUTED_LEG_KM = 2500;
 /** At most this many uncached OpenRouteService requests in flight at once (the free tier is rate limited). */
 const LEG_CONCURRENCY = 3;
@@ -73,7 +74,14 @@ interface StopPoint {
 }
 
 function straightLineLeg(from: StopPoint, to: StopPoint, km: number): TripStopLeg {
-  return { fromStopId: from.id, toStopId: to.id, distanceKm: km, durationMinutes: null, routed: false };
+  return {
+    fromStopId: from.id,
+    toStopId: to.id,
+    mode: km >= FLIGHT_LEG_THRESHOLD_KM ? 'flight' : 'drive',
+    distanceKm: km,
+    durationMinutes: null,
+    routed: false,
+  };
 }
 
 /** Runs `fn` over `items` with a bounded number in flight; results keep the input order. */
@@ -106,7 +114,7 @@ class TripStopService {
    * Road distance and time between each pair of consecutive stops (view access). Uses the
    * shared RoutingService, so routes come from its 30-day database cache before any
    * OpenRouteService call. A leg that cannot be routed (no API key, ORS error or rate limit,
-   * or too far apart) is returned as a straight-line leg with `routed: false`; one bad leg
+   * or too far apart) is returned as a straight-line leg with `routed: false`; a flight leg (straight-line distance of FLIGHT_LEG_THRESHOLD_KM or more) is never routed and has `mode: 'flight'` and no duration; one bad leg
    * never fails the response.
    */
   async getLegs(userId: number, tripId: number, profile: LegProfile): Promise<TripStopLegsResult> {
@@ -131,15 +139,19 @@ class TripStopService {
         const km = haversineMeters(from, to) / 1000;
         if (km === 0) {
           // The same place twice: nothing to route, and the answer is exact.
-          return { fromStopId: from.id, toStopId: to.id, distanceKm: 0, durationMinutes: 0, routed: true };
+          return { fromStopId: from.id, toStopId: to.id, mode: 'drive', distanceKm: 0, durationMinutes: 0, routed: true };
         }
-        if (!canRoute || km > MAX_ROUTED_LEG_KM) return straightLineLeg(from, to, km);
+        // A flight leg is never routed (no ORS call) and carries no time estimate.
+        if (km >= FLIGHT_LEG_THRESHOLD_KM || !canRoute || km > MAX_ROUTED_LEG_KM) {
+          return straightLineLeg(from, to, km);
+        }
         try {
           const route = await routingService.calculateRoute(from, to, profile);
           if (route.source !== 'route') return straightLineLeg(from, to, km);
           return {
             fromStopId: from.id,
             toStopId: to.id,
+            mode: 'drive',
             distanceKm: route.distance,
             durationMinutes: route.duration,
             routed: true,

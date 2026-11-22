@@ -29,6 +29,7 @@ import type { TripStop, TripStopLeg } from '../../types/tripStop';
 import { formatDateOnly } from '../../utils/timezone';
 import {
   computeSchedule,
+  estimateDriveMinutes,
   estimateTravel,
   FLIGHT_THRESHOLD_KM,
   formatTravelMinutes,
@@ -272,9 +273,10 @@ const legsKey = (tripId: number) => ['tripStopLegs', tripId] as const;
 /** One leg as shown: road figures from the server when available, else the browser's own estimate. */
 interface PlannerLeg {
   km: number;
-  minutes: number;
+  /** Null for a flight: flights have no time estimate. */
+  minutes: number | null;
   mode: 'drive' | 'flight';
-  /** True when km and minutes are road figures; false for the straight-line estimate. */
+  /** True when km and minutes are road figures; false for the straight-line estimate. Never true for a flight. */
   routed: boolean;
 }
 
@@ -342,20 +344,26 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     [stops]
   );
   const legs: PlannerLeg[] = useMemo(() => {
-    const routedByPair = new Map<string, TripStopLeg>();
-    for (const leg of serverLegs?.legs ?? []) {
-      if (leg.routed && leg.durationMinutes !== null) routedByPair.set(`${leg.fromStopId}>${leg.toStopId}`, leg);
-    }
-    return straightLegs.map((estimate, i) => {
-      const routed = routedByPair.get(legPairs[i]);
-      return routed
-        ? { km: routed.distanceKm, minutes: routed.durationMinutes ?? 0, mode: 'drive' as const, routed: true }
-        : { ...estimate, routed: false };
+    const serverByPair = new Map<string, TripStopLeg>();
+    for (const leg of serverLegs?.legs ?? []) serverByPair.set(`${leg.fromStopId}>${leg.toStopId}`, leg);
+    return straightLegs.map((estimate, i): PlannerLeg => {
+      const server = serverByPair.get(legPairs[i]);
+      // The server's classification wins when it has one; flights are never replaced by a road time.
+      const mode = server?.mode ?? estimate.mode;
+      if (mode === 'flight') return { km: estimate.km, minutes: null, mode, routed: false };
+      if (server?.routed && server.durationMinutes !== null) {
+        return { km: server.distanceKm, minutes: server.durationMinutes, mode, routed: true };
+      }
+      return { km: estimate.km, minutes: estimateDriveMinutes(estimate.km), mode, routed: false };
     });
   }, [straightLegs, serverLegs, legPairs]);
   const totalKm = legs.reduce((sum, leg) => sum + leg.km, 0);
-  const totalTravelMinutes = legs.reduce((sum, leg) => sum + leg.minutes, 0);
-  const straightLegCount = legs.filter((leg) => !leg.routed).length;
+  // Travel time covers drive legs only; flights are counted, never given an invented time.
+  const flightLegCount = legs.filter((leg) => leg.mode === 'flight').length;
+  const driveLegs = legs.filter((leg) => leg.mode === 'drive');
+  const totalTravelMinutes = driveLegs.reduce((sum, leg) => sum + (leg.minutes ?? 0), 0);
+  const straightLegCount = driveLegs.filter((leg) => !leg.routed).length;
+  const flightsLabel = `${flightLegCount} ${flightLegCount === 1 ? 'flight' : 'flights'}`;
   // The optimiser works on straight-line distances, so its saving is shown against those.
   const straightTotalKm = straightLegs.reduce((sum, leg) => sum + leg.km, 0);
   const totalNights = stops.reduce((sum, s) => sum + (s.nights ?? 0), 0);
@@ -583,9 +591,11 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                         <Fragment key={stop.id}>
                           {leg && (
                             <li
-                              aria-label={`${leg.routed ? '' : 'Straight-line estimate, '}${formatDistance(leg.km)}, about ${formatTravelMinutes(leg.minutes)} ${
-                                leg.mode === 'flight' ? 'by air' : 'by road'
-                              } from ${stops[index - 1].name} to ${stop.name}`}
+                              aria-label={
+                                leg.mode === 'flight'
+                                  ? `Flight leg, ${formatDistance(leg.km)} straight-line distance by air from ${stops[index - 1].name} to ${stop.name}`
+                                  : `${leg.routed ? '' : 'Straight-line estimate, '}${formatDistance(leg.km)}, about ${formatTravelMinutes(leg.minutes ?? 0)} by road from ${stops[index - 1].name} to ${stop.name}`
+                              }
                               className="list-none flex items-center gap-2 pl-14 py-1.5 text-sm text-slate dark:text-dusk-300"
                             >
                               <svg className="w-4 h-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -596,16 +606,18 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                                 {formatDistance(leg.km)}
                               </span>
                               <span aria-hidden="true">·</span>
-                              {leg.routed ? (
+                              {leg.mode === 'flight' ? (
+                                <span title="Too far to drive: shown as a flight, with no time estimate">by air</span>
+                              ) : leg.routed ? (
                                 <span title="Road distance and driving time from the routing service">
-                                  {formatTravelMinutes(leg.minutes)} drive
+                                  {formatTravelMinutes(leg.minutes ?? 0)} drive
                                 </span>
                               ) : (
                                 <span title="Estimated from the straight-line distance, not a routed time">
-                                  ~{formatTravelMinutes(leg.minutes)} {leg.mode === 'flight' ? 'flight' : 'drive'} (est.)
+                                  ~{formatTravelMinutes(leg.minutes ?? 0)} drive (est.)
                                 </span>
                               )}
-                              {!leg.routed && (
+                              {leg.mode === 'drive' && !leg.routed && (
                                 <span className="text-xs rounded-full border border-primary-500/20 dark:border-navy-600 px-2 py-0.5">
                                   straight line
                                 </span>
@@ -651,8 +663,12 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                     {straightLegCount === 0 ? 'Travel' : 'Travel (est.)'}
                   </dt>
                   <dd className="font-semibold text-charcoal dark:text-white tabular-nums">
-                    {straightLegCount > 0 && '~'}
-                    {formatTravelMinutes(totalTravelMinutes)}
+                    {driveLegs.length === 0
+                      ? '—'
+                      : `${straightLegCount > 0 ? '~' : ''}${formatTravelMinutes(totalTravelMinutes)}`}
+                    {flightLegCount > 0 && (
+                      <span className="block text-xs font-normal text-slate dark:text-dusk-400">plus {flightsLabel}</span>
+                    )}
                   </dd>
                 </div>
                 <div>
@@ -664,15 +680,18 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                 </div>
               </dl>
               <p className="mt-2 text-xs text-slate dark:text-dusk-400">
-                {straightLegCount === 0
-                  ? 'All legs show road distances and driving times.'
-                  : legs.some((leg) => leg.routed)
-                    ? `${straightLegCount} of ${legs.length} legs are straight-line estimates; the others show road distances and driving times.`
-                    : 'Distances are straight-line (not road distances).'}{' '}
-                {straightLegCount > 0 && (
+                {driveLegs.length === 0
+                  ? 'Distances are straight-line.'
+                  : straightLegCount === 0
+                    ? 'Driving legs show road distances and driving times.'
+                    : driveLegs.some((leg) => leg.routed)
+                      ? `${straightLegCount} of ${driveLegs.length} driving legs are straight-line estimates; the others show road distances and driving times.`
+                      : 'Distances are straight-line (not road distances).'}{' '}
+                {straightLegCount > 0 && 'Straight-line driving times are rough estimates. '}
+                {flightLegCount > 0 && (
                   <>
-                    Straight-line times are rough estimates (driving under {formatDistance(FLIGHT_THRESHOLD_KM)}, otherwise a
-                    flight with airport time).
+                    Legs of {formatDistance(FLIGHT_THRESHOLD_KM)} or more are shown as flights, by air, with no time estimate;
+                    the travel total leaves them out.
                   </>
                 )}
               </p>

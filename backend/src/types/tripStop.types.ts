@@ -60,12 +60,19 @@ export const tripStopLegsQuerySchema = z.object({
   profile: z.enum(LEG_PROFILES).default('driving-car'),
 });
 
+/** Straight-line distance at or above which a leg is a flight (no road route, no time estimate). */
+export const FLIGHT_LEG_THRESHOLD_KM = 600;
+
+export type TripStopLegMode = 'drive' | 'flight';
+
 export interface TripStopLeg {
   fromStopId: number;
   toStopId: number;
+  /** 'flight' when the straight-line distance is at least FLIGHT_LEG_THRESHOLD_KM; never routed, no duration. */
+  mode: TripStopLegMode;
   /** Road distance when `routed`, otherwise the straight-line distance. */
   distanceKm: number;
-  /** Road travel time; null when the leg is not routed (the client estimates it). */
+  /** Road travel time; null when the leg is not routed (the client estimates drive legs) and always null for flights. */
   durationMinutes: number | null;
   /** True when the figures come from a road route (fresh or cached), false for straight-line. */
   routed: boolean;

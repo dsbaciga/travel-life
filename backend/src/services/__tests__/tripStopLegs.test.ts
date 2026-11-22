@@ -10,6 +10,9 @@
  * - TSL-006: Needs only view access; a denied permission propagates and nothing is routed
  * - TSL-007: Fewer than two stops gives no legs
  * - TSL-008: The profile is passed through to the router; the query schema defaults to driving-car and rejects unknown values
+ * - TSL-009: Every leg has a mode; short legs are 'drive'
+ * - TSL-010: A flight leg (600 km or more straight-line) is never sent to ORS or the cache, with mode 'flight' and no duration
+ * - TSL-011: The flight threshold is 600 km, defined once, and applies even when a cached route exists
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -44,7 +47,7 @@ jest.mock('axios');
 import axios from 'axios';
 const mockAxios = axios as jest.Mocked<typeof axios>;
 
-import { tripStopLegsQuerySchema } from '../../types/tripStop.types';
+import { tripStopLegsQuerySchema, FLIGHT_LEG_THRESHOLD_KM } from '../../types/tripStop.types';
 
 type LegsService = {
   getLegs: (
@@ -56,6 +59,7 @@ type LegsService = {
     legs: Array<{
       fromStopId: number;
       toStopId: number;
+      mode: 'drive' | 'flight';
       distanceKm: number;
       durationMinutes: number | null;
       routed: boolean;
@@ -119,8 +123,8 @@ describe('TripStopService.getLegs', () => {
     expect(mockVerifyTrip).toHaveBeenCalledWith(5, 10, 'view');
     expect(result.profile).toBe('driving-car');
     expect(result.legs).toEqual([
-      { fromStopId: 1, toStopId: 2, distanceKm: 150, durationMinutes: 90, routed: true },
-      { fromStopId: 2, toStopId: 3, distanceKm: 300, durationMinutes: 180, routed: true },
+      { fromStopId: 1, toStopId: 2, mode: 'drive', distanceKm: 150, durationMinutes: 90, routed: true },
+      { fromStopId: 2, toStopId: 3, mode: 'drive', distanceKm: 300, durationMinutes: 180, routed: true },
     ]);
     expect(mockPrisma.routeCache.upsert).toHaveBeenCalledTimes(2);
     expect(mockAxios.post).toHaveBeenCalledTimes(2);
@@ -214,6 +218,7 @@ describe('TripStopService.getLegs', () => {
     expect(result.legs[1]).toEqual({
       fromStopId: 5,
       toStopId: 6,
+      mode: 'drive',
       distanceKm: 0,
       durationMinutes: 0,
       routed: true,
@@ -234,6 +239,57 @@ describe('TripStopService.getLegs', () => {
 
     mockPrisma.tripStop.findMany.mockResolvedValue([]);
     expect((await loadService('key').getLegs(5, 10, 'driving-car')).legs).toEqual([]);
+  });
+
+  it('TSL-009: every leg has a mode, and short legs are drive', async () => {
+    mockPrisma.tripStop.findMany.mockResolvedValue([MUNICH, SALZBURG, VIENNA]);
+
+    const unrouted = await loadService(undefined).getLegs(5, 10, 'driving-car');
+    expect(unrouted.legs.map((l) => l.mode)).toEqual(['drive', 'drive']);
+
+    mockAxios.post.mockResolvedValue(orsResponse(150_000, 5400));
+    const routed = await loadService('key').getLegs(5, 10, 'driving-car');
+    expect(routed.legs.map((l) => l.mode)).toEqual(['drive', 'drive']);
+  });
+
+  it('TSL-010: a flight leg is not sent to ORS and returns mode flight with a null duration', async () => {
+    // Munich -> Madrid (about 1,480 km) -> Lisbon (about 500 km, a drive).
+    const MADRID = stopRow(7, 40.4168, -3.7038);
+    const LISBON = stopRow(8, 38.7223, -9.1393);
+    mockPrisma.tripStop.findMany.mockResolvedValue([MUNICH, MADRID, LISBON]);
+    mockAxios.post.mockResolvedValue(orsResponse(630_000, 25_000));
+
+    const result = await loadService('key').getLegs(5, 10, 'driving-car');
+
+    expect(result.legs).toHaveLength(2);
+    expect(result.legs[0]).toMatchObject({ fromStopId: 1, toStopId: 7, mode: 'flight', durationMinutes: null, routed: false });
+    expect(result.legs[0].distanceKm).toBeGreaterThan(1300);
+    expect(result.legs[0].distanceKm).toBeLessThan(1700);
+    expect(result.legs[1]).toMatchObject({ mode: 'drive', routed: true, durationMinutes: expect.any(Number) });
+    // Only the drive leg reached ORS and the cache; the flight cost no call at all.
+    expect(mockAxios.post).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.routeCache.findFirst).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.routeCache.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('TSL-011: the threshold is 600 km and a flight ignores any cached route', async () => {
+    expect(FLIGHT_LEG_THRESHOLD_KM).toBe(600);
+
+    // Munich -> Rome is about 700 km straight-line; a cached road route must not turn it into a drive.
+    const ROME = stopRow(9, 41.9028, 12.4964);
+    mockPrisma.tripStop.findMany.mockResolvedValue([MUNICH, ROME]);
+    mockPrisma.routeCache.findFirst.mockResolvedValue({
+      id: 1, fromLat: 48.1351, fromLon: 11.582, toLat: 41.9028, toLon: 12.4964,
+      distance: 900, duration: 540, profile: 'driving-car', routeGeometry: null,
+      createdAt: new Date(), updatedAt: new Date(),
+    });
+
+    const result = await loadService('key').getLegs(5, 10, 'driving-car');
+
+    expect(result.legs[0]).toMatchObject({ mode: 'flight', routed: false, durationMinutes: null });
+    expect(result.legs[0].distanceKm).toBeGreaterThanOrEqual(FLIGHT_LEG_THRESHOLD_KM);
+    expect(mockPrisma.routeCache.findFirst).not.toHaveBeenCalled();
+    expect(mockAxios.post).not.toHaveBeenCalled();
   });
 
   it('TSL-008: the profile reaches the router, and the query schema validates it', async () => {

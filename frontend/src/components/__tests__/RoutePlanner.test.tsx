@@ -26,6 +26,9 @@
  * - RPL-022: Road distances follow the user's units
  * - RPL-023: A failed legs request leaves the straight-line values in place
  * - RPL-024: The optimise preview says it compares straight-line distances
+ * - RPL-025: A flight leg shows its distance and no time, and the totals leave it out ("plus N flights")
+ * - RPL-026: A routed result never turns a flight leg into a road drive time (server mode, or the client's own classification)
+ * - RPL-027: Drive legs keep their straight-line estimate and the totals count only them
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -87,6 +90,23 @@ const zigzag = (): TripStop[] => [
   stop(3, 'Madrid', 40.42, -3.7, 2),
   stop(4, 'Berlin', 52.52, 13.4, 1),
   stop(5, 'Paris', 48.86, 2.35, 2),
+];
+
+// A regional trip where every leg is a drive: Munich, Salzburg, Vienna, Budapest, Prague.
+const regional = (): TripStop[] => [
+  stop(1, 'Munich', 48.14, 11.58, 2),
+  stop(2, 'Salzburg', 47.81, 13.05, 1),
+  stop(3, 'Vienna', 48.21, 16.37, 2),
+  stop(4, 'Budapest', 47.5, 19.04, 2),
+  stop(5, 'Prague', 50.08, 14.44, 1),
+];
+
+// One drive (Munich to Salzburg), one flight (Salzburg to Lisbon), one drive (Lisbon to Madrid).
+const mixed = (): TripStop[] => [
+  stop(1, 'Munich', 48.14, 11.58, 1),
+  stop(2, 'Salzburg', 47.81, 13.05, 1),
+  stop(3, 'Lisbon', 38.72, -9.14, 1),
+  stop(4, 'Madrid', 40.42, -3.7, 1),
 ];
 
 const mocks = vi.mocked(tripStopService);
@@ -160,9 +180,11 @@ describe('RoutePlanner', () => {
     await screen.findByText('Lisbon');
 
     expect(listNames()).toEqual(['Lisbon', 'Warsaw', 'Madrid', 'Berlin', 'Paris']);
-    // Lisbon to Warsaw is about 2,800 km: a flight.
-    expect(screen.getByLabelText(/from Lisbon to Warsaw/)).toHaveTextContent(/flight \(est\.\)/);
-    expect(screen.getAllByText(/\(est\.\)/).length).toBeGreaterThanOrEqual(4);
+    // Lisbon to Warsaw is about 2,800 km: a flight, with a distance and no time.
+    const flight = screen.getByLabelText(/from Lisbon to Warsaw/);
+    expect(flight).toHaveTextContent(/[\d,]+ km/);
+    expect(flight).toHaveTextContent('by air');
+    expect(flight).not.toHaveTextContent(/\(est\.\)|\bmin\b|\d h\b/);
     const totals = screen.getByText('Distance').parentElement!;
     expect(totals).toHaveTextContent(/[\d,]+ km/);
     expect(totals).not.toHaveTextContent(/ mi\b/);
@@ -497,18 +519,18 @@ describe('RoutePlanner', () => {
     const allRouted = () => ({
       profile: 'driving-car',
       legs: [
-        legFor(1, 2, 3400, 2400, true),
-        legFor(2, 3, 2900, 1800, true),
-        legFor(3, 4, 2300, 1500, true),
-        legFor(4, 5, 1050, 600, true),
+        legFor(1, 2, 340, 240, true),
+        legFor(2, 3, 290, 180, true),
+        legFor(3, 4, 230, 150, true),
+        legFor(4, 5, 105, 60, true),
       ],
     });
 
     it('RPL-019: straight-line legs are labelled', async () => {
-      renderPlanner(zigzag());
-      await screen.findByText('Lisbon');
+      renderPlanner(regional());
+      await screen.findByText('Munich');
 
-      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
+      const leg = screen.getByLabelText(/from Munich to Salzburg/);
       expect(leg).toHaveTextContent(/^\s*≈\s*[\d,]+ km/);
       expect(leg).toHaveTextContent('straight line');
       expect(screen.getAllByText('straight line')).toHaveLength(4);
@@ -518,58 +540,58 @@ describe('RoutePlanner', () => {
 
     it('RPL-020: routed legs show road distance and drive time with no straight-line label', async () => {
       mocks.getLegs.mockResolvedValue(allRouted());
-      renderPlanner(zigzag());
-      await screen.findByText('Lisbon');
+      renderPlanner(regional());
+      await screen.findByText('Munich');
 
       await waitFor(() => expect(screen.queryByText('straight line')).not.toBeInTheDocument());
-      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
-      expect(leg).toHaveTextContent('3,400 km');
-      expect(leg).toHaveTextContent('40 h drive');
+      const leg = screen.getByLabelText(/from Munich to Salzburg/);
+      expect(leg).toHaveTextContent('340 km');
+      expect(leg).toHaveTextContent('4 h drive');
       expect(leg).not.toHaveTextContent('≈');
       expect(leg).not.toHaveTextContent('(est.)');
       const totals = screen.getByText('Distance').parentElement!;
-      expect(totals).toHaveTextContent('9,650 km');
+      expect(totals).toHaveTextContent('965 km');
       expect(totals).not.toHaveTextContent('≈');
-      expect(screen.getByText('All legs show road distances and driving times.')).toBeInTheDocument();
+      expect(screen.getByText(/Driving legs show road distances and driving times\./)).toBeInTheDocument();
     });
 
     it('RPL-021: only the straight-line legs are labelled in a mixed result', async () => {
       mocks.getLegs.mockResolvedValue({
         profile: 'driving-car',
         legs: [
-          legFor(1, 2, 3400, 2400, true),
-          legFor(2, 3, 2900, null, false),
-          legFor(3, 4, 2300, 1500, true),
-          legFor(4, 5, 1050, null, false),
+          legFor(1, 2, 340, 240, true),
+          legFor(2, 3, 290, null, false),
+          legFor(3, 4, 230, 150, true),
+          legFor(4, 5, 105, null, false),
         ],
       });
-      renderPlanner(zigzag());
-      await screen.findByText('Lisbon');
+      renderPlanner(regional());
+      await screen.findByText('Munich');
 
       await waitFor(() => expect(screen.getAllByText('straight line')).toHaveLength(2));
-      expect(screen.getByLabelText(/from Lisbon to Warsaw/)).not.toHaveTextContent('straight line');
-      expect(screen.getByLabelText(/from Warsaw to Madrid/)).toHaveTextContent('straight line');
-      expect(screen.getByLabelText(/from Berlin to Paris/)).toHaveTextContent('straight line');
-      expect(screen.getByText(/2 of 4 legs are straight-line estimates/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/from Munich to Salzburg/)).not.toHaveTextContent('straight line');
+      expect(screen.getByLabelText(/from Salzburg to Vienna/)).toHaveTextContent('straight line');
+      expect(screen.getByLabelText(/from Budapest to Prague/)).toHaveTextContent('straight line');
+      expect(screen.getByText(/2 of 4 driving legs are straight-line estimates/)).toBeInTheDocument();
       expect(screen.getByText('Distance').parentElement).toHaveTextContent(/≈/);
     });
 
     it('RPL-022: road distances follow the units setting', async () => {
       setSystem('imperial');
       mocks.getLegs.mockResolvedValue(allRouted());
-      renderPlanner(zigzag());
-      await screen.findByText('Lisbon');
+      renderPlanner(regional());
+      await screen.findByText('Munich');
 
       await waitFor(() => expect(screen.queryByText('straight line')).not.toBeInTheDocument());
-      const leg = screen.getByLabelText(/from Lisbon to Warsaw/);
-      expect(leg).toHaveTextContent(/2,1\d\d mi/);
+      const leg = screen.getByLabelText(/from Munich to Salzburg/);
+      expect(leg).toHaveTextContent(/2\d\d mi/);
       expect(leg).not.toHaveTextContent(/ km/);
     });
 
     it('RPL-023: a failed legs request keeps the straight-line values', async () => {
       mocks.getLegs.mockRejectedValue(new Error('boom'));
-      renderPlanner(zigzag());
-      await screen.findByText('Lisbon');
+      renderPlanner(regional());
+      await screen.findByText('Munich');
 
       await waitFor(() => expect(mocks.getLegs).toHaveBeenCalled());
       expect(screen.getAllByText('straight line')).toHaveLength(4);
@@ -584,6 +606,85 @@ describe('RoutePlanner', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Optimise route' }));
       const region = await screen.findByRole('region', { name: 'Proposed route' });
       expect(region).toHaveTextContent('Compared by straight-line distance.');
+    });
+
+    it('RPL-025: a flight leg shows its distance and no time, and the totals leave it out', async () => {
+      renderPlanner(mixed());
+      await screen.findByText('Munich');
+
+      const flight = screen.getByLabelText(/from Salzburg to Lisbon/);
+      expect(flight.getAttribute('aria-label')).toMatch(/^Flight leg, /);
+      expect(flight.getAttribute('aria-label')).not.toMatch(/about|\bmin\b|\d h\b/);
+      expect(flight).toHaveTextContent(/[\d,]+ km/);
+      expect(flight).toHaveTextContent('by air');
+      expect(flight).not.toHaveTextContent(/drive|flight \(est|\bmin\b|\d h\b|straight line/);
+
+      // The drive legs still show estimates; the flight is not in the travel total.
+      expect(screen.getByLabelText(/from Munich to Salzburg/)).toHaveTextContent(/~.*drive \(est\.\)/);
+      const travel = screen.getByText(/^Travel/).parentElement!;
+      expect(travel).toHaveTextContent('plus 1 flight');
+      expect(travel).not.toHaveTextContent('flights');
+      // About 117 km and 500 km of road at 70 km/h with a 1.3 detour: well under a day, far from a flight's hours.
+      expect(travel).toHaveTextContent(/~\d+ h/);
+      // The distance total still includes the flight (over 2,000 km).
+      expect(screen.getByText('Distance').parentElement).toHaveTextContent(/2,\d{3} km/);
+      expect(screen.getByText(/shown as flights, by air, with no time estimate/)).toBeInTheDocument();
+      expect(screen.queryByText(/airport time/)).not.toBeInTheDocument();
+    });
+
+    it('RPL-025b: with only flights the travel total is a dash plus the flight count', async () => {
+      renderPlanner(zigzag());
+      await screen.findByText('Lisbon');
+
+      const travel = screen.getByText(/^Travel/).parentElement!;
+      expect(travel).toHaveTextContent('plus 4 flights');
+      expect(travel).toHaveTextContent('—');
+      expect(travel).not.toHaveTextContent(/~|\bmin\b|\d h\b/);
+    });
+
+    it('RPL-026: a routed result never replaces a flight leg with a road drive time', async () => {
+      // The server marks the flight leg (mode) and, to be hostile, even sends road-looking figures.
+      mocks.getLegs.mockResolvedValue({
+        profile: 'driving-car',
+        legs: [
+          legFor(1, 2, 117, 90, true),
+          { ...legFor(2, 3, 2900, 2400, true), mode: 'flight' },
+          legFor(3, 4, 630, 400, true),
+        ],
+      });
+      renderPlanner(mixed());
+      await screen.findByText('Munich');
+
+      await waitFor(() => expect(screen.getByLabelText(/from Munich to Salzburg/)).toHaveTextContent('1 h 30 min drive'));
+      const flight = screen.getByLabelText(/from Salzburg to Lisbon/);
+      expect(flight.getAttribute('aria-label')).toMatch(/^Flight leg, /);
+      expect(flight).toHaveTextContent('by air');
+      expect(flight).not.toHaveTextContent(/drive|\bmin\b|\d h\b/);
+      expect(screen.getByText(/^Travel/).parentElement).toHaveTextContent('plus 1 flight');
+    });
+
+    it('RPL-026b: an older server without mode is classified by the browser', async () => {
+      mocks.getLegs.mockResolvedValue({
+        profile: 'driving-car',
+        legs: [legFor(1, 2, 117, 90, true), legFor(2, 3, 2900, 2400, true), legFor(3, 4, 630, 400, true)],
+      });
+      renderPlanner(mixed());
+      await screen.findByText('Munich');
+
+      await waitFor(() => expect(screen.getByLabelText(/from Munich to Salzburg/)).toHaveTextContent('1 h 30 min drive'));
+      const flight = screen.getByLabelText(/from Salzburg to Lisbon/);
+      expect(flight).toHaveTextContent('by air');
+      expect(flight).not.toHaveTextContent(/drive|\bmin\b|\d h\b/);
+    });
+
+    it('RPL-027: drive legs keep the straight-line estimate when unrouted', async () => {
+      renderPlanner(regional());
+      await screen.findByText('Munich');
+
+      const leg = screen.getByLabelText(/from Munich to Salzburg/);
+      expect(leg).toHaveTextContent(/~.*drive \(est\.\)/);
+      expect(leg.getAttribute('aria-label')).toMatch(/^Straight-line estimate, .*about .* by road/);
+      expect(screen.getByText(/^Travel/).parentElement).not.toHaveTextContent('plus');
     });
   });
 });
