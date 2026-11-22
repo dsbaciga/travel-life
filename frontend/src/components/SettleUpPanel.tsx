@@ -5,6 +5,7 @@ import expenseService from "../services/expense.service";
 import { formatCurrency } from "../utils/formatCurrency";
 import { formatDateOnly } from "../utils/timezone";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
+import { useTripEditAccess } from "../hooks/useTripEditAccess";
 import SettlementFormModal from "./SettlementFormModal";
 import { todayDateOnly, type SettlementFormValues } from "../utils/settlement";
 import type { TripSettlement } from "../types/expense";
@@ -26,6 +27,8 @@ interface SettleUpPanelProps {
 
 export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
   const queryClient = useQueryClient();
+  // View-only collaborators see balances and payments but cannot record, edit or delete.
+  const { canEdit } = useTripEditAccess(tripId);
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [formState, setFormState] = useState<{
     initial: SettlementFormValues;
@@ -163,6 +166,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
                     <span className="font-medium">{transfer.toLabel}</span>{" "}
                     <span className="tabular-nums">{money(transfer.amount)}</span>
                   </span>
+                  {canEdit && (
                   <button
                     type="button"
                     className="text-xs font-medium text-primary-600 hover:underline dark:text-gold"
@@ -183,6 +187,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
                   >
                     Record payment
                   </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -259,6 +264,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
                     {settlement.notes ? ` · ${settlement.notes}` : ""}
                   </div>
                 </div>
+                {canEdit && (
                 <div className="flex shrink-0 gap-3">
                   <button
                     type="button"
@@ -289,6 +295,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
                     Delete
                   </button>
                 </div>
+                )}
               </li>
             ))}
           </ul>

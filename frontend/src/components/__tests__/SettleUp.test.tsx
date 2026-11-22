@@ -13,6 +13,7 @@
  * - SUP-009: recorded payments are listed with their date and can be edited
  * - SUP-010: deleting a recorded payment asks first, then removes it and refreshes
  * - SUP-011: payments with no exchange rate are listed as not counted
+ * - SUP-013: view-only users see balances and payments but no controls
  * - SUP-012: the form refuses the same person on both sides without calling the API
  */
 
@@ -32,6 +33,10 @@ vi.mock('../../services/expense.service', () => ({
   },
 }));
 
+vi.mock('../../hooks/useTripEditAccess', () => ({
+  useTripEditAccess: vi.fn(() => ({ canEdit: true, isLoading: false })),
+}));
+
 vi.mock('react-hot-toast', () => ({
   default: { success: vi.fn(), error: vi.fn() },
 }));
@@ -40,6 +45,7 @@ import SettleUpPanel from '../SettleUpPanel';
 import ExpenseSplitFields from '../ExpenseSplitFields';
 import expenseService from '../../services/expense.service';
 import toast from 'react-hot-toast';
+import { useTripEditAccess } from '../../hooks/useTripEditAccess';
 import type { ExpenseParticipant, SettleUpSummary, TripSettlement } from '../../types/expense';
 import { emptySplitState, type SplitFormState } from '../../utils/expenseSplit';
 
@@ -249,6 +255,20 @@ describe('SettleUpPanel recorded payments', () => {
 
     expect(await screen.findByText('Payments not counted')).toBeInTheDocument();
     expect(screen.getByText(/Alex paid dana/)).toHaveTextContent('XYZ');
+  });
+
+  it('SUP-013: view-only users see balances and payments but no controls', async () => {
+    (useTripEditAccess as ReturnType<typeof vi.fn>).mockReturnValue({ canEdit: false, isLoading: false });
+    mockGetSettlements.mockResolvedValue([recorded]);
+    renderPanel();
+
+    expect(await screen.findByText('Payments recorded')).toBeInTheDocument();
+    expect(screen.getByRole('row', { name: /dana/ })).toHaveTextContent('gets back');
+    expect(screen.getByText(/2 payments/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Record payment/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Edit payment/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Delete payment/ })).not.toBeInTheDocument();
+    (useTripEditAccess as ReturnType<typeof vi.fn>).mockReturnValue({ canEdit: true, isLoading: false });
   });
 
   it('SUP-012: refuses the same person on both sides without calling the API', async () => {
