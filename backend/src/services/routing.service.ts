@@ -77,6 +77,11 @@ class RoutingService {
   private readonly API_URL = config.openRouteService.url ?? 'https://api.openrouteservice.org';
   private readonly CACHE_DAYS = 30; // Cache routes for 30 days
 
+  /** True when an OpenRouteService API key is configured (routed results are possible). */
+  hasApiKey(): boolean {
+    return !!this.API_KEY && this.API_KEY.trim().length > 0;
+  }
+
   /**
    * Calculate route distance and duration between two points
    * Falls back to Haversine formula if routing service is unavailable

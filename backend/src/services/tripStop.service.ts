@@ -2,11 +2,16 @@ import prisma from '../config/database';
 import { AppError } from '../errors/errors';
 import { convertDecimals } from './_shared/decimalConversion';
 import { haversineMeters } from './_shared/vendored/geo';
+import routingService from './routing.service';
 import { verifyEntityInTrip, verifyTripAccessWithPermission } from './_shared/tripAccess';
 import {
   CreateTripStopInput,
   UpdateTripStopInput,
   ReorderTripStopsInput,
+  LegProfile,
+  TripStopLeg,
+  FLIGHT_LEG_THRESHOLD_KM,
+  TripStopLegsResult,
 } from '../types/tripStop.types';
 
 async function findInTrip(stopId: number, tripId: number) {
@@ -57,6 +62,42 @@ function assertNearLocation(
   }
 }
 
+/** Legs longer than this (straight-line) are not sent to the router. Flight legs (FLIGHT_LEG_THRESHOLD_KM) are skipped sooner, so this is only a safety cap. */
+const MAX_ROUTED_LEG_KM = 2500;
+/** At most this many uncached OpenRouteService requests in flight at once (the free tier is rate limited). */
+const LEG_CONCURRENCY = 3;
+
+interface StopPoint {
+  id: number;
+  latitude: number;
+  longitude: number;
+}
+
+function straightLineLeg(from: StopPoint, to: StopPoint, km: number): TripStopLeg {
+  return {
+    fromStopId: from.id,
+    toStopId: to.id,
+    mode: km >= FLIGHT_LEG_THRESHOLD_KM ? 'flight' : 'drive',
+    distanceKm: km,
+    durationMinutes: null,
+    routed: false,
+  };
+}
+
+/** Runs `fn` over `items` with a bounded number in flight; results keep the input order. */
+async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 /**
  * The ordered route plan of a trip (Multi-City Trip Planner). Reads need 'view',
  * every write needs 'edit'. Positions are always 0..n-1 with no gaps.
@@ -67,6 +108,61 @@ class TripStopService {
     return convertDecimals(
       await prisma.tripStop.findMany({ where: { tripId }, orderBy: { position: 'asc' } })
     );
+  }
+
+  /**
+   * Road distance and time between each pair of consecutive stops (view access). Uses the
+   * shared RoutingService, so routes come from its 30-day database cache before any
+   * OpenRouteService call. A leg that cannot be routed (no API key, ORS error or rate limit,
+   * or too far apart) is returned as a straight-line leg with `routed: false`; a flight leg (straight-line distance of FLIGHT_LEG_THRESHOLD_KM or more) is never routed and has `mode: 'flight'` and no duration; one bad leg
+   * never fails the response.
+   */
+  async getLegs(userId: number, tripId: number, profile: LegProfile): Promise<TripStopLegsResult> {
+    await verifyTripAccessWithPermission(userId, tripId, 'view');
+    const rows = await prisma.tripStop.findMany({
+      where: { tripId },
+      orderBy: { position: 'asc' },
+      select: { id: true, latitude: true, longitude: true },
+    });
+    const stops: StopPoint[] = rows.map((r) => ({
+      id: r.id,
+      latitude: Number(r.latitude),
+      longitude: Number(r.longitude),
+    }));
+    const pairs = stops.slice(1).map((to, i) => ({ from: stops[i], to }));
+    const canRoute = routingService.hasApiKey();
+
+    const legs = await mapWithConcurrency<{ from: StopPoint; to: StopPoint }, TripStopLeg>(
+      pairs,
+      LEG_CONCURRENCY,
+      async ({ from, to }) => {
+        const km = haversineMeters(from, to) / 1000;
+        if (km === 0) {
+          // The same place twice: nothing to route, and the answer is exact.
+          return { fromStopId: from.id, toStopId: to.id, mode: 'drive', distanceKm: 0, durationMinutes: 0, routed: true };
+        }
+        // A flight leg is never routed (no ORS call) and carries no time estimate.
+        if (km >= FLIGHT_LEG_THRESHOLD_KM || !canRoute || km > MAX_ROUTED_LEG_KM) {
+          return straightLineLeg(from, to, km);
+        }
+        try {
+          const route = await routingService.calculateRoute(from, to, profile);
+          if (route.source !== 'route') return straightLineLeg(from, to, km);
+          return {
+            fromStopId: from.id,
+            toStopId: to.id,
+            mode: 'drive',
+            distanceKm: route.distance,
+            durationMinutes: route.duration,
+            routed: true,
+          };
+        } catch {
+          return straightLineLeg(from, to, km);
+        }
+      }
+    );
+
+    return { profile, legs };
   }
 
   async createStop(userId: number, tripId: number, data: CreateTripStopInput) {

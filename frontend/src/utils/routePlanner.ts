@@ -40,33 +40,26 @@ export function routeLengthKm(points: readonly GeoPoint[]): number {
 
 export type TravelMode = 'drive' | 'flight';
 
-export interface TravelEstimate {
-  mode: TravelMode;
-  minutes: number;
-}
+/** A flight leg has no time estimate (minutes is null); a drive leg has a rough one. */
+export type TravelEstimate = { mode: 'drive'; minutes: number } | { mode: 'flight'; minutes: null };
 
 /** At or above this straight-line distance the estimate assumes a flight. */
 export const FLIGHT_THRESHOLD_KM = 600;
 const DRIVE_DETOUR_FACTOR = 1.3; // roads are longer than the straight line
 const DRIVE_KMH = 70;
-const FLIGHT_KMH = 800;
-const FLIGHT_OVERHEAD_MIN = 150; // airport transfers, check-in, boarding
+
+/** A rough driving time from the straight-line distance. An estimate, not a routing result. */
+export function estimateDriveMinutes(distanceKm: number): number {
+  return Math.round(((distanceKm * DRIVE_DETOUR_FACTOR) / DRIVE_KMH) * 60);
+}
 
 /**
- * A rough door-to-door time from the straight-line distance alone. It is an estimate,
- * not a routing result: the UI must label it as one.
+ * Classify a leg from its straight-line distance. A drive gets a rough time estimate; a
+ * flight gets none (airport time and schedules cannot be guessed from distance).
  */
 export function estimateTravel(distanceKm: number): TravelEstimate {
-  if (distanceKm >= FLIGHT_THRESHOLD_KM) {
-    return {
-      mode: 'flight',
-      minutes: Math.round((distanceKm / FLIGHT_KMH) * 60 + FLIGHT_OVERHEAD_MIN),
-    };
-  }
-  return {
-    mode: 'drive',
-    minutes: Math.round(((distanceKm * DRIVE_DETOUR_FACTOR) / DRIVE_KMH) * 60),
-  };
+  if (distanceKm >= FLIGHT_THRESHOLD_KM) return { mode: 'flight', minutes: null };
+  return { mode: 'drive', minutes: estimateDriveMinutes(distanceKm) };
 }
 
 /** "45 min", "3 h", "3 h 20 min". */

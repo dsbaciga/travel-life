@@ -3,6 +3,7 @@ import {
   createTripStopSchema,
   updateTripStopSchema,
   reorderTripStopsSchema,
+  tripStopLegsQuerySchema,
 } from '../types/tripStop.types';
 import { createCrudController } from '../prisma/crudHelpers';
 import { parseId } from '../http/parseId';
@@ -19,6 +20,14 @@ export const tripStopController = createCrudController({
     getStopsByTrip: {
       method: 'getStopsByTrip',
       buildArgs: (userId, req) => [userId, parseId(req.params.tripId, 'tripId')],
+    },
+    getLegs: {
+      method: 'getLegs',
+      buildArgs: (userId, req) => [
+        userId,
+        parseId(req.params.tripId, 'tripId'),
+        tripStopLegsQuerySchema.parse(req.query).profile,
+      ],
     },
     updateStop: {
       method: 'updateStop',

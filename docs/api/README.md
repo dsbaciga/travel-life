@@ -330,6 +330,21 @@ Response: `{ dryRun, total, valid, invalid, excluded, created, rows: [{ index, s
 
 Rules worth knowing: times without an offset are wall-clock times in the row timezone, else the trip timezone, else the user timezone (never UTC unless nothing is set); `YYYY-MM-DD HH:mm` and ISO 8601 are accepted and `03/04/2026` is rejected; costs are dot-decimal strings such as `1234.50`; address-only locations are imported without coordinates and are not geocoded; no OpenStreetMap opening-hours lookup is made during import.
 
+### Trip Stops / Route Planner (`/api/trips/:tripId/stops`)
+
+The ordered stops of the Multi-City Trip Planner. Reads need view access, writes need edit access.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | List the stops in route order | Yes |
+| POST | `/` | Append a stop (free place or from a saved place) | Yes |
+| GET | `/legs?profile=driving-car` | Road distance and time between consecutive stops | Yes |
+| PUT | `/reorder` | Reorder; body is the full ordered `stopIds` | Yes |
+| PUT | `/:id` | Update a stop | Yes |
+| DELETE | `/:id` | Delete a stop | Yes |
+
+`GET /legs` returns `{ profile, legs: [{ fromStopId, toStopId, mode, distanceKm, durationMinutes, routed }] }`, one entry per consecutive pair (stops minus one). `profile` is `driving-car` (default), `cycling-regular` or `foot-walking`. It uses `routing.service` and its 30-day route cache; `routed: true` means a road route (fresh or cached). `mode` is `flight` when the straight-line distance is 600 km or more (`FLIGHT_LEG_THRESHOLD_KM` in `tripStop.types.ts`), otherwise `drive`. A flight leg is never sent to ORS or the route cache and comes back with `routed: false`, the straight-line `distanceKm` and `durationMinutes: null` (no time estimate, which also saves rate-limited calls). A drive leg that cannot be routed (no `OPENROUTESERVICE_API_KEY`, an ORS error or rate limit, or a leg over 2,500 km straight-line) comes back with `routed: false`, the straight-line `distanceKm` and `durationMinutes: null`; one failed leg never fails the request. At most three uncached ORS requests run at once.
+
 ### Entity Links (`/api/trips/:tripId/links`)
 
 Links connect any two entities (photos, locations, activities, lodging, transportation, journal entries, albums) within a trip.
