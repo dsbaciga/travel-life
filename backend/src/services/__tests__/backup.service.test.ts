@@ -506,6 +506,48 @@ describe('BackupService', () => {
       expect(JSON.stringify(result)).not.toMatch(/base64/i);
     });
 
+    it('BKP-SET-001: exports settlement payments by person name, the owner without one', async () => {
+      mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
+      mockPrisma.trip.findUnique.mockResolvedValue({
+        id: 1,
+        userId: 1,
+        title: 'Split Trip',
+        locations: [], photos: [], activities: [], transportation: [], lodging: [],
+        journalEntries: [], photoAlbums: [], weatherData: [], tagAssignments: [],
+        companionAssignments: [], checklists: [], languages: [], bookingDeadlines: [],
+        settlements: [
+          {
+            amount: 25.5,
+            currency: 'EUR',
+            date: new Date('2026-05-03T00:00:00Z'),
+            notes: 'Cash',
+            fromCompanion: { name: 'Alice', isMyself: false, linkedUserId: null },
+            toCompanion: { name: 'Me', isMyself: true, linkedUserId: 1 },
+          },
+        ],
+      });
+
+      const result = await createBackup(1);
+
+      const query = mockPrisma.trip.findUnique.mock.calls[0][0] as {
+        include: { settlements: { select: Record<string, unknown> } };
+      };
+      expect(query.include.settlements.select).toMatchObject({ amount: true, currency: true, date: true });
+      expect(result.trips[0].settlements).toEqual([
+        expect.objectContaining({
+          fromIsOwner: false,
+          fromCompanionName: 'Alice',
+          toIsOwner: true,
+          toCompanionName: null,
+          amount: 25.5,
+          currency: 'EUR',
+          notes: 'Cash',
+        }),
+      ]);
+      // The people are never exported by id.
+      expect(JSON.stringify(result.trips[0].settlements)).not.toMatch(/CompanionId/);
+    });
+
     it('BKP-005: includes location categories', async () => {
       const result = await createBackup(1);
 
@@ -601,7 +643,7 @@ describe('BackupService', () => {
       expect(result.checklists).toHaveLength(0);
     });
 
-    it('BKP-012: exports v1.9.0 fields (incl. activity/lodging locationId) (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
+    it('BKP-012: exports v1.10.0 fields (incl. activity/lodging locationId) (expenses, emergencyInfo, unfiledSavedLinks, FX snapshots, user/companion/trip fields)', async () => {
       mockPrisma.trip.findMany.mockResolvedValueOnce([{ id: 1 }]);
       mockPrisma.trip.findUnique.mockResolvedValue(withTripBookingCosts({
         id: 1,
@@ -760,7 +802,7 @@ describe('BackupService', () => {
 
       const result = await createBackup(1);
 
-      expect(result.version).toBe('1.9.0');
+      expect(result.version).toBe('1.10.0');
       expect(result.user.dietaryPreferences).toEqual(['gluten-free']);
       expect(result.user.useCustomMapStyle).toBe(false);
       expect(result.user.baseCurrency).toBe('USD');

@@ -174,9 +174,12 @@ export const companionService = {
           OR: [{ paidByCompanionId: companionId }, { splits: { some: { companionId } } }],
         },
       });
-      if (used > 0) {
+      const settled = await prisma.tripSettlement.count({
+        where: { OR: [{ fromCompanionId: companionId }, { toCompanionId: companionId }] },
+      });
+      if (used + settled > 0) {
         throw new AppError(
-          'Your "Myself" companion is used in expense payers or splits and cannot be deleted',
+          'Your "Myself" companion is used in expense payers, splits or settlement payments and cannot be deleted',
           400
         );
       }

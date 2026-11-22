@@ -20,7 +20,9 @@ import { z } from 'zod';
 //          of a booking carries `booking: { type, id }` (id = the booking's id in this file) so its
 //          payer, splits and receipt survive; restore creates one cost row per booking. Older files
 //          (cost on the booking, no linked expenses) restore into the same shape.
-export const BACKUP_VERSION = '1.9.0';
+// v1.10.0 - Trips carry `settlements`: recorded settle-up payments between the owner and companions
+//          (people by name, like expense splits). Older files simply have none.
+export const BACKUP_VERSION = '1.10.0';
 
 // =============================================================================
 // Shared/Reusable Schemas
@@ -591,6 +593,19 @@ const BackupExpenseSchema = z.object({
     .optional(),
 });
 
+// Settlement payment schema (added in v1.10.0). People travel by NAME like expense splits do;
+// a person with no companion name is the trip owner.
+const BackupSettlementSchema = z.object({
+  fromIsOwner: z.boolean().optional(),
+  fromCompanionName: z.string().nullable().optional(),
+  toIsOwner: z.boolean().optional(),
+  toCompanionName: z.string().nullable().optional(),
+  amount: z.union([z.number(), z.string()]),
+  currency: z.string(),
+  date: FlexibleDateSchema,
+  notes: z.string().nullable().optional(),
+});
+
 // Trip emergency info schema (added in v1.6.0)
 const BackupEmergencyInfoSchema = z.object({
   insuranceProvider: z.string().nullable().optional(),
@@ -675,6 +690,8 @@ const BackupTripSchema = z.object({
 
   // Expenses and emergency info (added in v1.6.0)
   expenses: z.array(BackupExpenseSchema).optional(),
+  // Settle-up payments (added in v1.10.0)
+  settlements: z.array(BackupSettlementSchema).optional(),
   emergencyInfo: BackupEmergencyInfoSchema.nullable().optional(),
 });
 

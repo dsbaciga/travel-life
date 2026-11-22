@@ -10,6 +10,7 @@
  * - ESP-006: getSettleUp excludes unconverted and unsplit expenses and reports them
  * - ESP-007: getParticipants lists the owner and non-self companions
  * - ESP-008: access control - edit permission is required to set a split
+ * - ESP-009: getSettleUp subtracts recorded settlements and lists unconvertible ones
  */
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
@@ -24,6 +25,7 @@ const mockPrisma = {
     update: jest.fn(),
   },
   tripExpenseSplit: { deleteMany: jest.fn() },
+  tripSettlement: { findMany: jest.fn() },
   tripCompanion: { findMany: jest.fn() },
   travelCompanion: { findMany: jest.fn(), findFirst: jest.fn() },
   $executeRaw: jest.fn(),
@@ -35,6 +37,11 @@ jest.mock('../../config/database', () => ({
   default: mockPrisma,
 }));
 
+jest.mock('../exchangeRate.service', () => {
+  const actual = jest.requireActual<typeof import('../exchangeRate.service')>('../exchangeRate.service');
+  return { __esModule: true, ...actual, default: { convert: jest.fn() } };
+});
+
 jest.mock('../expense.service', () => ({
   __esModule: true,
   default: {
@@ -45,6 +52,7 @@ jest.mock('../expense.service', () => ({
 
 import { Prisma } from '@prisma/client';
 import expenseService from '../expense.service';
+import exchangeRateService from '../exchangeRate.service';
 import expenseSplitService from '../expenseSplit.service';
 
 const mockSummary = expenseService.getBudgetSummary as jest.MockedFunction<
@@ -95,6 +103,7 @@ describe('ExpenseSplitService', () => {
     jest.clearAllMocks();
     stubTrip();
     stubParticipants();
+    mockPrisma.tripSettlement.findMany.mockResolvedValue([]);
     mockPrisma.tripExpense.findFirst.mockResolvedValue({ id: 1, tripId: 10, amount: D('100.00') });
     mockPrisma.tripExpense.findUniqueOrThrow.mockResolvedValue({
       id: 1,
@@ -401,6 +410,104 @@ describe('ExpenseSplitService', () => {
       mockPrisma.travelCompanion.findMany.mockResolvedValue([{ id: 77, name: 'Robin' }]);
       const result = await expenseSplitService.getSettleUp(1, 10);
       expect(result.transfers[0]).toMatchObject({ from: 'companion:77', fromLabel: 'Robin' });
+    });
+  });
+
+  describe('ESP-009: recorded settlements', () => {
+    const dinner = {
+      id: 1,
+      description: 'Dinner',
+      category: 'food',
+      amount: D('90.00'),
+      currency: 'USD',
+      exchangeRate: null,
+      baseAmount: null,
+      baseCurrency: null,
+      date: null,
+      paidByCompanionId: OWNER_COMPANION,
+      splits: [
+        { companionId: OWNER_COMPANION, amount: D('30.00'), percentage: null },
+        { companionId: 5, amount: D('30.00'), percentage: null },
+        { companionId: 6, amount: D('30.00'), percentage: null },
+      ],
+    };
+    const payment = (overrides: Record<string, unknown>) => ({
+      id: 1,
+      tripId: 10,
+      fromCompanionId: 5,
+      toCompanionId: OWNER_COMPANION,
+      amount: D('10.00'),
+      currency: 'USD',
+      date: new Date('2026-05-03T00:00:00.000Z'),
+      notes: null,
+      ...overrides,
+    });
+
+    beforeEach(() => {
+      mockSummary.mockResolvedValue({ currency: 'USD' } as Awaited<ReturnType<typeof expenseService.getBudgetSummary>>);
+      mockBase.mockImplementation(async (expense) => expense.amount);
+      mockPrisma.tripExpense.findMany.mockResolvedValue([dinner]);
+    });
+
+    it('subtracts a recorded payment so the suggested payments reflect what is still owed', async () => {
+      mockPrisma.tripSettlement.findMany.mockResolvedValue([payment({})]);
+
+      const result = await expenseSplitService.getSettleUp(1, 10);
+
+      expect(result.balances.find((b) => b.participant === 'companion:5')).toMatchObject({
+        settledOut: 10,
+        settledIn: 0,
+        net: -20,
+      });
+      expect(result.balances.find((b) => b.participant === 'owner')).toMatchObject({
+        settledIn: 10,
+        net: 50,
+      });
+      expect(result.transfers).toEqual([
+        { from: 'companion:6', fromLabel: 'Sam', to: 'owner', toLabel: 'dana', amount: 30 },
+        { from: 'companion:5', fromLabel: 'Alex', to: 'owner', toLabel: 'dana', amount: 20 },
+      ]);
+      expect(result.unconvertedSettlements).toEqual([]);
+      expect(result.isComplete).toBe(true);
+    });
+
+    it('converts a payment in another currency like an expense', async () => {
+      mockPrisma.tripSettlement.findMany.mockResolvedValue([payment({ currency: 'EUR', amount: D('20.00') })]);
+      (exchangeRateService.convert as jest.Mock).mockImplementation((async () => ({
+        exchangeRate: D('1.5'),
+        baseAmount: D('30.00'),
+        baseCurrency: 'USD',
+        precision: 'exact',
+      })) as never);
+
+      const result = await expenseSplitService.getSettleUp(1, 10);
+
+      // 20 EUR at 1.5 = 30 USD: Alex is square, only Sam still owes.
+      expect(result.transfers).toEqual([
+        { from: 'companion:6', fromLabel: 'Sam', to: 'owner', toLabel: 'dana', amount: 30 },
+      ]);
+    });
+
+    it('lists a payment with no exchange rate instead of guessing, and marks the result incomplete', async () => {
+      mockPrisma.tripSettlement.findMany.mockResolvedValue([payment({ id: 4, currency: 'XYZ', amount: D('20.00') })]);
+      (exchangeRateService.convert as jest.Mock).mockImplementation((async () => null) as never);
+
+      const result = await expenseSplitService.getSettleUp(1, 10);
+
+      expect(result.unconvertedSettlements).toEqual([
+        {
+          settlementId: 4,
+          from: 'companion:5',
+          fromLabel: 'Alex',
+          to: 'owner',
+          toLabel: 'dana',
+          currency: 'XYZ',
+          amount: 20,
+        },
+      ]);
+      expect(result.isComplete).toBe(false);
+      // The payment is left out, so Alex still owes the full share.
+      expect(result.transfers[0]).toMatchObject({ from: 'companion:5', amount: 30 });
     });
   });
 

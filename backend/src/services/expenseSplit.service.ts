@@ -4,10 +4,8 @@ import { AppError } from '../errors/errors';
 import { verifyTripAccessWithPermission } from './_shared/tripAccess';
 import { convertDecimals } from './_shared/decimalConversion';
 import {
-  OWNER_KEY,
   ShareEntry,
   SettleUpExpense,
-  companionKey,
   compareKeys,
   computeSettleUp,
   roundMoney,
@@ -18,7 +16,9 @@ import {
 import { expenseLinkedEntityInclude } from './_shared/bookingCost';
 import { payerKey, splitRowKey, withSplitFields } from './_shared/expenseSplitFields';
 import { ensureOwnerCompanionId, findOwnerCompanionId } from './_shared/ownerCompanion';
+import { companionIdOf, loadTripParticipants, participantLabels } from './_shared/tripParticipants';
 import expenseService from './expense.service';
+import tripSettlementService from './tripSettlement.service';
 import {
   ExpenseParticipant,
   SetExpenseSplitInput,
@@ -26,11 +26,6 @@ import {
 } from '../types/expenseSplit.types';
 
 const toNumber = (value: Prisma.Decimal): number => roundMoney(value).toNumber();
-
-/** Parses `owner` / `companion:<id>` into a companion id (null for the owner). */
-function companionIdOf(key: string): number | null {
-  return key === OWNER_KEY ? null : Number(key.slice('companion:'.length));
-}
 
 /**
  * Participant keys are `owner` or `companion:<id>`. In storage the owner is the TRIP OWNER's
@@ -148,8 +143,6 @@ class ExpenseSplitService {
     });
 
     const ownerCompanionId = await findOwnerCompanionId(prisma, access.trip.userId);
-    const participants = await this.loadParticipants(tripId, access.trip.userId);
-    const labels = new Map(participants.map((p) => [p.key, p.label]));
     const descriptions = new Map(rows.map((r) => [r.id, r.description]));
 
     const expenses: SettleUpExpense[] = [];
@@ -183,22 +176,15 @@ class ExpenseSplitService {
       });
     }
 
-    const result = computeSettleUp(expenses);
+    // Recorded payments between people reduce what is still owed (converted like expenses).
+    const settlements = await tripSettlementService.loadForSettleUp(tripId, ownerCompanionId, currency);
+    const result = computeSettleUp(expenses, settlements);
 
-    // A companion unlinked from the trip after being used in a split still has a name.
-    const unknownIds = result.balances
-      .map((b) => b.participant)
-      .filter((key) => !labels.has(key))
-      .map(companionIdOf)
-      .filter((id): id is number => id !== null);
-    if (unknownIds.length > 0) {
-      const named = await prisma.travelCompanion.findMany({
-        where: { id: { in: unknownIds } },
-        select: { id: true, name: true },
-      });
-      for (const c of named) labels.set(companionKey(c.id), c.name);
-    }
-    const labelOf = (key: string) => labels.get(key) ?? this.fallbackLabel(key);
+    const settlementById = new Map(settlements.map((st) => [st.id, st]));
+    const labelOf = await participantLabels(tripId, access.trip.userId, [
+      ...result.balances.map((b) => b.participant),
+      ...settlements.flatMap((st) => [st.from, st.to]),
+    ]);
     const ref = (id: number) => ({ expenseId: id, description: descriptions.get(id) ?? '' });
 
     return {
@@ -208,6 +194,8 @@ class ExpenseSplitService {
         label: labelOf(b.participant),
         paid: toNumber(b.paid),
         owed: toNumber(b.owed),
+        settledOut: toNumber(b.settledOut),
+        settledIn: toNumber(b.settledIn),
         net: toNumber(b.net),
       })),
       transfers: result.transfers.map((t) => ({
@@ -222,8 +210,27 @@ class ExpenseSplitService {
         currency: u.currency,
         amount: toNumber(u.amount),
       })),
+      unconvertedSettlements: result.unconvertedSettlementIds.flatMap((id) => {
+        const st = settlementById.get(id);
+        return st
+          ? [
+              {
+                settlementId: id,
+                from: st.from,
+                fromLabel: labelOf(st.from),
+                to: st.to,
+                toLabel: labelOf(st.to),
+                currency: st.currency,
+                amount: toNumber(st.amount),
+              },
+            ]
+          : [];
+      }),
       unsplit: result.unsplitExpenseIds.map(ref),
-      isComplete: result.unconverted.length === 0 && result.unsplitExpenseIds.length === 0,
+      isComplete:
+        result.unconverted.length === 0 &&
+        result.unconvertedSettlementIds.length === 0 &&
+        result.unsplitExpenseIds.length === 0,
     };
   }
 
@@ -283,30 +290,8 @@ class ExpenseSplitService {
     return convertDecimals(withSplitFields(expense, await findOwnerCompanionId(prisma, ownerId)));
   }
 
-  private fallbackLabel(key: string): string {
-    return key === OWNER_KEY ? 'Trip owner' : `Former companion #${companionIdOf(key)}`;
-  }
-
-  private async loadParticipants(tripId: number, ownerId: number): Promise<ExpenseParticipant[]> {
-    const [owner, links] = await Promise.all([
-      prisma.user.findUnique({ where: { id: ownerId }, select: { username: true } }),
-      prisma.tripCompanion.findMany({
-        where: { tripId, companion: { isMyself: false } },
-        select: { companion: { select: { id: true, name: true } } },
-        orderBy: { id: 'asc' },
-      }),
-    ]);
-
-    return [
-      { key: OWNER_KEY, label: owner?.username ?? 'Trip owner', kind: 'owner' },
-      ...links.map(
-        (link): ExpenseParticipant => ({
-          key: companionKey(link.companion.id),
-          label: link.companion.name,
-          kind: 'companion',
-        })
-      ),
-    ];
+  private loadParticipants(tripId: number, ownerId: number): Promise<ExpenseParticipant[]> {
+    return loadTripParticipants(tripId, ownerId);
   }
 }
 

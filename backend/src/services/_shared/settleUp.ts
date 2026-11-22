@@ -143,8 +143,21 @@ export interface Balance {
   paid: Prisma.Decimal;
   /** Total this participant's shares come to, in the base currency. */
   owed: Prisma.Decimal;
-  /** paid - owed. Positive = is owed money; negative = owes money. */
+  /** Settlement payments this participant has made, in the base currency. */
+  settledOut: Prisma.Decimal;
+  /** Settlement payments this participant has received, in the base currency. */
+  settledIn: Prisma.Decimal;
+  /** paid - owed + settledOut - settledIn. Positive = is owed money; negative = owes money. */
   net: Prisma.Decimal;
+}
+
+/** A recorded payment between two participants. */
+export interface SettlementPayment {
+  id: number;
+  from: string;
+  to: string;
+  /** The amount in the settlement (base) currency; null = could not be converted. */
+  baseAmount: Prisma.Decimal | null;
 }
 
 export interface Transfer {
@@ -164,6 +177,8 @@ export interface SettleUpResult {
   transfers: Transfer[];
   /** Split expenses that could not be converted; excluded from balances. */
   unconverted: SettleUpUnconverted[];
+  /** Recorded settlement payments that could not be converted; excluded from balances. */
+  unconvertedSettlementIds: number[];
   /** Expenses with no payer, no shares, or shares that do not add up; excluded. */
   unsplitExpenseIds: number[];
 }
@@ -226,12 +241,22 @@ export function minimizeTransfers(balances: ReadonlyArray<Balance>): Transfer[] 
  * still 50/50), with the cent remainder placed deterministically by
  * `allocateProRata`. The payer is credited the whole base amount. Because each
  * expense's shares sum to its base amount exactly, balances sum to zero exactly.
+ *
+ * A recorded settlement (A paid B) moves A's net up and B's net down by the same amount, so
+ * balances still sum to zero and the suggested payments only cover what is still owed. One that
+ * could not be converted is reported and left out rather than guessed at.
  */
-export function computeSettleUp(expenses: ReadonlyArray<SettleUpExpense>): SettleUpResult {
+export function computeSettleUp(
+  expenses: ReadonlyArray<SettleUpExpense>,
+  settlements: ReadonlyArray<SettlementPayment> = []
+): SettleUpResult {
   const paid = new Map<string, Prisma.Decimal>();
   const owed = new Map<string, Prisma.Decimal>();
   const unconverted: SettleUpUnconverted[] = [];
   const unsplitExpenseIds: number[] = [];
+  const settledOut = new Map<string, Prisma.Decimal>();
+  const settledIn = new Map<string, Prisma.Decimal>();
+  const unconvertedSettlementIds: number[] = [];
 
   const add = (map: Map<string, Prisma.Decimal>, key: string, amount: Prisma.Decimal) => {
     map.set(key, (map.get(key) ?? ZERO).add(amount));
@@ -266,17 +291,38 @@ export function computeSettleUp(expenses: ReadonlyArray<SettleUpExpense>): Settl
     for (const share of baseShares) add(owed, share.participant, share.amount);
   }
 
-  const participants = [...new Set([...paid.keys(), ...owed.keys()])].sort(compareKeys);
+  for (const settlement of settlements) {
+    if (settlement.baseAmount === null) {
+      unconvertedSettlementIds.push(settlement.id);
+      continue;
+    }
+    add(settledOut, settlement.from, settlement.baseAmount);
+    add(settledIn, settlement.to, settlement.baseAmount);
+  }
+
+  const participants = [
+    ...new Set([...paid.keys(), ...owed.keys(), ...settledOut.keys(), ...settledIn.keys()]),
+  ].sort(compareKeys);
   const balances: Balance[] = participants.map((participant) => {
     const p = paid.get(participant) ?? ZERO;
     const o = owed.get(participant) ?? ZERO;
-    return { participant, paid: p, owed: o, net: p.sub(o) };
+    const out = settledOut.get(participant) ?? ZERO;
+    const received = settledIn.get(participant) ?? ZERO;
+    return {
+      participant,
+      paid: p,
+      owed: o,
+      settledOut: out,
+      settledIn: received,
+      net: p.sub(o).add(out).sub(received),
+    };
   });
 
   return {
     balances,
     transfers: minimizeTransfers(balances),
     unconverted,
+    unconvertedSettlementIds,
     unsplitExpenseIds,
   };
 }

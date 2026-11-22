@@ -93,7 +93,11 @@ export type SettleUpBalance = {
   label: string;
   paid: number;
   owed: number;
-  /** paid - owed; positive means this person is owed money. */
+  /** Recorded settlement payments this person has made. */
+  settledOut: number;
+  /** Recorded settlement payments this person has received. */
+  settledIn: number;
+  /** paid - owed + settledOut - settledIn; positive means this person is still owed money. */
   net: number;
 };
 
@@ -114,10 +118,49 @@ export type SettleUpSummary = {
   transfers: SettleUpTransfer[];
   /** Split expenses with no exchange rate — excluded from balances. */
   unconverted: Array<SettleUpExpenseRef & { currency: string | null; amount: number }>;
+  /** Recorded payments with no exchange rate — excluded from balances. */
+  unconvertedSettlements: Array<{
+    settlementId: number;
+    from: ParticipantKey;
+    fromLabel: string;
+    to: ParticipantKey;
+    toLabel: string;
+    currency: string;
+    /** In `currency`, not the settle-up currency. */
+    amount: number;
+  }>;
   /** Expenses with no payer or split — excluded from balances. */
   unsplit: SettleUpExpenseRef[];
   isComplete: boolean;
 };
+
+/** A recorded payment from one person to another that settles split expenses. */
+export type TripSettlement = {
+  id: number;
+  tripId: number;
+  from: ParticipantKey;
+  fromLabel: string;
+  to: ParticipantKey;
+  toLabel: string;
+  amount: number;
+  currency: string;
+  /** Calendar date, YYYY-MM-DD. */
+  date: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateSettlementInput = {
+  from: ParticipantKey;
+  to: ParticipantKey;
+  amount: number;
+  currency: string;
+  date: string;
+  notes?: string | null;
+};
+
+export type UpdateSettlementInput = Partial<CreateSettlementInput>;
 
 export type CreateExpenseInput = {
   description: string;
