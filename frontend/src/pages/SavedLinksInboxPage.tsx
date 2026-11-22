@@ -16,6 +16,7 @@ import { useBulkSelection } from "../hooks/useBulkSelection";
 import BulkActionBar from "../components/BulkActionBar";
 import PageHeader from "../components/PageHeader";
 import PendingImportsPanel from "../components/PendingImportsPanel";
+import ImportsInProgressPanel from "../components/ImportsInProgressPanel";
 import EmptyState from "../components/EmptyState";
 import { ListItemSkeleton } from "../components/SkeletonLoader";
 
@@ -187,6 +188,7 @@ export default function SavedLinksInboxPage() {
         subtitle="Saved links and imported bookings that aren't on a trip yet"
       />
 
+      <ImportsInProgressPanel />
       <PendingImportsPanel />
 
       {/* Quick add */}

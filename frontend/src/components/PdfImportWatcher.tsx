@@ -3,7 +3,7 @@ import { useQueries, useQueryClient, type Query } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import pdfImportService from '../services/pdfImport.service';
-import { getApiErrorMessage } from '../lib/errors';
+import { useCancelPdfImport } from '../hooks/useCancelPdfImport';
 import { useAuthStore } from '../store/authStore';
 import {
   usePdfImportTrackerStore,
@@ -22,11 +22,16 @@ import {
   showPdfImportBanner,
 } from '../utils/pdfImportNotifications';
 
+/** How long the "Reading…" / "Waiting to read…" banner stays up. */
+export const PDF_IMPORT_STARTED_BANNER_MS = 5000;
+
 /**
- * Watches PDF uploads that are still parsing. Each gets a "Reading…" banner
- * with a Cancel button, replaced in place by a result banner (with a Review
- * link) when the server finishes. Mounted once at the app root so it keeps
- * running while the user moves around; renders nothing itself.
+ * Watches PDF uploads that are still parsing. Each gets a short-lived
+ * "Reading…" banner with a Cancel button; after that the Inbox tab's spinner and
+ * the Inbox page's "Reading PDFs" list carry the progress, so a long read does
+ * not cover the page. A result banner (with a Review link) pops when the server
+ * finishes. Mounted once at the app root so it keeps running while the user
+ * moves around; renders nothing itself.
  */
 export default function PdfImportWatcher() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -36,9 +41,9 @@ export default function PdfImportWatcher() {
   // Imports already given their result banner (or cancelled). Guards against a
   // second banner while the untrack re-render is in flight.
   const settled = useRef(new Set<number>());
-  // What each import's in-progress banner currently says ("waiting-2",
-  // "reading"), so it is only re-shown when that changes.
-  const announced = useRef(new Map<number, string>());
+  // Imports whose "Reading…" banner has been shown. It is shown once: later
+  // changes (from waiting in line to being read) show on the Inbox instead.
+  const announced = useRef(new Set<number>());
   // When each import was first seen being read; the give-up clock starts there,
   // not at upload, since a PDF may wait in line behind other users first.
   const readingSince = useRef(new Map<number, number>());
@@ -56,24 +61,14 @@ export default function PdfImportWatcher() {
     })),
   });
 
+  const cancelImport = useCancelPdfImport();
   const cancel = useCallback(
     async (item: TrackedPdfImport) => {
       if (settled.current.has(item.id)) return;
       settled.current.add(item.id);
-      try {
-        // Deleting an import takes it out of the server's queue, aborting the
-        // LLM request if it is being read so the next PDF in line can start.
-        await pdfImportService.deletePdfImport(item.id);
-        untrack(item.id);
-        queryClient.removeQueries({ queryKey: ['pdfImport', item.id] });
-        toast.dismiss(`pdf-import-${item.id}`);
-        toast.success(`Stopped reading ${item.name}`);
-      } catch (err) {
-        settled.current.delete(item.id);
-        toast.error(getApiErrorMessage(err, `Couldn't cancel ${item.name}`));
-      }
+      if (!(await cancelImport(item))) settled.current.delete(item.id);
     },
-    [untrack, queryClient]
+    [cancelImport]
   );
 
   useEffect(() => {
@@ -106,14 +101,12 @@ export default function PdfImportWatcher() {
 
       if (!finished && !gaveUp) {
         // Wait for the first answer, so a stale entry never flashes a banner.
-        const phase = ahead > 0 ? `waiting-${ahead}` : 'reading';
-        if (data && announced.current.get(item.id) !== phase) {
-          announced.current.set(item.id, phase);
-          // Same toast id each time, so the banner updates in place.
+        if (data && !announced.current.has(item.id)) {
+          announced.current.add(item.id);
           showPdfImportBanner(
             item.id,
             describeImportInProgress(item.name, () => void cancel(item), ahead),
-            { duration: Infinity }
+            { duration: PDF_IMPORT_STARTED_BANNER_MS }
           );
         }
         return;
