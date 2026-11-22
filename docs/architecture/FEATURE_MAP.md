@@ -36,7 +36,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Feature | Backend | Frontend |
 | ------- | ------- | -------- |
 | Expenses, budget, multi-currency (a booking's cost is its expense row: read/write it through `services/_shared/bookingCost` — `costExpenseInclude` + `hydrateBookingCost` on reads, `buildBookingCostCreate` on create, `syncBookingCost` on update, `withLinkedEntity` for the expense list) | `expense`, `exchangeRate`, `receipt`, `services/_shared/bookingCost`, `services/_shared/expenseRescale` | `BudgetManager`, `CostCurrencyFields`, `CurrencySelect`, `utils/formatCurrency`, `constants/currencies` |
-| Expense splitting and settle-up | `expenseSplit`, `services/_shared/settleUp`, `expenseSplitFields`, `services/_shared/ownerCompanion` (the trip owner = their `isMyself` companion: `findOwnerCompanionId`, `ensureOwnerCompanionId`) | `ExpenseSplitFields`, `SettleUpPanel` |
+| Expense splitting and settle-up | `expenseSplit`, `tripSettlement` (recorded payments), `services/_shared/tripParticipants` (owner + companions, labels), `services/_shared/settleUp`, `expenseSplitFields`, `services/_shared/ownerCompanion` (the trip owner = their `isMyself` companion: `findOwnerCompanionId`, `ensureOwnerCompanionId`) | `ExpenseSplitFields`, `SettleUpPanel`, `SettlementFormModal` |
 | Receipt scan (LLM) and receipt images | `receiptScan`, `expenseReceipt`, `llm` (`chatWithImage`) | `ReceiptScanButton`, `ReceiptViewer` |
 | Loyalty programs / membership numbers | `loyaltyProgram` | `LoyaltyProgramManager`, `LoyaltyProgramField` |
 | Booking deadlines | `bookingDeadline` | `DeadlinesManager`, `widgets/DeadlinesWidget` |

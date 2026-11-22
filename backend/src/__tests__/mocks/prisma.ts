@@ -125,6 +125,7 @@ export const mockPrismaClient = {
   // TripExpense model (a booking's cost is its linked expense row)
   tripExpense: createMockModelDelegate(),
   tripExpenseSplit: createMockModelDelegate(),
+  tripSettlement: createMockModelDelegate(),
 
   // Transaction support
   $transaction: jest.fn((callback: unknown) => {
@@ -197,6 +198,7 @@ export const resetPrismaMocks = (): void => {
   resetModel(mockPrismaClient.entityLink);
   resetModel(mockPrismaClient.tripExpense);
   resetModel(mockPrismaClient.tripExpenseSplit);
+  resetModel(mockPrismaClient.tripSettlement);
   // Deleting a booking looks up the receipt files of its cost row first: none by default.
   mockPrismaClient.tripExpense.findMany.mockResolvedValue([]);
 

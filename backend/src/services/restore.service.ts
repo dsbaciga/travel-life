@@ -59,7 +59,7 @@ interface RestoreStats {
  *          booking's own fields, which the linked expense (payer, splits, receipt) then updates.
  *          Files up to 1.8.0 have the cost on the booking only and restore into the same shape.
  */
-const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.8.0', '1.9.0'];
+const SUPPORTED_BACKUP_VERSIONS = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.8.0', '1.9.0', '1.10.0'];
 
 /**
  * Second layer of defence for file paths coming out of an uploaded backup.
@@ -1211,6 +1211,44 @@ export async function restoreFromBackup(
                 },
               });
             }
+          }
+
+          // Import settlement payments (v1.10.0). People are matched to the restored companions by
+          // name; a payment that no longer names two distinct people is skipped rather than guessed at.
+          for (const settlementData of tripData.settlements || []) {
+            const personId = async (isOwner: boolean | undefined, name: string | null | undefined) => {
+              if (isOwner || !name) {
+                if (myselfCompanionId === null) myselfCompanionId = await ensureOwnerCompanionId(tx, userId);
+                return myselfCompanionId;
+              }
+              return companionMap.get(name);
+            };
+            const fromCompanionId = await personId(settlementData.fromIsOwner, settlementData.fromCompanionName);
+            const toCompanionId = await personId(settlementData.toIsOwner, settlementData.toCompanionName);
+            const amount = new Prisma.Decimal(settlementData.amount);
+            const amountValue = Number(settlementData.amount);
+            const date = settlementData.date ? new Date(settlementData.date) : null;
+            if (
+              fromCompanionId === undefined ||
+              toCompanionId === undefined ||
+              fromCompanionId === toCompanionId ||
+              !(amountValue > 0) ||
+              !date ||
+              Number.isNaN(date.getTime())
+            ) {
+              continue;
+            }
+            await tx.tripSettlement.create({
+              data: {
+                tripId: trip.id,
+                fromCompanionId,
+                toCompanionId,
+                amount,
+                currency: settlementData.currency.toUpperCase().slice(0, 3),
+                date,
+                notes: settlementData.notes ?? null,
+              },
+            });
           }
 
           // Import trip emergency info (added in v1.6.0)

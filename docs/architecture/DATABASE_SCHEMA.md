@@ -398,6 +398,24 @@ One participant's share of an expense, in the expense's own currency (migration 
 
 A participant appears at most once per expense (unique index); the shares adding up to the amount is enforced in `expenseSplit.service.ts`. Deleting the `isMyself` companion is refused (400) while any expense references it.
 
+### TripSettlement
+
+A payment one person made to another to settle up a trip's split expenses (migration `20261127000000_add_trip_settlements`, table `trip_settlements`). Settle-up stays a calculation: recorded payments are subtracted from the net balances.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Int | Primary key |
+| tripId | Int | Trip foreign key (cascade) |
+| fromCompanionId | Int | Who paid (cascade). The trip owner is their `isMyself` companion, exactly as in `TripExpenseSplit` |
+| toCompanionId | Int | Who was paid (cascade) |
+| amount | Decimal(10,2) | Greater than 0 (CHECK `trip_settlements_amount_positive`) |
+| currency | String(3) | ISO 4217 code of `amount` |
+| date | Date | Calendar date of the payment (`@db.Date`) |
+| notes | Text? | Optional note |
+| createdAt / updatedAt | DateTime | Timestamps |
+
+`from` and `to` must differ (CHECK `trip_settlements_distinct_people`). Like splits, a payment survives its companion being unlinked from the trip (settle-up still names them) and is deleted with the companion; deleting the `isMyself` companion is refused (400) while any payment references it. Indexes: `(trip_id, date)`, `from_companion_id`, `to_companion_id`.
+
 ## Loyalty Programs
 
 ### LoyaltyProgram

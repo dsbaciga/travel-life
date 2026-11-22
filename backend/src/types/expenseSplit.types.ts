@@ -44,7 +44,11 @@ export interface SettleUpBalance {
   paid: number;
   /** Share of the split expenses, in `currency`. */
   owed: number;
-  /** paid - owed; positive = is owed money. */
+  /** Recorded settlement payments this person has made, in `currency`. */
+  settledOut: number;
+  /** Recorded settlement payments this person has received, in `currency`. */
+  settledIn: number;
+  /** paid - owed + settledOut - settledIn; positive = is still owed money. */
   net: number;
 }
 
@@ -66,6 +70,17 @@ export interface SettleUpUnconvertedItem extends SettleUpExpenseRef {
   amount: number;
 }
 
+export interface SettleUpUnconvertedSettlement {
+  settlementId: number;
+  from: string;
+  fromLabel: string;
+  to: string;
+  toLabel: string;
+  currency: string;
+  /** In `currency`, not the settle-up currency. */
+  amount: number;
+}
+
 export interface SettleUpSummary {
   /** Currency every figure below is expressed in. */
   currency: string;
@@ -73,6 +88,8 @@ export interface SettleUpSummary {
   transfers: SettleUpTransfer[];
   /** Split expenses with no exchange rate; excluded from balances and transfers. */
   unconverted: SettleUpUnconvertedItem[];
+  /** Recorded payments with no exchange rate; excluded from balances and transfers. */
+  unconvertedSettlements: SettleUpUnconvertedSettlement[];
   /** Expenses with no payer / split (or a split that no longer adds up); excluded. */
   unsplit: SettleUpExpenseRef[];
   /** True when nothing relevant was left out. */

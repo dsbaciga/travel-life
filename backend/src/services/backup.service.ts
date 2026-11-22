@@ -245,6 +245,27 @@ function transformTripToBackupFormat(trip: Record<string, unknown>): BackupTrip 
         })),
       };
     }) as BackupTrip['expenses'],
+    // Settlement payments (v1.10.0): the same name-based people as expense splits.
+    settlements: (
+      trip.settlements as
+        | Array<
+            {
+              fromCompanion: BackupExpenseCompanion | null;
+              toCompanion: BackupExpenseCompanion | null;
+            } & Record<string, unknown>
+          >
+        | undefined
+    )?.map(({ fromCompanion, toCompanion, ...settlement }) => {
+      const isOwner = (c: BackupExpenseCompanion | null) =>
+        c != null && c.isMyself && c.linkedUserId === trip.userId;
+      return {
+        ...settlement,
+        fromIsOwner: isOwner(fromCompanion),
+        fromCompanionName: isOwner(fromCompanion) ? null : fromCompanion?.name ?? null,
+        toIsOwner: isOwner(toCompanion),
+        toCompanionName: isOwner(toCompanion) ? null : toCompanion?.name ?? null,
+      };
+    }) as BackupTrip['settlements'],
     emergencyInfo: (trip.emergencyInfo as BackupTrip['emergencyInfo']) ?? null,
   };
 }
@@ -546,6 +567,17 @@ async function fetchTripWithRelatedData(tripId: number): Promise<Record<string, 
           receiptMimeType: true,
           receiptSizeBytes: true,
           receiptUploadedAt: true,
+        },
+      },
+      settlements: {
+        orderBy: { id: 'asc' },
+        select: {
+          amount: true,
+          currency: true,
+          date: true,
+          notes: true,
+          fromCompanion: { select: expenseCompanionSelect },
+          toCompanion: { select: expenseCompanionSelect },
         },
       },
       emergencyInfo: {

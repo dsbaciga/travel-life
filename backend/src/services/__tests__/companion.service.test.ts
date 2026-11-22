@@ -64,6 +64,9 @@ const mockPrisma = {
   tripExpense: {
     count: jest.fn(),
   },
+  tripSettlement: {
+    count: jest.fn(),
+  },
 };
 
 jest.mock('../../config/database', () => ({
@@ -417,6 +420,16 @@ describe('CompanionService', () => {
     it('refuses (400) while an expense names it as payer or split participant', async () => {
       mockPrisma.travelCompanion.findFirst.mockResolvedValue({ ...mockCompanion, isMyself: true });
       mockPrisma.tripExpense.count.mockResolvedValue(2);
+      mockPrisma.tripSettlement.count.mockResolvedValue(0);
+
+      await expect(companionService.deleteCompanion(1, 1)).rejects.toMatchObject({ statusCode: 400 });
+      expect(mockPrisma.travelCompanion.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuses (400) while a settlement payment names it', async () => {
+      mockPrisma.travelCompanion.findFirst.mockResolvedValue({ ...mockCompanion, isMyself: true });
+      mockPrisma.tripExpense.count.mockResolvedValue(0);
+      mockPrisma.tripSettlement.count.mockResolvedValue(1);
 
       await expect(companionService.deleteCompanion(1, 1)).rejects.toMatchObject({ statusCode: 400 });
       expect(mockPrisma.travelCompanion.delete).not.toHaveBeenCalled();
@@ -425,6 +438,7 @@ describe('CompanionService', () => {
     it('deletes it when no expense references it', async () => {
       mockPrisma.travelCompanion.findFirst.mockResolvedValue({ ...mockCompanion, isMyself: true });
       mockPrisma.tripExpense.count.mockResolvedValue(0);
+      mockPrisma.tripSettlement.count.mockResolvedValue(0);
       mockPrisma.travelCompanion.delete.mockResolvedValue(mockCompanion);
 
       await companionService.deleteCompanion(1, 1);

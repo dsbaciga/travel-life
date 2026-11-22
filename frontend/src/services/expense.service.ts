@@ -7,6 +7,9 @@ import type {
   ExpenseParticipant,
   SetExpenseSplitInput,
   SettleUpSummary,
+  TripSettlement,
+  CreateSettlementInput,
+  UpdateSettlementInput,
 } from '../types/expense';
 
 export const expenseService = {
@@ -90,6 +93,32 @@ export const expenseService = {
   async getSettleUp(tripId: number): Promise<SettleUpSummary> {
     const response = await axios.get<SettleUpSummary>(`/trips/${tripId}/settle-up`);
     return response.data;
+  },
+
+  async getSettlements(tripId: number): Promise<TripSettlement[]> {
+    const response = await axios.get<TripSettlement[]>(`/trips/${tripId}/settlements`);
+    return response.data;
+  },
+
+  async createSettlement(tripId: number, data: CreateSettlementInput): Promise<TripSettlement> {
+    const response = await axios.post<TripSettlement>(`/trips/${tripId}/settlements`, data);
+    return response.data;
+  },
+
+  async updateSettlement(
+    tripId: number,
+    settlementId: number,
+    data: UpdateSettlementInput
+  ): Promise<TripSettlement> {
+    const response = await axios.put<TripSettlement>(
+      `/trips/${tripId}/settlements/${settlementId}`,
+      data
+    );
+    return response.data;
+  },
+
+  async deleteSettlement(tripId: number, settlementId: number): Promise<void> {
+    await axios.delete(`/trips/${tripId}/settlements/${settlementId}`);
   },
 
   async getBudgetSummary(tripId: number): Promise<BudgetSummary> {

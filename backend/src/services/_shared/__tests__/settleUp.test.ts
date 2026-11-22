@@ -11,6 +11,7 @@
  * - SET-004: unsplit / inconsistent expenses are excluded and reported
  * - SET-005: rounding across converted amounts keeps balances summing to zero
  * - SET-006: transfers minimise payments and actually settle everyone
+ * - SET-007: recorded settlements reduce what is still owed
  */
 
 import { describe, it, expect } from '@jest/globals';
@@ -339,6 +340,8 @@ describe('minimizeTransfers (SET-006)', () => {
     participant,
     paid: D(0),
     owed: D(0),
+    settledOut: D(0),
+    settledIn: D(0),
     net: D(net),
   });
 
@@ -386,5 +389,78 @@ describe('minimizeTransfers (SET-006)', () => {
 
   it('returns nothing when all balances are zero', () => {
     expect(minimizeTransfers([balance(A, '0'), balance(B, '0')])).toEqual([]);
+  });
+});
+
+describe('computeSettleUp with recorded settlements (SET-007)', () => {
+  // The owner fronted 90 split three ways: A and B each owe the owner 30.
+  const dinner = expense({
+    id: 1,
+    amount: D(90),
+    baseAmount: D(90),
+    paidBy: OWNER_KEY,
+    shares: [
+      { participant: OWNER_KEY, amount: D(30) },
+      { participant: A, amount: D(30) },
+      { participant: B, amount: D(30) },
+    ],
+  });
+  const payment = (id: number, from: string, to: string, baseAmount: string | null) => ({
+    id,
+    from,
+    to,
+    baseAmount: baseAmount === null ? null : D(baseAmount),
+  });
+
+  it('leaves the result alone when there are no settlements', () => {
+    const result = computeSettleUp([dinner]);
+    expect(result.transfers.map((t) => [t.from, t.to, t.amount.toString()])).toEqual([
+      [A, OWNER_KEY, '30'],
+      [B, OWNER_KEY, '30'],
+    ]);
+    expect(result.unconvertedSettlementIds).toEqual([]);
+  });
+
+  it('subtracts a part payment from what is still owed', () => {
+    const result = computeSettleUp([dinner], [payment(1, A, OWNER_KEY, '10')]);
+    const a = result.balances.find((b) => b.participant === A)!;
+    expect(a.settledOut.toString()).toBe('10');
+    expect(a.net.toString()).toBe('-20');
+    expect(result.balances.find((b) => b.participant === OWNER_KEY)!.settledIn.toString()).toBe('10');
+    expect(result.transfers.map((t) => [t.from, t.to, t.amount.toString()])).toEqual([
+      [B, OWNER_KEY, '30'],
+      [A, OWNER_KEY, '20'],
+    ]);
+  });
+
+  it('settles fully when the payment covers the debt, and balances still sum to zero', () => {
+    const result = computeSettleUp([dinner], [payment(1, A, OWNER_KEY, '30'), payment(2, B, OWNER_KEY, '30')]);
+    expect(result.transfers).toEqual([]);
+    expect(sum(result.balances.map((b) => b.net)).isZero()).toBe(true);
+    expect(result.balances.every((b) => b.net.isZero())).toBe(true);
+  });
+
+  it('flips the direction when someone overpays', () => {
+    const result = computeSettleUp([dinner], [payment(1, A, OWNER_KEY, '40')]);
+    // A now holds a credit of 10 and the owner's is down to 20: B covers both.
+    expect(result.transfers.map((t) => [t.from, t.to, t.amount.toString()])).toEqual([
+      [B, OWNER_KEY, '20'],
+      [B, A, '10'],
+    ]);
+  });
+
+  it('lists a payment that could not be converted instead of guessing', () => {
+    const result = computeSettleUp([dinner], [payment(7, A, OWNER_KEY, null)]);
+    expect(result.unconvertedSettlementIds).toEqual([7]);
+    expect(result.balances.find((b) => b.participant === A)!.net.toString()).toBe('-30');
+  });
+
+  it('includes people who only appear in a settlement', () => {
+    const result = computeSettleUp([], [payment(1, A, B, '5')]);
+    expect(result.balances.map((b) => [b.participant, b.net.toString()])).toEqual([
+      [A, '5'],
+      [B, '-5'],
+    ]);
+    expect(result.transfers.map((t) => [t.from, t.to, t.amount.toString()])).toEqual([[B, A, '5']]);
   });
 });

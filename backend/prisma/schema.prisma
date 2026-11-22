@@ -13,20 +13,20 @@ datasource db {
 }
 
 model User {
-  id                     Int      @id @default(autoincrement())
-  username               String   @unique @db.VarChar(255)
-  email                  String   @unique @db.VarChar(255)
-  passwordHash           String   @map("password_hash") @db.VarChar(255)
-  avatarUrl              String?  @map("avatar_url") @db.VarChar(500)
-  timezone               String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
-  passwordVersion        Int      @default(0) @map("password_version")
-  oidcSubject            String?  @unique @map("oidc_subject") @db.VarChar(500) // "issuer|sub" identity from OIDC single sign-on
-  calendarToken          String?  @unique @map("calendar_token") @db.VarChar(64) // Secret token for the read-only iCal feed URL
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
+  id              Int      @id @default(autoincrement())
+  username        String   @unique @db.VarChar(255)
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  avatarUrl       String?  @map("avatar_url") @db.VarChar(500)
+  timezone        String?  @db.VarChar(100) // null = home timezone not chosen yet (frontend prompts on first login)
+  passwordVersion Int      @default(0) @map("password_version")
+  oidcSubject     String?  @unique @map("oidc_subject") @db.VarChar(500) // "issuer|sub" identity from OIDC single sign-on
+  calendarToken   String?  @unique @map("calendar_token") @db.VarChar(64) // Secret token for the read-only iCal feed URL
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   // Travel partner link (the permission level lives in user_preferences.defaultPartnerPermission)
-  travelPartnerId          Int?   @map("travel_partner_id")
+  travelPartnerId Int? @map("travel_partner_id")
 
   trips                   Trip[]
   tags                    TripTag[]
@@ -95,27 +95,27 @@ model UserIntegrations {
 // Display and behaviour preferences of one user, split out of `users` in migration
 // 20261124000000_split_user_table. Every user has exactly one row, created with the user.
 model UserPreferences {
-  userId                   Int      @id @map("user_id")
-  activityCategories     Json     @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
-  tripTypes              Json     @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
-  dietaryPreferences     Json     @default("[]") @map("dietary_preferences")
+  userId                   Int     @id @map("user_id")
+  activityCategories       Json    @default("[{\"name\":\"Sightseeing\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Dining\",\"emoji\":\"\ud83c\udf7d\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Entertainment\",\"emoji\":\"\ud83c\udfad\"},{\"name\":\"Shopping\",\"emoji\":\"\ud83d\udecd\ufe0f\"},{\"name\":\"Recreation\",\"emoji\":\"\u26bd\"},{\"name\":\"Cultural\",\"emoji\":\"\ud83c\udfdb\ufe0f\"},{\"name\":\"Sports\",\"emoji\":\"\ud83c\udfc5\"},{\"name\":\"Wellness\",\"emoji\":\"\ud83e\uddd8\"},{\"name\":\"Tour\",\"emoji\":\"\ud83d\udc65\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("activity_categories")
+  tripTypes                Json    @default("[{\"name\":\"Leisure\",\"emoji\":\"\ud83c\udfd6\ufe0f\"},{\"name\":\"Business\",\"emoji\":\"\ud83d\udcbc\"},{\"name\":\"Road Trip\",\"emoji\":\"\ud83d\ude97\"},{\"name\":\"Backpacking\",\"emoji\":\"\ud83c\udf92\"},{\"name\":\"Cruise\",\"emoji\":\"\ud83d\udea2\"},{\"name\":\"Study Abroad\",\"emoji\":\"\ud83d\udcda\"},{\"name\":\"Volunteer\",\"emoji\":\"\ud83e\udd1d\"},{\"name\":\"Pilgrimage\",\"emoji\":\"\ud83d\udd4a\ufe0f\"},{\"name\":\"Adventure\",\"emoji\":\"\ud83e\uddd7\"},{\"name\":\"Family\",\"emoji\":\"\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66\"},{\"name\":\"Honeymoon\",\"emoji\":\"\ud83d\udc95\"},{\"name\":\"Other\",\"emoji\":\"\ud83d\udccc\"}]") @map("trip_types")
+  dietaryPreferences       Json    @default("[]") @map("dietary_preferences")
   // Extra From addresses trusted to forward links to the ingest mailbox, on top
   // of this user's own `email`. Per-user rather than a global env list, because
   // a global list cannot say which user an address belongs to.
-  linkIngestSenders      Json     @default("[]") @map("link_ingest_senders")
-  useCustomMapStyle      Boolean  @default(true) @map("use_custom_map_style")
+  linkIngestSenders        Json    @default("[]") @map("link_ingest_senders")
+  useCustomMapStyle        Boolean @default(true) @map("use_custom_map_style")
   // Home currency (ISO 4217) that mixed-currency budget totals are reported in.
   // Null means "no home currency chosen" — totals fall back to the trip's
   // budgetCurrency, then to the most common currency among the costed items.
-  baseCurrency           String?  @map("base_currency") @db.VarChar(3)
+  baseCurrency             String? @map("base_currency") @db.VarChar(3)
   // Which external maps/rideshare app the "Directions" deep links open by
   // default (apple | google | citymapper | uber | lyft). Null = no preference,
   // the UI then just lists every app that can handle the route.
-  preferredMapsApp       String?  @map("preferred_maps_app") @db.VarChar(50)
+  preferredMapsApp         String? @map("preferred_maps_app") @db.VarChar(50)
   // CHECK user_preferences_measurement_system_check (migration 20261124000000_split_user_table) limits it to imperial | metric;
   // Prisma cannot represent CHECK constraints, so `prisma db push` would NOT recreate it.
-  measurementSystem      String?  @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
-  defaultPartnerPermission String @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin. CHECK user_preferences_default_partner_permission_check (migration 20261126000000_add_vocabulary_checks)
+  measurementSystem        String? @map("measurement_system") @db.VarChar(10) // "imperial" | "metric"; null = the app default (DEFAULT_MEASUREMENT_SYSTEM in the frontend)
+  defaultPartnerPermission String  @default("edit") @map("default_partner_permission") @db.VarChar(50) // view, edit, admin. CHECK user_preferences_default_partner_permission_check (migration 20261126000000_add_vocabulary_checks)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -182,6 +182,7 @@ model Trip {
   languages                 TripLanguage[]
   pendingEntities           PendingEntity[]
   expenses                  TripExpense[]
+  settlements               TripSettlement[]
   savedLinks                SavedLink[]
   emergencyInfo             TripEmergencyInfo?
   customItems               CustomItem[]
@@ -268,11 +269,13 @@ model TravelCompanion {
   allergies          Json     @default("[]")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  user            User               @relation("CompanionOwner", fields: [userId], references: [id], onDelete: Cascade)
-  linkedUser      User?              @relation("CompanionLinkedUser", fields: [linkedUserId], references: [id], onDelete: SetNull)
-  tripAssignments TripCompanion[]
-  paidExpenses    TripExpense[]      @relation("ExpensePaidBy")
-  expenseSplits   TripExpenseSplit[] @relation("ExpenseSplitCompanion")
+  user                User               @relation("CompanionOwner", fields: [userId], references: [id], onDelete: Cascade)
+  linkedUser          User?              @relation("CompanionLinkedUser", fields: [linkedUserId], references: [id], onDelete: SetNull)
+  tripAssignments     TripCompanion[]
+  paidExpenses        TripExpense[]      @relation("ExpensePaidBy")
+  expenseSplits       TripExpenseSplit[] @relation("ExpenseSplitCompanion")
+  settlementsPaid     TripSettlement[]   @relation("SettlementFrom")
+  settlementsReceived TripSettlement[]   @relation("SettlementTo")
 
   @@index([userId])
   @@index([avatarUrl])
@@ -329,37 +332,37 @@ model TripInvitation {
 }
 
 model Location {
-  id                   Int                                    @id @default(autoincrement())
-  tripId               Int                                    @map("trip_id")
-  parentId             Int?                                   @map("parent_id")
-  name                 String                                 @db.VarChar(500)
-  address              String?                                @db.Text
+  id                   Int       @id @default(autoincrement())
+  tripId               Int       @map("trip_id")
+  parentId             Int?      @map("parent_id")
+  name                 String    @db.VarChar(500)
+  address              String?   @db.Text
   // ISO 3166-1 alpha-2, upper case. CHECK locations_country_code_format_check (migration
   // 20261121000000_add_structured_country_codes). Set from the geocoder when the client knows it,
   // otherwise derived from the address text; null when neither is recognisable.
-  countryCode          String?                                @map("country_code") @db.VarChar(2)
-  latitude             Decimal?                               @db.Decimal(10, 8)
-  longitude            Decimal?                               @db.Decimal(11, 8)
-  categoryId           Int?                                   @map("category_id")
-  visitDatetime        DateTime?                              @map("visit_datetime")
-  visitDurationMinutes Int?                                   @map("visit_duration_minutes")
-  notes                String?                                @db.Text
-  isFavorite           Boolean                                @default(false) @map("is_favorite")
+  countryCode          String?   @map("country_code") @db.VarChar(2)
+  latitude             Decimal?  @db.Decimal(10, 8)
+  longitude            Decimal?  @db.Decimal(11, 8)
+  categoryId           Int?      @map("category_id")
+  visitDatetime        DateTime? @map("visit_datetime")
+  visitDurationMinutes Int?      @map("visit_duration_minutes")
+  notes                String?   @db.Text
+  isFavorite           Boolean   @default(false) @map("is_favorite")
   // When true, the location is hidden from trip maps entirely — no marker, and it does not
   // affect auto-fit bounds/zoom. Lets a far-off origin (e.g. home) stay recorded without
   // zooming the map out to span the whole journey.
-  excludeFromMap       Boolean                                @default(false) @map("exclude_from_map")
+  excludeFromMap       Boolean   @default(false) @map("exclude_from_map")
   // Raw OpenStreetMap `opening_hours` specification (e.g. "Mo-Fr 09:00-17:00; Sa 10:00-14:00").
   // Kept verbatim as the single source of truth; parsed on demand by openingHours.service.
-  openingHours         String?                                @map("opening_hours") @db.Text
+  openingHours         String?   @map("opening_hours") @db.Text
   // Where openingHours came from: 'osm' (auto-populated from Nominatim) or 'manual' (user entered).
   // A 'manual' value is never overwritten by the automatic OSM lookup.
-  openingHoursSource   String?                                @map("opening_hours_source") @db.VarChar(20) // osm, manual or NULL. CHECK locations_opening_hours_source_check (migration 20261126000000_add_vocabulary_checks)
+  openingHoursSource   String?   @map("opening_hours_source") @db.VarChar(20) // osm, manual or NULL. CHECK locations_opening_hours_source_check (migration 20261126000000_add_vocabulary_checks)
   // IANA timezone of the place itself (NOT the user's or the trip's). Opening hours are
   // wall-clock times in this zone. Auto-derived from coordinates via tz-lookup, user-overridable.
-  timezone             String?                                @db.VarChar(100)
-  createdAt            DateTime                               @default(now()) @map("created_at")
-  updatedAt            DateTime                               @updatedAt @map("updated_at")
+  timezone             String?   @db.VarChar(100)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   trip                 Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
   category             LocationCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -470,22 +473,22 @@ model CustomItem {
 }
 
 model Photo {
-  id            Int                                    @id @default(autoincrement())
-  tripId        Int                                    @map("trip_id")
-  source        String                                 @default("local") @db.VarChar(50) // 'local' or 'immich'. CHECK photos_source_check (migration 20261126000000_add_vocabulary_checks)
-  mediaType     String                                 @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'. CHECK photos_media_type_check (migration 20261126000000_add_vocabulary_checks)
-  immichAssetId String?                                @map("immich_asset_id") @db.VarChar(255)
-  localPath     String?                                @map("local_path") @db.VarChar(500)
-  thumbnailPath String?                                @map("thumbnail_path") @db.VarChar(500)
+  id            Int       @id @default(autoincrement())
+  tripId        Int       @map("trip_id")
+  source        String    @default("local") @db.VarChar(50) // 'local' or 'immich'. CHECK photos_source_check (migration 20261126000000_add_vocabulary_checks)
+  mediaType     String    @default("image") @map("media_type") @db.VarChar(20) // 'image' or 'video'. CHECK photos_media_type_check (migration 20261126000000_add_vocabulary_checks)
+  immichAssetId String?   @map("immich_asset_id") @db.VarChar(255)
+  localPath     String?   @map("local_path") @db.VarChar(500)
+  thumbnailPath String?   @map("thumbnail_path") @db.VarChar(500)
   duration      Int? // Video duration in seconds
-  caption       String?                                @db.Text
-  latitude      Decimal?                               @db.Decimal(10, 8)
-  longitude     Decimal?                               @db.Decimal(11, 8)
-  takenAt       DateTime?                              @map("taken_at")
-  isFavorite    Boolean                                @default(false) @map("is_favorite")
-  uploadedAt    DateTime                               @default(now()) @map("uploaded_at")
-  createdAt     DateTime                               @default(now()) @map("created_at")
-  updatedAt     DateTime                               @updatedAt @map("updated_at")
+  caption       String?   @db.Text
+  latitude      Decimal?  @db.Decimal(10, 8)
+  longitude     Decimal?  @db.Decimal(11, 8)
+  takenAt       DateTime? @map("taken_at")
+  isFavorite    Boolean   @default(false) @map("is_favorite")
+  uploadedAt    DateTime  @default(now()) @map("uploaded_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   trip             Trip                   @relation("TripPhotos", fields: [tripId], references: [id], onDelete: Cascade)
   tripCoverPhoto   Trip[]                 @relation("TripCoverPhoto")
@@ -737,6 +740,34 @@ model TripExpenseSplit {
   @@unique([expenseId, companionId])
   @@index([companionId])
   @@map("trip_expense_splits")
+}
+
+// A payment one person made to another to settle up the trip's split expenses (#97). Settle-up is
+// still a calculation: recorded settlements are subtracted from the net balances, so the suggested
+// payments shrink as people pay each other back. Both people are companions (the trip owner is their
+// "myself" companion), exactly as in TripExpenseSplit, so they follow the same rules: unlinking a
+// companion from the trip keeps their settlements (settle-up still names them), and deleting the
+// companion deletes them. The amount is in `currency`; settle-up converts it like an expense.
+model TripSettlement {
+  id              Int      @id @default(autoincrement())
+  tripId          Int      @map("trip_id")
+  fromCompanionId Int      @map("from_companion_id")
+  toCompanionId   Int      @map("to_companion_id")
+  amount          Decimal  @db.Decimal(10, 2) // CHECKs trip_settlements_amount_positive and trip_settlements_distinct_people (migration 20261127000000_add_trip_settlements)
+  currency        String   @db.VarChar(3)
+  date            DateTime @db.Date
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trip          Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fromCompanion TravelCompanion @relation("SettlementFrom", fields: [fromCompanionId], references: [id], onDelete: Cascade)
+  toCompanion   TravelCompanion @relation("SettlementTo", fields: [toCompanionId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, date])
+  @@index([fromCompanionId])
+  @@index([toCompanionId])
+  @@map("trip_settlements")
 }
 
 // =============================================================================

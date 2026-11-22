@@ -171,6 +171,9 @@ const mockTx = {
   tripEmergencyInfo: {
     create: jest.fn(),
   },
+  tripSettlement: {
+    create: jest.fn(),
+  },
 };
 
 const mockPrisma = {
@@ -1240,6 +1243,59 @@ describe('RestoreService', () => {
       );
     });
   });
+  describe('RST-018: settlement payments (#97)', () => {
+    it('re-links both people to the restored companions by name and skips unusable payments', async () => {
+      mockTx.travelCompanion.create.mockImplementation((async (args: { data: { name: string } }) => ({
+        id: args.data.name === 'Alice' ? 501 : 502,
+      })) as never);
+      mockTx.travelCompanion.findFirst.mockResolvedValue({ id: 900 } as never);
+
+      const backup: BackupData = {
+        ...minimalBackup,
+        version: '1.10.0',
+        companions: [{ name: 'Alice' }, { name: 'Bob' }],
+        trips: [
+          {
+            title: 'Split Trip',
+            status: 'Planned',
+            privacyLevel: 'Private',
+            companions: ['Alice', 'Bob'],
+            settlements: [
+              { fromCompanionName: 'Alice', toIsOwner: true, amount: 40, currency: 'eur', date: '2026-05-03T00:00:00.000Z', notes: 'Cash' },
+              { fromIsOwner: true, toCompanionName: 'Bob', amount: '12.50', currency: 'EUR', date: '2026-05-04' },
+              // A person missing from the backup, the same person on both sides, and a non-positive amount.
+              { fromCompanionName: 'Ghost', toIsOwner: true, amount: 5, currency: 'EUR', date: '2026-05-05' },
+              { fromCompanionName: 'Alice', toCompanionName: 'Alice', amount: 5, currency: 'EUR', date: '2026-05-05' },
+              { fromCompanionName: 'Alice', toIsOwner: true, amount: 0, currency: 'EUR', date: '2026-05-05' },
+            ],
+          },
+        ],
+      };
+
+      const result = await restoreFromBackup(1, backup);
+      expect(result.success).toBe(true);
+
+      const created = mockTx.tripSettlement.create.mock.calls.map(
+        (c) => (c[0] as { data: Record<string, unknown> }).data
+      );
+      expect(created).toHaveLength(2);
+      expect(created[0]).toMatchObject({ fromCompanionId: 501, toCompanionId: 900, currency: 'EUR', notes: 'Cash' });
+      expect(String(created[0].amount)).toBe('40');
+      expect(created[1]).toMatchObject({ fromCompanionId: 900, toCompanionId: 502, notes: null });
+      expect(String(created[1].amount)).toBe('12.50');
+    });
+
+    it('restores an older file with no settlements without creating any', async () => {
+      const result = await restoreFromBackup(1, {
+        ...minimalBackup,
+        version: '1.9.0',
+        trips: [{ title: 'Old', status: 'Planned', privacyLevel: 'Private' }],
+      });
+      expect(result.success).toBe(true);
+      expect(mockTx.tripSettlement.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('RST-017: expense payer and splits (#97)', () => {
     it('re-links the payer and each share to the restored companions by name', async () => {
       mockTx.travelCompanion.create.mockImplementation((async (args: { data: { name: string } }) => ({

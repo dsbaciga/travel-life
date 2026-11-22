@@ -443,7 +443,11 @@ Expense objects carry `receiptPath`, `receiptMimeType`, `receiptSizeBytes`, `rec
 | GET | `/api/trips/:tripId/budget-summary` | Get budget vs. spent totals with a category breakdown | Yes |
 | GET | `/api/trips/:tripId/expenses/participants` | List who an expense can be paid by or split with: the trip owner (`owner`) and the trip's companions (`companion:<id>`) | Yes |
 | PUT | `/api/trips/:tripId/expenses/:id/split` | Set who paid and how the expense is split. Body: `paidBy` (participant key, or `null` to clear), `method` (`equal`, `amount` or `percentage`), `participants` (`participant` plus `amount` or `percentage`). Amounts must sum to the expense amount, percentages to 100 | Yes (edit) |
-| GET | `/api/trips/:tripId/settle-up` | Per-person paid / share / balance and the payments that settle them, in the budget summary's currency | Yes |
+| GET | `/api/trips/:tripId/settle-up` | Per-person paid / share / settled / balance and the payments still needed to settle them, in the budget summary's currency; recorded settlements are subtracted | Yes |
+| GET | `/api/trips/:tripId/settlements` | List the recorded settlement payments, newest first (`from` / `to` participant keys with labels, `amount`, `currency`, `date` as `YYYY-MM-DD`, `notes`) | Yes |
+| POST | `/api/trips/:tripId/settlements` | Record a payment. Body: `from`, `to` (participant keys, different, on the trip), `amount` (> 0), `currency`, `date`, optional `notes` | Yes (edit) |
+| PUT | `/api/trips/:tripId/settlements/:id` | Edit a payment; every field optional, `notes: null` clears the note. A person who has left the trip may stay on it, a newly chosen one must be on the trip | Yes (edit) |
+| DELETE | `/api/trips/:tripId/settlements/:id` | Delete a payment | Yes (edit) |
 
 Expenses returned by the list and detail endpoints carry `paidBy`, `splitMethod` and `splits`
 (`participant`, `amount` in the expense's own currency, `percentage`). Settle-up is computed with exact
@@ -451,6 +455,13 @@ decimal arithmetic: each expense's base-currency amount is shared out in proport
 any odd cent placed on the largest share (lowest participant on a tie). Split expenses with no exchange
 rate are excluded and listed under `unconverted`; expenses with no payer or split are listed under
 `unsplit`.
+
+Recorded settlements move the balances: a payment from A to B raises A's `net` and lowers B's by the same
+amount (each balance also reports `settledOut` / `settledIn`), so the suggested `transfers` only cover what
+is still owed, and overpaying flips the direction. A payment is converted at its own date's rate like an
+expense; one with no exchange rate is left out and listed under `unconvertedSettlements` (which also makes
+`isComplete` false). Settlements are exported in backups (version 1.10.0) by person name and re-linked
+by name on restore; trip duplication does not copy them (it does not copy splits either).
 
 Budget summary totals are converted into a single base currency using the exchange rate frozen at each
 expense's own date. Amounts that could not be converted are excluded from `spent` and listed under
