@@ -161,6 +161,15 @@ DATABASE_URL=postgresql://... node scripts/refresh-migration-checksums.js --appl
   It rewrites only the `checksum` column of `_prisma_migrations` for the edited migrations
   (a fixed list inside the script). It runs no migration SQL and touches no table.
 
+## Migrations added 2026-11-27 (safe on a populated database)
+
+Released in 8.3.0. Additive: one new table, nothing existing is changed. Apply with
+`prisma migrate deploy`.
+
+| Migration | What it does |
+| --- | --- |
+| `20261127000000_add_trip_settlements` | Creates `trip_settlements`, the recorded settle-up payments between a trip's travellers. |
+
 ## Migrations added 2026-11-16 (safe on a populated database)
 
 Released in 8.0.0. All additive: new tables, and new columns that are nullable or have a
