@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { Toaster } from 'react-hot-toast';
+import AppToaster from './components/AppToaster';
 import React, { useEffect, useState, Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
 import PdfImportWatcher from './components/PdfImportWatcher';
@@ -167,7 +167,7 @@ function App() {
           }}
         >
           <ScrollToTop />
-          <Toaster
+          <AppToaster
             position={isPhone ? 'top-center' : 'top-right'}
             containerClassName="z-[100]"
             containerStyle={isPhone && isAuthenticated ? { top: 72 } : undefined}
