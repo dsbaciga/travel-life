@@ -12,7 +12,7 @@ throwaway container that you delete afterwards.
 
 | Script | What it checks |
 | ------ | -------------- |
-| `provision-empty-db.sh` | Builds an empty database with a plain `prisma migrate deploy` (see `backend/prisma/migrations/README.md`), then reports migration status and schema drift |
+| `provision-empty-db.sh` | Builds an empty database with a plain `prisma migrate deploy` (see `backend/prisma/migrations/README.md`), then reports migration status and schema drift. Prints the full `migrate deploy` output (also saved to a log) and exits non-zero if it fails. `TL_TEST_DB_PORT` overrides the port (default 55432) |
 | `api-smoke.cjs` | 66 API steps as a new user: sign-up, token refresh, create/edit/delete on every main entity, location writes, raw-SQL reads, share link and calendar feed without sign-in, trip duplication, backup and restore |
 | `compare-reads.cjs` | Asks the old and the new backend the same read questions about copies of the same data, for every user and trip, and lists every response that differs |
 | `backup-roundtrip.cjs` | For each existing user: backup, restore over their data, backup again, and compare |
