@@ -105,6 +105,23 @@ describe('TripHeaderActions phone menu', () => {
 
     expect(tripService.updateTrip).toHaveBeenCalledWith(7, { archived: false });
   });
+
+  // The header wraps on phones, putting the trigger at the left edge; a menu
+  // hung from its right edge then opened off screen.
+  it.each([
+    { left: 16, expected: 'left-0' },
+    { left: 300, expected: 'right-0' },
+  ])('opens toward the screen when the trigger sits at x=$left', async ({ left, expected }) => {
+    const user = userEvent.setup();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    renderActions();
+    const trigger = screen.getByRole('button', { name: 'Trip actions' });
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({ left, width: 44 } as DOMRect);
+
+    await user.click(trigger);
+
+    expect(screen.getByRole('menu')).toHaveClass(expected);
+  });
 });
 
 /** The item with this text inside the phone menu (the inline buttons repeat the labels). */
