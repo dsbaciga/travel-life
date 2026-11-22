@@ -34,7 +34,7 @@ defect and there is no version of the code in which it is "done" — see
   which serves a sanitised payload. Trip IDs are sequential, so the previous behaviour made every
   Public trip enumerable by every registered account.
 - **Migration squashing — deliberately not done.** The baseline exists so a fresh database *can* be
-  built, and `backend/prisma/migrations/README.md` documents the two-step procedure. Squashing the
+  built, and `backend/prisma/migrations/README.md` documents the fresh-database recipe (a plain `migrate deploy`; the legacy migrations are idempotent). Squashing the
   51 legacy migrations would strand any database not already fully migrated and would make the
   recorded history stop matching what was actually applied in production.
 

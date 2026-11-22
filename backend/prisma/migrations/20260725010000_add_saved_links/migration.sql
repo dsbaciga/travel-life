@@ -3,13 +3,19 @@
 ALTER TYPE "EntityType" ADD VALUE IF NOT EXISTS 'SAVED_LINK';
 
 -- CreateEnum
-CREATE TYPE "SavedLinkSource" AS ENUM ('MANUAL', 'EMAIL');
+DO $$ BEGIN
+    CREATE TYPE "SavedLinkSource" AS ENUM ('MANUAL', 'EMAIL');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "LinkMetadataStatus" AS ENUM ('PENDING', 'FETCHED', 'FAILED', 'SKIPPED');
+DO $$ BEGIN
+    CREATE TYPE "LinkMetadataStatus" AS ENUM ('PENDING', 'FETCHED', 'FAILED', 'SKIPPED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "saved_links" (
+CREATE TABLE IF NOT EXISTS "saved_links" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "trip_id" INTEGER,
@@ -29,16 +35,18 @@ CREATE TABLE "saved_links" (
 );
 
 -- CreateIndex
-CREATE INDEX "saved_links_user_id_idx" ON "saved_links"("user_id");
+CREATE INDEX IF NOT EXISTS "saved_links_user_id_idx" ON "saved_links"("user_id");
 
 -- CreateIndex
-CREATE INDEX "saved_links_user_id_trip_id_idx" ON "saved_links"("user_id", "trip_id");
+CREATE INDEX IF NOT EXISTS "saved_links_user_id_trip_id_idx" ON "saved_links"("user_id", "trip_id");
 
 -- CreateIndex
-CREATE INDEX "saved_links_trip_id_idx" ON "saved_links"("trip_id");
+CREATE INDEX IF NOT EXISTS "saved_links_trip_id_idx" ON "saved_links"("trip_id");
 
 -- AddForeignKey
+ALTER TABLE "saved_links" DROP CONSTRAINT IF EXISTS "saved_links_user_id_fkey";
 ALTER TABLE "saved_links" ADD CONSTRAINT "saved_links_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "saved_links" DROP CONSTRAINT IF EXISTS "saved_links_trip_id_fkey";
 ALTER TABLE "saved_links" ADD CONSTRAINT "saved_links_trip_id_fkey" FOREIGN KEY ("trip_id") REFERENCES "trips"("id") ON DELETE SET NULL ON UPDATE CASCADE;

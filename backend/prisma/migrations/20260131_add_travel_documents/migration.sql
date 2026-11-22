@@ -1,11 +1,14 @@
 -- AlterEnum (add DOCUMENTS to ValidationIssueCategory)
-ALTER TYPE "ValidationIssueCategory" ADD VALUE 'DOCUMENTS';
+ALTER TYPE "ValidationIssueCategory" ADD VALUE IF NOT EXISTS 'DOCUMENTS';
 
 -- CreateEnum
-CREATE TYPE "TravelDocumentType" AS ENUM ('PASSPORT', 'VISA', 'ID_CARD', 'GLOBAL_ENTRY', 'VACCINATION');
+DO $$ BEGIN
+    CREATE TYPE "TravelDocumentType" AS ENUM ('PASSPORT', 'VISA', 'ID_CARD', 'GLOBAL_ENTRY', 'VACCINATION');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "travel_documents" (
+CREATE TABLE IF NOT EXISTS "travel_documents" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "type" "TravelDocumentType" NOT NULL,
@@ -24,7 +27,7 @@ CREATE TABLE "travel_documents" (
 );
 
 -- CreateTable
-CREATE TABLE "visa_requirements" (
+CREATE TABLE IF NOT EXISTS "visa_requirements" (
     "id" SERIAL NOT NULL,
     "passport_country" VARCHAR(100) NOT NULL,
     "destination_country" VARCHAR(100) NOT NULL,
@@ -39,7 +42,7 @@ CREATE TABLE "visa_requirements" (
 );
 
 -- CreateTable
-CREATE TABLE "trip_languages" (
+CREATE TABLE IF NOT EXISTS "trip_languages" (
     "id" SERIAL NOT NULL,
     "trip_id" INTEGER NOT NULL,
     "language_code" VARCHAR(10) NOT NULL,
@@ -49,7 +52,7 @@ CREATE TABLE "trip_languages" (
 );
 
 -- CreateTable
-CREATE TABLE "language_phrases" (
+CREATE TABLE IF NOT EXISTS "language_phrases" (
     "id" SERIAL NOT NULL,
     "language" VARCHAR(100) NOT NULL,
     "language_code" VARCHAR(10) NOT NULL,
@@ -64,37 +67,39 @@ CREATE TABLE "language_phrases" (
 );
 
 -- CreateIndex
-CREATE INDEX "travel_documents_user_id_idx" ON "travel_documents"("user_id");
+CREATE INDEX IF NOT EXISTS "travel_documents_user_id_idx" ON "travel_documents"("user_id");
 
 -- CreateIndex
-CREATE INDEX "travel_documents_expiry_date_idx" ON "travel_documents"("expiry_date");
+CREATE INDEX IF NOT EXISTS "travel_documents_expiry_date_idx" ON "travel_documents"("expiry_date");
 
 -- CreateIndex
-CREATE INDEX "visa_requirements_passport_country_idx" ON "visa_requirements"("passport_country");
+CREATE INDEX IF NOT EXISTS "visa_requirements_passport_country_idx" ON "visa_requirements"("passport_country");
 
 -- CreateIndex
-CREATE INDEX "visa_requirements_destination_country_idx" ON "visa_requirements"("destination_country");
+CREATE INDEX IF NOT EXISTS "visa_requirements_destination_country_idx" ON "visa_requirements"("destination_country");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "visa_requirements_passport_country_destination_country_key" ON "visa_requirements"("passport_country", "destination_country");
+CREATE UNIQUE INDEX IF NOT EXISTS "visa_requirements_passport_country_destination_country_key" ON "visa_requirements"("passport_country", "destination_country");
 
 -- CreateIndex
-CREATE INDEX "trip_languages_trip_id_idx" ON "trip_languages"("trip_id");
+CREATE INDEX IF NOT EXISTS "trip_languages_trip_id_idx" ON "trip_languages"("trip_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "trip_languages_trip_id_language_code_key" ON "trip_languages"("trip_id", "language_code");
+CREATE UNIQUE INDEX IF NOT EXISTS "trip_languages_trip_id_language_code_key" ON "trip_languages"("trip_id", "language_code");
 
 -- CreateIndex
-CREATE INDEX "language_phrases_language_code_idx" ON "language_phrases"("language_code");
+CREATE INDEX IF NOT EXISTS "language_phrases_language_code_idx" ON "language_phrases"("language_code");
 
 -- CreateIndex
-CREATE INDEX "language_phrases_category_idx" ON "language_phrases"("category");
+CREATE INDEX IF NOT EXISTS "language_phrases_category_idx" ON "language_phrases"("category");
 
 -- CreateIndex
-CREATE INDEX "language_phrases_language_code_category_idx" ON "language_phrases"("language_code", "category");
+CREATE INDEX IF NOT EXISTS "language_phrases_language_code_category_idx" ON "language_phrases"("language_code", "category");
 
 -- AddForeignKey
+ALTER TABLE "travel_documents" DROP CONSTRAINT IF EXISTS "travel_documents_user_id_fkey";
 ALTER TABLE "travel_documents" ADD CONSTRAINT "travel_documents_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "trip_languages" DROP CONSTRAINT IF EXISTS "trip_languages_trip_id_fkey";
 ALTER TABLE "trip_languages" ADD CONSTRAINT "trip_languages_trip_id_fkey" FOREIGN KEY ("trip_id") REFERENCES "trips"("id") ON DELETE CASCADE ON UPDATE CASCADE;
