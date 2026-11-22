@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.3.0] - 2026-11-22
+
 ### Added
 
 - **Record settle-up payments.** On a trip's Settle Up panel, each suggested payment now has a **Record payment** button. It opens a form already filled in with who pays whom and how much, which you can change (amount, currency, date, a note), and saves it. Recorded payments are taken off what people owe, so the suggested payments shrink as everyone pays each other back, and they are listed under **Payments recorded** where you can edit or delete them. A payment in another currency is converted like an expense; if no exchange rate is available it is listed as not counted rather than guessed at. Recorded payments are included in backups. This adds a new database migration (`20261127000000_add_trip_settlements`) that creates one new table and changes nothing existing.
@@ -38,6 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Notifications no longer get stuck on phones.** Tapping a notification paused it (the desktop hover-to-pause behaviour), and on a touch screen the pause never ended, so that notification and every later one stayed on screen. Pauses now only happen when hovering with a mouse, and tapping or clicking a notification dismisses it.
 - **Trip actions menu on phones.** The ⋮ menu on a trip's page opened off the left edge of the screen when the button sat below the trip title; it now opens toward whichever side has room.
 - **A brand-new empty database can now be set up with `npx prisma migrate deploy` alone.** It used to stop at the second migration with `column "timezone" of relation "users" already exists`, and the documented workaround skipped the migrations dated after the baseline, leaving `trips.country_code`, `trip_emergency_info` and `travel_partner_requests` missing. The older migrations are now safe to replay (they do nothing on a database that already has their changes), and the migrations README gives the one-command recipe. Databases that are already deployed need no action. Development databases that use `prisma migrate dev` should run `node scripts/refresh-migration-checksums.js --apply` once from `backend/`, otherwise Prisma offers to reset them; see `backend/prisma/migrations/README.md`.
+
+### Upgrade notes
+
+- **Back up the database before deploying.** This release adds one migration, `20261127000000_add_trip_settlements`, which creates the `trip_settlements` table and changes nothing existing. `npx prisma migrate deploy` applies it.
+- Development databases that use `prisma migrate dev` should run `node backend/scripts/refresh-migration-checksums.js --apply` once, because 46 old migrations were made idempotent. Production needs nothing for that.
 
 ## [8.2.0] - 2026-11-21
 
