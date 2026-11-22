@@ -700,7 +700,7 @@ docker logs travel-life-backend
 
 If the backend container exits right after start and its log ends with
 `ERROR: prisma migrate deploy failed`, a database migration did not apply. The log names the
-failed migration (when Prisma reports it) and states that the entrypoint did not modify the
+failed migration (when Prisma reports it) and states that the container did not modify the
 database. Nothing was force-synced and `_prisma_migrations` was not edited; the container
 stops on purpose so it does not serve a half-migrated schema.
 
