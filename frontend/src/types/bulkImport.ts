@@ -3,7 +3,7 @@
  * `{ status, data }` envelope. Mirrors backend `types/bulkImport.types.ts`.
  */
 
-export type ImportEntity = 'locations' | 'activities';
+export type ImportEntity = 'locations' | 'activities' | 'lodging' | 'transportation';
 
 /** One CSV row after column mapping: raw text keyed by import field name. */
 export type ImportRowPayload = Record<string, string>;
@@ -23,7 +23,8 @@ export type ImportIssueCode =
   | 'no_coordinates'
   | 'location_not_found'
   | 'location_ambiguous'
-  | 'cost_without_currency';
+  | 'cost_without_currency'
+  | 'timezone_assumed';
 
 export interface ImportIssue {
   field: string | null;

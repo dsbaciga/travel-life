@@ -16,6 +16,8 @@
  * - CSV-012: Output quoting round-trips through the parser
  * - CSV-013: The template maps itself automatically and has two example rows
  * - CSV-014: The error report lists rejected and skipped rows with reasons
+ * - CSV-015: Lodging headers map automatically and required fields are reported
+ * - CSV-016: Transportation headers map automatically
  */
 
 import { describe, it, expect } from 'vitest';
@@ -139,6 +141,40 @@ describe('column mapping', () => {
     expect(mapping.description).toBeNull();
   });
 
+  it('CSV-015: matches lodging headers', () => {
+    const headers = ['Hotel', 'Accommodation Type', 'Check In', 'Check Out', 'TZ', 'Confirmation', 'Total', 'Currency Code', 'Link'];
+    const mapping = autoMapColumns(headers, IMPORT_FIELDS.lodging);
+    expect(mapping.name).toBe(0);
+    expect(mapping.type).toBe(1);
+    expect(mapping.checkInDate).toBe(2);
+    expect(mapping.checkOutDate).toBe(3);
+    expect(mapping.timezone).toBe(4);
+    expect(mapping.confirmationNumber).toBe(5);
+    expect(mapping.cost).toBe(6);
+    expect(mapping.currency).toBe(7);
+    expect(mapping.bookingUrl).toBe(8);
+    expect(missingRequiredFields(autoMapColumns(['name'], IMPORT_FIELDS.lodging), IMPORT_FIELDS.lodging).map((f) => f.key)).toEqual([
+      'type',
+      'checkInDate',
+      'checkOutDate',
+    ]);
+  });
+
+  it('CSV-016: matches transportation headers', () => {
+    const headers = ['Mode', 'Origin', 'Destination', 'Departs', 'Arrives', 'Departure Timezone', 'Airline', 'Flight Number', 'Price'];
+    const mapping = autoMapColumns(headers, IMPORT_FIELDS.transportation);
+    expect(mapping.type).toBe(0);
+    expect(mapping.fromLocationName).toBe(1);
+    expect(mapping.toLocationName).toBe(2);
+    expect(mapping.departureTime).toBe(3);
+    expect(mapping.arrivalTime).toBe(4);
+    expect(mapping.startTimezone).toBe(5);
+    expect(mapping.carrier).toBe(6);
+    expect(mapping.vehicleNumber).toBe(7);
+    expect(mapping.cost).toBe(8);
+    expect(mapping.endTimezone).toBeNull();
+  });
+
   it('CSV-008: never maps one column to two fields, and exact names beat synonyms', () => {
     // "description" is a synonym for location notes, but here a real "notes" column exists.
     const mapping = autoMapColumns(['name', 'description', 'notes'], IMPORT_FIELDS.locations);
@@ -181,7 +217,7 @@ describe('CSV output', () => {
   });
 
   it('CSV-013: templates map themselves automatically and have two example rows', () => {
-    for (const entity of ['locations', 'activities'] as const) {
+    for (const entity of ['locations', 'activities', 'lodging', 'transportation'] as const) {
       const csv = parseOk(buildTemplateCsv(entity));
       expect(csv.rows).toHaveLength(2);
       const mapping = autoMapColumns(csv.headers, IMPORT_FIELDS[entity]);

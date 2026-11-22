@@ -7,6 +7,8 @@ import { getUserTimezone, resolveTimezone } from './_shared/timezoneResolution';
 import {
   evaluateActivityRows,
   evaluateLocationRows,
+  evaluateLodgingRows,
+  evaluateTransportationRows,
   type EvaluatedRow,
 } from './_shared/bulkImportEvaluators';
 import { deriveLocationCountryCode } from './_shared/countryCodes';
@@ -15,7 +17,9 @@ import type {
   BulkImportResult,
   ImportActivitiesInput,
   ImportLocationsInput,
+  ImportLodgingInput,
   ImportRowResult,
+  ImportTransportationInput,
 } from '../types/bulkImport.types';
 import { findUserPreferences } from './_shared/userSettings';
 
@@ -237,6 +241,169 @@ class BulkImportService {
             bookingUrl: activity.bookingUrl || null,
             bookingReference: activity.bookingReference || null,
             notes: activity.notes || null,
+          },
+          select: { id: true },
+        });
+      }
+    }, IMPORT_TRANSACTION_OPTIONS);
+
+    const createdIndexes = new Set(plan.toCreate.map((row) => row.index));
+    const results = plan.results.map((r) => (createdIndexes.has(r.index) ? { ...r, status: 'created' as const } : r));
+    return summarize(results, false, { tripTimezoneSet: null, defaultTimezone });
+  }
+
+  /**
+   * Validates, and unless `dryRun` is set creates, lodging stays from CSV rows.
+   *
+   * Same shape as `importActivities`: one transaction, edit permission first, wall-clock times
+   * read in the row timezone, else the trip timezone, else the user timezone. Stays are created
+   * with the fields `createLodging` writes; the cost is the stay's expense row. Not imported:
+   * the place link and the loyalty program (both are set by editing the stay afterwards).
+   */
+  async importLodging(userId: number, tripId: number, input: ImportLodgingInput): Promise<BulkImportResult> {
+    await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    const [trip, userTimezone, existing] = await Promise.all([
+      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true, user: { select: { timezone: true } } } }),
+      getUserTimezone(userId),
+      prisma.lodging.findMany({ where: { tripId }, select: { name: true, checkInDate: true } }),
+    ]);
+
+    const defaultZone = resolveTimezone(trip?.timezone, userTimezone);
+    const defaultTimezone: BulkImportResult['defaultTimezone'] = {
+      zone: defaultZone,
+      source: trip?.timezone ? 'trip' : userTimezone ? 'user' : 'utc',
+    };
+
+    const evaluated = evaluateLodgingRows(input.rows, { tripId, defaultTimezone: defaultZone, existing });
+    const plan = planRows(evaluated, new Set(input.excludeRows));
+
+    if (input.dryRun || plan.toCreate.length === 0) {
+      return summarize(plan.results, input.dryRun, { tripTimezoneSet: null, defaultTimezone });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const { data } of plan.toCreate) {
+        const { lodging, costDecimal } = data;
+        // The evaluator guarantees both dates, because the columns are NOT NULL.
+        const checkInDate = new Date(lodging.checkInDate as string);
+        const costExpense = await buildBookingCostCreate(
+          tx,
+          tripId,
+          { kind: 'lodging', name: lodging.name, checkInDate, timezone: lodging.timezone || null },
+          { cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal), currency: lodging.currency },
+          [trip?.timezone ?? null, trip?.user?.timezone ?? null]
+        );
+        await tx.lodging.create({
+          data: {
+            tripId,
+            type: lodging.type,
+            name: lodging.name,
+            address: lodging.address || null,
+            checkInDate,
+            checkOutDate: new Date(lodging.checkOutDate as string),
+            timezone: lodging.timezone || null,
+            confirmationNumber: lodging.confirmationNumber || null,
+            costExpense,
+            bookingUrl: lodging.bookingUrl || null,
+            notes: lodging.notes || null,
+          },
+          select: { id: true },
+        });
+      }
+    }, IMPORT_TRANSACTION_OPTIONS);
+
+    const createdIndexes = new Set(plan.toCreate.map((row) => row.index));
+    const results = plan.results.map((r) => (createdIndexes.has(r.index) ? { ...r, status: 'created' as const } : r));
+    return summarize(results, false, { tripTimezoneSet: null, defaultTimezone });
+  }
+
+  /**
+   * Validates, and unless `dryRun` is set creates, transportation legs from CSV rows.
+   *
+   * Same shape as `importActivities`. The departure is read in the start timezone and the arrival
+   * in the end timezone (each: the row's cell, else the trip timezone, else the user timezone).
+   * From and To are kept as text; they are not matched to trip locations, so no route distance
+   * is calculated. The loyalty program is not imported.
+   */
+  async importTransportation(userId: number, tripId: number, input: ImportTransportationInput): Promise<BulkImportResult> {
+    await verifyTripAccessWithPermission(userId, tripId, 'edit');
+
+    const [trip, userTimezone, existing] = await Promise.all([
+      prisma.trip.findUnique({ where: { id: tripId }, select: { timezone: true, user: { select: { timezone: true } } } }),
+      getUserTimezone(userId),
+      prisma.transportation.findMany({
+        where: { tripId },
+        select: {
+          type: true,
+          company: true,
+          referenceNumber: true,
+          startLocationText: true,
+          endLocationText: true,
+          scheduledStart: true,
+        },
+      }),
+    ]);
+
+    const defaultZone = resolveTimezone(trip?.timezone, userTimezone);
+    const defaultTimezone: BulkImportResult['defaultTimezone'] = {
+      zone: defaultZone,
+      source: trip?.timezone ? 'trip' : userTimezone ? 'user' : 'utc',
+    };
+
+    const evaluated = evaluateTransportationRows(input.rows, {
+      tripId,
+      defaultTimezone: defaultZone,
+      existing: existing.map((leg) => ({
+        type: leg.type,
+        carrier: leg.company,
+        vehicleNumber: leg.referenceNumber,
+        fromLocationName: leg.startLocationText,
+        toLocationName: leg.endLocationText,
+        departureTime: leg.scheduledStart,
+      })),
+    });
+    const plan = planRows(evaluated, new Set(input.excludeRows));
+
+    if (input.dryRun || plan.toCreate.length === 0) {
+      return summarize(plan.results, input.dryRun, { tripTimezoneSet: null, defaultTimezone });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const { data } of plan.toCreate) {
+        const { transportation: leg, costDecimal } = data;
+        const scheduledStart = leg.departureTime ? new Date(leg.departureTime) : null;
+        const costExpense = await buildBookingCostCreate(
+          tx,
+          tripId,
+          {
+            kind: 'transportation',
+            type: leg.type,
+            company: leg.carrier || null,
+            referenceNumber: leg.vehicleNumber || null,
+            startLocationText: leg.fromLocationName || null,
+            endLocationText: leg.toLocationName || null,
+            scheduledStart,
+            startTimezone: leg.startTimezone || null,
+          },
+          { cost: costDecimal === undefined ? null : new Prisma.Decimal(costDecimal), currency: leg.currency },
+          [trip?.timezone ?? null, trip?.user?.timezone ?? null]
+        );
+        await tx.transportation.create({
+          data: {
+            tripId,
+            type: leg.type,
+            startLocationText: leg.fromLocationName || null,
+            endLocationText: leg.toLocationName || null,
+            scheduledStart,
+            scheduledEnd: leg.arrivalTime ? new Date(leg.arrivalTime) : null,
+            startTimezone: leg.startTimezone || null,
+            endTimezone: leg.endTimezone || null,
+            company: leg.carrier || null,
+            referenceNumber: leg.vehicleNumber || null,
+            bookingReference: leg.confirmationNumber || null,
+            costExpense,
+            notes: leg.notes || null,
           },
           select: { id: true },
         });

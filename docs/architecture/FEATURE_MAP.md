@@ -27,7 +27,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Today view / Today mode (live next-up card, local + home clocks) | trip data (client-side) | `components/today/`, `trip-dashboard/TodayModeCard`, `utils/todayNextUp`, `useActiveTrip` |
 | Multi-city route planner (ordered stops, route map, optimiser, road distances per leg via `routing`) | `tripStop`, `routing` | `components/route-planner/` (`RoutePlanner`, `RoutePlannerMap`) |
 | Compare 2-8 trips (table, map, timeline, cost) | `tripComparison` | `TripComparisonPage`, `components/trip-comparison/` |
-| CSV import of places/activities | `bulkImport`, `services/_shared/bulkImportRows`, `bulkImportEvaluators` | `BulkImportModal`, `BulkImportPreviewTable` |
+| CSV import of places, activities, lodging and transportation | `bulkImport`, `services/_shared/bulkImportRows`, `bulkImportEvaluators` | `BulkImportModal`, `BulkImportPreviewTable` |
 | Unscheduled items / Kanban | `activity` etc. | `UnscheduledItems`, `TripsKanbanView`, `KanbanCard` |
 | Tags, companions | `tag`, `companion` | `TagManager`, `CompanionManager`, `CompanionsPage` |
 

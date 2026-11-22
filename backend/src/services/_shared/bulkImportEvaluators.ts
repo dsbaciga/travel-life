@@ -1,17 +1,27 @@
 import type { ZodError } from 'zod';
 import { createLocationSchema, type CreateLocationInput } from '../../types/location.types';
 import { createActivitySchema, type CreateActivityInput } from '../../types/activity.types';
+import { createLodgingSchema, LodgingType, type CreateLodgingInput } from '../../types/lodging.types';
+import {
+  createTransportationSchema,
+  TransportationType,
+  type CreateTransportationInput,
+} from '../../types/transportation.types';
 import type {
   ActivityImportRow,
   ImportIssue,
   ImportIssueCode,
   LocationImportRow,
+  LodgingImportRow,
+  TransportationImportRow,
 } from '../../types/bulkImport.types';
 import {
   cleanCell,
   findDuplicateIndex,
   isDuplicateActivity,
   isDuplicateLocation,
+  isDuplicateLodging,
+  isDuplicateTransportation,
   matchByName,
   matchCategoryName,
   parseAmount,
@@ -19,10 +29,13 @@ import {
   parseCoordinate,
   parseCurrency,
   parseDateTimeCell,
+  parseEnumCell,
   parseTimezoneCell,
   type ActivityKey,
   type CellResult,
   type LocationKey,
+  type LodgingKey,
+  type TransportationKey,
 } from './bulkImportRows';
 
 /**
@@ -360,6 +373,256 @@ export function evaluateActivityRows(
         notes: cleanCell(row.notes) ?? null,
       },
       parsed.success ? { activity: parsed.data, costDecimal, locationId } : undefined
+    );
+  });
+}
+
+// =============================================================================
+// LODGING
+// =============================================================================
+
+export interface LodgingEvalContext {
+  tripId: number;
+  /** Zone for wall-clock times with no `timezone` cell; resolved by the caller as for activities. */
+  defaultTimezone: string;
+  /** Stays already in the trip. */
+  existing: ReadonlyArray<LodgingKey>;
+}
+
+export interface LodgingRowData {
+  lodging: CreateLodgingInput;
+  /** Canonical cost string for `Prisma.Decimal`; the schema only ever sees a number. */
+  costDecimal?: string;
+}
+
+const LODGING_TYPES: readonly string[] = Object.values(LodgingType);
+const TRANSPORTATION_TYPES: readonly string[] = Object.values(TransportationType);
+
+export function evaluateLodgingRows(
+  rows: readonly LodgingImportRow[],
+  ctx: LodgingEvalContext
+): EvaluatedRow<LodgingRowData>[] {
+  const seen: LodgingKey[] = [];
+  const seenRowIndex: number[] = [];
+
+  return rows.map((row, index) => {
+    const issues = new IssueCollector();
+
+    const type = issues.take('type', parseEnumCell(cleanCell(row.type), LODGING_TYPES, 'Type'));
+    if (type === undefined && !issues.hasError('type')) {
+      issues.error('type', `Type is required. Use one of: ${LODGING_TYPES.join(', ')}`);
+    }
+
+    const name = cleanCell(row.name);
+    if (!name) issues.error('name', 'Name is required');
+
+    const rowTimezone = issues.take('timezone', parseTimezoneCell(cleanCell(row.timezone)));
+    const zone = rowTimezone ?? ctx.defaultTimezone;
+
+    // Both dates are required (the stay has no meaning without them). A bare date is read as
+    // midnight on that day in the stay's zone, which is how most booking sheets write them.
+    const checkInRaw = cleanCell(row.checkInDate);
+    const checkOutRaw = cleanCell(row.checkOutDate);
+    if (!checkInRaw) issues.error('checkInDate', 'Check-in is required');
+    if (!checkOutRaw) issues.error('checkOutDate', 'Check-out is required');
+    const checkIn = issues.take('checkInDate', parseDateTimeCell(checkInRaw, zone, { allDay: true }));
+    const checkOut = issues.take('checkOutDate', parseDateTimeCell(checkOutRaw, zone, { allDay: true }));
+    if (checkIn && checkOut && new Date(checkOut.iso).getTime() <= new Date(checkIn.iso).getTime()
+      && !issues.hasError('checkInDate') && !issues.hasError('checkOutDate')) {
+      issues.error('checkOutDate', 'Check-out must be after check-in');
+    }
+
+    const costDecimal = issues.take('cost', parseAmount(cleanCell(row.cost)));
+    const currency = issues.take('currency', parseCurrency(cleanCell(row.currency)));
+    if (costDecimal !== undefined && currency === undefined && !issues.hasError('currency')) {
+      issues.warn('currency', 'cost_without_currency', 'Cost has no currency, so it will not count toward the trip budget');
+    }
+
+    // A wall-clock time was read in `zone`; remember that zone on the stay so the time keeps its meaning.
+    const usedWallClock = (checkIn !== undefined && checkIn.kind !== 'offset') || (checkOut !== undefined && checkOut.kind !== 'offset');
+    const storedTimezone = rowTimezone ?? (usedWallClock ? zone : undefined);
+
+    const candidate = {
+      tripId: ctx.tripId,
+      type,
+      name,
+      address: cleanCell(row.address),
+      checkInDate: checkIn?.iso,
+      checkOutDate: checkOut?.iso,
+      timezone: storedTimezone,
+      confirmationNumber: cleanCell(row.confirmationNumber),
+      cost: costDecimal === undefined ? undefined : Number(costDecimal),
+      currency,
+      bookingUrl: cleanCell(row.bookingUrl),
+      notes: cleanCell(row.notes),
+    };
+    const parsed = createLodgingSchema.safeParse(candidate);
+    if (!parsed.success) addSchemaIssues(issues, parsed.error);
+
+    if (parsed.success && issues.errors.length === 0) {
+      const key: LodgingKey = { name: parsed.data.name, checkInDate: checkIn?.iso ?? null };
+      const existingIndex = findDuplicateIndex(key, ctx.existing, isDuplicateLodging);
+      if (existingIndex >= 0) {
+        issues.warn('name', 'duplicate_existing', `Looks like a duplicate of the existing stay "${ctx.existing[existingIndex].name}" (same name and check-in)`);
+      } else {
+        const earlier = findDuplicateIndex(key, seen, isDuplicateLodging);
+        if (earlier >= 0) {
+          issues.warn('name', 'duplicate_in_file', `Looks like a duplicate of row ${seenRowIndex[earlier] + 1} in this file (same name and check-in)`);
+        }
+      }
+      seen.push(key);
+      seenRowIndex.push(index);
+    }
+
+    return finish(
+      issues,
+      {
+        type: type ?? null,
+        name: name ?? null,
+        address: cleanCell(row.address) ?? null,
+        checkInDate: checkIn?.iso ?? null,
+        checkOutDate: checkOut?.iso ?? null,
+        timezone: storedTimezone ?? null,
+        confirmationNumber: cleanCell(row.confirmationNumber) ?? null,
+        bookingUrl: cleanCell(row.bookingUrl) ?? null,
+        cost: costDecimal ?? null,
+        currency: currency ?? null,
+        notes: cleanCell(row.notes) ?? null,
+      },
+      parsed.success ? { lodging: parsed.data, costDecimal } : undefined
+    );
+  });
+}
+
+// =============================================================================
+// TRANSPORTATION
+// =============================================================================
+
+export interface TransportationEvalContext {
+  tripId: number;
+  /** Zone for wall-clock times with no timezone cell; resolved by the caller as for activities. */
+  defaultTimezone: string;
+  /** Legs already in the trip. */
+  existing: ReadonlyArray<TransportationKey>;
+}
+
+export interface TransportationRowData {
+  transportation: CreateTransportationInput;
+  /** Canonical cost string for `Prisma.Decimal`; the schema only ever sees a number. */
+  costDecimal?: string;
+}
+
+export function evaluateTransportationRows(
+  rows: readonly TransportationImportRow[],
+  ctx: TransportationEvalContext
+): EvaluatedRow<TransportationRowData>[] {
+  const seen: TransportationKey[] = [];
+  const seenRowIndex: number[] = [];
+
+  return rows.map((row, index) => {
+    const issues = new IssueCollector();
+
+    const type = issues.take('type', parseEnumCell(cleanCell(row.type), TRANSPORTATION_TYPES, 'Type'));
+    if (type === undefined && !issues.hasError('type')) {
+      issues.error('type', `Type is required. Use one of: ${TRANSPORTATION_TYPES.join(', ')}`);
+    }
+
+    const from = cleanCell(row.fromLocationName);
+    const to = cleanCell(row.toLocationName);
+    if (!from && !to) issues.error('fromLocationName', 'Give a From or a To place');
+
+    // The departure is read in the start zone and the arrival in the end zone, each falling back
+    // as for activities (row zone, then trip zone, then user zone). An arrival with no end zone
+    // is read in the start zone when one was given, and a warning says so.
+    const startZoneCell = issues.take('startTimezone', parseTimezoneCell(cleanCell(row.startTimezone)));
+    const endZoneCell = issues.take('endTimezone', parseTimezoneCell(cleanCell(row.endTimezone)));
+    const startZone = startZoneCell ?? ctx.defaultTimezone;
+    const endZone = endZoneCell ?? startZoneCell ?? ctx.defaultTimezone;
+
+    const departure = issues.take('departureTime', parseDateTimeCell(cleanCell(row.departureTime), startZone));
+    const arrival = issues.take('arrivalTime', parseDateTimeCell(cleanCell(row.arrivalTime), endZone));
+    if (departure && arrival && new Date(arrival.iso).getTime() < new Date(departure.iso).getTime()
+      && !issues.hasError('departureTime') && !issues.hasError('arrivalTime')) {
+      issues.error('arrivalTime', 'Arrival is before the departure');
+    }
+    if (arrival?.kind === 'wall' && startZoneCell && !endZoneCell) {
+      issues.warn(
+        'endTimezone',
+        'timezone_assumed',
+        `No end timezone: the arrival was read as ${startZoneCell} time, the same as the departure`
+      );
+    }
+
+    const costDecimal = issues.take('cost', parseAmount(cleanCell(row.cost)));
+    const currency = issues.take('currency', parseCurrency(cleanCell(row.currency)));
+    if (costDecimal !== undefined && currency === undefined && !issues.hasError('currency')) {
+      issues.warn('currency', 'cost_without_currency', 'Cost has no currency, so it will not count toward the trip budget');
+    }
+
+    const storedStartTimezone = startZoneCell ?? (departure?.kind === 'wall' ? startZone : undefined);
+    const storedEndTimezone = endZoneCell ?? (arrival?.kind === 'wall' ? endZone : undefined);
+
+    const carrier = cleanCell(row.carrier);
+    const vehicleNumber = cleanCell(row.vehicleNumber);
+    const candidate = {
+      tripId: ctx.tripId,
+      type,
+      fromLocationName: from,
+      toLocationName: to,
+      departureTime: departure?.iso,
+      arrivalTime: arrival?.iso,
+      startTimezone: storedStartTimezone,
+      endTimezone: storedEndTimezone,
+      carrier,
+      vehicleNumber,
+      confirmationNumber: cleanCell(row.confirmationNumber),
+      cost: costDecimal === undefined ? undefined : Number(costDecimal),
+      currency,
+      notes: cleanCell(row.notes),
+    };
+    const parsed = createTransportationSchema.safeParse(candidate);
+    if (!parsed.success) addSchemaIssues(issues, parsed.error);
+
+    if (parsed.success && issues.errors.length === 0) {
+      const key: TransportationKey = {
+        type: parsed.data.type,
+        carrier,
+        vehicleNumber,
+        fromLocationName: from,
+        toLocationName: to,
+        departureTime: departure?.iso ?? null,
+      };
+      const existingIndex = findDuplicateIndex(key, ctx.existing, isDuplicateTransportation);
+      if (existingIndex >= 0) {
+        issues.warn('departureTime', 'duplicate_existing', 'Looks like a duplicate of an existing transportation leg (same carrier, vehicle number and departure)');
+      } else {
+        const earlier = findDuplicateIndex(key, seen, isDuplicateTransportation);
+        if (earlier >= 0) {
+          issues.warn('departureTime', 'duplicate_in_file', `Looks like a duplicate of row ${seenRowIndex[earlier] + 1} in this file (same carrier, vehicle number and departure)`);
+        }
+      }
+      seen.push(key);
+      seenRowIndex.push(index);
+    }
+
+    return finish(
+      issues,
+      {
+        type: type ?? null,
+        fromLocationName: from ?? null,
+        toLocationName: to ?? null,
+        departureTime: departure?.iso ?? null,
+        arrivalTime: arrival?.iso ?? null,
+        startTimezone: storedStartTimezone ?? null,
+        endTimezone: storedEndTimezone ?? null,
+        carrier: carrier ?? null,
+        vehicleNumber: vehicleNumber ?? null,
+        confirmationNumber: cleanCell(row.confirmationNumber) ?? null,
+        cost: costDecimal ?? null,
+        currency: currency ?? null,
+        notes: cleanCell(row.notes) ?? null,
+      },
+      parsed.success ? { transportation: parsed.data, costDecimal } : undefined
     );
   });
 }

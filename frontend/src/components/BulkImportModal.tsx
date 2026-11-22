@@ -32,7 +32,22 @@ interface BulkImportModalProps {
 
 type Step = 'choose' | 'map' | 'preview' | 'result';
 
-const ENTITY_LABEL: Record<ImportEntity, string> = { locations: 'Locations', activities: 'Activities' };
+const ENTITY_ORDER: ImportEntity[] = ['locations', 'activities', 'lodging', 'transportation'];
+
+const ENTITY_LABEL: Record<ImportEntity, string> = {
+  locations: 'Locations',
+  activities: 'Activities',
+  lodging: 'Lodging',
+  transportation: 'Transportation',
+};
+
+/** [singular, plural] for the result sentence. */
+const ENTITY_NOUN: Record<ImportEntity, [string, string]> = {
+  locations: ['location', 'locations'],
+  activities: ['activity', 'activities'],
+  lodging: ['stay', 'stays'],
+  transportation: ['leg', 'legs'],
+};
 
 const STEP_TITLE: Record<Step, string> = {
   choose: 'Import from CSV',
@@ -67,7 +82,7 @@ const secondaryButton =
 const primaryButton = 'btn btn-primary min-h-[44px] disabled:opacity-50';
 
 /**
- * Wizard for importing locations or activities from a CSV file.
+ * Wizard for importing locations, activities, lodging or transportation from a CSV file.
  *
  * Choose type and file -> map columns -> preview (a server dry run, so it is exactly what the
  * real run will accept) -> result with a downloadable error report.
@@ -180,7 +195,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
       });
       setResult(done);
       setStep('result');
-      for (const key of ['trip', 'budget-summary', entity === 'locations' ? 'locations' : 'activities']) {
+      for (const key of ['trip', 'budget-summary', entity]) {
         void queryClient.invalidateQueries({ queryKey: [key, tripId] });
       }
       if (done.created > 0) onComplete?.();
@@ -260,11 +275,11 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
         <div className="space-y-5">
           <fieldset>
             <legend className="label">What are you importing?</legend>
-            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-              {(['locations', 'activities'] as const).map((option) => (
+            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {ENTITY_ORDER.map((option) => (
                 <label
                   key={option}
-                  className={`flex min-h-[44px] flex-1 cursor-pointer items-center gap-3 rounded-lg border px-4 py-2 text-sm ${
+                  className={`flex min-h-[44px] cursor-pointer items-center gap-3 rounded-lg border px-4 py-2 text-sm ${
                     entity === option
                       ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                       : 'border-stone-300 dark:border-dusk-600'
@@ -308,20 +323,23 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
           <div className="rounded-lg bg-stone-50 p-3 text-sm text-stone-700 dark:bg-dusk-800 dark:text-dusk-300">
             <p className="font-medium">Need a starting point?</p>
             <p className="mt-1">
-              Download a template with a header row and two example rows:{' '}
-              <button type="button" className="font-medium text-primary-700 underline dark:text-primary-400" onClick={() => downloadTemplate('locations')}>
-                Download locations template
-              </button>
-              {' or '}
-              <button type="button" className="font-medium text-primary-700 underline dark:text-primary-400" onClick={() => downloadTemplate('activities')}>
-                Download activities template
-              </button>
-              .
+              Download a template with a header row and two example rows:
             </p>
-            {entity === 'activities' && (
+            <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+              {ENTITY_ORDER.map((which) => (
+                <li key={which}>
+                  <button type="button" className="font-medium text-primary-700 underline dark:text-primary-400" onClick={() => downloadTemplate(which)}>
+                    Download {ENTITY_LABEL[which].toLowerCase()} template
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {entity !== 'locations' && (
               <p className="mt-2 text-xs">
-                Times: <code>YYYY-MM-DD HH:mm</code> is read in the timezone column, else the trip timezone, else your timezone.
+                Times: <code>YYYY-MM-DD HH:mm</code> is read in the{' '}
+                {entity === 'transportation' ? 'start or end timezone column (departure and arrival)' : 'timezone column'}, else the trip timezone, else your timezone.
                 ISO 8601 with an offset (<code>2026-04-03T10:30:00+02:00</code>) is used as given. Day-first or month-first dates such as <code>03/04/2026</code> are rejected.
+                {entity === 'lodging' && ' A date alone (2026-04-03) means midnight that day.'}
               </p>
             )}
           </div>
@@ -412,7 +430,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
       {step === 'result' && result && (
         <div className="space-y-4">
           <p className="text-base font-medium text-stone-900 dark:text-dusk-100" role="status">
-            {result.created} {ENTITY_LABEL[entity].toLowerCase()} {result.created === 1 ? 'was' : 'were'} imported.
+            {result.created} {ENTITY_NOUN[entity][result.created === 1 ? 0 : 1]} {result.created === 1 ? 'was' : 'were'} imported.
             {skipped.length > 0 && ` ${skipped.length} ${skipped.length === 1 ? 'row was' : 'rows were'} skipped.`}
           </p>
           {result.tripTimezoneSet && (

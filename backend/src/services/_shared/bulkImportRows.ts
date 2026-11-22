@@ -132,6 +132,24 @@ export function parseCurrency(raw: string | undefined): CellResult<string | unde
   return ok(code);
 }
 
+/**
+ * Parses a type cell against a fixed list. Case, spaces, hyphens and underscores are ignored, so
+ * "Bed and Breakfast", "bed-and-breakfast" and "bed_and_breakfast" all give `bed_and_breakfast`.
+ * Blank is `undefined`; anything outside the list is an error naming the accepted values.
+ */
+export function parseEnumCell(
+  raw: string | undefined,
+  allowed: readonly string[],
+  label: string
+): CellResult<string | undefined> {
+  if (raw === undefined) return ok(undefined);
+  const key = (value: string) => value.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  const wanted = key(raw);
+  const match = allowed.find((value) => key(value) === wanted);
+  if (!match) return fail(`${label} "${raw}" is not recognised. Use one of: ${allowed.join(', ')}`);
+  return ok(match);
+}
+
 // =============================================================================
 // TIMEZONES AND DATE-TIMES
 // =============================================================================
@@ -308,6 +326,22 @@ export function isDuplicateLocation(a: LocationKey, b: LocationKey): boolean {
   );
 }
 
+export interface LodgingKey {
+  name: string;
+  /** UTC instant of check-in. */
+  checkInDate?: Date | string | null;
+}
+
+export interface TransportationKey {
+  type: string;
+  carrier?: string | null;
+  vehicleNumber?: string | null;
+  fromLocationName?: string | null;
+  toLocationName?: string | null;
+  /** UTC instant; null/undefined for a leg with no departure time. */
+  departureTime?: Date | string | null;
+}
+
 function instantOf(value: Date | string | null | undefined): number | null {
   if (value == null) return null;
   const time = value instanceof Date ? value.getTime() : new Date(value).getTime();
@@ -325,4 +359,29 @@ export function findDuplicateIndex<T>(candidate: T, pool: readonly T[], isSame: 
     if (isSame(candidate, pool[i])) return i;
   }
   return -1;
+}
+
+/** Two stays are duplicates when the name and the check-in instant both match. */
+export function isDuplicateLodging(a: LodgingKey, b: LodgingKey): boolean {
+  return normalizeNameKey(a.name) === normalizeNameKey(b.name) && instantOf(a.checkInDate) === instantOf(b.checkInDate);
+}
+
+const textKey = (value: string | null | undefined): string => (value ? normalizeNameKey(value) : '');
+
+/**
+ * Two legs are duplicates when the departure instant, carrier and vehicle number all match. A leg
+ * with neither carrier nor vehicle number (a drive, a walk) is told apart by its type and the
+ * from/to names instead.
+ */
+export function isDuplicateTransportation(a: TransportationKey, b: TransportationKey): boolean {
+  if (instantOf(a.departureTime) !== instantOf(b.departureTime)) return false;
+  if (textKey(a.carrier) !== textKey(b.carrier) || textKey(a.vehicleNumber) !== textKey(b.vehicleNumber)) return false;
+  if (textKey(a.carrier) === '' && textKey(a.vehicleNumber) === '') {
+    return (
+      a.type === b.type &&
+      textKey(a.fromLocationName) === textKey(b.fromLocationName) &&
+      textKey(a.toLocationName) === textKey(b.toLocationName)
+    );
+  }
+  return true;
 }

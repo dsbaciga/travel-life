@@ -40,6 +40,37 @@ export const activityImportRowSchema = z.strictObject({
   notes: cell,
 });
 
+export const lodgingImportRowSchema = z.strictObject({
+  type: cell,
+  name: cell,
+  address: cell,
+  checkInDate: cell,
+  checkOutDate: cell,
+  timezone: cell,
+  confirmationNumber: cell,
+  bookingUrl: cell,
+  cost: cell,
+  currency: cell,
+  notes: cell,
+});
+
+export const transportationImportRowSchema = z.strictObject({
+  type: cell,
+  fromLocationName: cell,
+  toLocationName: cell,
+  departureTime: cell,
+  arrivalTime: cell,
+  /** Zone for the departure time; also used for the arrival when `endTimezone` is blank. */
+  startTimezone: cell,
+  endTimezone: cell,
+  carrier: cell,
+  vehicleNumber: cell,
+  confirmationNumber: cell,
+  cost: cell,
+  currency: cell,
+  notes: cell,
+});
+
 const importOptions = {
   /** Validate only: nothing is written, and the per-row results are exactly what a real run would produce. */
   dryRun: z.boolean().default(false),
@@ -57,10 +88,24 @@ export const importActivitiesSchema = z.object({
   ...importOptions,
 });
 
+export const importLodgingSchema = z.object({
+  rows: z.array(lodgingImportRowSchema).min(1, 'At least one row is required').max(IMPORT_MAX_ROWS, `At most ${IMPORT_MAX_ROWS} rows can be imported at once`),
+  ...importOptions,
+});
+
+export const importTransportationSchema = z.object({
+  rows: z.array(transportationImportRowSchema).min(1, 'At least one row is required').max(IMPORT_MAX_ROWS, `At most ${IMPORT_MAX_ROWS} rows can be imported at once`),
+  ...importOptions,
+});
+
 export type LocationImportRow = z.infer<typeof locationImportRowSchema>;
 export type ActivityImportRow = z.infer<typeof activityImportRowSchema>;
 export type ImportLocationsInput = z.infer<typeof importLocationsSchema>;
 export type ImportActivitiesInput = z.infer<typeof importActivitiesSchema>;
+export type LodgingImportRow = z.infer<typeof lodgingImportRowSchema>;
+export type TransportationImportRow = z.infer<typeof transportationImportRowSchema>;
+export type ImportLodgingInput = z.infer<typeof importLodgingSchema>;
+export type ImportTransportationInput = z.infer<typeof importTransportationSchema>;
 
 // =============================================================================
 // RESPONSE
@@ -74,7 +119,8 @@ export type ImportIssueCode =
   | 'no_coordinates'
   | 'location_not_found'
   | 'location_ambiguous'
-  | 'cost_without_currency';
+  | 'cost_without_currency'
+  | 'timezone_assumed';
 
 export interface ImportIssue {
   /** The import field the issue belongs to, or null for a whole-row problem. */
@@ -112,7 +158,7 @@ export interface BulkImportResult {
   /** Set when the trip had no timezone and the first located row supplied one. */
   tripTimezoneSet: string | null;
   /**
-   * Activities only: the zone used to read wall-clock times that carry neither an offset nor a
+   * Activities, lodging and transportation: the zone used to read wall-clock times that carry neither an offset nor a
    * `timezone` cell, and where it came from (the trip, else the user's setting, else UTC).
    */
   defaultTimezone: { zone: string; source: 'trip' | 'user' | 'utc' } | null;
