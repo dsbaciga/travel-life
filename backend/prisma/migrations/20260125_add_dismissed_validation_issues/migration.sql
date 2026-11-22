@@ -1,8 +1,11 @@
 -- CreateEnum
-CREATE TYPE "ValidationIssueCategory" AS ENUM ('SCHEDULE', 'ACCOMMODATIONS', 'TRANSPORTATION', 'COMPLETENESS');
+DO $$ BEGIN
+    CREATE TYPE "ValidationIssueCategory" AS ENUM ('SCHEDULE', 'ACCOMMODATIONS', 'TRANSPORTATION', 'COMPLETENESS');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
-CREATE TABLE "dismissed_validation_issues" (
+CREATE TABLE IF NOT EXISTS "dismissed_validation_issues" (
     "id" SERIAL NOT NULL,
     "trip_id" INTEGER NOT NULL,
     "issue_type" VARCHAR(100) NOT NULL,
@@ -14,10 +17,11 @@ CREATE TABLE "dismissed_validation_issues" (
 );
 
 -- CreateIndex
-CREATE INDEX "dismissed_validation_issues_trip_id_idx" ON "dismissed_validation_issues"("trip_id");
+CREATE INDEX IF NOT EXISTS "dismissed_validation_issues_trip_id_idx" ON "dismissed_validation_issues"("trip_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "dismissed_validation_issues_trip_id_issue_type_issue_key_key" ON "dismissed_validation_issues"("trip_id", "issue_type", "issue_key");
+CREATE UNIQUE INDEX IF NOT EXISTS "dismissed_validation_issues_trip_id_issue_type_issue_key_key" ON "dismissed_validation_issues"("trip_id", "issue_type", "issue_key");
 
 -- AddForeignKey
+ALTER TABLE "dismissed_validation_issues" DROP CONSTRAINT IF EXISTS "dismissed_validation_issues_trip_id_fkey";
 ALTER TABLE "dismissed_validation_issues" ADD CONSTRAINT "dismissed_validation_issues_trip_id_fkey" FOREIGN KEY ("trip_id") REFERENCES "trips"("id") ON DELETE CASCADE ON UPDATE CASCADE;

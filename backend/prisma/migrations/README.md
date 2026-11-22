@@ -90,36 +90,76 @@ against a genuinely empty database therefore failed on the very first migration.
 npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script
 ```
 
-It contains all 37 tables, the enums, `CREATE EXTENSION postgis`, every index and
+It contains the tables, the enums, `CREATE EXTENSION postgis`, every index and
 foreign key, plus (hand-appended) the four `CHECK` constraints Prisma cannot express.
-It reflects the schema **as of today**, not as of 2025 — see the next section.
+It reflects the schema as of 2026-07-26, not as of 2025; the migrations dated after it
+(starting with `20260728040000_add_travel_partner_requests`) are genuinely applied on top.
 
 ## Provisioning a genuinely fresh database
 
-The baseline creates the *current* schema, so the 51 legacy migrations that follow it
-would replay DDL that already exists (`ADD COLUMN "timezone"` on a `users` table that
-already has it, etc.). Most of them are not idempotent, so **`prisma migrate deploy`
-alone still cannot provision a fresh database in one shot.** Fixing that properly would
-mean rewriting history; instead, provision a fresh database like this:
+One command, against an empty PostGIS-enabled database:
 
 ```bash
-# 1. Create the schema from the baseline.
-#    (db execute reads the datasource from prisma.config.ts / DATABASE_URL.)
-npx prisma db execute --file prisma/migrations/00000000000000_init/migration.sql
-
-# 2. Record the baseline and every legacy migration as applied
-#    (their content is already inside the baseline).
-for d in prisma/migrations/*/; do
-  npx prisma migrate resolve --applied "$(basename "$d")"
-done
-
-# 3. From here on, normal deploys work.
 npx prisma migrate deploy
 ```
 
-Step 2 marks the four 2026-07-28 migrations as applied too; that is correct, because
-their effects are already present in the baseline (they are written to be no-ops
-against a database that already has them anyway).
+That is the whole recipe. `00000000000000_init` creates the schema as it stood on 2026-07-26,
+every migration after it replays on top, and the result is exactly `schema.prisma` (including
+the CHECK constraints). Nothing is marked as applied by hand, and no `db execute` step is needed.
+
+**Do not follow the older recipe** (`db execute` the baseline, then `migrate resolve --applied`
+every migration). It marked the migrations dated after the baseline as applied without running
+them, which left `trips.country_code`, the `trip_emergency_info` table and the
+`travel_partner_requests` table missing.
+
+How to check a fresh database, with a throwaway container on a free port:
+
+```bash
+docker run -d --name tl-fresh -e POSTGRES_PASSWORD=pw -e POSTGRES_DB=app -p 55440:5432 postgis/postgis:16-3.4
+export DATABASE_URL=postgresql://postgres:pw@localhost:55440/app
+npx prisma migrate deploy
+npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script
+# expected: "-- This is an empty migration."
+docker rm -f tl-fresh
+```
+
+### Why the older migrations are idempotent
+
+The baseline already contains everything the 2025-10-15 to 2026-07-28 migrations create, and
+`migrate deploy` replays them after it. Originally they were bare `ADD COLUMN` / `CREATE TABLE`
+statements and failed on an empty database (the first one with
+`column "timezone" of relation "users" already exists`). They now use `IF NOT EXISTS` /
+`IF EXISTS`, `DO` blocks for enums, constraints and renames, and a column-exists guard around
+the old data moves, so on a fresh database they are no-ops. Their behaviour on a database that
+has not applied them is unchanged. Two small deliberate differences on a fresh database:
+
+- `20260301000000_add_email_import_system` no longer creates `users.forwarding_email` and its
+  unique index. Nothing reads them, the feature was removed, and `schema.prisma` has no such
+  column. Databases that already ran the original keep the unused column; drop it with
+  `ALTER TABLE users DROP COLUMN forwarding_email;` if you want them to match.
+- `20260215_add_route_cache_unique_index` skips its index when the baseline already created
+  the same unique index, instead of creating a duplicate.
+
+### Editing applied migrations: what Prisma does with the changed checksums
+
+Prisma records a checksum of each migration file when it applies it. After this change the
+files differ from what existing databases recorded. This was tested against Prisma 7.10.1:
+
+- `prisma migrate deploy` (production, the container entrypoint) does **not** compare
+  checksums of already-applied migrations. It applies only the migrations that are not yet
+  recorded and succeeds. No action is needed on a deployed database.
+- `prisma migrate dev` **does** compare them. On a database that applied the earlier versions
+  it prints `The migration ... was modified after it was applied` and offers to reset the
+  schema (which deletes all data). Do not accept that on a database you care about. Instead
+  run, once per development database, from `backend/`:
+
+```bash
+DATABASE_URL=postgresql://... node scripts/refresh-migration-checksums.js          # dry run
+DATABASE_URL=postgresql://... node scripts/refresh-migration-checksums.js --apply
+```
+
+  It rewrites only the `checksum` column of `_prisma_migrations` for the edited migrations
+  (a fixed list inside the script). It runs no migration SQL and touches no table.
 
 ## Migrations added 2026-11-16 (safe on a populated database)
 

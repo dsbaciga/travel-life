@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "photos" DROP COLUMN "location_id";
+ALTER TABLE "photos" DROP COLUMN IF EXISTS "location_id";

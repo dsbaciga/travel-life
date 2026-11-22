@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "route_cache" ADD COLUMN "route_geometry" JSONB;
+ALTER TABLE "route_cache" ADD COLUMN IF NOT EXISTS "route_geometry" JSONB;

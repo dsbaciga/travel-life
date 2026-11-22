@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "trip_tags" ADD COLUMN "text_color" VARCHAR(7);
+ALTER TABLE "trip_tags" ADD COLUMN IF NOT EXISTS "text_color" VARCHAR(7);

@@ -1,10 +1,10 @@
 -- AlterTable
-ALTER TABLE "transportation" ADD COLUMN "calculated_distance" DECIMAL(10,2),
-ADD COLUMN "calculated_duration" DECIMAL(10,2),
-ADD COLUMN "distance_source" VARCHAR(20);
+ALTER TABLE "transportation" ADD COLUMN IF NOT EXISTS "calculated_distance" DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS "calculated_duration" DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS "distance_source" VARCHAR(20);
 
 -- CreateTable
-CREATE TABLE "route_cache" (
+CREATE TABLE IF NOT EXISTS "route_cache" (
     "id" SERIAL NOT NULL,
     "from_lat" DECIMAL(10,8) NOT NULL,
     "from_lon" DECIMAL(11,8) NOT NULL,
@@ -20,4 +20,4 @@ CREATE TABLE "route_cache" (
 );
 
 -- CreateIndex
-CREATE INDEX "route_cache_from_lat_from_lon_to_lat_to_lon_profile_idx" ON "route_cache"("from_lat", "from_lon", "to_lat", "to_lon", "profile");
+CREATE INDEX IF NOT EXISTS "route_cache_from_lat_from_lon_to_lat_to_lon_profile_idx" ON "route_cache"("from_lat", "from_lon", "to_lat", "to_lon", "profile");

@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "trip_series" (
+CREATE TABLE IF NOT EXISTS "trip_series" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "name" VARCHAR(500) NOT NULL,
@@ -11,17 +11,19 @@ CREATE TABLE "trip_series" (
 );
 
 -- AlterTable
-ALTER TABLE "trips" ADD COLUMN "series_id" INTEGER,
-ADD COLUMN "series_order" INTEGER;
+ALTER TABLE "trips" ADD COLUMN IF NOT EXISTS "series_id" INTEGER,
+ADD COLUMN IF NOT EXISTS "series_order" INTEGER;
 
 -- CreateIndex
-CREATE INDEX "trip_series_user_id_idx" ON "trip_series"("user_id");
+CREATE INDEX IF NOT EXISTS "trip_series_user_id_idx" ON "trip_series"("user_id");
 
 -- CreateIndex
-CREATE INDEX "trips_series_id_series_order_idx" ON "trips"("series_id", "series_order");
+CREATE INDEX IF NOT EXISTS "trips_series_id_series_order_idx" ON "trips"("series_id", "series_order");
 
 -- AddForeignKey
+ALTER TABLE "trips" DROP CONSTRAINT IF EXISTS "trips_series_id_fkey";
 ALTER TABLE "trips" ADD CONSTRAINT "trips_series_id_fkey" FOREIGN KEY ("series_id") REFERENCES "trip_series"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "trip_series" DROP CONSTRAINT IF EXISTS "trip_series_user_id_fkey";
 ALTER TABLE "trip_series" ADD CONSTRAINT "trip_series_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

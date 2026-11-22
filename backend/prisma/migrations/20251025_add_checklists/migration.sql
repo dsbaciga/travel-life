@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "checklists" (
+CREATE TABLE IF NOT EXISTS "checklists" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
     "name" VARCHAR(500) NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "checklists" (
 );
 
 -- CreateTable
-CREATE TABLE "checklist_items" (
+CREATE TABLE IF NOT EXISTS "checklist_items" (
     "id" SERIAL NOT NULL,
     "checklist_id" INTEGER NOT NULL,
     "name" VARCHAR(500) NOT NULL,
@@ -31,7 +31,9 @@ CREATE TABLE "checklist_items" (
 );
 
 -- AddForeignKey
+ALTER TABLE "checklists" DROP CONSTRAINT IF EXISTS "checklists_user_id_fkey";
 ALTER TABLE "checklists" ADD CONSTRAINT "checklists_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "checklist_items" DROP CONSTRAINT IF EXISTS "checklist_items_checklist_id_fkey";
 ALTER TABLE "checklist_items" ADD CONSTRAINT "checklist_items_checklist_id_fkey" FOREIGN KEY ("checklist_id") REFERENCES "checklists"("id") ON DELETE CASCADE ON UPDATE CASCADE;
