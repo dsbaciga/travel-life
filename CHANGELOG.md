@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Link photos to activities automatically.** The Photos tab has a new **Link to activities** button that matches each photo to an activity by the time it was taken: a photo is matched only to an activity it was taken during, or to an all-day activity on the same date (an activity with no end time is assumed to last 2 hours). A photo taken between activities is left unmatched rather than given to the closest one. You review the matches, grouped by activity with thumbnails, and untick anything wrong before linking. Photos already linked to an activity are left alone, and the dialog says how many photos were left out and why.
 - **Backfill photo links for existing trips.** A one-off command applies the same matching to every trip at once, with no review step: `docker exec travel-life-backend node dist/scripts/backfillPhotoActivityLinks.js`. Add `--dry-run` to see what it would link without changing anything, or `--trip=<id>` / `--user=<id>` to limit it. It skips photos that already have an activity link, so it is safe to run again.
 
+### Changed
+
+- **One link control per card.** Places, activities, transport, lodging, journal entries and timeline items showed their links twice: the **Linked items** list and a separate link icon with a count. Once something is linked, only the list remains, with an **Edit links** button in its header that opens the linking dialog. The link icon still appears when nothing is linked yet, so you can add the first link.
+
 ### Fixed
 
 - **Trip actions menu on phones.** The ⋮ menu on a trip's page opened off the left edge of the screen when the button sat below the trip title; it now opens toward whichever side has room.

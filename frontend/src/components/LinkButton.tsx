@@ -11,6 +11,9 @@ interface LinkButtonProps {
   onUpdate?: () => void;
   className?: string;
   size?: 'sm' | 'md';
+  /** Render nothing once the entity has links: used next to a manageable
+   *  LinkedEntitiesDisplay, whose own "Edit links" button takes over. */
+  hideWhenLinked?: boolean;
 }
 
 export default function LinkButton({
@@ -21,6 +24,7 @@ export default function LinkButton({
   onUpdate,
   className = '',
   size = 'md',
+  hideWhenLinked = false,
 }: LinkButtonProps) {
   const [showPanel, setShowPanel] = useState(false);
 
@@ -47,6 +51,8 @@ export default function LinkButton({
     }
     return parts.join('\n');
   };
+
+  if (hideWhenLinked && hasLinks) return null;
 
   return (
     <>

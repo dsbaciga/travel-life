@@ -477,6 +477,8 @@ export default function TimelineEventCard({
           entityType={entityType}
           entityId={actualEntityId}
           compact
+          manageable
+          onLinksUpdate={onLinkUpdate}
           currentDate={item.dateTime}
           timezone={tripTimezone}
         />
@@ -490,6 +492,7 @@ export default function TimelineEventCard({
             linkSummary={linkSummary}
             onUpdate={onLinkUpdate}
             size="sm"
+            hideWhenLinked
           />
           {directionsDestination && (
             <DirectionsButton
