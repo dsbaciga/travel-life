@@ -334,6 +334,21 @@ Rules worth knowing: times without an offset are wall-clock times in the row tim
 
 Lodging and transportation rules: `type` is required and must be one of the single-create values (lodging: `hotel`, `hostel`, `airbnb`, `vacation_rental`, `camping`, `resort`, `motel`, `bed_and_breakfast`, `apartment`, `friends_family`, `other`; transportation: `flight`, `train`, `bus`, `car`, `ferry`, `bicycle`, `walk`, `other`), matched ignoring case and spaces. A stay needs `name`, `checkInDate` and `checkOutDate` (a bare `YYYY-MM-DD` means midnight in the stay's zone) and check-out must be after check-in. A leg needs a `fromLocationName` or `toLocationName` (kept as text, not linked to trip locations) and its arrival may not be before its departure; the departure is read in `startTimezone` and the arrival in `endTimezone`, each falling back to the trip timezone, then the user timezone (an arrival with only a start timezone is read in it and gets a `timezone_assumed` warning). The zone used is stored on the stay or leg. Duplicates are flagged as warnings: same name and check-in for a stay; same departure, carrier and vehicle number for a leg (type and from/to names when both carrier and vehicle number are blank). Loyalty programs and place links are not imported.
 
+### Trip Stops / Route Planner (`/api/trips/:tripId/stops`)
+
+The ordered stops of the Multi-City Trip Planner. Reads need view access, writes need edit access.
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/` | List the stops in route order | Yes |
+| POST | `/` | Append a stop (free place or from a saved place) | Yes |
+| GET | `/legs?profile=driving-car` | Road distance and time between consecutive stops | Yes |
+| PUT | `/reorder` | Reorder; body is the full ordered `stopIds` | Yes |
+| PUT | `/:id` | Update a stop | Yes |
+| DELETE | `/:id` | Delete a stop | Yes |
+
+`GET /legs` returns `{ profile, legs: [{ fromStopId, toStopId, mode, distanceKm, durationMinutes, routed }] }`, one entry per consecutive pair (stops minus one). `profile` is `driving-car` (default), `cycling-regular` or `foot-walking`. It uses `routing.service` and its 30-day route cache; `routed: true` means a road route (fresh or cached). `mode` is `flight` when the straight-line distance is 600 km or more (`FLIGHT_LEG_THRESHOLD_KM` in `tripStop.types.ts`), otherwise `drive`. A flight leg is never sent to ORS or the route cache and comes back with `routed: false`, the straight-line `distanceKm` and `durationMinutes: null` (no time estimate, which also saves rate-limited calls). A drive leg that cannot be routed (no `OPENROUTESERVICE_API_KEY`, an ORS error or rate limit, or a leg over 2,500 km straight-line) comes back with `routed: false`, the straight-line `distanceKm` and `durationMinutes: null`; one failed leg never fails the request. At most three uncached ORS requests run at once.
+
 ### Entity Links (`/api/trips/:tripId/links`)
 
 Links connect any two entities (photos, locations, activities, lodging, transportation, journal entries, albums) within a trip.

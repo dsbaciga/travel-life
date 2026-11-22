@@ -177,7 +177,10 @@ describe('estimateTravel', () => {
     expect(estimateTravel(140).mode).toBe('drive');
     expect(estimateTravel(140).minutes).toBe(Math.round(((140 * 1.3) / 70) * 60));
     expect(estimateTravel(1500).mode).toBe('flight');
-    expect(estimateTravel(1500).minutes).toBe(Math.round((1500 / 800) * 60 + 150));
+    // A flight has no time estimate at all.
+    expect(estimateTravel(1500).minutes).toBeNull();
+    expect(estimateTravel(599.9).mode).toBe('drive');
+    expect(estimateTravel(600).mode).toBe('flight');
   });
 
   it('is zero minutes for no distance', () => {
