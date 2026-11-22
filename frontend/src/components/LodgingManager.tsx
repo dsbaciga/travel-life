@@ -1064,6 +1064,8 @@ export default function LodgingManager({
                 entityType="LODGING"
                 entityId={lodging.id}
                 compact
+                manageable
+                onLinksUpdate={invalidateLinkSummary}
               />
 
               {/* Actions - always at bottom on mobile */}
@@ -1075,6 +1077,7 @@ export default function LodgingManager({
                   linkSummary={getLinkSummary('LODGING', lodging.id)}
                   onUpdate={invalidateLinkSummary}
                   size="sm"
+                  hideWhenLinked
                 />
                 <div className="flex-1" />
                 <button

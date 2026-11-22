@@ -681,6 +681,7 @@ export default function JournalManager({
                         linkSummary={getLinkSummary('JOURNAL_ENTRY', entry.id)}
                         onUpdate={invalidateLinkSummary}
                         size="sm"
+                        hideWhenLinked
                       />
                       <button
                         type="button"
@@ -729,6 +730,8 @@ export default function JournalManager({
                     entityType="JOURNAL_ENTRY"
                     entityId={entry.id}
                     compact
+                    manageable
+                    onLinksUpdate={invalidateLinkSummary}
                   />
                 </div>
 

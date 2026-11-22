@@ -656,6 +656,7 @@ export default function LocationManager({
                 linkSummary={getLinkSummary("LOCATION", location.id)}
                 onUpdate={invalidateLinkSummary}
                 size="sm"
+                hideWhenLinked
               />
               {/* Directions from the device's current location — this list has
                   no itinerary order to infer an origin from. */}
@@ -683,6 +684,8 @@ export default function LocationManager({
             entityType="LOCATION"
             entityId={location.id}
             compact
+            manageable
+            onLinksUpdate={invalidateLinkSummary}
           />
         </div>
 

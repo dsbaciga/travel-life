@@ -17,6 +17,7 @@ import {
 import { extractDatePortion, resolveTimezone } from '../utils/timezone';
 import { useTimezoneResolver } from '../hooks/useTimezoneResolver';
 import EntityDetailModal from './EntityDetailModal';
+import LinkPanel from './LinkPanel';
 
 interface LinkedEntitiesDisplayProps {
   tripId: number;
@@ -35,6 +36,12 @@ interface LinkedEntitiesDisplayProps {
   currentDate?: Date;
   /** Optional: Timezone to use for date comparison */
   timezone?: string;
+  /** Optional: Show an "Edit links" button in the header that opens the link
+   *  panel. Pair with `<LinkButton hideWhenLinked>` so the card shows one link
+   *  control: the list (with its edit button) when linked, the icon when not. */
+  manageable?: boolean;
+  /** Optional: Called after links change through the "Edit links" panel */
+  onLinksUpdate?: () => void;
 }
 
 
@@ -104,6 +111,8 @@ export default function LinkedEntitiesDisplay({
   className = '',
   currentDate,
   timezone,
+  manageable = false,
+  onLinksUpdate,
 }: LinkedEntitiesDisplayProps) {
   const navigate = useNavigate();
   const resolveTz = useTimezoneResolver();
@@ -112,6 +121,7 @@ export default function LinkedEntitiesDisplay({
   const effectiveTimezone = resolveTz(timezone);
   // State for entity detail modal
   const [selectedEntity, setSelectedEntity] = useState<SelectedEntity | null>(null);
+  const [showLinkPanel, setShowLinkPanel] = useState(false);
 
   // Handle clicking on a linked entity - albums go to their detail page, others open modal
   const handleEntityClick = (linkedEntityType: EntityType, linkedEntityId: number) => {
@@ -208,8 +218,13 @@ export default function LinkedEntitiesDisplay({
     );
   }, [groupedLinks]);
 
+  // A manageable display stays visible while the entity has any link at all,
+  // even when the date filter hides every one: its "Edit links" button is then
+  // the card's only way into the link panel (the LinkButton hides itself).
+  const hasAnyLinks = !!linksData && linksData.linksFrom.length + linksData.linksTo.length > 0;
+
   // Don't render anything if there are no links
-  if (!isLoading && linkedEntityTypes.length === 0) {
+  if (!isLoading && linkedEntityTypes.length === 0 && !(manageable && hasAnyLinks)) {
     return null;
   }
 
@@ -243,6 +258,27 @@ export default function LinkedEntitiesDisplay({
           Linked Items
         </span>
         <div className="flex-1 h-px bg-gray-200 dark:bg-dusk-700"></div>
+        {manageable && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowLinkPanel(true);
+            }}
+            className="inline-flex items-center gap-1 px-2 py-1 -my-1 rounded-md text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+            aria-label="Edit linked items"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+              />
+            </svg>
+            Edit links
+          </button>
+        )}
       </div>
 
       {/* Linked entity cards by type */}
@@ -310,6 +346,16 @@ export default function LinkedEntitiesDisplay({
           );
         })}
       </div>
+
+      {showLinkPanel && (
+        <LinkPanel
+          tripId={tripId}
+          entityType={entityType}
+          entityId={entityId}
+          onClose={() => setShowLinkPanel(false)}
+          onUpdate={onLinksUpdate}
+        />
+      )}
 
       {/* Entity Detail Modal */}
       {selectedEntity && (

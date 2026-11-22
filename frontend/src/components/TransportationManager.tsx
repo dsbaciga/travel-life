@@ -376,6 +376,8 @@ function TransportationItem({
         entityType="TRANSPORTATION"
         entityId={transportation.id}
         compact
+        manageable
+        onLinksUpdate={invalidateLinkSummary}
       />
 
       {/* Actions - bottom row */}
@@ -387,6 +389,7 @@ function TransportationItem({
           linkSummary={getLinkSummary('TRANSPORTATION', transportation.id)}
           onUpdate={invalidateLinkSummary}
           size="sm"
+          hideWhenLinked
         />
         <div className="flex-1" />
         <button

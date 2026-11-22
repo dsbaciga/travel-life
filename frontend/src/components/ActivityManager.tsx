@@ -591,6 +591,8 @@ export default function ActivityManager({
           entityType="ACTIVITY"
           entityId={activity.id}
           compact
+          manageable
+          onLinksUpdate={invalidateLinkSummary}
         />
 
         {/* Actions - bottom row */}
@@ -602,6 +604,7 @@ export default function ActivityManager({
             linkSummary={getLinkSummary('ACTIVITY', activity.id)}
             onUpdate={invalidateLinkSummary}
             size="sm"
+            hideWhenLinked
           />
           <div className="flex-1" />
           <button
