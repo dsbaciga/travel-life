@@ -68,7 +68,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     return toProfile(user, await getUserPreferences(userId));
@@ -240,7 +240,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const prefs = await getUserPreferences(userId);
@@ -346,7 +346,7 @@ class UserService {
     });
 
     if (existingUser) {
-      throw new AppError('Username is already taken', 400);
+      throw new AppError('That username is taken. Choose another.', 400);
     }
 
     const user = await prisma.user.update({
@@ -464,13 +464,13 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValidPassword) {
-      throw new AppError('Current password is incorrect', 401);
+      throw new AppError("That isn't your current password. Check it and try again.", 401);
     }
 
     // Hash new password. Routed through the shared helper so the cost factor is
@@ -552,7 +552,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const prefs = await getUserPreferences(userId);
@@ -590,7 +590,7 @@ class UserService {
   ) {
     // Validate basic constraints before starting transaction
     if (data.travelPartnerId === userId) {
-      throw new AppError('Cannot set yourself as travel partner', 400);
+      throw new AppError("You can't be your own travel partner.", 400);
     }
 
     // Use interactive transaction with row-level locking to prevent race conditions
@@ -612,7 +612,7 @@ class UserService {
         for (const id of primaryIds) {
           const user = await lockAndFetchUser(id);
           if (!user) {
-            throw new AppError(id === userId ? 'User not found' : 'Partner user not found', 404);
+            throw new AppError(id === userId ? "We couldn't find that user." : 'Partner user not found', 404);
           }
         }
 
@@ -630,7 +630,7 @@ class UserService {
         // Clearing the partnership - only this user's side
         const currentUser = await lockAndFetchUser(userId);
         if (!currentUser) {
-          throw new AppError('User not found', 404);
+          throw new AppError("We couldn't find that user.", 404);
         }
 
         if (currentUser.travel_partner_id) {
@@ -643,7 +643,7 @@ class UserService {
         // Just fetching/updating current user (no partner change)
         const currentUser = await lockAndFetchUser(userId);
         if (!currentUser) {
-          throw new AppError('User not found', 404);
+          throw new AppError("We couldn't find that user.", 404);
         }
 
         if (data.defaultPartnerPermission !== undefined) {

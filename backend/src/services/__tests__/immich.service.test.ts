@@ -151,7 +151,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Cannot connect to Immich server');
+      ).rejects.toThrow('reach your Immich server');
     });
 
     it('IMM-003: throws on ENOTFOUND', async () => {
@@ -160,7 +160,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Cannot connect to Immich server');
+      ).rejects.toThrow('reach your Immich server');
     });
 
     it('IMM-004: throws on ETIMEDOUT', async () => {
@@ -169,7 +169,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Connection to Immich server timed out');
+      ).rejects.toThrow('took too long to respond');
     });
 
     it('IMM-005: throws on SSL certificate error', async () => {
@@ -187,7 +187,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Invalid Immich API key');
+      ).rejects.toThrow("Immich didn't accept that API key");
     });
 
     it('IMM-007: throws on 404 (wrong endpoint)', async () => {
@@ -196,7 +196,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Immich API endpoint not found');
+      ).rejects.toThrow("Immich didn't respond at that address");
     });
   });
 
@@ -262,7 +262,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.getAssets(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Failed to fetch assets from Immich');
+      ).rejects.toThrow("Couldn't load photos from Immich");
     });
 
     it('IMM-011: returns empty when no assets available during skip', async () => {
@@ -311,7 +311,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.getAssetById(TEST_API_URL, TEST_API_KEY, 'nonexistent')
-      ).rejects.toThrow('Failed to fetch asset from Immich');
+      ).rejects.toThrow("Couldn't load that photo from Immich.");
     });
   });
 
@@ -369,7 +369,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.searchAssets(TEST_API_URL, TEST_API_KEY, { city: 'Rome' })
-      ).rejects.toThrow('Failed to search assets in Immich');
+      ).rejects.toThrow("Couldn't search your Immich library.");
     });
   });
 
@@ -403,7 +403,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.getAlbums(TEST_API_URL, TEST_API_KEY)
-      ).rejects.toThrow('Failed to fetch albums from Immich');
+      ).rejects.toThrow("Couldn't load your albums from Immich.");
     });
   });
 
@@ -433,7 +433,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.getAlbumById(TEST_API_URL, TEST_API_KEY, 'nonexistent')
-      ).rejects.toThrow('Failed to fetch album from Immich');
+      ).rejects.toThrow("Couldn't load that album from Immich.");
     });
   });
 
@@ -482,7 +482,7 @@ describe('ImmichService', () => {
           '2024-07-01',
           '2024-07-10'
         )
-      ).rejects.toThrow('Failed to fetch assets by date range');
+      ).rejects.toThrow("Couldn't load photos for those dates from Immich.");
     });
   });
 
@@ -540,7 +540,7 @@ describe('ImmichService', () => {
 
       await expect(
         immichService.getAssetThumbnailStream(TEST_API_URL, TEST_API_KEY, 'asset-1')
-      ).rejects.toThrow('Failed to fetch thumbnail from Immich');
+      ).rejects.toThrow("Couldn't load that thumbnail from Immich.");
     });
   });
 });

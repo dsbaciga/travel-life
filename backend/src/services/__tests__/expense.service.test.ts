@@ -835,7 +835,7 @@ describe('ExpenseService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(expenseService.getBudgetSummary(99, 10)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 
@@ -850,7 +850,7 @@ describe('ExpenseService', () => {
           category: 'food',
           amount: 10,
         })
-      ).rejects.toThrow('Insufficient permissions');
+      ).rejects.toThrow("You don't have permission to do that.");
       expect(mockPrisma.tripExpense.create).not.toHaveBeenCalled();
     });
 
@@ -858,7 +858,7 @@ describe('ExpenseService', () => {
       mockPrisma.tripExpense.findFirst.mockResolvedValue(null);
 
       await expect(expenseService.updateExpense(1, 10, 5, { amount: 1 })).rejects.toThrow(
-        'Expense not found or does not belong to trip'
+        "We couldn't find that expense on this trip."
       );
     });
   });

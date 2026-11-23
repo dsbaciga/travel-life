@@ -37,7 +37,7 @@ function withTarget<
 async function findInTrip(deadlineId: number, tripId: number) {
   const deadline = await prisma.bookingDeadline.findFirst({ where: { id: deadlineId, tripId } });
   if (!deadline) {
-    throw new AppError('Deadline not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that deadline on this trip.", 404);
   }
   return deadline;
 }
@@ -85,7 +85,7 @@ class BookingDeadlineService {
     // A standalone deadline is named by its title, so it cannot lose it.
     const standalone = !existing.lodgingId && !existing.transportationId && !existing.activityId;
     if (standalone && data.title !== undefined && !data.title?.trim()) {
-      throw new AppError('A deadline that is not attached to a booking needs a title', 400);
+      throw new AppError('Give this deadline a title, or attach it to a booking.', 400);
     }
 
     const dueChanged =

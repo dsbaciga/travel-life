@@ -1181,7 +1181,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.updateTransportation(userId, transportationId, { notes: 'Test' })
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {
@@ -1200,7 +1200,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.updateTransportation(userId, transportationId, { notes: 'Test' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should recalculate route when locations change', async () => {
@@ -1295,7 +1295,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.deleteTransportation(userId, transportationId)
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {
@@ -1314,7 +1314,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.deleteTransportation(userId, transportationId)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 

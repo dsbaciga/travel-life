@@ -262,14 +262,14 @@ export async function validateUrlNotInternal(url: string): Promise<void> {
   try {
     parsed = new URL(url);
   } catch {
-    throw new AppError('Invalid URL format', 400);
+    throw new AppError('Enter a full URL, like https://example.com.', 400);
   }
 
   // Step 2: Only allow http and https
   const protocol = parsed.protocol.toLowerCase();
   if (protocol !== 'http:' && protocol !== 'https:') {
     throw new AppError(
-      'Only HTTP and HTTPS URLs are allowed',
+      'Use a web address that starts with http:// or https://.',
       400
     );
   }
@@ -362,12 +362,12 @@ export function validateUrlNotInternalSync(url: string): void {
   try {
     parsed = new URL(url);
   } catch {
-    throw new AppError('Invalid URL format', 400);
+    throw new AppError('Enter a full URL, like https://example.com.', 400);
   }
 
   const protocol = parsed.protocol.toLowerCase();
   if (protocol !== 'http:' && protocol !== 'https:') {
-    throw new AppError('Only HTTP and HTTPS URLs are allowed', 400);
+    throw new AppError('Use a web address that starts with http:// or https://.', 400);
   }
 
   const hostname = parsed.hostname.toLowerCase();

@@ -304,7 +304,7 @@ describe('AviationstackService', () => {
 
       await expect(
         aviationstackService.getFlightStatus(1, 999)
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
 
     it('AVS-007: returns null/cached when no flight number available', async () => {
@@ -374,7 +374,7 @@ describe('AviationstackService', () => {
 
       await expect(
         aviationstackService.getFlightStatus(1, 1)
-      ).rejects.toThrow('Invalid AviationStack API key');
+      ).rejects.toThrow("AviationStack didn't accept that API key. Check it and try again.");
     });
   });
 
@@ -501,7 +501,7 @@ describe('AviationstackService', () => {
         aviationstackService.updateFlightTracking(1, 999, {
           gate: 'B22',
         })
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
   });
 });

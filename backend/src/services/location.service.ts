@@ -193,12 +193,12 @@ export class LocationService {
       });
 
       if (!parent) {
-        throw new AppError('Parent location not found or does not belong to the same trip', 404);
+        throw new AppError("The place you picked as the parent isn't on this trip.", 404);
       }
 
       // Enforce single-level hierarchy: parent cannot already be a child
       if (parent.parentId) {
-        throw new AppError('Cannot nest locations more than one level deep. The selected parent is already a child of another location.', 400);
+        throw new AppError('A place can only sit one level inside another, and the one you picked is already inside a place.', 400);
       }
     }
 
@@ -422,7 +422,7 @@ export class LocationService {
     if (data.parentId !== undefined && data.parentId !== null) {
       // Prevent self-referencing
       if (data.parentId === locationId) {
-        throw new AppError('A location cannot be its own parent', 400);
+        throw new AppError("A place can't be its own parent.", 400);
       }
 
       // Enforce single-level hierarchy: location with children cannot become a child
@@ -430,7 +430,7 @@ export class LocationService {
         where: { parentId: locationId },
       });
       if (hasChildren > 0) {
-        throw new AppError('Cannot set a parent for a location that has children. Remove children first or use a different location.', 400);
+        throw new AppError('This place has places inside it. Move them out first, or pick a different place.', 400);
       }
 
       const parent = await prisma.location.findFirst({
@@ -441,18 +441,18 @@ export class LocationService {
       });
 
       if (!parent) {
-        throw new AppError('Parent location not found or does not belong to the same trip', 404);
+        throw new AppError("The place you picked as the parent isn't on this trip.", 404);
       }
 
       // Enforce single-level hierarchy: parent cannot already be a child
       if (parent.parentId) {
-        throw new AppError('Cannot nest locations more than one level deep. The selected parent is already a child of another location.', 400);
+        throw new AppError('A place can only sit one level inside another, and the one you picked is already inside a place.', 400);
       }
 
       // Prevent circular references (check if new parent is a child of this location)
       const descendants = await this.getDescendants(locationId);
       if (descendants.some(d => d.id === data.parentId)) {
-        throw new AppError('Cannot set parent to a descendant location (would create circular reference)', 400);
+        throw new AppError("A place can't sit inside one of its own child places.", 400);
       }
     }
 
@@ -518,7 +518,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or access denied', 404);
+      throw new AppError("We couldn't find that category, or you don't have access to it.", 404);
     }
   }
 
@@ -624,7 +624,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or cannot be edited', 404);
+      throw new AppError("We couldn't find that category, or it can't be edited.", 404);
     }
 
     const updated = await prisma.locationCategory.update({
@@ -649,7 +649,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or cannot be deleted', 404);
+      throw new AppError("We couldn't find that category, or it can't be deleted.", 404);
     }
 
     await prisma.locationCategory.delete({
@@ -677,7 +677,7 @@ export class LocationService {
     });
 
     if (locations.length !== data.ids.length) {
-      throw new AppError('One or more locations not found or do not belong to this trip', 404);
+      throw new AppError("Some of those places aren't on this trip.", 404);
     }
 
     // Clean up entity links and delete atomically in a transaction
@@ -714,7 +714,7 @@ export class LocationService {
     });
 
     if (locations.length !== data.ids.length) {
-      throw new AppError('One or more locations not found or do not belong to this trip', 404);
+      throw new AppError("Some of those places aren't on this trip.", 404);
     }
 
     // Build update data from non-undefined values
@@ -723,7 +723,7 @@ export class LocationService {
     if (data.updates.notes !== undefined) updateData.notes = data.updates.notes;
 
     if (Object.keys(updateData).length === 0) {
-      throw new AppError('No valid update fields provided', 400);
+      throw new AppError('Nothing to save. Change a field first.', 400);
     }
 
     // Update all locations

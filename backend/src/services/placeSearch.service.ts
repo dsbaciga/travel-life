@@ -63,7 +63,7 @@ async function fetchResults(query: string, limit: number): Promise<PlaceSearchRe
     return toResults(Array.isArray(response.data) ? response.data : []);
   } catch (error) {
     logger.warn(`Place search failed: ${error instanceof Error ? error.message : String(error)}`);
-    throw new AppError('Place search is unavailable right now. Please try again in a moment.', 503);
+    throw new AppError("Place search isn't available right now. Try again in a moment.", 503);
   }
 }
 

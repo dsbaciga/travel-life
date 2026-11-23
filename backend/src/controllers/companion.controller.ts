@@ -73,7 +73,7 @@ export const companionController = {
     const companionId = parseId(req.params.id);
 
     if (!req.file) {
-      throw new AppError('No file uploaded', 400);
+      throw new AppError('Choose a file to upload.', 400);
     }
 
     const companion = await companionService.uploadAvatar(userId, companionId, req.file);

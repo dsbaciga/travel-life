@@ -78,7 +78,7 @@ class TrackService {
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
     if (!DAY_KEY_PATTERN.test(date)) {
-      throw new AppError('date must be YYYY-MM-DD', 400);
+      throw new AppError('Use a date like 2027-03-14.', 400);
     }
 
     const trip = await prisma.trip.findUnique({
@@ -95,10 +95,10 @@ class TrackService {
       const next = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
       end = fromZonedTime(`${next}T00:00:00`, tz);
     } catch {
-      throw new AppError('Invalid timezone', 400);
+      throw new AppError("That time zone isn't recognized. Pick one from the list.", 400);
     }
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      throw new AppError('Invalid date or timezone', 400);
+      throw new AppError('Check the date and time zone and try again.', 400);
     }
 
     const points = await prisma.tripTrackPoint.findMany({

@@ -61,7 +61,7 @@ const checkUploadsAvailable = (_req: Request, res: Response, next: NextFunction)
   if (!uploadsAvailable) {
     res.status(503).json({
       status: 'error',
-      message: 'Photo uploads are temporarily unavailable. The upload directory is not writable. Please check server logs for permission fix instructions.',
+      message: "Photo uploads aren't available right now. The upload folder isn't writable. Ask the server admin to check its permissions.",
     });
     return;
   }

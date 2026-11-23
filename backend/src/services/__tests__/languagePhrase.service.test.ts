@@ -192,7 +192,7 @@ describe('LanguagePhraseService', () => {
 
       await expect(
         languagePhraseService.getPhrasesForTrip(999, 1)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should skip languages that have no phrase data', async () => {

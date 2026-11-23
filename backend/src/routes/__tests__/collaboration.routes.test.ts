@@ -17,7 +17,7 @@ jest.mock('../../middleware/auth', () => ({
   __esModule: true,
   authenticate: (req: Request, res: Response, next: NextFunction) => {
     if (req.headers.authorization) return next();
-    res.status(401).json({ status: 'error', message: 'No token provided' });
+    res.status(401).json({ status: 'error', message: 'Sign in to continue.' });
   },
 }));
 

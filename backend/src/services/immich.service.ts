@@ -164,7 +164,7 @@ function toImmichAppError(error: unknown, action: string): AppError {
       );
     }
     if (status === 404) {
-      return new AppError(`Immich could not find what was needed to ${action}${detail ? ` (${detail})` : ''}.`, 404);
+      return new AppError(`Immich couldn't find what it needed to ${action}${detail ? ` (${detail})` : ''}.`, 404);
     }
     if (status !== undefined) {
       return new AppError(
@@ -175,9 +175,9 @@ function toImmichAppError(error: unknown, action: string): AppError {
     if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
       return new AppError(`Immich took too long to respond while trying to ${action}.`, 504);
     }
-    return new AppError(`Could not reach Immich to ${action}.`, 502);
+    return new AppError(`Can't reach Immich to ${action}.`, 502);
   }
-  return new AppError(`Failed to ${action}: ${getErrorMessage(error)}`, 502);
+  return new AppError(`Couldn't ${action}.`, 502);
 }
 
 /**
@@ -271,36 +271,36 @@ class ImmichService {
         if (process.env.NODE_ENV === 'development') {
           console.error(`[Immich Service] Cannot connect to Immich at ${sanitizeUrlForLogging(apiUrl)}: Server refused connection`);
         }
-        throw new AppError('Cannot connect to Immich server. Please check your configuration and ensure the server is running.', 400);
+        throw new AppError("Can't reach your Immich server. Check your settings and make sure it's running.", 400);
       } else if (errorCode === 'ENOTFOUND') {
         if (process.env.NODE_ENV === 'development') {
           console.error(`[Immich Service] Cannot resolve hostname for ${sanitizeUrlForLogging(apiUrl)}: DNS resolution failed`);
         }
-        throw new AppError('Cannot connect to Immich server. Please check your configuration and network settings.', 400);
+        throw new AppError("Can't reach your Immich server. Check your settings and your network.", 400);
       } else if (errorCode === 'ETIMEDOUT') {
         if (process.env.NODE_ENV === 'development') {
           console.error(`[Immich Service] Connection to ${sanitizeUrlForLogging(apiUrl)} timed out after 30 seconds`);
         }
-        throw new AppError('Connection to Immich server timed out. Please check network firewall rules.', 408);
+        throw new AppError('Your Immich server took too long to respond. Check your firewall settings.', 408);
       } else if (errorCode === 'DEPTH_ZERO_SELF_SIGNED_CERT' || errorCode === 'CERT_HAS_EXPIRED' || errorCode === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE') {
         if (process.env.NODE_ENV === 'development') {
           console.error(`[Immich Service] SSL certificate error for ${sanitizeUrlForLogging(apiUrl)}: ${errorCode}`);
         }
         throw new AppError('SSL certificate error. The Immich server has an invalid or self-signed certificate.', 400);
       } else if (responseStatus === 401 || responseStatus === 403) {
-        throw new AppError('Invalid Immich API key. Check your API key in user settings.', 401);
+        throw new AppError("Immich didn't accept that API key. Check it in your settings.", 401);
       } else if (responseStatus === 404) {
         if (process.env.NODE_ENV === 'development') {
           console.error(`[Immich Service] API endpoint not found at ${sanitizeUrlForLogging(apiUrl)}`);
         }
-        throw new AppError('Immich API endpoint not found. Please check that your URL is correct and points to your Immich server.', 404);
+        throw new AppError("Immich didn't respond at that address. Check that the URL points to your Immich server.", 404);
       }
       if (process.env.NODE_ENV === 'development') {
         console.error(`[Immich Service] Connection failed to ${sanitizeUrlForLogging(apiUrl)}: ${errorMessage} (Code: ${errorCode})`);
       } else {
         console.error(`[Immich Service] Connection failed: ${errorMessage} (Code: ${errorCode})`);
       }
-      throw new AppError('Failed to connect to Immich server. Please check your configuration.', 400);
+      throw new AppError("Can't reach your Immich server. Check your settings.", 400);
     }
   }
 
@@ -415,7 +415,7 @@ class ImmichService {
       const errorMessage = getErrorMessage(error);
       const errorCode = isAxiosError(error) ? error.code || 'Unknown' : 'Unknown';
       console.error('[Immich Service] Error fetching assets:', errorCode, '-', errorMessage);
-      throw new AppError(`Failed to fetch assets from Immich: ${errorMessage}`, 500);
+      throw new AppError("Couldn't load photos from Immich.", 500);
     }
   }
 
@@ -434,7 +434,7 @@ class ImmichService {
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       console.error('Error fetching Immich asset:', errorMessage);
-      throw new AppError('Failed to fetch asset from Immich', 404);
+      throw new AppError("Couldn't load that photo from Immich.", 404);
     }
   }
 
@@ -483,7 +483,7 @@ class ImmichService {
       const errorMessage = getErrorMessage(error);
       const errorCode = isAxiosError(error) ? error.code || 'Unknown' : 'Unknown';
       console.error('[Immich Service] Error fetching thumbnail:', errorCode, '-', errorMessage);
-      throw new AppError('Failed to fetch thumbnail from Immich', 500);
+      throw new AppError("Couldn't load that thumbnail from Immich.", 500);
     }
   }
 
@@ -513,7 +513,7 @@ class ImmichService {
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       console.error('Error fetching original file stream:', errorMessage);
-      throw new AppError('Failed to fetch original file from Immich', 500);
+      throw new AppError("Couldn't load the original file from Immich.", 500);
     }
   }
 
@@ -532,7 +532,7 @@ class ImmichService {
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       console.error('Error searching Immich assets:', errorMessage);
-      throw new AppError('Failed to search assets in Immich', 500);
+      throw new AppError("Couldn't search your Immich library.", 500);
     }
   }
 
@@ -552,7 +552,7 @@ class ImmichService {
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       console.error('Error fetching Immich albums:', errorMessage);
-      throw new AppError('Failed to fetch albums from Immich', 500);
+      throw new AppError("Couldn't load your albums from Immich.", 500);
     }
   }
 
@@ -571,7 +571,7 @@ class ImmichService {
     } catch (error: unknown) {
       const errorMessage = getErrorMessage(error);
       console.error('Error fetching Immich album:', errorMessage);
-      throw new AppError('Failed to fetch album from Immich', 404);
+      throw new AppError("Couldn't load that album from Immich.", 404);
     }
   }
 
@@ -724,7 +724,7 @@ class ImmichService {
         errorMessage,
         responseData ? `- Immich response: ${JSON.stringify(responseData)}` : ''
       );
-      throw new AppError('Failed to fetch assets by date range', 500);
+      throw new AppError("Couldn't load photos for those dates from Immich.", 500);
     }
   }
 
@@ -925,7 +925,7 @@ class ImmichService {
 
     const apiKey = decryptSecret(user?.immichApiKey);
     if (!user?.immichApiUrl || !apiKey) {
-      throw new AppError('Immich settings not configured', 400);
+      throw new AppError("Immich isn't set up. Add your server URL and API key in Settings.", 400);
     }
 
     return { apiUrl: user.immichApiUrl, apiKey };

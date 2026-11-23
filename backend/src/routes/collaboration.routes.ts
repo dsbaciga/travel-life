@@ -37,7 +37,7 @@ router.get('/invitations/token/:token', collaborationController.getInvitationByT
 // /api prefix, so a path-less router.use(authenticate) runs for every /api
 // request that reaches it, including ones meant for routers mounted later:
 // the public share links, the calendar feed and invitation acceptance all
-// answered 401 "No token provided" because of it.
+// answered 401 'Sign in to continue.' because of it.
 
 // ============================================================
 // User Invitations (for the logged-in user)

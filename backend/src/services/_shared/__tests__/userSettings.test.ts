@@ -101,8 +101,8 @@ describe('userSettings accessors', () => {
     mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    await expect(getUserPreferences(999)).rejects.toMatchObject({ statusCode: 404, message: 'User not found' });
-    await expect(getUserIntegrations(999)).rejects.toMatchObject({ statusCode: 404, message: 'User not found' });
+    await expect(getUserPreferences(999)).rejects.toMatchObject({ statusCode: 404, message: "We couldn't find that user." });
+    await expect(getUserIntegrations(999)).rejects.toMatchObject({ statusCode: 404, message: "We couldn't find that user." });
     expect(mockPrisma.userPreferences.upsert).not.toHaveBeenCalled();
     expect(mockPrisma.userIntegrations.upsert).not.toHaveBeenCalled();
   });
@@ -153,7 +153,7 @@ describe('userSettings accessors', () => {
 
   it('USS-005: a write for a user that no longer exists is a 404', async () => {
     mockPrisma.user.update.mockRejectedValue(
-      new Prisma.PrismaClientKnownRequestError('Record not found', { code: 'P2025', clientVersion: 'test' })
+      new Prisma.PrismaClientKnownRequestError("We couldn't find that.", { code: 'P2025', clientVersion: 'test' })
     );
 
     await expect(updateUserPreferences(999, { baseCurrency: 'EUR' })).rejects.toMatchObject({ statusCode: 404 });

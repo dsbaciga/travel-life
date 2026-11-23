@@ -4,7 +4,7 @@ Inventory of user-facing strings that should change to match the [Voice and Tone
 
 ## Status
 
-Applied to `frontend/` and `mobile/` in the "Apply the voice and tone guide to the web and mobile apps" PR: **all P1 and P2 rows, and the mechanical P3 rules** (Couldn't X. Try again., no "Please" or "successfully", `…` in loading text, sentence case, confirm buttons that name the action). Backend rows ("Backend messages that reach the UI") are handled in a separate PR.
+Applied to `frontend/` and `mobile/` in the "Apply the voice and tone guide to the web and mobile apps" PR: **all P1 and P2 rows, and the mechanical P3 rules** (Couldn't X. Try again., no "Please" or "successfully", `…` in loading text, sentence case, confirm buttons that name the action). Backend rows ("Backend messages that reach the UI") were applied in the companion backend PR (#248), so both the frontend/mobile and backend rows are now applied.
 
 Decisions taken: Transportation and Lodging are now **Transport** and **Stays** in all user-visible text (code, routes and API fields keep their names); the sign-in button stays "Begin your journey" (sentence case); the "Login successful" toast is gone; registering says "Welcome to Travel Life."
 

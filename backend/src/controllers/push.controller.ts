@@ -26,7 +26,7 @@ export const pushController = {
   subscribe: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
     if (!pushNotificationService.isConfigured()) {
-      throw new AppError('Push notifications are not configured on this server', 503);
+      throw new AppError("Push notifications aren't set up on this server.", 503);
     }
     const parsed = pushSubscribeSchema.parse(req.body);
 
@@ -74,7 +74,7 @@ export const pushController = {
   sendTest: asyncHandler(async (req: Request, res: Response) => {
     const userId = requireUserId(req);
     if (!pushNotificationService.isConfigured()) {
-      throw new AppError('Push notifications are not configured on this server', 503);
+      throw new AppError("Push notifications aren't set up on this server.", 503);
     }
     const sent = await pushNotificationService.sendToUser(userId, {
       title: 'Travel Life',

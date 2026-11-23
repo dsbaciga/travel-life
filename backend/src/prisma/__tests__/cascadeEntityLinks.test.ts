@@ -384,7 +384,7 @@ describe('bulkDeleteEntities(activity) — descendant EntityLink cleanup', () =>
 
     await expect(
       bulkDeleteEntities('activity', USER_ID, TRIP_ID, [10, 20])
-    ).rejects.toThrow('One or more activities not found or do not belong to this trip');
+    ).rejects.toThrow("Some of those activities aren't on this trip.");
 
     expect(mockPrismaClient.entityLink.deleteMany).not.toHaveBeenCalled();
     expect(mockPrismaClient.$transaction).not.toHaveBeenCalled();

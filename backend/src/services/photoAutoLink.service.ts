@@ -292,10 +292,10 @@ class PhotoAutoLinkService {
       prisma.photo.count({ where: { id: { in: photoIds }, tripId } }),
     ]);
     if (activityCount !== activityIds.length) {
-      throw new AppError('Some activities do not belong to this trip', 400);
+      throw new AppError("Some of those activities aren't on this trip.", 400);
     }
     if (photoCount !== photoIds.length) {
-      throw new AppError('Some photos do not belong to this trip', 400);
+      throw new AppError("Some of those photos aren't on this trip.", 400);
     }
 
     const created = await prisma.$transaction(async (tx) => {

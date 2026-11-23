@@ -9,13 +9,13 @@ const router = Router();
 const invitationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 invitations per 15 minutes
-  message: { status: 'error', message: 'Too many invitation requests. Please try again later.' },
+  message: { status: 'error', message: 'Too many invitations. Wait a few minutes and try again.' },
 });
 
 const publicInvitationLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // 20 requests per 15 minutes
-  message: { status: 'error', message: 'Too many requests. Please try again later.' },
+  message: { status: 'error', message: 'Too many requests. Wait a few minutes and try again.' },
 });
 
 // ============================================

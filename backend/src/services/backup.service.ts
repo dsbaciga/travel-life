@@ -636,7 +636,7 @@ export async function createBackup(userId: number): Promise<BackupData> {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const preferences = await getUserPreferences(userId);

@@ -218,8 +218,8 @@ describe('integrationRequestGuard', () => {
     });
 
     it('refuses malformed URLs and non-HTTP schemes', () => {
-      expect(() => integrationRequestOptions('not a url')).toThrow(/Invalid URL/);
-      expect(() => integrationRequestOptions('file:///etc/passwd')).toThrow(/HTTP and HTTPS/);
+      expect(() => integrationRequestOptions('not a url')).toThrow(/Enter a full URL/);
+      expect(() => integrationRequestOptions('file:///etc/passwd')).toThrow('starts with http');
     });
 
     it('routes public URLs through the guarded agents with proxies disabled', () => {

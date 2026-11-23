@@ -95,7 +95,7 @@ export const collaborationService = {
     // Verify user can manage collaborators (owner or admin)
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to invite collaborators', 403);
+      throw new AppError("You don't have permission to invite collaborators.", 403);
     }
 
     // Get trip details for response
@@ -105,7 +105,7 @@ export const collaborationService = {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Prevent non-owners from inviting at admin permission level
@@ -115,7 +115,7 @@ export const collaborationService = {
 
     // Check if invited email is the trip owner
     if (trip.user.email.toLowerCase() === data.email.toLowerCase()) {
-      throw new AppError('Cannot invite the trip owner', 400);
+      throw new AppError("You can't invite the trip owner.", 400);
     }
 
     // Check if user is already a collaborator
@@ -215,7 +215,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     // Mark expired invitations
@@ -298,7 +298,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     // Check if expired
@@ -307,7 +307,7 @@ export const collaborationService = {
         where: { id: invitation.id },
         data: { status: InvitationStatus.EXPIRED },
       });
-      throw new AppError('Invitation has expired', 400);
+      throw new AppError('This invitation has expired. Ask the person who invited you to send a new one.', 400);
     }
 
     return invitation;
@@ -322,7 +322,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -337,7 +337,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or already responded to', 404);
+      throw new AppError('This invitation was already answered or has been cancelled.', 404);
     }
 
     // Check if expired
@@ -346,7 +346,7 @@ export const collaborationService = {
         where: { id: invitation.id },
         data: { status: InvitationStatus.EXPIRED },
       });
-      throw new AppError('Invitation has expired', 400);
+      throw new AppError('This invitation has expired. Ask the person who invited you to send a new one.', 400);
     }
 
     // Check if already a collaborator
@@ -418,7 +418,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -430,7 +430,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or already responded to', 404);
+      throw new AppError('This invitation was already answered or has been cancelled.', 404);
     }
 
     await prisma.tripInvitation.update({
@@ -451,7 +451,7 @@ export const collaborationService = {
     // Verify user has access to this trip
     const { permissionLevel } = await this.getUserPermissionLevel(userId, tripId);
     if (!permissionLevel) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
 
     const collaborators = await prisma.tripCollaborator.findMany({
@@ -487,7 +487,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to view invitations', 403);
+      throw new AppError("You don't have permission to view invitations.", 403);
     }
 
     // Mark expired invitations
@@ -528,7 +528,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to manage collaborators', 403);
+      throw new AppError("You don't have permission to manage collaborators.", 403);
     }
 
     // Check if target is the trip owner
@@ -537,7 +537,7 @@ export const collaborationService = {
     });
 
     if (trip?.userId === collaboratorUserId) {
-      throw new AppError('Cannot modify trip owner permissions', 400);
+      throw new AppError("You can't change the trip owner's permissions.", 400);
     }
 
     // Find the collaborator
@@ -551,7 +551,7 @@ export const collaborationService = {
     });
 
     if (!collaborator) {
-      throw new AppError('Collaborator not found', 404);
+      throw new AppError("We couldn't find that collaborator.", 404);
     }
 
     // Prevent non-owners from setting admin permissions
@@ -583,7 +583,7 @@ export const collaborationService = {
       // Verify user can manage collaborators
       const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
       if (!hasAccess) {
-        throw new AppError('You do not have permission to remove collaborators', 403);
+        throw new AppError("You don't have permission to remove collaborators.", 403);
       }
     }
 
@@ -593,7 +593,7 @@ export const collaborationService = {
     });
 
     if (trip?.userId === collaboratorUserId) {
-      throw new AppError('Cannot remove the trip owner', 400);
+      throw new AppError("You can't remove the trip owner.", 400);
     }
 
     // Find the collaborator
@@ -607,7 +607,7 @@ export const collaborationService = {
     });
 
     if (!collaborator) {
-      throw new AppError('Collaborator not found', 404);
+      throw new AppError("We couldn't find that collaborator.", 404);
     }
 
     await prisma.tripCollaborator.delete({
@@ -624,7 +624,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to cancel invitations', 403);
+      throw new AppError("You don't have permission to cancel invitations.", 403);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -636,7 +636,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     await prisma.tripInvitation.delete({
@@ -653,7 +653,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to resend invitations', 403);
+      throw new AppError("You don't have permission to resend invitations.", 403);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -665,7 +665,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     const updated = await prisma.tripInvitation.update({

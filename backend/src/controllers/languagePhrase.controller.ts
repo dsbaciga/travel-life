@@ -31,13 +31,13 @@ export const languagePhraseController = {
     // Validate language code
     const validationResult = LanguageCodeSchema.safeParse(languageCode);
     if (!validationResult.success) {
-      throw new AppError('Invalid language code', 400);
+      throw new AppError("That language code isn't recognized.", 400);
     }
 
     const language = languagePhraseService.getPhrasesByLanguage(languageCode);
 
     if (!language) {
-      throw new AppError('Language not found', 404);
+      throw new AppError("We couldn't find that language.", 404);
     }
 
     res.json({
@@ -56,13 +56,13 @@ export const languagePhraseController = {
     // Validate language code
     const languageValidation = LanguageCodeSchema.safeParse(languageCode);
     if (!languageValidation.success) {
-      throw new AppError('Invalid language code', 400);
+      throw new AppError("That language code isn't recognized.", 400);
     }
 
     // Validate category
     const categoryValidation = PhraseCategorySchema.safeParse(category);
     if (!categoryValidation.success) {
-      throw new AppError('Invalid category', 400);
+      throw new AppError('Choose a category from the list.', 400);
     }
 
     const language = languagePhraseService.getPhrasesByLanguageAndCategory(
@@ -71,7 +71,7 @@ export const languagePhraseController = {
     );
 
     if (!language) {
-      throw new AppError('Language not found', 404);
+      throw new AppError("We couldn't find that language.", 404);
     }
 
     res.json({

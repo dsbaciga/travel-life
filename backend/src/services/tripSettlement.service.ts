@@ -154,7 +154,7 @@ class TripSettlementService {
 
   private async findInTrip(id: number, tripId: number) {
     const row = await prisma.tripSettlement.findFirst({ where: { id, tripId } });
-    if (!row) throw new AppError('Settlement not found or does not belong to trip', 404);
+    if (!row) throw new AppError("We couldn't find that payment on this trip.", 404);
     return row;
   }
 

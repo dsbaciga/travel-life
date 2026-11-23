@@ -362,7 +362,7 @@ export const expectErrorResponse = (
  * @example
  * ```typescript
  * const error = expectAppError(next, { statusCode: 401 });
- * expect(error.message).toBe('Invalid refresh token');
+ * expect(error.message).toBe('You were signed out. Sign in again to continue.');
  * ```
  */
 export const expectAppError = (

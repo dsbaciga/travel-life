@@ -53,7 +53,7 @@ export const tagService = {
     });
 
     if (!tag) {
-      throw new AppError('Tag not found', 404);
+      throw new AppError("We couldn't find that tag.", 404);
     }
 
     return tag;
@@ -66,7 +66,7 @@ export const tagService = {
     });
 
     if (!tag) {
-      throw new AppError('Tag not found', 404);
+      throw new AppError("We couldn't find that tag.", 404);
     }
 
     // Check for duplicate name if renaming
@@ -75,7 +75,7 @@ export const tagService = {
         where: { userId, name: data.name, id: { not: tagId } },
       });
       if (duplicate) {
-        throw new AppError('A tag with that name already exists', 400);
+        throw new AppError('You already have a tag with that name.', 400);
       }
     }
 
@@ -92,7 +92,7 @@ export const tagService = {
     });
 
     if (!tag) {
-      throw new AppError('Tag not found', 404);
+      throw new AppError("We couldn't find that tag.", 404);
     }
 
     await prisma.tripTag.delete({
@@ -109,7 +109,7 @@ export const tagService = {
     });
 
     if (tags.length !== tagIds.length) {
-      throw new AppError('One or more tags not found', 404);
+      throw new AppError("We couldn't find some of those tags.", 404);
     }
 
     // Update sort order in a transaction
@@ -136,7 +136,7 @@ export const tagService = {
     });
 
     if (!tag) {
-      throw new AppError('Tag not found', 404);
+      throw new AppError("We couldn't find that tag.", 404);
     }
 
     // Check if link already exists
@@ -172,7 +172,7 @@ export const tagService = {
     });
 
     if (!link) {
-      throw new AppError('Tag not linked to this trip', 404);
+      throw new AppError("That tag isn't on this trip.", 404);
     }
 
     await prisma.tripTagAssignment.delete({

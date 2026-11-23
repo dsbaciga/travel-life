@@ -39,7 +39,7 @@ class JournalEntryAiService {
     await verifyTripAccessWithPermission(userId, tripId, 'view');
 
     if (!(await llmService.isConfigured(userId))) {
-      throw new AppError('AI features are not configured. Set LLM_API_KEY to enable.', 503);
+      throw new AppError("AI features aren't set up on this server. Ask the admin to add an LLM key.", 503);
     }
 
     const [trip, entries] = await Promise.all([
@@ -54,9 +54,9 @@ class JournalEntryAiService {
       }),
     ]);
 
-    if (!trip) throw new AppError('Trip not found', 404);
+    if (!trip) throw new AppError("We couldn't find that trip.", 404);
     if (entries.length === 0) {
-      throw new AppError('No journal entries found for this trip', 400);
+      throw new AppError('This trip has no journal entries yet.', 400);
     }
 
     const entriesText = entries
@@ -95,13 +95,13 @@ ${truncated}
       summary = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 1024, userId });
     } catch (err) {
       if (err instanceof LlmError) {
-        throw new AppError(`AI summary generation failed: ${err.message}`, 502);
+        throw new AppError(`Couldn't generate the AI summary. ${err.message}`, 502);
       }
       throw err;
     }
 
     if (!summary) {
-      throw new AppError('AI summary generation returned no content.', 502);
+      throw new AppError('The AI summary came back empty. Try again.', 502);
     }
 
     return summary;
@@ -119,7 +119,7 @@ ${truncated}
     await verifyEntityAccessWithPermission('journalEntry', entryId, userId, 'view');
 
     if (!(await llmService.isConfigured(userId))) {
-      throw new AppError('AI features are not configured. Set LLM_API_KEY to enable.', 503);
+      throw new AppError("AI features aren't set up on this server. Ask the admin to add an LLM key.", 503);
     }
 
     const entry = await prisma.journalEntry.findUnique({
@@ -127,7 +127,7 @@ ${truncated}
       select: { title: true, content: true, mood: true },
     });
 
-    if (!entry) throw new AppError('Journal entry not found', 404);
+    if (!entry) throw new AppError("We couldn't find that journal entry.", 404);
 
     // Nothing to suggest if both are already set
     if (entry.title && entry.mood) return {};
@@ -160,7 +160,7 @@ ${safeContent}
       raw = await llmService.chat(systemPrompt, userPrompt, { maxTokens: 128, temperature: 0.5, userId });
     } catch (err) {
       if (err instanceof LlmError) {
-        throw new AppError(`AI enhancement failed: ${err.message}`, 502);
+        throw new AppError(`Couldn't enhance the entry with AI. ${err.message}`, 502);
       }
       throw err;
     }

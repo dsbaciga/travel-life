@@ -104,7 +104,7 @@ export class OidcService {
       response = await axios.get<OidcDiscoveryDocument>(url, { timeout: HTTP_TIMEOUT_MS });
     } catch (error: unknown) {
       // Without this wrap a network/TLS/DNS failure surfaces to the client as a
-      // bare 500 "Internal server error", which is undiagnosable from the UI.
+      // bare 500 "Couldn't finish that. Try again, and reload the page if it keeps happening.", which is undiagnosable from the UI.
       // The operator-facing hint (env var name, container reachability) is
       // logged only — /api/auth/oidc/login is unauthenticated, so the response
       // must not describe the deployment's configuration.
@@ -113,7 +113,7 @@ export class OidcService {
         `OIDC discovery fetch failed for ${url}: ${detail}. ` +
         'Check that OIDC_ISSUER_URL is correct and reachable from the backend container.'
       );
-      throw new AppError('Single sign-on is temporarily unavailable', 502);
+      throw new AppError("Single sign-on isn't available right now. Try again in a moment.", 502);
     }
     const doc = response.data;
 
