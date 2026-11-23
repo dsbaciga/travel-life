@@ -151,7 +151,7 @@ class TripValidatorService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     const context = getValidationContext(trip.status);
@@ -232,7 +232,7 @@ class TripValidatorService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     await prisma.dismissedValidationIssue.upsert({
@@ -270,7 +270,7 @@ class TripValidatorService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     await prisma.dismissedValidationIssue.deleteMany({

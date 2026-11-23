@@ -62,7 +62,7 @@ export class TripService {
     });
 
     if (!series) {
-      throw new AppError('Trip series not found or you do not have permission to use it', 404);
+      throw new AppError("We couldn't find that trip series, or you don't have permission to use it.", 404);
     }
   }
 
@@ -414,7 +414,7 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // The share token is a secret capability — only the owner may see it.
@@ -433,7 +433,7 @@ export class TripService {
     });
 
     if (!existingTrip) {
-      throw new AppError('Trip not found or you do not have permission to edit it', 404);
+      throw new AppError("We couldn't find that trip, or you can only view it.", 404);
     }
 
     // A null seriesId detaches the trip from its series and needs no check; any other value
@@ -473,7 +473,7 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found or you do not have permission to delete it', 404);
+      throw new AppError("We couldn't find that trip, or you don't have permission to delete it.", 404);
     }
 
     // The database cascade removes the photo rows but knows nothing about the
@@ -544,7 +544,7 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found or you do not have permission to edit it', 404);
+      throw new AppError("We couldn't find that trip, or you can only view it.", 404);
     }
 
     // If photoId is provided, verify the photo belongs to this trip
@@ -556,7 +556,7 @@ export class TripService {
       coverPhotoRow = photo;
 
       if (!photo) {
-        throw new AppError('Photo not found or does not belong to this trip', 404);
+        throw new AppError("We couldn't find that photo on this trip.", 404);
       }
     }
 
@@ -641,7 +641,7 @@ export class TripService {
     });
 
     if (!sourceTrip) {
-      throw new AppError('Trip not found or you do not have permission to duplicate it', 404);
+      throw new AppError("We couldn't find that trip, or you don't have permission to duplicate it.", 404);
     }
 
     // Albums and checklists are loaded separately because they are the only relations

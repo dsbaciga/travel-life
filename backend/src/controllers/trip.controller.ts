@@ -117,7 +117,7 @@ export const tripController = {
     const tripId = parseId(req.params.id, 'tripId');
 
     if (!req.file) {
-      throw new AppError('No image provided', 400);
+      throw new AppError('Choose an image to upload.', 400);
     }
 
     const trip = await tripCoverImageService.uploadCoverImage(userId, tripId, req.file);

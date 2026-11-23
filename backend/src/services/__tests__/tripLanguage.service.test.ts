@@ -196,7 +196,7 @@ describe('TripLanguageService', () => {
 
       await expect(
         tripLanguageService.getLanguagesForTrip(999, 1)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should throw 404 when trip not found for addLanguageToTrip', async () => {
@@ -207,7 +207,7 @@ describe('TripLanguageService', () => {
           languageCode: 'es',
           language: 'Spanish',
         })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should throw 404 when trip not found for removeLanguageFromTrip', async () => {
@@ -215,7 +215,7 @@ describe('TripLanguageService', () => {
 
       await expect(
         tripLanguageService.removeLanguageFromTrip(999, 1, 'es')
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -246,7 +246,7 @@ describe('TripLanguageService', () => {
 
       await expect(
         tripLanguageService.removeLanguageFromTrip(1, 1, 'nonexistent')
-      ).rejects.toThrow('Language not found for this trip');
+      ).rejects.toThrow("That language isn't on this trip.");
     });
   });
 });

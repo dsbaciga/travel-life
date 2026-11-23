@@ -74,7 +74,7 @@ class MobileSyncService {
       },
     });
     if (!trip) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
 
     const checklistRows = await prisma.checklist.findMany({

@@ -144,7 +144,7 @@ describe('TripCoverImageService', () => {
 
       await expect(
         tripCoverImageService.uploadCoverImage(mockUserId, mockTripId, mockFile)
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
 
       expect(mockPrisma.trip.update).not.toHaveBeenCalled();
     });

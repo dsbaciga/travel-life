@@ -40,7 +40,7 @@ jest.mock('../../services/_shared/tripAccess', () => ({
     const trip = await mockPrisma.trip.findFirst({ where: { id: tripId, userId } });
     if (!trip) {
       const { AppError } = require('../../errors/errors');
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
     return trip;
   }),
@@ -253,7 +253,7 @@ describe('PackingSuggestionService', () => {
 
       await expect(
         packingSuggestionService.getSuggestionsForTrip(999, 1)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 

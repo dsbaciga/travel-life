@@ -109,7 +109,7 @@ export const errorHandler = (
     const fieldNames = err.issues.map(e => e.path.join('.')).filter(Boolean);
     return res.status(400).json({
       status: 'error',
-      message: 'Validation failed',
+      message: "Some of those details aren't valid. Check them and try again.",
       fields: fieldNames.length > 0 ? fieldNames : undefined,
     });
   }
@@ -120,7 +120,7 @@ export const errorHandler = (
     if (err.code === 'P2002') {
       return res.status(400).json({
         status: 'error',
-        message: 'A record with this value already exists',
+        message: 'That value is already in use.',
         field: getConstraintTarget(err.meta),
       });
     }
@@ -129,7 +129,7 @@ export const errorHandler = (
     if (err.code === 'P2003') {
       return res.status(400).json({
         status: 'error',
-        message: 'Referenced record does not exist',
+        message: 'Something this refers to no longer exists.',
       });
     }
 
@@ -137,7 +137,7 @@ export const errorHandler = (
     if (err.code === 'P2025') {
       return res.status(404).json({
         status: 'error',
-        message: 'Record not found',
+        message: "We couldn't find that.",
       });
     }
 
@@ -167,6 +167,6 @@ export const errorHandler = (
   // Programming or unknown errors
   return res.status(500).json({
     status: 'error',
-    message: 'Internal server error',
+    message: "Couldn't finish that. Try again, and reload the page if it keeps happening.",
   });
 };

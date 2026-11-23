@@ -211,7 +211,7 @@ describe('AlbumSuggestionService', () => {
 
       await expect(
         albumSuggestionService.getAlbumSuggestions(1, 999)
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 
@@ -259,7 +259,7 @@ describe('AlbumSuggestionService', () => {
           name: 'Test Album',
           photoIds: [1, 2, 999],
         })
-      ).rejects.toThrow('Some photos do not belong to this trip');
+      ).rejects.toThrow("Some of those photos aren't on this trip.");
     });
 
     it('should throw error when trip not found on accept', async () => {
@@ -270,7 +270,7 @@ describe('AlbumSuggestionService', () => {
           name: 'Test',
           photoIds: [1],
         })
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 

@@ -41,7 +41,7 @@ export const userInvitationService = {
     });
 
     if (!invitingUser) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     // Check if user with this email already exists
@@ -142,7 +142,7 @@ export const userInvitationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     const isExpired = invitation.expiresAt < new Date();
@@ -182,12 +182,12 @@ export const userInvitationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     // Check if already responded
     if (invitation.status !== UserInvitationStatusValues.PENDING) {
-      throw new AppError('Invitation is no longer valid', 400);
+      throw new AppError('This invitation is no longer valid. Ask the person who invited you for a new one.', 400);
     }
 
     // Check if expired
@@ -196,12 +196,12 @@ export const userInvitationService = {
         where: { id: invitation.id },
         data: { status: UserInvitationStatusValues.EXPIRED },
       });
-      throw new AppError('Invitation has expired', 400);
+      throw new AppError('This invitation has expired. Ask the person who invited you to send a new one.', 400);
     }
 
     // Verify email matches
     if (invitation.email.toLowerCase() !== data.email.toLowerCase()) {
-      throw new AppError('Email does not match the invitation', 400);
+      throw new AppError("That email doesn't match the invitation.", 400);
     }
 
     // Check if username already exists
@@ -283,11 +283,11 @@ export const userInvitationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     if (invitation.status !== UserInvitationStatusValues.PENDING) {
-      throw new AppError('Invitation is no longer valid', 400);
+      throw new AppError('This invitation is no longer valid. Ask the person who invited you for a new one.', 400);
     }
 
     await prisma.userInvitation.update({
@@ -367,7 +367,7 @@ export const userInvitationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or already responded to', 404);
+      throw new AppError('This invitation was already answered or has been cancelled.', 404);
     }
 
     await prisma.userInvitation.delete({
@@ -392,7 +392,7 @@ export const userInvitationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or cannot be resent', 404);
+      throw new AppError("We couldn't find that invitation, or it can't be resent.", 404);
     }
 
     // Get the inviting user
@@ -402,7 +402,7 @@ export const userInvitationService = {
     });
 
     if (!invitingUser) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const token = generateInvitationToken();

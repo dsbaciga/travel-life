@@ -25,7 +25,7 @@ export const generalRateLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: {
     status: 'error',
-    message: 'Too many requests. Please try again later.',
+    message: 'Too many requests. Wait a few minutes and try again.',
   },
 });
 
@@ -41,7 +41,7 @@ export const sensitiveEndpointRateLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: {
     status: 'error',
-    message: 'Too many search requests. Please wait a moment before searching again. Limit: 10 requests per minute.',
+    message: 'Too many searches. Wait a moment and try again.',
   },
   // Skip successful requests - only count failed or rate-limited ones
   // This is optional; remove if you want to count all requests
@@ -60,7 +60,7 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     status: 'error',
-    message: 'Too many authentication attempts. Please wait a moment before trying again. Limit: 5 requests per minute.',
+    message: 'Too many sign-in attempts. Wait a moment and try again.',
   },
 });
 
@@ -87,7 +87,7 @@ export const aiLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: {
     status: 'error',
-    message: `Too many AI requests. Please wait before trying again. Limit: ${aiMax} requests per hour.`,
+    message: `Too many AI requests. Wait a while and try again. The limit is ${aiMax} per hour.`,
   },
 });
 
@@ -113,7 +113,7 @@ export const backupLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: {
     status: 'error',
-    message: `Too many backup/restore requests. Please wait before trying again. Limit: ${backupMax} requests per hour.`,
+    message: `Too many backup or restore requests. Wait a while and try again. The limit is ${backupMax} per hour.`,
   },
 });
 
@@ -142,7 +142,7 @@ export const externalApiLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: {
     status: 'error',
-    message: `Too many refresh requests to external data providers. Please wait before trying again. Limit: ${externalApiMax} requests per hour.`,
+    message: `Too many refresh requests. Wait a while and try again. The limit is ${externalApiMax} per hour.`,
   },
 });
 
@@ -163,6 +163,6 @@ export const nearbyFoodLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   message: {
     status: 'error',
-    message: 'Too many nearby searches. Please wait a minute and try again.',
+    message: 'Too many nearby searches. Wait a minute and try again.',
   },
 });

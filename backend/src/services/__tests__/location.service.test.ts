@@ -662,7 +662,7 @@ describe('LocationService', () => {
           longitude: -74,
           categoryId: 999,
         })
-      ).rejects.toThrow('Category not found or access denied');
+      ).rejects.toThrow("We couldn't find that category, or you don't have access to it.");
 
       expect(mockPrisma.location.create).not.toHaveBeenCalled();
     });
@@ -735,7 +735,7 @@ describe('LocationService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(locationService.getLocationsByTrip(userId, tripId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 
@@ -753,7 +753,7 @@ describe('LocationService', () => {
       mockPrisma.location.findMany.mockResolvedValue([]);
 
       await expect(locationService.getLocationsByTrip(userId, tripId)).rejects.toThrow(
-        'Access denied'
+        "You don't have access to this trip."
       );
 
       expect(mockPrisma.location.findMany).not.toHaveBeenCalled();
@@ -826,7 +826,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { name: 'Test' })
-      ).rejects.toThrow('Location not found');
+      ).rejects.toThrow("We couldn't find that place.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {
@@ -846,7 +846,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { name: 'Updated' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should clear optional fields when set to null', async () => {
@@ -928,7 +928,7 @@ describe('LocationService', () => {
       mockPrisma.location.findUnique.mockResolvedValue(null);
 
       await expect(locationService.deleteLocation(userId, locationId)).rejects.toThrow(
-        'Location not found'
+        "We couldn't find that place."
       );
     });
 
@@ -948,7 +948,7 @@ describe('LocationService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(locationService.deleteLocation(userId, locationId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });
@@ -1013,7 +1013,7 @@ describe('LocationService', () => {
       mockPrisma.location.findFirst.mockResolvedValue(null);
 
       await expect(locationService.createLocation(userId, input)).rejects.toThrow(
-        'Parent location not found or does not belong to the same trip'
+        "The place you picked as the parent isn't on this trip."
       );
     });
 
@@ -1035,7 +1035,7 @@ describe('LocationService', () => {
       mockPrisma.location.findFirst.mockResolvedValue(mockParentLocation);
 
       await expect(locationService.createLocation(userId, input)).rejects.toThrow(
-        'Cannot nest locations more than one level deep'
+        'one level inside another'
       );
     });
 
@@ -1055,7 +1055,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { parentId: locationId })
-      ).rejects.toThrow('A location cannot be its own parent');
+      ).rejects.toThrow("A place can't be its own parent.");
     });
 
     it('should prevent setting parent if location has children', async () => {
@@ -1075,7 +1075,7 @@ describe('LocationService', () => {
       await expect(
         locationService.updateLocation(userId, locationId, { parentId: 5 })
       ).rejects.toThrow(
-        'Cannot set a parent for a location that has children'
+        'This place has places inside it'
       );
     });
 
@@ -1199,7 +1199,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateCategory(userId, categoryId, { name: 'Hacked' })
-      ).rejects.toThrow('Category not found or cannot be edited');
+      ).rejects.toThrow("We couldn't find that category, or it can't be edited.");
     });
 
     it('should delete a custom category', async () => {
@@ -1228,7 +1228,7 @@ describe('LocationService', () => {
       mockPrisma.locationCategory.findFirst.mockResolvedValue(null);
 
       await expect(locationService.deleteCategory(userId, categoryId)).rejects.toThrow(
-        'Category not found or cannot be deleted'
+        "We couldn't find that category, or it can't be deleted."
       );
     });
   });

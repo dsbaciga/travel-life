@@ -179,7 +179,7 @@ class ActivityService {
     if (data.parentId) {
       // Prevent circular reference - activity cannot be its own parent
       if (data.parentId === activityId) {
-        throw new AppError('Activity cannot be its own parent', 400);
+        throw new AppError("An activity can't be its own parent.", 400);
       }
       await verifyEntityInTrip('activity', data.parentId, activity.tripId);
     }

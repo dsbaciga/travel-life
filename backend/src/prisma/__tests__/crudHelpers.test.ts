@@ -437,7 +437,7 @@ describe('createCrudController', () => {
 
     it('propagates service errors via next', async () => {
       const authUser = createAuthenticatedUser(testUsers.user1);
-      const serviceError = new AppError('Not found', 404);
+      const serviceError = new AppError("We couldn't find that.", 404);
       mockService.getItemById.mockRejectedValue(serviceError);
 
       const controller = createCrudController({
@@ -573,10 +573,10 @@ describe('deleteEntity', () => {
 
   it('propagates errors from verifyEntityAccessWithPermission', async () => {
     mockVerifyEntityAccessWithPermission.mockRejectedValue(
-      new AppError('Activity not found', 404)
+      new AppError("We couldn't find that activity.", 404)
     );
 
-    await expect(deleteEntity('activity', 999, 1)).rejects.toThrow('Activity not found');
+    await expect(deleteEntity('activity', 999, 1)).rejects.toThrow("We couldn't find that activity.");
   });
 });
 
@@ -639,7 +639,7 @@ describe('bulkDeleteEntities', () => {
 
     await expect(
       bulkDeleteEntities('activity', userId, tripId, ids)
-    ).rejects.toThrow('One or more activities not found or do not belong to this trip');
+    ).rejects.toThrow("Some of those activities aren't on this trip.");
   });
 
   it('handles lodging entity type correctly', async () => {
@@ -788,7 +788,7 @@ describe('bulkUpdateEntities', () => {
 
     await expect(
       bulkUpdateEntities('activity', userId, tripId, ids, updates)
-    ).rejects.toThrow('No valid update fields provided');
+    ).rejects.toThrow('Nothing to save. Change a field first.');
   });
 
   it('throws when entities not found or not belonging to trip', async () => {
@@ -808,7 +808,7 @@ describe('bulkUpdateEntities', () => {
 
     await expect(
       bulkUpdateEntities('activity', userId, tripId, ids, updates)
-    ).rejects.toThrow('One or more activities not found or do not belong to this trip');
+    ).rejects.toThrow("Some of those activities aren't on this trip.");
   });
 
   it('skips undefined values in updates', async () => {

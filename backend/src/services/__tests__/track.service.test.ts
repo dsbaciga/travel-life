@@ -109,7 +109,7 @@ describe('TrackService', () => {
     });
 
     it('TRK-003: access control - a denied trip writes nothing', async () => {
-      mockVerifyTrip.mockRejectedValue(new AppError('Insufficient permissions', 403) as never);
+      mockVerifyTrip.mockRejectedValue(new AppError("You don't have permission to do that.", 403) as never);
 
       await expect(
         trackService.ingestBatch(USER, TRIP, {
@@ -272,7 +272,7 @@ describe('TrackService', () => {
     });
 
     it('TRK-010b: apply is denied without edit permission and writes nothing', async () => {
-      mockVerifyTrip.mockRejectedValue(new AppError('Insufficient permissions', 403) as never);
+      mockVerifyTrip.mockRejectedValue(new AppError("You don't have permission to do that.", 403) as never);
       await expect(
         trackService.inferPhotoLocations(USER, TRIP, { apply: true })
       ).rejects.toMatchObject({ statusCode: 403 });

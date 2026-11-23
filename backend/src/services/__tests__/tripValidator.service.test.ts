@@ -482,7 +482,7 @@ describe('TripValidatorService', () => {
 
       await expect(
         tripValidatorService.validateTrip(999, 1)
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 
@@ -519,7 +519,7 @@ describe('TripValidatorService', () => {
 
       await expect(
         tripValidatorService.dismissIssue(999, 1, 'type', 'key', 'SCHEDULE')
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 

@@ -274,7 +274,7 @@ class ChecklistService {
     }) as ChecklistFromPrisma | null;
 
     if (!checklist) {
-      throw new AppError('Checklist not found', 404);
+      throw new AppError("We couldn't find that checklist.", 404);
     }
 
     return addChecklistStats(checklist);
@@ -343,7 +343,7 @@ class ChecklistService {
     });
 
     if (!existing) {
-      throw new AppError('Checklist not found', 404);
+      throw new AppError("We couldn't find that checklist.", 404);
     }
 
     // Verify the caller has edit access to the trip before re-pointing the checklist at it
@@ -380,7 +380,7 @@ class ChecklistService {
     });
 
     if (!existing) {
-      throw new AppError('Checklist not found', 404);
+      throw new AppError("We couldn't find that checklist.", 404);
     }
 
     await prisma.checklist.delete({
@@ -402,7 +402,7 @@ class ChecklistService {
     });
 
     if (!checklist) {
-      throw new AppError('Checklist not found', 404);
+      throw new AppError("We couldn't find that checklist.", 404);
     }
 
     // Get max sort order
@@ -441,7 +441,7 @@ class ChecklistService {
     });
 
     if (!item) {
-      throw new AppError('Checklist item not found', 404);
+      throw new AppError("We couldn't find that checklist item.", 404);
     }
 
     const updatedItem = await prisma.checklistItem.update({
@@ -476,7 +476,7 @@ class ChecklistService {
     });
 
     if (!item) {
-      throw new AppError('Checklist item not found', 404);
+      throw new AppError("We couldn't find that checklist item.", 404);
     }
 
     await prisma.checklistItem.delete({

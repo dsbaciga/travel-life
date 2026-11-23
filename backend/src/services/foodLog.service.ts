@@ -40,7 +40,7 @@ function flattenPhotos<T extends { photos: Array<{ photo: unknown }> }>(entry: T
 async function findInTrip(entryId: number, tripId: number) {
   const entry = await prisma.foodLogEntry.findFirst({ where: { id: entryId, tripId } });
   if (!entry) {
-    throw new AppError('Food log entry not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that food log entry on this trip.", 404);
   }
   return entry;
 }
@@ -125,7 +125,7 @@ class FoodLogService {
       where: { id: { in: uniqueIds }, tripId, mediaType: MediaType.IMAGE },
     });
     if (found !== uniqueIds.length) {
-      throw new AppError('One or more photos were not found in this trip, or are not images', 404);
+      throw new AppError("Some of those photos aren't on this trip, or aren't images.", 404);
     }
 
     const existing = await prisma.foodLogEntryPhoto.findMany({
@@ -180,7 +180,7 @@ class FoodLogService {
       select: { id: true, immichAssetId: true, mediaType: true },
     });
     if (existing.some((p) => p.mediaType !== MediaType.IMAGE)) {
-      throw new AppError('Only photos can be attached to a food log entry, not videos', 400);
+      throw new AppError('Only photos can be attached to a food log entry.', 400);
     }
 
     const linkedAssetIds = new Set(existing.map((p) => p.immichAssetId));
@@ -211,7 +211,7 @@ class FoodLogService {
         }),
       });
       if (result.failed > 0) {
-        throw new AppError('Could not link one or more Immich photos to this trip', 500);
+        throw new AppError("Couldn't add some of those Immich photos to this trip.", 500);
       }
     }
 

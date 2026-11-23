@@ -109,7 +109,7 @@ describe('validateUrlNotInternal — URL shape guards', () => {
     ['   '],
   ])('rejects malformed input %p as an invalid URL', async (url) => {
     const error = await expectRejected(url);
-    expect(error.message).toBe('Invalid URL format');
+    expect(error.message).toBe('Enter a full URL, like https://example.com.');
   });
 
   it.each([
@@ -121,7 +121,7 @@ describe('validateUrlNotInternal — URL shape guards', () => {
     ['ws://example.com/socket'],
   ])('rejects non-HTTP scheme %p', async (url) => {
     const error = await expectRejected(url);
-    expect(error.message).toBe('Only HTTP and HTTPS URLs are allowed');
+    expect(error.message).toBe('Use a web address that starts with http:// or https://.');
   });
 
   it('does not attempt DNS resolution when the scheme is rejected', async () => {
@@ -350,9 +350,9 @@ describe('validateUrlNotInternal — DNS resolution', () => {
 
 describe('validateUrlNotInternalSync', () => {
   it('performs the same shape, hostname and IP-literal checks without DNS', () => {
-    expect(expectRejectedSync('not-a-url').message).toBe('Invalid URL format');
+    expect(expectRejectedSync('not-a-url').message).toBe('Enter a full URL, like https://example.com.');
     expect(expectRejectedSync('file:///etc/passwd').message).toBe(
-      'Only HTTP and HTTPS URLs are allowed'
+      'Use a web address that starts with http:// or https://.'
     );
     expect(expectRejectedSync('http://localhost:2283/').message).toBe(
       'URLs pointing to localhost or internal services are not allowed'

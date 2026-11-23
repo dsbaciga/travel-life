@@ -26,7 +26,7 @@ import { AppError } from '../errors/errors';
  */
 export function requireUser(req: Request): JwtPayload {
   if (!req.user) {
-    throw new AppError('Unauthorized', 401);
+    throw new AppError('Sign in to continue.', 401);
   }
   return req.user;
 }

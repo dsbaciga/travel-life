@@ -134,7 +134,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('No token provided');
+      expect(error.message).toBe('Sign in to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -165,7 +165,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('No token provided');
+      expect(error.message).toBe('Sign in to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -181,7 +181,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('No token provided');
+      expect(error.message).toBe('Sign in to continue.');
     });
 
     it('should reject empty Bearer token', async () => {
@@ -205,7 +205,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Invalid or expired token');
+      expect(error.message).toBe('Your session has expired. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -240,7 +240,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Invalid or expired token');
+      expect(error.message).toBe('Your session has expired. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -282,7 +282,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Invalid or expired token');
+      expect(error.message).toBe('Your session has expired. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -430,7 +430,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Token invalidated. Please log in again.');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -490,7 +490,7 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Token invalidated. Please log in again.');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -527,14 +527,14 @@ describe('Auth Middleware - authenticate', () => {
 
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Token invalidated. Please log in again.');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
   });
 
   // AUTH-M10: Reject blacklisted access token (e.g., after logout)
   describe('AUTH-M10: Blacklisted access token', () => {
-    it('should reject a blacklisted access token with 401 "Token has been revoked"', async () => {
+    it('should reject a blacklisted access token with 401 and a signed-out message', async () => {
       mockFindUnique.mockResolvedValue({ passwordVersion: 0 });
       mockIsBlacklisted.mockReturnValue(true);
 
@@ -550,7 +550,7 @@ describe('Auth Middleware - authenticate', () => {
       expect(mockIsBlacklisted).toHaveBeenCalledWith(token);
       expect(nextFunction).toHaveBeenCalledWith(expect.any(AppError));
       const error = (nextFunction as jest.Mock).mock.calls[0][0] as AppError;
-      expect(error.message).toBe('Token has been revoked');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
       // Must reject before attaching user
       expect(mockRequest.user).toBeUndefined();

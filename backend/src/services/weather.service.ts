@@ -96,7 +96,7 @@ class WeatherService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Check if trip has dates
@@ -108,7 +108,7 @@ class WeatherService {
     const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
-      console.warn('No weather API key configured');
+      console.warn("Weather isn't set up. Add an OpenWeatherMap API key in Settings.");
       return []; // No API key available
     }
 
@@ -356,7 +356,7 @@ class WeatherService {
       const data = response as OpenWeatherResponse;
 
       if (!data.daily || !data.daily[dayIndex]) {
-        throw new AppError('Weather data not available for this date', 404);
+        throw new AppError("There's no weather data for that date.", 404);
       }
 
       const dayData = data.daily[dayIndex];
@@ -414,7 +414,7 @@ class WeatherService {
       };
     } catch (error: unknown) {
       if (isAxiosError(error) && error.response?.status === 401) {
-        throw new AppError('Invalid OpenWeatherMap API key', 500);
+        throw new AppError("OpenWeatherMap didn't accept that API key. Check it and try again.", 500);
       }
       throw error;
     }
@@ -450,7 +450,7 @@ class WeatherService {
       const data = response as OpenWeatherHistoricalResponse;
 
       if (!data.data || data.data.length === 0) {
-        throw new AppError('Historical weather data not available for this date', 404);
+        throw new AppError("There's no historical weather for that date.", 404);
       }
 
       // The API returns hourly data for the requested day
@@ -501,7 +501,7 @@ class WeatherService {
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         if (error.response?.status === 401) {
-          throw new AppError('Invalid OpenWeatherMap API key', 500);
+          throw new AppError("OpenWeatherMap didn't accept that API key. Check it and try again.", 500);
         }
         if (error.response?.status === 403) {
           // Historical data requires paid subscription - log and return null gracefully
@@ -806,14 +806,14 @@ class WeatherService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Get API key (user's key or system key)
     const apiKey = decryptSecret((await getUserIntegrations(trip.userId)).weatherApiKey) || this.API_KEY;
 
     if (!apiKey) {
-      throw new AppError('No weather API key configured', 400);
+      throw new AppError("Weather isn't set up. Add an OpenWeatherMap API key in Settings.", 400);
     }
 
     // Get coordinates for this specific date
@@ -821,7 +821,7 @@ class WeatherService {
     const coordinates = await this.getTripCoordinates(tripId, targetDate);
 
     if (!coordinates) {
-      throw new AppError('No coordinates available for this date', 400);
+      throw new AppError('There are no coordinates for that date.', 400);
     }
 
     // Delete existing weather data to force refresh

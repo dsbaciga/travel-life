@@ -177,7 +177,7 @@ describe('CustomItemService', () => {
 
       await expect(
         customItemService.updateType(USER_ID, 999, { name: 'Nope' })
-      ).rejects.toThrow('Custom item type not found');
+      ).rejects.toThrow("We couldn't find that item type.");
     });
   });
 
@@ -192,7 +192,7 @@ describe('CustomItemService', () => {
           name: 'Parking',
           typeId: 77,
         })
-      ).rejects.toThrow('Custom item type not found');
+      ).rejects.toThrow("We couldn't find that item type.");
       expect(mockPrisma.customItem.create).not.toHaveBeenCalled();
     });
 
@@ -295,7 +295,7 @@ describe('CustomItemService', () => {
           ids: [1, 2],
           updates: { typeId: 77 },
         })
-      ).rejects.toThrow('Custom item type not found');
+      ).rejects.toThrow("We couldn't find that item type.");
       expect(mockBulkUpdateEntities).not.toHaveBeenCalled();
     });
   });

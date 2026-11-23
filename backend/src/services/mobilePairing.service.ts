@@ -128,13 +128,13 @@ class MobilePairingService {
     const record = this.records.get(key);
     this.records.delete(key);
     if (!record || record.expiresAt <= Date.now()) {
-      throw new AppError('Pairing code is invalid or has expired', 401);
+      throw new AppError('That pairing code has expired. Create a new one in Settings and scan it again.', 401);
     }
     if (record.challenge !== null) {
       const presented = Buffer.from(this.hash(verifier ?? ''), 'utf8');
       const expected = Buffer.from(record.challenge, 'utf8');
       if (presented.length !== expected.length || !crypto.timingSafeEqual(presented, expected)) {
-        throw new AppError('Pairing code is invalid or has expired', 401);
+        throw new AppError('That pairing code has expired. Create a new one in Settings and scan it again.', 401);
       }
     }
     return record.userId;
@@ -177,7 +177,7 @@ class MobilePairingService {
     const pending = this.pendingSignIns.get(key);
     this.pendingSignIns.delete(key);
     if (!pending || pending.expiresAt <= Date.now()) {
-      throw new AppError('Sign-in request is invalid or has expired', 401);
+      throw new AppError('That sign-in request has expired. Start again.', 401);
     }
     return this.createPairingToken(pending.userId, pending.challenge);
   }

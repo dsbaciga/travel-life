@@ -180,7 +180,7 @@ describe('UserService', () => {
     it('should throw 404 when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.getUserById(999)).rejects.toThrow('User not found');
+      await expect(userService.getUserById(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -305,7 +305,7 @@ describe('UserService', () => {
       mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.getImmichSettings(999)).rejects.toThrow('User not found');
+      await expect(userService.getImmichSettings(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -357,7 +357,7 @@ describe('UserService', () => {
       mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.getWeatherSettings(999)).rejects.toThrow('User not found');
+      await expect(userService.getWeatherSettings(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -393,7 +393,7 @@ describe('UserService', () => {
       mockPrisma.user.findFirst.mockResolvedValue({ id: 2, username: 'taken' });
 
       await expect(userService.updateUsername(1, 'taken')).rejects.toThrow(
-        'Username is already taken'
+        'That username is taken. Choose another.'
       );
     });
   });
@@ -441,7 +441,7 @@ describe('UserService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(userService.updatePassword(1, 'wrongpass', 'newpass')).rejects.toThrow(
-        'Current password is incorrect'
+        "That isn't your current password. Check it and try again."
       );
     });
   });
@@ -454,7 +454,7 @@ describe('UserService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.updatePassword(999, 'old', 'new')).rejects.toThrow(
-        'User not found'
+        "We couldn't find that user."
       );
     });
   });
@@ -534,7 +534,7 @@ describe('UserService', () => {
       mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.getAviationstackSettings(999)).rejects.toThrow('User not found');
+      await expect(userService.getAviationstackSettings(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -557,7 +557,7 @@ describe('UserService', () => {
       mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(userService.getOpenrouteserviceSettings(999)).rejects.toThrow('User not found');
+      await expect(userService.getOpenrouteserviceSettings(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -597,7 +597,7 @@ describe('UserService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(userService.renameTripType(999, 'Old', 'New')).rejects.toThrow(
-        'User not found'
+        "We couldn't find that user."
       );
     });
   });

@@ -392,11 +392,11 @@ describe('SavedLinkService', () => {
 
       await expect(
         savedLinkService.updateSavedLink(USER_ID, 999, { notes: 'x' })
-      ).rejects.toThrow('Saved link not found');
+      ).rejects.toThrow("We couldn't find that saved link.");
 
       await expect(
         savedLinkService.deleteSavedLink(USER_ID, 999)
-      ).rejects.toThrow('Saved link not found');
+      ).rejects.toThrow("We couldn't find that saved link.");
 
       // Ownership is enforced in the query, not after the fact.
       expect(mockPrisma.savedLink.findFirst).toHaveBeenCalledWith({

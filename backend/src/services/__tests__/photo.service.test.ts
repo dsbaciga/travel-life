@@ -542,7 +542,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { isFavorite: true })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
       expect(mockPrisma.photo.update).not.toHaveBeenCalled();
     });
 
@@ -763,7 +763,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { caption: 'New' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -1222,7 +1222,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.getPhotoById(mockUserId, 99999)
-      ).rejects.toThrow('Photo not found');
+      ).rejects.toThrow("We couldn't find that photo.");
     });
 
     it('should handle video exceeding duration limit', async () => {
@@ -1243,7 +1243,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.uploadPhoto(mockUserId, videoFile, { tripId: mockTripId })
-      ).rejects.toThrow('Video duration exceeds maximum');
+      ).rejects.toThrow('That video is');
     });
 
     it('should get unsorted photos not in any album', async () => {

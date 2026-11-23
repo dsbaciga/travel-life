@@ -260,10 +260,10 @@ class RoutingService {
         });
 
         if (error.response?.status === 401 || error.response?.status === 403) {
-          throw new AppError('Invalid OpenRouteService API key', 401);
+          throw new AppError("OpenRouteService didn't accept that API key. Check it and try again.", 401);
         }
         if (error.response?.status === 429) {
-          throw new AppError('OpenRouteService rate limit exceeded', 429);
+          throw new AppError('OpenRouteService is limiting requests. Try again in a minute.', 429);
         }
         throw new Error(`OpenRouteService API error: ${errorMessage}`);
       } else if (error instanceof Error) {

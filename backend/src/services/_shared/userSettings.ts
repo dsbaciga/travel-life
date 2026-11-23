@@ -44,7 +44,7 @@ export type UserPreferencesInput = Partial<{
     : UserPreferencesData[K];
 }>;
 
-const userNotFound = () => new AppError('User not found', 404);
+const userNotFound = () => new AppError("We couldn't find that user.", 404);
 
 /**
  * The user's integration settings (ciphertext for the secrets). Creates the row with the

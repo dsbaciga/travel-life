@@ -563,19 +563,19 @@ describe('LodgingService', () => {
     });
 
     it('should throw error if lodging not found', async () => {
-      (deleteEntity as jest.Mock).mockRejectedValue(new AppError('Lodging not found', 404));
+      (deleteEntity as jest.Mock).mockRejectedValue(new AppError("We couldn't find that stay.", 404));
 
       await expect(
         lodgingService.deleteLodging(mockUserId, 999)
-      ).rejects.toThrow('Lodging not found');
+      ).rejects.toThrow("We couldn't find that stay.");
     });
 
     it('should throw error if user does not own the lodging', async () => {
-      (deleteEntity as jest.Mock).mockRejectedValue(new AppError('Access denied', 403));
+      (deleteEntity as jest.Mock).mockRejectedValue(new AppError("You don't have access to this trip.", 403));
 
       await expect(
         lodgingService.deleteLodging(mockUserId, mockLodgingId)
-      ).rejects.toThrow('Access denied');
+      ).rejects.toThrow("You don't have access to this trip.");
     });
   });
 
