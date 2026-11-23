@@ -711,7 +711,7 @@ export default function LocationManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Location</span>
+              <span className="hidden sm:inline">+ Add location</span>
             </button>
           )}
         </div>
@@ -721,7 +721,7 @@ export default function LocationManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Location" : "Add Location"}
+        title={manager.editingId ? "Edit location" : "Add location"}
         icon="place"
         maxWidth="2xl"
         formId="location-form"
@@ -730,7 +730,7 @@ export default function LocationManager({
             onCancel={handleCloseForm}
             formId="location-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Location`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} location`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('location-form'))}
             leftContent={
@@ -795,7 +795,7 @@ export default function LocationManager({
           </FormSection>
 
           {/* Basic Info Section */}
-          <FormSection title="Location Details" icon="place">
+          <FormSection title="Location details" icon="place">
             {/* Create mode: bring an activity or lodging of the same name along */}
             {!manager.editingId && (
               <div>
@@ -943,7 +943,7 @@ export default function LocationManager({
 
             <div>
               <label htmlFor="location-opening-hours" className="label">
-                Opening Hours
+                Opening hours
               </label>
               <input
                 type="text"
@@ -1027,9 +1027,9 @@ export default function LocationManager({
         ) : manager.items.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoLocations />}
-            message="Pin Your Destinations"
-            subMessage="Mark the places that matter - from iconic landmarks and hidden gems to cozy cafes and stunning viewpoints. Build your personal map of memories."
-            actionLabel="Add Your First Location"
+            message="No places yet"
+            subMessage="Save the places you want to see, from landmarks to the cafe you don't want to miss."
+            actionLabel="Add place"
             onAction={openCreateForm}
           />
         ) : (

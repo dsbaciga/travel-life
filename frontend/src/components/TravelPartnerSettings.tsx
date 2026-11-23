@@ -303,7 +303,7 @@ export default function TravelPartnerSettings() {
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        Travel Partner
+        Travel partner
       </h2>
 
       <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
@@ -570,7 +570,7 @@ export default function TravelPartnerSettings() {
       {/* Info Box */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
         <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
-          How Travel Partners Work
+          How Travel partners work
         </h3>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
           <li>Send a request; the partnership only starts once the other person accepts</li>

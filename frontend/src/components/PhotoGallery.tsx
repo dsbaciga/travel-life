@@ -998,8 +998,8 @@ export default function PhotoGallery({
     return (
       <EmptyState
         icon={<EmptyIllustrations.NoPhotos />}
-        message="Your Photo Journey Begins Here"
-        subMessage="Upload photos to capture your travel memories. You can link photos to locations, add them to albums, and create a visual story of your adventures."
+        message="No photos yet"
+        subMessage="Upload photos or import them from Immich, then link them to places and days."
       />
     );
   }
@@ -1053,12 +1053,12 @@ export default function PhotoGallery({
             className="px-3 py-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-lg text-sm font-medium text-gray-700 dark:text-dusk-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all"
             aria-label="Sort photos"
           >
-            <option value="date-desc">Latest First</option>
-            <option value="date-asc">Oldest First</option>
+            <option value="date-desc">Latest first</option>
+            <option value="date-asc">Oldest first</option>
             <option value="caption-asc">Caption A-Z</option>
             <option value="caption-desc">Caption Z-A</option>
-            <option value="created-desc">Recently Added</option>
-            <option value="created-asc">First Added</option>
+            <option value="created-desc">Recently added</option>
+            <option value="created-asc">First added</option>
           </select>
         </div>
 
@@ -1132,7 +1132,7 @@ export default function PhotoGallery({
             className="btn btn-secondary inline-flex items-center gap-2"
           >
             <Icon name="success" size={16} />
-            Select Photos
+            Select photos
           </button>
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
@@ -1436,7 +1436,7 @@ export default function PhotoGallery({
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {showCreateAlbumForm ? "Create New Album" : "Select Album"}
+                {showCreateAlbumForm ? "Create new album" : "Select album"}
               </h3>
               <button
                 onClick={() => {
@@ -1467,7 +1467,7 @@ export default function PhotoGallery({
                   className="w-full p-4 mb-4 rounded-lg border-2 border-dashed border-blue-500 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-600 dark:text-blue-400 font-medium flex items-center justify-center gap-2"
                 >
                   <Icon name="add" />
-                  Create New Album
+                  Create new album
                 </button>
 
                 {/* Existing Albums List */}
@@ -1550,7 +1550,7 @@ export default function PhotoGallery({
                     }
                     className="flex-1 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreatingAlbum ? "Creating…" : "Create Album"}
+                    {isCreatingAlbum ? "Creating…" : "Create album"}
                   </button>
                 </div>
               </>

@@ -106,7 +106,7 @@ export function RecentActivityCard({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-body font-semibold text-lg text-charcoal dark:text-warm-gray">
-          Recent Activity
+          Recent activity
         </h3>
         <div className="flex items-center gap-1 text-slate dark:text-warm-gray">
           <Icon name="schedule" className="w-4 h-4" />

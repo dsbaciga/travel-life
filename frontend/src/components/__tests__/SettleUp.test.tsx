@@ -114,7 +114,7 @@ describe('SettleUpPanel', () => {
     mockGetSettleUp.mockResolvedValue(summary);
     renderPanel();
 
-    expect(await screen.findByText('Settle Up')).toBeInTheDocument();
+    expect(await screen.findByText('Settle up')).toBeInTheDocument();
     expect(screen.getByRole('row', { name: /dana/ })).toHaveTextContent('gets back');
     expect(screen.getByRole('row', { name: /Alex/ })).toHaveTextContent('owes');
     expect(screen.getByText(/2 payments/)).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe('SettleUpPanel recorded payments', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Record payment from Alex to dana' }));
 
-    expect(await screen.findByRole('heading', { name: /Record Payment/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Record payment/ })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByLabelText('Paid by')).toHaveValue('companion:5'));
     expect(screen.getByLabelText('Paid to')).toHaveValue('owner');
     expect(screen.getByLabelText('Amount')).toHaveValue(30);
@@ -176,7 +176,7 @@ describe('SettleUpPanel recorded payments', () => {
     fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '12.5' } });
     fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-05-04' } });
     fireEvent.change(screen.getByLabelText('Notes'), { target: { value: '  Venmo ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record payment' }));
 
     await waitFor(() =>
       expect(mockCreateSettlement).toHaveBeenCalledWith(1, {
@@ -203,12 +203,12 @@ describe('SettleUpPanel recorded payments', () => {
     expect(screen.getByText(/May 3, 2026/)).toHaveTextContent('Cash at the airport');
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit payment from Alex to dana' }));
-    expect(await screen.findByRole('heading', { name: /Edit Payment/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Edit payment/ })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByLabelText('Paid by')).toHaveValue('companion:5'));
     expect(screen.getByLabelText('Date')).toHaveValue('2026-05-03');
 
     fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '15' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Update Payment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Update payment' }));
 
     await waitFor(() =>
       expect(mockUpdateSettlement).toHaveBeenCalledWith(
@@ -229,7 +229,7 @@ describe('SettleUpPanel recorded payments', () => {
     expect(mockDeleteSettlement).not.toHaveBeenCalled();
 
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete payment' }));
 
     await waitFor(() => expect(mockDeleteSettlement).toHaveBeenCalledWith(1, 7));
     await waitFor(() => expect(mockGetSettleUp.mock.calls.length).toBeGreaterThan(1));
@@ -277,7 +277,7 @@ describe('SettleUpPanel recorded payments', () => {
     await waitFor(() => expect(screen.getByLabelText('Paid by')).toHaveValue('companion:5'));
 
     fireEvent.change(screen.getByLabelText('Paid to'), { target: { value: 'companion:5' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record payment' }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Choose two different people'));
     expect(mockCreateSettlement).not.toHaveBeenCalled();

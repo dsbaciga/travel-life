@@ -116,7 +116,7 @@ export default function IOSStorageWarning({
       {/* Storage Limit Warning */}
       {showStorageWarning && (
         <WarningCard
-          title="Storage Running Low"
+          title="Storage running low"
           icon={<StorageIcon />}
           onDismiss={handleDismissStorage}
         >
@@ -162,7 +162,7 @@ export default function IOSStorageWarning({
                 transition-colors
               "
             >
-              Manage Storage
+              Manage storage
               <Icon name="chevronRight" size={16} />
             </a>
           )}
@@ -172,7 +172,7 @@ export default function IOSStorageWarning({
       {/* Eviction Warning */}
       {showEvictionWarning && (
         <WarningCard
-          title="Keep Your Data Safe"
+          title="Keep your data safe"
           icon={<ClockIcon />}
           onDismiss={handleDismissEviction}
         >

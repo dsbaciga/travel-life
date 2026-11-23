@@ -59,7 +59,7 @@ function NoEventsState({ onAddActivity }: { onAddActivity: () => void }) {
         className="btn-primary"
       >
         <PlusIcon className="w-4 h-4" />
-        Add Activity
+        Add activity
       </button>
     </div>
   );
@@ -81,7 +81,7 @@ function DreamTripState({
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
         <Icon name="sparkle" className="w-5 h-5" />
-        <span className="text-sm font-medium">Dream Trip</span>
+        <span className="text-sm font-medium">Dream trip</span>
       </div>
 
       <p className="text-sm text-slate dark:text-warm-gray/80">
@@ -132,14 +132,14 @@ function CompletedTripState({
           onClick={onViewMemories}
           className="btn-primary"
         >
-          View Photos
+          View photos
           <ChevronRightIcon className="w-4 h-4" />
         </button>
         <button
           onClick={onViewTimeline}
           className="btn-secondary"
         >
-          View Timeline
+          View timeline
         </button>
       </div>
     </div>
@@ -181,10 +181,10 @@ function DatesPassedState({
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <button onClick={onViewMemories} className="btn-secondary">
-          View Memories
+          View memories
         </button>
         <button onClick={onViewTimeline} className="btn-secondary">
-          View Timeline
+          View timeline
         </button>
       </div>
     </div>
@@ -277,7 +277,7 @@ export default function NextUpCard({
                 onClick={() => onNavigateToTab('timeline')}
                 className="text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 transition-colors sm:hidden"
               >
-                View Timeline
+                View timeline
                 <ChevronRightIcon className="w-4 h-4" />
               </button>
             )}
@@ -298,7 +298,7 @@ export default function NextUpCard({
             onClick={() => onNavigateToTab('timeline')}
             className="hidden sm:flex text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium items-center gap-1 transition-colors shrink-0"
           >
-            View Timeline
+            View timeline
             <ChevronRightIcon className="w-4 h-4" />
           </button>
         )}

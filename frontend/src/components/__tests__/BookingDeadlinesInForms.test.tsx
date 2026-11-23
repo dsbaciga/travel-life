@@ -119,8 +119,8 @@ describe('deadlines in the activity form', () => {
     );
 
   const openAddForm = async (user: ReturnType<typeof userEvent.setup>) => {
-    await waitFor(() => expect(screen.getByRole('button', { name: /add activity/i })).toBeInTheDocument());
-    await user.click(screen.getByRole('button', { name: /add activity/i }));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /add activity/i })[0]).toBeInTheDocument());
+    await user.click(screen.getAllByRole('button', { name: /add activity/i })[0]);
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
   };
 
@@ -158,7 +158,7 @@ describe('deadlines in the activity form', () => {
     // Nothing is sent while the booking does not exist yet.
     expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: /^add activity$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add activity$/i }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(TRIP_ID, {
@@ -183,7 +183,7 @@ describe('deadlines in the activity form', () => {
 
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Tour' } });
     await stageDeadline(user, '2026-12-01T18:00');
-    await user.click(screen.getByRole('button', { name: /^add activity$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add activity$/i }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     const message = vi.mocked(toast.error).mock.calls.map((c) => String(c[0])).join('\n');
@@ -191,7 +191,7 @@ describe('deadlines in the activity form', () => {
     expect(message).toContain('2026-12-01 18:00');
     // The booking was saved and is not reported as failed.
     expect(message).not.toMatch(/failed to add activity/i);
-    expect(toast.success).toHaveBeenCalledWith('Activity added successfully');
+    expect(toast.success).toHaveBeenCalledWith('Activity added');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
@@ -218,7 +218,7 @@ describe('deadlines in the activity form', () => {
     expect(screen.queryByRole('list', { name: 'Deadlines' })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'Second' } });
-    await user.click(screen.getByRole('button', { name: /^add activity$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add activity$/i }));
     await waitFor(() => expect(activityService.createActivity).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     // The second booking got nothing: the first one's deadline did not carry over.
@@ -362,12 +362,12 @@ describe('deadlines in the lodging and transportation forms', () => {
     wrap(<TransportationManager tripId={TRIP_ID} locations={mockLocations} tripTimezone="Europe/Paris" tripStartDate="2026-12-01" />);
 
   const openLodging = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click(await screen.findByRole('button', { name: /add lodging/i }));
+    await user.click((await screen.findAllByRole('button', { name: /add stay/i }))[0]);
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
     fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: 'Grand Hotel' } });
   };
   const openTransportation = async (user: ReturnType<typeof userEvent.setup>) => {
-    await user.click((await screen.findAllByRole('button', { name: /add transportation/i }))[0]);
+    await user.click((await screen.findAllByRole('button', { name: /add transport/i }))[0]);
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
   };
 
@@ -393,7 +393,7 @@ describe('deadlines in the lodging and transportation forms', () => {
 
     await stageDeadlineRow(user, '2026-12-01T18:00', 'Cancel by 6pm');
     expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add stay$/i }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(TRIP_ID, {
@@ -416,7 +416,7 @@ describe('deadlines in the lodging and transportation forms', () => {
 
     await stageDeadlineRow(user, '2026-12-01T18:00', 'Cancel by 6pm');
     expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transport$/i }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(TRIP_ID, {
@@ -438,7 +438,7 @@ describe('deadlines in the lodging and transportation forms', () => {
 
     // Typed, but "Add deadline" is never pressed.
     await typeDeadlineRow(user, '2026-12-01T18:00', 'Left in the editor');
-    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add stay$/i }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(
@@ -453,7 +453,7 @@ describe('deadlines in the lodging and transportation forms', () => {
     await openTransportation(user);
 
     await typeDeadlineRow(user, '2026-12-01T18:00');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transport$/i }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).toHaveBeenCalledWith(
@@ -469,7 +469,7 @@ describe('deadlines in the lodging and transportation forms', () => {
 
     // A note but no due date.
     await typeDeadlineRow(user, '', 'No date yet');
-    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add stay$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/choose a due date/i);
     expect(lodgingService.createLodging).not.toHaveBeenCalled();
@@ -479,7 +479,7 @@ describe('deadlines in the lodging and transportation forms', () => {
     // Finishing the row clears the message and lets the save through.
     fireEvent.change(screen.getByLabelText(/^due$/i), { target: { value: '2026-12-01T18:00' } });
     expect(screen.queryByText(/choose a due date to add/i)).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /^add lodging$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add stay$/i }));
     await waitFor(() => expect(lodgingService.createLodging).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
   });
@@ -490,7 +490,7 @@ describe('deadlines in the lodging and transportation forms', () => {
     await openTransportation(user);
 
     await typeDeadlineRow(user, '', 'No date yet');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transport$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/choose a due date/i);
     expect(transportationService.createTransportation).not.toHaveBeenCalled();
@@ -498,7 +498,7 @@ describe('deadlines in the lodging and transportation forms', () => {
     // Cancel the deadline row (the only Cancel inside the Deadlines section is its own).
     const row = screen.getByLabelText(/^due$/i).closest('div.space-y-3') as HTMLElement;
     await user.click(within(row).getByRole('button', { name: /^cancel$/i }));
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transportation$/i }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: /^add transport$/i }));
     await waitFor(() => expect(transportationService.createTransportation).toHaveBeenCalledTimes(1));
     expect(bookingDeadlineService.createDeadline).not.toHaveBeenCalled();
   });

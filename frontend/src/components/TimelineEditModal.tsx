@@ -961,7 +961,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
               htmlFor="activity-start-date-allday"
               className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
-              Start Date
+              Start date
             </label>
             <input
               id="activity-start-date-allday"
@@ -985,7 +985,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
               htmlFor="activity-end-date-allday"
               className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
             >
-              End Date
+              End date
             </label>
             <input
               id="activity-end-date-allday"
@@ -1009,7 +1009,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              Start Time
+              Start time
             </label>
             <div className="flex gap-2">
               <input
@@ -1040,7 +1040,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              End Time
+              End time
             </label>
             <div className="flex gap-2">
               <input
@@ -1164,7 +1164,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             htmlFor="transportation-from-location"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
-            From Location
+            From location
           </label>
           <select
             id="transportation-from-location"
@@ -1204,7 +1204,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             htmlFor="transportation-to-location"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
-            To Location
+            To location
           </label>
           <select
             id="transportation-to-location"
@@ -1248,7 +1248,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             htmlFor="transportation-departure-time"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
-            Departure Time
+            Departure time
           </label>
           <input
             id="transportation-departure-time"
@@ -1265,7 +1265,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
                 startTimezone: value,
               }))
             }
-            label="Departure Timezone"
+            label="Departure timezone"
           />
         </div>
         <div>
@@ -1273,7 +1273,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             htmlFor="transportation-arrival-time"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
           >
-            Arrival Time
+            Arrival time
           </label>
           <input
             id="transportation-arrival-time"
@@ -1287,7 +1287,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             onChange={(value) =>
               setTransportationForm((prev) => ({ ...prev, endTimezone: value }))
             }
-            label="Arrival Timezone"
+            label="Arrival timezone"
           />
         </div>
       </div>
@@ -1427,7 +1427,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           >
             <option value="hotel">Hotel</option>
             <option value="hostel">Hostel</option>
-            <option value="vacation_rental">Vacation Rental</option>
+            <option value="vacation_rental">Vacation rental</option>
             <option value="camping">Camping</option>
             <option value="resort">Resort</option>
             <option value="other">Other</option>
@@ -1643,7 +1643,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           htmlFor="journal-entry-date"
           className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
         >
-          Entry Date
+          Entry date
         </label>
         <input
           id="journal-entry-date"
@@ -1724,7 +1724,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             className="btn btn-primary"
             disabled={saving}
           >
-            {saving ? "Saving…" : "Save Changes"}
+            {saving ? "Saving…" : "Save changes"}
           </button>
         </>
       }

@@ -476,7 +476,7 @@ export default function JournalManager({
           className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
         >
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ New Entry</span>
+          <span className="hidden sm:inline">+ New entry</span>
         </button>
       </div>
       )}
@@ -485,7 +485,7 @@ export default function JournalManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Entry" : "New Journal Entry"}
+        title={manager.editingId ? "Edit entry" : "New journal entry"}
         icon="journal"
         formId="journal-form"
         footer={
@@ -493,7 +493,7 @@ export default function JournalManager({
             onCancel={handleCloseForm}
             formId="journal-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Create"} Entry`}
+            submitLabel={`${manager.editingId ? "Update" : "Create"} entry`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('journal-form'))}
             leftContent={
@@ -550,7 +550,7 @@ export default function JournalManager({
                   htmlFor={entryDateFieldId}
                   className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
                 >
-                  Entry Date
+                  Entry date
                 </label>
                 <input
                   type="date"
@@ -662,9 +662,9 @@ export default function JournalManager({
       {formOnly ? null : manager.items.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoJournalEntries />}
-          message="Tell Your Story"
-          subMessage="Every journey has a story worth telling. Write about your experiences, capture the emotions, and preserve the small moments that make travel unforgettable. Your future self will thank you."
-          actionLabel="Write Your First Entry"
+          message="No journal entries yet"
+          subMessage="Write down what happened today while you still remember the details."
+          actionLabel="Write an entry"
           onAction={openCreateForm}
         />
       ) : (

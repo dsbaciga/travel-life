@@ -166,21 +166,21 @@ export default function TravelStatsWidget() {
 
   const statItems = [
     {
-      label: 'Total Trips',
+      label: 'Total trips',
       value: stats.totalTrips,
       icon: 'globe' as const,
       color: 'from-blue-500 to-blue-600',
       valueDisplay: stats.totalTrips.toLocaleString(),
     },
     {
-      label: 'Photos Captured',
+      label: 'Photos captured',
       value: stats.totalPhotos,
       icon: 'photo' as const,
       color: 'from-purple-500 to-purple-600',
       valueDisplay: stats.totalPhotos.toLocaleString(),
     },
     {
-      label: 'Places Visited',
+      label: 'Places visited',
       value: stats.totalLocations,
       icon: 'place' as const,
       color: 'from-green-500 to-green-600',
@@ -194,7 +194,7 @@ export default function TravelStatsWidget() {
       valueDisplay: stats.countriesVisited.toLocaleString(),
     },
     {
-      label: 'Distance Traveled',
+      label: 'Distance traveled',
       value: stats.totalDistanceKm,
       icon: 'route' as const,
       color: 'from-cyan-500 to-cyan-600',
@@ -227,7 +227,7 @@ export default function TravelStatsWidget() {
           <Icon name="dashboard" className="w-6 h-6 text-white" />
         </div>
         <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-          Travel Stats
+          Travel stats
         </h3>
       </div>
 
@@ -276,7 +276,7 @@ export default function TravelStatsWidget() {
         ) : (
           <>
             <Icon name="refresh" className="w-4 h-4" />
-            Recalculate Distances
+            Recalculate distances
           </>
         )}
       </button>

@@ -13,8 +13,8 @@ interface InviteUserModalProps {
 }
 
 const PERMISSION_OPTIONS: { value: PermissionLevel; label: string; description: string }[] = [
-  { value: 'view', label: 'View Only', description: 'Can view trip details but cannot make changes' },
-  { value: 'edit', label: 'Can Edit', description: 'Can view and edit trip details' },
+  { value: 'view', label: 'View only', description: 'Can view trip details but cannot make changes' },
+  { value: 'edit', label: 'Can edit', description: 'Can view and edit trip details' },
   { value: 'admin', label: 'Admin', description: 'Full access including managing collaborators' },
 ];
 
@@ -73,7 +73,7 @@ export default function InviteUserModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Invite Collaborator"
+      title="Invite collaborator"
       icon="users"
       maxWidth="md"
       footer={
@@ -98,7 +98,7 @@ export default function InviteUserModal({
                 Sending…
               </>
             ) : (
-              'Send Invitation'
+              'Send invitation'
             )}
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function InviteUserModal({
         {/* Permission Level */}
         <div>
           <label htmlFor={permissionId} className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
-            Permission Level
+            Permission level
           </label>
           <div className="space-y-2">
             {PERMISSION_OPTIONS.map((option) => (

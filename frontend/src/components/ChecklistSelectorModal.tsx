@@ -164,7 +164,7 @@ export default function ChecklistSelectorModal({
                   onClick={handleSelectAll}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  Select All
+                  Select all
                 </button>
                 <span className="text-gray-400">|</span>
                 <button
@@ -172,7 +172,7 @@ export default function ChecklistSelectorModal({
                   onClick={handleDeselectAll}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  Deselect All
+                  Deselect all
                 </button>
               </>
             )}

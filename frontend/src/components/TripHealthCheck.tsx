@@ -158,7 +158,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       <div className="p-4 border-b border-gray-200 dark:border-navy-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trip Health</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trip health</h3>
             {/* Status Badge */}
             {isOkay ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">

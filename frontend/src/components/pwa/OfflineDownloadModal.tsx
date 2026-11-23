@@ -242,7 +242,7 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleComplete}
-        title="Download Complete"
+        title="Download complete"
         icon="success"
         maxWidth="md"
         footer={
@@ -281,7 +281,7 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleCancel}
-        title="Downloading for Offline"
+        title="Downloading for offline use"
         icon="download"
         maxWidth="md"
         closeOnBackdropClick={false}
@@ -347,7 +347,7 @@ export default function OfflineDownloadModal({
     <Modal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="Download for Offline"
+      title="Download for offline use"
       icon="download"
       maxWidth="md"
       footer={
@@ -509,7 +509,7 @@ export default function OfflineDownloadModal({
             <div className="flex items-center gap-3 mb-2">
               <Icon name="storage" size={16} className="text-slate dark:text-warm-gray/70" />
               <span className="text-xs font-medium text-slate dark:text-warm-gray/70">
-                Storage Usage
+                Storage usage
               </span>
             </div>
             <div className="h-2 bg-navy-200 dark:bg-navy-600 rounded-full overflow-hidden mb-1">

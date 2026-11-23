@@ -244,7 +244,7 @@ export default function SavedLinksManager({
               className="btn-primary whitespace-nowrap"
               onClick={() => setIsAdding(true)}
             >
-              Add Link
+              Add link
             </button>
           </div>
         )}
@@ -316,8 +316,8 @@ export default function SavedLinksManager({
               {saving
                 ? "Saving…"
                 : editingId !== null
-                  ? "Save Changes"
-                  : "Save Link"}
+                  ? "Save changes"
+                  : "Save link"}
             </button>
           </div>
         </div>
@@ -329,8 +329,8 @@ export default function SavedLinksManager({
         <EmptyState
           icon="savedLink"
           message="No links yet"
-          subMessage="Save a page you want to remember for this trip"
-          actionLabel="Add Link"
+          subMessage="Save a page you want to remember for this trip."
+          actionLabel="Add link"
           onAction={() => setIsAdding(true)}
         />
       ) : (

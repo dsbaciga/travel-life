@@ -38,7 +38,7 @@ export default function FoodLogPage() {
     <div className="min-h-screen bg-cream dark:bg-navy-900">
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
       <PageHeader
-        title="Best Meals"
+        title="Best meals"
         subtitle="Every dish you have rated across your trips"
         backLink={LIBRARY_BACK_LINK}
       />

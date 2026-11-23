@@ -204,7 +204,7 @@ export default function ChecklistsPage() {
   
   if (defaultChecklistsStatus.some(c => !c.exists)) {
     secondaryActions.push({
-      label: 'Add Defaults',
+      label: 'Add defaults',
       icon: 'add' as const,
       onClick: handleOpenAddModal,
       variant: 'secondary' as const,
@@ -237,7 +237,7 @@ export default function ChecklistsPage() {
           subtitle="Track your travel achievements"
           backLink={LIBRARY_BACK_LINK}
           action={{
-            label: showCreateForm ? 'Cancel' : 'Create Custom List',
+            label: showCreateForm ? 'Cancel' : 'Create custom list',
             icon: showCreateForm ? 'close' : 'add',
             onClick: () => setShowCreateForm(!showCreateForm),
           }}
@@ -247,7 +247,7 @@ export default function ChecklistsPage() {
         {showCreateForm && (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Create Custom Checklist
+              Create custom checklist
             </h2>
             <form onSubmit={handleCreateChecklist}>
               <div className="mb-4">
@@ -285,7 +285,7 @@ export default function ChecklistsPage() {
                   value={newChecklistTripId ?? ''}
                   onChange={(e) => setNewChecklistTripId(e.target.value ? parseInt(e.target.value) : null)}
                   className="input"
-                  aria-label="Associate with Trip"
+                  aria-label="Associate with trip"
                 >
                   <option value="">None (General checklist)</option>
                   {trips.map((trip) => (
@@ -300,7 +300,7 @@ export default function ChecklistsPage() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Create Checklist
+                  Create checklist
                 </button>
                 <button
                   type="button"
@@ -317,9 +317,9 @@ export default function ChecklistsPage() {
         {checklists.length === 0 ? (
           <EmptyState
             icon="checklist"
-            message="No Checklists Yet"
-            subMessage="Get started by initializing default lists or creating your own custom checklist"
-            actionLabel={isInitializing ? 'Initializing…' : 'Initialize Default Lists'}
+            message="No checklists yet"
+            subMessage="Add the default packing and pre-trip lists, or start one of your own."
+            actionLabel={isInitializing ? 'Adding…' : 'Add default lists'}
             onAction={handleInitializeDefaults}
           />
         ) : (

@@ -232,7 +232,7 @@ export default function IOSInstallPrompt({
             onClick={handleDismiss}
             className="btn-secondary flex-1 py-2.5"
           >
-            Maybe Later
+            Maybe later
           </button>
           <button
             onClick={handleInstalled}

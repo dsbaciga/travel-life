@@ -10,7 +10,6 @@ import type { PhotoAlbum } from "../types/photo";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
 import { formatDateTimeInTimezone } from "../utils/timezone";
-import { getApiErrorMessage } from '../lib/errors';
 
 interface ImmichAlbumPanelProps {
   album: PhotoAlbum;
@@ -19,7 +18,7 @@ interface ImmichAlbumPanelProps {
 }
 
 function errorMessage(error: unknown): string {
-  return getApiErrorMessage(error, "Couldn't finish that. Try again.");
+  return error instanceof Error && error.message ? error.message : "Couldn't finish that. Try again.";
 }
 
 function count(n: number, noun: string): string {

@@ -346,14 +346,14 @@ export default function PhotoTimeline({
             onClick={expandAllDays}
             className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
-            Expand All
+            Expand all
           </button>
           <button
             type="button"
             onClick={collapseAllDays}
             className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
-            Collapse All
+            Collapse all
           </button>
         </div>
       </div>

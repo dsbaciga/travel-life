@@ -173,7 +173,7 @@ export default function TripHeaderActions({
           to={`/trips/${tripId}/edit`}
           className="btn btn-secondary text-sm sm:text-base px-3 sm:px-4 py-2 whitespace-nowrap"
         >
-          Edit Trip
+          Edit trip
         </Link>
 
         <PdfImportButton tripId={tripId} />

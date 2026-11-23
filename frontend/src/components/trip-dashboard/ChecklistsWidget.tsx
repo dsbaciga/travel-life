@@ -337,7 +337,7 @@ export default function ChecklistsWidget({
             onClick={onNavigateToChecklists}
             className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
               hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-            aria-label="Go to Checklists"
+            aria-label="Go to checklists"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </button>
@@ -380,7 +380,7 @@ export default function ChecklistsWidget({
           onClick={onNavigateToChecklists}
           className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
             hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-          aria-label="Go to Checklists"
+          aria-label="Go to checklists"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>
@@ -391,7 +391,7 @@ export default function ChecklistsWidget({
         <div className="mb-4 pb-4 border-b border-slate/10 dark:border-warm-gray/10">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-slate dark:text-warm-gray/70">
-              Overall Progress
+              Overall progress
             </span>
             <span
               className={`text-xs font-medium ${

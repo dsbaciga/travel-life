@@ -546,7 +546,7 @@ export default function ActivityManager({
                 rel="noopener noreferrer"
                 className="inline-block py-2 -my-2 text-blue-600 hover:underline dark:text-blue-400"
               >
-                View Booking
+                View booking
               </a>
             </div>
           )}
@@ -675,7 +675,7 @@ export default function ActivityManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Activity</span>
+              <span className="hidden sm:inline">+ Add activity</span>
             </button>
           )}
         </div>
@@ -685,7 +685,7 @@ export default function ActivityManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Activity" : "Add Activity"}
+        title={manager.editingId ? "Edit activity" : "Add activity"}
         icon="activity"
         formId="activity-form"
         footer={
@@ -693,7 +693,7 @@ export default function ActivityManager({
             onCancel={handleCloseForm}
             formId="activity-form"
             isSubmitting={isSubmitting}
-            submitLabel={manager.editingId ? "Update Activity" : "Add Activity"}
+            submitLabel={manager.editingId ? "Update activity" : "Add activity"}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(activityFormRef.current)}
           />
@@ -793,9 +793,9 @@ export default function ActivityManager({
       ) : topLevelActivities.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoActivities />}
-          message="What Will You Discover?"
-          subMessage="Plan your adventures - from guided tours and museum visits to local dining experiences and outdoor excursions. Every activity tells a story."
-          actionLabel="Add Your First Activity"
+          message="No activities yet"
+          subMessage="Add a tour, a museum visit, a dinner booking, anything you want to do on this trip."
+          actionLabel="Add activity"
           onAction={handleOpenForm}
         />
       ) : filteredActivities.length === 0 && dietaryFilter.length > 0 ? (

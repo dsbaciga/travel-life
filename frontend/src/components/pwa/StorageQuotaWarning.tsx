@@ -48,17 +48,17 @@ const QUICK_CLEAR_CATEGORIES: {
   },
   {
     key: 'mapTiles',
-    label: 'Map Tiles',
+    label: 'Map tiles',
     description: 'Safe to clear - will re-download when viewing maps',
   },
   {
     key: 'immichCache',
-    label: 'Immich Cache',
+    label: 'Immich cache',
     description: 'Safe to clear - will re-download from your Immich server',
   },
   {
     key: 'videoCache',
-    label: 'Video Cache',
+    label: 'Video cache',
     description: 'Safe to clear - videos can be re-downloaded',
   },
 ];
@@ -410,7 +410,7 @@ export default function StorageQuotaWarning({
               `}
             >
               <Icons.Settings className="w-4 h-4" />
-              Manage Storage Settings
+              Manage storage settings
             </Link>
           </div>
         )}

@@ -124,7 +124,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Location Map
+          Location map
         </h3>
         <span className="text-sm text-gray-600 dark:text-dusk-400">
           {validLocations.length} location{validLocations.length !== 1 ? 's' : ''} shown

@@ -103,7 +103,7 @@ export default function TripComparisonPage() {
           className="text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-flex items-center min-h-[44px]"
         >
           <Icon name="back" size={16} className="mr-1" />
-          My Trips
+          My trips
         </Link>
         <h1 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
           Compare trips

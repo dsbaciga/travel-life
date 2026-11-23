@@ -92,13 +92,13 @@ export default function PlacesVisitedPage() {
       <div className="max-w-[1600px] mx-auto px-4 py-8">
         <LibraryBackLink />
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-          Places Visited
+          Places visited
         </h1>
         <EmptyState
           icon="globe"
           message="No places visited yet"
           subMessage="Locations from completed trips will appear here"
-          actionLabel="Go to Trips"
+          actionLabel="Go to trips"
           actionHref="/trips"
         />
       </div>
@@ -120,7 +120,7 @@ export default function PlacesVisitedPage() {
           <div className="flex justify-between items-center gap-3">
             <div className="min-w-0">
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white truncate">
-                Places Visited
+                Places visited
               </h1>
               <p className="text-sm md:text-base text-gray-600 dark:text-dusk-400 md:mt-1 truncate">
                 {displayedLocations.length}{" "}
@@ -187,7 +187,7 @@ export default function PlacesVisitedPage() {
           <div className="w-80 bg-white dark:bg-dusk-800 border-l border-gray-200 dark:border-dusk-700 overflow-y-auto p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                Location Details
+                Location details
               </h2>
               <button
                 onClick={() => setSelectedLocation(null)}

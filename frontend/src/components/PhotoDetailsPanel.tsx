@@ -145,7 +145,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h2 className="text-white font-semibold flex items-center gap-2">
             <Icon name="info" />
-            Photo Details
+            Photo details
           </h2>
           <button
             type="button"
@@ -168,7 +168,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
           ) : (
             <>
               {/* Basic Info */}
-              <DetailSection title="Basic Information">
+              <DetailSection title="Basic information">
                 <DetailRow
                   label="Caption"
                   value={photo.caption}
@@ -177,7 +177,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
                   }
                 />
                 <DetailRow
-                  label="Date Taken"
+                  label="Date taken"
                   value={formatDateTime(photo.takenAt || exif?.dateTimeOriginal)}
                   icon={
                     <Icon name="calendar" size={14} />
@@ -214,7 +214,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
 
               {/* Exposure Settings (Immich photos) */}
               {exif && (exif.fNumber || exif.exposureTime || exif.iso || exif.focalLength) && (
-                <DetailSection title="Exposure Settings">
+                <DetailSection title="Exposure settings">
                   <div className="grid grid-cols-2 gap-2">
                     {exif.fNumber && (
                       <div className="bg-white/5 rounded p-2 text-center">
@@ -236,7 +236,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
                     )}
                     {exif.focalLength && (
                       <div className="bg-white/5 rounded p-2 text-center">
-                        <div className="text-white/60 text-xs mb-1">Focal Length</div>
+                        <div className="text-white/60 text-xs mb-1">Focal length</div>
                         <div className="text-white font-medium">{formatFocalLength(exif.focalLength)}</div>
                       </div>
                     )}

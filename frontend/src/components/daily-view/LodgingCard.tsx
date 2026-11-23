@@ -233,7 +233,7 @@ export default function LodgingCard({
               className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline [@media(pointer:coarse)]:min-h-[44px]"
             >
               <Icon name="externalLink" size={16} />
-              View Booking
+              View booking
             </a>
           </div>
         )}

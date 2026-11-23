@@ -184,7 +184,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Polling timed out without reaching a terminal status — background job likely crashed
   if (timedOut && importData && (importData.status === 'UPLOADED' || importData.status === 'PARSING')) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Processing Timed Out" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Processing timed out" maxWidth="md">
         <div className="py-4 space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">
             PDF processing has taken longer than expected and may have stalled.
@@ -205,7 +205,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting…' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try again'}
           </button>
         </div>
       </Modal>
@@ -253,7 +253,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting…' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try again'}
           </button>
         </div>
       </Modal>
@@ -281,7 +281,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSED, and everything in it was already accepted or rejected
   if (entitiesLoaded && entities.length === 0) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Nothing Left to Review" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Nothing left to review" maxWidth="md">
         <div className="py-4">
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             Every booking from this PDF has already been added or dismissed.
@@ -299,7 +299,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSED but no entities loaded yet
   if (entities.length === 0) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
+      <Modal isOpen={isOpen} onClose={onClose} title="Review extracted entities" maxWidth="lg">
         <div className="flex justify-center py-8">
           <LoadingSpinner />
         </div>
@@ -316,7 +316,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   const fields = ENTITY_FIELDS[currentEntity.entityType] ?? Object.keys(currentEntity.parsedData);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Review extracted entities" maxWidth="lg">
       {/* Progress */}
       <div className="mb-4 flex items-center justify-between">
         <span className="text-stone-500 dark:text-dusk-400 eyebrow">

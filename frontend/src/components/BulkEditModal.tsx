@@ -204,7 +204,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
           <div className="flex items-start gap-3">
             <Icon name="info" className="text-primary-600 dark:text-gold mt-0.5" />
             <div className="text-sm text-primary-800 dark:text-primary-200">
-              <p className="font-medium">Bulk Edit Mode</p>
+              <p className="font-medium">Bulk edit mode</p>
               <p className="mt-1 text-primary-700 dark:text-primary-300">
                 Only filled fields will be updated. Leave fields empty to keep their current values.
                 This will update {selectedCount} {pluralLabel.toLowerCase()}.
@@ -221,7 +221,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
         )}
 
         {/* Fields */}
-        <FormSection title="Update Fields" icon="edit">
+        <FormSection title="Update fields" icon="edit">
           <div className="space-y-4">
             {fields.map(field => (
               <div key={field.key}>

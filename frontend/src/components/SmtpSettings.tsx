@@ -306,7 +306,7 @@ export default function SmtpSettings() {
         {/* Provider selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-            Email Provider
+            Email provider
           </label>
           <select
             value={provider}
@@ -412,7 +412,7 @@ export default function SmtpSettings() {
         {/* From address (always shown) */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-            From Address
+            From address
           </label>
           <input
             type="text"
@@ -434,7 +434,7 @@ export default function SmtpSettings() {
               disabled={isTesting || isSaving}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
-              {isTesting ? 'Sending…' : 'Send Test Email'}
+              {isTesting ? 'Sending…' : 'Send test email'}
             </button>
           )}
 
@@ -443,7 +443,7 @@ export default function SmtpSettings() {
             disabled={isSaving || !canSave()}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving…' : 'Save Settings'}
+            {isSaving ? 'Saving…' : 'Save settings'}
           </button>
 
           {settings?.smtpConfigured && (
@@ -452,7 +452,7 @@ export default function SmtpSettings() {
               disabled={isSaving}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
-              Clear Settings
+              Clear settings
             </button>
           )}
         </div>

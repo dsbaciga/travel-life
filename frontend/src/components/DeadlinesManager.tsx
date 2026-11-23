@@ -208,7 +208,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
           className="btn-primary"
           onClick={() => (showForm ? closeForm() : setShowForm(true))}
         >
-          {showForm ? "Cancel" : "Add Deadline"}
+          {showForm ? "Cancel" : "Add deadline"}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
           <div className="flex justify-end gap-3">
             <button type="button" className="btn-secondary" onClick={closeForm} disabled={isSaving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? "Saving…" : "Save Deadline"}
+              {isSaving ? "Saving…" : "Save deadline"}
             </button>
           </div>
         </form>
@@ -302,8 +302,8 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         <EmptyState
           icon="alarm"
           message="No deadlines yet"
-          subMessage="Track free-cancellation cutoffs, check-in windows and payment dates, or anything you want to keep an eye on"
-          actionLabel="Add Deadline"
+          subMessage="Track free-cancellation cutoffs, check-in windows and payment dates."
+          actionLabel="Add deadline"
           onAction={() => setShowForm(true)}
         />
       ) : (

@@ -92,7 +92,7 @@ export default function ActivityCard({
               <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600 dark:text-dusk-400">
                 {activity.allDay ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
-                    All Day
+                    All day
                   </span>
                 ) : activity.startTime ? (
                   <>

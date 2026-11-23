@@ -283,7 +283,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Estimated Total */}
           <div className="bg-white/80 dark:bg-navy-900/50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Estimated Budget</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Estimated budget</p>
             {estimatedEntries.length > 0 ? (
               <div className="space-y-1">
                 {estimatedEntries.map(([currency, amount]) => (
@@ -299,7 +299,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
 
           {/* Actual Spent */}
           <div className="bg-white/80 dark:bg-navy-900/50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Actual Spent</p>
+            <p className="text-sm font-medium text-gray-600 dark:text-dusk-400 mb-1">Actual spent</p>
             {actualEntries.length > 0 ? (
               <div className="space-y-1">
                 {actualEntries.map(([currency, amount]) => (
@@ -441,7 +441,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
         >
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Souvenir</span>
+          <span className="hidden sm:inline">+ Add souvenir</span>
         </button>
       </div>
 
@@ -452,7 +452,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingItemId ? 'Edit Souvenir' : 'Add Souvenir'}
+        title={editingItemId ? 'Edit souvenir' : 'Add souvenir'}
         icon="souvenir"
         maxWidth="lg"
         formId="souvenir-form"
@@ -474,7 +474,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving…' : editingItemId ? 'Update Souvenir' : 'Add Souvenir'}
+              {isSubmitting ? 'Saving…' : editingItemId ? 'Update souvenir' : 'Add souvenir'}
             </button>
           </>
         }
@@ -500,7 +500,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           {/* Recipient */}
           <div>
             <label htmlFor="souvenir-for-whom" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              For Whom
+              For whom
             </label>
             <input
               type="text"
@@ -530,7 +530,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="souvenir-estimated-price" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                Estimated Price
+                Estimated price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dusk-400">
@@ -551,7 +551,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
 
             <div>
               <label htmlFor="souvenir-actual-price" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                Actual Price
+                Actual price
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-dusk-400">
@@ -591,9 +591,9 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       {items.length === 0 ? (
         <EmptyState
           icon="souvenir"
-          message="No Souvenirs Yet"
-          subMessage="Track gifts and souvenirs you want to bring back from your trip. Keep track of who they're for and stay within budget!"
-          actionLabel="Add Your First Souvenir"
+          message="No souvenirs yet"
+          subMessage="Track what you want to bring back, who it is for, and what it costs."
+          actionLabel="Add souvenir"
           onAction={openCreateForm}
         />
       ) : (

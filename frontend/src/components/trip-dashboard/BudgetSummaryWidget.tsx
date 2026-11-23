@@ -200,7 +200,7 @@ export default function BudgetSummaryWidget({
             onClick={onNavigateToBudget}
             className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
               hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-            aria-label="Go to Budget"
+            aria-label="Go to budget"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </button>
@@ -255,7 +255,7 @@ export default function BudgetSummaryWidget({
           onClick={onNavigateToBudget}
           className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
             hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-          aria-label="Go to Budget"
+          aria-label="Go to budget"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>
@@ -325,7 +325,7 @@ export default function BudgetSummaryWidget({
             aria-expanded={isBreakdownExpanded}
           >
             <span className="text-sm font-medium text-slate dark:text-warm-gray/70">
-              Spending Breakdown
+              Spending breakdown
             </span>
             <div className="text-slate dark:text-warm-gray/50">
               {isBreakdownExpanded ? (
@@ -357,7 +357,7 @@ export default function BudgetSummaryWidget({
               {/* Total */}
               <div className="mt-3 pt-2 border-t border-slate/10 dark:border-warm-gray/10 flex items-center justify-between">
                 <span className="text-sm font-medium text-charcoal dark:text-warm-gray">
-                  Total Spent
+                  Total spent
                 </span>
                 <span className="text-sm font-bold tabular-nums text-charcoal dark:text-warm-gray">
                   {formatCurrency(breakdownTotal)}

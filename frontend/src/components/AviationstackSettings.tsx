@@ -92,7 +92,7 @@ export default function AviationstackSettings() {
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Aviationstack Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Aviationstack settings</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure your Aviationstack API key to enable real-time flight tracking data for your trips. Flight information will be displayed in the timeline for each flight.
@@ -165,7 +165,7 @@ export default function AviationstackSettings() {
         </h3>
         <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
           <li>Go to <a href="https://aviationstack.com/product" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">aviationstack.com</a></li>
-          <li>Click "Sign Up" or "Get Free API Key"</li>
+          <li>Click "Sign up" or "Get Free API Key"</li>
           <li>Complete the registration process</li>
           <li>Navigate to your dashboard</li>
           <li>Copy your API key and paste it above</li>

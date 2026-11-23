@@ -280,7 +280,7 @@ export default function LlmSettings() {
             disabled={isSaving}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving…' : 'Save Settings'}
+            {isSaving ? 'Saving…' : 'Save settings'}
           </button>
 
           {settings?.llmApiKeySet && (

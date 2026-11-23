@@ -522,7 +522,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route Planner</h2>
+        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route planner</h2>
         <p className="text-sm text-slate dark:text-dusk-400">
           Order the cities of your trip, see how far apart they are, and find a shorter route.
         </p>

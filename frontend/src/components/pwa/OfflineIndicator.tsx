@@ -112,7 +112,7 @@ export default function OfflineIndicator({
             {/* Status text */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
               <span className="text-sm font-medium text-gold">
-                {!isOnline ? 'You are offline' : 'Slow connection detected'}
+                {!isOnline ? "You're offline" : 'Slow connection'}
               </span>
 
               {/* Pending changes badge */}
@@ -127,8 +127,8 @@ export default function OfflineIndicator({
             {/* Subtext */}
             <span className="hidden sm:inline text-xs text-warm-gray/60">
               {!isOnline
-                ? 'Changes will sync when you reconnect'
-                : 'Some features may be limited'}
+                ? "Changes are saved on this device and sync when you're back online."
+                : 'Some features need a connection.'}
             </span>
           </div>
         </div>

@@ -81,7 +81,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
     <div className="border border-blue-300 dark:border-blue-700 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-          Add New Location
+          Add new location
         </h4>
         <button
           type="button"

@@ -125,7 +125,7 @@ export default function CalendarFeedSettings() {
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Calendar Feed</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Calendar feed</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Subscribe to your trips from Google Calendar, Apple Calendar, Outlook, or any calendar app.
@@ -191,7 +191,7 @@ export default function CalendarFeedSettings() {
           type="button"
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
         >
-          {isWorking ? 'Working…' : hasFeed ? 'Rotate Feed URL' : 'Enable Calendar Feed'}
+          {isWorking ? 'Working…' : hasFeed ? 'Rotate Feed URL' : 'Enable calendar feed'}
         </button>
 
         {hasFeed && (
@@ -201,7 +201,7 @@ export default function CalendarFeedSettings() {
             type="button"
             className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            Disable Feed
+            Disable feed
           </button>
         )}
       </div>

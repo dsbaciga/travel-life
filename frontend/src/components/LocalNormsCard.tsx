@@ -199,7 +199,7 @@ export default function LocalNormsCard({
       <div className={`space-y-4 ${className}`}>
         <header>
           <h3 className="font-display text-xl font-bold text-charcoal dark:text-warm-gray">
-            Local Norms
+            Local norms
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             Tipping, plugs, tap water, driving side and emergency numbers — bundled offline.
@@ -233,7 +233,7 @@ export default function LocalNormsCard({
       <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
           <h3 className="font-display text-xl font-bold text-charcoal dark:text-warm-gray">
-            Local Norms
+            Local norms
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             Practical conventions in {selected.name}. Bundled offline — confirm anything

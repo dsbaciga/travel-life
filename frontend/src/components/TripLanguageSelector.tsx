@@ -123,7 +123,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
               <LoadingSpinner.Inline /> Adding…
             </>
           ) : (
-            'Add Language'
+            'Add language'
           )}
         </button>
       </div>

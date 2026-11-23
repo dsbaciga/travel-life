@@ -148,7 +148,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving…" : editingId !== null ? "Save" : "Add Type"}
+            {saving ? "Saving…" : editingId !== null ? "Save" : "Add type"}
           </button>
         </div>
       </div>

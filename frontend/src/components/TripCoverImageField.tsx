@@ -103,7 +103,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
 
   return (
     <div>
-      <span className="label">Cover Photo</span>
+      <span className="label">Cover photo</span>
 
       <div className="flex flex-col sm:flex-row gap-4 items-start">
         <div className="w-full sm:w-56 aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-dusk-700 bg-gray-100 dark:bg-dusk-700 flex items-center justify-center shrink-0">
@@ -131,7 +131,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
               className="btn btn-secondary"
               disabled={busy}
             >
-              {busy ? 'Working…' : hasUploadedCover ? 'Replace Image' : 'Upload Image'}
+              {busy ? 'Working…' : hasUploadedCover ? 'Replace image' : 'Upload image'}
             </button>
 
             {hasUploadedCover && (

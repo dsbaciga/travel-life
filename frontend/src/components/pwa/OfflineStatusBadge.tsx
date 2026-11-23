@@ -328,7 +328,7 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
           bg: 'bg-emerald-500 dark:bg-emerald-600',
           text: 'text-white',
           icon: 'check' as const,
-          label: 'Available Offline',
+          label: 'Available offline',
         };
       case 'downloading':
         return {
@@ -343,7 +343,7 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
           bg: 'bg-amber-500 dark:bg-amber-600',
           text: 'text-white',
           icon: 'refresh' as const,
-          label: 'Update Available',
+          label: 'Update available',
         };
       case 'not-downloaded':
       default:
@@ -351,7 +351,7 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
           bg: 'bg-parchment dark:bg-navy-700',
           text: 'text-slate dark:text-warm-gray',
           icon: 'download' as const,
-          label: 'Not Downloaded',
+          label: 'Not downloaded',
         };
     }
   };

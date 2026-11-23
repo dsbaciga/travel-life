@@ -322,7 +322,7 @@ export default function CustomItemsManager({
               className="btn-primary whitespace-nowrap"
               onClick={() => setIsAdding(true)}
             >
-              Add Item
+              Add item
             </button>
           </div>
         )}
@@ -556,7 +556,7 @@ export default function CustomItemsManager({
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? "Saving…" : editingId !== null ? "Save Changes" : "Save Item"}
+              {saving ? "Saving…" : editingId !== null ? "Save changes" : "Save item"}
             </button>
           </div>
         </div>
@@ -569,7 +569,7 @@ export default function CustomItemsManager({
           icon="custom"
           message="No custom items yet"
           subMessage="Track anything that does not fit the other tabs"
-          actionLabel="Add Item"
+          actionLabel="Add item"
           onAction={() => setIsAdding(true)}
         />
       ) : (

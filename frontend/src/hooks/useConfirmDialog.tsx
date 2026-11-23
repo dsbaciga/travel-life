@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import type { ConfirmDialogProps } from '../components/ConfirmDialog';
 
@@ -64,16 +64,22 @@ export function useConfirmDialog(): UseConfirmDialogReturn {
     setOptions(null);
   }, [resolveRef]);
 
-  const ConfirmDialogComponent: React.FC = () =>
-    options ? (
-      <ConfirmDialog
-        isOpen={isOpen}
-        onClose={handleClose}
-        onConfirm={handleConfirm}
-        isLoading={false}
-        {...options}
-      />
-    ) : null;
+  // Keep the component identity stable across unrelated re-renders of the host. A new
+  // function each render remounts the dialog, and a remount restores focus to the field
+  // that opened it; in a form with an onBlur handler that blur re-renders the host again,
+  // which remounts the dialog, and so on without end.
+  const latest = useRef({ isOpen, options, handleClose, handleConfirm });
+  latest.current = { isOpen, options, handleClose, handleConfirm };
+  const ConfirmDialogComponent = useMemo<React.FC>(
+    () =>
+      function ConfirmDialogHost() {
+        const { isOpen: open, options: opts, handleClose: close, handleConfirm: ok } = latest.current;
+        return opts ? (
+          <ConfirmDialog isOpen={open} onClose={close} onConfirm={ok} isLoading={false} {...opts} />
+        ) : null;
+      },
+    []
+  );
 
   return {
     confirm,

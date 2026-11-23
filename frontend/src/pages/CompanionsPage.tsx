@@ -344,11 +344,11 @@ export default function CompanionsPage() {
       <ConfirmDialogComponent />
       
       <PageHeader
-        title="Travel Companions"
+        title="Travel companions"
         subtitle="Manage your travel companions and add them to trips"
         backLink={LIBRARY_BACK_LINK}
         action={{
-          label: "Add Companion",
+          label: "Add companion",
           icon: "add",
           onClick: () => setShowForm(true),
         }}
@@ -358,14 +358,14 @@ export default function CompanionsPage() {
       <FormModal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingCompanion ? "Edit Companion" : "Add New Companion"}
+        title={editingCompanion ? "Edit companion" : "Add new companion"}
         maxWidth="lg"
         formId="companion-form"
         footer={
           <FormModalFooter
             onCancel={resetForm}
             formId="companion-form"
-            submitLabel={editingCompanion ? "Update Companion" : "Create Companion"}
+            submitLabel={editingCompanion ? "Update companion" : "Create companion"}
             isEditMode={!!editingCompanion}
           />
         }
@@ -428,7 +428,7 @@ export default function CompanionsPage() {
               />
             </div>
             <div>
-              <label htmlFor="companion-dietary" className="label">Dietary Preferences</label>
+              <label htmlFor="companion-dietary" className="label">Dietary preferences</label>
               <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
                 Track dietary restrictions to easily find suitable restaurants when traveling together.
               </p>
@@ -448,9 +448,9 @@ export default function CompanionsPage() {
         {companions.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoCompanions />}
-            message="Share the Journey"
-            subMessage="Great adventures are even better when shared. Add your travel companions to keep track of who you're exploring the world with - from family and friends to new connections made along the way."
-            actionLabel="Add Your First Companion"
+            message="No travel companions yet"
+            subMessage="Add the people you travel with so you can share trips and split costs."
+            actionLabel="Add companion"
             onAction={() => setShowForm(true)}
           />
         ) : (
@@ -762,7 +762,7 @@ export default function CompanionsPage() {
           setShowImmichBrowser(false);
           setImmichTargetCompanion(null);
         }}
-        title="Choose Avatar from Immich"
+        title="Choose avatar from Immich"
         maxWidth="6xl"
       >
         <ImmichBrowser

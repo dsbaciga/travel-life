@@ -92,7 +92,7 @@ export default function WeatherSettings() {
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather settings</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure your OpenWeatherMap One Call API 3.0 key to enable weather data for your trips. Weather information will be displayed in the timeline for each day of your trip.

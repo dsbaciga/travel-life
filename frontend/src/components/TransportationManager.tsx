@@ -1082,7 +1082,7 @@ export default function TransportationManager({
     if (transportation.isInProgress) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-          In Progress
+          In progress
         </span>
       );
     }
@@ -1222,7 +1222,7 @@ export default function TransportationManager({
             onChange={(e) => setSortBy(e.target.value as SortBy)}
             className="input py-1 px-2 text-sm w-auto"
           >
-            <option value="date">Departure Date</option>
+            <option value="date">Departure date</option>
             <option value="type">Type</option>
           </select>
         </div>
@@ -1330,7 +1330,7 @@ export default function TransportationManager({
                 onClick={() => setShowFromLocationQuickAdd(!showFromLocationQuickAdd)}
                 className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
-                {showFromLocationQuickAdd ? "Cancel" : "+ Add New Location"}
+                {showFromLocationQuickAdd ? "Cancel" : "+ Add new location"}
               </button>
               {showFromLocationQuickAdd && (
                 <div className="mt-2">
@@ -1376,7 +1376,7 @@ export default function TransportationManager({
                 onClick={() => setShowToLocationQuickAdd(!showToLocationQuickAdd)}
                 className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
-                {showToLocationQuickAdd ? "Cancel" : "+ Add New Location"}
+                {showToLocationQuickAdd ? "Cancel" : "+ Add new location"}
               </button>
               {showToLocationQuickAdd && (
                 <div className="mt-2">
@@ -1473,14 +1473,14 @@ export default function TransportationManager({
 
           {/* COLLAPSIBLE: More Options (Carrier, Vehicle, Booking, Cost, Notes) */}
           <CollapsibleSection
-            title="More Options"
+            title="More options"
             icon="settings"
             isExpanded={showMoreOptions}
             onToggle={() => setShowMoreOptions(!showMoreOptions)}
             badge="carrier, cost, notes"
           >
             {/* Carrier and Vehicle Number */}
-            <FormSection title="Transport Details" icon="ticket">
+            <FormSection title="Transport details" icon="ticket">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -1544,7 +1544,7 @@ export default function TransportationManager({
             </FormSection>
 
             {/* Custom Location Text (Advanced) */}
-            <FormSection title="Custom Locations" icon="edit" description="Use only if location not in list (distances won't be calculated)">
+            <FormSection title="Custom locations" icon="edit" description="Use only if location not in list (distances won't be calculated)">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -1618,8 +1618,8 @@ export default function TransportationManager({
       {manager.items.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoTransportation />}
-          message="Plan Your Journey"
-          subMessage="How will you get there? Add flights, trains, road trips, and more. Track departure times, booking confirmations, and never miss a connection."
+          message="No transport yet"
+          subMessage="Add flights, trains, rentals and other legs, with times and confirmation numbers."
           actionLabel="Add transport"
           onAction={openCreateForm}
         />

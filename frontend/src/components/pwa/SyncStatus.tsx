@@ -247,7 +247,7 @@ export default function SyncStatus({
               "
             >
               <Icon name="refresh" size={16} />
-              Sync Now
+              Sync now
             </button>
           )}
 

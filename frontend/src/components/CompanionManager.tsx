@@ -191,14 +191,14 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Travel Companions
+          Travel companions
         </h2>
         <button
           onClick={openCreateForm}
           className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
         >
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Companion</span>
+          <span className="hidden sm:inline">+ Add companion</span>
         </button>
       </div>
 
@@ -206,7 +206,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       <Modal
         isOpen={showCompanionForm}
         onClose={resetForm}
-        title={editingCompanionId ? "Edit Companion" : "Add Companion"}
+        title={editingCompanionId ? "Edit companion" : "Add companion"}
         icon="users"
         maxWidth="lg"
         formId="companion-form"
@@ -227,7 +227,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving…' : `${editingCompanionId ? 'Update' : 'Add'} Companion`}
+              {isSubmitting ? 'Saving…' : `${editingCompanionId ? 'Update' : 'Add'} companion`}
             </button>
           </>
         }
@@ -306,7 +306,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
           </div>
           <div>
             <label htmlFor="dietary-preferences" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
-              Dietary Preferences
+              Dietary preferences
             </label>
             <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
               Track dietary restrictions to easily find suitable restaurants when traveling together.

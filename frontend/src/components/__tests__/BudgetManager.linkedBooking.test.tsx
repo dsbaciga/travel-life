@@ -65,7 +65,7 @@ describe('Budget tab: expenses that are a booking cost', () => {
     renderBudget();
 
     const badge = await screen.findByTestId('linked-booking-badge');
-    expect(badge).toHaveTextContent('Lodging: Hotel Paris');
+    expect(badge).toHaveTextContent('Stay: Hotel Paris');
     expect(badge).toHaveAttribute('href', '/trips/7?tab=lodging&edit=68');
     // an ordinary expense carries no such marker
     expect(screen.getAllByTestId('linked-booking-badge')).toHaveLength(1);

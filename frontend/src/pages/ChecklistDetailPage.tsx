@@ -310,8 +310,8 @@ export default function ChecklistDetailPage() {
                 {showAddForm
                   ? "Cancel"
                   : isAirports
-                    ? "Add Airport"
-                    : "Add Item"}
+                    ? "Add airport"
+                    : "Add item"}
               </button>
             )}
           </div>
@@ -356,7 +356,7 @@ export default function ChecklistDetailPage() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Add Item
+                  Add item
                 </button>
                 <button
                   type="button"

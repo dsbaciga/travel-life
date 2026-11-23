@@ -134,7 +134,7 @@ export default function AlbumModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
           <h2 id="album-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
-            {isEdit ? "Edit Album" : "Create Album"}
+            {isEdit ? "Edit album" : "Create album"}
           </h2>
           <button
             onClick={onClose}
@@ -224,7 +224,7 @@ export default function AlbumModal({
               className="btn btn-primary"
               disabled={saving || !name.trim()}
             >
-              {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Album"}
+              {saving ? "Saving…" : isEdit ? "Save changes" : "Create album"}
             </button>
           </div>
         </form>

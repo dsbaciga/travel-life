@@ -122,7 +122,7 @@ export default function ImmichSettings() {
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Immich Integration</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Immich integration</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Connect your self-hosted Immich instance to browse and link photos to your trips without uploading duplicates.
@@ -190,7 +190,7 @@ export default function ImmichSettings() {
             disabled={isTesting || !apiUrl || !apiKey}
             className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isTesting ? 'Testing…' : 'Test Connection'}
+            {isTesting ? 'Testing…' : 'Test connection'}
           </button>
 
           <button
@@ -198,7 +198,7 @@ export default function ImmichSettings() {
             disabled={isSaving || !apiUrl || !apiKey}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving…' : 'Save Settings'}
+            {isSaving ? 'Saving…' : 'Save settings'}
           </button>
 
           {settings?.immichConfigured && (
@@ -207,7 +207,7 @@ export default function ImmichSettings() {
               disabled={isSaving}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
-              Clear Settings
+              Clear settings
             </button>
           )}
         </div>

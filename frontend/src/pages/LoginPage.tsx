@@ -99,7 +99,7 @@ export default function LoginPage() {
           {/* Form card with refined styling */}
           <div className="bg-white/90 dark:bg-navy-800/90 backdrop-blur-sm rounded-2xl shadow-[0_8px_32px_rgba(43,90,127,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border-2 border-primary-500/10 dark:border-sky/10 p-4 sm:p-6 md:p-8">
             <h2 className="text-2xl font-display font-semibold text-center mb-8 text-primary-700 dark:text-sky">
-              Welcome Back
+              Welcome back
             </h2>
 
             {/* SSO-only mode: the password form is hidden, but errors (e.g.

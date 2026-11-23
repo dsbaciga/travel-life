@@ -223,7 +223,7 @@ export default function TripSeriesPage() {
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs
           items={[
-            { label: 'Trip Series', href: '/trip-series' },
+            { label: 'Trip series', href: '/trip-series' },
             { label: series.name },
           ]}
         />
@@ -457,7 +457,7 @@ export default function TripSeriesPage() {
         <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-red-200 dark:border-red-900/50">
           <div className="px-6 py-4 border-b border-red-200 dark:border-red-900/50">
             <h2 className="text-lg font-display font-bold text-red-600 dark:text-red-400">
-              Danger Zone
+              Danger zone
             </h2>
           </div>
           <div className="p-6 flex items-center justify-between">
@@ -471,7 +471,7 @@ export default function TripSeriesPage() {
               onClick={handleDeleteSeries}
               className="btn btn-danger text-sm"
             >
-              Delete Series
+              Delete series
             </button>
           </div>
         </div>

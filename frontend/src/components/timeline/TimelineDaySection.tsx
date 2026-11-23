@@ -236,7 +236,7 @@ export default function TimelineDaySection({
                 <div className="flex items-center gap-2 mb-3">
                   <Icon name="schedule" className="w-4 h-4 text-gray-500 dark:text-dusk-400" />
                   <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300">
-                    Unscheduled Activities
+                    Unscheduled activities
                   </h4>
                   <span className="text-xs text-gray-500 dark:text-dusk-400">
                     ({dayGroup.unscheduledActivities.length})

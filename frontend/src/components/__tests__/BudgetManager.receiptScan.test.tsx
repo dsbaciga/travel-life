@@ -104,7 +104,7 @@ describe('Scan receipt on the Budget tab', () => {
     expect(createExpense).not.toHaveBeenCalled();
     expect(uploadReceipt).not.toHaveBeenCalled();
 
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add expense' }));
     await waitFor(() => expect(createExpense).toHaveBeenCalledTimes(1));
     expect(createExpense).toHaveBeenCalledWith(
       7,
@@ -129,7 +129,7 @@ describe('Scan receipt on the Budget tab', () => {
     await userEvent.upload(screen.getByTestId('receipt-scan-input'), photo());
     await waitFor(() => expect(screen.getByLabelText(/Description/)).toHaveValue('Cafe'));
 
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add expense' }));
 
     await waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(String(toastError.mock.calls[0][0])).toMatch(/expense was saved, but the receipt photo was not attached.*try again/i);
@@ -142,16 +142,16 @@ describe('Scan receipt on the Budget tab', () => {
     renderBudget();
     await userEvent.upload(screen.getByTestId('receipt-scan-input'), photo());
     await waitFor(() => expect(screen.getByLabelText(/Description/)).toHaveValue('One'));
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add expense' }));
     await waitFor(() => expect(uploadReceipt).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.queryByLabelText(/Description/)).not.toBeInTheDocument());
 
     createExpense.mockResolvedValue({ id: 2 });
-    await userEvent.click(screen.getByRole('button', { name: '+ Add Expense' }));
+    await userEvent.click(screen.getByRole('button', { name: '+ Add expense' }));
     expect(screen.queryByAltText('Receipt thumbnail')).not.toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/Description/), 'Two');
     await userEvent.type(screen.getByLabelText(/Amount/, { selector: '#expense-amount' }), '2');
-    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add Expense' }));
+    await userEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add expense' }));
     await waitFor(() => expect(createExpense).toHaveBeenCalledTimes(2));
     expect(uploadReceipt).toHaveBeenCalledTimes(1);
   });
@@ -198,7 +198,7 @@ describe('Scan receipt on the Budget tab', () => {
       await userEvent.click(await screen.findByLabelText('Edit Taxi'));
       expect(screen.getByAltText('Receipt thumbnail')).toBeInTheDocument();
       await userEvent.upload(screen.getByTestId('expense-receipt-input'), photo());
-      await userEvent.click(screen.getByRole('button', { name: 'Update Expense' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Update expense' }));
       await waitFor(() => expect(uploadReceipt).toHaveBeenCalledWith(7, 3, expect.any(File)));
       expect(deleteReceipt).not.toHaveBeenCalled();
     });
@@ -209,7 +209,7 @@ describe('Scan receipt on the Budget tab', () => {
       await userEvent.click(await screen.findByLabelText('Edit Taxi'));
       await userEvent.click(screen.getByRole('button', { name: 'Remove receipt' }));
       expect(screen.queryByAltText('Receipt thumbnail')).not.toBeInTheDocument();
-      await userEvent.click(screen.getByRole('button', { name: 'Update Expense' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Update expense' }));
       await waitFor(() => expect(deleteReceipt).toHaveBeenCalledWith(7, 3));
       expect(uploadReceipt).not.toHaveBeenCalled();
     });
@@ -234,7 +234,7 @@ describe('Scan receipt on the Budget tab', () => {
     await waitFor(() => expect(scanReceipt).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByRole('button', { name: 'Scan Receipt' })).toBeEnabled());
     expect(screen.queryByLabelText(/Description/)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '+ Add Expense' }));
+    await userEvent.click(screen.getByRole('button', { name: '+ Add expense' }));
     expect(screen.getByLabelText(/Description/)).toHaveValue('');
   });
 

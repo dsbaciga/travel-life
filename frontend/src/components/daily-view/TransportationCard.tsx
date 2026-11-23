@@ -231,7 +231,7 @@ export default function TransportationCard({
             <EmbeddedLocationCard
               location={transportation.fromLocation}
               tripId={tripId}
-              label="Departure Location"
+              label="Departure location"
             />
           </div>
         )}
@@ -241,7 +241,7 @@ export default function TransportationCard({
             <EmbeddedLocationCard
               location={transportation.toLocation}
               tripId={tripId}
-              label="Arrival Location"
+              label="Arrival location"
             />
           </div>
         )}

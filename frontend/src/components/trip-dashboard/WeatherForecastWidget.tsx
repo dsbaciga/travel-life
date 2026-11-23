@@ -357,7 +357,7 @@ function ErrorState({ error, onRefresh }: { error: string; onRefresh?: () => voi
     <div className="card animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
       </div>
 
@@ -396,7 +396,7 @@ function EmptyState({ location }: { location: string }) {
     <div className="card animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
       </div>
 
@@ -468,7 +468,7 @@ export default function WeatherForecastWidget({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
         {onRefresh && (
           <button

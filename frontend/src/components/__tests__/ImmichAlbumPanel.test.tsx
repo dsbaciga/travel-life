@@ -121,7 +121,7 @@ describe('ImmichAlbumPanel', () => {
     });
     render(<ImmichAlbumPanel album={album()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich...' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich…' }));
 
     const dialog = await screen.findByRole('alertdialog').catch(() => screen.findByRole('dialog'));
     expect(dialog).toHaveTextContent('create a new album named "Beach" in your Immich library');
@@ -153,7 +153,7 @@ describe('ImmichAlbumPanel', () => {
     const onChanged = vi.fn();
     render(<ImmichAlbumPanel album={album()} onChanged={onChanged} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich...' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich…' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Create in Immich' }));
 
     const status = await screen.findByRole('status');
@@ -163,7 +163,7 @@ describe('ImmichAlbumPanel', () => {
     expect(h.immich.exportAlbum).toHaveBeenCalledTimes(1);
     expect(onChanged).toHaveBeenCalled();
     // Now linked, so the next action is an update rather than a create.
-    expect(screen.getByRole('button', { name: 'Update album in Immich...' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Update album in Immich…' })).toBeInTheDocument();
   });
 
   it("AP-006: shows Immich's permission error as returned", async () => {
@@ -179,7 +179,7 @@ describe('ImmichAlbumPanel', () => {
     );
     render(<ImmichAlbumPanel album={album()} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich...' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich…' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Create in Immich' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('album.create');
@@ -204,7 +204,7 @@ describe('ImmichAlbumPanel', () => {
     const onClose = vi.fn();
     render(<AlbumModal album={album()} tripId={42} onSave={vi.fn()} onClose={onClose} />);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich...' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Create album in Immich…' }));
     await screen.findByText(/Nothing in Immich is deleted/);
 
     fireEvent.keyDown(document, { key: 'Escape' });

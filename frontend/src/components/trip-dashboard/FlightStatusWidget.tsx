@@ -509,7 +509,7 @@ export default function FlightStatusWidget({
         <div className="flex items-center gap-2">
           <AirplaneIcon className="w-5 h-5 text-primary-500 dark:text-gold" />
           <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-            Flight Status
+            Flight status
           </h3>
         </div>
 

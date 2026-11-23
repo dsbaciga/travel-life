@@ -20,8 +20,8 @@ interface CollaboratorsManagerProps {
 }
 
 const PERMISSION_LABELS: Record<PermissionLevel, { label: string; color: string }> = {
-  view: { label: 'View Only', color: 'bg-gray-100 text-gray-700 dark:bg-dusk-700 dark:text-dusk-300' },
-  edit: { label: 'Can Edit', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  view: { label: 'View only', color: 'bg-gray-100 text-gray-700 dark:bg-dusk-700 dark:text-dusk-300' },
+  edit: { label: 'Can edit', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   admin: { label: 'Admin', color: 'bg-gold/20 text-gold dark:bg-gold/10 dark:text-gold' },
 };
 
@@ -232,8 +232,8 @@ export default function CollaboratorsManager({
                     }
                     className="px-3 py-1.5 text-sm border border-gray-200 dark:border-gold/30 rounded-lg bg-white dark:bg-navy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gold focus:border-transparent"
                   >
-                    <option value="view">View Only</option>
-                    <option value="edit">Can Edit</option>
+                    <option value="view">View only</option>
+                    <option value="edit">Can edit</option>
                     {isOwner && <option value="admin">Admin</option>}
                   </select>
                 ) : (

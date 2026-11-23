@@ -78,10 +78,10 @@ export default function TripSeriesListPage() {
     <div className="min-h-screen bg-cream dark:bg-navy-900">
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <PageHeader
-          title="Trip Series"
+          title="Trip series"
           subtitle="Group related trips together into a series"
           backLink={LIBRARY_BACK_LINK}
-          action={{ label: 'Create Series', icon: 'add', onClick: () => setShowCreateModal(true) }}
+          action={{ label: 'Create series', icon: 'add', onClick: () => setShowCreateModal(true) }}
         />
 
         {/* Content */}
@@ -90,7 +90,7 @@ export default function TripSeriesListPage() {
             icon="series"
             message="No trip series yet"
             subMessage="Create a series to group related trips together, like a multi-city tour or annual vacation tradition."
-            actionLabel="Create Series"
+            actionLabel="Create series"
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
@@ -146,7 +146,7 @@ export default function TripSeriesListPage() {
           setNewName('');
           setNewDescription('');
         }}
-        title="Create Trip Series"
+        title="Create trip series"
         icon="series"
       >
         <div className="space-y-4">
@@ -190,7 +190,7 @@ export default function TripSeriesListPage() {
               className="flex-1 btn btn-primary"
               disabled={creating || !newName.trim()}
             >
-              {creating ? 'Creating…' : 'Create Series'}
+              {creating ? 'Creating…' : 'Create series'}
             </button>
             <button
               type="button"

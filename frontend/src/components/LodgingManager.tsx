@@ -545,7 +545,7 @@ export default function LodgingManager({
       options: [
         { value: "hotel", label: "Hotel" },
         { value: "hostel", label: "Hostel" },
-        { value: "vacation_rental", label: "Vacation Rental" },
+        { value: "vacation_rental", label: "Vacation rental" },
         { value: "camping", label: "Camping" },
         { value: "resort", label: "Resort" },
         { value: "other", label: "Other" },
@@ -661,7 +661,7 @@ export default function LodgingManager({
 
         <form id="lodging-form" onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Basic Info (Name & Type) */}
-          <FormSection title="Basic Info" icon="lodging">
+          <FormSection title="Basic info" icon="lodging">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -703,7 +703,7 @@ export default function LodgingManager({
                 >
                   <option value="hotel">Hotel</option>
                   <option value="hostel">Hostel</option>
-                  <option value="vacation_rental">Vacation Rental</option>
+                  <option value="vacation_rental">Vacation rental</option>
                   <option value="camping">Camping</option>
                   <option value="resort">Resort</option>
                   <option value="other">Other</option>
@@ -713,7 +713,7 @@ export default function LodgingManager({
           </FormSection>
 
           {/* SECTION 2: Stay Dates */}
-          <FormSection title="Stay Dates" icon="calendar">
+          <FormSection title="Stay dates" icon="calendar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -851,14 +851,14 @@ export default function LodgingManager({
 
           {/* COLLAPSIBLE: More Options (Booking, Cost, Notes) */}
           <CollapsibleSection
-            title="More Options"
+            title="More options"
             icon="settings"
             isExpanded={showMoreOptions}
             onToggle={() => setShowMoreOptions(!showMoreOptions)}
             badge="booking, cost, notes"
           >
             {/* Booking Section */}
-            <FormSection title="Booking Details" icon="ticket">
+            <FormSection title="Booking details" icon="ticket">
               <BookingFields
                 confirmationNumber={values.confirmationNumber}
                 bookingUrl={values.bookingUrl}
@@ -924,9 +924,9 @@ export default function LodgingManager({
         ) : manager.items.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoLodging />}
-            message="Where Will You Stay?"
-            subMessage="From boutique hotels and cozy Airbnbs to camping under the stars - add your accommodations to keep all your booking details in one place."
-            actionLabel="Add Your First Stay"
+            message="No stays yet"
+            subMessage="Add a hotel, rental or campsite to keep your booking details in one place."
+            actionLabel="Add stay"
             onAction={openCreateForm}
           />
         ) : (
@@ -1017,7 +1017,7 @@ export default function LodgingManager({
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline dark:text-blue-400"
                     >
-                      View Booking
+                      View booking
                     </a>
                   </div>
                 )}

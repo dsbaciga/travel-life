@@ -732,7 +732,7 @@ export default function DailyView({
         <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
           <Icon name="alert" size={32} className="text-red-600 dark:text-red-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Data</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Couldn't load this trip</h3>
         <p className="text-gray-500 dark:text-dusk-400 max-w-md">{error}</p>
       </div>
     );
@@ -868,7 +868,7 @@ export default function DailyView({
             <div className="flex items-center gap-2 mb-4">
               <Icon name="schedule" size={20} className="text-amber-500" />
               <h3 className="text-sm font-semibold text-gray-700 dark:text-dusk-300">
-                Unscheduled Activities
+                Unscheduled activities
               </h3>
               <span className="text-xs text-gray-500 dark:text-dusk-400 bg-gray-100 dark:bg-dusk-700 px-2 py-0.5 rounded-full">
                 {currentDay.unscheduledActivities.length}

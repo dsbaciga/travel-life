@@ -425,7 +425,7 @@ export default function LinkPanel({
                 No linked items yet
               </p>
               <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-                Click "Add Link" above to connect this item to photos, locations, or other entities.
+                Click "Add link" above to connect this item to photos, locations, or other entities.
               </p>
             </div>
           ) : (

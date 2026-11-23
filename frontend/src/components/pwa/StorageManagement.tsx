@@ -63,45 +63,45 @@ const CATEGORY_CONFIG: Record<
   { label: string; icon: (props: { className?: string }) => ReactNode; clearLabel: string; description: string }
 > = {
   trips: {
-    label: 'Trips Data',
+    label: 'Trips data',
     icon: Icons.Database,
-    clearLabel: 'Clear Trip Data',
+    clearLabel: 'Clear trip data',
     description: 'Trip details, locations, activities, stays, and other trip information',
   },
   photoThumbnails: {
-    label: 'Photo Thumbnails',
+    label: 'Photo thumbnails',
     icon: Icons.Image,
-    clearLabel: 'Clear Thumbnails',
+    clearLabel: 'Clear thumbnails',
     description: 'Cached thumbnail images for offline viewing',
   },
   photoFull: {
-    label: 'Full Photos',
+    label: 'Full photos',
     icon: Icons.Image,
-    clearLabel: 'Clear Full Photos',
+    clearLabel: 'Clear full photos',
     description: 'Full-resolution photos saved for offline access',
   },
   mapTiles: {
-    label: 'Map Tiles',
+    label: 'Map tiles',
     icon: Icons.Map,
-    clearLabel: 'Clear Map Tiles',
+    clearLabel: 'Clear map tiles',
     description: 'Cached map tiles for offline map viewing',
   },
   immichCache: {
-    label: 'Immich Cache',
+    label: 'Immich cache',
     icon: Icons.Image,
-    clearLabel: 'Clear Immich Cache',
+    clearLabel: 'Clear Immich cache',
     description: 'Cached photos from your Immich server',
   },
   videoCache: {
-    label: 'Video Cache',
+    label: 'Video cache',
     icon: Icons.Video,
-    clearLabel: 'Clear Video Cache',
+    clearLabel: 'Clear video cache',
     description: 'Cached videos for offline playback',
   },
   other: {
-    label: 'Other Data',
+    label: 'Other data',
     icon: Icons.Folder,
-    clearLabel: 'Clear Other Data',
+    clearLabel: 'Clear other data',
     description: 'Sync queue, drafts, search index, and metadata',
   },
 };
@@ -283,7 +283,7 @@ export default function StorageManagement({
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold text-charcoal dark:text-warm-gray">
-              Storage Management
+              Storage management
             </h3>
             <p className="text-sm text-slate dark:text-warm-gray/70">
               Manage offline data and cache
@@ -320,7 +320,7 @@ export default function StorageManagement({
             <Icons.Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-medium text-amber-800 dark:text-amber-200">
-                Enable Persistent Storage
+                Enable persistent storage
               </h4>
               <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                 Your browser may automatically clear offline data when storage is low.
@@ -337,7 +337,7 @@ export default function StorageManagement({
                   min-h-[44px]
                 "
               >
-                Request Persistent Storage
+                Request persistent storage
               </button>
             </div>
           </div>
@@ -477,7 +477,7 @@ export default function StorageManagement({
                   <button
                     onClick={() =>
                       showConfirm(
-                        'Remove Trip Data',
+                        'Remove trip data',
                         `This will remove all offline data for "${trip.tripTitle}". You can re-download it later.`,
                         () => handleClearTrip(trip.tripId),
                         'warning'
@@ -601,7 +601,7 @@ export default function StorageManagement({
             <button
               onClick={() =>
                 showConfirm(
-                  'Clear Old Data',
+                  'Clear old data',
                   `This will clear all cached data older than ${autoCleanup.maxAgeInDays} days. This includes thumbnails, map tiles, and Immich cache.`,
                   handleClearOldData,
                   'warning'
@@ -639,7 +639,7 @@ export default function StorageManagement({
           <Icons.Warning className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="font-medium text-red-800 dark:text-red-200">
-              Clear All Offline Data
+              Clear all offline data
             </h4>
             <p className="text-sm text-red-700 dark:text-red-300 mt-1">
               This will remove all cached trips, photos, map tiles, and other offline data.
@@ -648,7 +648,7 @@ export default function StorageManagement({
             <button
               onClick={() =>
                 showConfirm(
-                  'Clear All Offline Data',
+                  'Clear all offline data',
                   'This will permanently delete all offline data including cached trips, photos, map tiles, and sync queue. You will need to re-download trips for offline access. This action cannot be undone.',
                   handleClearAll
                 )
@@ -669,7 +669,7 @@ export default function StorageManagement({
               ) : (
                 <>
                   <Icons.Trash className="w-4 h-4" />
-                  Clear All Offline Data
+                  Clear all offline data
                 </>
               )}
             </button>

@@ -262,7 +262,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold text-charcoal dark:text-warm-gray">
-            Emergency Card
+            Emergency card
           </h2>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             {country.facts

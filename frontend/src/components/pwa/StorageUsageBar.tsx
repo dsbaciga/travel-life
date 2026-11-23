@@ -55,37 +55,37 @@ const CATEGORY_CONFIG: Record<CategoryKey, {
   icon: (props: { className?: string }) => ReactNode;
 }> = {
   trips: {
-    label: 'Trips Data',
+    label: 'Trips data',
     color: 'bg-primary-500 dark:bg-primary-400',
     textColor: 'text-primary-600 dark:text-primary-400',
     icon: Icons.Database,
   },
   photoThumbnails: {
-    label: 'Photo Thumbnails',
+    label: 'Photo thumbnails',
     color: 'bg-accent-500 dark:bg-accent-400',
     textColor: 'text-accent-600 dark:text-accent-400',
     icon: Icons.Image,
   },
   photoFull: {
-    label: 'Full Photos',
+    label: 'Full photos',
     color: 'bg-amber-500 dark:bg-amber-400',
     textColor: 'text-amber-600 dark:text-amber-400',
     icon: Icons.Image,
   },
   mapTiles: {
-    label: 'Map Tiles',
+    label: 'Map tiles',
     color: 'bg-emerald-500 dark:bg-emerald-400',
     textColor: 'text-emerald-600 dark:text-emerald-400',
     icon: Icons.Map,
   },
   immichCache: {
-    label: 'Immich Cache',
+    label: 'Immich cache',
     color: 'bg-purple-500 dark:bg-purple-400',
     textColor: 'text-purple-600 dark:text-purple-400',
     icon: Icons.Image,
   },
   videoCache: {
-    label: 'Video Cache',
+    label: 'Video cache',
     color: 'bg-rose-500 dark:bg-rose-400',
     textColor: 'text-rose-600 dark:text-rose-400',
     icon: Icons.Video,

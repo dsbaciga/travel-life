@@ -194,7 +194,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
           onClick={openCreateFormWithRandomColor}
           className="btn btn-primary whitespace-nowrap flex-shrink-0"
         >
-          + Create Tag
+          + Create tag
         </button>
       </div>
 
@@ -202,7 +202,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       <Modal
         isOpen={showTagForm}
         onClose={cancelForm}
-        title={editingTagId ? "Edit Tag" : "Create Tag"}
+        title={editingTagId ? "Edit tag" : "Create tag"}
         icon="tag"
         maxWidth="lg"
         formId="tag-form"
@@ -223,7 +223,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving…" : `${editingTagId ? "Update" : "Create"} Tag`}
+              {isSubmitting ? "Saving…" : `${editingTagId ? "Update" : "Create"} tag`}
             </button>
           </>
         }

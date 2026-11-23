@@ -452,7 +452,7 @@ export default function TagsAndCategoriesSection({
       {/* Activity Categories */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Activity Categories
+          Activity categories
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Customize the activity categories available when creating activities in
@@ -481,7 +481,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full sm:w-auto"
           >
-            Add Category
+            Add category
           </button>
         </div>
 
@@ -600,7 +600,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Settings
+            Save settings
           </button>
         </div>
       </div>
@@ -608,7 +608,7 @@ export default function TagsAndCategoriesSection({
       {/* Trip Types */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Trip Types
+          Trip types
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Customize the trip types available when creating trips. Each type
@@ -637,7 +637,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full sm:w-auto"
           >
-            Add Type
+            Add type
           </button>
         </div>
 
@@ -756,7 +756,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Trip Types
+            Save trip types
           </button>
         </div>
       </div>
@@ -764,7 +764,7 @@ export default function TagsAndCategoriesSection({
       {/* Global Tag Management */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Trip Tags
+          Trip tags
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Create and manage tags that can be assigned to trips. Tags help
@@ -788,7 +788,7 @@ export default function TagsAndCategoriesSection({
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 htmlFor={newTagColorId}
               >
-                Background Color
+                Background color
               </label>
               <input
                 type="color"
@@ -803,7 +803,7 @@ export default function TagsAndCategoriesSection({
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 htmlFor={newTagTextColorId}
               >
-                Text Color
+                Text color
               </label>
               <input
                 type="color"
@@ -819,7 +819,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full"
           >
-            Create Tag
+            Create tag
           </button>
         </div>
 
@@ -858,7 +858,7 @@ export default function TagsAndCategoriesSection({
                           className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                           htmlFor={`edit-tag-bg-${tag.id}`}
                         >
-                          Background Color
+                          Background color
                         </label>
                         <input
                           type="color"
@@ -873,7 +873,7 @@ export default function TagsAndCategoriesSection({
                           className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                           htmlFor={`edit-tag-text-${tag.id}`}
                         >
-                          Text Color
+                          Text color
                         </label>
                         <input
                           type="color"
@@ -892,7 +892,7 @@ export default function TagsAndCategoriesSection({
                         type="button"
                         className="btn btn-primary text-sm"
                       >
-                        Save Colors
+                        Save colors
                       </button>
                       <button
                         onClick={handleCancelEditTag}
@@ -1016,7 +1016,7 @@ export default function TagsAndCategoriesSection({
                         type="button"
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                       >
-                        Edit Colors
+                        Edit colors
                       </button>
                       <button
                         onClick={() => handleDeleteTag(tag.id)}

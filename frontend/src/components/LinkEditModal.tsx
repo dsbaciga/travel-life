@@ -126,7 +126,7 @@ export default function LinkEditModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <h3 id="link-edit-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-            Edit Link
+            Edit link
           </h3>
           <button
             onClick={onClose}
@@ -162,7 +162,7 @@ export default function LinkEditModal({
           {/* Relationship type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              Relationship Type
+              Relationship type
             </label>
             <select
               value={relationship}
@@ -209,7 +209,7 @@ export default function LinkEditModal({
               disabled={updateMutation.isPending}
               className="btn btn-primary flex-1"
             >
-              {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
+              {updateMutation.isPending ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>

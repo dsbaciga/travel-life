@@ -124,7 +124,7 @@ export default function BackupRestoreSection({
       {/* Create Backup */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Create Backup
+          Create backup
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Download a complete backup of all your travel data including trips,
@@ -156,7 +156,7 @@ export default function BackupRestoreSection({
               Creating Backup…
             </>
           ) : (
-            "Download Backup"
+            "Download backup"
           )}
         </button>
       </div>
@@ -189,7 +189,7 @@ export default function BackupRestoreSection({
             htmlFor="backup-file-input"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2"
           >
-            Select Backup File
+            Select backup file
           </label>
           <input
             id="backup-file-input"
@@ -271,7 +271,7 @@ export default function BackupRestoreSection({
       {/* Backup Tips */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Backup Best Practices
+          Backup best practices
         </h2>
         <ul className="text-sm text-gray-600 dark:text-dusk-400 space-y-2 list-disc list-inside">
           <li>

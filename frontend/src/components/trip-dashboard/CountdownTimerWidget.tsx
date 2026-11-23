@@ -309,7 +309,7 @@ function TripCompletedDisplay() {
       </div>
 
       <h4 className="text-2xl font-bold font-display text-charcoal dark:text-warm-gray mb-2">
-        Trip Complete
+        Trip complete
       </h4>
       <p className="text-slate dark:text-warm-gray/70">
         Another adventure for the books!

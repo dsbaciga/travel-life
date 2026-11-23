@@ -125,7 +125,7 @@ export default function DataFreshnessIndicator({
               : 'text-slate dark:text-warm-gray/70 hover:bg-parchment dark:hover:bg-navy-700'
             }
           `}
-          title={isOnline ? 'Refresh data' : 'Cannot refresh while offline'}
+          title={isOnline ? 'Refresh data' : "Can't refresh while you're offline"}
           aria-label="Refresh data"
         >
           <Icon name="refresh" size={14} />
@@ -244,8 +244,8 @@ DataFreshnessIndicator.Detailed = function DetailedFreshnessIndicator({
               : 'bg-white dark:bg-navy-800 text-charcoal dark:text-warm-gray hover:bg-parchment dark:hover:bg-navy-700'
             }
           `}
-          title={isOnline ? 'Refresh data' : 'Cannot refresh while offline'}
-          aria-label={isOnline ? 'Refresh data' : 'Cannot refresh while offline'}
+          title={isOnline ? 'Refresh data' : "Can't refresh while you're offline"}
+          aria-label={isOnline ? 'Refresh data' : "Can't refresh while you're offline"}
         >
           <Icon name="refresh" size={16} />
           <span className="hidden sm:inline">Refresh</span>

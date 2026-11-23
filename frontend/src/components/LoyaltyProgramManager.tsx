@@ -176,18 +176,18 @@ export default function LoyaltyProgramManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Loyalty Programs
+          Loyalty programs
         </h2>
         {programs.length > 0 && (
         <button onClick={openCreateForm} className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Program</span>
+          <span className="hidden sm:inline">+ Add program</span>
         </button>
         )}
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Privacy Note</h3>
+        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Privacy note</h3>
         <p className="text-sm text-blue-800 dark:text-blue-200">
           Membership numbers are private to your account. They are never shown to people you share a
           trip with and never appear on public share pages. Flights, trains and stays offer to use a
@@ -198,7 +198,7 @@ export default function LoyaltyProgramManager() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingId ? 'Edit Loyalty Program' : 'Add Loyalty Program'}
+        title={editingId ? 'Edit loyalty program' : 'Add loyalty program'}
         icon={getLoyaltyProgramTypeIcon(formData.type)}
         maxWidth="lg"
         formId="loyalty-program-form"
@@ -215,7 +215,7 @@ export default function LoyaltyProgramManager() {
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving…' : `${editingId ? 'Update' : 'Add'} Program`}
+              {isSubmitting ? 'Saving…' : `${editingId ? 'Update' : 'Add'} program`}
             </button>
           </>
         }
@@ -309,7 +309,7 @@ export default function LoyaltyProgramManager() {
             </div>
             <div>
               <label htmlFor="lp-aliases" className={labelClass}>
-                Other Names
+                Other names
               </label>
               <input
                 type="text"
@@ -341,7 +341,7 @@ export default function LoyaltyProgramManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="lp-tier" className={labelClass}>
-                Status Tier
+                Status tier
               </label>
               <input
                 type="text"
@@ -355,7 +355,7 @@ export default function LoyaltyProgramManager() {
             </div>
             <div>
               <label htmlFor="lp-points" className={labelClass}>
-                Points Balance
+                Points balance
               </label>
               <input
                 type="number"
@@ -391,7 +391,7 @@ export default function LoyaltyProgramManager() {
           icon="ticket"
           message="No loyalty programs yet"
           subMessage="Add your frequent-flyer and hotel membership numbers to have them offered when you add a flight or stay."
-          actionLabel="Add Program"
+          actionLabel="Add program"
           onAction={openCreateForm}
         />
       ) : (

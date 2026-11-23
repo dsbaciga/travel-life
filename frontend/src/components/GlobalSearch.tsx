@@ -303,7 +303,7 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-gray-500 dark:text-dusk-400 eyebrow">
-                  Recent Searches
+                  Recent searches
                 </span>
                 <button
                   onClick={clearRecentSearches}

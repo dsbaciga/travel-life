@@ -59,7 +59,7 @@ export function describeFinishedImport(
       tone: 'neutral',
       title: `Still working on ${name}`,
       body: 'This is taking longer than usual. Anything it finds will appear in your Inbox.',
-      action: { label: 'Open Inbox', to: '/saved-links' },
+      action: { label: 'Open inbox', to: '/saved-links' },
     };
   }
 

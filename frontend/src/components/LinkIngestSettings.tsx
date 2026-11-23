@@ -113,7 +113,7 @@ export default function LinkIngestSettings() {
     <div className="card space-y-4">
       <div>
         <h3 className="text-lg font-display font-semibold text-charcoal dark:text-dusk-100">
-          Link Ingest
+          Link ingest
         </h3>
         <p className="text-sm text-slate dark:text-dusk-400 mt-1">
           Forward a link to the ingest mailbox and it appears in your saved-links

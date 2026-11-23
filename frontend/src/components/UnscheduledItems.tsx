@@ -628,7 +628,7 @@ export default function UnscheduledItems({
       <ConfirmDialogComponent />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Unscheduled Items
+          Unscheduled items
         </h2>
 
         {/* Add Button */}
@@ -637,7 +637,7 @@ export default function UnscheduledItems({
           onClick={() => setShowAddMenu(true)}
           className="btn btn-primary"
         >
-          + Add Item
+          + Add item
         </button>
       </div>
 
@@ -647,7 +647,7 @@ export default function UnscheduledItems({
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Add New Item
+                Add new item
               </h3>
               <button
                 type="button"
@@ -764,7 +764,7 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "activity"}
         onClose={resetForm}
-        title={isCreating ? "Add Activity" : "Edit Activity"}
+        title={isCreating ? "Add activity" : "Edit activity"}
         icon="activity"
         formId="unscheduled-activity-form"
         footer={
@@ -783,7 +783,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving…" : isCreating ? "Add Activity" : "Update Activity"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add activity" : "Update activity"}
             </button>
           </>
         }
@@ -858,7 +858,7 @@ export default function UnscheduledItems({
                   htmlFor="unscheduled-transport-from"
                   className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
-                  From Location
+                  From location
                 </label>
                 <select
                   id="unscheduled-transport-from"
@@ -897,7 +897,7 @@ export default function UnscheduledItems({
                   htmlFor="unscheduled-transport-to"
                   className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
-                  To Location
+                  To location
                 </label>
                 <select
                   id="unscheduled-transport-to"
@@ -938,7 +938,7 @@ export default function UnscheduledItems({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                  Departure Time
+                  Departure time
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -969,7 +969,7 @@ export default function UnscheduledItems({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                  Arrival Time
+                  Arrival time
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -1006,19 +1006,19 @@ export default function UnscheduledItems({
                 onChange={(value) =>
                   transportationForm.handleChange("startTimezone", value)
                 }
-                label="Departure Timezone"
+                label="Departure timezone"
               />
               <TimezoneSelect
                 value={transportationForm.values.endTimezone}
                 onChange={(value) =>
                   transportationForm.handleChange("endTimezone", value)
                 }
-                label="Arrival Timezone"
+                label="Arrival timezone"
               />
             </div>
           </FormSection>
 
-          <FormSection title="Carrier Details">
+          <FormSection title="Carrier details">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -1128,7 +1128,7 @@ export default function UnscheduledItems({
         }
       >
         <form id="lodging-form" onSubmit={handleSubmitLodging} className="space-y-6">
-          <FormSection title="Basic Information">
+          <FormSection title="Basic information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -1322,7 +1322,7 @@ export default function UnscheduledItems({
           <EmptyState
             icon="note"
             message="No unscheduled items"
-            subMessage="Items without dates/times will appear here"
+            subMessage="Items without a date or time show up here."
           />
         ) : (
           <>
@@ -1332,7 +1332,7 @@ export default function UnscheduledItems({
                 <EmptyState
                   icon="activity"
                   message="No unscheduled activities"
-                  subMessage="Activities without dates/times will appear here"
+                  subMessage="Activities without a date or time show up here."
                 />
               ) : (
                 activities.map((activity) => (
@@ -1383,7 +1383,7 @@ export default function UnscheduledItems({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
                               >
-                                View Booking
+                                View booking
                               </a>
                             </div>
                           )}
@@ -1445,7 +1445,7 @@ export default function UnscheduledItems({
                 <EmptyState
                   icon="transportation"
                   message="No unscheduled transport"
-                  subMessage="Transport without departure times will appear here"
+                  subMessage="Transport without a departure time shows up here."
                 />
               ) : (
                 transportation.map((transport) => (
@@ -1557,7 +1557,7 @@ export default function UnscheduledItems({
                 <EmptyState
                   icon="lodging"
                   message="No unscheduled stays"
-                  subMessage="Stays without check-in dates will appear here"
+                  subMessage="Stays without check-in dates show up here."
                 />
               ) : (
                 lodging.map((lodgingItem) => (
@@ -1602,7 +1602,7 @@ export default function UnscheduledItems({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
                               >
-                                View Booking
+                                View booking
                               </a>
                             </div>
                           )}

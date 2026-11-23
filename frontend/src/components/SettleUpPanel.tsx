@@ -85,7 +85,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
           id="settle-up-heading"
           className="font-body font-semibold text-lg text-charcoal dark:text-warm-gray"
         >
-          Settle Up
+          Settle up
         </h3>
         <p className="text-xs text-slate dark:text-warm-gray/60">
           Split expenses only, in {data.currency}.

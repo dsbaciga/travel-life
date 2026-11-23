@@ -172,7 +172,7 @@ export default function OpenRouteServiceSettings() {
         </h3>
         <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
           <li>Go to <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">openrouteservice.org/dev/#/signup</a></li>
-          <li>Click "Sign Up" and complete the registration</li>
+          <li>Click "Sign up" and complete the registration</li>
           <li>Verify your email address</li>
           <li>Log in and navigate to your dashboard</li>
           <li>Click "Request a Token" to generate an API key</li>

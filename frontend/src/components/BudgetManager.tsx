@@ -86,7 +86,7 @@ const LINKED_ENTITY_TABS = {
 const LINKED_ENTITY_LABELS = {
   activity: "Activity",
   transportation: "Transport",
-  lodging: "Stays",
+  lodging: "Stay",
   customItem: "Custom item",
 } as const;
 
@@ -532,7 +532,7 @@ export default function BudgetManager({
             onClick={openCreateExpenseForm}
             className="btn-primary"
           >
-            + Add Expense
+            + Add expense
           </button>
         </div>
       </div>
@@ -544,7 +544,7 @@ export default function BudgetManager({
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-1">
-                  Trip Budget
+                  Trip budget
                 </p>
                 {budget !== null ? (
                   <>
@@ -579,7 +579,7 @@ export default function BudgetManager({
                   onClick={openBudgetEditor}
                   className="btn-secondary"
                 >
-                  {budget !== null ? "Edit Budget" : "Set Budget"}
+                  {budget !== null ? "Edit budget" : "Set budget"}
                 </button>
                 {budget !== null && (
                   <button
@@ -696,7 +696,7 @@ export default function BudgetManager({
         ) : (
           <div>
             <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-3">
-              {budget !== null ? "Edit Trip Budget" : "Set Trip Budget"}
+              {budget !== null ? "Edit trip budget" : "Set trip budget"}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
@@ -741,7 +741,7 @@ export default function BudgetManager({
                 className="btn-primary"
                 disabled={isSavingBudget}
               >
-                {isSavingBudget ? "Saving…" : "Save Budget"}
+                {isSavingBudget ? "Saving…" : "Save budget"}
               </button>
             </div>
           </div>
@@ -779,7 +779,7 @@ export default function BudgetManager({
       <FormModal
         isOpen={showExpenseForm}
         onClose={closeExpenseForm}
-        title={editingExpenseId ? "Edit Expense" : "Add Expense"}
+        title={editingExpenseId ? "Edit expense" : "Add expense"}
         icon="expense"
         formId="expense-form"
         maxWidth="2xl"
@@ -788,7 +788,7 @@ export default function BudgetManager({
             onCancel={closeExpenseForm}
             formId="expense-form"
             isSubmitting={isSavingExpense}
-            submitLabel={editingExpenseId ? "Update Expense" : "Add Expense"}
+            submitLabel={editingExpenseId ? "Update expense" : "Add expense"}
             isEditMode={!!editingExpenseId}
           />
         }
@@ -973,8 +973,8 @@ export default function BudgetManager({
           <EmptyState
             icon="expense"
             message="No expenses recorded yet"
-            subMessage="Track your trip spending by adding expenses"
-            actionLabel="Add Expense"
+            subMessage="Add expenses to track your trip spending."
+            actionLabel="Add expense"
             onAction={openCreateExpenseForm}
           />
         ) : (

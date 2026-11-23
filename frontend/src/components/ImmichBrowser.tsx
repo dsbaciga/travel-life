@@ -422,7 +422,7 @@ export default function ImmichBrowser({
         <div className="px-3 py-1 sm:px-6 sm:py-3 border-b border-gray-200 dark:border-dusk-700 shrink-0">
           <div className="flex justify-between items-center gap-2">
             <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-              Browse Immich Library
+              Browse Immich library
             </h2>
             <button
               onClick={onClose}
@@ -446,7 +446,7 @@ export default function ImmichBrowser({
           {/* View Tabs */}
           <div className="flex gap-2 mb-3 sm:mb-4">
             <button onClick={() => setView("assets")} type="button" className={tabClass(view === "assets")}>
-              All Photos
+              All photos
             </button>
             <button onClick={() => setView("albums")} type="button" className={tabClass(view === "albums")}>
               Albums
@@ -716,7 +716,7 @@ export default function ImmichBrowser({
                         type="button"
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
                       >
-                        Deselect All
+                        Deselect all
                       </button>
                       <div className="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-lg text-sm font-medium">
                         {selectedAssetsMap.size} selected

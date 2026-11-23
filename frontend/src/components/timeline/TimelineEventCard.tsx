@@ -128,7 +128,7 @@ export default function TimelineEventCard({
   // Format trip time display
   const renderTripTime = () => {
     if (item.isAllDay) {
-      return <span className="text-gray-500 dark:text-dusk-400">All Day</span>;
+      return <span className="text-gray-500 dark:text-dusk-400">All day</span>;
     }
     if (item.showCheckInTime) {
       return (
@@ -184,7 +184,7 @@ export default function TimelineEventCard({
       return null;
     }
     if (item.isAllDay) {
-      return <span className="text-gray-500 dark:text-dusk-400">All Day</span>;
+      return <span className="text-gray-500 dark:text-dusk-400">All day</span>;
     }
     if (item.showCheckInTime) {
       return (

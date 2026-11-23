@@ -212,7 +212,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Packing Suggestions
+              Packing suggestions
             </h3>
             {hasAnySuggestions && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gold/20 text-gold">

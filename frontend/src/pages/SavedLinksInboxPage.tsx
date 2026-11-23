@@ -235,7 +235,7 @@ export default function SavedLinksInboxPage() {
             onClick={handleAdd}
             disabled={saving}
           >
-            {saving ? "Saving…" : "Save Link"}
+            {saving ? "Saving…" : "Save link"}
           </button>
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function SavedLinksInboxPage() {
               onClick={handleDeleteAllUnassigned}
               disabled={isBulkDeleting}
             >
-              Delete All Unassigned
+              Delete all unassigned
             </button>
           </div>
 

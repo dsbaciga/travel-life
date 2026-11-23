@@ -660,7 +660,7 @@ export default function TripDetailPage() {
                 <div className="space-y-6 animate-fadeIn">
                   <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                      Trip Map
+                      Trip map
                     </h2>
                     {isTransportationLoading ? (
                       <Skeleton className="h-96" />
@@ -764,7 +764,7 @@ export default function TripDetailPage() {
               {activeTab === "photo-map" && (
                 <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6 animate-fadeIn">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    Photo Map
+                    Photo map
                   </h2>
                   <ErrorBoundary>
                     <Suspense
@@ -788,7 +788,7 @@ export default function TripDetailPage() {
               {activeTab === "photo-timeline" && (
                 <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 p-6 animate-fadeIn">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    Photo Timeline
+                    Photo timeline
                   </h2>
                   <ErrorBoundary>
                     <Suspense

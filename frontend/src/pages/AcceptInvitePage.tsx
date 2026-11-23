@@ -164,7 +164,7 @@ export default function AcceptInvitePage() {
               <Icon name="close" size={32} className="text-red-600 dark:text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
-              Invalid Invitation
+              Invalid invitation
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {error || 'This invitation is no longer valid.'}
@@ -295,7 +295,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor={confirmPasswordId} className="label">
-                Confirm Password
+                Confirm password
               </label>
               <input
                 type="password"
@@ -320,7 +320,7 @@ export default function AcceptInvitePage() {
                   Creating Account…
                 </>
               ) : (
-                'Create Account'
+                'Create account'
               )}
             </button>
           </form>

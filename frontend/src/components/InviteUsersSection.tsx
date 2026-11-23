@@ -177,7 +177,7 @@ export default function InviteUsersSection() {
             <Icon name="alert" className="text-yellow-400 mr-2" />
             <div>
               <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Email Not Configured
+                Email not configured
               </h3>
               <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
                 SMTP is not configured on the server. Invitations will be created but emails won't be sent.
@@ -200,7 +200,7 @@ export default function InviteUsersSection() {
         <form onSubmit={handleSendInvitation} className="space-y-4">
           <div>
             <label htmlFor={emailInputId} className="label">
-              Email Address
+              Email address
             </label>
             <input
               type="email"
@@ -239,7 +239,7 @@ export default function InviteUsersSection() {
             ) : (
               <>
                 <Icon name="mail" size={16} className="mr-2 align-text-bottom" />
-                Send Invitation
+                Send invitation
               </>
             )}
           </button>
@@ -249,7 +249,7 @@ export default function InviteUsersSection() {
       {/* Sent Invitations List */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Sent Invitations
+          Sent invitations
         </h2>
 
         {/* Accessibility: aria-live region for status updates */}
