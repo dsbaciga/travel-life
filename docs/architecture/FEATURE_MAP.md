@@ -20,6 +20,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Activities | `activity` | `ActivityManager`, `components/forms/ActivityForm` |
 | Transportation (flights, trains, …) and flight status | `transportation`, `aviationstack`, `airport`, `routing`, `travelTime` | `TransportationManager`, `FlightStatusBadge`, `FlightRouteMap`, `AirportSearchInput` |
 | Lodging | `lodging` | `LodgingManager` |
+| Route line (a day's itinerary drawn as a journey) and contour backdrops | none (client only). Shared: `packages/shared/src/brand/routeProgress.ts` and `contours.ts`, vendored to `frontend/src/lib/vendored/` by `npm run sync:vendored`. Mobile: `RouteRail`, `ContourBackdrop`, `domain/routeLine` | `components/brand/` (`ContourBackdrop`, `RouteSegment`), used by `timeline/TimelineEventCard`, `trip-dashboard/TodaysItinerary` and `EmptyState` |
 | Custom items | `customItem` ([spec](../development/CUSTOM_ITEM_SPEC.md)) | `CustomItemsManager`, `CustomItemTypeManager` |
 | Journal (+ AI drafting, per-day AI draft) | `journalEntry`, `journalEntryAi`, `journalDayDraft`, `services/_shared/dayDraft` | `JournalManager`, `MarkdownEditor` |
 | Entity links (any entity to any entity) | `entityLink`, `services/_shared/entityLinkCleanup` | `LinkPanel`, `LinkedEntitiesDisplay`, `EntityPickerModal`, `useEntityLinking` |

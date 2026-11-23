@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A route line and contour backdrops.** A day's itinerary now reads as a journey, on the web timeline, the dashboard's Today's Itinerary and the Android Today list. A dashed line runs down the left with a stop marker at each item, coloured by item type. The current or next stop is a filled gold marker, finished stops are muted, and the line is solid gold up to that stop and dashed after it. Items lose most of their card chrome so the line carries the structure. Empty states (web and Android) also get faint topographic contour lines behind them, generated from a fixed seed so the terrain never changes between visits. The path generator is shared code (`packages/shared/src/brand/contours.ts`, vendored into the frontend) and `ContourBackdrop` is a reusable component on both platforms for hero areas. The printed itinerary is unchanged. This adds no native dependencies beyond `react-native-svg`, already present, but the Android change needs a new APK.
+
 ### Changed
 
 - **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the Trips screen notice) gets a gold-to-amber bar along its top edge, a subtle diagonal wash, and a deeper surface in dark mode. Titles and headings now use Crimson Pro and body text Manrope, as on the web. Light mode colours are unchanged. This adds native code (`expo-linear-gradient`), so it needs a new APK and cannot ship as an over-the-air update.

@@ -26,6 +26,7 @@ import { SkeletonList } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { getEntity } from '@/db/repository';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
+import { buildRouteLine } from '@/domain/routeLine';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
 import {
   buildTripDays,
@@ -167,6 +168,7 @@ export default function TodayScreen() {
   const todayItems = useMemo(() => itemsForDay(items, activeDay), [items, activeDay]);
   const unscheduled = useMemo(() => unscheduledItems(items), [items]);
   const nextUp = useMemo(() => findNextUp(items, now), [items, now]);
+  const routeLine = useMemo(() => buildRouteLine(todayItems, now, isToday), [todayItems, now, isToday]);
 
   const stripRef = useRef<ScrollViewInstance>(null);
   const [stripWidth, setStripWidth] = useState(0);
@@ -474,11 +476,13 @@ export default function TodayScreen() {
     <Screen scroll={false} padded={false}>
       <FlashList
         data={todayItems}
+        extraData={routeLine}
         keyExtractor={(item) => item.key}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.rowWrap}>
             <TimelineRow
               item={item}
+              route={routeLine[index]}
               tripId={trip.id}
               dayKey={activeDay}
               tripTimezone={tripZone}
@@ -551,6 +555,6 @@ const styles = StyleSheet.create({
   unscheduledItem: { gap: spacing.xs },
   header: { padding: spacing.lg, gap: spacing.md },
   titleRow: { flexWrap: 'nowrap' },
-  rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+  rowWrap: { paddingHorizontal: spacing.lg },
   list: { paddingBottom: FAB_CLEARANCE },
 });
