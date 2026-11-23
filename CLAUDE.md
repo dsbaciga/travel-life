@@ -30,6 +30,7 @@ Each directory has its own `package.json`/`node_modules`; run commands from insi
 | **Find where a feature lives, or a helper to reuse** | [Feature Map](docs/architecture/FEATURE_MAP.md) — check it *before* writing a new helper |
 | **Write code that fits the codebase** | [Code Conventions](docs/architecture/CODE_CONVENTIONS.md) (**required before writing code**) |
 | **Work on the UI** | [Style Guide](docs/architecture/STYLE_GUIDE.md) (**required**) |
+| **Write any user-facing text** (toasts, errors, empty states, confirmations, labels) | [Voice and Tone](docs/guides/VOICE_AND_TONE.md) (**required**); strings still to rewrite are in the [Copy Audit](docs/guides/COPY_AUDIT.md) |
 | Database | [Database Schema](docs/architecture/DATABASE_SCHEMA.md) (`backend/prisma/schema.prisma` is the authority) |
 | API | [API Reference](docs/api/README.md); live Swagger comments sit above each route |
 | Step-by-step feature work | [Development Workflows](docs/guides/DEVELOPMENT_WORKFLOWS.md) |
