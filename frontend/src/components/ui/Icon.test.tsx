@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import Icon, { ICON_NAMES } from './Icon';
+import Icon from './Icon';
+import { ICON_NAMES } from './iconRegistry';
 
 describe('Icon', () => {
   it('is decorative by default', () => {

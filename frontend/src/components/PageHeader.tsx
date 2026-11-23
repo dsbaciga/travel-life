@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { Link } from 'react-router';
+import Icon, { type IconName } from './ui/Icon';
 
 interface ActionButton {
   /** Button label */
@@ -13,7 +14,7 @@ interface ActionButton {
   /** Whether the button is disabled */
   disabled?: boolean;
   /** Icon to show before label */
-  icon?: ReactNode;
+  icon?: IconName;
   /** Tooltip text shown on hover */
   title?: string;
 }
@@ -79,7 +80,7 @@ export default function PageHeader({
     const classes = variantClasses[actionConfig.variant ?? 'primary'];
     const content = (
       <>
-        {actionConfig.icon && <span className="mr-1">{actionConfig.icon}</span>}
+        {actionConfig.icon && <Icon name={actionConfig.icon} size={20} className="mr-1" />}
         {actionConfig.label}
       </>
     );
@@ -159,7 +160,7 @@ PageHeader.Section = function SectionHeader({
           disabled={action.disabled}
           className={variantClasses[action.variant ?? 'secondary']}
         >
-          {action.icon && <span className="mr-1">{action.icon}</span>}
+          {action.icon && <Icon name={action.icon} size={20} className="mr-1" />}
           {action.label}
         </button>
       )}
