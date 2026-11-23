@@ -194,7 +194,7 @@ export function Card({
             end={{ x: 1, y: 0 }}
             style={styles.heroBar}
           />
-          {contourSeed ? <ContourBackdrop seed={contourSeed} /> : null}
+          {contourSeed ? <ContourBackdrop seed={contourSeed} onHero /> : null}
         </>
       ) : null}
       {children}
