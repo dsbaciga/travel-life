@@ -5,6 +5,7 @@ import type {
   ImmichBulkSummary,
   ImmichFilters,
 } from "../types/immich";
+import { getApiErrorMessage } from '../lib/errors';
 
 interface ImmichBulkImportDialogProps {
   tripId: number;
@@ -18,7 +19,7 @@ interface ImmichBulkImportDialogProps {
 type Phase = "counting" | "confirm" | "running" | "done" | "error";
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
+  return getApiErrorMessage(error, "Couldn't finish that. Try again.");
 }
 
 function plural(count: number, noun: string): string {

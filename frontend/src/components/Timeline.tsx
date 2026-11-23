@@ -37,6 +37,7 @@ import { useTripLinkSummary } from '../hooks/useTripLinkSummary';
 import { getEntityKey } from '../types/entityLink';
 import type { TripLinkSummary } from '../types/entityLink';
 import EmptyState from './EmptyState';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { getActivityPlaceName } from '../lib/itineraryPlaces';
 
 /**
@@ -222,12 +223,18 @@ const Timeline = ({
   };
 
   // Handle delete
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const handleDelete = async (item: TimelineItem) => {
     const itemId = item.data.id;
+    const typeLabel = TIMELINE_TYPE_LABELS[item.type].toLowerCase();
 
-    if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: `Delete ${typeLabel}`,
+      message: `"${item.title}" comes off your timeline. You can't undo this.`,
+      confirmLabel: `Delete ${typeLabel}`,
+      variant: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       switch (item.type) {
@@ -1373,13 +1380,14 @@ const Timeline = ({
     });
     return (
       <div className="text-center py-8 text-red-500">
-        Error loading timeline. Refresh the page.
+        Couldn't load the timeline. Refresh the page to try again.
       </div>
     );
   }
 
   return (
     <div className="timeline-container">
+      <ConfirmDialogComponent />
       {/* Filter Bar */}
       <div className="timeline-filter-bar mb-4 print:hidden">
         <TimelineFilters

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import type { Photo } from "../types/photo";
 import photoService from "../services/photo.service";
 import { getFullAssetUrl } from "../lib/config";
@@ -194,7 +195,7 @@ export default function AddPhotosToAlbumModal({
       onClose();
     } catch (error) {
       console.error("Failed to add photos to album:", error);
-      alert("Couldn't add photos to album. Try again.");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAdding(false);
     }

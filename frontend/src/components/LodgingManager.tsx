@@ -581,12 +581,19 @@ export default function LodgingManager({
   }, [manager.items, sortBy]);
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (isFormDirty) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     resetForm();
-  }, [isFormDirty, resetForm]);
+  }, [isFormDirty, resetForm, confirm]);
 
   return (
     <div className="space-y-6">

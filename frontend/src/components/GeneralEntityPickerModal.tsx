@@ -8,6 +8,7 @@ import { getFullAssetUrl } from '../lib/config';
 import { getAccessToken } from '../lib/axios';
 import toast from 'react-hot-toast';
 import Icon from './ui/Icon';
+import { getApiErrorMessage } from '../lib/errors';
 
 // Threshold for showing search bar
 const SEARCH_THRESHOLD = 5;
@@ -181,7 +182,7 @@ export default function GeneralEntityPickerModal({
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create link:', error);
-      const message = error instanceof Error ? error.message : "Couldn't create link. Try again.";
+      const message = getApiErrorMessage(error, "Couldn't create link. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);
@@ -213,7 +214,7 @@ export default function GeneralEntityPickerModal({
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create links:', error);
-      const message = error instanceof Error ? error.message : "Couldn't create links. Try again.";
+      const message = getApiErrorMessage(error, "Couldn't create links. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);

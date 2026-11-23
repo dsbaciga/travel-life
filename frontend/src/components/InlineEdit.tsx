@@ -28,6 +28,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import toast from 'react-hot-toast';
 import Icon from './ui/Icon';
+import { getApiErrorMessage } from '../lib/errors';
 
 interface InlineEditProps {
   value: string;
@@ -104,7 +105,7 @@ export default function InlineEdit({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Couldn't save. Try again.";
+      const errorMessage = getApiErrorMessage(err, "Couldn't save. Try again.");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -269,7 +270,7 @@ export function InlineEditNumber({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Couldn't save. Try again.";
+      const errorMessage = getApiErrorMessage(err, "Couldn't save. Try again.");
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);

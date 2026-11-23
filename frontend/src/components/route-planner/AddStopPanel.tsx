@@ -108,7 +108,7 @@ function SearchSource({
       />
       {searching && <p className="mt-1 text-sm text-slate dark:text-dusk-400">Searching…</p>}
       {searched && !searching && results.length === 0 && (
-        <p className="mt-1 text-sm text-slate dark:text-dusk-400">No places found.</p>
+        <p className="mt-1 text-sm text-slate dark:text-dusk-400">No places match.</p>
       )}
       {results.length > 0 && (
         <ul

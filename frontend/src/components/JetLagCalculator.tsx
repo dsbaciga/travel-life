@@ -108,7 +108,7 @@ export default function JetLagCalculator({
       <div className={`inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 ${className}`}>
         <InfoIcon className="w-4 h-4" />
         <span className="text-sm">
-          {jetLagInfo.recommendations[0] || 'Unable to calculate jet lag'}
+          {jetLagInfo.recommendations[0] || "Couldn't work out jet lag for these dates."}
         </span>
       </div>
     );

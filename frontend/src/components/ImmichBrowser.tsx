@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import toast from "react-hot-toast";
 import immichService from "../services/immich.service";
 import type {
   ImmichAsset,
@@ -307,7 +308,7 @@ export default function ImmichBrowser({
         setLoadError(
           error instanceof Error && error.message
             ? error.message
-            : "Failed to load photos from Immich. Check your Immich settings."
+            : "Couldn't load photos from Immich. Check your Immich settings."
         );
       })
       .finally(() => {
@@ -382,14 +383,14 @@ export default function ImmichBrowser({
       const albumAssets = requireArrayField(albumData.assets, "assets");
 
       if (albumAssets.length === 0) {
-        alert("This album has no photos to import");
+        toast("This album has no photos to import.");
         return;
       }
 
       await onImportAlbum(album, albumAssets);
     } catch (error) {
       console.error("Failed to import album:", error);
-      alert("Couldn't import album. Try again.");
+      toast.error("Couldn't import album. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -663,7 +664,7 @@ export default function ImmichBrowser({
               </div>
               {filteredAlbums.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-gray-600 dark:text-dusk-400">No albums found</p>
+                  <p className="text-gray-600 dark:text-dusk-400">No albums yet</p>
                 </div>
               )}
             </>
@@ -821,7 +822,7 @@ export default function ImmichBrowser({
                       ? "Everything on this page is already on the entry"
                       : hasActiveFilters
                         ? "No photos match these filters"
-                        : "No photos found"}
+                        : "No photos yet"}
                   </p>
                 </div>
               )}

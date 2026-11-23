@@ -514,7 +514,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
   if (isError) {
     return (
       <p role="alert" className="py-6 text-sm text-red-600 dark:text-red-400">
-        Could not load the route plan.
+        Couldn't load the route plan. Try again.
       </p>
     );
   }

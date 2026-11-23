@@ -139,7 +139,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
   if (!validation) {
     return (
       <div className="card">
-        <p className="text-gray-600 dark:text-dusk-400">Unable to check trip health</p>
+        <p className="text-gray-600 dark:text-dusk-400">Couldn't check this trip. Try again.</p>
         <button
           onClick={fetchValidation}
           className="mt-3 text-sm text-primary-600 dark:text-gold hover:underline"
@@ -200,7 +200,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
               <Icon name="success" className="w-6 h-6" />
             </div>
             <p className="font-medium text-gray-900 dark:text-white">Looking good!</p>
-            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">No issues found with your trip.</p>
+            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">Nothing to fix. Your trip looks good.</p>
           </div>
         ) : (
           <div className="space-y-3">

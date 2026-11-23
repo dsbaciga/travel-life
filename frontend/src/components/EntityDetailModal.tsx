@@ -694,7 +694,7 @@ export default function EntityDetailModal({
             </div>
           ) : error ? (
             <div className="text-center py-8 text-red-500 dark:text-red-400">
-              Failed to load details
+              Couldn't load details. Try again.
             </div>
           ) : (
             renderDetails()

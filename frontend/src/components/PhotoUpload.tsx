@@ -410,7 +410,7 @@ export default function PhotoUpload({
       onPhotoUploaded();
     } catch {
       if (!isMountedRef.current || controller.signal.aborted) return;
-      alert("Couldn't upload photos. Try again.");
+      toast.error("Couldn't upload photos. Try again.");
     } finally {
       if (isMountedRef.current) {
         setIsUploading(false);

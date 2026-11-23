@@ -191,7 +191,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
   if (!data) {
     return (
       <div className="bg-white dark:bg-navy-800 rounded-xl shadow-sm border border-gray-200 dark:border-navy-700 p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Unable to load packing suggestions</p>
+        <p className="text-gray-600 dark:text-dusk-400">Couldn't load packing suggestions. Try again.</p>
         <button
           onClick={fetchSuggestions}
           className="mt-3 text-sm text-primary-600 dark:text-gold hover:underline"

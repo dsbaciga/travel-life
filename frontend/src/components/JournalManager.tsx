@@ -350,11 +350,13 @@ export default function JournalManager({
     if (!date || aiDrafting) return;
 
     if (confirmReplace && (formValues.title.trim() || formValues.content.trim())) {
-      // Same native prompt the close button uses: this form is already a modal, and a
-      // second stacked modal fights it for focus.
-      const replace = window.confirm(
-        "The form already has text. Drafting with AI will replace the title and content. Continue?"
-      );
+      const replace = await confirm({
+        title: 'Replace your text with an AI draft?',
+        message: 'The AI draft replaces the title and content already in this form.',
+        confirmLabel: 'Replace with draft',
+        cancelLabel: 'Keep my text',
+        variant: 'warning',
+      });
       if (!replace) return;
     }
 
@@ -446,12 +448,19 @@ export default function JournalManager({
   };
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (isFormDirty) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     resetForm();
-  }, [isFormDirty, resetForm]);
+  }, [isFormDirty, resetForm, confirm]);
 
   return (
     <div className="space-y-6">

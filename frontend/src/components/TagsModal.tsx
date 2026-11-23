@@ -234,7 +234,7 @@ export default function TagsModal({
                 {filteredAvailableTags.length === 0 ? (
                   <p className="text-gray-500 dark:text-dusk-400 text-sm">
                     {searchQuery
-                      ? "No tags found matching your search."
+                      ? "No tags match your search."
                       : "All tags are already added to this trip."}
                   </p>
                 ) : (

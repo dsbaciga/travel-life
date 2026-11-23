@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import customItemService from "../services/customItem.service";
 import type { CustomItemType } from "../types/customItem";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * Manages the user's custom item type registry.
@@ -62,7 +63,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       reset();
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't save type. Try again.");
+      toast.error(getApiErrorMessage(err, "Couldn't save type. Try again."));
     } finally {
       setSaving(false);
     }

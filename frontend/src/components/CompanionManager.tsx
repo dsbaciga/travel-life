@@ -489,7 +489,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                 ))
               ) : (
                 <div className="text-center py-4 text-gray-500 dark:text-dusk-400 text-sm">
-                  No companions found matching "{searchQuery}"
+                  No companions match "{searchQuery}"
                 </div>
               )}
             </div>

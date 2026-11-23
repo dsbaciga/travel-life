@@ -459,7 +459,7 @@ export default function TravelPartnerSettings() {
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div className="p-3 text-center text-gray-500 dark:text-dusk-400">
-                    No users found
+                    No users match
                   </div>
                 ) : (
                   searchResults.map((user) => (

@@ -17,6 +17,7 @@ import CustomItemTypeManager from "./CustomItemTypeManager";
 import ExpandableText from "./shared/ExpandableText";
 import Icon from "./ui/Icon";
 import { formatCurrency } from "../utils/formatCurrency";
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * CustomItemsManager handles the trip "Custom" tab.
@@ -221,7 +222,7 @@ export default function CustomItemsManager({
       resetForm();
       refreshData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't save custom item. Try again.");
+      toast.error(getApiErrorMessage(err, "Couldn't save custom item. Try again."));
     } finally {
       setSaving(false);
     }
@@ -264,7 +265,7 @@ export default function CustomItemsManager({
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Couldn't delete items. Try again.");
+      toast.error(getApiErrorMessage(err, "Couldn't delete items. Try again."));
     } finally {
       setIsBulkDeleting(false);
     }

@@ -169,7 +169,7 @@ export default function LoyaltyProgramManager() {
   }
 
   if (isError) {
-    return <div className="text-center py-4 text-red-600">Failed to load loyalty programs</div>;
+    return <div className="text-center py-4 text-red-600">Couldn't load loyalty programs. Try again.</div>;
   }
 
   return (

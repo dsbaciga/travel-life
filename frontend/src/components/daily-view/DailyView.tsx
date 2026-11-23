@@ -627,7 +627,7 @@ export default function DailyView({
         setAllDays(daysData);
       } catch (err) {
         console.error('Error loading daily view data:', err);
-        setError('Failed to load trip data. Try refreshing the page.');
+        setError("Couldn't load this trip's days. Refresh the page to try again.");
       } finally {
         setLoading(false);
       }
@@ -741,7 +741,7 @@ export default function DailyView({
   if (allDays.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
-        <p>No trip dates defined. Set trip start and end dates.</p>
+        <p>This trip has no dates yet. Add a start and end date to plan day by day.</p>
       </div>
     );
   }

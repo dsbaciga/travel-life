@@ -214,7 +214,7 @@ export default function AirportSearchInput({
 
       {!searching && trimmed.length >= 2 && results.length === 0 && (
         <div className="text-sm text-gray-500 dark:text-dusk-400 py-2">
-          No airports found for &ldquo;{trimmed}&rdquo;
+          No airports match &ldquo;{trimmed}&rdquo;
         </div>
       )}
 

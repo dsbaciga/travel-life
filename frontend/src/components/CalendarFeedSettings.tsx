@@ -111,7 +111,7 @@ export default function CalendarFeedSettings() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setMessage({ type: 'error', text: "Couldn't copy to clipboard — copy the URL manually. Try again." });
+      setMessage({ type: 'error', text: "Couldn't copy the link. Select the URL and copy it by hand." });
     }
   };
 

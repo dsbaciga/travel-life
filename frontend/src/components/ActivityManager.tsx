@@ -635,13 +635,20 @@ export default function ActivityManager({
   };
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (activityFormDirtyRef.current && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (activityFormDirtyRef.current) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     activityFormDirtyRef.current = false;
     resetForm();
-  }, [resetForm]);
+  }, [resetForm, confirm]);
 
   // handleOpenForm uses the dedicated openCreateForm function
   const handleOpenForm = openCreateForm;

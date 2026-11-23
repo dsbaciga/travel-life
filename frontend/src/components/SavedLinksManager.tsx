@@ -16,6 +16,7 @@ import BulkActionBar from "./BulkActionBar";
 import EmptyState from "./EmptyState";
 import LinkButton from "./LinkButton";
 import { ListItemSkeleton } from "./SkeletonLoader";
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * SavedLinksManager handles the trip "Links" tab.
@@ -125,7 +126,7 @@ export default function SavedLinksManager({
       refreshData();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Couldn't save link. Try again.";
+        getApiErrorMessage(err, "Couldn't save link. Try again.");
       toast.error(message);
     } finally {
       setSaving(false);
@@ -180,7 +181,7 @@ export default function SavedLinksManager({
       refreshData();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Couldn't delete links. Try again.",
+        getApiErrorMessage(err, "Couldn't delete links. Try again."),
       );
     } finally {
       setIsBulkDeleting(false);

@@ -325,7 +325,7 @@ export default function ConflictResolutionModal({
               ))
             ) : (
               <div className="text-center py-8 text-slate dark:text-warm-gray/70">
-                <p>No field differences found (metadata only conflict)</p>
+                <p>The visible details match. Only background data differs.</p>
               </div>
             )}
           </div>

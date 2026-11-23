@@ -139,7 +139,7 @@ export default function ProgressiveImage({
       >
         <div className="text-center p-4">
           <Icon name="photo" size={48} className="mx-auto text-gray-400 dark:text-dusk-400 mb-2" />
-          <p className="text-sm text-gray-500 dark:text-dusk-400">Failed to load image</p>
+          <p className="text-sm text-gray-500 dark:text-dusk-400">Couldn't load this image</p>
         </div>
       </div>
     );

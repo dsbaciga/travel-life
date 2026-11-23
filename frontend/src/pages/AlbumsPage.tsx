@@ -221,7 +221,7 @@ export default function AlbumsPage() {
       setShowCreateForm(false);
       albumPagination.reset();
     } catch {
-      alert("Couldn't create album. Try again.");
+      toast.error("Couldn't create album. Try again.");
     }
   };
 
@@ -241,7 +241,7 @@ export default function AlbumsPage() {
       // Reload current page (or go to previous if this was the last item on the page)
       albumPagination.loadPage(albumPagination.currentPage);
     } catch {
-      alert("Couldn't delete album. Try again.");
+      toast.error("Couldn't delete album. Try again.");
     }
   };
 

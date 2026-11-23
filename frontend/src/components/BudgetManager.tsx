@@ -562,8 +562,8 @@ export default function BudgetManager({
                     )}
                     {budgetNotComparable && (
                       <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                        Could not be converted to {displayCurrency} — progress
-                        below is unavailable.
+                        Couldn't convert this budget to {displayCurrency}, so progress
+                        is unavailable.
                       </p>
                     )}
                   </>

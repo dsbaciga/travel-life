@@ -334,9 +334,9 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
           {query && !isLoading && results.length === 0 && (
             <div className="p-8 text-center">
               <Icon name="search" size={48} className="mx-auto mb-3 text-gray-400 dark:text-dusk-400" />
-              <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+              <p className="text-gray-600 dark:text-dusk-400 font-medium">Nothing matches &ldquo;{query}&rdquo;</p>
               <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-                Try different keywords
+                Try a different spelling or fewer words.
               </p>
             </div>
           )}

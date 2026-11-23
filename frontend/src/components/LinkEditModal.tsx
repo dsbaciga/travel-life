@@ -11,6 +11,7 @@ import {
   getRelationshipLabel,
 } from '../lib/entityConfig';
 import toast from 'react-hot-toast';
+import { getApiErrorMessage } from '../lib/errors';
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -95,7 +96,7 @@ export default function LinkEditModal({
       onSuccess();
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Couldn't update link. Try again.";
+      const message = getApiErrorMessage(error, "Couldn't update link. Try again.");
       toast.error(message);
     },
   });

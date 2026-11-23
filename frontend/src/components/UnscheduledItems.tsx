@@ -1,4 +1,5 @@
 import Icon from './ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useState, useEffect, useCallback } from "react";
 import type { Activity } from "../types/activity";
 import type { Transportation } from "../types/transportation";
@@ -318,10 +319,16 @@ export default function UnscheduledItems({
     }
   };
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
   const handleDeleteActivity = async (activityId: number) => {
-    if (!window.confirm('Delete this activity? This action cannot be undone.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete activity',
+      message: 'This activity is deleted. You can\'t undo this.',
+      confirmLabel: 'Delete activity',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await activityService.deleteActivity(activityId);
       toast.success('Activity deleted');
@@ -618,6 +625,7 @@ export default function UnscheduledItems({
 
   return (
     <div className="space-y-6">
+      <ConfirmDialogComponent />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Unscheduled Items

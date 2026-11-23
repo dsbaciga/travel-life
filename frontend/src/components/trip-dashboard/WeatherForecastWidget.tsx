@@ -366,7 +366,7 @@ function ErrorState({ error, onRefresh }: { error: string; onRefresh?: () => voi
           <Icon name="alert" className="w-6 h-6 text-red-500 dark:text-red-400" />
         </div>
         <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">
-          Unable to load forecast
+          Couldn't load the forecast. Try again.
         </p>
         <p className="text-xs text-slate dark:text-warm-gray/70 mb-4">{error}</p>
         {onRefresh && (

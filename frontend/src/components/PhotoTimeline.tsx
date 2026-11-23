@@ -410,7 +410,7 @@ export default function PhotoTimeline({
 
                   {dayGroup.error && (
                     <div className="text-center py-8 text-red-500">
-                      <p className="text-sm">Failed to load photos</p>
+                      <p className="text-sm">Couldn't load photos. Try again.</p>
                       <button
                         type="button"
                         onClick={() => loadPhotosForDay(dayGroup.rawDate)}

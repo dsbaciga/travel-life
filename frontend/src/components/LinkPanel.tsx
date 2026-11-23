@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import Icon from './ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
@@ -348,8 +349,16 @@ export default function LinkPanel({
     return linksByType;
   }, [linksData]);
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
   const handleDeleteLink = async (linkId: number) => {
-    if (window.confirm('Remove this link?')) {
+    const confirmed = await confirm({
+      title: 'Remove link',
+      message: 'The two items are no longer linked. Neither one is deleted.',
+      confirmLabel: 'Remove link',
+      variant: 'warning',
+    });
+    if (confirmed) {
       deleteLinkMutation.mutate(linkId);
     }
   };
@@ -363,6 +372,7 @@ export default function LinkPanel({
       aria-modal="true"
       aria-labelledby="link-panel-title"
     >
+      <ConfirmDialogComponent />
       <div
         ref={panelRef}
         tabIndex={-1}

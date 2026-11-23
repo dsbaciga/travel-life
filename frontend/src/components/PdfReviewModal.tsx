@@ -232,7 +232,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSE_FAILED
   if (importData.status === 'PARSE_FAILED') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Processing Failed" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Couldn't process this PDF" maxWidth="md">
         <div className="py-4 space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">
             {importData.errorMessage || "Couldn't extract entities from the PDF. Try again."}
@@ -263,10 +263,10 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: NO_ENTITIES
   if (importData.status === 'NO_ENTITIES') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="No Entities Found" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="No bookings found" maxWidth="md">
         <div className="py-4">
           <p className="text-sm text-stone-600 dark:text-dusk-400">
-            No travel entities were found in this PDF. The document may not contain recognizable booking information.
+            We didn't find any bookings in this PDF. It may not be a booking confirmation.
           </p>
         </div>
         <div className="mt-4 flex justify-end">
