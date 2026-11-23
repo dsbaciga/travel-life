@@ -2,6 +2,7 @@ import { TripStatus, type Trip } from '../../types/trip';
 import TripDayIndicator from './TripDayIndicator';
 import { formatTripDates } from '../../utils/dateFormat';
 import { stripMarkdown } from '../../utils/stripMarkdown';
+import { useTripTint, tintOverlay } from '../../hooks/useTripTint';
 
 interface DashboardHeroProps {
   trip: Trip;
@@ -24,6 +25,8 @@ export default function DashboardHero({
   coverPhotoUrl,
   className = '',
 }: DashboardHeroProps) {
+  const { hero: heroTint } = useTripTint(trip.coverColor);
+
   const formatDateRange = (startDate: string | null, endDate: string | null): string =>
     formatTripDates(startDate, endDate);
 
@@ -60,7 +63,20 @@ export default function DashboardHero({
         />
 
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        <div
+          className={`absolute inset-0 ${heroTint ? '' : 'bg-gradient-to-t from-black/80 via-black/40 to-black/20'}`}
+          style={
+            heroTint
+              ? {
+                  backgroundImage: tintOverlay(heroTint, 'to top', [
+                    { color: 'to', alpha: 0.88 },
+                    { color: 'from', alpha: 0.5 },
+                    { color: 'from', alpha: 0.3 },
+                  ]),
+                }
+              : undefined
+          }
+        />
 
         {/* Content */}
         <div className="relative h-full flex flex-col justify-end p-6 sm:p-8">

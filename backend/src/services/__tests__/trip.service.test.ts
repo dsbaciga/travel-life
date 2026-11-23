@@ -1533,7 +1533,7 @@ describe('Trip Service', () => {
       // are mutually exclusive
       expect(mockPrisma.trip.update).toHaveBeenCalledWith({
         where: { id: mockTripId },
-        data: { coverPhotoId: photoId, coverImagePath: null, coverImageThumbnailPath: null },
+        data: { coverPhotoId: photoId, coverColor: null, coverImagePath: null, coverImageThumbnailPath: null },
         include: { coverPhoto: true },
       });
       expect(result.coverPhotoId).toBe(photoId);
@@ -1554,7 +1554,7 @@ describe('Trip Service', () => {
 
       expect(mockPrisma.trip.update).toHaveBeenCalledWith({
         where: { id: mockTripId },
-        data: { coverPhotoId: null },
+        data: { coverPhotoId: null, coverColor: null },
         include: { coverPhoto: true },
       });
       expect(result.coverPhotoId).toBeNull();

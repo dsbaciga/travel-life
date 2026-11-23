@@ -244,6 +244,7 @@ export const collaborationService = {
             // Either an uploaded cover image or a photo from the trip's gallery
             coverImagePath: true,
             coverImageThumbnailPath: true,
+            coverColor: true,
             coverPhoto: {
               select: {
                 id: true,
@@ -280,6 +281,7 @@ export const collaborationService = {
             // Either an uploaded cover image or a photo from the trip's gallery
             coverImagePath: true,
             coverImageThumbnailPath: true,
+            coverColor: true,
             coverPhoto: {
               select: {
                 id: true,

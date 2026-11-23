@@ -129,6 +129,12 @@ const MIGRATIONS: readonly string[] = [
   `
   UPDATE trips SET last_synced_at = NULL;
   `,
+  // Trips now carry coverColor (the tint of their hero cards). Trips are mirrored as
+  // JSON, so there is no column to add; force one full pull so the field is filled in
+  // on everything mirrored before.
+  `
+  UPDATE trips SET last_synced_at = NULL;
+  `,
 ];
 
 /** Apply any migrations the database has not seen. Safe to call on every launch. */

@@ -141,16 +141,24 @@ interface CardProps {
   accessibilityLabel?: string;
   /** `hero` is the single dark, high-emphasis card on a screen. */
   tone?: 'default' | 'hero';
+  /** A trip's tint: replaces the hero gradient colours (the gold top bar stays). Hero only. */
+  tint?: { from: string; to: string };
 }
 
-export function Card({ children, style, onPress, onLongPress, accessibilityLabel, tone = 'default' }: CardProps) {
+export function Card({ children, style, onPress, onLongPress, accessibilityLabel, tone = 'default', tint }: CardProps) {
   const palette = usePalette();
   const hero = tone === 'hero';
   const dark = useResolvedColorScheme() === 'dark';
   const base = [
     styles.card,
     hero
-      ? [styles.cardHero, { backgroundColor: palette.hero, borderColor: dark ? palette.border : palette.hero }]
+      ? [
+          styles.cardHero,
+          {
+            backgroundColor: tint?.from ?? palette.hero,
+            borderColor: dark ? palette.border : (tint?.from ?? palette.hero),
+          },
+        ]
       : { backgroundColor: palette.surface, borderColor: palette.border },
     style,
   ];
@@ -161,7 +169,7 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
           {/* A subtle diagonal wash, from the hero colour to a slightly lighter step. */}
           <LinearGradient
             pointerEvents="none"
-            colors={[palette.hero, palette.heroWash]}
+            colors={[tint?.from ?? palette.hero, tint?.to ?? palette.heroWash]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}

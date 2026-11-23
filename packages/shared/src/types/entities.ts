@@ -67,6 +67,8 @@ export interface TripDto extends Timestamps {
   countryCode: string | null;
   budget: number | null;
   budgetCurrency: string | null;
+  /** Dominant colour of the trip's cover image (`#rrggbb`), null when none. Feed to `tripTint`. */
+  coverColor?: string | null;
   /** The caller's effective permission on this trip. */
   permission?: 'view' | 'edit' | 'admin' | 'owner';
 }

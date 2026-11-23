@@ -35,6 +35,7 @@ import {
   type TimelineItem,
 } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { useTripTint } from '@/lib/tripTint';
 import { copyWithFeedback, tapFeedback } from '@/lib/feedback';
 import {
   useActiveTrip,
@@ -136,6 +137,7 @@ export default function TodayScreen() {
   const now = useNow();
   const userTimezone = useUserTimezone();
   const { data: trip, isLoading } = useActiveTrip();
+  const tint = useTripTint(trip?.coverColor);
   const { data: timeline } = useTripTimeline(trip);
   const { data: expenses = [] } = useEntities(trip?.id, 'EXPENSE');
   const { data: dirty } = useDirtyKeys(trip?.id);
@@ -374,7 +376,7 @@ export default function TodayScreen() {
       ) : null}
 
       {isToday ? (
-      <Card tone="hero">
+      <Card tone="hero" tint={tint}>
         <AppText variant="label" color={palette.heroAccent}>
           {nextUp ? (nextUp.inProgress ? 'HAPPENING NOW' : 'NEXT UP') : 'NEXT UP'}
         </AppText>

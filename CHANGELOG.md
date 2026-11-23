@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Each trip gets its own colour.** A trip's accent tint is taken from its cover image (an uploaded image or a photo from the library, Immich included) and flavours that trip's hero surfaces: the photo overlay on the trip page header and the dashboard hero, a thin stripe on the trip card, and the "Next up" card on the Android app's Today tab. The app-wide gold stays the main accent. Grey or very dark/light covers, and trips with no cover, look exactly as before. The colour follows the cover: it is recomputed when you upload a cover or pick a photo as the cover, and cleared when the cover is removed or its photo is deleted. This adds a database migration (`20261128000000_add_trip_cover_color`, one nullable column). Trips whose cover was set earlier have no colour until you run `npx tsx scripts/backfill-trip-cover-color.ts` once in `backend/` (`--dry-run` to preview). The Android app refetches every mirrored trip once to pick the colour up.
+
 ### Changed
 
 - **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the Trips screen notice) gets a gold-to-amber bar along its top edge, a subtle diagonal wash, and a deeper surface in dark mode. Titles and headings now use Crimson Pro and body text Manrope, as on the web. Light mode colours are unchanged. This adds native code (`expo-linear-gradient`), so it needs a new APK and cannot ship as an over-the-air update.

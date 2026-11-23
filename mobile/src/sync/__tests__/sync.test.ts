@@ -873,7 +873,7 @@ describe('sync engine', () => {
   });
 
   it('SYNC-061: migrations are idempotent and wipe() empties every table', async () => {
-    expect(await migrate(db)).toBe(2);
+    expect(await migrate(db)).toBe(3);
     server.seed('ACTIVITY', activityInput());
     await pullTrip(db, server, TRIP);
     await createEntity(db, 'ACTIVITY', TRIP, activityInput());

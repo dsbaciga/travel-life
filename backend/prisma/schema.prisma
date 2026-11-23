@@ -143,6 +143,9 @@ model Trip {
   // Mutually exclusive with coverPhotoId — setting one clears the other.
   coverImagePath          String?   @map("cover_image_path") @db.VarChar(500)
   coverImageThumbnailPath String?   @map("cover_image_thumbnail_path") @db.VarChar(500)
+  // Dominant colour of the current cover (upload or library photo), '#rrggbb'. Derived,
+  // never user-supplied: set wherever the cover changes, cleared when it is removed.
+  coverColor              String?   @map("cover_color") @db.VarChar(7)
   bannerPhotoId           Int?      @map("banner_photo_id")
   addToPlacesVisited      Boolean   @default(false) @map("add_to_places_visited")
   excludeFromAutoShare    Boolean   @default(false) @map("exclude_from_auto_share")
