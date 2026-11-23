@@ -4,7 +4,8 @@
  *
  * Light mode is neutral, as on the web: a cool near-white page (`cream`), white
  * cards and slate text. Amber is the accent, kept for actions and highlights
- * rather than spread across every surface. Dark mode is navy with gold.
+ * rather than spread across every surface. Dark mode is the cool-grey "dusk" ramp
+ * (shared with the web app) with gold.
  */
 import { Appearance, useColorScheme } from 'react-native';
 import { create } from 'zustand';
@@ -27,6 +28,24 @@ async function getThemeDb(): Promise<SqlDriver | null> {
     return null;
   }
 }
+
+/**
+ * The web app's dark-mode grey ramp. Mirrors `DUSK` at the top of
+ * `frontend/tailwind.config.js`; keep the two in step.
+ */
+export const DUSK = {
+  50: '#f9fafb',
+  100: '#f3f4f6',
+  200: '#e3e5ea',
+  300: '#d1d4db',
+  400: '#9da2af',
+  500: '#6d7280',
+  600: '#4e5360',
+  700: '#3b404b',
+  800: '#242830',
+  900: '#151820',
+  950: '#0b0d12',
+} as const;
 
 export interface Palette {
   background: string;
@@ -77,19 +96,20 @@ export const lightPalette: Palette = {
 };
 
 export const darkPalette: Palette = {
-  background: '#0f172a',
-  surface: '#1e293b',
-  surfaceRaised: '#334155',
-  border: '#334155',
-  text: '#f8fafc',
-  textMuted: '#cbd5e1',
+  background: DUSK[900],
+  surface: DUSK[800],
+  surfaceRaised: DUSK[700],
+  border: DUSK[700],
+  text: DUSK[50],
+  textMuted: DUSK[300],
   primary: '#fbbf24',
-  onPrimary: '#0f172a',
+  onPrimary: DUSK[900],
   accent: '#f59e0b',
   tint: 'rgba(251, 191, 36, 0.16)',
-  hero: '#1e293b',
-  onHero: '#f8fafc',
-  heroMuted: '#cbd5e1',
+  // Deeper than ordinary cards (dusk-800) so the hero stands apart.
+  hero: DUSK[950],
+  onHero: DUSK[50],
+  heroMuted: DUSK[300],
   heroAccent: '#fbbf24',
   success: '#4ade80',
   warning: '#fbbf24',

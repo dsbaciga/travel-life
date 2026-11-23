@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the current trip on the Trips screen) gets a thin Compass Gold bar along its top edge and a deeper surface in dark mode. Light mode is unchanged.
+
 ## [8.3.0] - 2026-11-22
 
 ### Added

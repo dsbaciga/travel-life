@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { splitLeadingEmoji } from '../lib/labels';
-import { radius, spacing, TOUCH_TARGET, usePalette } from '../lib/theme';
+import { DUSK, radius, spacing, TOUCH_TARGET, usePalette, useResolvedColorScheme } from '../lib/theme';
 import Icon, { type IconName } from './Icon';
 
 /**
@@ -144,14 +144,20 @@ interface CardProps {
 export function Card({ children, style, onPress, onLongPress, accessibilityLabel, tone = 'default' }: CardProps) {
   const palette = usePalette();
   const hero = tone === 'hero';
+  const dark = useResolvedColorScheme() === 'dark';
   const base = [
     styles.card,
     hero
-      ? [styles.cardHero, { backgroundColor: palette.hero, borderColor: palette.hero }]
+      ? [styles.cardHero, { backgroundColor: palette.hero, borderColor: dark ? palette.border : palette.hero }]
       : { backgroundColor: palette.surface, borderColor: palette.border },
     style,
   ];
-  const body = <HeroContext.Provider value={hero}>{children}</HeroContext.Provider>;
+  const body = (
+    <HeroContext.Provider value={hero}>
+      {hero ? <View pointerEvents="none" style={[styles.heroBar, { backgroundColor: palette.heroAccent }]} /> : null}
+      {children}
+    </HeroContext.Provider>
+  );
   if (!onPress && !onLongPress) return <View style={base}>{body}</View>;
   return (
     <Pressable
@@ -463,12 +469,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     // A soft lift instead of a heavy outline.
     elevation: 1,
-    shadowColor: '#0f172a',
+    shadowColor: DUSK[900],
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
-  cardHero: { elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  // The Compass Gold signature: a thin accent bar along the top edge.
+  heroBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
+  cardHero: { overflow: 'hidden', elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
