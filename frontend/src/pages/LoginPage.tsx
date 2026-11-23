@@ -11,8 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const OIDC_ERROR_MESSAGES: Record<string, string> = {
   oidc_denied: 'Single sign-on was cancelled.',
-  oidc_invalid: 'Single sign-on session expired. Please try again.',
-  oidc_failed: 'Single sign-on failed. Please try again.',
+  oidc_invalid: 'Single sign-on session expired. Try again.',
+  oidc_failed: 'Single sign-on failed. Try again.',
   oidc_disabled: 'Single sign-on is not enabled.',
   oidc_not_allowed: 'No account exists for this sign-in. Contact your administrator.',
   oidc_email_unverified:
@@ -58,13 +58,12 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      toast.success('Login successful!');
       // Navigate to redirect URL if provided, otherwise go to dashboard
       // Validate redirect to prevent open redirect attacks (only allow same-origin paths)
       const redirectUrl = safeRedirectPath(searchParams.get('redirect'));
       navigate(redirectUrl);
     } catch {
-      toast.error(error || 'Login failed');
+      toast.error(error || "Couldn't sign in. Check your email and password.");
     }
   };
 
@@ -154,7 +153,7 @@ export default function LoginPage() {
                 className="btn-primary w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Logging in...' : 'Begin Your Journey'}
+                {isLoading ? 'Signing in…' : 'Begin your journey'}
               </button>
             </form>
             )}

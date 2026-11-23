@@ -152,7 +152,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
       }
     } catch (error) {
       console.error('Reverse geocode error:', error);
-      toast.error('Failed to get address for this location');
+      toast.error("Couldn't get address for this location. Try again.");
     }
   };
 

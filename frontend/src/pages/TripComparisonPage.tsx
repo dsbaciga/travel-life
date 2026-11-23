@@ -32,7 +32,7 @@ function getErrorMessage(error: unknown): string {
     const message = (error as { message?: unknown }).message;
     if (typeof message === 'string' && message) return message;
   }
-  return 'Failed to load the comparison';
+  return "Couldn't load the comparison. Try again.";
 }
 
 export default function TripComparisonPage() {

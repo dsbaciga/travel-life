@@ -104,7 +104,7 @@ export default function InlineEdit({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save';
+      const errorMessage = err instanceof Error ? err.message : "Couldn't save. Try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -198,7 +198,7 @@ export default function InlineEdit({
           {isSaving && (
             <span className="flex items-center gap-1">
               <div className="w-3 h-3 border-2 border-primary-500 dark:border-sky border-t-transparent rounded-full animate-spin" />
-              Saving...
+              Saving…
             </span>
           )}
         </div>
@@ -269,7 +269,7 @@ export function InlineEditNumber({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save';
+      const errorMessage = err instanceof Error ? err.message : "Couldn't save. Try again.";
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);

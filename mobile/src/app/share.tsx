@@ -54,7 +54,7 @@ export default function ShareScreen() {
       void syncNow();
       close();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not save that');
+      setError(caught instanceof Error ? caught.message : "Couldn't save that. Try again.");
       setBusy(false);
     }
   };

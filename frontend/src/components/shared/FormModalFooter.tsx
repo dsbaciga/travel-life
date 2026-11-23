@@ -78,7 +78,7 @@ export default function FormModalFooter({
   formId,
   isSubmitting = false,
   submitLabel,
-  submittingLabel = 'Saving...',
+  submittingLabel = 'Saving…',
   isEditMode = false,
   onSaveAndAddAnother,
   leftContent,

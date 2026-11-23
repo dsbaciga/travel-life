@@ -114,7 +114,7 @@ export default function EntityLinkTooltip({
                   ))}
                   {linkedEntityNames.length > 5 && (
                     <li className="text-gray-400 italic">
-                      +{linkedEntityNames.length - 5} more...
+                      +{linkedEntityNames.length - 5} more…
                     </li>
                   )}
                 </ul>

@@ -62,7 +62,7 @@ export default function ChecklistSelectorModal({
       onClose();
     } catch (error) {
       console.error('Failed to update checklists:', error);
-      toast.error('Failed to update checklists');
+      toast.error("Couldn't update checklists. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -194,8 +194,8 @@ export default function ChecklistSelectorModal({
             >
               {isSubmitting
                 ? mode === 'add'
-                  ? 'Adding...'
-                  : 'Removing...'
+                  ? 'Adding…'
+                  : 'Removing…'
                 : mode === 'add'
                 ? `Add ${selectedTypes.size > 0 ? `(${selectedTypes.size})` : ''}`
                 : `Remove ${selectedTypes.size > 0 ? `(${selectedTypes.size})` : ''}`}

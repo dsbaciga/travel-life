@@ -50,9 +50,9 @@ export default function BackupRestoreSection({
     try {
       const backupData = await backupService.createBackup();
       backupService.downloadBackupFile(backupData);
-      toast.success("Backup created and downloaded successfully");
+      toast.success("Backup created and downloaded");
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to create backup");
+      toast.error(getApiErrorMessage(err) || "Couldn't create backup. Try again.");
     } finally {
       setBackupInProgress(false);
     }
@@ -62,7 +62,7 @@ export default function BackupRestoreSection({
     const file = e.target.files?.[0];
     if (file) {
       if (!file.name.endsWith(".json")) {
-        toast.error("Please select a valid JSON backup file");
+        toast.error("Select a valid JSON backup file");
         return;
       }
       setSelectedBackupFile(file);
@@ -71,15 +71,15 @@ export default function BackupRestoreSection({
 
   const handleRestoreBackup = async () => {
     if (!selectedBackupFile) {
-      toast.error("Please select a backup file first");
+      toast.error("Select a backup file first");
       return;
     }
 
     const confirmed = await confirm({
-      title: "Restore from Backup",
+      title: "Restore from backup",
       message: restoreOptions.clearExistingData
-        ? "This will DELETE all your existing data and replace it with the backup. This action cannot be undone. Are you sure?"
-        : "This will merge the backup data with your existing data. Continue?",
+        ? "All your existing data is deleted and replaced with the backup. You can't undo this."
+        : "The backup is merged with your existing data.",
       confirmLabel: "Restore",
       variant: "danger",
     });
@@ -113,7 +113,7 @@ export default function BackupRestoreSection({
         toast.error(result.message || "Restore failed");
       }
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to restore from backup");
+      toast.error(getApiErrorMessage(err) || "Couldn't restore from backup. Try again.");
     } finally {
       setRestoreInProgress(false);
     }
@@ -153,7 +153,7 @@ export default function BackupRestoreSection({
           {backupInProgress ? (
             <>
               <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white align-text-bottom" />
-              Creating Backup...
+              Creating Backup…
             </>
           ) : (
             "Download Backup"
@@ -260,7 +260,7 @@ export default function BackupRestoreSection({
           {restoreInProgress ? (
             <>
               <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white align-text-bottom" />
-              Restoring...
+              Restoring…
             </>
           ) : (
             "Restore from Backup"

@@ -63,7 +63,7 @@ export default function PhotoDetailsPanel({ photo, isOpen, onClose }: PhotoDetai
         .catch((err) => {
           if (!isCancelled) {
             console.error('Failed to fetch Immich asset:', err);
-            setError('Failed to load photo details from Immich');
+            setError("Couldn't load photo details from Immich. Try again.");
           }
         })
         .finally(() => {

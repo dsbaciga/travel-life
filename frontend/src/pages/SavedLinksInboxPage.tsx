@@ -88,7 +88,7 @@ export default function SavedLinksInboxPage() {
       toast.success("Link saved — fetching preview");
       refreshData();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to save link"));
+      toast.error(getApiErrorMessage(err, "Couldn't save link. Try again."));
     } finally {
       setSaving(false);
     }
@@ -101,7 +101,7 @@ export default function SavedLinksInboxPage() {
       toast.success("Link moved to trip");
       refreshData();
     } catch {
-      toast.error("Failed to assign link");
+      toast.error("Couldn't assign link. Try again.");
     } finally {
       setAssigning(null);
     }
@@ -109,9 +109,9 @@ export default function SavedLinksInboxPage() {
 
   const handleDelete = async (link: SavedLink) => {
     const confirmed = await confirm({
-      title: "Delete link?",
-      message: `"${savedLinkDisplayTitle(link)}" will be permanently removed.`,
-      confirmLabel: "Delete",
+      title: "Delete link",
+      message: `"${savedLinkDisplayTitle(link)}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete link",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -121,7 +121,7 @@ export default function SavedLinksInboxPage() {
       toast.success("Link deleted");
       refreshData();
     } catch {
-      toast.error("Failed to delete link");
+      toast.error("Couldn't delete link. Try again.");
     }
   };
 
@@ -130,9 +130,9 @@ export default function SavedLinksInboxPage() {
     if (ids.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Links",
-      message: `Delete ${ids.length} selected link${ids.length === 1 ? "" : "s"}? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${ids.length} link${ids.length === 1 ? "" : "s"}`,
+      message: `Delete ${ids.length} selected link${ids.length === 1 ? "" : "s"}? You can't undo this.`,
+      confirmLabel: `Delete ${ids.length} link${ids.length === 1 ? "" : "s"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -144,7 +144,7 @@ export default function SavedLinksInboxPage() {
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to delete links"));
+      toast.error(getApiErrorMessage(err, "Couldn't delete links. Try again."));
     } finally {
       setIsBulkDeleting(false);
     }
@@ -159,9 +159,9 @@ export default function SavedLinksInboxPage() {
     if (total === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete All Unassigned Links",
-      message: `All ${total} link${total === 1 ? "" : "s"} not assigned to a trip will be permanently removed. Links already on a trip are not affected.`,
-      confirmLabel: "Delete All",
+      title: "Delete all unassigned links",
+      message: `All ${total} link${total === 1 ? "" : "s"} not assigned to a trip will be permanently removed. Links already on a trip are not affected. You can't undo this.`,
+      confirmLabel: `Delete ${total} unassigned link${total === 1 ? "" : "s"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -174,7 +174,7 @@ export default function SavedLinksInboxPage() {
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, "Failed to delete links"));
+      toast.error(getApiErrorMessage(err, "Couldn't delete links. Try again."));
     } finally {
       setIsBulkDeleting(false);
     }

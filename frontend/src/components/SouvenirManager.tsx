@@ -125,7 +125,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       }
     } catch (error) {
       console.error('Failed to load souvenirs checklist:', error);
-      toast.error('Failed to load souvenirs');
+      toast.error("Couldn't load souvenirs. Try again.");
     } finally {
       setLoading(false);
     }
@@ -219,7 +219,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       onUpdate?.();
     } catch (error) {
       console.error('Failed to save souvenir:', error);
-      toast.error('Failed to save souvenir');
+      toast.error("Couldn't save souvenir. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -242,15 +242,15 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       onUpdate?.();
     } catch (error) {
       console.error('Failed to update purchase status:', error);
-      toast.error('Failed to update purchase status');
+      toast.error("Couldn't update purchase status. Try again.");
     }
   };
 
   const handleDelete = async (itemId: number) => {
     const confirmed = await confirm({
-      title: 'Delete Souvenir',
-      message: 'Are you sure you want to delete this souvenir? This action cannot be undone.',
-      confirmLabel: 'Delete',
+      title: 'Delete souvenir',
+      message: 'This souvenir is deleted. You can\'t undo this.',
+      confirmLabel: 'Delete souvenir',
       variant: 'danger',
     });
 
@@ -263,7 +263,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       onUpdate?.();
     } catch (error) {
       console.error('Failed to delete souvenir:', error);
-      toast.error('Failed to delete souvenir');
+      toast.error("Couldn't delete souvenir. Try again.");
     }
   };
 
@@ -474,7 +474,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : editingItemId ? 'Update Souvenir' : 'Add Souvenir'}
+              {isSubmitting ? 'Saving…' : editingItemId ? 'Update Souvenir' : 'Add Souvenir'}
             </button>
           </>
         }

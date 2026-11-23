@@ -164,7 +164,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
       setExcluded(new Set(dryRun.rows.filter((row) => row.status === 'valid' && isDuplicateRow(row)).map((row) => row.index)));
       setStep('preview');
     } catch (error) {
-      toast.error(apiMessage(error, 'Could not validate the file. Please try again.'));
+      toast.error(apiMessage(error, 'Could not validate the file. Try again.'));
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -201,7 +201,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
       if (done.created > 0) onComplete?.();
     } catch (error) {
       // The transaction rolled back, so nothing was created and it is safe to try again.
-      toast.error(apiMessage(error, 'The import failed and nothing was imported. Please try again.'));
+      toast.error(apiMessage(error, 'The import failed and nothing was imported. Try again.'));
     } finally {
       inFlight.current = false;
       setBusy(false);
@@ -240,7 +240,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
           <div className="flex justify-between gap-3">
             <button type="button" onClick={() => setStep('choose')} className={secondaryButton} disabled={busy}>Back</button>
             <button type="button" onClick={runPreview} disabled={busy || missing.length > 0} className={primaryButton}>
-              {busy ? 'Checking...' : 'Next: preview'}
+              {busy ? 'Checking…' : 'Next: preview'}
             </button>
           </div>
         );
@@ -249,7 +249,7 @@ export default function BulkImportModal({ isOpen, onClose, tripId, onComplete }:
           <div className="flex justify-between gap-3">
             <button type="button" onClick={() => setStep('map')} className={secondaryButton} disabled={busy}>Back</button>
             <button type="button" onClick={runImport} disabled={busy || importableCount === 0} className={primaryButton}>
-              {busy ? 'Importing...' : `Import ${importableCount} ${importableCount === 1 ? 'row' : 'rows'}`}
+              {busy ? 'Importing…' : `Import ${importableCount} ${importableCount === 1 ? 'row' : 'rows'}`}
             </button>
           </div>
         );

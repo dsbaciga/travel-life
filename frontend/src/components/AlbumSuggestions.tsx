@@ -213,14 +213,14 @@ export default function AlbumSuggestions({
         name: suggestion.name,
         photoIds: suggestion.photoIds,
       });
-      toast.success(`Album "${suggestion.name}" created!`);
+      toast.success(`Album "${suggestion.name}" created`);
       // Remove this suggestion from the list
       setSuggestions(prev => prev.filter(s =>
         !(s.type === suggestion.type && s.name === suggestion.name)
       ));
       onAlbumCreated();
     } catch (error) {
-      toast.error('Failed to create album');
+      toast.error("Couldn't create album. Try again.");
       console.error(error);
     } finally {
       setAccepting(null);
@@ -339,7 +339,7 @@ export default function AlbumSuggestions({
                     {isAccepting ? (
                       <>
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Creating...
+                        Creating…
                       </>
                     ) : (
                       'Create Album'

@@ -262,7 +262,7 @@ export default function ActivityManager({
 
       try {
         const createdActivity = await activityService.createActivity(createData);
-        toast.success('Activity added successfully');
+        toast.success('Activity added');
         await deadlines.apply(createdActivity.id, createdActivity.timezone);
         invalidateLinkSummary();
 
@@ -280,7 +280,7 @@ export default function ActivityManager({
         }
       } catch (error) {
         console.error('Failed to create activity:', error);
-        toast.error('Failed to add activity');
+        toast.error("Couldn't add activity. Try again.");
       }
     }
     } finally {
@@ -348,9 +348,9 @@ export default function ActivityManager({
   // Custom delete handler with special confirmation message
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Activity",
-      message: "Delete this activity and all its sub-activities? This action cannot be undone.",
-      confirmLabel: "Delete",
+      title: "Delete activity",
+      message: "This activity and all its sub-activities are deleted. You can't undo this.",
+      confirmLabel: "Delete activity",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -363,9 +363,9 @@ export default function ActivityManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Activities",
-      message: `Delete ${selectedIds.length} selected activities? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "activity" : "activities"}`,
+      message: `The selected ${selectedIds.length === 1 ? "activity is" : "activities are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "activity" : "activities"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -379,7 +379,7 @@ export default function ActivityManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete activities:", error);
-      toast.error("Failed to delete some activities");
+      toast.error("Couldn't delete some activities. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -400,7 +400,7 @@ export default function ActivityManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update activities:", error);
-      toast.error("Failed to update some activities");
+      toast.error("Couldn't update some activities. Try again.");
     } finally {
       setIsBulkEditing(false);
     }

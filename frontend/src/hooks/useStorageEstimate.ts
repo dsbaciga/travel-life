@@ -107,7 +107,7 @@ export function useStorageEstimate(): StorageEstimateResult {
       setQuota(estimatedQuota);
     } catch (err) {
       console.error('Failed to estimate storage:', err);
-      setError(err instanceof Error ? err.message : 'Failed to estimate storage');
+      setError(err instanceof Error ? err.message : "Couldn't estimate storage. Try again.");
 
       // Fallback to safe defaults
       setUsage(0);

@@ -3,20 +3,7 @@ import calendarFeedService from '../services/calendarFeed.service';
 import type { CalendarTokenInfo } from '../services/calendarFeed.service';
 import { getAssetBaseUrl } from '../lib/config';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
-
-interface ApiError {
-  response?: { data?: { message?: string } };
-  message?: string;
-}
-
-function isApiError(err: unknown): err is ApiError {
-  return err !== null && typeof err === 'object' && ('response' in err || 'message' in err);
-}
-
-function getApiErrorMessage(err: unknown): string | undefined {
-  if (!isApiError(err)) return undefined;
-  return err.response?.data?.message ?? err.message;
-}
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * Build the absolute feed URL from the server-relative feed path.
@@ -59,9 +46,9 @@ export default function CalendarFeedSettings() {
   const handleGenerate = async () => {
     if (hasFeed) {
       const confirmed = await confirm({
-        title: 'Rotate Calendar Feed URL',
+        title: 'Rotate calendar feed URL',
         message:
-          'Rotating generates a new secret URL and permanently invalidates the current one. Any calendar app subscribed to the old URL will stop receiving updates and must be re-subscribed. Continue?',
+          'Rotating generates a new secret URL and permanently invalidates the current one. Any calendar app subscribed to the old URL will stop receiving updates and must be re-subscribed.',
         confirmLabel: 'Rotate URL',
         variant: 'danger',
       });
@@ -83,7 +70,7 @@ export default function CalendarFeedSettings() {
     } catch (err: unknown) {
       setMessage({
         type: 'error',
-        text: getApiErrorMessage(err) || 'Failed to generate feed URL',
+        text: getApiErrorMessage(err, "Couldn't create the feed URL. Try again."),
       });
     } finally {
       setIsWorking(false);
@@ -92,10 +79,10 @@ export default function CalendarFeedSettings() {
 
   const handleRevoke = async () => {
     const confirmed = await confirm({
-      title: 'Disable Calendar Feed',
+      title: 'Turn off calendar feed',
       message:
         'This permanently disables the current feed URL. Subscribed calendar apps will stop receiving updates. You can generate a new URL later.',
-      confirmLabel: 'Disable Feed',
+      confirmLabel: 'Turn off feed',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -110,7 +97,7 @@ export default function CalendarFeedSettings() {
     } catch (err: unknown) {
       setMessage({
         type: 'error',
-        text: getApiErrorMessage(err) || 'Failed to disable feed',
+        text: getApiErrorMessage(err, "Couldn't turn off the feed. Try again."),
       });
     } finally {
       setIsWorking(false);
@@ -124,14 +111,14 @@ export default function CalendarFeedSettings() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setMessage({ type: 'error', text: 'Could not copy to clipboard — copy the URL manually' });
+      setMessage({ type: 'error', text: "Couldn't copy to clipboard — copy the URL manually. Try again." });
     }
   };
 
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading calendar feed settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading calendar feed settings…</p>
       </div>
     );
   }
@@ -204,7 +191,7 @@ export default function CalendarFeedSettings() {
           type="button"
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
         >
-          {isWorking ? 'Working...' : hasFeed ? 'Rotate Feed URL' : 'Enable Calendar Feed'}
+          {isWorking ? 'Working…' : hasFeed ? 'Rotate Feed URL' : 'Enable Calendar Feed'}
         </button>
 
         {hasFeed && (

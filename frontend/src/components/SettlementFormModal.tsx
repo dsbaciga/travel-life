@@ -82,7 +82,7 @@ export default function SettlementFormModal({
         onSaved();
         onClose();
       } catch {
-        toast.error("Failed to save payment");
+        toast.error("Couldn't save payment. Try again.");
       }
     });
   };

@@ -62,7 +62,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       reset();
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save type");
+      toast.error(err instanceof Error ? err.message : "Couldn't save type. Try again.");
     } finally {
       setSaving(false);
     }
@@ -76,9 +76,9 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
 
   const handleDelete = async (type: CustomItemType) => {
     const confirmed = await confirm({
-      title: "Delete type?",
-      message: `"${type.name}" will be removed. Items using it are kept and become untyped.`,
-      confirmLabel: "Delete",
+      title: "Delete type",
+      message: `"${type.name}" is deleted. Items using it are kept and become untyped.`,
+      confirmLabel: "Delete type",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -89,7 +89,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       if (editingId === type.id) reset();
       refresh();
     } catch {
-      toast.error("Failed to delete type");
+      toast.error("Couldn't delete type. Try again.");
     }
   };
 

@@ -106,7 +106,7 @@ function SearchSource({
         autoComplete="off"
         className="w-full min-h-[44px] rounded-lg border border-primary-500/20 dark:border-navy-600 bg-white dark:bg-navy-900 px-3 text-charcoal dark:text-white"
       />
-      {searching && <p className="mt-1 text-sm text-slate dark:text-dusk-400">Searching...</p>}
+      {searching && <p className="mt-1 text-sm text-slate dark:text-dusk-400">Searching…</p>}
       {searched && !searching && results.length === 0 && (
         <p className="mt-1 text-sm text-slate dark:text-dusk-400">No places found.</p>
       )}

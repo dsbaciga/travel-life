@@ -53,9 +53,9 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
 
   const handleDelete = async (settlement: TripSettlement) => {
     const confirmed = await confirm({
-      title: "Delete Payment",
+      title: "Delete payment",
       message: `Delete the ${formatCurrency(settlement.amount, settlement.currency)} payment from ${settlement.fromLabel} to ${settlement.toLabel}? What is owed is recalculated.`,
-      confirmLabel: "Delete",
+      confirmLabel: "Delete payment",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -64,7 +64,7 @@ export default function SettleUpPanel({ tripId }: SettleUpPanelProps) {
       toast.success("Payment deleted");
       refresh();
     } catch {
-      toast.error("Failed to delete payment");
+      toast.error("Couldn't delete payment. Try again.");
     }
   };
 

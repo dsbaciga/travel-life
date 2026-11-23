@@ -1,7 +1,12 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { useBulkSelection } from './useBulkSelection';
-import { capitalize } from '../utils/stringHelpers';
+import { pluralize } from '../utils/stringHelpers';
+import { getApiErrorMessage } from '../lib/errors';
+
+/** The entity noun for a count: "1 stay", "3 stays". */
+const nounFor = (entityName: string, count: number) =>
+  count === 1 ? entityName : pluralize(entityName);
 
 /**
  * Service interface for bulk operations.
@@ -88,9 +93,9 @@ export function useBulkOperations<T extends { id: number }>(
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: `Delete ${capitalize(entityName)}`,
-      message: `Delete ${selectedIds.length} selected ${entityName}${selectedIds.length !== 1 ? 's' : ''}? This action cannot be undone.`,
-      confirmLabel: 'Delete All',
+      title: `Delete ${nounFor(entityName, selectedIds.length)}`,
+      message: `Delete ${selectedIds.length} selected ${nounFor(entityName, selectedIds.length)}? You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${nounFor(entityName, selectedIds.length)}`,
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -98,13 +103,13 @@ export function useBulkOperations<T extends { id: number }>(
     setIsBulkDeleting(true);
     try {
       await service.bulkDelete(tripId, selectedIds);
-      toast.success(`Deleted ${selectedIds.length} ${entityName}${selectedIds.length !== 1 ? 's' : ''}`);
+      toast.success(`Deleted ${selectedIds.length} ${nounFor(entityName, selectedIds.length)}`);
       selection.exitSelectionMode();
       await loadItems();
       onUpdate?.();
     } catch (error) {
-      console.error(`Failed to bulk delete ${entityName}s:`, error);
-      toast.error(`Failed to delete some ${entityName}s`);
+      console.error(`Failed to bulk delete ${pluralize(entityName)}:`, error);
+      toast.error(getApiErrorMessage(error, `Couldn't delete some ${pluralize(entityName)}. Try again.`));
     } finally {
       setIsBulkDeleting(false);
     }
@@ -124,14 +129,14 @@ export function useBulkOperations<T extends { id: number }>(
     setIsBulkEditing(true);
     try {
       await service.bulkUpdate(tripId, selectedIds, updates);
-      toast.success(`Updated ${selectedIds.length} ${entityName}${selectedIds.length !== 1 ? 's' : ''}`);
+      toast.success(`Updated ${selectedIds.length} ${nounFor(entityName, selectedIds.length)}`);
       setShowBulkEditModal(false);
       selection.exitSelectionMode();
       await loadItems();
       onUpdate?.();
     } catch (error) {
-      console.error(`Failed to bulk update ${entityName}s:`, error);
-      toast.error(`Failed to update some ${entityName}s`);
+      console.error(`Failed to bulk update ${pluralize(entityName)}:`, error);
+      toast.error(getApiErrorMessage(error, `Couldn't update some ${pluralize(entityName)}. Try again.`));
     } finally {
       setIsBulkEditing(false);
     }

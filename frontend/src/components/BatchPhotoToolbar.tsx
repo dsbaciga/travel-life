@@ -168,7 +168,7 @@ export default function BatchPhotoToolbar({
                     ) : (
                       <Icon name="delete" size={16} />
                     )}
-                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">{isDeleting ? 'Deleting…' : 'Delete'}</span>
                   </button>
                 </>
               )}

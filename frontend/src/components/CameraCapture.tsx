@@ -72,7 +72,7 @@ export default function CameraCapture({
         ) : (
           <Icon name="photo" />
         )}
-        {isCapturing ? 'Opening...' : buttonText}
+        {isCapturing ? 'Opening…' : buttonText}
       </button>
     </div>
   );

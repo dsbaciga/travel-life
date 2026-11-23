@@ -307,7 +307,7 @@ export default function ImmichBrowser({
         setLoadError(
           error instanceof Error && error.message
             ? error.message
-            : "Failed to load photos from Immich. Please check your Immich settings."
+            : "Failed to load photos from Immich. Check your Immich settings."
         );
       })
       .finally(() => {
@@ -389,7 +389,7 @@ export default function ImmichBrowser({
       await onImportAlbum(album, albumAssets);
     } catch (error) {
       console.error("Failed to import album:", error);
-      alert("Failed to import album. Please try again.");
+      alert("Couldn't import album. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -475,8 +475,8 @@ export default function ImmichBrowser({
                   maxLength={200}
                   placeholder={
                     filters.searchMode === "smart"
-                      ? "Describe what is in the photo, e.g. beach sunset..."
-                      : "Search by file name..."
+                      ? "Describe what is in the photo, e.g. beach sunset…"
+                      : "Search by file name…"
                   }
                   aria-label="Search assets"
                   className="flex-1 min-w-0 basis-40 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
@@ -615,7 +615,7 @@ export default function ImmichBrowser({
                 type="text"
                 value={albumSearchTerm}
                 onChange={(e) => setAlbumSearchTerm(e.target.value)}
-                placeholder="Search albums..."
+                placeholder="Search albums…"
                 aria-label="Search albums"
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
               />
@@ -699,7 +699,7 @@ export default function ImmichBrowser({
                         type="button"
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Link all matching...
+                        Link all matching…
                       </button>
                       {smartActive && (
                         <span className="self-center text-xs text-gray-600 dark:text-dusk-400">
@@ -866,7 +866,7 @@ export default function ImmichBrowser({
               className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
               {isLinking ? (
-                "Linking..."
+                "Linking…"
               ) : (
                 <>
                   Link{" "}

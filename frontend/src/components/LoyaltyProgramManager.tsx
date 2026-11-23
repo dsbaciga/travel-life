@@ -118,15 +118,15 @@ export default function LoyaltyProgramManager() {
       resetForm();
       await refresh();
     } catch {
-      toast.error(editingId ? 'Failed to update loyalty program' : 'Failed to add loyalty program');
+      toast.error(editingId ? "Couldn't update loyalty program. Try again." : "Couldn't add loyalty program. Try again.");
     }
   };
 
   const handleDelete = async (program: LoyaltyProgram) => {
     const confirmed = await confirm({
-      title: 'Delete Loyalty Program',
-      message: `Delete "${program.name}"? Bookings that used it keep working but lose the link. This action cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: 'Delete loyalty program',
+      message: `"${program.name}" is deleted. Bookings that used it keep working but lose the link. You can't undo this.`,
+      confirmLabel: 'Delete program',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -136,7 +136,7 @@ export default function LoyaltyProgramManager() {
       toast.success('Loyalty program deleted');
       await refresh();
     } catch {
-      toast.error('Failed to delete loyalty program');
+      toast.error("Couldn't delete loyalty program. Try again.");
     }
   };
 
@@ -165,7 +165,7 @@ export default function LoyaltyProgramManager() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-4">Loading loyalty programs...</div>;
+    return <div className="text-center py-4">Loading loyalty programs…</div>;
   }
 
   if (isError) {
@@ -215,7 +215,7 @@ export default function LoyaltyProgramManager() {
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : `${editingId ? 'Update' : 'Add'} Program`}
+              {isSubmitting ? 'Saving…' : `${editingId ? 'Update' : 'Add'} Program`}
             </button>
           </>
         }

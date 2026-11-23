@@ -147,7 +147,7 @@ export default function ConflictResolutionModal({
             {isResolving ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin" />
-                Resolving...
+                Resolving…
               </>
             ) : (
               <>

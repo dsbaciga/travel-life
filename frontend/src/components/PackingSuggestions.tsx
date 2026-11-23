@@ -97,7 +97,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
       setData(result);
     } catch (error) {
       console.error('Failed to fetch packing suggestions:', error);
-      toast.error('Failed to load packing suggestions');
+      toast.error("Couldn't load packing suggestions. Try again.");
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
       toast.success(`Added "${suggestion.item}" to packing list`);
     } catch (error) {
       console.error('Failed to add to checklist:', error);
-      toast.error('Failed to add item to checklist');
+      toast.error("Couldn't add item to checklist. Try again.");
     } finally {
       setAddingToChecklist((prev) => {
         const next = new Set(prev);
@@ -181,7 +181,7 @@ export default function PackingSuggestions({ tripId }: PackingSuggestionsProps) 
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
           <span className="text-gray-600 dark:text-dusk-400">
-            Analyzing weather data for packing suggestions...
+            Analyzing weather data for packing suggestions…
           </span>
         </div>
       </div>

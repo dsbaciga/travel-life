@@ -90,7 +90,7 @@ export default function TravelDocumentManager() {
       const docs = await travelDocumentService.getAll();
       setDocuments(docs);
     } catch {
-      toast.error('Failed to load travel documents');
+      toast.error("Couldn't load travel documents. Try again.");
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ export default function TravelDocumentManager() {
       resetForm();
       loadDocuments();
     } catch {
-      toast.error('Failed to add document');
+      toast.error("Couldn't add document. Try again.");
     }
   };
 
@@ -156,15 +156,15 @@ export default function TravelDocumentManager() {
       resetForm();
       loadDocuments();
     } catch {
-      toast.error('Failed to update document');
+      toast.error("Couldn't update document. Try again.");
     }
   };
 
   const handleDelete = async (doc: TravelDocument) => {
     const confirmed = await confirm({
-      title: 'Delete Document',
-      message: `Delete "${doc.name}"? This action cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: 'Delete document',
+      message: `"${doc.name}" is deleted. You can't undo this.`,
+      confirmLabel: 'Delete document',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -174,7 +174,7 @@ export default function TravelDocumentManager() {
       toast.success('Document deleted');
       loadDocuments();
     } catch {
-      toast.error('Failed to delete document');
+      toast.error("Couldn't delete document. Try again.");
     }
   };
 
@@ -203,7 +203,7 @@ export default function TravelDocumentManager() {
   }, {} as Record<DocumentType, TravelDocument[]>);
 
   if (loading) {
-    return <div className="text-center py-4">Loading documents...</div>;
+    return <div className="text-center py-4">Loading documents…</div>;
   }
 
   return (
@@ -247,7 +247,7 @@ export default function TravelDocumentManager() {
               Cancel
             </button>
             <button type="submit" form="document-form" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : `${editingDocumentId ? 'Update' : 'Add'} Document`}
+              {isSubmitting ? 'Saving…' : `${editingDocumentId ? 'Update' : 'Add'} Document`}
             </button>
           </>
         }
@@ -409,7 +409,7 @@ export default function TravelDocumentManager() {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
               maxLength={1000}
             />
           </div>

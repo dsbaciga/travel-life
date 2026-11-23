@@ -815,7 +815,7 @@ const Timeline = ({
         operation: 'loadTimelineData.error',
         data: { tripId, errorMessage: error instanceof Error ? error.message : String(error) }
       });
-      toast.error('Failed to load timeline data');
+      toast.error("Couldn't load timeline data. Try again.");
       console.error('Error loading timeline:', error);
     } finally {
       setLoading(false);
@@ -1307,10 +1307,10 @@ const Timeline = ({
       }
       setWeatherData(weatherByDate);
 
-      toast.success(`Weather data refreshed successfully (${weather?.length || 0} days)`);
+      toast.success(`Weather data refreshed (${weather?.length || 0} days)`);
     } catch (error) {
       console.error('Error refreshing weather:', error);
-      toast.error('Failed to refresh weather data');
+      toast.error("Couldn't refresh weather data. Try again.");
     } finally {
       setRefreshingWeather(false);
     }
@@ -1352,7 +1352,7 @@ const Timeline = ({
 
   if (loading) {
     return (
-      <div className="text-center py-8 text-gray-900 dark:text-white">Loading timeline...</div>
+      <div className="text-center py-8 text-gray-900 dark:text-white">Loading timeline…</div>
     );
   }
 
@@ -1373,7 +1373,7 @@ const Timeline = ({
     });
     return (
       <div className="text-center py-8 text-red-500">
-        Error loading timeline. Please refresh the page.
+        Error loading timeline. Refresh the page.
       </div>
     );
   }

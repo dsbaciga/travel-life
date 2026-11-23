@@ -95,7 +95,7 @@ export default function LinkEditModal({
       onSuccess();
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : 'Failed to update link';
+      const message = error instanceof Error ? error.message : "Couldn't update link. Try again.";
       toast.error(message);
     },
   });
@@ -184,7 +184,7 @@ export default function LinkEditModal({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add a note about this link..."
+              placeholder="Add a note about this link…"
               rows={3}
               maxLength={1000}
               className="input w-full resize-none"
@@ -208,7 +208,7 @@ export default function LinkEditModal({
               disabled={updateMutation.isPending}
               className="btn btn-primary flex-1"
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
             </button>
           </div>
         </form>

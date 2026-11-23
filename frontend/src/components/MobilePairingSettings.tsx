@@ -2,17 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import mobilePairingService from '../services/mobilePairing.service';
 import { resolvePairingServerUrl } from '../utils/pairingServerUrl';
-
-interface ApiError {
-  response?: { data?: { message?: string } };
-  message?: string;
-}
-
-function getApiErrorMessage(err: unknown): string | undefined {
-  if (err === null || typeof err !== 'object') return undefined;
-  const apiError = err as ApiError;
-  return apiError.response?.data?.message ?? apiError.message;
-}
+import { getApiErrorMessage } from '../lib/errors';
 
 interface ActivePairing {
   qrDataUrl: string;
@@ -74,7 +64,7 @@ export default function MobilePairingSettings() {
         }
       }, 1000);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || 'Failed to create a pairing code');
+      setError(getApiErrorMessage(err, "Couldn't create a pairing code. Try again."));
     } finally {
       setIsWorking(false);
     }
@@ -130,7 +120,7 @@ export default function MobilePairingSettings() {
           disabled={isWorking}
           className="min-h-[44px] px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors"
         >
-          {isWorking ? 'Generating...' : pairing ? 'Generate New Code' : 'Pair Mobile App'}
+          {isWorking ? 'Generating…' : pairing ? 'Generate New Code' : 'Pair Mobile App'}
         </button>
         {pairing && (
           <button

@@ -218,11 +218,11 @@ export default function OfflineDownloadModal({
   const getPhaseLabel = (phase: DownloadProgress['phase']): string => {
     switch (phase) {
       case 'metadata':
-        return 'Downloading trip data...';
+        return 'Downloading trip data…';
       case 'photos':
-        return 'Downloading photos...';
+        return 'Downloading photos…';
       case 'maps':
-        return 'Downloading map tiles...';
+        return 'Downloading map tiles…';
       case 'complete':
         return 'Download complete!';
     }
@@ -259,7 +259,7 @@ export default function OfflineDownloadModal({
             <Icon name="check" size={32} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <h3 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
-            Trip Downloaded Successfully
+            Trip saved for offline use
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70 max-w-sm">
             {tripTitle ? `"${tripTitle}"` : 'Your trip'} is now available offline.

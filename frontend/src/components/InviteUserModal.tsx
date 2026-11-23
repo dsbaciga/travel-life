@@ -38,7 +38,7 @@ export default function InviteUserModal({
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error('Please enter an email address');
+      toast.error('Enter an email address');
       return;
     }
 
@@ -55,7 +55,7 @@ export default function InviteUserModal({
       handleClose();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      const errorMessage = error.response?.data?.message || 'Failed to send invitation';
+      const errorMessage = error.response?.data?.message || "Couldn't send invitation. Try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -95,7 +95,7 @@ export default function InviteUserModal({
             {isSubmitting ? (
               <>
                 <span className="w-4 h-4 border-2 border-navy-900/30 border-t-navy-900 rounded-full animate-spin" />
-                Sending...
+                Sending…
               </>
             ) : (
               'Send Invitation'
@@ -167,7 +167,7 @@ export default function InviteUserModal({
             id={messageId}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Add a personal message to the invitation..."
+            placeholder="Add a personal message to the invitation…"
             rows={3}
             maxLength={1000}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gold/30 rounded-lg bg-white dark:bg-navy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gold focus:border-transparent resize-none"

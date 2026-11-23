@@ -49,7 +49,7 @@ export default function CollaboratorsManager({
       setOwner(response.owner);
     } catch (err) {
       console.error('Failed to load collaborators:', err);
-      toast.error('Failed to load collaborators');
+      toast.error("Couldn't load collaborators. Try again.");
     } finally {
       setLoading(false);
     }
@@ -80,15 +80,15 @@ export default function CollaboratorsManager({
       loadCollaborators();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || 'Failed to update permission');
+      toast.error(error.response?.data?.message || "Couldn't update permission. Try again.");
     }
   };
 
   const handleRemoveCollaborator = async (collaborator: Collaborator) => {
     const confirmed = await confirm({
-      title: 'Remove Collaborator',
-      message: `Remove ${collaborator.user.username} from this trip?`,
-      confirmLabel: 'Remove',
+      title: 'Remove collaborator',
+      message: `${collaborator.user.username} loses access to this trip.`,
+      confirmLabel: 'Remove collaborator',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -99,15 +99,15 @@ export default function CollaboratorsManager({
       loadCollaborators();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || 'Failed to remove collaborator');
+      toast.error(error.response?.data?.message || "Couldn't remove collaborator. Try again.");
     }
   };
 
   const handleCancelInvitation = async (invitation: TripInvitation) => {
     const confirmed = await confirm({
-      title: 'Cancel Invitation',
-      message: `Cancel invitation to ${invitation.email}?`,
-      confirmLabel: 'Cancel Invitation',
+      title: 'Cancel invitation',
+      message: `The invitation to ${invitation.email} is cancelled.`,
+      confirmLabel: 'Cancel invitation',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -118,7 +118,7 @@ export default function CollaboratorsManager({
       loadPendingInvitations();
     } catch (err) {
       console.error('Failed to cancel invitation:', err);
-      toast.error('Failed to cancel invitation');
+      toast.error("Couldn't cancel invitation. Try again.");
     }
   };
 
@@ -129,7 +129,7 @@ export default function CollaboratorsManager({
       loadPendingInvitations();
     } catch (err) {
       console.error('Failed to resend invitation:', err);
-      toast.error('Failed to resend invitation');
+      toast.error("Couldn't resend invitation. Try again.");
     }
   };
 

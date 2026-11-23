@@ -88,12 +88,12 @@ export function usePagination<T>(
       setHasMore(result.hasMore);
     } catch (err) {
       console.error('Failed to load initial items:', err);
-      setError(err instanceof Error ? err : new Error('Failed to load'));
+      setError(err instanceof Error ? err : new Error("Couldn't load. Try again."));
 
       if (onError) {
         onError(err);
       } else {
-        toast.error('Failed to load items');
+        toast.error("Couldn't load items. Try again.");
       }
     } finally {
       setLoading(false);
@@ -117,12 +117,12 @@ export function usePagination<T>(
       setHasMore(result.hasMore);
     } catch (err) {
       console.error('Failed to load more items:', err);
-      setError(err instanceof Error ? err : new Error('Failed to load more'));
+      setError(err instanceof Error ? err : new Error("Couldn't load more. Try again."));
 
       if (onError) {
         onError(err);
       } else {
-        toast.error('Failed to load more items');
+        toast.error("Couldn't load more items. Try again.");
       }
     } finally {
       setLoadingMore(false);

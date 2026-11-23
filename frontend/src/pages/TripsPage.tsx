@@ -220,7 +220,7 @@ export default function TripsPage() {
       if (context?.previousTripsData) {
         queryClient.setQueryData(['trips', queryParams], context.previousTripsData);
       }
-      toast.error('Failed to delete trip. Please try again.');
+      toast.error("Couldn't delete trip. Try again.");
     },
     onSuccess: (_data, deletedTripId) => {
       toast.success('Trip deleted.', {
@@ -257,7 +257,7 @@ export default function TripsPage() {
       if (context?.previousTripsData) {
         queryClient.setQueryData(['trips', queryParams], context.previousTripsData);
       }
-      toast.error('Failed to update trip status.');
+      toast.error("Couldn't update trip status. Try again.");
     },
     onSuccess: () => {
       toast.success('Trip status updated.');
@@ -280,7 +280,7 @@ export default function TripsPage() {
       return tripService.updateTrip(tripId, { archived });
     },
     onError: () => {
-      toast.error('Failed to update trip.');
+      toast.error("Couldn't update trip. Try again.");
     },
     onSuccess: (_data, { archived }) => {
       toast.success(archived ? 'Trip archived.' : 'Trip unarchived.');
@@ -348,10 +348,11 @@ export default function TripsPage() {
   }, [trips]);
 
   const handleDelete = async (id: number) => {
+    const trip = trips.find((t) => t.id === id);
     const confirmed = await confirm({
-      title: 'Delete Trip',
-      message: 'Are you sure you want to delete this trip? This will remove all associated locations, photos, transport, stays, activities, and journal entries.',
-      confirmLabel: 'Delete Trip',
+      title: 'Delete trip',
+      message: `${trip ? `"${trip.title}"` : 'This trip'} is deleted along with its places, photos, transport, stays, activities and journal entries. You can't undo this.`,
+      confirmLabel: 'Delete trip',
       variant: 'danger',
     });
 
@@ -600,7 +601,7 @@ export default function TripsPage() {
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate/50 dark:text-warm-gray/50" />
               <input
                 type="text"
-                placeholder="Search trips..."
+                placeholder="Search trips…"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 aria-label="Search trips"

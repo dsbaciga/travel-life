@@ -104,7 +104,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
 
   const handleAccept = async () => {
     if (!currentEntity || !selectedTripId) {
-      toast.error('Please select a trip');
+      toast.error('Select a trip');
       return;
     }
     setIsSubmitting(true);
@@ -141,7 +141,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
       advance();
     } catch {
-      toast.error('Failed to add entity');
+      toast.error("Couldn't add entity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +155,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
       advance();
     } catch {
-      toast.error('Failed to reject entity');
+      toast.error("Couldn't reject entity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -174,7 +174,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       setSelectedTripId(undefined);
       queryClient.invalidateQueries({ queryKey: ['pdfImport', importId] });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to reparse';
+      const message = err instanceof Error ? err.message : "Couldn't reparse. Try again.";
       toast.error(message);
     } finally {
       setReparsing(false);
@@ -205,7 +205,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting...' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try Again'}
           </button>
         </div>
       </Modal>
@@ -221,8 +221,8 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           <LoadingSpinner />
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             {ahead > 0
-              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one...`
-              : 'Extracting travel details from your PDF...'}
+              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one…`
+              : 'Extracting travel details from your PDF…'}
           </p>
         </div>
       </Modal>
@@ -235,7 +235,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       <Modal isOpen={isOpen} onClose={onClose} title="Processing Failed" maxWidth="md">
         <div className="py-4 space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">
-            {importData.errorMessage || 'Failed to extract entities from the PDF.'}
+            {importData.errorMessage || "Couldn't extract entities from the PDF. Try again."}
           </p>
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             You can try parsing again or close this dialog.
@@ -253,7 +253,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting...' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try Again'}
           </button>
         </div>
       </Modal>
@@ -408,7 +408,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={isSubmitting || !selectedTripId}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Adding...' : 'Accept'}
+            {isSubmitting ? 'Adding…' : 'Accept'}
           </button>
         </div>
       </div>

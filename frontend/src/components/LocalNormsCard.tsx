@@ -156,7 +156,7 @@ export default function LocalNormsCard({
   const handleSelectCountry = useCallback(
     (code: string | null) => {
       void selectCountry(code).catch(() => {
-        toast.error('Could not save the country for this trip');
+        toast.error("Couldn't save the country for this trip. Try again.");
       });
     },
     [selectCountry]

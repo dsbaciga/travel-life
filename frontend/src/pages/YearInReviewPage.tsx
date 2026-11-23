@@ -180,8 +180,8 @@ export default function YearInReviewPage() {
         {isError && (
           <EmptyState
             icon="alert"
-            message="Could not load your year in review"
-            subMessage="Please try again in a moment"
+            message="Couldn't load your year in review. Try again."
+            subMessage="Try again in a moment"
           />
         )}
 

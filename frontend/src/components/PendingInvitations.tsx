@@ -48,7 +48,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       // Navigate to the trip
       navigate(`/trips/${collaborator.tripId}`);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, 'Failed to accept invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't accept invitation. Try again."));
     } finally {
       setProcessingId(null);
     }
@@ -63,7 +63,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       onUpdate?.();
     } catch (err: unknown) {
       console.error('Failed to decline invitation:', err);
-      toast.error(getApiErrorMessage(err, 'Failed to decline invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't decline invitation. Try again."));
     } finally {
       setProcessingId(null);
     }

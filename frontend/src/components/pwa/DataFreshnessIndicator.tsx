@@ -96,7 +96,7 @@ export default function DataFreshnessIndicator({
         `}
       >
         {isSyncing ? (
-          'Syncing...'
+          'Syncing…'
         ) : lastSynced ? (
           <>
             {isStale && (
@@ -203,7 +203,7 @@ DataFreshnessIndicator.Detailed = function DetailedFreshnessIndicator({
             `}
           >
             {isSyncing
-              ? 'Syncing data...'
+              ? 'Syncing data…'
               : isStale
                 ? 'Data may be outdated'
                 : 'Data is up to date'

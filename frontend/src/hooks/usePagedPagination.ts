@@ -69,12 +69,12 @@ export function usePagedPagination<T>(
         setCurrentPage(page);
       } catch (err) {
         console.error('Failed to load page:', err);
-        setError(err instanceof Error ? err : new Error('Failed to load'));
+        setError(err instanceof Error ? err : new Error("Couldn't load. Try again."));
 
         if (onError) {
           onError(err);
         } else {
-          toast.error('Failed to load items');
+          toast.error("Couldn't load items. Try again.");
         }
       } finally {
         setLoading(false);

@@ -102,7 +102,7 @@ export default function VaultScreen() {
       setPicking(false);
     } catch (error) {
       // Languages are edited on the server, so this needs a connection.
-      setLanguageError(error instanceof Error ? error.message : 'Could not update languages');
+      setLanguageError(error instanceof Error ? error.message : "Couldn't update languages. Try again.");
     }
   };
   const { data: documents = [] } = useQuery({

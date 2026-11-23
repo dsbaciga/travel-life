@@ -55,7 +55,7 @@ export default function AlbumsPage() {
 
   const albumPagination = usePagedPagination<PhotoAlbum>(loadAlbumsPage, {
     pageSize: 30,
-    onError: () => toast.error('Failed to load albums'),
+    onError: () => toast.error("Couldn't load albums. Try again."),
   });
   const paginationRef = useRef(albumPagination);
   paginationRef.current = albumPagination;
@@ -221,15 +221,15 @@ export default function AlbumsPage() {
       setShowCreateForm(false);
       albumPagination.reset();
     } catch {
-      alert('Failed to create album');
+      alert("Couldn't create album. Try again.");
     }
   };
 
   const handleDeleteAlbum = async (albumId: number) => {
     const confirmed = await confirm({
-      title: 'Delete Album',
-      message: 'Are you sure you want to delete this album? Photos will not be deleted.',
-      confirmLabel: 'Delete',
+      title: 'Delete album',
+      message: 'The album is deleted. The photos stay in your library.',
+      confirmLabel: 'Delete album',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -241,7 +241,7 @@ export default function AlbumsPage() {
       // Reload current page (or go to previous if this was the last item on the page)
       albumPagination.loadPage(albumPagination.currentPage);
     } catch {
-      alert('Failed to delete album');
+      alert("Couldn't delete album. Try again.");
     }
   };
 
@@ -290,7 +290,7 @@ export default function AlbumsPage() {
       }
     } catch (err) {
       console.error('Failed to load album photos:', err);
-      toast.error('Failed to load album photos');
+      toast.error("Couldn't load album photos. Try again.");
     }
   };
 
@@ -308,7 +308,7 @@ export default function AlbumsPage() {
       albumPagination.loadPage(albumPagination.currentPage);
     } catch (err) {
       console.error('Failed to set cover photo:', err);
-      toast.error('Failed to set cover photo');
+      toast.error("Couldn't set cover photo. Try again.");
     }
   };
 
@@ -316,7 +316,7 @@ export default function AlbumsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
-          <LoadingSpinner.FullPage message="Loading albums..." />
+          <LoadingSpinner.FullPage message="Loading albums…" />
         </div>
       </div>
     );
@@ -364,7 +364,7 @@ export default function AlbumsPage() {
                 onChange={(e) => setAlbumDescription(e.target.value)}
                 rows={3}
                 className="input"
-                placeholder="A collection of our best summer moments..."
+                placeholder="A collection of our best summer moments…"
               />
             </div>
 

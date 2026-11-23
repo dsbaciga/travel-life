@@ -379,7 +379,7 @@ export default function JournalManager({
           kind: 'failed',
           message: typeof serverMessage === 'string' && serverMessage
             ? serverMessage
-            : "Couldn't generate a draft. Please try again.",
+            : "Couldn't generate a draft. Try again.",
         });
       }
     } finally {
@@ -431,9 +431,9 @@ export default function JournalManager({
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Journal Entry",
-      message: "Delete this journal entry? This action cannot be undone.",
-      confirmLabel: "Delete",
+      title: "Delete journal entry",
+      message: "This journal entry is deleted. You can't undo this.",
+      confirmLabel: "Delete journal entry",
       variant: "danger",
     });
     if (!confirmed) return;

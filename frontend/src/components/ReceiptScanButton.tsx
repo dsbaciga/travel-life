@@ -78,7 +78,7 @@ export default function ReceiptScanButton({ tripId, disabled, onScanned }: Recei
         aria-busy={isScanning}
         onClick={() => inputRef.current?.click()}
       >
-        {isScanning ? "Reading receipt..." : "Scan Receipt"}
+        {isScanning ? "Reading receipt…" : "Scan Receipt"}
       </button>
     </>
   );

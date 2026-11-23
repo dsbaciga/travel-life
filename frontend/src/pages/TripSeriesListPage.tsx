@@ -64,14 +64,14 @@ export default function TripSeriesListPage() {
       setNewDescription('');
       toast.success('Series created');
     } catch {
-      toast.error('Failed to create series');
+      toast.error("Couldn't create series. Try again.");
     } finally {
       setCreating(false);
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner.FullPage message="Loading trip series..." />;
+    return <LoadingSpinner.FullPage message="Loading trip series…" />;
   }
 
   return (
@@ -180,7 +180,7 @@ export default function TripSeriesListPage() {
               onChange={(e) => setNewDescription(e.target.value)}
               className="input"
               rows={3}
-              placeholder="Describe your trip series..."
+              placeholder="Describe your trip series…"
             />
           </div>
           <div className="flex gap-3 pt-2">
@@ -190,7 +190,7 @@ export default function TripSeriesListPage() {
               className="flex-1 btn btn-primary"
               disabled={creating || !newName.trim()}
             >
-              {creating ? 'Creating...' : 'Create Series'}
+              {creating ? 'Creating…' : 'Create Series'}
             </button>
             <button
               type="button"

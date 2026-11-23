@@ -197,7 +197,7 @@ export default function SyncStatus({
           {/* Status text */}
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-charcoal dark:text-warm-gray">
-              {state === 'syncing' && 'Syncing...'}
+              {state === 'syncing' && 'Syncing…'}
               {state === 'synced' && 'All changes synced'}
               {state === 'pending' && `${pendingChanges} pending ${pendingChanges === 1 ? 'change' : 'changes'}`}
               {state === 'error' && 'Sync failed'}

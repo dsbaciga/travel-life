@@ -93,7 +93,7 @@ export default function AirportSearchInput({
         console.error('Airport search error:', error);
         if (latestQueryRef.current === trimmed) {
           setResults([]);
-          toast.error('Failed to search airports');
+          toast.error("Couldn't search airports. Try again.");
         }
       } finally {
         if (latestQueryRef.current === trimmed) {
@@ -141,7 +141,7 @@ export default function AirportSearchInput({
       await onAdded();
     } catch (error) {
       console.error('Failed to add airport:', error);
-      toast.error('Failed to add airport');
+      toast.error("Couldn't add airport. Try again.");
     } finally {
       setAddingCode(null);
     }
@@ -169,7 +169,7 @@ export default function AirportSearchInput({
       />
 
       {searching && (
-        <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">Searching...</div>
+        <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">Searching…</div>
       )}
 
       {!searching && results.length > 0 && (

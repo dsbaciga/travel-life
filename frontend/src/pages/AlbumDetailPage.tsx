@@ -174,7 +174,7 @@ export default function AlbumDetailPage() {
       loadAlbum();
       toast.success("Album updated");
     } catch {
-      toast.error("Failed to update album");
+      toast.error("Couldn't update album. Try again.");
     }
   };
 
@@ -195,7 +195,7 @@ export default function AlbumDetailPage() {
       setAvailablePhotos(available);
     } catch (err) {
       console.error("Failed to load available photos:", err);
-      toast.error("Failed to load photos");
+      toast.error("Couldn't load photos. Try again.");
     }
   };
 
@@ -233,7 +233,7 @@ export default function AlbumDetailPage() {
       await loadAlbum();
     } catch (err) {
       console.error("Failed to add photos:", err);
-      toast.error("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAddingPhotos(false);
     }
@@ -249,7 +249,7 @@ export default function AlbumDetailPage() {
       await loadAlbum();
     } catch (err) {
       console.error("Failed to set cover photo", err);
-      toast.error("Failed to set cover photo");
+      toast.error("Couldn't set cover photo. Try again.");
     }
   };
 
@@ -594,7 +594,7 @@ export default function AlbumDetailPage() {
                     className="btn btn-primary"
                   >
                     {isAddingPhotos
-                      ? "Adding..."
+                      ? "Adding…"
                       : `Add ${selectedPhotoIds.size} Photo${selectedPhotoIds.size !== 1 ? 's' : ''}`}
                   </button>
                 </div>

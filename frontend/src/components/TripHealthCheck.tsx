@@ -72,7 +72,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       setValidation(result);
     } catch (error) {
       console.error('Health check failed:', error);
-      toast.error('Failed to check trip health');
+      toast.error("Couldn't check trip health. Try again.");
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       fetchValidation();
     } catch (error) {
       console.error('Failed to dismiss issue:', error);
-      toast.error('Failed to dismiss issue');
+      toast.error("Couldn't dismiss issue. Try again.");
     }
   };
 
@@ -104,7 +104,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       fetchValidation();
     } catch (error) {
       console.error('Failed to restore issue:', error);
-      toast.error('Failed to restore issue');
+      toast.error("Couldn't restore issue. Try again.");
     }
   };
 
@@ -130,7 +130,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       <div className="card">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
-          <span className="text-gray-600 dark:text-dusk-400">Checking trip health...</span>
+          <span className="text-gray-600 dark:text-dusk-400">Checking trip health…</span>
         </div>
       </div>
     );

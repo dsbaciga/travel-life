@@ -287,7 +287,7 @@ export default function FoodLogManager({
       closeForm();
       refresh();
     } catch {
-      toast.error("Could not save entry");
+      toast.error("Couldn't save entry. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -295,9 +295,9 @@ export default function FoodLogManager({
 
   const handleDelete = async (entry: FoodLogEntry) => {
     const confirmed = await confirm({
-      title: "Delete Entry",
-      message: `Delete "${entry.dish}" at ${entry.restaurantName}?`,
-      confirmLabel: "Delete",
+      title: "Delete entry",
+      message: `"${entry.dish}" at ${entry.restaurantName} is deleted. You can't undo this.`,
+      confirmLabel: "Delete entry",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -306,7 +306,7 @@ export default function FoodLogManager({
       toast.success("Entry deleted");
       refresh();
     } catch {
-      toast.error("Could not delete entry");
+      toast.error("Couldn't delete entry. Try again.");
     }
   };
 

@@ -573,7 +573,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           await submitJournal();
           break;
       }
-      toast.success(`${getItemTypeLabel()} updated successfully`);
+      toast.success(`${getItemTypeLabel()} updated`);
       onSave();
       onClose();
     } catch (error) {
@@ -1118,7 +1118,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           }
           className="input"
           rows={3}
-          placeholder="Additional notes..."
+          placeholder="Additional notes…"
         />
       </div>
     </>
@@ -1383,7 +1383,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           }
           className="input"
           rows={3}
-          placeholder="Additional notes..."
+          placeholder="Additional notes…"
         />
       </div>
     </>
@@ -1612,7 +1612,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           }
           className="input"
           rows={3}
-          placeholder="Additional notes..."
+          placeholder="Additional notes…"
         />
       </div>
     </>
@@ -1668,7 +1668,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           }
           rows={8}
           className="input font-mono text-sm"
-          placeholder="Write your journal entry here..."
+          placeholder="Write your journal entry here…"
           required
         />
         <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
@@ -1724,7 +1724,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             className="btn btn-primary"
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving…" : "Save Changes"}
           </button>
         </>
       }

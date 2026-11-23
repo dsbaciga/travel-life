@@ -221,7 +221,7 @@ export default function CustomItemsManager({
       resetForm();
       refreshData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save custom item");
+      toast.error(err instanceof Error ? err.message : "Couldn't save custom item. Try again.");
     } finally {
       setSaving(false);
     }
@@ -229,9 +229,9 @@ export default function CustomItemsManager({
 
   const handleDelete = async (item: CustomItem) => {
     const confirmed = await confirm({
-      title: "Delete custom item?",
-      message: `"${item.name}" will be removed, along with any links to it.`,
-      confirmLabel: "Delete",
+      title: "Delete custom item",
+      message: `"${item.name}" is deleted, along with any links to it. You can't undo this.`,
+      confirmLabel: "Delete custom item",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -241,7 +241,7 @@ export default function CustomItemsManager({
       toast.success("Custom item deleted");
       refreshData();
     } catch {
-      toast.error("Failed to delete custom item");
+      toast.error("Couldn't delete custom item. Try again.");
     }
   };
 
@@ -250,9 +250,9 @@ export default function CustomItemsManager({
     if (ids.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Custom Items",
-      message: `Delete ${ids.length} selected item${ids.length === 1 ? "" : "s"}? Any links to them will be removed too.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${ids.length} custom item${ids.length === 1 ? "" : "s"}`,
+      message: `Delete ${ids.length} selected item${ids.length === 1 ? "" : "s"}? Any links to them are removed too. You can't undo this.`,
+      confirmLabel: `Delete ${ids.length} custom item${ids.length === 1 ? "" : "s"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -264,7 +264,7 @@ export default function CustomItemsManager({
       bulkSelection.exitSelectionMode();
       refreshData();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete items");
+      toast.error(err instanceof Error ? err.message : "Couldn't delete items. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }

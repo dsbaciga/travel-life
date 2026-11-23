@@ -174,7 +174,7 @@ export default function SmtpSettings() {
 
   const handleSave = async () => {
     if (!canSave()) {
-      setMessage({ type: 'error', text: 'Please fill in all required fields' });
+      setMessage({ type: 'error', text: 'Fill in all required fields' });
       return;
     }
 
@@ -201,7 +201,7 @@ export default function SmtpSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save SMTP settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't save SMTP settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -216,7 +216,7 @@ export default function SmtpSettings() {
       setMessage({ type: 'success', text: result.message });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to send test email' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't send test email. Try again." });
     } finally {
       setIsTesting(false);
     }
@@ -224,9 +224,9 @@ export default function SmtpSettings() {
 
   const handleClear = async () => {
     const confirmed = await confirm({
-      title: 'Remove SMTP Settings',
-      message: 'Are you sure you want to remove your SMTP email settings? The server will fall back to the global configuration (if any).',
-      confirmLabel: 'Remove',
+      title: 'Remove SMTP settings',
+      message: 'Your email settings are removed. The server falls back to its global configuration, if it has one.',
+      confirmLabel: 'Remove settings',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -256,7 +256,7 @@ export default function SmtpSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to clear SMTP settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't clear SMTP settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -265,7 +265,7 @@ export default function SmtpSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading email settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading email settings…</p>
       </div>
     );
   }
@@ -434,7 +434,7 @@ export default function SmtpSettings() {
               disabled={isTesting || isSaving}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
-              {isTesting ? 'Sending...' : 'Send Test Email'}
+              {isTesting ? 'Sending…' : 'Send Test Email'}
             </button>
           )}
 
@@ -443,7 +443,7 @@ export default function SmtpSettings() {
             disabled={isSaving || !canSave()}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving...' : 'Save Settings'}
+            {isSaving ? 'Saving…' : 'Save Settings'}
           </button>
 
           {settings?.smtpConfigured && (

@@ -28,7 +28,7 @@ export default function DeadlinesWidget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deadlines'] });
     },
-    onError: () => toast.error('Could not dismiss deadline'),
+    onError: () => toast.error("Couldn't dismiss deadline. Try again."),
   });
 
   if (!deadlines || deadlines.length === 0) {

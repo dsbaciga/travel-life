@@ -50,7 +50,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
       setShowCreate(false);
       toast.success('Series created');
     } catch {
-      toast.error('Failed to create series');
+      toast.error("Couldn't create series. Try again.");
     } finally {
       setCreating(false);
     }
@@ -79,7 +79,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
             {s.name} {s._count ? `(${s._count.trips} trips)` : ''}
           </option>
         ))}
-        <option value="__create__">+ Create New Series...</option>
+        <option value="__create__">+ Create New Series…</option>
       </select>
       <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
         Group related trips together in a series
@@ -114,7 +114,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
               className="btn btn-primary text-sm px-4"
               disabled={creating || !newSeriesName.trim()}
             >
-              {creating ? 'Creating...' : 'Create'}
+              {creating ? 'Creating…' : 'Create'}
             </button>
             <button
               type="button"

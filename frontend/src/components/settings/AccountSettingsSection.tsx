@@ -86,7 +86,7 @@ export default function AccountSettingsSection({
       updateUser({ username: result.username });
       toast.success(result.message);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to update username");
+      toast.error(getApiErrorMessage(err) || "Couldn't update username. Try again.");
     }
   };
 
@@ -94,7 +94,7 @@ export default function AccountSettingsSection({
     e.preventDefault();
 
     if (!currentPassword || !newPassword) {
-      toast.error("Please fill in all password fields");
+      toast.error("Fill in all password fields");
       return;
     }
 
@@ -118,7 +118,7 @@ export default function AccountSettingsSection({
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to update password");
+      toast.error(getApiErrorMessage(err) || "Couldn't update password. Try again.");
     }
   };
 
@@ -129,7 +129,7 @@ export default function AccountSettingsSection({
       });
       toast.success("Dietary preferences saved");
     } catch {
-      toast.error("Failed to save dietary preferences");
+      toast.error("Couldn't save dietary preferences. Try again.");
     }
   };
 
@@ -145,7 +145,7 @@ export default function AccountSettingsSection({
           : "Home currency cleared"
       );
     } catch {
-      toast.error("Failed to save home currency");
+      toast.error("Couldn't save home currency. Try again.");
     } finally {
       setSavingBaseCurrency(false);
     }
@@ -164,7 +164,7 @@ export default function AccountSettingsSection({
       );
     } catch {
       onCustomMapStyleChange(!newValue);
-      toast.error("Failed to update map style preference");
+      toast.error("Couldn't update map style preference. Try again.");
     }
   };
 
@@ -341,7 +341,7 @@ export default function AccountSettingsSection({
             className="btn btn-primary"
             disabled={savingBaseCurrency}
           >
-            {savingBaseCurrency ? "Saving..." : "Save Home Currency"}
+            {savingBaseCurrency ? "Saving…" : "Save Home Currency"}
           </button>
         </div>
       </div>
@@ -377,7 +377,7 @@ export default function AccountSettingsSection({
       <ErrorBoundary>
         <Suspense
           fallback={
-            <LoadingSpinner.FullPage message="Loading travel partners..." />
+            <LoadingSpinner.FullPage message="Loading travel partners…" />
           }
         >
           <TravelPartnerSettings />

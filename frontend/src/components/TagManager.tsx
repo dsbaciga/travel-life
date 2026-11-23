@@ -75,7 +75,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       const allTags = await tagService.getTagsByUser();
       setTags(allTags);
     } catch {
-      toast.error("Failed to load tags");
+      toast.error("Couldn't load tags. Try again.");
     }
   };
 
@@ -102,7 +102,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       // Automatically link the new tag to this trip
       await handleLinkTag(newTag.id);
     } catch {
-      toast.error("Failed to create tag");
+      toast.error("Couldn't create tag. Try again.");
     }
   };
 
@@ -120,15 +120,15 @@ export default function TagManager({ tripId }: TagManagerProps) {
       loadAllTags();
       manager.loadItems();
     } catch {
-      toast.error("Failed to update tag");
+      toast.error("Couldn't update tag. Try again.");
     }
   };
 
   const handleDeleteTag = async (tagId: number) => {
     const confirmed = await confirm({
-      title: 'Delete Tag',
-      message: 'Delete this tag? It will be removed from all trips.',
-      confirmLabel: 'Delete',
+      title: 'Delete tag',
+      message: 'This tag is removed from all trips.',
+      confirmLabel: 'Delete tag',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -139,7 +139,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       loadAllTags();
       manager.loadItems();
     } catch {
-      toast.error("Failed to delete tag");
+      toast.error("Couldn't delete tag. Try again.");
     }
   };
 
@@ -153,7 +153,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       if (error.response?.data?.message?.includes("already linked")) {
         toast.error("Tag already added to this trip");
       } else {
-        toast.error("Failed to add tag");
+        toast.error("Couldn't add tag. Try again.");
       }
     }
   };
@@ -164,7 +164,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
       toast.success("Tag removed from trip");
       manager.loadItems();
     } catch {
-      toast.error("Failed to remove tag");
+      toast.error("Couldn't remove tag. Try again.");
     }
   };
 
@@ -177,7 +177,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
   const cancelForm = resetForm;
 
   if (manager.loading) {
-    return <div className="text-center py-4">Loading tags...</div>;
+    return <div className="text-center py-4">Loading tags…</div>;
   }
 
   const availableTags = tags.filter(
@@ -223,7 +223,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : `${editingTagId ? "Update" : "Create"} Tag`}
+              {isSubmitting ? "Saving…" : `${editingTagId ? "Update" : "Create"} Tag`}
             </button>
           </>
         }

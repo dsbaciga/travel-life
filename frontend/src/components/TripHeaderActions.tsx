@@ -55,7 +55,7 @@ export default function TripHeaderActions({
       toast.success(nextArchived ? 'Trip archived.' : 'Trip unarchived.');
     },
     onError: () => {
-      toast.error('Failed to update trip.');
+      toast.error("Couldn't update trip. Try again.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });

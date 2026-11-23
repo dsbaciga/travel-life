@@ -29,7 +29,7 @@ export default function ChecklistDetailPage() {
       setChecklistName(data.name);
     } catch (err) {
       console.error("Failed to load checklist:", err);
-      toast.error("Failed to load checklist");
+      toast.error("Couldn't load checklist. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +47,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update item:", err);
-      toast.error("Failed to update item");
+      toast.error("Couldn't update item. Try again.");
     }
   };
 
@@ -67,15 +67,15 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to add item:", err);
-      toast.error("Failed to add item");
+      toast.error("Couldn't add item. Try again.");
     }
   };
 
   const handleDeleteItem = async (itemId: number) => {
     const confirmed = await confirm({
-      title: "Delete Item",
-      message: "Are you sure you want to delete this item?",
-      confirmLabel: "Delete",
+      title: "Delete item",
+      message: "This item comes off the checklist.",
+      confirmLabel: "Delete item",
       variant: "danger",
     });
     if (!confirmed) {
@@ -87,7 +87,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to delete item:", err);
-      toast.error("Failed to delete item");
+      toast.error("Couldn't delete item. Try again.");
     }
   };
 
@@ -102,7 +102,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update checklist name:", err);
-      toast.error("Failed to update checklist name");
+      toast.error("Couldn't update checklist name. Try again.");
     }
   };
 
@@ -297,7 +297,7 @@ export default function ChecklistDetailPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input flex-1"
-              placeholder="Search items..."
+              placeholder="Search items…"
               aria-label="Search checklist items"
             />
             {/* The inline item form has its own Cancel; the airport picker does not. */}
@@ -351,7 +351,7 @@ export default function ChecklistDetailPage() {
                   value={newItemDescription}
                   onChange={(e) => setNewItemDescription(e.target.value)}
                   className="input"
-                  placeholder="Optional description..."
+                  placeholder="Optional description…"
                 />
               </div>
               <div className="flex gap-2">

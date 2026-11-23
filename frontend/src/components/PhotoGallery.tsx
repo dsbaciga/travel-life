@@ -669,17 +669,17 @@ export default function PhotoGallery({
       setFavoriteOverride(photo.id, undefined);
       setRetained((r) => (r?.photo.id === photo.id ? null : r));
       toast.error(
-        next ? "Failed to add to favorites" : "Failed to remove from favorites"
+        next ? "Couldn't add to favorites. Try again." : "Couldn't remove from favorites. Try again."
       );
     }
   };
 
   const handleDelete = async (photoId: number) => {
     const confirmed = await confirm({
-      title: "Delete Photo",
+      title: "Delete photo",
       message:
-        "Are you sure you want to delete this photo? This action cannot be undone.",
-      confirmLabel: "Delete",
+        "This photo is removed from the trip, albums and map. You can't undo this.",
+      confirmLabel: "Delete photo",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -689,7 +689,7 @@ export default function PhotoGallery({
       setSelectedPhoto(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photo");
+      toast.error("Couldn't delete photo. Try again.");
     }
   };
 
@@ -705,7 +705,7 @@ export default function PhotoGallery({
       onPhotoUpdated?.();
       toast.success("Photo updated");
     } catch {
-      toast.error("Failed to update photo");
+      toast.error("Couldn't update photo. Try again.");
     }
   };
 
@@ -769,7 +769,7 @@ export default function PhotoGallery({
       // The effect will handle selection once photos.length >= totalPhotosInView
     } catch {
       pendingSelectAll.current = false;
-      toast.error("Failed to load all photos");
+      toast.error("Couldn't load all photos. Try again.");
     }
   };
 
@@ -792,9 +792,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
-      toast.success(`Successfully added ${selectedPhotoIds.size} photo(s) to album`);
+      toast.success(`Added ${selectedPhotoIds.size} photo(s) to album`);
     } catch {
-      toast.error("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -832,10 +832,10 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
       toast.success(
-        `Successfully created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
+        `Created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
       );
     } catch {
-      toast.error("Failed to create album");
+      toast.error("Couldn't create album. Try again.");
     } finally {
       setIsCreatingAlbum(false);
     }
@@ -845,9 +845,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0 || !currentAlbumId) return;
 
     const confirmed = await confirm({
-      title: "Remove Photos",
-      message: `Remove ${selectedPhotoIds.size} photo(s) from this album? The photos will not be deleted, only removed from this album.`,
-      confirmLabel: "Remove",
+      title: "Remove from album",
+      message: `${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo comes" : "photos come"} out of this album. ${selectedPhotoIds.size === 1 ? "It stays" : "They stay"} in your library.`,
+      confirmLabel: `Remove ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "warning",
     });
     if (!confirmed) return;
@@ -863,9 +863,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosRemovedFromAlbum?.();
-      toast.success(`Successfully removed ${photoIds.length} photo(s) from album`);
+      toast.success(`Removed ${photoIds.length} photo(s) from album`);
     } catch {
-      toast.error("Failed to remove photos from album");
+      toast.error("Couldn't remove photos from album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -875,9 +875,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Photos",
-      message: `Are you sure you want to delete ${selectedPhotoIds.size} photo(s)? This action cannot be undone.`,
-      confirmLabel: "Delete",
+      title: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
+      message: `${selectedPhotoIds.size === 1 ? "This photo is" : "These photos are"} removed from the trip, albums and map. You can't undo this.`,
+      confirmLabel: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -893,7 +893,7 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photos");
+      toast.error("Couldn't delete photos. Try again.");
     } finally {
       setIsDeletingPhotos(false);
     }
@@ -1550,7 +1550,7 @@ export default function PhotoGallery({
                     }
                     className="flex-1 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreatingAlbum ? "Creating..." : "Create Album"}
+                    {isCreatingAlbum ? "Creating…" : "Create Album"}
                   </button>
                 </div>
               </>

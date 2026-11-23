@@ -66,7 +66,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Please choose an image file');
+      toast.error('Choose an image file');
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -82,7 +82,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
     } catch (error) {
       // Surfaces the backend's reason (e.g. rejected file type) rather than axios's
       // generic "Request failed with status code 400"
-      toast.error(getApiErrorMessage(error, 'Failed to upload cover photo'));
+      toast.error(getApiErrorMessage(error, "Couldn't upload cover photo. Try again."));
     } finally {
       setBusy(false);
     }
@@ -95,7 +95,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
       onChange(updatedTrip);
       toast.success('Cover photo removed');
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Failed to remove cover photo'));
+      toast.error(getApiErrorMessage(error, "Couldn't remove cover photo. Try again."));
     } finally {
       setBusy(false);
     }
@@ -131,7 +131,7 @@ export default function TripCoverImageField({ tripId, cover, onChange }: TripCov
               className="btn btn-secondary"
               disabled={busy}
             >
-              {busy ? 'Working...' : hasUploadedCover ? 'Replace Image' : 'Upload Image'}
+              {busy ? 'Working…' : hasUploadedCover ? 'Replace Image' : 'Upload Image'}
             </button>
 
             {hasUploadedCover && (

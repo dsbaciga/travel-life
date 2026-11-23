@@ -344,7 +344,7 @@ export default function LocationManager({
         // return, so create the place directly here.
         try {
           const created = await locationService.createLocation(createData);
-          toast.success("Location added successfully");
+          toast.success("Location added");
           await createCompanionForPlace(alsoCreate, created);
           invalidateLinkSummary();
           await manager.loadItems();
@@ -352,7 +352,7 @@ export default function LocationManager({
           success = true;
         } catch (error) {
           console.error("Failed to create location:", error);
-          toast.error("Failed to add location");
+          toast.error("Couldn't add location. Try again.");
           success = false;
         }
       }
@@ -389,7 +389,7 @@ export default function LocationManager({
       manager.setItems((prev) =>
         prev.map((l) => (l.id === location.id ? { ...l, isFavorite: !newValue } : l))
       );
-      toast.error("Failed to update favorite");
+      toast.error("Couldn't update favorite. Try again.");
     }
   };
 
@@ -398,11 +398,11 @@ export default function LocationManager({
     const hasChildren = manager.items.some(l => l.parentId === id);
 
     const confirmed = await confirm({
-      title: "Delete Location",
+      title: "Delete location",
       message: hasChildren
-        ? `Delete "${location?.name}" and all its child locations? This action cannot be undone.`
-        : `Delete "${location?.name}"? This action cannot be undone.`,
-      confirmLabel: "Delete",
+        ? `"${location?.name}" and all its child locations are deleted. You can't undo this.`
+        : `"${location?.name}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete location",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -415,9 +415,9 @@ export default function LocationManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Locations",
-      message: `Delete ${selectedIds.length} selected locations? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
+      message: `The selected ${selectedIds.length === 1 ? "location is" : "locations are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -431,7 +431,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete locations:", error);
-      toast.error("Failed to delete some locations");
+      toast.error("Couldn't delete some locations. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -452,7 +452,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update locations:", error);
-      toast.error("Failed to update some locations");
+      toast.error("Couldn't update some locations. Try again.");
     } finally {
       setIsBulkEditing(false);
     }

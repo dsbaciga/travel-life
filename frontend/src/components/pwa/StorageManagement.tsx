@@ -268,7 +268,7 @@ export default function StorageManagement({
   if (loading && !breakdown) {
     return (
       <div className={`${className}`}>
-        <LoadingSpinner.FullPage message="Loading storage information..." />
+        <LoadingSpinner.FullPage message="Loading storage information…" />
       </div>
     );
   }
@@ -688,7 +688,7 @@ export default function StorageManagement({
           }}
           title={confirmDialog.title}
           message={confirmDialog.message}
-          confirmLabel="Clear"
+          confirmLabel="Clear data"
           variant={confirmDialog.variant}
           isLoading={clearing !== null}
         />

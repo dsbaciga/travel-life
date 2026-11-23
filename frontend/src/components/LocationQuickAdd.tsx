@@ -36,7 +36,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         setSearchResults(results);
       } catch (error) {
         console.error('Search error:', error);
-        toast.error('Failed to search locations');
+        toast.error("Couldn't search locations. Try again.");
       } finally {
         setSearching(false);
       }
@@ -71,7 +71,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
       onLocationCreated(newLocation.id, newLocation.name);
     } catch (error) {
       console.error('Failed to create location:', error);
-      toast.error('Failed to create location');
+      toast.error("Couldn't create location. Try again.");
     } finally {
       setCreating(false);
     }
@@ -97,14 +97,14 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for a place..."
+          placeholder="Search for a place…"
           className="input"
           autoFocus
         />
 
         {searching && (
           <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">
-            Searching...
+            Searching…
           </div>
         )}
 
@@ -137,7 +137,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
 
         {creating && (
           <div className="text-sm text-blue-600 dark:text-blue-400 py-2">
-            Creating location...
+            Creating location…
           </div>
         )}
       </div>

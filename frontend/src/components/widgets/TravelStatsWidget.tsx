@@ -157,7 +157,7 @@ export default function TravelStatsWidget() {
       // Reload stats to show updated distances
       await loadStats();
     } catch (error) {
-      toast.error('Failed to recalculate distances');
+      toast.error("Couldn't recalculate distances. Try again.");
       console.error('Recalculation error:', error);
     } finally {
       setIsRecalculating(false);
@@ -271,7 +271,7 @@ export default function TravelStatsWidget() {
         {isRecalculating ? (
           <>
             <Icon name="spinner" className="animate-spin h-4 w-4" />
-            Recalculating...
+            Recalculating…
           </>
         ) : (
           <>

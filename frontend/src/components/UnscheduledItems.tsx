@@ -185,7 +185,7 @@ export default function UnscheduledItems({
       const unscheduledLodging = lodgingData.filter((l) => !l.checkInDate);
       setLodging(unscheduledLodging);
     } catch {
-      toast.error("Failed to load data");
+      toast.error("Couldn't load data. Try again.");
     }
   }, [tripId]);
 
@@ -312,7 +312,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save activity");
+      toast.error("Couldn't save activity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -328,7 +328,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error('Failed to delete activity');
+      toast.error("Couldn't delete activity. Try again.");
     }
   };
 
@@ -447,7 +447,7 @@ export default function UnscheduledItems({
 
     const transportationType = transportationForm.values.type;
     if (!isTransportationType(transportationType)) {
-      toast.error("Please select a valid transport type");
+      toast.error("Select a valid transport type");
       return;
     }
 
@@ -506,7 +506,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save transport");
+      toast.error("Couldn't save transport. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -523,7 +523,7 @@ export default function UnscheduledItems({
 
     const lodgingType = lodgingForm.values.type;
     if (!isLodgingType(lodgingType)) {
-      toast.error("Please select a valid stay type");
+      toast.error("Select a valid stay type");
       return;
     }
 
@@ -583,7 +583,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save stay");
+      toast.error("Couldn't save stay. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -775,7 +775,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Activity" : "Update Activity"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add Activity" : "Update Activity"}
             </button>
           </>
         }
@@ -820,7 +820,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add transport" : "Update transport"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add transport" : "Update transport"}
             </button>
           </>
         }
@@ -1085,7 +1085,7 @@ export default function UnscheduledItems({
               }
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
             />
           </FormSection>
         </form>
@@ -1114,7 +1114,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add stay" : "Update stay"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add stay" : "Update stay"}
             </button>
           </>
         }
@@ -1302,7 +1302,7 @@ export default function UnscheduledItems({
               }
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
             />
           </FormSection>
         </form>

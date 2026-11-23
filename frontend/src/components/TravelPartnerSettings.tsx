@@ -97,7 +97,7 @@ export default function TravelPartnerSettings() {
       setPermission(data.defaultPartnerPermission || 'edit');
     } catch (error) {
       console.error('Failed to load travel partner settings:', error);
-      toast.error('Failed to load travel partner settings');
+      toast.error("Couldn't load travel partner settings. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +180,7 @@ export default function TravelPartnerSettings() {
       setShowDropdown(false);
       toast.success(`Request sent to ${user.username}`);
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to send travel partner request'));
+      toast.error(errorMessage(err, "Couldn't send travel partner request. Try again."));
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +199,7 @@ export default function TravelPartnerSettings() {
       });
       setPermission(result.defaultPartnerPermission || 'edit');
       await reloadRequests();
-      toast.success(`${request.requester.username} is now your travel partner!`);
+      toast.success(`${request.requester.username} is now your travel partner`);
 
       const shared = result.sharedTripCount;
       const received = result.receivedTripCount;
@@ -214,7 +214,7 @@ export default function TravelPartnerSettings() {
         toast.success(`Existing trips: ${parts.join('; ')}`);
       }
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to accept travel partner request'));
+      toast.error(errorMessage(err, "Couldn't accept travel partner request. Try again."));
     } finally {
       setPendingRequestId(null);
     }
@@ -227,7 +227,7 @@ export default function TravelPartnerSettings() {
       await reloadRequests();
       toast.success('Request declined');
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to decline travel partner request'));
+      toast.error(errorMessage(err, "Couldn't decline travel partner request. Try again."));
     } finally {
       setPendingRequestId(null);
     }
@@ -240,7 +240,7 @@ export default function TravelPartnerSettings() {
       await reloadRequests();
       toast.success('Request cancelled');
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to cancel travel partner request'));
+      toast.error(errorMessage(err, "Couldn't cancel travel partner request. Try again."));
     } finally {
       setPendingRequestId(null);
     }
@@ -250,9 +250,9 @@ export default function TravelPartnerSettings() {
     if (!settings?.travelPartner) return;
 
     const confirmed = await confirm({
-      title: 'Remove Travel Partner',
+      title: 'Remove travel partner',
       message: `Remove ${settings.travelPartner.username} as your travel partner? Your new trips will no longer be shared with them. They keep their own setting until they remove you too.`,
-      confirmLabel: 'Remove',
+      confirmLabel: 'Remove partner',
       variant: 'danger',
     });
 
@@ -266,7 +266,7 @@ export default function TravelPartnerSettings() {
       setSettings(result);
       toast.success('Travel partner removed');
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to remove travel partner'));
+      toast.error(errorMessage(err, "Couldn't remove travel partner. Try again."));
     } finally {
       setIsSaving(false);
     }
@@ -286,7 +286,7 @@ export default function TravelPartnerSettings() {
       setSettings(result);
       toast.success('Permission level updated');
     } catch (err: unknown) {
-      toast.error(errorMessage(err, 'Failed to update permission'));
+      toast.error(errorMessage(err, "Couldn't update permission. Try again."));
     } finally {
       setIsSaving(false);
     }
@@ -295,7 +295,7 @@ export default function TravelPartnerSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading travel partner settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading travel partner settings…</p>
       </div>
     );
   }
@@ -446,7 +446,7 @@ export default function TravelPartnerSettings() {
               type="text"
               value={searchQuery}
               onChange={handleSearchInputChange}
-              placeholder="Search by username or email..."
+              placeholder="Search by username or email…"
               className="input w-full"
             />
 
@@ -455,7 +455,7 @@ export default function TravelPartnerSettings() {
               <div className="absolute z-10 mt-1 w-full bg-white dark:bg-dusk-700 rounded-lg shadow-lg border border-gray-200 dark:border-dusk-600 max-h-60 overflow-y-auto">
                 {isSearching ? (
                   <div className="p-3 text-center text-gray-500 dark:text-dusk-400">
-                    Searching...
+                    Searching…
                   </div>
                 ) : searchResults.length === 0 ? (
                   <div className="p-3 text-center text-gray-500 dark:text-dusk-400">

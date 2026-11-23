@@ -69,7 +69,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       const allCompanions = await companionService.getCompanionsByUser();
       setCompanions(allCompanions);
     } catch {
-      toast.error('Failed to load companions');
+      toast.error("Couldn't load companions. Try again.");
     }
   };
 
@@ -98,7 +98,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       // Automatically link the new companion to this trip
       await handleLinkCompanion(newCompanion.id);
     } catch {
-      toast.error('Failed to create companion');
+      toast.error("Couldn't create companion. Try again.");
     }
   };
 
@@ -120,7 +120,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       manager.loadItems();
       onUpdate?.();
     } catch {
-      toast.error('Failed to update companion');
+      toast.error("Couldn't update companion. Try again.");
     }
   };
 
@@ -135,7 +135,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       if (error.response?.data?.message?.includes('already linked')) {
         toast.error('Companion already added to this trip');
       } else {
-        toast.error('Failed to add companion');
+        toast.error("Couldn't add companion. Try again.");
       }
     }
   };
@@ -143,9 +143,9 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
   const handleUnlinkCompanion = async (companionId: number) => {
     const companion = manager.items.find((c) => c.id === companionId);
     const confirmed = await confirm({
-      title: 'Remove from Trip',
-      message: `Remove ${companion?.name ?? 'this companion'} from this trip? They stay in your companions list.`,
-      confirmLabel: 'Remove',
+      title: 'Remove from trip',
+      message: `${companion?.name ?? 'This companion'} is removed from this trip. They stay in your companions list.`,
+      confirmLabel: 'Remove from trip',
       variant: 'warning',
     });
     if (!confirmed) return;
@@ -156,7 +156,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       manager.loadItems();
       onUpdate?.();
     } catch {
-      toast.error('Failed to remove companion');
+      toast.error("Couldn't remove companion. Try again.");
     }
   };
 
@@ -174,7 +174,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
   // resetForm is now provided by useFormReset hook - eliminates 6 lines of boilerplate
 
   if (manager.loading) {
-    return <div className="text-center py-4">Loading companions...</div>;
+    return <div className="text-center py-4">Loading companions…</div>;
   }
 
   const availableCompanions = companions.filter(
@@ -227,7 +227,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : `${editingCompanionId ? 'Update' : 'Add'} Companion`}
+              {isSubmitting ? 'Saving…' : `${editingCompanionId ? 'Update' : 'Add'} Companion`}
             </button>
           </>
         }

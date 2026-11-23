@@ -258,7 +258,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to save budget");
+      toast.error("Couldn't save budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -266,9 +266,9 @@ export default function BudgetManager({
 
   const handleRemoveBudget = async () => {
     const confirmed = await confirm({
-      title: "Remove Budget",
-      message: "Remove the budget for this trip? Expenses will be kept.",
-      confirmLabel: "Remove",
+      title: "Remove budget",
+      message: "The budget for this trip is removed. Your expenses stay.",
+      confirmLabel: "Remove budget",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -280,7 +280,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to remove budget");
+      toast.error("Couldn't remove budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -462,7 +462,7 @@ export default function BudgetManager({
       closeExpenseForm();
       refreshData();
     } catch {
-      toast.error(editingExpenseId ? "Failed to update expense" : "Failed to add expense");
+      toast.error(editingExpenseId ? "Couldn't update expense. Try again." : "Couldn't add expense. Try again.");
     } finally {
       submitLock.current = false;
       setIsSavingExpense(false);
@@ -487,11 +487,11 @@ export default function BudgetManager({
 
   const handleDeleteExpense = async (expense: TripExpense) => {
     const confirmed = await confirm({
-      title: "Delete Expense",
+      title: "Delete expense",
       message: expense.linkedEntity
-        ? `Delete "${expense.description}"? This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays.`
-        : `Delete "${expense.description}"?`,
-      confirmLabel: "Delete",
+        ? `"${expense.description}" is deleted. This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays. You can't undo this.`
+        : `"${expense.description}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete expense",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -502,7 +502,7 @@ export default function BudgetManager({
       if (editingExpenseId === expense.id) closeExpenseForm();
       refreshData();
     } catch {
-      toast.error("Failed to delete expense");
+      toast.error("Couldn't delete expense. Try again.");
     }
   };
 
@@ -741,7 +741,7 @@ export default function BudgetManager({
                 className="btn-primary"
                 disabled={isSavingBudget}
               >
-                {isSavingBudget ? "Saving..." : "Save Budget"}
+                {isSavingBudget ? "Saving…" : "Save Budget"}
               </button>
             </div>
           </div>

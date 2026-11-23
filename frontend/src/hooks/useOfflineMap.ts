@@ -379,7 +379,7 @@ export function useOfflineTripMap(options: UseOfflineTripMapOptions): UseOffline
 
         return result;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to cache tiles';
+        const errorMessage = error instanceof Error ? error.message : "Couldn't cache tiles. Try again.";
         if (isMountedRef.current) {
           setTripCacheError(errorMessage);
         }
@@ -406,7 +406,7 @@ export function useOfflineTripMap(options: UseOfflineTripMapOptions): UseOffline
       // Refresh base hook cache count
       await baseHook.refreshCacheCount();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to clear cache';
+      const errorMessage = error instanceof Error ? error.message : "Couldn't clear cache. Try again.";
       if (isMountedRef.current) {
         setTripCacheError(errorMessage);
       }

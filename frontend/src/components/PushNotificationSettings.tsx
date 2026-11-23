@@ -92,7 +92,7 @@ export default function PushNotificationSettings() {
       toast.success('Push notifications enabled');
     } catch (err) {
       console.error('Failed to enable push notifications:', err);
-      toast.error(getApiErrorMessage(err) || 'Failed to enable push notifications');
+      toast.error(getApiErrorMessage(err) || "Couldn't enable push notifications. Try again.");
     } finally {
       setBusy(false);
     }
@@ -112,7 +112,7 @@ export default function PushNotificationSettings() {
       toast.success('Push notifications disabled');
     } catch (err) {
       console.error('Failed to disable push notifications:', err);
-      toast.error(getApiErrorMessage(err) || 'Failed to disable push notifications');
+      toast.error(getApiErrorMessage(err) || "Couldn't disable push notifications. Try again.");
     } finally {
       setBusy(false);
     }
@@ -125,7 +125,7 @@ export default function PushNotificationSettings() {
       toast.success('Test notification sent');
     } catch (err) {
       console.error('Failed to send test notification:', err);
-      toast.error(getApiErrorMessage(err) || 'Failed to send test notification');
+      toast.error(getApiErrorMessage(err) || "Couldn't send test notification. Try again.");
     } finally {
       setBusy(false);
     }
@@ -140,7 +140,7 @@ export default function PushNotificationSettings() {
     );
   } else if (loading) {
     content = (
-      <p className="text-sm text-gray-500 dark:text-dusk-400">Loading...</p>
+      <p className="text-sm text-gray-500 dark:text-dusk-400">Loading…</p>
     );
   } else if (!serverConfigured) {
     content = (

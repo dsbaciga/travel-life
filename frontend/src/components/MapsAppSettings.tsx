@@ -56,7 +56,7 @@ export default function MapsAppSettings() {
       );
     } catch {
       setPreferredApp(previous);
-      toast.error('Failed to save maps app preference');
+      toast.error("Couldn't save maps app preference. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -65,7 +65,7 @@ export default function MapsAppSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading maps settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading maps settings…</p>
       </div>
     );
   }

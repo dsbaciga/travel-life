@@ -916,8 +916,8 @@ export default function TransportationManager({
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
       title: "Delete transport",
-      message: "Delete this transport? This action cannot be undone.",
-      confirmLabel: "Delete",
+      message: "This transport and its booking details are deleted. You can't undo this.",
+      confirmLabel: "Delete transport",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -930,9 +930,9 @@ export default function TransportationManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete transport",
-      message: `Delete ${selectedIds.length} selected transport items? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} transport ${selectedIds.length === 1 ? "item" : "items"}`,
+      message: `The selected transport ${selectedIds.length === 1 ? "item is" : "items are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} transport ${selectedIds.length === 1 ? "item" : "items"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -946,7 +946,7 @@ export default function TransportationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete transportation:", error);
-      toast.error("Failed to delete some transport items");
+      toast.error("Couldn't delete some transport items. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -967,7 +967,7 @@ export default function TransportationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update transportation:", error);
-      toast.error("Failed to update some transport items");
+      toast.error("Couldn't update some transport items. Try again.");
     } finally {
       setIsBulkEditing(false);
     }

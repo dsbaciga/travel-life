@@ -110,7 +110,7 @@ export default function OfflineStatusBadge({
           text: 'text-primary-700 dark:text-gold',
           icon: 'refresh' as const,
           label: 'Downloading',
-          tooltip: 'Downloading for offline...',
+          tooltip: 'Downloading for offline…',
           animate: true,
         };
       case 'outdated':
@@ -261,7 +261,7 @@ OfflineStatusBadge.Icon = function OfflineStatusIcon({
 
   const tooltips = {
     downloaded: 'Available offline',
-    downloading: 'Downloading...',
+    downloading: 'Downloading…',
     outdated: 'Offline data outdated',
     'not-downloaded': '',
   };
@@ -315,7 +315,7 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
         `}
       >
         <Icon name="refresh" className="w-4 h-4 animate-spin" />
-        Checking...
+        Checking…
       </span>
     );
   }
@@ -335,7 +335,7 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
           bg: 'bg-primary-500 dark:bg-gold',
           text: 'text-white dark:text-navy-900',
           icon: 'refresh' as const,
-          label: 'Downloading...',
+          label: 'Downloading…',
           animate: true,
         };
       case 'outdated':

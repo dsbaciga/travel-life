@@ -376,7 +376,7 @@ export default function TripDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["checklists", tripId] });
     } catch (error) {
       console.error("Failed to update checklist item:", error);
-      toast.error("Failed to update checklist item");
+      toast.error("Couldn't update checklist item. Try again.");
     }
   };
 
@@ -420,7 +420,7 @@ export default function TripDetailPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-dusk-400">
-            Loading trip...
+            Loading trip…
           </p>
         </div>
       </div>
@@ -521,7 +521,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading dashboard..." />
+                        <LoadingSpinner.FullPage message="Loading dashboard…" />
                       }
                     >
                       <TripDashboard
@@ -563,7 +563,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading day plan..." />
+                        <LoadingSpinner.FullPage message="Loading day plan…" />
                       }
                     >
                       <ItineraryDayView
@@ -598,7 +598,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading timeline..." />
+                          <LoadingSpinner.FullPage message="Loading timeline…" />
                         }
                       >
                         <Timeline
@@ -633,7 +633,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading daily view..." />
+                          <LoadingSpinner.FullPage message="Loading daily view…" />
                         }
                       >
                         <DailyView
@@ -668,7 +668,7 @@ export default function TripDetailPage() {
                       <ErrorBoundary>
                         <Suspense
                           fallback={
-                            <LoadingSpinner.FullPage message="Loading map..." />
+                            <LoadingSpinner.FullPage message="Loading map…" />
                           }
                         >
                           <TripMap
@@ -688,7 +688,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading route planner..." />
+                        <LoadingSpinner.FullPage message="Loading route planner…" />
                       }
                     >
                       <RoutePlanner
@@ -711,7 +711,7 @@ export default function TripDetailPage() {
                     ) : (
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading locations..." />
+                          <LoadingSpinner.FullPage message="Loading locations…" />
                         }
                       >
                         <LocationManager
@@ -734,7 +734,7 @@ export default function TripDetailPage() {
                 <ErrorBoundary>
                   <Suspense
                     fallback={
-                      <LoadingSpinner.FullPage message="Loading photos..." />
+                      <LoadingSpinner.FullPage message="Loading photos…" />
                     }
                   >
                     <TripPhotosTab
@@ -769,7 +769,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading photo map..." />
+                        <LoadingSpinner.FullPage message="Loading photo map…" />
                       }
                     >
                       <PhotosMapView
@@ -793,7 +793,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading photo timeline..." />
+                        <LoadingSpinner.FullPage message="Loading photo timeline…" />
                       }
                     >
                       <PhotoTimeline
@@ -815,7 +815,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading activities..." />
+                          <LoadingSpinner.FullPage message="Loading activities…" />
                         }
                       >
                         <ActivityManager
@@ -846,7 +846,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading unscheduled items..." />
+                          <LoadingSpinner.FullPage message="Loading unscheduled items…" />
                         }
                       >
                         <UnscheduledItems
@@ -875,7 +875,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading transport..." />
+                          <LoadingSpinner.FullPage message="Loading transport…" />
                         }
                       >
                         <TransportationManager
@@ -904,7 +904,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading stays..." />
+                          <LoadingSpinner.FullPage message="Loading stays…" />
                         }
                       >
                         <LodgingManager
@@ -930,7 +930,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading budget..." />
+                        <LoadingSpinner.FullPage message="Loading budget…" />
                       }
                     >
                       <BudgetManager
@@ -957,7 +957,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading food log..." />
+                        <LoadingSpinner.FullPage message="Loading food log…" />
                       }
                     >
                       <FoodLogManager
@@ -976,7 +976,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading deadlines..." />
+                        <LoadingSpinner.FullPage message="Loading deadlines…" />
                       }
                     >
                       <DeadlinesManager
@@ -999,7 +999,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading links..." />
+                        <LoadingSpinner.FullPage message="Loading links…" />
                       }
                     >
                       <SavedLinksManager
@@ -1021,7 +1021,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading custom items..." />
+                        <LoadingSpinner.FullPage message="Loading custom items…" />
                       }
                     >
                       <CustomItemsManager
@@ -1048,7 +1048,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading journal..." />
+                          <LoadingSpinner.FullPage message="Loading journal…" />
                         }
                       >
                         <JournalManager
@@ -1076,7 +1076,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading companions..." />
+                          <LoadingSpinner.FullPage message="Loading companions…" />
                         }
                       >
                         <CompanionManager
@@ -1099,7 +1099,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading emergency card..." />
+                        <LoadingSpinner.FullPage message="Loading emergency card…" />
                       }
                     >
                       <EmergencyCard
@@ -1121,7 +1121,7 @@ export default function TripDetailPage() {
                   <ErrorBoundary>
                     <Suspense
                       fallback={
-                        <LoadingSpinner.FullPage message="Loading local norms..." />
+                        <LoadingSpinner.FullPage message="Loading local norms…" />
                       }
                     >
                       <LocalNormsCard

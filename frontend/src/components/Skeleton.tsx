@@ -143,7 +143,7 @@ export function SkeletonGrid({
       {Array.from({ length: count }).map((_, i) => (
         <SkeletonCard key={i} hasImage={hasImage} />
       ))}
-      <span className="sr-only">Loading content...</span>
+      <span className="sr-only">Loading content…</span>
     </div>
   );
 }

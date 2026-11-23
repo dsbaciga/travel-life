@@ -61,7 +61,7 @@ export default function DuplicateTripModal({
 
   const handleDuplicateTrip = async () => {
     if (!duplicateTripTitle.trim()) {
-      toast.error("Please enter a title for the duplicated trip");
+      toast.error("Enter a title for the duplicated trip");
       return;
     }
 
@@ -70,12 +70,12 @@ export default function DuplicateTripModal({
         title: duplicateTripTitle,
         copyEntities: duplicateOptions,
       });
-      toast.success("Trip duplicated successfully!");
+      toast.success("Trip duplicated");
       onClose();
       onDuplicated(duplicatedTrip.id);
     } catch (error) {
       console.error("Failed to duplicate trip:", error);
-      toast.error("Failed to duplicate trip");
+      toast.error("Couldn't duplicate trip. Try again.");
     }
   };
 

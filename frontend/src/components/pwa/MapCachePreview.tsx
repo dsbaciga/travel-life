@@ -176,7 +176,7 @@ export function MapCachePreview({
       if (err instanceof DOMException && err.name === 'AbortError') {
         setError('Download cancelled');
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to download tiles');
+        setError(err instanceof Error ? err.message : "Couldn't download tiles. Try again.");
       }
     } finally {
       setIsDownloading(false);
@@ -199,7 +199,7 @@ export function MapCachePreview({
       await mapTileCacheService.clearTripTiles(tripId);
       onCacheClear?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear cache');
+      setError(err instanceof Error ? err.message : "Couldn't clear cache. Try again.");
     }
   }, [tripId, onCacheClear]);
 
@@ -375,7 +375,7 @@ export function MapCachePreview({
         <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
-              Downloading tiles...
+              Downloading tiles…
             </span>
             <span className="text-sm text-gray-500 dark:text-dusk-400">
               {progress.current} / {progress.total} ({progress.percentage}%)

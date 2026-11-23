@@ -205,7 +205,7 @@ export default function BulkActionBar({
                   ) : (
                     <Icon name="edit" size={16} />
                   )}
-                  <span className="hidden sm:inline">{isEditing ? 'Editing...' : 'Edit'}</span>
+                  <span className="hidden sm:inline">{isEditing ? 'Editing…' : 'Edit'}</span>
                 </button>
               )}
 
@@ -222,7 +222,7 @@ export default function BulkActionBar({
                 ) : (
                   <Icon name="delete" size={16} />
                 )}
-                <span className="hidden sm:inline">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                <span className="hidden sm:inline">{isDeleting ? 'Deleting…' : 'Delete'}</span>
               </button>
 
               {/* Close / Done button */}

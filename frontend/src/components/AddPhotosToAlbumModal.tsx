@@ -194,7 +194,7 @@ export default function AddPhotosToAlbumModal({
       onClose();
     } catch (error) {
       console.error("Failed to add photos to album:", error);
-      alert("Failed to add photos to album");
+      alert("Couldn't add photos to album. Try again.");
     } finally {
       setIsAdding(false);
     }
@@ -352,7 +352,7 @@ export default function AddPhotosToAlbumModal({
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAdding
-                ? "Adding..."
+                ? "Adding…"
                 : `Add ${selectedPhotoIds.size} Photo${
                     selectedPhotoIds.size !== 1 ? "s" : ""
                   }`}

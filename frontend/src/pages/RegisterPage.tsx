@@ -49,10 +49,10 @@ export default function RegisterPage() {
 
     try {
       await register({ username, email, password });
-      toast.success('Registration successful!');
+      toast.success('Welcome to Travel Life.');
       navigate('/dashboard');
     } catch {
-      toast.error(error || 'Registration failed');
+      toast.error(error || "Couldn't create your account. Try again.");
     }
   };
 
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                 className="btn-primary w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Start Your Journey'}
+                {isLoading ? 'Creating account…' : 'Start Your Journey'}
               </button>
             </form>
 

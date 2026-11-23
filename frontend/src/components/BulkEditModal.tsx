@@ -111,7 +111,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
 
     // Check if any updates were provided
     if (Object.keys(updates).length === 0) {
-      setErrors({ _form: 'Please fill in at least one field to update' });
+      setErrors({ _form: 'Fill in at least one field to update' });
       return;
     }
 
@@ -160,7 +160,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
             rows={3}
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
 
@@ -172,7 +172,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
             step="0.01"
           />
         );
@@ -185,7 +185,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
     }
@@ -260,7 +260,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             {isSubmitting ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin mr-2" />
-                Updating...
+                Updating…
               </>
             ) : (
               `Update ${selectedCount} ${pluralLabel}`

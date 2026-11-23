@@ -627,7 +627,7 @@ export default function DailyView({
         setAllDays(daysData);
       } catch (err) {
         console.error('Error loading daily view data:', err);
-        setError('Failed to load trip data. Please try refreshing the page.');
+        setError('Failed to load trip data. Try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -721,7 +721,7 @@ export default function DailyView({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view...</span>
+        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view…</span>
       </div>
     );
   }
@@ -741,7 +741,7 @@ export default function DailyView({
   if (allDays.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
-        <p>No trip dates defined. Please set trip start and end dates.</p>
+        <p>No trip dates defined. Set trip start and end dates.</p>
       </div>
     );
   }

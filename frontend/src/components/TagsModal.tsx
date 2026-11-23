@@ -38,7 +38,7 @@ export default function TagsModal({
       setTripTags(tripTagsData);
       setAllTags(allTagsData);
     } catch {
-      toast.error("Failed to load tags");
+      toast.error("Couldn't load tags. Try again.");
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag created and added to trip");
     } catch {
-      toast.error("Failed to create tag");
+      toast.error("Couldn't create tag. Try again.");
     }
   };
 
@@ -80,7 +80,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag added to trip");
     } catch {
-      toast.error("Failed to add tag");
+      toast.error("Couldn't add tag. Try again.");
     }
   };
 
@@ -91,7 +91,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag removed from trip");
     } catch {
-      toast.error("Failed to remove tag");
+      toast.error("Couldn't remove tag. Try again.");
     }
   };
 
@@ -124,7 +124,7 @@ export default function TagsModal({
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-dusk-400">
-                Loading tags...
+                Loading tags…
               </p>
             </div>
           ) : (
@@ -228,7 +228,7 @@ export default function TagsModal({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tags..."
+                  placeholder="Search tags…"
                   className="input mb-3"
                 />
                 {filteredAvailableTags.length === 0 ? (

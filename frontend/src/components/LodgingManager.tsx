@@ -484,7 +484,7 @@ export default function LodgingManager({
           ...createDataBase,
           locationId: newLocationId,
         });
-        toast.success('Stay added successfully');
+        toast.success('Stay added');
         await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
@@ -519,7 +519,7 @@ export default function LodgingManager({
         }
       } catch (error) {
         console.error('Failed to create lodging:', error);
-        toast.error('Failed to add stay');
+        toast.error("Couldn't add stay. Try again.");
       }
     }
   };
@@ -527,8 +527,8 @@ export default function LodgingManager({
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
       title: "Delete stay",
-      message: "Delete this stay? This action cannot be undone.",
-      confirmLabel: "Delete",
+      message: "This stay and its booking details are deleted. You can't undo this.",
+      confirmLabel: "Delete stay",
       variant: "danger",
     });
     if (!confirmed) return;

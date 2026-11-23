@@ -171,7 +171,7 @@ export default function AlbumModal({
             value={description}
             onChange={(val) => setDescription(val)}
             rows={3}
-            placeholder="Add a description for this album..."
+            placeholder="Add a description for this album…"
             label="Description (Optional)"
             compact
           />
@@ -224,7 +224,7 @@ export default function AlbumModal({
               className="btn btn-primary"
               disabled={saving || !name.trim()}
             >
-              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Album"}
+              {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Album"}
             </button>
           </div>
         </form>

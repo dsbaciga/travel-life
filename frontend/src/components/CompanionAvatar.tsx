@@ -130,7 +130,7 @@ export default function CompanionAvatar({
       toast.success("Avatar updated");
       onUpdate?.(updated);
     } catch {
-      toast.error("Failed to upload avatar");
+      toast.error("Couldn't upload avatar. Try again.");
     } finally {
       setUploading(false);
       setShowMenu(false);
@@ -148,7 +148,7 @@ export default function CompanionAvatar({
       toast.success("Avatar removed");
       onUpdate?.(updated);
     } catch {
-      toast.error("Failed to remove avatar");
+      toast.error("Couldn't remove avatar. Try again.");
     }
     setShowMenu(false);
   };

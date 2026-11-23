@@ -61,7 +61,7 @@ export default function OfflineDownloadButton({
       setError(null);
     } catch (err) {
       console.error('Failed to load offline status:', err);
-      setError('Failed to check status');
+      setError("Couldn't check status. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function OfflineDownloadButton({
       onRemove?.();
     } catch (err) {
       console.error('Failed to remove offline data:', err);
-      setError('Failed to remove');
+      setError("Couldn't remove. Try again.");
     } finally {
       setIsRemoving(false);
     }
@@ -145,7 +145,7 @@ export default function OfflineDownloadButton({
               : status === 'outdated'
               ? 'Offline data outdated - Click to update'
               : status === 'downloading'
-              ? 'Downloading...'
+              ? 'Downloading…'
               : 'Download for offline'
           }
           aria-label={
@@ -225,13 +225,13 @@ export default function OfflineDownloadButton({
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-charcoal dark:text-warm-gray">
                 {isLoading
-                  ? 'Checking status...'
+                  ? 'Checking status…'
                   : status === 'downloaded'
                   ? 'Available Offline'
                   : status === 'outdated'
                   ? 'Offline Data Outdated'
                   : status === 'downloading'
-                  ? 'Downloading...'
+                  ? 'Downloading…'
                   : 'Download for Offline'}
               </span>
 

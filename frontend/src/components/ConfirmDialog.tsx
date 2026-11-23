@@ -181,7 +181,7 @@ export default function ConfirmDialog({
             {isLoading ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
-                Processing...
+                Processing…
               </>
             ) : (
               confirmLabel

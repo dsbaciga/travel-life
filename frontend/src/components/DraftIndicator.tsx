@@ -45,7 +45,7 @@ export default function DraftIndicator({
         <>
           {/* Pulsing dot for saving state */}
           <span className="w-2 h-2 bg-primary-500 dark:bg-gold rounded-full animate-pulse-subtle" />
-          <span>Saving...</span>
+          <span>Saving…</span>
         </>
       ) : lastSavedAt ? (
         <>

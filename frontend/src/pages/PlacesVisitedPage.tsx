@@ -44,7 +44,7 @@ export default function PlacesVisitedPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          toast.error("Failed to load favorite locations");
+          toast.error("Couldn't load favorite locations. Try again.");
           setShowFavoritesOnly(false);
         }
       })
@@ -73,7 +73,7 @@ export default function PlacesVisitedPage() {
       setLocations(locationData);
       setTransportation(transportationData);
     } catch {
-      toast.error("Failed to load visited places");
+      toast.error("Couldn't load visited places. Try again.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export default function PlacesVisitedPage() {
   if (loading) {
     return (
       <div className="max-w-[1600px] mx-auto px-4 py-8">
-        <LoadingSpinner.FullPage message="Loading your visited places..." />
+        <LoadingSpinner.FullPage message="Loading your visited places…" />
       </div>
     );
   }

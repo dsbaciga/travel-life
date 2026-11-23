@@ -93,7 +93,7 @@ export default function LinkPanel({
       void lightboxThumbnails.loadThumbnail(photo.id, photo.thumbnailPath, photo.source);
       setLightboxPhoto(photo);
     } catch {
-      toast.error('Failed to load photo');
+      toast.error("Couldn't load photo. Try again.");
     }
   };
 
@@ -154,7 +154,7 @@ export default function LinkPanel({
     },
     onError: (error: Error) => {
       console.error('Failed to delete link:', error);
-      toast.error('Failed to remove link');
+      toast.error("Couldn't remove link. Try again.");
     },
   });
 
@@ -406,7 +406,7 @@ export default function LinkPanel({
             </div>
           ) : error ? (
             <div className="text-red-600 dark:text-red-400 text-center py-8">
-              Failed to load links. Please try again.
+              Failed to load links. Try again.
             </div>
           ) : linkedEntityTypes.length === 0 ? (
             <div className="text-center py-8">

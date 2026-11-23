@@ -739,7 +739,7 @@ export async function getDb(): Promise<IDBPDatabase<TravelLifeDB>> {
       blocked(currentVersion, blockedVersion) {
         console.warn(
           `[OfflineDB] Database upgrade blocked. Current: v${currentVersion}, Blocked: v${blockedVersion}`,
-          'Please close other tabs using this app.'
+          'Close other tabs using this app.'
         );
         // Emit custom event for UI to show notification
         window.dispatchEvent(

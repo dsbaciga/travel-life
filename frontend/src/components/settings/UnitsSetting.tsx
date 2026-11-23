@@ -29,7 +29,7 @@ export default function UnitsSetting() {
       updateUser({ measurementSystem: next });
       toast.success(next === "imperial" ? "Using imperial units" : "Using metric units");
     } catch {
-      toast.error("Failed to save units");
+      toast.error("Couldn't save units. Try again.");
     } finally {
       setSaving(false);
     }

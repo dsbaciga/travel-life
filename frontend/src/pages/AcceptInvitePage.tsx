@@ -76,7 +76,7 @@ export default function AcceptInvitePage() {
     }
 
     if (!username.trim()) {
-      toast.error('Please enter a username');
+      toast.error('Enter a username');
       return;
     }
 
@@ -102,13 +102,13 @@ export default function AcceptInvitePage() {
       // Log the user in with the credentials they just created
       await login({ email, password });
 
-      toast.success('Account created successfully! Welcome to Travel Life!');
+      toast.success('Account created. Welcome to Travel Life.');
       navigate('/dashboard');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to create account');
+        toast.error(error.response?.data?.message || "Couldn't create account. Try again.");
       } else {
-        toast.error('Failed to create account');
+        toast.error("Couldn't create account. Try again.");
       }
     } finally {
       setSubmitting(false);
@@ -132,9 +132,9 @@ export default function AcceptInvitePage() {
       navigate('/');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to decline invitation');
+        toast.error(error.response?.data?.message || "Couldn't decline invitation. Try again.");
       } else {
-        toast.error('Failed to decline invitation');
+        toast.error("Couldn't decline invitation. Try again.");
       }
     }
   };
@@ -144,7 +144,7 @@ export default function AcceptInvitePage() {
       <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation...</p>
+          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation…</p>
         </div>
       </div>
     );
@@ -189,7 +189,7 @@ export default function AcceptInvitePage() {
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {invitation.status === 'EXPIRED'
-                ? 'This invitation has expired. Please ask the person who invited you to send a new invitation.'
+                ? 'This invitation has expired. Ask the person who invited you to send a new invitation.'
                 : invitation.status === 'ACCEPTED'
                 ? 'This invitation has already been accepted. You can log in to your account.'
                 : 'This invitation has been declined.'}
@@ -311,7 +311,7 @@ export default function AcceptInvitePage() {
               {submitting ? (
                 <>
                   <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
-                  Creating Account...
+                  Creating Account…
                 </>
               ) : (
                 'Create Account'

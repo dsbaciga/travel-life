@@ -26,7 +26,7 @@ export async function openNavigation(target: NavTarget): Promise<void> {
     try {
       await Linking.openURL(links.fallback);
     } catch {
-      Alert.alert('Could not open maps', 'No app on this phone could open the directions.');
+      Alert.alert("Couldn't open maps. Try again.", 'No app on this phone could open the directions.');
     }
   }
 }
