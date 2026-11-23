@@ -56,6 +56,7 @@ describe('theme store and palettes', () => {
       'onHero',
       'heroMuted',
       'heroAccent',
+      'heroWash',
       'success',
       'warning',
       'danger',
@@ -91,5 +92,6 @@ describe('theme store and palettes', () => {
     expect(contrast(darkPalette.textMuted, darkPalette.surface)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(darkPalette.onHero, darkPalette.hero)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(darkPalette.heroMuted, darkPalette.hero)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(darkPalette.heroMuted, darkPalette.heroWash)).toBeGreaterThanOrEqual(4.5);
   });
 });

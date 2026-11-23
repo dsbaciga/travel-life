@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the current trip on the Trips screen) gets a thin Compass Gold bar along its top edge and a deeper surface in dark mode. Light mode is unchanged.
+- **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the Trips screen notice) gets a gold-to-amber bar along its top edge, a subtle diagonal wash, and a deeper surface in dark mode. Titles and headings now use Crimson Pro and body text Manrope, as on the web. Light mode colours are unchanged. This adds native code (`expo-linear-gradient`), so it needs a new APK and cannot ship as an over-the-air update.
 
 ## [8.3.0] - 2026-11-22
 

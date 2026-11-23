@@ -1,6 +1,7 @@
 /**
  * Small themed building blocks shared by every screen.
  */
+import { LinearGradient } from 'expo-linear-gradient';
 import { createContext, useContext, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +18,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { fontStyle, useFontStore, type FontKind, type FontWeightName } from '../lib/fonts';
 import { splitLeadingEmoji } from '../lib/labels';
 import { DUSK, radius, spacing, TOUCH_TARGET, usePalette, useResolvedColorScheme } from '../lib/theme';
 import Icon, { type IconName } from './Icon';
@@ -154,7 +156,26 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
   ];
   const body = (
     <HeroContext.Provider value={hero}>
-      {hero ? <View pointerEvents="none" style={[styles.heroBar, { backgroundColor: palette.heroAccent }]} /> : null}
+      {hero ? (
+        <>
+          {/* A subtle diagonal wash, from the hero colour to a slightly lighter step. */}
+          <LinearGradient
+            pointerEvents="none"
+            colors={[palette.hero, palette.heroWash]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          {/* The Compass Gold signature: gold to amber along the top edge. */}
+          <LinearGradient
+            pointerEvents="none"
+            colors={[palette.heroAccent, HERO_BAR_END]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.heroBar}
+          />
+        </>
+      ) : null}
       {children}
     </HeroContext.Provider>
   );
@@ -196,6 +217,8 @@ export function AppText({
 }: AppTextProps) {
   const palette = usePalette();
   const onHero = useContext(HeroContext);
+  const fontsReady = useFontStore((state) => state.ready);
+  const face = TEXT_FACES[variant];
   const fallback = onHero
     ? muted
       ? palette.heroMuted
@@ -210,6 +233,7 @@ export function AppText({
       accessibilityRole={accessibilityRole}
       style={[
         textStyles[variant],
+        fontStyle(face[0], face[1], fontsReady),
         { color: color ?? fallback },
         style,
       ]}>
@@ -267,6 +291,7 @@ export function Button({
   const outline =
     variant === 'ghost' || variant === 'secondary' ? (onHero ? HERO_WASH : palette.border) : background;
   const { icon, text: words } = splitLeadingEmoji(label);
+  const fontsReady = useFontStore((state) => state.ready);
   return (
     <Pressable
       accessibilityRole="button"
@@ -292,7 +317,7 @@ export function Button({
           {iconName ? <Icon name={iconName} size={18} color={foreground} /> : null}
           {/* The icon is its own Text: a bad emoji glyph must not take the words down with it. */}
           {!iconName && icon ? <Text style={styles.buttonIcon}>{icon}</Text> : null}
-          <Text style={[styles.buttonLabel, { color: foreground }]}>{words}</Text>
+          <Text style={[styles.buttonLabel, fontStyle('body', '600', fontsReady), { color: foreground }]}>{words}</Text>
         </View>
       )}
     </Pressable>
@@ -332,10 +357,11 @@ export function Chip({ label, selected, onPress, tone = 'default', detail, icon,
   const onHero = useContext(HeroContext);
   const idleLabel = onHero ? palette.onHero : toneColor;
   const labelColor = selected ? palette.onPrimary : idleLabel;
+  const fontsReady = useFontStore((state) => state.ready);
   const text = (
-    <Text style={[styles.chipLabel, { color: labelColor }]}>
+    <Text style={[styles.chipLabel, fontStyle('body', '600', fontsReady), { color: labelColor }]}>
       {label}
-      {detail ? <Text style={styles.chipDetail}> {detail}</Text> : null}
+      {detail ? <Text style={[styles.chipDetail, fontStyle('body', '400', fontsReady)]}> {detail}</Text> : null}
     </Text>
   );
   const body =
@@ -379,6 +405,7 @@ interface FieldProps extends Omit<TextInputProps, 'style'> {
 
 export function Field({ label, error, hideLabel, ...input }: FieldProps) {
   const palette = usePalette();
+  const fontsReady = useFontStore((state) => state.ready);
   return (
     <View style={styles.field}>
       {hideLabel ? null : (
@@ -392,6 +419,7 @@ export function Field({ label, error, hideLabel, ...input }: FieldProps) {
         {...input}
         style={[
           styles.input,
+          fontStyle('body', '400', fontsReady),
           input.multiline && styles.inputMultiline,
           {
             color: palette.text,
@@ -449,14 +477,27 @@ export function Banner({ text, tone = 'info' }: { text: string; tone?: 'info' | 
   );
 }
 
+/** Amber end of the hero card's gold top bar (the start is `palette.heroAccent`). */
+const HERO_BAR_END = '#D97706';
+
 /** Translucent white, for controls sitting on the hero surface. */
 const HERO_WASH = 'rgba(255, 255, 255, 0.14)';
 
+/** Which font and weight each text variant uses (display = Crimson Pro, body = Manrope). */
+const TEXT_FACES: Record<NonNullable<AppTextProps['variant']>, [FontKind, FontWeightName]> = {
+  title: ['display', '700'],
+  heading: ['display', '600'],
+  body: ['body', '400'],
+  label: ['body', '600'],
+  caption: ['body', '400'],
+};
+
 const textStyles = StyleSheet.create({
-  title: { fontSize: 26, fontWeight: '700', lineHeight: 32, letterSpacing: -0.3 },
-  heading: { fontSize: 18, fontWeight: '600', lineHeight: 24 },
-  body: { fontSize: 16, lineHeight: 22 },
-  label: { fontSize: 13, fontWeight: '600', lineHeight: 18, letterSpacing: 0.2 },
+  // Crimson Pro sits smaller than the system font at the same size, so display sizes run larger.
+  title: { fontSize: 31, lineHeight: 36, letterSpacing: -0.2 },
+  heading: { fontSize: 22, lineHeight: 27 },
+  body: { fontSize: 15, lineHeight: 22 },
+  label: { fontSize: 13, lineHeight: 18, letterSpacing: 0.2 },
   caption: { fontSize: 13, lineHeight: 18 },
 });
 
@@ -474,7 +515,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
   },
-  // The Compass Gold signature: a thin accent bar along the top edge.
   heroBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 3 },
   cardHero: { overflow: 'hidden', elevation: 4, shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
   footer: {
@@ -507,7 +547,7 @@ const styles = StyleSheet.create({
   buttonCompact: { paddingHorizontal: spacing.md, alignSelf: 'flex-start' },
   buttonContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   buttonIcon: { fontSize: 16, fontWeight: 'normal' },
-  buttonLabel: { fontSize: 16, fontWeight: '600' },
+  buttonLabel: { fontSize: 15 },
   chip: {
     minHeight: 32,
     paddingHorizontal: spacing.md,
@@ -516,8 +556,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chipContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  chipLabel: { fontSize: 13, fontWeight: '600' },
-  chipDetail: { fontWeight: 'normal' },
+  chipLabel: { fontSize: 13 },
+  chipDetail: {},
   field: { gap: spacing.xs },
   input: {
     minHeight: TOUCH_TARGET,

@@ -65,6 +65,8 @@ export interface Palette {
   onHero: string;
   heroMuted: string;
   heroAccent: string;
+  /** Far end of the hero card's subtle diagonal wash (it starts at `hero`). */
+  heroWash: string;
   success: string;
   warning: string;
   danger: string;
@@ -88,6 +90,7 @@ export const lightPalette: Palette = {
   onHero: '#f8fafc',
   heroMuted: '#cbd5e1',
   heroAccent: '#fbbf24',
+  heroWash: '#1e293b',
   success: '#15803d',
   warning: '#b45309',
   danger: '#b91c1c',
@@ -111,6 +114,7 @@ export const darkPalette: Palette = {
   onHero: DUSK[50],
   heroMuted: DUSK[300],
   heroAccent: '#fbbf24',
+  heroWash: DUSK[900],
   success: '#4ade80',
   warning: '#fbbf24',
   danger: '#f87171',
