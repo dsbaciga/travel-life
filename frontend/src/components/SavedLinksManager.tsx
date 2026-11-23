@@ -326,7 +326,7 @@ export default function SavedLinksManager({
         <ListItemSkeleton count={3} />
       ) : !links || links.length === 0 ? (
         <EmptyState
-          icon="🔗"
+          icon="savedLink"
           message="No links yet"
           subMessage="Save a page you want to remember for this trip"
           actionLabel="Add Link"

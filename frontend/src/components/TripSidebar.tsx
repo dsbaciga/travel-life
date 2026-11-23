@@ -5,6 +5,7 @@
  * Provides a desktop-friendly sidebar with expandable sections.
  */
 
+import Icon from './ui/Icon';
 import { useState, useEffect } from 'react';
 import type { TabGroupItem, SubTab } from './TabGroup';
 import { useNavigationStore } from '../store/navigationStore';
@@ -102,21 +103,9 @@ export default function TripSidebar({
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <svg
-            className={`w-5 h-5 text-gray-500 dark:text-dusk-400 transition-transform ${
+          <Icon name="doubleChevronLeft" className={`w-5 h-5 text-gray-500 dark:text-dusk-400 transition-transform ${
               sidebarCollapsed ? 'rotate-180' : ''
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-            />
-          </svg>
+            }`} />
         </button>
       </div>
 
@@ -162,21 +151,9 @@ export default function TripSidebar({
                     )}
 
                     {hasSubTabs && (
-                      <svg
-                        className={`w-4 h-4 text-gray-400 transition-transform ${
+                      <Icon name="expand" className={`w-4 h-4 text-gray-400 transition-transform ${
                           isExpanded ? 'rotate-180' : ''
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                        }`} />
                     )}
                   </>
                 )}

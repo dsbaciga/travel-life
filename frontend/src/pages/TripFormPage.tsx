@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import MarkdownEditor from '../components/MarkdownEditor';
 import TripCoverImageField from '../components/TripCoverImageField';
 import { useNavigationBlock } from '../hooks/useNavigationBlock';
+import Icon from '../components/ui/Icon';
 
 interface FormErrors {
   title?: string;
@@ -414,10 +415,7 @@ export default function TripFormPage() {
               onClick={() => navigate(`/trips/${id}`)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+              <Icon name="visible" size={16} />
               View Trip
             </button>
           )}
@@ -487,7 +485,7 @@ export default function TripFormPage() {
                 <span>
                   {showOptionalFields ? 'Hide' : 'Add'} dates, description and more
                 </span>
-                <span aria-hidden="true">{showOptionalFields ? '▲' : '▼'}</span>
+                <Icon name={showOptionalFields ? 'collapse' : 'expand'} size={16} />
               </button>
             )}
 
@@ -640,9 +638,7 @@ export default function TripFormPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
-                      </svg>
+                      <Icon name="link" size={16} />
                       Public share link
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">

@@ -1,13 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  ArrowDownTrayIcon,
-  CloudIcon,
-  CloudArrowDownIcon,
-  CheckIcon,
-  ArrowPathIcon,
-  TrashIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import { offlineDownloadService, type OfflineDownloadStatus, type DownloadSizeEstimate } from '../../services/offlineDownload.service';
 import OfflineDownloadModal from './OfflineDownloadModal';
 
@@ -167,15 +159,15 @@ export default function OfflineDownloadButton({
           }
         >
           {isLoading || isRemoving ? (
-            <ArrowPathIcon className="w-5 h-5 animate-spin" />
+            <Icon name="refresh" className="animate-spin" />
           ) : status === 'downloaded' ? (
-            <CheckIcon className="w-5 h-5" />
+            <Icon name="check" />
           ) : status === 'outdated' ? (
-            <ArrowPathIcon className="w-5 h-5" />
+            <Icon name="refresh" />
           ) : status === 'downloading' ? (
-            <ArrowPathIcon className="w-5 h-5 animate-spin" />
+            <Icon name="refresh" className="animate-spin" />
           ) : (
-            <ArrowDownTrayIcon className="w-5 h-5" />
+            <Icon name="download" />
           )}
         </button>
 
@@ -217,15 +209,15 @@ export default function OfflineDownloadButton({
               `}
             >
               {isLoading ? (
-                <ArrowPathIcon className="w-5 h-5 text-slate dark:text-warm-gray animate-spin" />
+                <Icon name="refresh" className="text-slate dark:text-warm-gray animate-spin" />
               ) : status === 'downloaded' ? (
-                <CloudArrowDownIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Icon name="cloudDone" className="text-emerald-600 dark:text-emerald-400" />
               ) : status === 'outdated' ? (
-                <ExclamationCircleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <Icon name="error" className="text-amber-600 dark:text-amber-400" />
               ) : status === 'downloading' ? (
-                <ArrowPathIcon className="w-5 h-5 text-primary-600 dark:text-gold animate-spin" />
+                <Icon name="refresh" className="text-primary-600 dark:text-gold animate-spin" />
               ) : (
-                <CloudIcon className="w-5 h-5 text-slate dark:text-warm-gray" />
+                <Icon name="cloud" className="text-slate dark:text-warm-gray" />
               )}
             </div>
 
@@ -291,7 +283,7 @@ export default function OfflineDownloadButton({
                   min-w-[44px] min-h-[44px]
                 "
               >
-                <ArrowDownTrayIcon className="w-4 h-4" />
+                <Icon name="download" size={16} />
                 Download
               </button>
             )}
@@ -315,7 +307,7 @@ export default function OfflineDownloadButton({
                   title="Update offline data"
                   aria-label="Update offline data"
                 >
-                  <ArrowPathIcon className="w-4 h-4" />
+                  <Icon name="refresh" size={16} />
                 </button>
                 <button
                   onClick={handleRemove}
@@ -335,9 +327,9 @@ export default function OfflineDownloadButton({
                   aria-label="Remove offline data"
                 >
                   {isRemoving ? (
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    <Icon name="refresh" size={16} className="animate-spin" />
                   ) : (
-                    <TrashIcon className="w-4 h-4" />
+                    <Icon name="delete" size={16} />
                   )}
                 </button>
               </>
@@ -360,7 +352,7 @@ export default function OfflineDownloadButton({
                     min-w-[44px] min-h-[44px]
                   "
                 >
-                  <ArrowPathIcon className="w-4 h-4" />
+                  <Icon name="refresh" size={16} />
                   Update
                 </button>
                 <button
@@ -380,9 +372,9 @@ export default function OfflineDownloadButton({
                   aria-label="Remove offline data"
                 >
                   {isRemoving ? (
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    <Icon name="refresh" size={16} className="animate-spin" />
                   ) : (
-                    <TrashIcon className="w-4 h-4" />
+                    <Icon name="delete" size={16} />
                   )}
                 </button>
               </>

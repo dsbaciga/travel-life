@@ -10,6 +10,7 @@
 
 import toast from 'react-hot-toast';
 import type { Toast } from 'react-hot-toast';
+import Icon from '../components/ui/Icon';
 
 interface UndoToastOptions {
   message: string;
@@ -60,7 +61,7 @@ export function toastWithUndo({ message, onUndo, duration = 5000 }: UndoToastOpt
     ),
     {
       duration,
-      icon: '↩️',
+      icon: <Icon name="undo" />,
     }
   );
 }
@@ -145,9 +146,9 @@ export function toastWithAction({
   variant = 'info',
 }: ActionToastOptions) {
   const iconMap = {
-    info: 'ℹ️',
-    success: '✅',
-    warning: '⚠️',
+    info: <Icon name="info" />,
+    success: <Icon name="success" className="text-green-600" />,
+    warning: <Icon name="alert" className="text-amber-600" />,
   };
 
   return toast(
@@ -199,7 +200,7 @@ export function toastError(message: string) {
  */
 export function toastInfo(message: string) {
   return toast(message, {
-    icon: 'ℹ️',
+    icon: <Icon name="info" />,
   });
 }
 
@@ -208,7 +209,7 @@ export function toastInfo(message: string) {
  */
 export function toastWarning(message: string) {
   return toast(message, {
-    icon: '⚠️',
+    icon: <Icon name="alert" className="text-amber-600" />,
     duration: 5000,
   });
 }

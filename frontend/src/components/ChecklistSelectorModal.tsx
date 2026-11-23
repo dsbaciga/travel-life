@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import Icon, { type IconName } from './ui/Icon';
 import toast from 'react-hot-toast';
 import type { DefaultChecklistStatus, ChecklistType } from '../types/checklist';
 
@@ -68,16 +68,16 @@ export default function ChecklistSelectorModal({
     }
   };
 
-  const getChecklistIcon = (type: ChecklistType) => {
+  const getChecklistIcon = (type: ChecklistType): IconName => {
     switch (type) {
       case 'airports':
-        return '✈️';
+        return 'airport';
       case 'countries':
-        return '🌍';
+        return 'globe';
       case 'cities':
-        return '🏙️';
+        return 'city';
       case 'us_states':
-        return '🗽';
+        return 'landmark';
     }
   };
 
@@ -105,7 +105,7 @@ export default function ChecklistSelectorModal({
               aria-label="Close"
               className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
             >
-              <XMarkIcon className="w-6 h-6" />
+              <Icon name="close" size={24} />
             </button>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function ChecklistSelectorModal({
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{getChecklistIcon(checklist.type)}</span>
+                        <Icon name={getChecklistIcon(checklist.type)} size={24} />
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {checklist.name}
                         </span>

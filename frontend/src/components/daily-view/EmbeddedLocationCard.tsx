@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import Icon from '../ui/Icon';
 import type { Location } from '../../types/location';
 import DirectionsButton from '../DirectionsButton';
 import { placeFromLocation } from '../../lib/itineraryPlaces';
@@ -52,7 +53,6 @@ export default function EmbeddedLocationCard({
 
   // Get category info
   const categoryInfo = 'category' in location && location.category;
-  const categoryIcon = categoryInfo && categoryInfo.icon ? categoryInfo.icon : '📍';
   const categoryName = categoryInfo && categoryInfo.name;
 
   return (
@@ -73,7 +73,11 @@ export default function EmbeddedLocationCard({
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className={`w-10 h-10 rounded-lg ${colors.icon} flex items-center justify-center flex-shrink-0`}>
-          <span className="text-lg">{categoryIcon}</span>
+          {categoryInfo && categoryInfo.icon ? (
+            <span className="text-lg">{categoryInfo.icon}</span>
+          ) : (
+            <Icon name="place" />
+          )}
         </div>
 
         {/* Content */}
@@ -90,25 +94,7 @@ export default function EmbeddedLocationCard({
 
           {location.address && (
             <div className="flex items-start gap-1.5 mt-1 text-sm text-gray-500 dark:text-dusk-400">
-              <svg
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              <Icon name="place" size={16} className="flex-shrink-0 mt-0.5" />
               <span className="line-clamp-2">{location.address}</span>
             </div>
           )}
@@ -123,14 +109,7 @@ export default function EmbeddedLocationCard({
           {location.latitude && location.longitude && (
             <div className="mt-2 flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                  />
-                </svg>
+                <Icon name="map" size={16} />
                 View on map
               </span>
             </div>
@@ -142,19 +121,7 @@ export default function EmbeddedLocationCard({
           {canNavigate && (
             <DirectionsButton destination={destination} origin={originPlace} />
           )}
-          <svg
-            className="w-5 h-5 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <Icon name="chevronRight" size={20} className="text-gray-400" />
         </div>
       </div>
     </div>

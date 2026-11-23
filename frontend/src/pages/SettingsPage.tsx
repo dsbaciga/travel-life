@@ -14,6 +14,7 @@ import AccountSettingsSection from "../components/settings/AccountSettingsSectio
 import TagsAndCategoriesSection from "../components/settings/TagsAndCategoriesSection";
 import BackupRestoreSection from "../components/settings/BackupRestoreSection";
 import IntegrationsSection from "../components/settings/IntegrationsSection";
+import Icon from '../components/ui/Icon';
 
 // Lazy-loaded heavy tab components (only loaded when their tab is active)
 const TravelDocumentManager = lazy(
@@ -153,7 +154,8 @@ export default function SettingsPage() {
           to="/dashboard"
           className="text-blue-600 dark:text-blue-400 hover:underline mb-3 inline-flex items-center min-h-[44px]"
         >
-          ← Back to Today
+          <Icon name="back" size={16} className="mr-1" />
+          Back to Today
         </Link>
 
         <div className="flex justify-between items-center mb-8">

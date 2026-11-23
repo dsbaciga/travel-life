@@ -8,6 +8,7 @@ import {
   type TravelMode,
 } from '../lib/mapsDeepLinks';
 import { useMapsPreferences } from '../hooks/useMapsPreferences';
+import Icon from './ui/Icon';
 
 interface DirectionsButtonProps {
   /** Where the user wants to go. Nothing renders if it has no usable location. */
@@ -26,20 +27,7 @@ interface DirectionsButtonProps {
 
 function NavigationIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 3l7.5 17-7.5-4-7.5 4L12 3z"
-      />
-    </svg>
+    <Icon name="navigate" className={className} />
   );
 }
 

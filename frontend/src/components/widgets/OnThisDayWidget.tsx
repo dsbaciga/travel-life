@@ -4,6 +4,7 @@
  * Renders nothing when there are no memories for today.
  */
 
+import Icon from '../ui/Icon';
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -60,14 +61,7 @@ export default function OnThisDayWidget() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Icon name="history" className="w-6 h-6 text-white" />
         </div>
         <div>
           <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
@@ -100,7 +94,7 @@ export default function OnThisDayWidget() {
                     className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-navy-900/50 dark:to-navy-900/30 hover:from-primary-50 hover:to-primary-100 dark:hover:from-navy-700/60 dark:hover:to-navy-700/40 transition-colors group"
                   >
                     <span className="text-2xl flex-shrink-0" aria-hidden="true">
-                      {trip.tripTypeEmoji || '🧭'}
+                      {trip.tripTypeEmoji || <Icon name="trip" size={24} />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-gold transition-colors">
@@ -110,15 +104,7 @@ export default function OnThisDayWidget() {
                         {formatTripDates(trip.startDate, trip.endDate)}
                       </p>
                     </div>
-                    <svg
-                      className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <Icon name="chevronRight" className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0" />
                   </Link>
                 ))}
               </div>
@@ -145,20 +131,7 @@ export default function OnThisDayWidget() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-gray-300 dark:text-dusk-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
+                          <Icon name="photo" className="w-6 h-6 text-gray-300 dark:text-dusk-600" />
                         </div>
                       )}
                     </Link>

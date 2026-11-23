@@ -818,30 +818,31 @@ For sequential animations:
 
 ## Icons
 
-### Icon System
+### Rule: Material Symbols outlined only, by meaning
 
-All icons are centralized in `src/components/icons/index.tsx`:
+Every icon is a Material Symbols (outlined, weight 400) glyph drawn with the `Icon` component, the same family the Android app uses (`mobile/src/components/iconGlyphs.ts`). Pick an icon by what it means, never by glyph.
 
-- SVG-based, stroke style (not filled)
-- Default size: `w-5 h-5`
-- `aria-hidden` by default
+- **No emoji as UI icons.** Type badges, buttons, headers, tabs, toasts, empty states, weather and transport markers all use `Icon`. Emoji stay only where they are content: user-entered text, a user-chosen trip type or category emoji, journal mood faces, country flags.
+- **No `@heroicons/react`, `lucide-react` or hand-written `<svg>` icons.** If a meaning has no name, add one to `src/components/ui/iconRegistry.ts` (semantic name to a `material-symbols` `*-outline` glyph, imported through `~icons/material-symbols/...`) instead of drawing a new one. Spinners, logos, charts, maps and illustrations are not icons and may stay SVG.
+- **Names mirror mobile** where they overlap (`today`, `map`, `trip`, `place`, `stay`, `parking`, `receipt`, `chevronRight`, ...). Entity types (`activity`, `transportation`, `lodging`, `location`, `journal`, `expense`, `photo`, `document`, `checklist`), transport modes (`flight`, `train`, `bus`, `car`, `ferry`, `bike`, `walk`), weather (`weatherRain`, ...) and status (`success`, `alert`, `error`, `info`) are all names.
+- Data that used to hold an emoji holds an `IconName` (`ENTITY_TYPE_CONFIG[type].icon`, `DIETARY_TAGS[].icon`, `getWeatherIcon()`, `getTransportationIcon()`). Anything persisted to the backend keeps its stored value.
 
 ### Usage
 
 ```tsx
-import { MapPinIcon, CalendarIcon, PhotoIcon } from '@/components/icons';
+import Icon from '@/components/ui/Icon';
 
-<MapPinIcon className="w-4 h-4 text-primary-500 dark:text-gold" />
+<Icon name="flight" />                                   {/* 20px inline with text, decorative */}
+<Icon name="alert" size={16} className="text-amber-600" /> {/* 16px in dense chips */}
+<Icon name="delete" size={24} title="Delete trip" />     {/* 24px in buttons/headers; title makes it role="img" */}
 ```
 
-### Available Icons
-
-| Category | Icons |
-|----------|-------|
-| Core | `CloseIcon`, `SearchIcon`, `FilterIcon`, `PlusIcon`, `TrashIcon`, `EditIcon`, `PencilIcon`, `ListIcon`, `EllipsisVerticalIcon` |
-| Content | `PhotoIcon`, `CameraIcon`, `MapPinIcon`, `CalendarIcon` |
-| Chevrons | `ChevronRightIcon`, `ChevronDownIcon`, `ChevronUpIcon` |
-| Status | `SpinnerIcon` (includes `animate-spin` automatically) |
+- Sizes: 20 inline with text (default), 16 in dense chips, 24 in buttons and headers. A `size-*` / `w-* h-*` class overrides.
+- Colour is `currentColor`: set it with a text colour class.
+- Decorative by default (`aria-hidden`); pass `title` only when the icon is the only label, and keep `aria-label` on icon-only buttons.
+- Props that take an icon (`EmptyState`, `FormSection`, `Modal`, `FormModal`, `PageHeader` actions) take an `IconName`, not an emoji.
+- Glyphs are bundled at build time by `unplugin-icons` (custom compiler in `frontend/vite.icons.ts`), so they work offline. Non-React consumers (Leaflet divIcons) use `iconSvgString(name)`.
+- `components/icons/index.tsx` keeps the old named wrappers (`CloseIcon`, `PlusIcon`, ...) around `Icon` for existing call sites; use `Icon` in new code.
 
 ### Icon Colors
 

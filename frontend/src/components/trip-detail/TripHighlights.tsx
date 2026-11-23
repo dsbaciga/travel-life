@@ -66,7 +66,7 @@ export default function TripHighlights({
   if (photos.length === 0) {
     return (
       <EmptyState
-        icon="⭐"
+        icon="star"
         message="No highlights yet"
         subMessage="Tap the star on any photo, in the grid or in the full-screen viewer, to add it to this trip's highlights. Starred photos will appear here and on your public share page."
       />

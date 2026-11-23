@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import tagService from "../services/tag.service";
@@ -114,19 +115,7 @@ export default function TagsModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} className="w-6 h-6" />
           </button>
         </div>
 
@@ -167,19 +156,7 @@ export default function TagsModal({
                           aria-label={`Remove tag ${tag.name}`}
                           className="hover:bg-white hover:bg-opacity-20 rounded-full p-0.5"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          <Icon name="close" size={16} className="w-4 h-4" />
                         </button>
                       </div>
                     ))}

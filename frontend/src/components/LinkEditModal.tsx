@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Icon from './ui/Icon';
 import { useMutation } from '@tanstack/react-query';
 import entityLinkService from '../services/entityLink.service';
 import { useInvalidateEntityLinks } from '../hooks/useInvalidateEntityLinks';
@@ -132,9 +133,7 @@ export default function LinkEditModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -143,18 +142,16 @@ export default function LinkEditModal({
           {/* Link visualization */}
           <div className="flex items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
             <div className="text-center">
-              <span className="text-xl">{sourceConfig.emoji}</span>
+              <Icon name={sourceConfig.icon} />
               <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {sourceName}
               </div>
             </div>
             <div className="flex items-center gap-1 text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <Icon name="forward" size={16} />
             </div>
             <div className="text-center">
-              <span className="text-xl">{targetConfig.emoji}</span>
+              <Icon name={targetConfig.icon} />
               <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {targetName}
               </div>

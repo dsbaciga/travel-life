@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import Modal from './Modal';
+import Icon from './ui/Icon';
 import LoadingSpinner from './LoadingSpinner';
 import { usePdfImportPolling } from '../hooks/usePdfImportPolling';
 import pdfImportService from '../services/pdfImport.service';
@@ -91,7 +92,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     const next = currentIndex + 1;
     if (next >= entities.length) {
       if (skipped && next === entities.length) {
-        toast('All entities reviewed', { icon: '✓' });
+        toast('All entities reviewed', { icon: <Icon name="check" /> });
       }
       onComplete();
     } else {

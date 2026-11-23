@@ -9,6 +9,7 @@ import PhotoLightbox from './PhotoLightbox';
 import EmptyState, { EmptyIllustrations } from './EmptyState';
 import toast from 'react-hot-toast';
 import { formatDateOnly } from '../utils/timezone';
+import Icon from './ui/Icon';
 
 interface PhotoTimelineProps {
   tripId: number;
@@ -392,22 +393,7 @@ export default function PhotoTimeline({
                     {dayGroup.loading && (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                     )}
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    <Icon name="expand" className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
               </button>
@@ -497,20 +483,7 @@ export default function PhotoTimeline({
                       onClick={() => toggleDay(dayGroup.rawDate)}
                       className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
-                      <svg
-                        className="w-4 h-4 rotate-180"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <Icon name="collapse" size={16} />
                       Collapse day
                     </button>
                   )}

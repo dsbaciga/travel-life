@@ -5,6 +5,8 @@
  * Designed to be lightweight and efficient for client-side search operations.
  */
 
+import type { IconName } from '../components/ui/Icon';
+
 // ============================================
 // TEXT NORMALIZATION
 // ============================================
@@ -501,15 +503,15 @@ export const ENTITY_TYPE_LABELS: Record<SearchableEntityType, string> = {
 };
 
 /**
- * Icons for entity types (using SVG path data).
+ * Icon names for entity types (rendered with the shared `Icon` component).
  */
-export const ENTITY_TYPE_ICONS: Record<SearchableEntityType, string> = {
-  TRIP: 'M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9',
-  LOCATION: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z',
-  ACTIVITY: 'M13 10V3L4 14h7v7l9-11h-7z',
-  JOURNAL: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
-  TRANSPORTATION: 'M5 17h14M5 17a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2M5 17l-2 4h18l-2-4M12 12V5',
-  LODGING: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',
+export const ENTITY_TYPE_ICONS: Record<SearchableEntityType, IconName> = {
+  TRIP: 'trip',
+  LOCATION: 'place',
+  ACTIVITY: 'activity',
+  JOURNAL: 'journal',
+  TRANSPORTATION: 'transportation',
+  LODGING: 'lodging',
 };
 
 /**

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import Icon from '../ui/Icon';
 import { useQuery } from '@tanstack/react-query';
 import entityLinkService from '../../services/entityLink.service';
 import type { EntityType } from '../../types/entityLink';
@@ -103,7 +104,7 @@ export default function EntityLinkTooltip({
             ) : (
               <div>
                 <div className="font-medium mb-1 text-gray-300">
-                  {config.emoji} {config.pluralLabel} ({linkedEntityNames.length})
+                  <Icon name={config.icon} size={16} className="align-text-bottom" /> {config.pluralLabel} ({linkedEntityNames.length})
                 </div>
                 <ul className="space-y-0.5">
                   {linkedEntityNames.slice(0, 5).map((name, index) => (

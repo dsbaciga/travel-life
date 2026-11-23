@@ -8,6 +8,7 @@
 import { useState, useMemo } from 'react';
 import { calculateJetLag, formatTimeDifference } from '../utils/jetlag';
 import { ChevronDownIcon } from './icons';
+import Icon from './ui/Icon';
 
 interface JetLagCalculatorProps {
   homeTimezone: string;
@@ -55,20 +56,7 @@ function getSeverityStyles(severity: 'none' | 'mild' | 'moderate' | 'severe') {
  */
 function ClockIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="schedule" className={className} />
   );
 }
 
@@ -77,20 +65,7 @@ function ClockIcon({ className = 'w-4 h-4' }: { className?: string }) {
  */
 function MoonIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-      />
-    </svg>
+    <Icon name="nightClear" className={className} />
   );
 }
 
@@ -99,20 +74,7 @@ function MoonIcon({ className = 'w-4 h-4' }: { className?: string }) {
  */
 function InfoIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="info" className={className} />
   );
 }
 

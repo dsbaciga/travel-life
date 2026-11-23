@@ -1,17 +1,19 @@
+import type { IconName } from '../components/ui/Icon';
+
 /**
- * Get weather icon emoji based on conditions
+ * Get weather icon name based on conditions
  */
-export const getWeatherIcon = (conditions: string | null): string => {
-  if (!conditions) return '🌡️';
+export const getWeatherIcon = (conditions: string | null): IconName => {
+  if (!conditions) return 'weatherUnknown';
 
   const lower = conditions.toLowerCase();
 
   // Clear/Sunny
-  if (lower.includes('clear') || lower.includes('sunny')) return '☀️';
+  if (lower.includes('clear') || lower.includes('sunny')) return 'weatherClear';
 
   // Partly cloudy
   if (lower.includes('partly cloudy') || lower.includes('few clouds'))
-    return '⛅';
+    return 'weatherPartlyCloudy';
 
   // Cloudy
   if (
@@ -19,7 +21,7 @@ export const getWeatherIcon = (conditions: string | null): string => {
     lower.includes('overcast') ||
     lower.includes('scattered clouds')
   )
-    return '☁️';
+    return 'weatherCloudy';
 
   // Rain
   if (
@@ -27,14 +29,14 @@ export const getWeatherIcon = (conditions: string | null): string => {
     lower.includes('drizzle') ||
     lower.includes('shower')
   )
-    return '🌧️';
+    return 'weatherRain';
 
   // Thunderstorm
-  if (lower.includes('storm') || lower.includes('thunder')) return '⛈️';
+  if (lower.includes('storm') || lower.includes('thunder')) return 'weatherStorm';
 
   // Snow
   if (lower.includes('snow') || lower.includes('sleet') || lower.includes('ice'))
-    return '❄️';
+    return 'weatherSnow';
 
   // Fog/Mist
   if (
@@ -42,13 +44,13 @@ export const getWeatherIcon = (conditions: string | null): string => {
     lower.includes('mist') ||
     lower.includes('haze')
   )
-    return '🌫️';
+    return 'weatherFog';
 
   // Wind
-  if (lower.includes('wind')) return '💨';
+  if (lower.includes('wind')) return 'weatherWind';
 
   // Default
-  return '🌡️';
+  return 'weatherUnknown';
 };
 
 /**

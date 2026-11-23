@@ -697,8 +697,8 @@ describe("ActivityManager", () => {
         expect(screen.getByText("Unscheduled Activity")).toBeInTheDocument();
       });
 
-      // Check for section headers - they contain emojis and counts like "📅 Scheduled Activities (1)"
-      // Use a more flexible regex that matches the text ignoring emojis
+      // Check for section headers - they contain an icon and counts like "Scheduled Activities (1)"
+      // Match on the heading text only, ignoring the icon
       const headings = screen.getAllByRole("heading");
       const scheduledHeading = headings.find(h => h.textContent?.toLowerCase().includes("scheduled activities"));
       const unscheduledHeading = headings.find(h => h.textContent?.toLowerCase().includes("unscheduled activities"));

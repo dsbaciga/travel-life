@@ -5,6 +5,7 @@ import userInvitationService from '../services/userInvitation.service';
 import { useAuthStore } from '../store/authStore';
 import type { UserInvitationPublicInfo } from '../types/userInvitation';
 import toast from 'react-hot-toast';
+import Icon from '../components/ui/Icon';
 
 export default function AcceptInvitePage() {
   const [searchParams] = useSearchParams();
@@ -155,9 +156,7 @@ export default function AcceptInvitePage() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Icon name="close" size={32} className="text-red-600 dark:text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               Invalid Invitation
@@ -183,9 +182,7 @@ export default function AcceptInvitePage() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Icon name="schedule" size={32} className="text-yellow-600 dark:text-yellow-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               {invitation.status === 'EXPIRED' ? 'Invitation Expired' : 'Invitation Already Used'}
@@ -216,9 +213,7 @@ export default function AcceptInvitePage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <Icon name="mail" size={32} className="text-primary-600 dark:text-primary-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               You're Invited!
@@ -315,26 +310,7 @@ export default function AcceptInvitePage() {
             >
               {submitting ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
                   Creating Account...
                 </>
               ) : (

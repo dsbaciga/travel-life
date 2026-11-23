@@ -1,6 +1,7 @@
 import { useState, useEffect, useId } from 'react';
 import userService, { type LlmSettingsResponse } from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 interface Preset {
   label: string;
@@ -183,7 +184,7 @@ export default function LlmSettings() {
       {settings?.llmConfigured && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ LLM is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> LLM is configured
             {settings.llmApiKeySet ? ' (with API key)' : ' (no-auth / local mode)'}
           </p>
         </div>

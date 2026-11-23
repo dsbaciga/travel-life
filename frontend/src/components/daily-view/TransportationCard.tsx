@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import Icon from '../ui/Icon';
 import type { Transportation } from '../../types/transportation';
 import type { Location } from '../../types/location';
 import type { PhotoAlbum } from '../../types/photo';
@@ -88,7 +89,7 @@ export default function TransportationCard({
             <div
               className={`w-12 h-12 rounded-xl ${colors.icon} flex items-center justify-center flex-shrink-0`}
             >
-              <span className="text-2xl">{getTransportationIcon(transportation.type)}</span>
+              <Icon name={getTransportationIcon(transportation.type)} size={24} />
             </div>
 
             {/* Main content */}
@@ -129,14 +130,7 @@ export default function TransportationCard({
                 className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                 title="Edit transportation"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <Icon name="edit" size={20} />
               </button>
             </div>
           </div>
@@ -164,19 +158,7 @@ export default function TransportationCard({
 
           {/* Arrow - horizontal on mobile, vertical on desktop */}
           <div className="flex items-center justify-center gap-2 sm:flex-col sm:gap-0 py-1 sm:py-0">
-            <svg
-              className="w-6 h-6 text-gray-400 dark:text-dusk-400 rotate-90 sm:rotate-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
-            </svg>
+            <Icon name="forward" size={24} className="text-gray-400 dark:text-dusk-400 rotate-90 sm:rotate-0" />
             {durationMinutes && durationMinutes > 0 && (
               <span className="text-xs text-gray-400 dark:text-dusk-400 sm:mt-1">
                 {formatDuration(durationMinutes)}
@@ -207,14 +189,7 @@ export default function TransportationCard({
         {transportation.calculatedDistance && (
           <div className="mt-3 flex items-center gap-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
-              </svg>
+              <Icon name="trendDown" size={16} />
               {formatDistance(transportation.calculatedDistance)}
             </span>
             {transportation.distanceSource && (
@@ -228,14 +203,7 @@ export default function TransportationCard({
         {/* Confirmation number */}
         {transportation.confirmationNumber && (
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-dusk-400">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Icon name="success" size={16} />
             <span className="font-mono">{transportation.confirmationNumber}</span>
           </div>
         )}
@@ -251,19 +219,7 @@ export default function TransportationCard({
         {transportation.notes && (
           <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-dusk-700/50 text-sm text-gray-600 dark:text-dusk-400">
             <div className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <Icon name="note" size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
               <span>{transportation.notes}</span>
             </div>
           </div>

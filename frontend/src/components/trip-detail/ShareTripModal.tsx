@@ -44,7 +44,7 @@ export default function ShareTripModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Share Trip"
-      icon="👥"
+      icon="users"
       maxWidth="lg"
     >
       <ErrorBoundary>

@@ -15,6 +15,7 @@ import LinkButton from "./LinkButton";
 import { ListItemSkeleton } from "./SkeletonLoader";
 import CustomItemTypeManager from "./CustomItemTypeManager";
 import ExpandableText from "./shared/ExpandableText";
+import Icon from "./ui/Icon";
 import { formatCurrency } from "../utils/formatCurrency";
 
 /**
@@ -564,7 +565,7 @@ export default function CustomItemsManager({
         <ListItemSkeleton count={3} />
       ) : !items || items.length === 0 ? (
         <EmptyState
-          icon="📌"
+          icon="custom"
           message="No custom items yet"
           subMessage="Track anything that does not fit the other tabs"
           actionLabel="Add Item"
@@ -589,9 +590,7 @@ export default function CustomItemsManager({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start gap-2">
-                  <span className="text-lg leading-none mt-0.5" aria-hidden="true">
-                    📌
-                  </span>
+                  <Icon name="custom" className="mt-0.5" />
                   <div className="min-w-0">
                     <ExpandableText className="font-medium text-charcoal dark:text-dusk-100">
                       {item.name}
@@ -605,7 +604,7 @@ export default function CustomItemsManager({
 
                 {item.location?.name && (
                   <p className="text-sm text-slate dark:text-dusk-400 mt-2 truncate">
-                    📍 {item.location.name}
+                    <Icon name="place" size={16} className="align-text-bottom" /> {item.location.name}
                   </p>
                 )}
 

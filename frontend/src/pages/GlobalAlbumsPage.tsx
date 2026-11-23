@@ -16,6 +16,7 @@ import EmptyState, { EmptyIllustrations } from "../components/EmptyState";
 import { formatTripDates } from "../utils/dateFormat";
 import LinkButton from "../components/LinkButton";
 import { stripMarkdown } from "../utils/stripMarkdown";
+import Icon from "../components/ui/Icon";
 
 type SortOption =
   | "tripDate-desc"
@@ -394,19 +395,7 @@ export default function GlobalAlbumsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-sky dark:to-primary-500 flex items-center justify-center shadow-lg">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+                <Icon name="photo" size={24} className="text-white" />
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
@@ -427,7 +416,8 @@ export default function GlobalAlbumsPage() {
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="btn btn-primary whitespace-nowrap self-start sm:self-auto"
             >
-              {showCreateForm ? "Cancel" : "+ Create Album"}
+              <Icon name={showCreateForm ? "close" : "add"} size={20} className="mr-1 align-text-bottom" />
+              {showCreateForm ? "Cancel" : "Create Album"}
             </button>
           </div>
         </div>
@@ -519,20 +509,7 @@ export default function GlobalAlbumsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate/50 dark:text-warm-gray/50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate/50 dark:text-warm-gray/50" />
               <input
                 type="text"
                 placeholder="Search albums or trips..."
@@ -618,7 +595,7 @@ export default function GlobalAlbumsPage() {
           />
         ) : filteredAlbums.length === 0 ? (
           <div className="text-center py-12 px-6 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-2xl border-2 border-primary-500/10 dark:border-sky/10">
-            <div className="text-5xl mb-4">🔍</div>
+            <Icon name="search" size={48} className="mb-4 text-slate dark:text-warm-gray/70" />
             <p className="text-charcoal dark:text-warm-gray text-lg font-medium mb-2">
               No albums match your search
             </p>
@@ -671,7 +648,7 @@ export default function GlobalAlbumsPage() {
                   >
                     <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-400 to-primary-600 dark:from-sky/80 dark:to-primary-500 flex items-center justify-center shadow-md">
-                        <span className="text-white text-lg">✈️</span>
+                        <Icon name="flight" className="text-white" />
                       </div>
                       <div className="text-left min-w-0">
                         <h2 className="text-lg sm:text-xl break-words [overflow-wrap:anywhere] font-semibold text-charcoal dark:text-warm-gray font-display">
@@ -694,21 +671,12 @@ export default function GlobalAlbumsPage() {
                       >
                         View Trip
                       </Link>
-                      <svg
-                        className={`w-5 h-5 text-slate dark:text-warm-gray/70 transition-transform duration-200 ${
+                      <Icon
+                        name="expand"
+                        className={`text-slate dark:text-warm-gray/70 transition-transform duration-200 ${
                           isCollapsed ? "" : "rotate-180"
                         }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      />
                     </div>
                   </button>
 
@@ -752,20 +720,7 @@ export default function GlobalAlbumsPage() {
                                   </div>
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-slate/30 dark:text-warm-gray/30">
-                                    <svg
-                                      className="w-12 h-12"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      aria-hidden="true"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={1.5}
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                      />
-                                    </svg>
+                                    <Icon name="photo" size={48} />
                                   </div>
                                 )}
 

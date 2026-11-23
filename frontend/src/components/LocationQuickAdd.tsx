@@ -3,6 +3,7 @@ import geocodingService, { countryCodeFromGeocode } from '../services/geocoding.
 import locationService from '../services/location.service';
 import type { GeocodingResult } from '../services/geocoding.service';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
 
 interface LocationQuickAddProps {
   tripId: number;
@@ -142,7 +143,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
       </div>
 
       <div className="mt-3 text-xs text-gray-500 dark:text-dusk-400">
-        💡 Search for a place name, address, or landmark
+        <Icon name="lightbulb" size={14} className="align-text-bottom" /> Search for a place name, address, or landmark
       </div>
     </div>
   );

@@ -171,7 +171,7 @@ export default function PhotoActivityAutoLinkModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Link photos to activities"
-      icon="🔗"
+      icon="link"
       maxWidth="2xl"
       footer={
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
@@ -197,14 +197,14 @@ export default function PhotoActivityAutoLinkModal({
         <SkeletonLoader variant="list" count={3} />
       ) : isError ? (
         <EmptyState
-          icon="⚠️"
+          icon="alert"
           message="Could not match photos to activities"
           actionLabel="Try again"
           onAction={() => void refetch()}
         />
       ) : suggestions.length === 0 ? (
         <EmptyState
-          icon="🔗"
+          icon="link"
           message="No photos to link"
           subMessage={
             skippedNotes.length > 0

@@ -5,6 +5,8 @@ import type { Location } from "../types/location";
 import lodgingService from "../services/lodging.service";
 import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
+import { getLodgingIcon } from "./daily-view/utils";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import LocationQuickAdd from "./LocationQuickAdd";
 import AlsoCreatePlaceOption from "./forms/AlsoCreatePlaceOption";
@@ -578,23 +580,6 @@ export default function LodgingManager({
     });
   }, [manager.items, sortBy]);
 
-  const getTypeIcon = (type: LodgingType) => {
-    switch (type) {
-      case "hotel":
-        return "🏨";
-      case "hostel":
-        return "🏠";
-      case "vacation_rental":
-        return "🏡";
-      case "camping":
-        return "⛺";
-      case "resort":
-        return "🏖️";
-      default:
-        return "🛏️";
-    }
-  };
-
   // Wrap close handler with unsaved changes confirmation
   const handleCloseForm = useCallback(() => {
     if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
@@ -636,7 +621,7 @@ export default function LodgingManager({
         isOpen={manager.showForm}
         onClose={handleCloseForm}
         title={manager.editingId ? "Edit Lodging" : "Add Lodging"}
-        icon="🏨"
+        icon="lodging"
         formId="lodging-form"
         footer={
           <FormModalFooter
@@ -669,7 +654,7 @@ export default function LodgingManager({
 
         <form id="lodging-form" onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Basic Info (Name & Type) */}
-          <FormSection title="Basic Info" icon="🏨">
+          <FormSection title="Basic Info" icon="lodging">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -709,19 +694,19 @@ export default function LodgingManager({
                   className="input"
                   required
                 >
-                  <option value="hotel">🏨 Hotel</option>
-                  <option value="hostel">🏠 Hostel</option>
-                  <option value="vacation_rental">🏡 Vacation Rental</option>
-                  <option value="camping">⛺ Camping</option>
-                  <option value="resort">🏖️ Resort</option>
-                  <option value="other">🛏️ Other</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="hostel">Hostel</option>
+                  <option value="vacation_rental">Vacation Rental</option>
+                  <option value="camping">Camping</option>
+                  <option value="resort">Resort</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>
           </FormSection>
 
           {/* SECTION 2: Stay Dates */}
-          <FormSection title="Stay Dates" icon="📅">
+          <FormSection title="Stay Dates" icon="calendar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -783,7 +768,7 @@ export default function LodgingManager({
           </FormSection>
 
           {/* Place: the linked Place carries the address and map position */}
-          <FormSection title="Place" icon="📍">
+          <FormSection title="Place" icon="place">
             {showLocationQuickAdd ? (
               <LocationQuickAdd
                 tripId={tripId}
@@ -860,13 +845,13 @@ export default function LodgingManager({
           {/* COLLAPSIBLE: More Options (Booking, Cost, Notes) */}
           <CollapsibleSection
             title="More Options"
-            icon="⚙️"
+            icon="settings"
             isExpanded={showMoreOptions}
             onToggle={() => setShowMoreOptions(!showMoreOptions)}
             badge="booking, cost, notes"
           >
             {/* Booking Section */}
-            <FormSection title="Booking Details" icon="🎫">
+            <FormSection title="Booking Details" icon="ticket">
               <BookingFields
                 confirmationNumber={values.confirmationNumber}
                 bookingUrl={values.bookingUrl}
@@ -884,7 +869,7 @@ export default function LodgingManager({
             </FormSection>
 
             {/* Cost Section */}
-            <FormSection title="Cost" icon="💰">
+            <FormSection title="Cost" icon="money">
               <CostCurrencyFields
                 cost={values.cost}
                 currency={values.currency}
@@ -969,9 +954,7 @@ export default function LodgingManager({
                     />
                   </div>
                 )}
-                <span className="text-xl sm:text-2xl">
-                  {getTypeIcon(lodging.type)}
-                </span>
+                <Icon name={getLodgingIcon(lodging.type)} size={24} />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white break-words">
                     {lodging.name}

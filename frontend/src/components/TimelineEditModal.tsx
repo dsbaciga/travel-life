@@ -221,7 +221,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
 
   // Journal form state
   // Note: Linking to activities, lodging, transportation now uses the unified EntityLink system
-  // Users should use the Link button (🔗) on the timeline after saving
+  // Users should use the Link button on the timeline after saving
   const [journalForm, setJournalForm] = useState({
     title: "",
     content: "",
@@ -787,7 +787,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
     }
 
     // Note: Linking to other entities now uses the unified EntityLink system
-    // Users should use the Link button (🔗) on the timeline after saving
+    // Users should use the Link button on the timeline after saving
     const updateData = {
       title: journalForm.title,
       content: journalForm.content,
@@ -813,13 +813,13 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
   const getItemTypeIcon = () => {
     switch (itemType) {
       case "activity":
-        return "🎯";
+        return "activity";
       case "transportation":
-        return "🚀";
+        return "transportation";
       case "lodging":
-        return "🏨";
+        return "lodging";
       case "journal":
-        return "📔";
+        return "journal";
     }
   };
 
@@ -861,7 +861,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             <option value="">-- Select Category --</option>
             {activityCategories.map((cat) => (
               <option key={cat.name} value={cat.name}>
-                {cat.emoji} {cat.name}
+                {cat.name}
               </option>
             ))}
           </select>
@@ -1146,14 +1146,14 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           }}
           className="input"
         >
-          <option value="flight">✈️ Flight</option>
-          <option value="train">🚆 Train</option>
-          <option value="bus">🚌 Bus</option>
-          <option value="car">🚗 Car</option>
-          <option value="ferry">⛴️ Ferry</option>
-          <option value="bicycle">🚴 Bicycle</option>
-          <option value="walk">🚶 Walk</option>
-          <option value="other">🚀 Other</option>
+          <option value="flight">Flight</option>
+          <option value="train">Train</option>
+          <option value="bus">Bus</option>
+          <option value="car">Car</option>
+          <option value="ferry">Ferry</option>
+          <option value="bicycle">Bicycle</option>
+          <option value="walk">Walk</option>
+          <option value="other">Other</option>
         </select>
       </div>
 
@@ -1425,12 +1425,12 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
             }}
             className="input"
           >
-            <option value="hotel">🏨 Hotel</option>
-            <option value="hostel">🏠 Hostel</option>
-            <option value="vacation_rental">🏡 Vacation Rental</option>
-            <option value="camping">⛺ Camping</option>
-            <option value="resort">🏖️ Resort</option>
-            <option value="other">🛏️ Other</option>
+            <option value="hotel">Hotel</option>
+            <option value="hostel">Hostel</option>
+            <option value="vacation_rental">Vacation Rental</option>
+            <option value="camping">Camping</option>
+            <option value="resort">Resort</option>
+            <option value="other">Other</option>
           </select>
         </div>
       </div>
@@ -1680,7 +1680,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
           <p className="text-sm text-blue-700 dark:text-blue-300">
-            <strong>Tip:</strong> After saving, use the Link button (🔗) on the
+            <strong>Tip:</strong> After saving, use the Link button on the
             timeline to connect this journal entry to locations, activities,
             lodging, transportation, photos, or albums.
           </p>

@@ -17,6 +17,7 @@ import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
 import MarkdownRenderer from "../components/MarkdownRenderer";
 import toast from "react-hot-toast";
+import Icon from "../components/ui/Icon";
 
 export default function AlbumDetailPage() {
   const { tripId, albumId } = useParams<{ tripId: string; albumId: string }>();
@@ -336,7 +337,7 @@ export default function AlbumDetailPage() {
               {/* Entity Linking Info */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  💡 Use the link button in the album header to connect this album to locations, activities, and other trip entities.
+                  <Icon name="lightbulb" size={16} className="align-text-bottom" /> Use the link button in the album header to connect this album to locations, activities, and other trip entities.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -505,19 +506,7 @@ export default function AlbumDetailPage() {
                   aria-label="Close"
                   className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <Icon name="close" size={24} />
                 </button>
               </div>
 
@@ -565,17 +554,7 @@ export default function AlbumDetailPage() {
                           )}
                           {isSelected && (
                             <div className="absolute inset-0 bg-blue-500 bg-opacity-30 flex items-center justify-center">
-                              <svg
-                                className="w-8 h-8 text-white"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
+                              <Icon name="check" size={32} className="text-white" />
                             </div>
                           )}
                         </button>
@@ -629,3 +608,4 @@ export default function AlbumDetailPage() {
     </div>
   );
 }
+

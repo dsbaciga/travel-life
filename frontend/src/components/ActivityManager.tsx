@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import Icon from "./ui/Icon";
 import FormModalFooter from "./shared/FormModalFooter";
 import BookingDeadlinesSection from "./BookingDeadlinesSection";
 import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
@@ -476,7 +477,7 @@ export default function ActivityManager({
           {activity.category && (
             <span className="text-xl sm:text-2xl">
               {activityCategories.find((c) => c.name === activity.category)
-                ?.emoji || "📍"}
+                ?.emoji || <Icon name="place" size={24} />}
             </span>
           )}
           <div className="flex-1 min-w-0">
@@ -678,7 +679,7 @@ export default function ActivityManager({
         isOpen={manager.showForm}
         onClose={handleCloseForm}
         title={manager.editingId ? "Edit Activity" : "Add Activity"}
-        icon="🎯"
+        icon="activity"
         formId="activity-form"
         footer={
           <FormModalFooter
@@ -755,7 +756,7 @@ export default function ActivityManager({
               <option value="">All</option>
               {DIETARY_TAGS.map((tag) => (
                 <option key={tag.id} value={tag.id}>
-                  {tag.emoji} {tag.label}
+                  {tag.label}
                 </option>
               ))}
             </select>
@@ -807,7 +808,7 @@ export default function ActivityManager({
           {sortedScheduledActivities.length > 0 && (
             <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>📅</span> Scheduled Activities
+                <Icon name="calendar" /> Scheduled Activities
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedScheduledActivities.length})
                 </span>
@@ -822,7 +823,7 @@ export default function ActivityManager({
           {sortedUnscheduledActivities.length > 0 && (
             <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
-                <span>📋</span> Unscheduled Activities
+                <Icon name="list" /> Unscheduled Activities
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledActivities.length})
                 </span>

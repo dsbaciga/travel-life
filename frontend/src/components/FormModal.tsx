@@ -1,11 +1,12 @@
 import { type ReactNode } from "react";
 import Modal from "./Modal";
+import type { IconName } from "./ui/Icon";
 
 interface FormModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  icon?: string;
+  icon?: IconName;
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "4xl" | "6xl";
@@ -28,7 +29,7 @@ interface FormModalProps {
  *   isOpen={showModal}
  *   onClose={() => setShowModal(false)}
  *   title="Edit Item"
- *   icon="✏️"
+ *   icon="edit"
  *   formId="my-form"
  *   footer={
  *     <>

@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { JournalOpenRequest } from '../JournalManager';
+import Icon from '../ui/Icon';
 import { useTripEditAccess } from '../../hooks/useTripEditAccess';
 import { draftDateWindow, isDateInDraftWindow } from '../../utils/journalDraftWindow';
 
@@ -121,7 +122,7 @@ export function DayJournalActions({
         title={draftable ? undefined : 'This day is outside the trip dates'}
         onClick={() => onOpen(day, true)}
       >
-        ✨ Draft with AI
+        <Icon name="sparkle" size={16} className="align-text-bottom" /> Draft with AI
       </button>
     </div>
   );

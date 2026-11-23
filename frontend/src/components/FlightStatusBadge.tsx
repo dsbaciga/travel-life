@@ -1,17 +1,18 @@
 import type { FlightTracking } from '../types/transportation';
 import { getFlightStatusColor, getDelayColor } from '../utils/statusColors';
+import Icon, { type IconName } from './ui/Icon';
 
 interface FlightStatusBadgeProps {
   flightTracking: FlightTracking | null | undefined;
   compact?: boolean;
 }
 
-const FLIGHT_STATUS_ICONS: Record<string, string> = {
-  scheduled: '🕐',
-  active: '✈️',
-  landed: '✅',
-  cancelled: '❌',
-  diverted: '⚠️',
+const FLIGHT_STATUS_ICONS: Record<string, IconName> = {
+  scheduled: 'schedule',
+  active: 'flight',
+  landed: 'success',
+  cancelled: 'cancel',
+  diverted: 'alert',
 };
 
 /**
@@ -35,7 +36,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
 
   const { status, gate, terminal, baggageClaim, departureDelay, arrivalDelay, flightNumber } = flightTracking;
 
-  const statusIcon = status ? FLIGHT_STATUS_ICONS[status] || '📋' : '📋';
+  const statusIcon = status ? FLIGHT_STATUS_ICONS[status] || 'list' : 'list';
   const statusColor = getFlightStatusColor(status);
   const departureDelayColor = getDelayColor(departureDelay);
   const arrivalDelayColor = getDelayColor(arrivalDelay);
@@ -52,7 +53,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
             role="status"
             aria-label={`Flight status: ${status}`}
           >
-            <span aria-hidden="true">{statusIcon}</span> {status.charAt(0).toUpperCase() + status.slice(1)}
+            <Icon name={statusIcon} size={16} /> {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         )}
         {departureDelayText && (
@@ -81,7 +82,7 @@ export default function FlightStatusBadge({ flightTracking, compact = false }: F
             role="status"
             aria-label={`Flight status: ${status}`}
           >
-            <span aria-hidden="true">{statusIcon}</span> {status.charAt(0).toUpperCase() + status.slice(1)}
+            <Icon name={statusIcon} size={16} /> {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         )}
       </div>

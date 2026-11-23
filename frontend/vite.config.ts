@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { materialSymbols } from './vite.icons'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
@@ -14,6 +15,8 @@ const packageJson = JSON.parse(
 export default defineConfig({
   plugins: [
     react(),
+    // Material Symbols icons are bundled at build time (offline-safe); see components/ui/Icon.tsx
+    materialSymbols(),
     ...(process.env.ANALYZE ? [visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true })] : []),
     VitePWA({
       // Custom service worker (src/sw.ts) so we can handle Web Push events.
@@ -154,7 +157,6 @@ export default defineConfig({
           'vendor-query': ['@tanstack/react-query', '@tanstack/react-query-persist-client'],
           // vendor-emoji removed: emoji-picker-react is lazy-loaded via React.lazy
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          'vendor-icons': ['lucide-react', '@heroicons/react'],
           'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
         },
       }

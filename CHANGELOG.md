@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Editorial typography.** Small labels (section headers, "Next up", stat captions) are now tracked caps instead of bold uppercase; place names, restaurant names and journal text use Crimson Pro italic; and times, countdowns and money use tabular figures so columns line up. Web and the Android app.
-
+- **One icon style across the web app.** Every icon now comes from the same Material Symbols outline set the Android app uses, drawn through one shared `Icon` component with meaning-based names. This replaces the mix of Heroicons, hand-drawn SVG icons and emoji (type badges, buttons, headers, weather, transport modes, toast icons, empty states). Icons are bundled with the app, so they still work offline. Content you type yourself (trip names, labels, your own category and trip type emoji, journal moods, country flags) is untouched. The Heroicons and Lucide dependencies are gone.
 - **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the Trips screen notice) gets a gold-to-amber bar along its top edge, a subtle diagonal wash, and a deeper surface in dark mode. Titles and headings now use Crimson Pro and body text Manrope, as on the web. Light mode colours are unchanged. This adds native code (`expo-linear-gradient`), so it needs a new APK and cannot ship as an over-the-air update.
 
 ## [8.3.0] - 2026-11-22

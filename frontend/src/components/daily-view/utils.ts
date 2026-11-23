@@ -5,6 +5,7 @@ import type { JournalEntry } from '../../types/journalEntry';
 import type { Location } from '../../types/location';
 import type { CustomItem } from '../../types/customItem';
 import type { MapsPlace } from '../../lib/mapsDeepLinks';
+import type { IconName } from '../ui/Icon';
 
 /**
  * Format time for display
@@ -149,93 +150,93 @@ export function getTypeColors(type: 'activity' | 'transportation' | 'lodging' | 
 /**
  * Get transportation type icon
  */
-export function getTransportationIcon(type: string): string {
+export function getTransportationIcon(type: string): IconName {
   switch (type) {
     case 'flight':
-      return '✈️';
+      return 'flight';
     case 'train':
-      return '🚂';
+      return 'train';
     case 'bus':
-      return '🚌';
+      return 'bus';
     case 'car':
-      return '🚗';
+      return 'car';
     case 'ferry':
-      return '⛴️';
+      return 'ferry';
     case 'bicycle':
-      return '🚲';
+      return 'bike';
     case 'walk':
-      return '🚶';
+      return 'walk';
     default:
-      return '🚐';
+      return 'van';
   }
 }
 
 /**
  * Get lodging type icon
  */
-export function getLodgingIcon(type: string): string {
+export function getLodgingIcon(type: string): IconName {
   switch (type) {
     case 'hotel':
-      return '🏨';
+      return 'hotel';
     case 'hostel':
-      return '🛏️';
+      return 'hostel';
     case 'airbnb':
-      return '🏠';
+      return 'house';
     case 'vacation_rental':
-      return '🏡';
+      return 'cottage';
     case 'camping':
-      return '⛺';
+      return 'camping';
     case 'resort':
-      return '🏝️';
+      return 'resort';
     case 'motel':
-      return '🚗';
+      return 'hotel';
     case 'bed_and_breakfast':
-      return '🍳';
+      return 'cafe';
     case 'apartment':
-      return '🏢';
+      return 'apartment';
     case 'friends_family':
-      return '👨‍👩‍👧‍👦';
+      return 'users';
     default:
-      return '🏠';
+      return 'lodging';
   }
 }
 
 /**
  * Get activity category icon
  */
-export function getActivityIcon(category?: string | null): string {
-  if (!category) return '📋';
+export function getActivityIcon(category?: string | null): IconName {
+  if (!category) return 'activity';
   const categoryLower = category.toLowerCase();
 
   if (categoryLower.includes('food') || categoryLower.includes('restaurant') || categoryLower.includes('dining')) {
-    return '🍽️';
+    return 'restaurant';
   }
   if (categoryLower.includes('tour') || categoryLower.includes('sightseeing')) {
-    return '🗺️';
+    return 'map';
   }
   if (categoryLower.includes('museum') || categoryLower.includes('gallery') || categoryLower.includes('art')) {
-    return '🎨';
+    return 'museum';
   }
   if (categoryLower.includes('shopping')) {
-    return '🛍️';
+    return 'shopping';
   }
   if (categoryLower.includes('beach') || categoryLower.includes('swim')) {
-    return '🏖️';
+    return 'beach';
   }
   if (categoryLower.includes('hike') || categoryLower.includes('nature') || categoryLower.includes('outdoor')) {
-    return '🥾';
+    return 'hiking';
   }
   if (categoryLower.includes('entertainment') || categoryLower.includes('show') || categoryLower.includes('concert')) {
-    return '🎭';
+    return 'theater';
   }
   if (categoryLower.includes('sport') || categoryLower.includes('adventure')) {
-    return '🎯';
+    return 'sports';
   }
   if (categoryLower.includes('relax') || categoryLower.includes('spa')) {
-    return '💆';
+    return 'spa';
   }
 
-  return '📋';
+  return 'activity';
 }
 
 /**

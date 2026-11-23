@@ -1,7 +1,6 @@
 import { useId, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import loyaltyProgramService, { LOYALTY_PROGRAMS_QUERY_KEY } from '../services/loyaltyProgram.service';
-import { getLoyaltyProgramTypeIcon } from '../types/loyaltyProgram';
 import type { LoyaltyProgram } from '../types/loyaltyProgram';
 import { matchLoyaltyPrograms, type LoyaltyMatchKind } from '../utils/loyaltyMatch';
 
@@ -72,7 +71,7 @@ export default function LoyaltyProgramField({
         <option value="">None</option>
         {programs.map((p) => (
           <option key={p.id} value={p.id}>
-            {getLoyaltyProgramTypeIcon(p.type)} {p.providerName} - {p.name}
+            {p.providerName} - {p.name}
           </option>
         ))}
       </select>

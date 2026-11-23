@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import Icon from '../ui/Icon';
 import type { CustomItem } from '../../types/customItem';
 import LinkedEntitiesDisplay from '../LinkedEntitiesDisplay';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -71,7 +72,7 @@ export default function CustomItemCard({
             <div
               className={`w-12 h-12 rounded-xl ${colors.icon} flex items-center justify-center flex-shrink-0`}
             >
-              <span className="text-2xl">📌</span>
+              <Icon name="custom" size={24} />
             </div>
 
             {/* Main content */}
@@ -108,14 +109,7 @@ export default function CustomItemCard({
               className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
               title="Edit custom item"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <Icon name="edit" size={20} />
             </button>
           </div>
         </div>
@@ -124,20 +118,7 @@ export default function CustomItemCard({
         {item.location?.name && (
           <div className="mt-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-dusk-400 min-w-0">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
+              <Icon name="place" size={16} className="flex-shrink-0" />
               <span className="truncate place-name">{item.location.name}</span>
             </div>
             {destination && (

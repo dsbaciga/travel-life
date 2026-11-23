@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { materialSymbols } from './vite.icons';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), materialSymbols()],
   test: {
     globals: true,
     environment: 'jsdom',

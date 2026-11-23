@@ -9,6 +9,7 @@ import { PhotoSourcePicker } from "./CameraCapture";
 import { useConfetti } from "../hooks/useConfetti";
 import toast from "react-hot-toast";
 import { parseDuration } from "../utils/duration";
+import Icon from "./ui/Icon";
 
 /**
  * A pending file paired with a stable id. The id is used as the React key so
@@ -495,9 +496,7 @@ export default function PhotoUpload({
                       {/* Video indicator overlay */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="bg-black/50 rounded-full p-2">
-                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
+                          <Icon name="play" size={24} className="text-white" />
                         </div>
                       </div>
                     </div>
@@ -519,7 +518,7 @@ export default function PhotoUpload({
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-8 h-8 min-w-[44px] min-h-[44px] flex items-center justify-center text-sm hover:bg-red-600 shadow-md"
                     disabled={isUploading}
                   >
-                    ✕
+                    <Icon name="close" size={16} />
                   </button>
                 </div>
               ))}

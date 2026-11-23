@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useIOSDetection } from '../../hooks/useIOSDetection';
 import { useStorageEstimate } from '../../hooks/useStorageEstimate';
+import Icon from '../ui/Icon';
 
 const LAST_OPEN_KEY = 'last-app-open';
 const WARNING_DISMISSED_KEY = 'ios-storage-warning-dismissed';
@@ -162,9 +163,7 @@ export default function IOSStorageWarning({
               "
             >
               Manage Storage
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <Icon name="chevronRight" size={16} />
             </a>
           )}
         </WarningCard>
@@ -251,9 +250,7 @@ function WarningCard({ title, icon, children, onDismiss }: WarningCardProps) {
               "
               aria-label="Dismiss warning"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Icon name="close" size={16} />
             </button>
           </div>
 
@@ -266,26 +263,12 @@ function WarningCard({ title, icon, children, onDismiss }: WarningCardProps) {
 
 function StorageIcon() {
   return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-      />
-    </svg>
+    <Icon name="storage" />
   );
 }
 
 function ClockIcon() {
   return (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="schedule" />
   );
 }

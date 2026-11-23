@@ -137,6 +137,7 @@ Trip tint: `TripDto.coverColor` arrives with the trip list, shared trips and `mo
 
 | Need | Use | Where |
 | ---- | --- | ----- |
+| An icon (any entity type, transport mode, weather, status) | `Icon` (`name` is a semantic `IconName`; Material Symbols outlined; registry in `iconRegistry.ts`; `iconSvgString` for Leaflet) | `components/ui/Icon.tsx` |
 | Manager component CRUD state | `useManagerCRUD`, `useManagerFormWrapper`, `useFormReset` | `hooks/` |
 | Stop double-submit | `useSubmitLock` | `hooks/` |
 | "Save & Add Another" | `useSaveAndAddAnother` | `hooks/` |

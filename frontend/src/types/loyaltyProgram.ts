@@ -1,3 +1,5 @@
+import type { IconName } from '../components/ui/Icon';
+
 // Loyalty program types matching the backend enum
 export const LOYALTY_PROGRAM_TYPES = ['AIRLINE', 'HOTEL', 'RAIL', 'CAR_RENTAL', 'OTHER'] as const;
 
@@ -11,18 +13,18 @@ export const LOYALTY_PROGRAM_TYPE_LABELS: Record<LoyaltyProgramType, string> = {
   OTHER: 'Other',
 };
 
-export function getLoyaltyProgramTypeIcon(type: LoyaltyProgramType): string {
+export function getLoyaltyProgramTypeIcon(type: LoyaltyProgramType): IconName {
   switch (type) {
     case 'AIRLINE':
-      return '✈️';
+      return 'flight';
     case 'HOTEL':
-      return '🏨';
+      return 'hotel';
     case 'RAIL':
-      return '🚆';
+      return 'train';
     case 'CAR_RENTAL':
-      return '🚗';
+      return 'car';
     default:
-      return '🎟️';
+      return 'ticket';
   }
 }
 

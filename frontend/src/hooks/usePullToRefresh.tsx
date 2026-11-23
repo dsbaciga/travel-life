@@ -7,6 +7,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import type { RefObject } from 'react';
+import Icon from '../components/ui/Icon';
 
 interface PullToRefreshOptions {
   onRefresh: () => Promise<void> | void;
@@ -168,20 +169,7 @@ export function PullToRefreshIndicator({
         ) : (
           // Rotating arrow when pulling
           // Dynamic rotation requires CSS variable - cannot be moved to static CSS
-          <svg
-            className="w-8 h-8 text-primary-600 dark:text-sky transition-transform pull-refresh-arrow"
-            style={{ '--arrow-rotation': `${rotation}deg` }}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
+          <Icon name="arrowDown" size={32} className="text-primary-600 dark:text-sky transition-transform pull-refresh-arrow" style={{ '--arrow-rotation': `${rotation}deg` }} />
         )}
         {/* Progress text */}
         {!isRefreshing && pullDistance > 20 && (

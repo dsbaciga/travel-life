@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect, useCallback } from "react";
 import type { Activity } from "../types/activity";
 import type { Transportation } from "../types/transportation";
@@ -645,9 +646,7 @@ export default function UnscheduledItems({
                 onClick={() => setShowAddMenu(false)}
                 className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" className="w-6 h-6" />
               </button>
             </div>
 
@@ -663,7 +662,7 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <Icon name="activity" size={32} />
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Activity</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Things to do, places to visit</div>
@@ -677,7 +676,7 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">✈️</span>
+                    <Icon name="transportation" size={32} />
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Transportation</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Flights, trains, cars, etc.</div>
@@ -691,7 +690,7 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">🏨</span>
+                    <Icon name="lodging" size={32} />
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Lodging</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Hotels, Airbnb, camping</div>
@@ -758,7 +757,7 @@ export default function UnscheduledItems({
         isOpen={showFormModal && editingType === "activity"}
         onClose={resetForm}
         title={isCreating ? "Add Activity" : "Edit Activity"}
-        icon="🎯"
+        icon="activity"
         formId="unscheduled-activity-form"
         footer={
           <>
@@ -803,7 +802,7 @@ export default function UnscheduledItems({
         isOpen={showFormModal && editingType === "transportation"}
         onClose={resetForm}
         title={isCreating ? "Add Transportation" : "Edit Transportation"}
-        icon="✈️"
+        icon="transportation"
         formId="transportation-form"
         footer={
           <>
@@ -1097,7 +1096,7 @@ export default function UnscheduledItems({
         isOpen={showFormModal && editingType === "lodging"}
         onClose={resetForm}
         title={isCreating ? "Add Lodging" : "Edit Lodging"}
-        icon="🏨"
+        icon="lodging"
         formId="lodging-form"
         footer={
           <>
@@ -1313,7 +1312,7 @@ export default function UnscheduledItems({
       <div className="space-y-4">
         {totalCount === 0 ? (
           <EmptyState
-            icon="📝"
+            icon="note"
             message="No unscheduled items"
             subMessage="Items without dates/times will appear here"
           />
@@ -1323,7 +1322,7 @@ export default function UnscheduledItems({
             {activeSection === "activity" &&
               (activities.length === 0 ? (
                 <EmptyState
-                  icon="🎯"
+                  icon="activity"
                   message="No unscheduled activities"
                   subMessage="Activities without dates/times will appear here"
                 />
@@ -1340,7 +1339,7 @@ export default function UnscheduledItems({
                             <span className="text-xl">
                               {activityCategories.find(
                                 (c) => c.name === activity.category
-                              )?.emoji || "📍"}
+                              )?.emoji || <Icon name="place" size={24} />}
                             </span>
                           )}
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1416,14 +1415,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                           title="Edit activity"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                         <button
                           type="button"
@@ -1431,14 +1423,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors"
                           title="Delete activity"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <Icon name="delete" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
@@ -1450,7 +1435,7 @@ export default function UnscheduledItems({
             {activeSection === "transportation" &&
               (transportation.length === 0 ? (
                 <EmptyState
-                  icon="✈️"
+                  icon="transportation"
                   message="No unscheduled transportation"
                   subMessage="Transportation without departure times will appear here"
                 />
@@ -1550,14 +1535,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                           title="Edit transportation"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
@@ -1569,7 +1547,7 @@ export default function UnscheduledItems({
             {activeSection === "lodging" &&
               (lodging.length === 0 ? (
                 <EmptyState
-                  icon="🏨"
+                  icon="lodging"
                   message="No unscheduled lodging"
                   subMessage="Lodging without check-in dates will appear here"
                 />
@@ -1656,14 +1634,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                           title="Edit lodging"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>

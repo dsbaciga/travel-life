@@ -5,6 +5,7 @@ import type { AirportSearchResult } from '../services/airport.service';
 import checklistService from '../services/checklist.service';
 import geocodingService from '../services/geocoding.service';
 import type { AirportMetadata } from '../types/checklist';
+import Icon from './ui/Icon';
 
 interface AirportSearchInputProps {
   /** ID of the airports checklist the airport will be added to. */
@@ -197,7 +198,7 @@ export default function AirportSearchInput({
                 </span>
                 {alreadyAdded && (
                   <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">
-                    ✓ Added
+                    <Icon name="check" size={16} className="align-text-bottom" /> Added
                   </span>
                 )}
                 {isAdding && (
@@ -218,7 +219,7 @@ export default function AirportSearchInput({
       )}
 
       <div className="mt-3 text-xs text-gray-500 dark:text-dusk-400">
-        ✈️ Search by IATA code, ICAO code, or airport/city name. Coordinates are
+        <Icon name="flight" size={16} className="align-text-bottom" /> Search by IATA code, ICAO code, or airport/city name. Coordinates are
         confirmed via OpenStreetMap when available.
       </div>
     </div>

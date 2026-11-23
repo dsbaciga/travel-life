@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from './ui/Icon';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import loyaltyProgramService, { LOYALTY_PROGRAMS_QUERY_KEY } from '../services/loyaltyProgram.service';
@@ -234,7 +235,7 @@ export default function LoyaltyProgramManager() {
               >
                 {LOYALTY_PROGRAM_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {getLoyaltyProgramTypeIcon(type)} {LOYALTY_PROGRAM_TYPE_LABELS[type]}
+                    {LOYALTY_PROGRAM_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -387,7 +388,7 @@ export default function LoyaltyProgramManager() {
 
       {programs.length === 0 ? (
         <EmptyState
-          icon="🎟️"
+          icon="ticket"
           message="No loyalty programs yet"
           subMessage="Add your frequent-flyer and hotel membership numbers to have them offered when you add a flight or stay."
           actionLabel="Add Program"
@@ -405,7 +406,7 @@ export default function LoyaltyProgramManager() {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <span aria-hidden="true">{getLoyaltyProgramTypeIcon(program.type)}</span>
+                      <Icon name={getLoyaltyProgramTypeIcon(program.type)} />
                       <h4 className="font-semibold text-gray-900 dark:text-white break-words min-w-0">
                         {program.providerName} - {program.name}
                       </h4>

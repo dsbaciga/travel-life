@@ -1,8 +1,9 @@
 import { type ReactNode } from 'react';
+import Icon, { type IconName } from './ui/Icon';
 
 interface FormSectionProps {
   title: string;
-  icon?: string;
+  icon?: IconName;
   description?: string;
   children: ReactNode;
   className?: string;
@@ -25,9 +26,7 @@ export default function FormSection({
       {/* Section header: a quiet label, not a banner */}
       <div className="flex items-center gap-2">
         {icon && (
-          <span className="text-base leading-none opacity-80" aria-hidden="true">
-            {icon}
-          </span>
+          <Icon name={icon} size={20} className="text-primary-600 dark:text-gold opacity-80" />
         )}
         <h3 className="text-sm font-semibold text-charcoal dark:text-white">
           {title}
@@ -51,7 +50,7 @@ export default function FormSection({
 
 interface CollapsibleSectionProps {
   title: string;
-  icon?: string;
+  icon?: IconName;
   description?: string;
   isExpanded: boolean;
   onToggle: () => void;
@@ -84,9 +83,7 @@ export function CollapsibleSection({
       >
         <span className="flex items-baseline gap-2 min-w-0">
           {icon && (
-            <span className="leading-none opacity-80" aria-hidden="true">
-              {icon}
-            </span>
+            <Icon name={icon} size={20} className="self-center text-primary-600 dark:text-gold opacity-80" />
           )}
           <span>{title}</span>
           {badge && !isExpanded && (
@@ -95,17 +92,13 @@ export function CollapsibleSection({
             </span>
           )}
         </span>
-        <svg
-          className={`w-4 h-4 flex-shrink-0 text-slate dark:text-dusk-400 transition-transform duration-200 ${
+        <Icon
+          name="expand"
+          size={16}
+          className={`text-slate dark:text-dusk-400 transition-transform duration-200 ${
             isExpanded ? 'rotate-180' : ''
           }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        />
       </button>
 
       {/* Optional Description */}

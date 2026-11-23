@@ -11,6 +11,7 @@ import Modal from './Modal';
 import EmptyState from './EmptyState';
 import DietaryTagSelector from './DietaryTagSelector';
 import DietaryBadges, { DietaryBadgesExpanded } from './DietaryBadges';
+import Icon from './ui/Icon';
 
 interface CompanionFormData {
   name: string;
@@ -206,7 +207,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
         isOpen={showCompanionForm}
         onClose={resetForm}
         title={editingCompanionId ? "Edit Companion" : "Add Companion"}
-        icon="👥"
+        icon="users"
         maxWidth="lg"
         formId="companion-form"
         focusFirstInput
@@ -325,7 +326,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
         <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Companions on this trip</h3>
         {manager.items.length === 0 ? (
           <EmptyState.Compact
-            icon="👥"
+            icon="users"
             message="No companions added yet"
           />
         ) : (
@@ -362,7 +363,11 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                           onClick={() => setExpandedId(isExpanded ? null : companion.id)}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          {isExpanded ? 'Show less ↑' : 'Show details ↓'}
+                          {isExpanded ? (
+                            <>Show less <Icon name="collapse" size={16} className="align-text-bottom" /></>
+                          ) : (
+                            <>Show details <Icon name="expand" size={16} className="align-text-bottom" /></>
+                          )}
                         </button>
                       )}
                       {isExpanded && (

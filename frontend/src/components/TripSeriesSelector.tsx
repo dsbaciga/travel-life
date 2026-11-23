@@ -76,7 +76,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
         <option value="">None</option>
         {seriesList.map((s) => (
           <option key={s.id} value={s.id.toString()}>
-            📚 {s.name} {s._count ? `(${s._count.trips} trips)` : ''}
+            {s.name} {s._count ? `(${s._count.trips} trips)` : ''}
           </option>
         ))}
         <option value="__create__">+ Create New Series...</option>

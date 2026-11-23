@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import OfflineIndicator from './OfflineIndicator';
 import ConflictsList from './ConflictsList';
 import syncManager, { type StoredConflict } from '../../services/syncManager';
@@ -198,7 +198,7 @@ export default function PwaStatusLayer() {
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
                 "
               >
-                <XMarkIcon className="h-5 w-5" />
+                <Icon name="close" />
               </button>
             </div>
 
