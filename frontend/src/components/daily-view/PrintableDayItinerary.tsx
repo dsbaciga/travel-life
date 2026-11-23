@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import type { Activity } from '../../types/activity';
 import type { WeatherDisplay } from '../../types/weather';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -338,7 +339,7 @@ export default function PrintableDayItinerary({
         {/* Weather info if available */}
         {weather && (
           <div className="print-weather">
-            <span className="print-weather-icon">{weather.icon}</span>
+            <span className="print-weather-icon"><Icon name={weather.icon} /></span>
             <span className="print-weather-temp">
               {weather.high !== null && weather.high !== undefined ? Math.round(weather.high) : '--'}°
               {weather.low !== null && weather.low !== undefined && ` / ${Math.round(weather.low)}°`}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Icon from '../ui/Icon';
 import type { WeatherDisplay } from '../../types/weather';
 import { getTimezoneAbbr } from './utils';
 import { useDropdownPosition } from '../../hooks/useDropdownPosition';
@@ -151,19 +152,7 @@ export default function DayNavigator({
         }`}
         aria-label="Previous day"
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
+        <Icon name="chevronLeft" size={20} />
         <span className="hidden sm:inline font-medium">Previous</span>
       </button>
 
@@ -171,7 +160,7 @@ export default function DayNavigator({
       <div className="hidden sm:flex justify-center">
         {weather && (
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-            <span className="text-lg">{weather.icon}</span>
+            <Icon name={weather.icon} />
             <div className="text-sm">
               <span className="font-medium">
                 {weather.high !== null && weather.high !== undefined
@@ -208,21 +197,11 @@ export default function DayNavigator({
             <span className="text-sm text-gray-500 dark:text-dusk-400">
               of {totalDays}
             </span>
-            <svg
-              className={`w-4 h-4 text-gray-500 dark:text-dusk-400 transition-transform ${
-                isDropdownOpen ? 'rotate-180' : ''
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            <Icon
+              name="expand"
+              size={16}
+              className={`text-gray-500 dark:text-dusk-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+            />
           </div>
           <span className="text-sm text-gray-600 dark:text-dusk-400">
             {currentDate}
@@ -259,17 +238,7 @@ export default function DayNavigator({
                   <div className="flex items-center justify-between">
                     <span className="font-medium">Day {day.dayNumber}</span>
                     {day.dayNumber === currentDay && (
-                      <svg
-                        className="w-4 h-4 text-blue-600 dark:text-blue-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <Icon name="check" size={16} className="text-blue-600 dark:text-blue-400" />
                     )}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-dusk-400">
@@ -301,19 +270,7 @@ export default function DayNavigator({
             aria-label="Print this day"
             title="Print this day"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-              />
-            </svg>
+            <Icon name="print" size={20} />
             <span className="hidden sm:inline text-sm font-medium">Print</span>
           </button>
         )}
@@ -332,19 +289,7 @@ export default function DayNavigator({
         aria-label="Next day"
       >
         <span className="hidden sm:inline font-medium">Next</span>
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        <Icon name="chevronRight" size={20} />
       </button>
     </div>
   );

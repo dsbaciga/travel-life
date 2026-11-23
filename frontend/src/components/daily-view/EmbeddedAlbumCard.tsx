@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Icon from '../ui/Icon';
 import { useNavigate } from 'react-router';
 import type { PhotoAlbum } from '../../types/photo';
 import { getFullAssetUrl } from '../../lib/config';
@@ -120,7 +121,7 @@ export default function EmbeddedAlbumCard({
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-2xl">📸</span>
+              <Icon name="album" size={24} className="text-pink-500" />
             </div>
           )}
         </div>
@@ -143,19 +144,7 @@ export default function EmbeddedAlbumCard({
         </div>
 
         {/* Chevron */}
-        <svg
-          className="w-5 h-5 text-gray-400 flex-shrink-0"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
+        <Icon name="chevronRight" size={20} className="text-gray-400 flex-shrink-0" />
       </div>
     </div>
   );

@@ -85,7 +85,7 @@ class DebugLogger {
     });
 
     if (!Array.isArray(value)) {
-      this.log(`⚠️ Expected array but got ${typeof value}`, {
+      this.log(`Expected array but got ${typeof value}`, {
         ...context,
         data: {
           value: this.getValuePreview(value),
