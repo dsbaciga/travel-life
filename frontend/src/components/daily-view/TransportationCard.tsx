@@ -114,7 +114,7 @@ export default function TransportationCard({
           {/* Cost and actions */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             {transportation.cost && transportation.currency && (
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">
                 {formatCurrency(transportation.cost, transportation.currency)}
               </div>
             )}
@@ -146,7 +146,7 @@ export default function TransportationCard({
         <div className="mt-4 flex flex-col sm:flex-row sm:items-stretch gap-3 sm:gap-4">
           {/* From */}
           <div className="flex-1">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-1">
               From
             </div>
             <div className="font-semibold text-gray-900 dark:text-white truncate">{fromName}</div>
@@ -186,7 +186,7 @@ export default function TransportationCard({
 
           {/* To */}
           <div className="flex-1 sm:text-right">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-1">
               To
             </div>
             <div className="font-semibold text-gray-900 dark:text-white truncate">{toName}</div>
@@ -293,7 +293,7 @@ export default function TransportationCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -311,7 +311,7 @@ export default function TransportationCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

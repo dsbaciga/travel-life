@@ -22,7 +22,9 @@ export default function BudgetMeter({ burn, currency }: { burn: BurnRate; curren
       accessibilityLabel={`Budget: ${summary.amounts}. ${summary.verdict}, ${summary.pace}.`}
       style={styles.meter}>
       <Row style={styles.between}>
-        <AppText variant="label">{summary.amounts}</AppText>
+        <AppText variant="label" style={styles.tabular}>
+          {summary.amounts}
+        </AppText>
         <AppText variant="label" color={color}>
           {summary.verdict}
         </AppText>
@@ -40,6 +42,7 @@ export default function BudgetMeter({ burn, currency }: { burn: BurnRate; curren
 
 const styles = StyleSheet.create({
   meter: { gap: spacing.xs },
+  tabular: { fontVariant: ['tabular-nums'] },
   between: { justifyContent: 'space-between', flexWrap: 'nowrap' },
   track: { height: 8, borderRadius: radius.pill, overflow: 'visible', justifyContent: 'center' },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: radius.pill },

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -1452,5 +1452,33 @@ html.offline-banner-top main {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+/*
+ * Editorial typography. See docs/architecture/STYLE_GUIDE.md "Editorial typography".
+ * - .eyebrow: small tracked label (section headers, stat captions, "NEXT UP").
+ *   Manrope has no real small caps, so this is uppercase at a smaller size, which
+ *   looks better than synthesized all-small-caps (browsers fake those from capitals
+ *   at ~80% size with no optical correction).
+ * - .place-name / .journal-prose: Crimson Pro italic for locations and journal text.
+ */
+@layer components {
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .place-name {
+    @apply font-display italic;
+    font-size: 1.0625em;
+  }
+
+  .journal-prose {
+    @apply font-display italic;
+    font-size: 1.125rem;
+    line-height: 1.65;
   }
 }

@@ -139,7 +139,7 @@ export default function DirectionsButton({
           className="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800 shadow-lg py-1 animate-scale-in"
         >
           <div className="px-3 py-2 border-b border-gray-100 dark:border-dusk-700">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-dusk-400">
+            <p className="eyebrow text-gray-500 dark:text-dusk-400">
               Open directions in
             </p>
             {originLabel !== null && (

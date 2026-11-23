@@ -140,7 +140,7 @@ export default function YearInReviewPage() {
         <div className="mb-8 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="text-sm font-medium uppercase tracking-widest text-accent-500 dark:text-gold mb-2">
+              <p className="eyebrow text-accent-500 dark:text-gold mb-2">
                 Year in Review
               </p>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-primary-600 dark:text-sky tracking-tight leading-none">

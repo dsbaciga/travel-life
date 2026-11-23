@@ -71,7 +71,7 @@ function YearInReviewBanner({ review, isPastYear }: YearInReviewBannerProps) {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Year + stats */}
         <div className="min-w-0">
-          <p className="text-xs font-body font-medium uppercase tracking-widest text-white dark:text-gold mb-1">
+          <p className="font-body eyebrow text-white dark:text-gold mb-1">
             Year in Review
           </p>
           <div className="flex items-baseline gap-3 mb-5">

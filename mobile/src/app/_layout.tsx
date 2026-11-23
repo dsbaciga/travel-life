@@ -1,6 +1,6 @@
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { CrimsonPro_600SemiBold, CrimsonPro_700Bold } from '@expo-google-fonts/crimson-pro';
+import { CrimsonPro_400Regular_Italic, CrimsonPro_600SemiBold, CrimsonPro_700Bold } from '@expo-google-fonts/crimson-pro';
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import * as ExpoCrypto from 'expo-crypto';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
@@ -94,6 +94,7 @@ async function loadIconFont(): Promise<void> {
 async function loadTextFonts(): Promise<void> {
   try {
     const loading = Font.loadAsync({
+      CrimsonPro_400Regular_Italic,
       CrimsonPro_600SemiBold,
       CrimsonPro_700Bold,
       Manrope_400Regular,

@@ -254,7 +254,7 @@ export default function LinkedEntitiesDisplay({
     <div className={`mt-3 ${className}`}>
       {/* Section header */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
+        <span className="text-gray-500 dark:text-dusk-400 eyebrow">
           Linked Items
         </span>
         <div className="flex-1 h-px bg-gray-200 dark:bg-dusk-700"></div>

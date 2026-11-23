@@ -28,7 +28,7 @@ export default function TodayClocks({ now, localTimezone, homeTimezone }: TodayC
   return (
     <div className="flex items-end gap-5" data-testid="today-clocks">
       <div data-testid="local-clock">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate dark:text-dusk-400">
+        <p className="eyebrow text-slate dark:text-dusk-400">
           Local
         </p>
         <p className="text-2xl font-display font-bold text-charcoal dark:text-white tabular-nums leading-tight">
@@ -41,7 +41,7 @@ export default function TodayClocks({ now, localTimezone, homeTimezone }: TodayC
 
       {showHome && (
         <div data-testid="home-clock" className="border-l border-primary-500/15 dark:border-navy-700 pl-5">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate dark:text-dusk-400">
+          <p className="eyebrow text-slate dark:text-dusk-400">
             Home
           </p>
           <p className="text-lg font-semibold text-charcoal/80 dark:text-warm-gray/80 tabular-nums leading-tight">

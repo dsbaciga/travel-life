@@ -547,7 +547,7 @@ export default function BudgetManager({
                 </p>
                 {budget !== null ? (
                   <>
-                    <p className="text-2xl sm:text-3xl break-words [overflow-wrap:anywhere] font-bold font-display text-charcoal dark:text-warm-gray">
+                    <p className="text-2xl sm:text-3xl break-words [overflow-wrap:anywhere] font-bold font-display tabular-nums text-charcoal dark:text-warm-gray">
                       {formatCurrency(budget, budgetCurrency)}
                       <span className="text-sm font-body font-normal text-slate dark:text-warm-gray/70 ml-2">
                         {budgetCurrency || displayCurrency}
@@ -597,7 +597,7 @@ export default function BudgetManager({
             <div className="mt-4">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-2">
                 <span
-                  className={`text-lg font-semibold ${
+                  className={`text-lg font-semibold tabular-nums ${
                     isOverBudget
                       ? "text-red-600 dark:text-red-400"
                       : isNearBudget
@@ -613,7 +613,7 @@ export default function BudgetManager({
                 </span>
                 {comparableBudget !== null && (
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-sm font-medium tabular-nums ${
                       isOverBudget
                         ? "text-red-600 dark:text-red-400"
                         : "text-slate dark:text-warm-gray/70"
@@ -762,7 +762,7 @@ export default function BudgetManager({
                 <p className="text-xs font-medium text-slate dark:text-warm-gray/70 capitalize mb-1">
                   {category}
                 </p>
-                <p className="text-lg font-semibold break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray">
+                <p className="text-lg font-semibold tabular-nums break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray">
                   {formatCurrency(amount)}
                 </p>
               </div>
@@ -1027,14 +1027,14 @@ export default function BudgetManager({
                 </div>
                 <div className="flex items-center justify-between gap-3 sm:justify-end sm:flex-shrink-0">
                   <div className="text-right">
-                    <span className="block font-semibold text-charcoal dark:text-warm-gray whitespace-nowrap">
+                    <span className="block font-semibold tabular-nums text-charcoal dark:text-warm-gray whitespace-nowrap">
                       {formatCurrency(expense.amount, expense.currency)}
                     </span>
                     {expense.currency &&
                       expense.currency !== displayCurrency &&
                       (expense.baseAmount !== null &&
                       expense.baseCurrency === displayCurrency ? (
-                        <span className="block text-xs text-slate dark:text-warm-gray/60 whitespace-nowrap">
+                        <span className="block text-xs tabular-nums text-slate dark:text-warm-gray/60 whitespace-nowrap">
                           ≈ {formatCurrency(expense.baseAmount, expense.baseCurrency)}
                         </span>
                       ) : (

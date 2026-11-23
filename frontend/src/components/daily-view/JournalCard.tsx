@@ -125,7 +125,7 @@ export default function JournalCard({
               <MarkdownRenderer content={journal.content} />
             ) : (
               <p
-                className={`text-gray-700 dark:text-dusk-300 ${
+                className={`journal-prose text-gray-700 dark:text-dusk-300 ${
                   isLongContent ? 'line-clamp-6' : ''
                 }`}
               >
@@ -148,7 +148,7 @@ export default function JournalCard({
         {/* Linked locations */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -166,7 +166,7 @@ export default function JournalCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

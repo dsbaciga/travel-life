@@ -95,7 +95,7 @@ export default function ActivityCard({
                   </span>
                 ) : activity.startTime ? (
                   <>
-                    <span className="font-medium">
+                    <span className="font-medium tabular-nums">
                       {formatTime(activity.startTime, timezone)}
                       {activity.endTime && ` - ${formatTime(activity.endTime, timezone)}`}
                     </span>
@@ -120,7 +120,7 @@ export default function ActivityCard({
           {/* Cost and actions */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             {activity.cost && activity.currency && (
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">
                 {formatCurrency(activity.cost, activity.currency)}
               </div>
             )}
@@ -198,7 +198,7 @@ export default function ActivityCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -216,7 +216,7 @@ export default function ActivityCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">
@@ -245,7 +245,7 @@ export default function ActivityCard({
         {/* Sub-activities */}
         {activity.children && activity.children.length > 0 && (
           <div className="mt-4 border-t border-gray-200 dark:border-dusk-700 pt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-3">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-3">
               Sub-activities ({activity.children.length})
             </div>
             <div className="space-y-2">

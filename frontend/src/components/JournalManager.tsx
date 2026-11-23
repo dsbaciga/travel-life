@@ -705,7 +705,7 @@ export default function JournalManager({
                   {isExpanded ? (
                     <MarkdownRenderer content={entry.content} />
                   ) : (
-                    <p className="text-gray-700 dark:text-dusk-300">
+                    <p className="journal-prose text-gray-700 dark:text-dusk-300">
                       {stripMarkdown(truncateContent(entry.content))}
                     </p>
                   )}
