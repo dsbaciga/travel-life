@@ -17,9 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.3.1] - 2026-11-23
+
 ### Added
 
-- **Each trip gets its own colour.** A trip's accent tint is taken from its cover image (an uploaded image or a photo from the library, Immich included) and flavours that trip's hero surfaces: the photo overlay on the trip page header and the dashboard hero, a thin stripe on the trip card, and the "Next up" card on the Android app's Today tab. The app-wide gold stays the main accent. Grey or very dark/light covers, and trips with no cover, look exactly as before. The colour follows the cover: it is recomputed when you upload a cover or pick a photo as the cover, and cleared when the cover is removed or its photo is deleted. This adds a database migration (`20261128000000_add_trip_cover_color`, one nullable column). Trips whose cover was set earlier have no colour until you run `npx tsx scripts/backfill-trip-cover-color.ts` once in `backend/` (`--dry-run` to preview). The Android app refetches every mirrored trip once to pick the colour up.
+- **Each trip gets its own colour.** A trip's accent tint is taken from its cover image (an uploaded image or a photo from the library, Immich included) and flavours that trip's hero surfaces: the photo overlay on the trip page header and the dashboard hero, a thin stripe on the trip card, and the "Next up" card on the Android app's Today tab. The app-wide gold stays the main accent. Grey or very dark/light covers, and trips with no cover, look exactly as before. The colour follows the cover: it is recomputed when you upload a cover or pick a photo as the cover, and cleared when the cover is removed or its photo is deleted. This adds a database migration (`20261128000000_add_trip_cover_color`, one nullable column). Trips whose cover was set earlier have no colour until you run the backfill once (see Upgrade notes). The Android app refetches every mirrored trip once to pick the colour up.
 
 - **A route line and contour backdrops.** A day's itinerary now reads as a journey, on the web timeline, the dashboard's Today's Itinerary and the Android Today list. A dashed line runs down the left with a stop marker at each item, coloured by item type. The current or next stop is a filled gold marker, finished stops are muted, and the line is solid gold up to that stop and dashed after it. Items lose most of their card chrome so the line carries the structure. Empty states (web and Android) also get faint topographic contour lines behind them, generated from a fixed seed so the terrain never changes between visits. The path generator is shared code (`packages/shared/src/brand/contours.ts`, vendored into the frontend) and `ContourBackdrop` is a reusable component on both platforms for hero areas. The printed itinerary is unchanged. This adds no native dependencies beyond `react-native-svg`, already present, but the Android change needs a new APK.
 
@@ -37,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Ongoing hotel stays in Today's Itinerary.** A middle night of a stay now shows "All day" at the top of the list instead of a red "12:00 AM" after the "Now" marker, and it no longer steals the gold "next" marker from the real next event (the Timeline treats all-day items the same way). Today's Itinerary also compared event times against a wall-clock date in the device's zone, so "completed" and the "Now" time were wrong whenever the trip zone differed from the device's; they now use the real instant and the trip zone.
 - **Place lines.** An activity's category ("sightseeing") is no longer set in the italic place style; only a real location is. The Timeline now shows the activity's location under its title, with the street address only when it adds something, and Today's Itinerary uses the same item-type colours as the Timeline.
 - **Contour lines on light backgrounds** are a little stronger (about 10% instead of 6%) on the web and in the Android app; dark mode and hero cards are unchanged. The trip tab bar also fades on its left edge once scrolled and is labelled for screen readers.
+
+### Upgrade notes
+
+- **Back up the database before deploying.** This release adds one migration, `20261128000000_add_trip_cover_color`, which adds a nullable `trips.cover_color` column and changes nothing existing. `npx prisma migrate deploy` applies it.
+- **Give existing trips their colour** by running the backfill once after the migration: `docker exec travel-life-backend node dist/scripts/backfillTripCoverColor.js` (add `--dry-run` to preview). Trips without it simply show the default gold until their cover changes.
+- **Install the new Android APK** from this release. It adds native code (`expo-linear-gradient`), so an over-the-air update is not enough.
 
 ## [8.3.0] - 2026-11-22
 

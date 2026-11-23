@@ -161,6 +161,17 @@ DATABASE_URL=postgresql://... node scripts/refresh-migration-checksums.js --appl
   It rewrites only the `checksum` column of `_prisma_migrations` for the edited migrations
   (a fixed list inside the script). It runs no migration SQL and touches no table.
 
+## Migrations added 2026-11-28 (safe on a populated database)
+
+Released in 8.3.1. Additive: one nullable column, nothing existing is changed. Apply with
+`prisma migrate deploy`, then fill existing trips once with
+`docker exec travel-life-backend node dist/scripts/backfillTripCoverColor.js`
+(`--dry-run` to preview; in development `npx tsx src/scripts/backfillTripCoverColor.ts`).
+
+| Migration | What it does |
+| --- | --- |
+| `20261128000000_add_trip_cover_color` | Adds `trips.cover_color` (`VARCHAR(7)`, `#rrggbb`), the dominant colour of the trip cover, used for the trip's accent tint. |
+
 ## Migrations added 2026-11-27 (safe on a populated database)
 
 Released in 8.3.0. Additive: one new table, nothing existing is changed. Apply with
