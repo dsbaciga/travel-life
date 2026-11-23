@@ -161,7 +161,7 @@ export const userInvitationController = {
 
       const invitationId = parseInt(req.params.invitationId, 10);
       if (isNaN(invitationId)) {
-        throw new AppError('Invalid invitation ID', 400);
+        throw new AppError("That invitation link isn't valid.", 400);
       }
 
       const result = await userInvitationService.cancelInvitation(userId, invitationId);
@@ -188,7 +188,7 @@ export const userInvitationController = {
 
       const invitationId = parseInt(req.params.invitationId, 10);
       if (isNaN(invitationId)) {
-        throw new AppError('Invalid invitation ID', 400);
+        throw new AppError("That invitation link isn't valid.", 400);
       }
 
       const invitation = await userInvitationService.resendInvitation(userId, invitationId);

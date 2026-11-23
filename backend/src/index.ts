@@ -205,7 +205,7 @@ app.use('/api', validateCsrf);
 // Every failure under /uploads answers 404 so the route never reveals whether a
 // file exists, who owns it, or why access was refused.
 const uploadNotFound = (res: Response): void => {
-  res.status(404).json({ status: 'error', message: 'Not found' });
+  res.status(404).json({ status: 'error', message: "We couldn't find that." });
 };
 
 // Reuses the SAME passwordVersion cache as the API path (middleware/auth.ts).
@@ -433,7 +433,7 @@ app.use('/uploads', authenticateFileAccess, authorizeFileAccess, express.static(
 
 // Catch-all for files not found under /uploads — return 404 without leaking path info
 app.use('/uploads', (_req: Request, res: Response) => {
-  res.status(404).json({ status: 'error', message: 'Not found' });
+  res.status(404).json({ status: 'error', message: "We couldn't find that." });
 });
 
 // Health check endpoint

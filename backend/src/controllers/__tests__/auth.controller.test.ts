@@ -473,7 +473,7 @@ describe('AuthController', () => {
     });
 
     it('should propagate service errors when user not found', async () => {
-      const serviceError = new AppError('User not found', 404);
+      const serviceError = new AppError("We couldn't find that user.", 404);
       mockAuthService.getCurrentUser.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1);

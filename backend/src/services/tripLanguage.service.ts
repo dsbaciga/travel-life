@@ -112,7 +112,7 @@ class TripLanguageService {
     });
 
     if (!language) {
-      throw new AppError('Language not found for this trip', 404);
+      throw new AppError("That language isn't on this trip.", 404);
     }
 
     await prisma.tripLanguage.delete({

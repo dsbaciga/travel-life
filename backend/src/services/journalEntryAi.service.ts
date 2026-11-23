@@ -127,7 +127,7 @@ ${truncated}
       select: { title: true, content: true, mood: true },
     });
 
-    if (!entry) throw new AppError('Journal entry not found', 404);
+    if (!entry) throw new AppError("We couldn't find that journal entry.", 404);
 
     // Nothing to suggest if both are already set
     if (entry.title && entry.mood) return {};

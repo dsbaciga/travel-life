@@ -839,7 +839,7 @@ describe('EntityLinkService', () => {
       ).rejects.toThrow(AppError);
       await expect(
         entityLinkService.deleteLinkById(TEST_USER_ID, TEST_TRIP_ID, 999)
-      ).rejects.toThrow('Link not found');
+      ).rejects.toThrow("We couldn't find that link.");
     });
   });
 
@@ -1384,7 +1384,7 @@ describe('EntityLinkService', () => {
       mockPrisma.entityLink.findFirst.mockResolvedValue(null);
 
       await expect(entityLinkService.deleteLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Link not found'
+        "We couldn't find that link."
       );
     });
 

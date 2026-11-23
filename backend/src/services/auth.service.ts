@@ -229,7 +229,7 @@ export class AuthService {
       });
 
       if (!user) {
-        throw new AppError('User not found', 404);
+        throw new AppError("We couldn't find that user.", 404);
       }
 
       // Reject refresh if password was changed since this token was issued
@@ -287,7 +287,7 @@ export class AuthService {
   async issueTokensForUser(userId: number): Promise<AuthResponse> {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
     const prefs = await getUserPreferences(user.id);
     const payload = {
@@ -324,7 +324,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const prefs = await getUserPreferences(userId);

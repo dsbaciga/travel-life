@@ -858,7 +858,7 @@ describe('ExpenseService', () => {
       mockPrisma.tripExpense.findFirst.mockResolvedValue(null);
 
       await expect(expenseService.updateExpense(1, 10, 5, { amount: 1 })).rejects.toThrow(
-        'Expense not found or does not belong to trip'
+        "We couldn't find that expense on this trip."
       );
     });
   });

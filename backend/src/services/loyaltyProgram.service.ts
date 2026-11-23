@@ -63,7 +63,7 @@ class LoyaltyProgramService {
     });
 
     if (!program) {
-      throw new AppError('Loyalty program not found', 404);
+      throw new AppError("We couldn't find that loyalty program.", 404);
     }
 
     return toResponse(program);
@@ -79,7 +79,7 @@ class LoyaltyProgramService {
     });
 
     if (!existing) {
-      throw new AppError('Loyalty program not found', 404);
+      throw new AppError("We couldn't find that loyalty program.", 404);
     }
 
     const updateData: Prisma.LoyaltyProgramUncheckedUpdateInput = buildConditionalUpdateData(data);
@@ -98,7 +98,7 @@ class LoyaltyProgramService {
     });
 
     if (!existing) {
-      throw new AppError('Loyalty program not found', 404);
+      throw new AppError("We couldn't find that loyalty program.", 404);
     }
 
     // Bookings that referenced it fall back to no program (ON DELETE SET NULL)
@@ -117,7 +117,7 @@ class LoyaltyProgramService {
     });
 
     if (!program) {
-      throw new AppError('Loyalty program not found', 404);
+      throw new AppError("We couldn't find that loyalty program.", 404);
     }
   }
 }

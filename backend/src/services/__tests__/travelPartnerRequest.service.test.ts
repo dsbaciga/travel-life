@@ -838,7 +838,7 @@ describe('TravelPartnerRequestService', () => {
       await expectAppErrorFrom(
         travelPartnerRequestService.acceptRequest(REQUESTER_ID, REQUEST_ID),
         {
-          message: 'Travel partner request not found or already responded to',
+          message: 'This request was already answered or has been cancelled.',
           statusCode: 404,
         }
       );

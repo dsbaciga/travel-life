@@ -461,7 +461,7 @@ export const albumSuggestionService = {
     });
 
     if (photosCount !== suggestion.photoIds.length) {
-      throw new AppError('Some photos do not belong to this trip', 400);
+      throw new AppError("Some of those photos aren't on this trip.", 400);
     }
 
     // Create the album

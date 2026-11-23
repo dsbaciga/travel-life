@@ -389,7 +389,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or already responded to');
+      ).rejects.toThrow('This invitation was already answered or has been cancelled.');
     });
 
     it('should throw error when user not found', async () => {
@@ -397,7 +397,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(999, 1)
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -415,7 +415,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(1, 1)
-      ).rejects.toThrow('Invitation has expired');
+      ).rejects.toThrow('This invitation has expired. Ask the person who invited you to send a new one.');
     });
   });
 
@@ -449,7 +449,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.declineInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or already responded to');
+      ).rejects.toThrow('This invitation was already answered or has been cancelled.');
     });
   });
 
@@ -574,7 +574,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.removeCollaborator(1, 100, 999)
-      ).rejects.toThrow('Collaborator not found');
+      ).rejects.toThrow("We couldn't find that collaborator.");
     });
   });
 
@@ -621,7 +621,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.cancelInvitation(1, 100, 999)
-      ).rejects.toThrow('Invitation not found');
+      ).rejects.toThrow("We couldn't find that invitation.");
     });
 
     it('should throw error when user has no permission', async () => {
@@ -653,7 +653,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.getPendingInvitationsForUser(999)
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
 
     it('should expire old invitations before returning', async () => {

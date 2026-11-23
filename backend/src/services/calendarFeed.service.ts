@@ -298,7 +298,7 @@ class CalendarFeedService {
       select: { calendarToken: true },
     });
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
     return { token: user.calendarToken, feedPath: feedPathFor(user.calendarToken) };
   }
@@ -331,7 +331,7 @@ class CalendarFeedService {
       select: { id: true },
     });
     if (!user) {
-      throw new AppError('Calendar feed not found', 404);
+      throw new AppError("We couldn't find that calendar feed.", 404);
     }
 
     const trips = await prisma.trip.findMany({

@@ -246,7 +246,7 @@ describe('TripLanguageService', () => {
 
       await expect(
         tripLanguageService.removeLanguageFromTrip(1, 1, 'nonexistent')
-      ).rejects.toThrow('Language not found for this trip');
+      ).rejects.toThrow("That language isn't on this trip.");
     });
   });
 });

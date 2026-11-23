@@ -37,7 +37,7 @@ export const languagePhraseController = {
     const language = languagePhraseService.getPhrasesByLanguage(languageCode);
 
     if (!language) {
-      throw new AppError('Language not found', 404);
+      throw new AppError("We couldn't find that language.", 404);
     }
 
     res.json({
@@ -71,7 +71,7 @@ export const languagePhraseController = {
     );
 
     if (!language) {
-      throw new AppError('Language not found', 404);
+      throw new AppError("We couldn't find that language.", 404);
     }
 
     res.json({

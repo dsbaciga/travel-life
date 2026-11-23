@@ -145,7 +145,7 @@ class TravelDocumentService {
     });
 
     if (!document) {
-      throw new AppError('Travel document not found', 404);
+      throw new AppError("We couldn't find that travel document.", 404);
     }
 
     return toResponse(document);
@@ -164,7 +164,7 @@ class TravelDocumentService {
     });
 
     if (!existing) {
-      throw new AppError('Travel document not found', 404);
+      throw new AppError("We couldn't find that travel document.", 404);
     }
 
     // Use transaction to ensure atomic isPrimary update
@@ -218,7 +218,7 @@ class TravelDocumentService {
     });
 
     if (!document) {
-      throw new AppError('Travel document not found', 404);
+      throw new AppError("We couldn't find that travel document.", 404);
     }
 
     await prisma.travelDocument.delete({

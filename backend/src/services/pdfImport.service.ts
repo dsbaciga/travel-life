@@ -410,7 +410,7 @@ class PdfImportService {
       where: { id, userId },
       include: { _count: { select: { pendingEntities: true } } },
     });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
     // 0 = being read, n = n PDFs ahead of it, null = not in the queue.
     return { ...record, queuePosition: pdfParseQueue.position(id) };
   }
@@ -436,7 +436,7 @@ class PdfImportService {
 
   async updatePendingEntity(userId: number, id: number, input: UpdatePendingEntityInput) {
     const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
-    if (!entity) throw new AppError('Pending entity not found', 404);
+    if (!entity) throw new AppError("We couldn't find that item.", 404);
     if (entity.status !== PendingEntityStatus.PENDING) throw new AppError('Entity has already been reviewed', 400);
 
     return prisma.pendingEntity.update({
@@ -491,14 +491,14 @@ class PdfImportService {
       });
       if (claimed.count === 0) {
         const existing = await tx.pendingEntity.findFirst({ where: { id, userId } });
-        if (!existing) throw new AppError('Pending entity not found', 404);
+        if (!existing) throw new AppError("We couldn't find that item.", 404);
         throw new AppError('Entity has already been reviewed', 400);
       }
 
       const entity = await tx.pendingEntity.findFirst({
         where: { id, userId },
       });
-      if (!entity) throw new AppError('Pending entity not found', 404);
+      if (!entity) throw new AppError("We couldn't find that item.", 404);
 
       const data = { ...(entity.parsedData as Record<string, unknown>), ...overrides };
       let createdEntityId: number;
@@ -634,7 +634,7 @@ class PdfImportService {
     });
     if (claimed.count === 0) {
       const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
-      if (!entity) throw new AppError('Pending entity not found', 404);
+      if (!entity) throw new AppError("We couldn't find that item.", 404);
       throw new AppError('Entity has already been reviewed', 400);
     }
     return prisma.pendingEntity.findFirst({ where: { id } });
@@ -642,7 +642,7 @@ class PdfImportService {
 
   async reparseImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
     if (
       record.status === PdfImportStatus.PARSING ||
       record.status === PdfImportStatus.UPLOADED ||
@@ -683,7 +683,7 @@ class PdfImportService {
    */
   async deletePdfImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
 
     if (pdfParseQueue.cancel(id)) {
       logger.info('Cancelled PDF import waiting or being read', { pdfImportId: id });

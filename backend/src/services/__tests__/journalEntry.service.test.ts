@@ -599,11 +599,11 @@ describe('JournalEntryService', () => {
 
     it('should throw error if entry not found', async () => {
       mockPrisma.journalEntry.findUnique.mockResolvedValue(null);
-      (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(new AppError('Journal entry not found', 404));
+      (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(new AppError("We couldn't find that journal entry.", 404));
 
       await expect(
         journalEntryService.deleteJournalEntry(mockUserId, 999)
-      ).rejects.toThrow('Journal entry not found');
+      ).rejects.toThrow("We couldn't find that journal entry.");
     });
 
     it('should throw error if user does not own the entry', async () => {

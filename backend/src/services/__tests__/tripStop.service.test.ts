@@ -122,7 +122,7 @@ describe('TripStopService', () => {
   });
 
   it('TST-002: create rejects a linked location not on the trip', async () => {
-    mockVerifyEntity.mockRejectedValue(new AppError('Location not found or does not belong to trip', 404));
+    mockVerifyEntity.mockRejectedValue(new AppError("We couldn't find that place on this trip.", 404));
 
     await expect(
       tripStopService.createStop(1, 10, { name: 'A', latitude: 0, longitude: 0, locationId: 99 })
@@ -269,7 +269,7 @@ describe('TripStopService', () => {
     });
 
     it('TST-014: a location from another trip is rejected before it is read', async () => {
-      mockVerifyEntity.mockRejectedValue(new AppError('Location not found or does not belong to trip', 404));
+      mockVerifyEntity.mockRejectedValue(new AppError("We couldn't find that place on this trip.", 404));
 
       await expect(tripStopService.createStop(1, 10, { locationId: 77 })).rejects.toMatchObject({
         statusCode: 404,

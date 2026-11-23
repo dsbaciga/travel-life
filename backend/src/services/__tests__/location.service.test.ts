@@ -662,7 +662,7 @@ describe('LocationService', () => {
           longitude: -74,
           categoryId: 999,
         })
-      ).rejects.toThrow('Category not found or access denied');
+      ).rejects.toThrow("We couldn't find that category, or you don't have access to it.");
 
       expect(mockPrisma.location.create).not.toHaveBeenCalled();
     });
@@ -826,7 +826,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { name: 'Test' })
-      ).rejects.toThrow('Location not found');
+      ).rejects.toThrow("We couldn't find that place.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {
@@ -928,7 +928,7 @@ describe('LocationService', () => {
       mockPrisma.location.findUnique.mockResolvedValue(null);
 
       await expect(locationService.deleteLocation(userId, locationId)).rejects.toThrow(
-        'Location not found'
+        "We couldn't find that place."
       );
     });
 
@@ -1013,7 +1013,7 @@ describe('LocationService', () => {
       mockPrisma.location.findFirst.mockResolvedValue(null);
 
       await expect(locationService.createLocation(userId, input)).rejects.toThrow(
-        'Parent location not found or does not belong to the same trip'
+        "The place you picked as the parent isn't on this trip."
       );
     });
 
@@ -1199,7 +1199,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateCategory(userId, categoryId, { name: 'Hacked' })
-      ).rejects.toThrow('Category not found or cannot be edited');
+      ).rejects.toThrow("We couldn't find that category, or it can't be edited.");
     });
 
     it('should delete a custom category', async () => {
@@ -1228,7 +1228,7 @@ describe('LocationService', () => {
       mockPrisma.locationCategory.findFirst.mockResolvedValue(null);
 
       await expect(locationService.deleteCategory(userId, categoryId)).rejects.toThrow(
-        'Category not found or cannot be deleted'
+        "We couldn't find that category, or it can't be deleted."
       );
     });
   });

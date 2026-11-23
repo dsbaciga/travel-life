@@ -215,7 +215,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     // Mark expired invitations
@@ -298,7 +298,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     // Check if expired
@@ -307,7 +307,7 @@ export const collaborationService = {
         where: { id: invitation.id },
         data: { status: InvitationStatus.EXPIRED },
       });
-      throw new AppError('Invitation has expired', 400);
+      throw new AppError('This invitation has expired. Ask the person who invited you to send a new one.', 400);
     }
 
     return invitation;
@@ -322,7 +322,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -337,7 +337,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or already responded to', 404);
+      throw new AppError('This invitation was already answered or has been cancelled.', 404);
     }
 
     // Check if expired
@@ -346,7 +346,7 @@ export const collaborationService = {
         where: { id: invitation.id },
         data: { status: InvitationStatus.EXPIRED },
       });
-      throw new AppError('Invitation has expired', 400);
+      throw new AppError('This invitation has expired. Ask the person who invited you to send a new one.', 400);
     }
 
     // Check if already a collaborator
@@ -418,7 +418,7 @@ export const collaborationService = {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -430,7 +430,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found or already responded to', 404);
+      throw new AppError('This invitation was already answered or has been cancelled.', 404);
     }
 
     await prisma.tripInvitation.update({
@@ -551,7 +551,7 @@ export const collaborationService = {
     });
 
     if (!collaborator) {
-      throw new AppError('Collaborator not found', 404);
+      throw new AppError("We couldn't find that collaborator.", 404);
     }
 
     // Prevent non-owners from setting admin permissions
@@ -607,7 +607,7 @@ export const collaborationService = {
     });
 
     if (!collaborator) {
-      throw new AppError('Collaborator not found', 404);
+      throw new AppError("We couldn't find that collaborator.", 404);
     }
 
     await prisma.tripCollaborator.delete({
@@ -636,7 +636,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     await prisma.tripInvitation.delete({
@@ -665,7 +665,7 @@ export const collaborationService = {
     });
 
     if (!invitation) {
-      throw new AppError('Invitation not found', 404);
+      throw new AppError("We couldn't find that invitation.", 404);
     }
 
     const updated = await prisma.tripInvitation.update({

@@ -201,7 +201,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.sendInvitation(999, { email: 'test@example.com' })
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -228,7 +228,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.getInvitationByToken('nonexistent')
-      ).rejects.toThrow('Invitation not found');
+      ).rejects.toThrow("We couldn't find that invitation.");
     });
 
     it('should mark expired invitations as expired on access', async () => {
@@ -301,7 +301,7 @@ describe('UserInvitationService', () => {
           email: 'newuser@example.com',
           password: 'SecurePass123!',
         })
-      ).rejects.toThrow('Invitation has expired');
+      ).rejects.toThrow('This invitation has expired. Ask the person who invited you to send a new one.');
     });
 
     it('should reject already-accepted invitation', async () => {
@@ -315,7 +315,7 @@ describe('UserInvitationService', () => {
           email: 'newuser@example.com',
           password: 'SecurePass123!',
         })
-      ).rejects.toThrow('Invitation is no longer valid');
+      ).rejects.toThrow('This invitation is no longer valid. Ask the person who invited you for a new one.');
     });
 
     it('should reject when email does not match', async () => {
@@ -357,7 +357,7 @@ describe('UserInvitationService', () => {
           email: 'newuser@example.com',
           password: 'SecurePass123!',
         })
-      ).rejects.toThrow('Invitation not found');
+      ).rejects.toThrow("We couldn't find that invitation.");
     });
   });
 
@@ -388,7 +388,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.declineInvitation('nonexistent')
-      ).rejects.toThrow('Invitation not found');
+      ).rejects.toThrow("We couldn't find that invitation.");
     });
 
     it('should reject declining a non-pending invitation', async () => {
@@ -397,7 +397,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.declineInvitation('a'.repeat(64))
-      ).rejects.toThrow('Invitation is no longer valid');
+      ).rejects.toThrow('This invitation is no longer valid. Ask the person who invited you for a new one.');
     });
   });
 
@@ -464,7 +464,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.cancelInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or already responded to');
+      ).rejects.toThrow('This invitation was already answered or has been cancelled.');
     });
   });
 
@@ -517,7 +517,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.resendInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or cannot be resent');
+      ).rejects.toThrow("We couldn't find that invitation, or it can't be resent.");
     });
 
     it('should throw 404 when inviting user not found', async () => {
@@ -527,7 +527,7 @@ describe('UserInvitationService', () => {
 
       await expect(
         userInvitationService.resendInvitation(1, 1)
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
   });
 

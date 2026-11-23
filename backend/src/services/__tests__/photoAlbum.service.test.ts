@@ -357,12 +357,12 @@ describe('PhotoAlbumService', () => {
     it('should throw error if album not found', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
       (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(
-        new AppError('Album not found', 404)
+        new AppError("We couldn't find that album.", 404)
       );
 
       await expect(
         photoAlbumService.removePhotoFromAlbum(mockUserId, 999, 1)
-      ).rejects.toThrow('Album not found');
+      ).rejects.toThrow("We couldn't find that album.");
     });
   });
 
@@ -449,7 +449,7 @@ describe('PhotoAlbumService', () => {
         photoAlbumService.updateAlbum(mockUserId, mockAlbumId, {
           coverPhotoId: 999,
         })
-      ).rejects.toThrow('Cover photo not found or does not belong to trip');
+      ).rejects.toThrow("We couldn't find that cover photo on this trip.");
     });
 
     it('should allow clearing cover photo by setting to null', async () => {
@@ -789,12 +789,12 @@ describe('PhotoAlbumService', () => {
     it('should throw error if album not found', async () => {
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(null);
       (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(
-        new AppError('Album not found', 404)
+        new AppError("We couldn't find that album.", 404)
       );
 
       await expect(
         photoAlbumService.deleteAlbum(mockUserId, 999)
-      ).rejects.toThrow('Album not found');
+      ).rejects.toThrow("We couldn't find that album.");
     });
 
     it('should throw error if user does not own the album', async () => {

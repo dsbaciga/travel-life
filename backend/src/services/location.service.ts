@@ -193,7 +193,7 @@ export class LocationService {
       });
 
       if (!parent) {
-        throw new AppError('Parent location not found or does not belong to the same trip', 404);
+        throw new AppError("The place you picked as the parent isn't on this trip.", 404);
       }
 
       // Enforce single-level hierarchy: parent cannot already be a child
@@ -441,7 +441,7 @@ export class LocationService {
       });
 
       if (!parent) {
-        throw new AppError('Parent location not found or does not belong to the same trip', 404);
+        throw new AppError("The place you picked as the parent isn't on this trip.", 404);
       }
 
       // Enforce single-level hierarchy: parent cannot already be a child
@@ -518,7 +518,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or access denied', 404);
+      throw new AppError("We couldn't find that category, or you don't have access to it.", 404);
     }
   }
 
@@ -624,7 +624,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or cannot be edited', 404);
+      throw new AppError("We couldn't find that category, or it can't be edited.", 404);
     }
 
     const updated = await prisma.locationCategory.update({
@@ -649,7 +649,7 @@ export class LocationService {
     });
 
     if (!category) {
-      throw new AppError('Category not found or cannot be deleted', 404);
+      throw new AppError("We couldn't find that category, or it can't be deleted.", 404);
     }
 
     await prisma.locationCategory.delete({
@@ -677,7 +677,7 @@ export class LocationService {
     });
 
     if (locations.length !== data.ids.length) {
-      throw new AppError('One or more locations not found or do not belong to this trip', 404);
+      throw new AppError("Some of those places aren't on this trip.", 404);
     }
 
     // Clean up entity links and delete atomically in a transaction
@@ -714,7 +714,7 @@ export class LocationService {
     });
 
     if (locations.length !== data.ids.length) {
-      throw new AppError('One or more locations not found or do not belong to this trip', 404);
+      throw new AppError("Some of those places aren't on this trip.", 404);
     }
 
     // Build update data from non-undefined values

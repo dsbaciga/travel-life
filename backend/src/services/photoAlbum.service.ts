@@ -321,7 +321,7 @@ class PhotoAlbumService {
     });
 
     if (!album) {
-      throw new AppError('Album not found', 404);
+      throw new AppError("We couldn't find that album.", 404);
     }
 
     const loadedCount = skip + album.photoAssignments.length;
@@ -369,7 +369,7 @@ class PhotoAlbumService {
       });
 
       if (!coverPhoto) {
-        throw new AppError('Cover photo not found or does not belong to trip', 404);
+        throw new AppError("We couldn't find that cover photo on this trip.", 404);
       }
     }
 

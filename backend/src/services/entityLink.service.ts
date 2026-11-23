@@ -913,7 +913,7 @@ export const entityLinkService = {
         { type: data.targetType, id: data.targetId }
       );
       if (released) return;
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     await prisma.entityLink.delete({
@@ -935,7 +935,7 @@ export const entityLinkService = {
           ? await prisma.activity.updateMany({ where, data: { locationId: null } })
           : await prisma.lodging.updateMany({ where, data: { locationId: null } });
       if (count === 0) {
-        throw new AppError('Link not found', 404);
+        throw new AppError("We couldn't find that link.", 404);
       }
       return;
     }
@@ -945,7 +945,7 @@ export const entityLinkService = {
     });
 
     if (!link) {
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     await prisma.entityLink.delete({
@@ -972,7 +972,7 @@ export const entityLinkService = {
         entity: { type: synthetic.type, id: synthetic.entityId },
       });
       if (!current) {
-        throw new AppError('Link not found', 404);
+        throw new AppError("We couldn't find that link.", 404);
       }
       return current;
     }
@@ -982,7 +982,7 @@ export const entityLinkService = {
     });
 
     if (!link) {
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     const updateData: Prisma.EntityLinkUpdateInput = {};

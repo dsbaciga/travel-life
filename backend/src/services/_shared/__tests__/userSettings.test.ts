@@ -101,8 +101,8 @@ describe('userSettings accessors', () => {
     mockPrisma.userIntegrations.findUnique.mockResolvedValue(null);
     mockPrisma.user.findUnique.mockResolvedValue(null);
 
-    await expect(getUserPreferences(999)).rejects.toMatchObject({ statusCode: 404, message: 'User not found' });
-    await expect(getUserIntegrations(999)).rejects.toMatchObject({ statusCode: 404, message: 'User not found' });
+    await expect(getUserPreferences(999)).rejects.toMatchObject({ statusCode: 404, message: "We couldn't find that user." });
+    await expect(getUserIntegrations(999)).rejects.toMatchObject({ statusCode: 404, message: "We couldn't find that user." });
     expect(mockPrisma.userPreferences.upsert).not.toHaveBeenCalled();
     expect(mockPrisma.userIntegrations.upsert).not.toHaveBeenCalled();
   });

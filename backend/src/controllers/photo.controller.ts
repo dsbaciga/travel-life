@@ -157,7 +157,7 @@ export const photoController = {
     const photo = await photoService.getPhotoById(requireUserId(req), photoId);
 
     if (!photo) {
-      throw new AppError('Photo not found', 404);
+      throw new AppError("We couldn't find that photo.", 404);
     }
 
     res.json({ status: 'success', data: transformPhoto(photo) });

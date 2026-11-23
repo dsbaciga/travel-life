@@ -1222,7 +1222,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.getPhotoById(mockUserId, 99999)
-      ).rejects.toThrow('Photo not found');
+      ).rejects.toThrow("We couldn't find that photo.");
     });
 
     it('should handle video exceeding duration limit', async () => {

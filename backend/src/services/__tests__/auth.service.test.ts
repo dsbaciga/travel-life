@@ -619,7 +619,7 @@ describe('AuthService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await expect(authService.getCurrentUser(999)).rejects.toThrow(AppError);
-      await expect(authService.getCurrentUser(999)).rejects.toThrow('User not found');
+      await expect(authService.getCurrentUser(999)).rejects.toThrow("We couldn't find that user.");
     });
   });
 

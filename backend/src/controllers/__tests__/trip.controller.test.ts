@@ -556,7 +556,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Photo not found', 404);
+      const serviceError = new AppError("We couldn't find that photo.", 404);
       mockTripService.updateCoverPhoto.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {

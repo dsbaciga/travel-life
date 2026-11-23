@@ -68,7 +68,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     return toProfile(user, await getUserPreferences(userId));
@@ -240,7 +240,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const prefs = await getUserPreferences(userId);
@@ -464,7 +464,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     // Verify current password
@@ -552,7 +552,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     const prefs = await getUserPreferences(userId);
@@ -612,7 +612,7 @@ class UserService {
         for (const id of primaryIds) {
           const user = await lockAndFetchUser(id);
           if (!user) {
-            throw new AppError(id === userId ? 'User not found' : 'Partner user not found', 404);
+            throw new AppError(id === userId ? "We couldn't find that user." : 'Partner user not found', 404);
           }
         }
 
@@ -630,7 +630,7 @@ class UserService {
         // Clearing the partnership - only this user's side
         const currentUser = await lockAndFetchUser(userId);
         if (!currentUser) {
-          throw new AppError('User not found', 404);
+          throw new AppError("We couldn't find that user.", 404);
         }
 
         if (currentUser.travel_partner_id) {
@@ -643,7 +643,7 @@ class UserService {
         // Just fetching/updating current user (no partner change)
         const currentUser = await lockAndFetchUser(userId);
         if (!currentUser) {
-          throw new AppError('User not found', 404);
+          throw new AppError("We couldn't find that user.", 404);
         }
 
         if (data.defaultPartnerPermission !== undefined) {

@@ -168,7 +168,7 @@ class AviationstackService {
     });
 
     if (!transportation) {
-      throw new AppError('Transportation not found', 404);
+      throw new AppError("We couldn't find that transport item.", 404);
     }
 
     // Verify user has access to this trip
@@ -331,7 +331,7 @@ class AviationstackService {
     });
 
     if (!transportation) {
-      throw new AppError('Transportation not found', 404);
+      throw new AppError("We couldn't find that transport item.", 404);
     }
 
     await verifyTripAccess(userId, transportation.tripId);

@@ -556,7 +556,7 @@ export class TripService {
       coverPhotoRow = photo;
 
       if (!photo) {
-        throw new AppError('Photo not found or does not belong to this trip', 404);
+        throw new AppError("We couldn't find that photo on this trip.", 404);
       }
     }
 

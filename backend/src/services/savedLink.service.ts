@@ -24,7 +24,7 @@ async function findOwnedLink(userId: number, linkId: number) {
   });
 
   if (!link) {
-    throw new AppError('Saved link not found', 404);
+    throw new AppError("We couldn't find that saved link.", 404);
   }
 
   return link;
@@ -291,7 +291,7 @@ class SavedLinkService {
     });
 
     if (links.length !== ids.length) {
-      throw new AppError('One or more saved links were not found', 404);
+      throw new AppError("We couldn't find some of those saved links.", 404);
     }
 
     // EntityLink rows are hard-bound to a trip, so only assigned links can

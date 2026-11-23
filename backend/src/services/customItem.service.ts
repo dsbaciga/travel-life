@@ -112,7 +112,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!existing) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
 
     if (data.name && data.name !== existing.name) {
@@ -139,7 +139,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!existing) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
 
     await prisma.customItemType.delete({ where: { id: typeId } });
@@ -160,7 +160,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!type) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
   }
 

@@ -40,7 +40,7 @@ function flattenPhotos<T extends { photos: Array<{ photo: unknown }> }>(entry: T
 async function findInTrip(entryId: number, tripId: number) {
   const entry = await prisma.foodLogEntry.findFirst({ where: { id: entryId, tripId } });
   if (!entry) {
-    throw new AppError('Food log entry not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that food log entry on this trip.", 404);
   }
   return entry;
 }
@@ -125,7 +125,7 @@ class FoodLogService {
       where: { id: { in: uniqueIds }, tripId, mediaType: MediaType.IMAGE },
     });
     if (found !== uniqueIds.length) {
-      throw new AppError('One or more photos were not found in this trip, or are not images', 404);
+      throw new AppError("Some of those photos aren't on this trip, or aren't images.", 404);
     }
 
     const existing = await prisma.foodLogEntryPhoto.findMany({

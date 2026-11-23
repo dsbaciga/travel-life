@@ -137,7 +137,7 @@ export const travelPartnerRequestService = {
     ]);
 
     if (!requester) {
-      throw new AppError('User not found', 404);
+      throw new AppError("We couldn't find that user.", 404);
     }
 
     if (!recipient) {
@@ -271,7 +271,7 @@ export const travelPartnerRequestService = {
         });
 
         if (!request) {
-          throw new AppError('Travel partner request not found or already responded to', 404);
+          throw new AppError('This request was already answered or has been cancelled.', 404);
         }
 
         // Lock both rows in ascending id order to avoid deadlocks, mirroring
@@ -293,7 +293,7 @@ export const travelPartnerRequestService = {
             FROM users WHERE id = ${id} FOR UPDATE
           `;
           if (!row) {
-            throw new AppError('User not found', 404);
+            throw new AppError("We couldn't find that user.", 404);
           }
           // The permission level lives in user_preferences; the users row lock above is what serialises this.
           const prefs = await getUserPreferences(row.id, tx);
@@ -423,7 +423,7 @@ export const travelPartnerRequestService = {
     });
 
     if (!request) {
-      throw new AppError('Travel partner request not found or already responded to', 404);
+      throw new AppError('This request was already answered or has been cancelled.', 404);
     }
 
     await prisma.travelPartnerRequest.update({
@@ -456,7 +456,7 @@ export const travelPartnerRequestService = {
     });
 
     if (!request) {
-      throw new AppError('Travel partner request not found or already responded to', 404);
+      throw new AppError('This request was already answered or has been cancelled.', 404);
     }
 
     await prisma.travelPartnerRequest.delete({

@@ -1566,7 +1566,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.updateCoverPhoto(mockUserId, mockTripId, 999)
-      ).rejects.toThrow('Photo not found or does not belong to this trip');
+      ).rejects.toThrow("We couldn't find that photo on this trip.");
     });
 
     it('should reject update from non-owner', async () => {

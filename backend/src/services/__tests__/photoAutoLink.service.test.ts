@@ -261,14 +261,14 @@ describe('PhotoAutoLinkService', () => {
         photoAutoLinkService.applyActivityLinks(USER_ID, TRIP_ID, {
           links: [{ activityId: 1, photoIds: [10, 11] }],
         })
-      ).rejects.toThrow('Some photos do not belong to this trip');
+      ).rejects.toThrow("Some of those photos aren't on this trip.");
 
       mockPrisma.activity.count.mockResolvedValue(0);
       await expect(
         photoAutoLinkService.applyActivityLinks(USER_ID, TRIP_ID, {
           links: [{ activityId: 1, photoIds: [10] }],
         })
-      ).rejects.toThrow('Some activities do not belong to this trip');
+      ).rejects.toThrow("Some of those activities aren't on this trip.");
 
       expect(mockPrisma.activity.count).toHaveBeenCalledWith({
         where: { id: { in: [1] }, tripId: TRIP_ID },

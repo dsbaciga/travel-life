@@ -256,7 +256,7 @@ describe('ChecklistService', () => {
       mockPrisma.checklist.findFirst.mockResolvedValue(null);
 
       await expect(checklistService.getChecklistById(999, 1)).rejects.toThrow(
-        'Checklist not found'
+        "We couldn't find that checklist."
       );
     });
   });
@@ -383,7 +383,7 @@ describe('ChecklistService', () => {
 
       await expect(
         checklistService.updateChecklist(999, 1, { name: 'Test' })
-      ).rejects.toThrow('Checklist not found');
+      ).rejects.toThrow("We couldn't find that checklist.");
     });
   });
 
@@ -411,7 +411,7 @@ describe('ChecklistService', () => {
       mockPrisma.checklist.findFirst.mockResolvedValue(null);
 
       await expect(checklistService.deleteChecklist(999, 1)).rejects.toThrow(
-        'Checklist not found'
+        "We couldn't find that checklist."
       );
     });
   });
@@ -476,7 +476,7 @@ describe('ChecklistService', () => {
 
       await expect(
         checklistService.addChecklistItem(999, 1, { name: 'Test' })
-      ).rejects.toThrow('Checklist not found');
+      ).rejects.toThrow("We couldn't find that checklist.");
     });
   });
 
@@ -556,7 +556,7 @@ describe('ChecklistService', () => {
 
       await expect(
         checklistService.updateChecklistItem(999, 1, { name: 'Test' })
-      ).rejects.toThrow('Checklist item not found');
+      ).rejects.toThrow("We couldn't find that checklist item.");
     });
   });
 
@@ -584,7 +584,7 @@ describe('ChecklistService', () => {
       mockPrisma.checklistItem.findFirst.mockResolvedValue(null);
 
       await expect(checklistService.deleteChecklistItem(999, 1)).rejects.toThrow(
-        'Checklist item not found'
+        "We couldn't find that checklist item."
       );
     });
   });

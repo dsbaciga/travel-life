@@ -997,7 +997,7 @@ describe('ActivityService', () => {
 
       await expect(
         activityService.updateActivity(userId, activityId, { name: 'Test' })
-      ).rejects.toThrow('Activity not found');
+      ).rejects.toThrow("We couldn't find that activity.");
     });
 
     it('should throw error if user does not own the activity', async () => {
@@ -1160,7 +1160,7 @@ describe('ActivityService', () => {
       mockPrisma.activity.findUnique.mockResolvedValue(null);
 
       await expect(activityService.deleteActivity(userId, activityId)).rejects.toThrow(
-        'Activity not found'
+        "We couldn't find that activity."
       );
     });
 

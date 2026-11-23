@@ -69,14 +69,14 @@ describe('errorHandler', () => {
 
   describe('AppError handling', () => {
     it('should return correct status and message for AppError', () => {
-      const error = new UtilsAppError('Not found', 404);
+      const error = new UtilsAppError("We couldn't find that.", 404);
 
       errorHandler(error, mockRequest, mockResponse, mockNext);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Not found',
+        message: "We couldn't find that.",
       });
     });
 

@@ -1181,7 +1181,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.updateTransportation(userId, transportationId, { notes: 'Test' })
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {
@@ -1295,7 +1295,7 @@ describe('TransportationService', () => {
 
       await expect(
         transportationService.deleteTransportation(userId, transportationId)
-      ).rejects.toThrow('Transportation not found');
+      ).rejects.toThrow("We couldn't find that transport item.");
     });
 
     it('should throw error if user does not have access to the trip', async () => {

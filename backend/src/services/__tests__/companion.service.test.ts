@@ -359,7 +359,7 @@ describe('CompanionService', () => {
       mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
 
       await expect(companionService.getCompanionById(1, 999)).rejects.toThrow(
-        'Companion not found'
+        "We couldn't find that companion."
       );
     });
   });
@@ -396,7 +396,7 @@ describe('CompanionService', () => {
 
       await expect(
         companionService.updateCompanion(1, 999, { name: 'Test' })
-      ).rejects.toThrow('Companion not found');
+      ).rejects.toThrow("We couldn't find that companion.");
     });
   });
 
@@ -454,7 +454,7 @@ describe('CompanionService', () => {
       mockPrisma.travelCompanion.findFirst.mockResolvedValue(null);
 
       await expect(companionService.deleteCompanion(1, 999)).rejects.toThrow(
-        'Companion not found'
+        "We couldn't find that companion."
       );
     });
   });
@@ -512,7 +512,7 @@ describe('CompanionService', () => {
 
       await expect(
         companionService.linkCompanionToTrip(1, { tripId: 100, companionId: 999 })
-      ).rejects.toThrow('Companion not found');
+      ).rejects.toThrow("We couldn't find that companion.");
     });
 
     it('should throw error when trip not found', async () => {
@@ -552,7 +552,7 @@ describe('CompanionService', () => {
 
       await expect(
         companionService.unlinkCompanionFromTrip(1, 100, 1)
-      ).rejects.toThrow('Companion not linked to this trip');
+      ).rejects.toThrow("That companion isn't on this trip.");
     });
   });
 

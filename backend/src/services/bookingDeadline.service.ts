@@ -37,7 +37,7 @@ function withTarget<
 async function findInTrip(deadlineId: number, tripId: number) {
   const deadline = await prisma.bookingDeadline.findFirst({ where: { id: deadlineId, tripId } });
   if (!deadline) {
-    throw new AppError('Deadline not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that deadline on this trip.", 404);
   }
   return deadline;
 }
