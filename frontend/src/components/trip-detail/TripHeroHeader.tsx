@@ -5,6 +5,7 @@ import { TripStatus } from "../../types/trip";
 import type { TripTag } from "../../types/tag";
 import type { Checklist } from "../../types/checklist";
 import { resolveTripCoverUrl } from "../../lib/tripCover";
+import { useTripTint, tintOverlay, withAlpha } from "../../hooks/useTripTint";
 import TripSeriesBadge from "../TripSeriesBadge";
 import TripHeaderActions from "../TripHeaderActions";
 import MarkdownRenderer from "../MarkdownRenderer";
@@ -100,11 +101,13 @@ export default function TripHeroHeader({
   }, [coverPhoto, coverImagePath, coverImageThumbnailPath]);
 
   const tagsCount = tags.length;
+  const { hero: heroTint, accent: accentTint } = useTripTint(trip.coverColor);
 
   return (
     <div
       ref={headerRef}
       className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 mb-6"
+      style={coverPhotoUrl && accentTint ? { borderColor: withAlpha(accentTint.ring, 0.55) } : undefined}
     >
       {/* Cover Photo Background */}
       {coverPhotoUrl ? (
@@ -115,7 +118,20 @@ export default function TripHeroHeader({
             "--cover-photo-url": `url(${coverPhotoUrl})`,
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70"></div>
+          <div
+            className={`absolute inset-0 ${heroTint ? "" : "bg-gradient-to-b from-black/30 via-black/50 to-black/70"}`}
+            style={
+              heroTint
+                ? {
+                    backgroundImage: tintOverlay(heroTint, "to bottom", [
+                      { color: "from", alpha: 0.4 },
+                      { color: "from", alpha: 0.6 },
+                      { color: "to", alpha: 0.8 },
+                    ]),
+                  }
+                : undefined
+            }
+          ></div>
           <div className="relative h-full p-4 sm:p-6 flex flex-col justify-between text-white">
             <div className="flex flex-wrap justify-between items-start gap-4">
               <div className="min-w-0 flex-1 basis-[16rem] pr-4">

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { formatDateOnly } from '@travel-life/shared';
 
+import { useTripTint } from '@/lib/tripTint';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import { listPinnedTripIds, setTripPinned } from '@/db/repository';
 import { getDb } from '@/lib/db';
@@ -50,6 +51,8 @@ export default function TripsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const rows = useRef(new Map<number, SwipeableMethods>());
 
+  const undoTint = useTripTint(undo?.trip.coverColor);
+
   // The undo bar disappears on its own; the trip stays retrievable below.
   useEffect(() => {
     if (!undo) return;
@@ -85,7 +88,7 @@ export default function TripsScreen() {
       </AppText>
       {notice ? <Banner tone="warning" text={notice} /> : null}
       {undo ? (
-        <Card tone="hero">
+        <Card tone="hero" tint={undoTint}>
           <Row style={styles.between}>
             <AppText style={styles.grow} numberOfLines={2}>
               Removed “{undo.trip.title}” from this phone.

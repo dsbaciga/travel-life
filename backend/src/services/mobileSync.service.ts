@@ -68,6 +68,7 @@ class MobileSyncService {
         countryCode: true,
         budget: true,
         budgetCurrency: true,
+        coverColor: true,
         createdAt: true,
         updatedAt: true,
       },

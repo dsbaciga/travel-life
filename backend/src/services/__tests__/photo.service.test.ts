@@ -70,6 +70,7 @@ const mockPrisma = {
   },
   trip: {
     findFirst: jest.fn(),
+    updateMany: jest.fn(),
   },
   userIntegrations: {
     findUnique: jest.fn(),
@@ -907,6 +908,19 @@ describe('PhotoService', () => {
 
       expect(mockPrisma.photo.delete).toHaveBeenCalledWith({
         where: { id: mockPhotoId },
+      });
+    });
+
+    it('PHOTO-011b: clears the cover tint of any trip using the photo as its cover', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue(mockPhoto);
+      mockPrisma.entityLink.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.photo.delete.mockResolvedValue(mockPhoto);
+
+      await photoService.deletePhoto(mockUserId, mockPhotoId);
+
+      expect(mockPrisma.trip.updateMany).toHaveBeenCalledWith({
+        where: { coverPhotoId: mockPhotoId },
+        data: { coverColor: null },
       });
     });
   });

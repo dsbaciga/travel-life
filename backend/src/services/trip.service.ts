@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler';
 import { CreateTripInput, UpdateTripInput, GetTripQuery, TripStatus, DuplicateTripInput } from '../types/trip.types';
 import { companionService } from './companion.service';
 import { tripCoverImageService } from './tripCoverImage.service';
+import { computeCoverColor } from './tripCoverColor.service';
 import { toSafePermissionLevel } from '../services/_shared/tripPermissions';
 import { buildConditionalUpdateData, tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
@@ -547,10 +548,12 @@ export class TripService {
     }
 
     // If photoId is provided, verify the photo belongs to this trip
+    let coverPhotoRow = null;
     if (photoId) {
       const photo = await prisma.photo.findFirst({
         where: { id: photoId, tripId },
       });
+      coverPhotoRow = photo;
 
       if (!photo) {
         throw new AppError('Photo not found or does not belong to this trip', 404);
@@ -561,10 +564,26 @@ export class TripService {
     // mutually exclusive, so clear the upload and delete its files.
     const previousUpload = [trip.coverImagePath, trip.coverImageThumbnailPath];
 
+    // The cover tint follows the cover: sampled from the chosen photo, cleared when
+    // the cover is removed.
+    let coverColor: string | null = null;
+    if (coverPhotoRow) {
+      coverColor = await computeCoverColor({
+        userId: trip.userId,
+        coverImagePath: null,
+        coverImageThumbnailPath: null,
+        coverPhoto: coverPhotoRow,
+      });
+    } else if (trip.coverImagePath || trip.coverImageThumbnailPath) {
+      // Clearing the library cover leaves an uploaded one (if any) in place.
+      coverColor = trip.coverColor;
+    }
+
     const updatedTrip = await prisma.trip.update({
       where: { id: tripId },
       data: {
         coverPhotoId: photoId,
+        coverColor,
         ...(photoId ? { coverImagePath: null, coverImageThumbnailPath: null } : {}),
       },
       include: {

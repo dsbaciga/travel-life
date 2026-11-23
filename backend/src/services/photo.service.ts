@@ -987,6 +987,8 @@ class PhotoService {
     // Clean up entity links and delete atomically in a transaction
     await prisma.$transaction(async (tx) => {
       await cleanupEntityLinks(verifiedPhoto.tripId, 'PHOTO', photoId, tx);
+      // The FK nulls coverPhotoId when this photo is a trip cover; its tint goes too.
+      await tx.trip.updateMany({ where: { coverPhotoId: photoId }, data: { coverColor: null } });
       await tx.photo.delete({
         where: { id: photoId },
       });

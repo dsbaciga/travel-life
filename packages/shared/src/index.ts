@@ -4,6 +4,7 @@
 export * from './constants/countryFacts';
 export * from './entityLinks/rules';
 export * from './utils/geo';
+export * from './utils/tripTint';
 export * from './utils/mapsDeepLinks';
 export {
   OpeningHoursService,
