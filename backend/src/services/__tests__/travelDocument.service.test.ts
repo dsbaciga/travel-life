@@ -508,7 +508,7 @@ describe('TravelDocumentService', () => {
 
       await expect(
         travelDocumentService.checkDocumentValidityForTrip(1, 999)
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
 
     it('should flag documents with no expiry date', async () => {

@@ -140,7 +140,7 @@ const requireOwnedTrip = async (userId: number, tripId: number) => {
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or you do not have permission to manage sharing', 404);
+    throw new AppError("We couldn't find that trip, or you don't have permission to manage sharing.", 404);
   }
 
   return trip;
@@ -247,7 +247,7 @@ class ShareService {
     });
 
     if (!trip) {
-      throw new AppError('Shared trip not found', 404);
+      throw new AppError("We couldn't find that shared trip.", 404);
     }
 
     // Activity -> location name, from the activity's own locationId

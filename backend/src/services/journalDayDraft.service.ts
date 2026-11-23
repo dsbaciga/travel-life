@@ -45,7 +45,7 @@ class JournalDayDraftService {
       where: { id: tripId },
       select: { title: true, timezone: true, startDate: true, endDate: true },
     });
-    if (!trip) throw new AppError('Trip not found', 404);
+    if (!trip) throw new AppError("We couldn't find that trip.", 404);
 
     // Before any day data is read or the LLM is considered: a date outside the
     // trip is rejected outright. Trips without dates are not restricted.

@@ -217,12 +217,12 @@ describe('PhotoAutoLinkService', () => {
       await photoAutoLinkService.getActivitySuggestions(USER_ID, TRIP_ID);
       expect(mockVerifyTripAccess).toHaveBeenLastCalledWith(USER_ID, TRIP_ID, 'view');
 
-      mockVerifyTripAccess.mockRejectedValue(new AppError('Trip not found or access denied', 404));
+      mockVerifyTripAccess.mockRejectedValue(new AppError("We couldn't find that trip, or you don't have access to it.", 404));
       await expect(
         photoAutoLinkService.applyActivityLinks(USER_ID, TRIP_ID, {
           links: [{ activityId: 1, photoIds: [10] }],
         })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
       expect(mockVerifyTripAccess).toHaveBeenLastCalledWith(USER_ID, TRIP_ID, 'edit');
       expect(mockPrisma.entityLink.createMany).not.toHaveBeenCalled();
     });

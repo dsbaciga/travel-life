@@ -105,7 +105,7 @@ export const collaborationService = {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Prevent non-owners from inviting at admin permission level
@@ -451,7 +451,7 @@ export const collaborationService = {
     // Verify user has access to this trip
     const { permissionLevel } = await this.getUserPermissionLevel(userId, tripId);
     if (!permissionLevel) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
 
     const collaborators = await prisma.tripCollaborator.findMany({

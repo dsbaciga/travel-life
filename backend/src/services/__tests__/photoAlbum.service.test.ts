@@ -232,7 +232,7 @@ describe('PhotoAlbumService', () => {
 
     it('should throw error if user does not own the trip', async () => {
       (verifyTripAccessWithPermission as jest.Mock).mockRejectedValue(
-        new AppError('Trip not found or access denied', 404)
+        new AppError("We couldn't find that trip, or you don't have access to it.", 404)
       );
 
       const createInput = {
@@ -242,7 +242,7 @@ describe('PhotoAlbumService', () => {
 
       await expect(
         photoAlbumService.createAlbum(mockUserId, createInput)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 

@@ -475,7 +475,7 @@ class PdfImportService {
     // failure that we could have detected up front.
     const trip = await prisma.trip.findFirst({ where: { id: tripId, userId } });
     if (!trip) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
     const userTimezone = await getUserTimezone(userId);
     const zoneFor = (entityZone: string | undefined) =>

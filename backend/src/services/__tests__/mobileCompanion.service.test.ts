@@ -262,7 +262,7 @@ describe('MobileSyncService', () => {
   });
 
   it('MSYNC-004: access control - a denied trip reads nothing', async () => {
-    mockVerifyTrip.mockRejectedValue(new AppError('Trip not found or access denied', 404) as never);
+    mockVerifyTrip.mockRejectedValue(new AppError("We couldn't find that trip, or you don't have access to it.", 404) as never);
     await expect(mobileSyncService.getSnapshot(2, TRIP)).rejects.toMatchObject({ statusCode: 404 });
     expect(mockPrisma.trip.findUnique).not.toHaveBeenCalled();
     expect(mockPrisma.activity.findMany).not.toHaveBeenCalled();

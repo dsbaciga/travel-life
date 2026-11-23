@@ -211,7 +211,7 @@ describe('AlbumSuggestionService', () => {
 
       await expect(
         albumSuggestionService.getAlbumSuggestions(1, 999)
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 
@@ -270,7 +270,7 @@ describe('AlbumSuggestionService', () => {
           name: 'Test',
           photoIds: [1],
         })
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
   });
 

@@ -441,7 +441,7 @@ describe('Trip Service', () => {
     it('should throw 404 error for non-owner accessing private trip', async () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
-      await expect(tripService.getTripById(mockOtherUserId, mockTripId)).rejects.toThrow('Trip not found');
+      await expect(tripService.getTripById(mockOtherUserId, mockTripId)).rejects.toThrow("We couldn't find that trip.");
     });
 
     it('should not expose private trip details to non-owners', async () => {
@@ -453,7 +453,7 @@ describe('Trip Service', () => {
         fail('Expected error to be thrown');
       } catch (error: unknown) {
         if (error instanceof Error) {
-          expect(error.message).toBe('Trip not found');
+          expect(error.message).toBe("We couldn't find that trip.");
         }
       }
     });
@@ -820,7 +820,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.updateTrip(mockOtherUserId, mockTripId, { title: 'Hacked Title' })
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
     });
   });
 
@@ -835,7 +835,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.updateTrip(mockCollaboratorUserId, mockTripId, { title: 'Updated' })
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
     });
   });
 
@@ -849,7 +849,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.updateTrip(mockCollaboratorUserId, mockTripId, { title: 'Updated' })
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
     });
   });
 
@@ -945,7 +945,7 @@ describe('Trip Service', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(tripService.deleteTrip(mockOtherUserId, mockTripId)).rejects.toThrow(
-        'Trip not found or you do not have permission to delete it'
+        "We couldn't find that trip, or you don't have permission to delete it."
       );
     });
   });
@@ -1498,7 +1498,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.duplicateTrip(mockUserId, 99999, { title: 'Copy' })
-      ).rejects.toThrow('Trip not found or you do not have permission to duplicate it');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have permission to duplicate it.");
     });
 
     it('should throw error when duplicating trip of another user', async () => {
@@ -1506,7 +1506,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.duplicateTrip(mockOtherUserId, mockTripId, { title: 'Copy' })
-      ).rejects.toThrow('Trip not found or you do not have permission to duplicate it');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have permission to duplicate it.");
     });
   });
 
@@ -1574,7 +1574,7 @@ describe('Trip Service', () => {
 
       await expect(
         tripService.updateCoverPhoto(mockOtherUserId, mockTripId, 50)
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
     });
   });
 

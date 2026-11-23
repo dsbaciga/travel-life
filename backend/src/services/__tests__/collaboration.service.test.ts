@@ -483,7 +483,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.getCollaborators(999, 100)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 

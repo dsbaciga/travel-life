@@ -92,7 +92,7 @@ async function requireOwnedTrip(userId: number, tripId: number) {
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or you do not have permission to edit it', 404);
+    throw new AppError("We couldn't find that trip, or you can only view it.", 404);
   }
 
   return trip;

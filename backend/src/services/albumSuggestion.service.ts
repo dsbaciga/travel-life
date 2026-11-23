@@ -322,7 +322,7 @@ export const albumSuggestionService = {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Get all photos for this trip that are not already in an album
@@ -449,7 +449,7 @@ export const albumSuggestionService = {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Verify all photos belong to this trip (authorization check)

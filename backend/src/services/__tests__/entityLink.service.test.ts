@@ -1046,7 +1046,7 @@ describe('EntityLinkService', () => {
 
     it('should throw error if user does not own trip', async () => {
       mockVerifyTripAccessWithPermission.mockRejectedValue(
-        new AppError('Trip not found or access denied', 404)
+        new AppError("We couldn't find that trip, or you don't have access to it.", 404)
       );
 
       const input = {
@@ -1058,7 +1058,7 @@ describe('EntityLinkService', () => {
       };
 
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });

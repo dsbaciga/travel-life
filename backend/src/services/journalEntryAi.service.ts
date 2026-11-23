@@ -54,7 +54,7 @@ class JournalEntryAiService {
       }),
     ]);
 
-    if (!trip) throw new AppError('Trip not found', 404);
+    if (!trip) throw new AppError("We couldn't find that trip.", 404);
     if (entries.length === 0) {
       throw new AppError('No journal entries found for this trip', 400);
     }

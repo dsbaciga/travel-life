@@ -296,7 +296,7 @@ describe('WeatherService', () => {
       mockPrisma.trip.findUnique.mockResolvedValue(null);
 
       await expect(weatherService.getWeatherForTrip(999, 1)).rejects.toThrow(
-        'Trip not found'
+        "We couldn't find that trip."
       );
     });
 
@@ -425,7 +425,7 @@ describe('WeatherService', () => {
 
       await expect(
         weatherService.refreshWeatherForDate(1, 1, '2024-07-01')
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
 
     it('WEA-012: throws error when no API key for refresh', async () => {

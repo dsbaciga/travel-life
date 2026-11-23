@@ -346,7 +346,7 @@ class ExpenseService {
     ]);
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     const records: CostedRecord[] = expenses.map((item): CostedRecord => ({

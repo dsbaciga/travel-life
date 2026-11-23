@@ -542,7 +542,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { isFavorite: true })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
       expect(mockPrisma.photo.update).not.toHaveBeenCalled();
     });
 
@@ -763,7 +763,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { caption: 'New' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 

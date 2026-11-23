@@ -520,7 +520,7 @@ describe('CompanionService', () => {
 
       await expect(
         companionService.linkCompanionToTrip(1, { tripId: 999, companionId: 1 })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -587,7 +587,7 @@ describe('CompanionService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(companionService.getCompanionsByTrip(1, 999)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });

@@ -236,7 +236,7 @@ describe('ActivityService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(activityService.createActivity(userId, input)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 
@@ -781,7 +781,7 @@ describe('ActivityService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(activityService.getActivitiesByTrip(userId, tripId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 
@@ -1015,7 +1015,7 @@ describe('ActivityService', () => {
 
       await expect(
         activityService.updateActivity(userId, activityId, { name: 'Test' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should prevent activity from being its own parent', async () => {
@@ -1177,7 +1177,7 @@ describe('ActivityService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(activityService.deleteActivity(userId, activityId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 

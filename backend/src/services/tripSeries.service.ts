@@ -12,7 +12,7 @@ export class TripSeriesService {
       where: { id: seriesId, userId },
     });
     if (!series) {
-      throw new AppError('Trip series not found', 404);
+      throw new AppError("We couldn't find that trip series.", 404);
     }
     return series;
   }
@@ -134,7 +134,7 @@ export class TripSeriesService {
     });
 
     if (!series) {
-      throw new AppError('Trip series not found', 404);
+      throw new AppError("We couldn't find that trip series.", 404);
     }
 
     return {
@@ -189,7 +189,7 @@ export class TripSeriesService {
       where: { id: tripId, userId },
     });
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // Check if trip is already in this series
@@ -231,7 +231,7 @@ export class TripSeriesService {
       where: { id: tripId, userId, seriesId },
     });
     if (!trip) {
-      throw new AppError('Trip not found in this series', 404);
+      throw new AppError("That trip isn't in this series.", 404);
     }
 
     await prisma.trip.update({

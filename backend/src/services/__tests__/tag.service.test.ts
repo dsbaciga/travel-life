@@ -352,7 +352,7 @@ describe('TagService', () => {
 
       await expect(
         tagService.linkTagToTrip(1, { tripId: 999, tagId: 1 })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -424,7 +424,7 @@ describe('TagService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(tagService.getTagsByTrip(1, 999)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });

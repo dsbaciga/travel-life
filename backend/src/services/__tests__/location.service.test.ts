@@ -735,7 +735,7 @@ describe('LocationService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(locationService.getLocationsByTrip(userId, tripId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
 
@@ -846,7 +846,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { name: 'Updated' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
 
     it('should clear optional fields when set to null', async () => {
@@ -948,7 +948,7 @@ describe('LocationService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(locationService.deleteLocation(userId, locationId)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });
