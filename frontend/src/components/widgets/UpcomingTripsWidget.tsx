@@ -2,6 +2,7 @@
  * UpcomingTripsWidget - Shows next upcoming trips with quick stats
  */
 
+import Icon from '../ui/Icon';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import type { Trip } from '../../types/trip';
@@ -82,9 +83,7 @@ export default function UpcomingTripsWidget() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <Icon name="calendar" className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
             Upcoming Trips
@@ -102,9 +101,7 @@ export default function UpcomingTripsWidget() {
       {trips.length === 0 ? (
         <div className="text-center py-8">
           <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary-100 to-accent-100 dark:from-primary-900/30 dark:to-accent-900/30 flex items-center justify-center">
-            <svg className="w-10 h-10 text-primary-500 dark:text-sky" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Icon name="globe" className="w-10 h-10 text-primary-500 dark:text-sky" />
           </div>
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             Your Adventures Await
@@ -116,9 +113,7 @@ export default function UpcomingTripsWidget() {
             to="/trips/new"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 text-white shadow-lg shadow-primary-500/20 dark:shadow-accent-400/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Icon name="add" className="w-4 h-4" />
             Plan Your First Trip
           </Link>
         </div>
@@ -143,16 +138,12 @@ export default function UpcomingTripsWidget() {
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-dusk-400">
                       <span className="flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Icon name="calendar" className="w-4 h-4" />
                         {formatDateRange(trip)}
                       </span>
                     </div>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-primary-500 dark:group-hover:text-sky transform group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <Icon name="chevronRight" className="w-5 h-5 text-gray-400 group-hover:text-primary-500 dark:group-hover:text-sky transform group-hover:translate-x-1 transition-all flex-shrink-0" />
                 </div>
               </div>
             </Link>

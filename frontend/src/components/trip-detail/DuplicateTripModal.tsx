@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import tripService from "../../services/trip.service";
@@ -91,9 +92,7 @@ export default function DuplicateTripModal({
             className="p-2 -mr-2 -mt-1 rounded-lg text-gray-500 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors flex-shrink-0"
             aria-label="Close"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" className="w-5 h-5" />
           </button>
         </div>
 

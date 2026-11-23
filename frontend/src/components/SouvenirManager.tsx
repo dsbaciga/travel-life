@@ -5,6 +5,7 @@ import type { Checklist, ChecklistItem, SouvenirMetadata } from '../types/checkl
 import toast from 'react-hot-toast';
 import Modal from './Modal';
 import EmptyState from './EmptyState';
+import Icon from './ui/Icon';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 /**
@@ -277,7 +278,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
     return (
       <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-navy-800 dark:to-navy-700 rounded-xl p-4 mb-6 border border-primary-200 dark:border-gold/20">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-          <span>💰</span> Budget Summary
+          <Icon name="budget" /> Budget Summary
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Estimated Total */}
@@ -452,7 +453,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
         isOpen={showForm}
         onClose={resetForm}
         title={editingItemId ? 'Edit Souvenir' : 'Add Souvenir'}
-        icon="🎁"
+        icon="souvenir"
         maxWidth="lg"
         formId="souvenir-form"
         focusFirstInput
@@ -589,7 +590,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
       {/* Souvenirs List */}
       {items.length === 0 ? (
         <EmptyState
-          icon="🎁"
+          icon="souvenir"
           message="No Souvenirs Yet"
           subMessage="Track gifts and souvenirs you want to bring back from your trip. Keep track of who they're for and stay within budget!"
           actionLabel="Add Your First Souvenir"
@@ -601,7 +602,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           {unpurchasedItems.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span>🛒</span> To Buy
+                <Icon name="cart" /> To Buy
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({unpurchasedItems.length})
                 </span>
@@ -616,7 +617,7 @@ export default function SouvenirManager({ tripId, onUpdate }: SouvenirManagerPro
           {purchasedItems.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-3 flex items-center gap-2">
-                <span>✅</span> Purchased
+                <Icon name="success" /> Purchased
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({purchasedItems.length})
                 </span>

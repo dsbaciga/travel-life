@@ -300,7 +300,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         </div>
       ) : deadlines.length === 0 ? (
         <EmptyState
-          icon="⏰"
+          icon="alarm"
           message="No deadlines yet"
           subMessage="Track free-cancellation cutoffs, check-in windows and payment dates, or anything you want to keep an eye on"
           actionLabel="Add Deadline"

@@ -74,7 +74,7 @@ export default function InviteUserModal({
       isOpen={isOpen}
       onClose={handleClose}
       title="Invite Collaborator"
-      icon="👥"
+      icon="users"
       maxWidth="md"
       footer={
         <div className="flex gap-3">

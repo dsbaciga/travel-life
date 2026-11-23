@@ -1,3 +1,5 @@
+import Icon from './ui/Icon';
+import type { IconName } from './ui/Icon';
 import { useUnits } from '../hooks/useUnits';
 import { formatDistance as formatUnits, otherMeasurementSystem } from '../utils/units';
 import type {
@@ -101,16 +103,16 @@ export default function TransportationStats({
     return labels[type];
   };
 
-  const getTypeIcon = (type: TransportationType): string => {
-    const icons: Record<TransportationType, string> = {
-      flight: "✈️",
-      train: "🚆",
-      bus: "🚌",
-      car: "🚗",
-      ferry: "⛴️",
-      bicycle: "🚴",
-      walk: "🚶",
-      other: "🚊",
+  const getTypeIcon = (type: TransportationType): IconName => {
+    const icons: Record<TransportationType, IconName> = {
+      flight: "flight",
+      train: "train",
+      bus: "bus",
+      car: "car",
+      ferry: "ferry",
+      bicycle: "bike",
+      walk: "walk",
+      other: "rocket",
     };
     return icons[type];
   };
@@ -211,7 +213,7 @@ export default function TransportationStats({
             className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6"
           >
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>{getTypeIcon(type)}</span>
+              <Icon name={getTypeIcon(type)} />
               <span>{getTypeLabel(type)} Statistics</span>
             </h3>
 

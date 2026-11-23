@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Icon from './ui/Icon';
 import { Link } from 'react-router';
 import travelDocumentService from '../services/travelDocument.service';
 import type { DocumentAlert } from '../types/travelDocument';
@@ -85,7 +86,7 @@ export default function DocumentAlerts({
         className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors hover:opacity-90 ${containerClasses[mostSevereType]} ${className}`}
       >
         <span className={iconClasses[mostSevereType]} aria-hidden="true">
-          {alerts.length === 1 ? getDocumentTypeIcon(alerts[0].document.type) : '📄'}
+          <Icon name={alerts.length === 1 ? getDocumentTypeIcon(alerts[0].document.type) : 'document'} />
         </span>
         <span className={`text-sm font-medium ${textClasses[mostSevereType]}`}>
           {alerts.length === 1 ? alerts[0].message : `${alerts.length} documents need attention`}
@@ -101,8 +102,8 @@ export default function DocumentAlerts({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1">
-          <span className={`text-xl ${iconClasses[mostSevereType]}`} aria-hidden="true">
-            {mostSevereType === 'expired' || mostSevereType === 'critical' ? '!' : 'i'}
+          <span className={iconClasses[mostSevereType]} aria-hidden="true">
+            <Icon name={mostSevereType === 'expired' || mostSevereType === 'critical' ? 'alert' : 'info'} size={24} />
           </span>
           <div className="flex-1 min-w-0">
             <h3 className={`font-semibold ${textClasses[mostSevereType]}`}>
@@ -116,7 +117,7 @@ export default function DocumentAlerts({
                   key={alert.document.id}
                   className={`text-sm flex items-center gap-2 ${textClasses[alert.alertType]}`}
                 >
-                  <span aria-hidden="true">{getDocumentTypeIcon(alert.document.type)}</span>
+                  <Icon name={getDocumentTypeIcon(alert.document.type)} size={16} />
                   <span>{alert.message}</span>
                 </li>
               ))}
@@ -141,9 +142,7 @@ export default function DocumentAlerts({
           className={`p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 ${textClasses[mostSevereType]}`}
           aria-label="Dismiss alert"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <Icon name="close" />
         </button>
       </div>
     </div>

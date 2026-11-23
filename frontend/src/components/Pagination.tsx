@@ -1,3 +1,5 @@
+import Icon from './ui/Icon';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -49,9 +51,7 @@ export default function Pagination({
           className="px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-navy-800 border border-primary-200 dark:border-gold/30 text-charcoal dark:text-warm-gray hover:bg-parchment dark:hover:bg-navy-700 disabled:hover:bg-white dark:disabled:hover:bg-navy-800"
           aria-label="Previous page"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <Icon name="chevronLeft" />
         </button>
 
         {/* Page numbers */}
@@ -95,9 +95,7 @@ export default function Pagination({
           className="px-3 py-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-navy-800 border border-primary-200 dark:border-gold/30 text-charcoal dark:text-warm-gray hover:bg-parchment dark:hover:bg-navy-700 disabled:hover:bg-white dark:disabled:hover:bg-navy-800"
           aria-label="Next page"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <Icon name="chevronRight" />
         </button>
       </nav>
     </div>

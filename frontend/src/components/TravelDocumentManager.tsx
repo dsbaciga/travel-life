@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Icon from './ui/Icon';
 import travelDocumentService from '../services/travelDocument.service';
 import type {
   TravelDocument,
@@ -270,7 +271,7 @@ export default function TravelDocumentManager() {
               >
                 {DOCUMENT_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {getDocumentTypeIcon(type)} {DOCUMENT_TYPE_LABELS[type]}
+                    {DOCUMENT_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -435,7 +436,7 @@ export default function TravelDocumentManager() {
       {/* Document List */}
       {documents.length === 0 ? (
         <EmptyState
-          icon="📄"
+          icon="document"
           message="No travel documents yet"
           subMessage="Add your passports, visas, and other travel documents to track expiration dates and receive alerts."
           actionLabel="Add Document"
@@ -446,7 +447,7 @@ export default function TravelDocumentManager() {
           {(Object.entries(groupedDocuments) as [DocumentType, TravelDocument[]][]).map(([type, docs]) => (
             <div key={type} className="bg-white dark:bg-dusk-800 rounded-lg shadow p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>{getDocumentTypeIcon(type)}</span>
+                <Icon name={getDocumentTypeIcon(type)} />
                 {DOCUMENT_TYPE_LABELS[type]}s
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({docs.length})

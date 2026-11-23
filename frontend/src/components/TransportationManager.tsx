@@ -12,6 +12,8 @@ import { createLocationStub } from "../utils/locationHelpers";
 import type { EntityType, EntityLinkSummary } from "../types/entityLink";
 import transportationService from "../services/transportation.service";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
+import type { IconName } from "./ui/Icon";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
 import BookingDeadlinesSection from "./BookingDeadlinesSection";
@@ -143,7 +145,7 @@ type SortBy = "date" | "type";
 interface TransportationItemProps {
   transportation: Transportation;
   tripId: number;
-  getTypeIcon: (type: TransportationType) => string;
+  getTypeIcon: (type: TransportationType) => IconName;
   getStatusBadge: (transportation: Transportation) => React.ReactNode;
   getLocationDisplay: (
     location: { name: string } | null | undefined,
@@ -223,9 +225,7 @@ function TransportationItem({
             />
           </div>
         )}
-        <span className="text-xl sm:text-2xl">
-          {getTypeIcon(transportation.type)}
-        </span>
+        <Icon name={getTypeIcon(transportation.type)} size={28} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white capitalize">
@@ -1004,24 +1004,24 @@ export default function TransportationManager({
     },
   ], []);
 
-  const getTypeIcon = (type: TransportationType) => {
+  const getTypeIcon = (type: TransportationType): IconName => {
     switch (type) {
       case "flight":
-        return "✈️";
+        return "flight";
       case "train":
-        return "🚆";
+        return "train";
       case "bus":
-        return "🚌";
+        return "bus";
       case "car":
-        return "🚗";
+        return "car";
       case "ferry":
-        return "⛴️";
+        return "ferry";
       case "bicycle":
-        return "🚴";
+        return "bike";
       case "walk":
-        return "🚶";
+        return "walk";
       default:
-        return "🚀";
+        return "rocket";
     }
   };
 
@@ -1147,7 +1147,7 @@ export default function TransportationManager({
             className="sm:hidden btn btn-secondary w-full text-sm justify-between"
           >
             <span>Stats</span>
-            <span aria-hidden="true">{statsOpen ? "▲" : "▼"}</span>
+            <Icon name={statsOpen ? "collapse" : "expand"} size={16} />
           </button>
           <div
             id="transportation-stats"
@@ -1226,7 +1226,7 @@ export default function TransportationManager({
         isOpen={manager.showForm}
         onClose={handleCloseForm}
         title={manager.editingId ? "Edit Transportation" : "Add Transportation"}
-        icon="🚀"
+        icon="transportation"
         formId="transportation-form"
         footer={
           <FormModalFooter
@@ -1257,7 +1257,7 @@ export default function TransportationManager({
 
         <form id="transportation-form" onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Type Selection */}
-          <FormSection title="Type" icon="🚀">
+          <FormSection title="Type" icon="transportation">
             <div className="space-y-1">
               <label
                 htmlFor="transportation-type"
@@ -1276,20 +1276,20 @@ export default function TransportationManager({
                 className="input"
                 required
               >
-              <option value="flight">✈️ Flight</option>
-              <option value="train">🚆 Train</option>
-              <option value="bus">🚌 Bus</option>
-              <option value="car">🚗 Car</option>
-              <option value="ferry">⛴️ Ferry</option>
-              <option value="bicycle">🚴 Bicycle</option>
-              <option value="walk">🚶 Walk</option>
-              <option value="other">🚀 Other</option>
+              <option value="flight">Flight</option>
+              <option value="train">Train</option>
+              <option value="bus">Bus</option>
+              <option value="car">Car</option>
+              <option value="ferry">Ferry</option>
+              <option value="bicycle">Bicycle</option>
+              <option value="walk">Walk</option>
+              <option value="other">Other</option>
             </select>
             </div>
           </FormSection>
 
           {/* SECTION 2: Route (From/To Locations) */}
-          <FormSection title="Route" icon="📍" description="Select your departure and arrival locations">
+          <FormSection title="Route" icon="place" description="Select your departure and arrival locations">
             {/* From Location */}
             <div>
               <label
@@ -1384,7 +1384,7 @@ export default function TransportationManager({
           </FormSection>
 
           {/* SECTION 3: Schedule (Departure/Arrival Times) */}
-          <FormSection title="Schedule" icon="🕐" description="Optional - leave blank if times are unknown">
+          <FormSection title="Schedule" icon="schedule" description="Optional - leave blank if times are unknown">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -1411,7 +1411,7 @@ export default function TransportationManager({
                       title="Clear departure time"
                       aria-label="Clear departure time"
                     >
-                      ✕
+                      <Icon name="close" size={16} />
                     </button>
                   )}
                 </div>
@@ -1450,7 +1450,7 @@ export default function TransportationManager({
                       title="Clear arrival time"
                       aria-label="Clear arrival time"
                     >
-                      ✕
+                      <Icon name="close" size={16} />
                     </button>
                   )}
                 </div>
@@ -1467,13 +1467,13 @@ export default function TransportationManager({
           {/* COLLAPSIBLE: More Options (Carrier, Vehicle, Booking, Cost, Notes) */}
           <CollapsibleSection
             title="More Options"
-            icon="⚙️"
+            icon="settings"
             isExpanded={showMoreOptions}
             onToggle={() => setShowMoreOptions(!showMoreOptions)}
             badge="carrier, cost, notes"
           >
             {/* Carrier and Vehicle Number */}
-            <FormSection title="Transport Details" icon="🎫">
+            <FormSection title="Transport Details" icon="ticket">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -1537,7 +1537,7 @@ export default function TransportationManager({
             </FormSection>
 
             {/* Custom Location Text (Advanced) */}
-            <FormSection title="Custom Locations" icon="✏️" description="Use only if location not in list (distances won't be calculated)">
+            <FormSection title="Custom Locations" icon="edit" description="Use only if location not in list (distances won't be calculated)">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -1584,7 +1584,7 @@ export default function TransportationManager({
             </FormSection>
 
             {/* Cost */}
-            <FormSection title="Cost" icon="💰">
+            <FormSection title="Cost" icon="money">
               <CostCurrencyFields
                 cost={values.cost}
                 currency={values.currency}
@@ -1622,14 +1622,14 @@ export default function TransportationManager({
           {scheduledItems.length > 0 && (
             <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>📅</span> Scheduled Transportation
+                <Icon name="calendar" /> Scheduled Transportation
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({filteredScheduledItems.length})
                 </span>
               </h3>
               {filteredScheduledItems.length === 0 ? (
                 <EmptyState.Compact
-                  icon="🔍"
+                  icon="search"
                   message={`No ${activeTab} transportation`}
                 />
               ) : (
@@ -1664,7 +1664,7 @@ export default function TransportationManager({
           {sortedUnscheduledItems.length > 0 && (
             <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
-                <span>📋</span> Unscheduled Transportation
+                <Icon name="checklist" /> Unscheduled Transportation
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledItems.length})
                 </span>

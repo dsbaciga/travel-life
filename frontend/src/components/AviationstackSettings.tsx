@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import userService from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 export default function AviationstackSettings() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
@@ -100,7 +101,7 @@ export default function AviationstackSettings() {
       {settings?.aviationstackApiKeySet && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ Aviationstack API key is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> Aviationstack API key is configured
           </p>
         </div>
       )}

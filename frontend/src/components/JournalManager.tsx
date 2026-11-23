@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { isAxiosError } from "axios";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
 import FormModalFooter from "./shared/FormModalFooter";
@@ -476,7 +477,7 @@ export default function JournalManager({
         isOpen={manager.showForm}
         onClose={handleCloseForm}
         title={manager.editingId ? "Edit Entry" : "New Journal Entry"}
-        icon="📔"
+        icon="journal"
         formId="journal-form"
         footer={
           <FormModalFooter
@@ -584,7 +585,12 @@ export default function JournalManager({
                     }
                     className="btn btn-secondary text-sm disabled:opacity-50"
                   >
-                    {aiDrafting ? "Drafting…" : "✨ Draft with AI"}
+                    {aiDrafting ? "Drafting…" : (
+                      <>
+                        <Icon name="sparkle" size={16} className="align-text-bottom mr-1" />
+                        Draft with AI
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -637,7 +643,7 @@ export default function JournalManager({
             <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  💡 <strong>Tip:</strong> After creating your journal entry, use the link button (🔗) to connect it to locations, activities, lodging, transportation, photos, or albums.
+                  <Icon name="lightbulb" size={16} className="align-text-bottom" /> <strong>Tip:</strong> After creating your journal entry, use the link button (<Icon name="link" size={16} className="align-text-bottom" />) to connect it to locations, activities, lodging, transportation, photos, or albums.
                 </p>
               </div>
             </div>
@@ -670,7 +676,11 @@ export default function JournalManager({
                         {entry.title || "Untitled Entry"}
                       </h3>
                       <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
-                        {entry.date && <span>📅 {formatDate(entry.date, 'full')}</span>}
+                        {entry.date && (
+                          <span className="inline-flex items-center gap-1">
+                            <Icon name="calendar" size={16} /> {formatDate(entry.date, 'full')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 self-start">
@@ -720,7 +730,11 @@ export default function JournalManager({
                       {...{ 'aria-expanded': isExpanded }}
                       aria-label={isExpanded ? `Collapse ${entry.title || 'entry'} content` : `Expand ${entry.title || 'entry'} content`}
                     >
-                      {isExpanded ? "Show less" : "Read more →"}
+                      {isExpanded ? "Show less" : (
+                        <>
+                          Read more <Icon name="forward" size={16} className="align-text-bottom" />
+                        </>
+                      )}
                     </button>
                   )}
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { XMarkIcon, CheckIcon, CircleStackIcon } from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import type { MigrationResult } from '../../lib/localStorageMigration';
 
 interface MigrationNoticeProps {
@@ -115,9 +115,9 @@ export function MigrationNotice({
             `}
           >
             {hasErrors ? (
-              <CircleStackIcon className="w-4 h-4" />
+              <Icon name="storage" size={16} />
             ) : (
-              <CheckIcon className="w-4 h-4" />
+              <Icon name="check" size={16} />
             )}
           </div>
 
@@ -146,7 +146,7 @@ export function MigrationNotice({
             `}
             aria-label="Dismiss notification"
           >
-            <XMarkIcon className="w-4 h-4" />
+            <Icon name="close" size={16} />
           </button>
         </div>
       </div>

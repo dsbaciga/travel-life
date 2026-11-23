@@ -1356,7 +1356,7 @@ const Timeline = ({
   if (timelineItems.length === 0) {
     return (
       <EmptyState.Compact
-        icon="📅"
+        icon="calendar"
         message="No timeline items yet. Add activities, transportation, lodging, or journal entries to see them here."
       />
     );

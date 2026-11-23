@@ -92,7 +92,7 @@ export default function SettlementFormModal({
       isOpen={isOpen}
       onClose={onClose}
       title={editing ? "Edit Payment" : "Record Payment"}
-      icon="💸"
+      icon="money"
       formId="settlement-form"
       maxWidth="lg"
       footer={

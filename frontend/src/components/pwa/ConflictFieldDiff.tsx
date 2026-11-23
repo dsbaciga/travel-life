@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ComputerDesktopIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 import type { FieldDiff } from '../../types/sync.types';
 import { formatValueForDisplay } from '../../types/sync.types';
+import Icon from '../ui/Icon';
 
 export interface ConflictFieldDiffProps {
   /** The field difference to display */
@@ -93,7 +93,7 @@ export default function ConflictFieldDiff({
         >
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900/40">
-              <DevicePhoneMobileIcon className="w-3.5 h-3.5 text-primary-600 dark:text-gold" aria-hidden="true" />
+              <Icon name="smartphone" size={14} className="text-primary-600 dark:text-gold" />
             </div>
             <span className="text-xs font-medium text-primary-700 dark:text-gold">
               Your Changes
@@ -135,7 +135,7 @@ export default function ConflictFieldDiff({
         >
           <div className="flex items-center gap-2 mb-2">
             <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40">
-              <ComputerDesktopIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              <Icon name="computer" size={14} className="text-blue-600 dark:text-blue-400" />
             </div>
             <span className="text-xs font-medium text-blue-700 dark:text-blue-400">
               Server Version
@@ -172,20 +172,7 @@ export default function ConflictFieldDiff({
       {!mergeMode && (
         <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-t border-warm-gray/30 dark:border-navy-600">
           <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400">
-            <svg
-              className="w-4 h-4 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
+            <Icon name="alert" size={16} />
             <span>This field has conflicting changes</span>
           </div>
         </div>
@@ -223,15 +210,7 @@ ConflictFieldDiff.Compact = function CompactConflictFieldDiff({
           {localDisplay.length > 20 ? localDisplay.substring(0, 20) + '...' : localDisplay}
         </span>
 
-        <svg
-          className="w-4 h-4 text-slate dark:text-warm-gray/50 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        <Icon name="forward" size={16} className="text-slate dark:text-warm-gray/50" />
 
         {/* Server value */}
         <span

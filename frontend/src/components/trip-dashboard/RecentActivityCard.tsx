@@ -9,6 +9,7 @@
  * - "View all activity" link at bottom
  */
 
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 
 import type { Activity } from '../../types/activity';
@@ -43,20 +44,7 @@ function EmptyActivityState() {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="text-4xl mb-3" role="img" aria-label="No activity">
-        <svg
-          className="w-12 h-12 text-slate/50 dark:text-warm-gray/50"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <Icon name="schedule" className="w-12 h-12 text-slate/50 dark:text-warm-gray/50" />
       </div>
       <p className="text-sm text-slate dark:text-warm-gray font-medium">
         No recent activity
@@ -121,20 +109,7 @@ export function RecentActivityCard({
           Recent Activity
         </h3>
         <div className="flex items-center gap-1 text-slate dark:text-warm-gray">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <Icon name="schedule" className="w-4 h-4" />
         </div>
       </div>
 
@@ -198,20 +173,7 @@ export function RecentActivityCard({
             }}
           >
             <span>View all activity</span>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+            <Icon name="chevronRight" className="w-4 h-4" />
           </button>
         </div>
       )}

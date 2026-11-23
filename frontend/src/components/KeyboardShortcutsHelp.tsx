@@ -7,6 +7,7 @@
 
 import { useKeyboardShortcuts, getShortcutDisplay } from '../hooks/useKeyboardShortcuts';
 import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
+import Icon from './ui/Icon';
 
 export default function KeyboardShortcutsHelp() {
   const { showHelp, setShowHelp, shortcuts } = useKeyboardShortcuts();
@@ -58,19 +59,7 @@ export default function KeyboardShortcutsHelp() {
               className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
               aria-label="Close"
             >
-              <svg
-                className="w-6 h-6 text-gray-500 dark:text-dusk-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" size={24} className="text-gray-500 dark:text-dusk-400" />
             </button>
           </div>
         </div>

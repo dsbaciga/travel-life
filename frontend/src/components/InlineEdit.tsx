@@ -27,6 +27,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
 
 interface InlineEditProps {
   value: string;
@@ -149,7 +150,7 @@ export default function InlineEdit({
             {value || placeholder}
           </span>
           <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            ✏️
+            <Icon name="edit" size={16} />
           </span>
         </button>
       </div>
@@ -293,7 +294,7 @@ export function InlineEditNumber({
             {value !== null ? `${prefix}${value}${suffix}` : placeholder}
           </span>
           <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            ✏️
+            <Icon name="edit" size={16} />
           </span>
         </button>
       </div>

@@ -245,7 +245,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
   if (!card) {
     return (
       <EmptyState
-        icon="🆘"
+        icon="sos"
         message="Emergency card unavailable"
         subMessage={
           error
@@ -487,7 +487,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
           </dl>
         ) : (
           <EmptyState.Compact
-            icon="📄"
+            icon="document"
             message="No insurance or embassy details saved yet"
           />
         )}
@@ -511,7 +511,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
         )}
         {card.companions.length === 0 ? (
           <EmptyState.Compact
-            icon="🧑‍🤝‍🧑"
+            icon="users"
             message="No companions are linked to this trip"
           />
         ) : (

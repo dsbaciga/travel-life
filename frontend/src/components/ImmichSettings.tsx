@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import immichService from '../services/immich.service';
 import type { ImmichSettings } from '../types/immich';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 export default function ImmichSettings() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
@@ -129,8 +130,8 @@ export default function ImmichSettings() {
 
       {settings?.immichConfigured && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
-          <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ Immich is connected and configured
+          <p className="flex items-center gap-1.5 text-green-800 dark:text-green-200 font-medium">
+            <Icon name="check" size={16} /> Immich is connected and configured
           </p>
         </div>
       )}

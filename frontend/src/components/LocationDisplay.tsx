@@ -1,5 +1,6 @@
 import { formatOpeningHours, summarizeOpeningHours } from "../utils/openingHours";
 import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
+import Icon from "./ui/Icon";
 
 /**
  * LocationDisplay - Displays location name with hierarchical city/country info
@@ -95,7 +96,7 @@ export default function LocationDisplay({
             className="text-xs text-slate dark:text-warm-gray/60 mt-0.5"
             title={summarizeOpeningHours(openingHours)}
           >
-            <span aria-hidden="true">🕒 </span>
+            <Icon name="schedule" size={14} className="align-text-bottom mr-1" />
             {summarizeOpeningHours(openingHours)}
             {localZone && ` (${localZone})`}
           </p>
@@ -122,7 +123,7 @@ export default function LocationDisplay({
       {hoursLines.length > 0 && (
         <div className="mt-2">
           <p className="text-xs font-medium text-slate dark:text-warm-gray/70 flex items-center gap-1">
-            <span aria-hidden="true">🕒</span>
+            <Icon name="schedule" size={14} />
             Opening hours
             {localZone && (
               <span className="font-normal text-slate/70 dark:text-warm-gray/50">

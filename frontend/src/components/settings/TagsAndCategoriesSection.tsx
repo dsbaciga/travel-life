@@ -7,6 +7,7 @@ import type { ActivityCategory, TripTypeCategory } from "../../types/user";
 import type { TripTag } from "../../types/tag";
 import type { ConfirmDialogProps } from "../ConfirmDialog";
 import EmojiPicker from "../EmojiPicker";
+import Icon from "../ui/Icon";
 import { getRandomTagColor } from "../../utils/tagColors";
 
 type ConfirmOptions = Omit<
@@ -506,7 +507,7 @@ export default function TagsAndCategoriesSection({
                       title="Move up"
                       aria-label={`Move ${category.name} up`}
                     >
-                      ▲
+                      <Icon name="collapse" size={16} />
                     </button>
                     <button
                       onClick={() => handleMoveCategoryDown(index)}
@@ -516,7 +517,7 @@ export default function TagsAndCategoriesSection({
                       title="Move down"
                       aria-label={`Move ${category.name} down`}
                     >
-                      ▼
+                      <Icon name="expand" size={16} />
                     </button>
                   </div>
                   <EmojiPicker
@@ -662,7 +663,7 @@ export default function TagsAndCategoriesSection({
                       title="Move up"
                       aria-label="Move up"
                     >
-                      ▲
+                      <Icon name="collapse" size={16} />
                     </button>
                     <button
                       onClick={() => handleMoveTripTypeDown(index)}
@@ -672,7 +673,7 @@ export default function TagsAndCategoriesSection({
                       title="Move down"
                       aria-label="Move down"
                     >
-                      ▼
+                      <Icon name="expand" size={16} />
                     </button>
                   </div>
                   <EmojiPicker
@@ -914,7 +915,7 @@ export default function TagsAndCategoriesSection({
                         title="Move up"
                         aria-label="Move up"
                       >
-                        ▲
+                        <Icon name="collapse" size={16} />
                       </button>
                       <button
                         onClick={() => handleMoveTagDown(index)}
@@ -924,7 +925,7 @@ export default function TagsAndCategoriesSection({
                         title="Move down"
                         aria-label="Move down"
                       >
-                        ▼
+                        <Icon name="expand" size={16} />
                       </button>
                     </div>
                     <span
@@ -976,7 +977,7 @@ export default function TagsAndCategoriesSection({
                           title="Move up"
                           aria-label="Move up"
                         >
-                          ▲
+                          <Icon name="collapse" size={16} />
                         </button>
                         <button
                           onClick={() => handleMoveTagDown(index)}
@@ -986,7 +987,7 @@ export default function TagsAndCategoriesSection({
                           title="Move down"
                           aria-label="Move down"
                         >
-                          ▼
+                          <Icon name="expand" size={16} />
                         </button>
                       </div>
                       <button

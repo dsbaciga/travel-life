@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
@@ -161,9 +162,7 @@ export default function TripActionsMenu({
                 onClick={(e) => run(e, () => onArchiveToggle(trip))}
                 className={itemClass}
               >
-                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
+                <Icon name="folder" className="h-4 w-4 mr-2" />
                 {trip.archived ? 'Unarchive' : 'Archive'}
               </button>
             )}

@@ -48,7 +48,7 @@ export default function HomeTimezonePrompt() {
       isOpen
       onClose={() => {}}
       title="Welcome! Set your home timezone"
-      icon="🌍"
+      icon="globe"
       maxWidth="md"
       showCloseButton={false}
       closeOnBackdropClick={false}

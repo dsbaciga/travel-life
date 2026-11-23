@@ -1,18 +1,5 @@
 import { useState } from 'react';
-import {
-  ExclamationTriangleIcon,
-  ChevronRightIcon,
-  DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
-  CheckCircleIcon,
-  MapPinIcon,
-  CalendarIcon,
-  TruckIcon,
-  HomeIcon,
-  BookOpenIcon,
-  CheckIcon,
-  PaperAirplaneIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import type { SyncConflict, ConflictResolution, SyncConflictEntityType } from '../../types/sync.types';
 import { ENTITY_TYPE_LABELS, getFieldDiffs } from '../../types/sync.types';
 import ConflictResolutionModal from './ConflictResolutionModal';
@@ -21,13 +8,13 @@ import ConflictResolutionModal from './ConflictResolutionModal';
  * Icon mapping for entity types
  */
 const ENTITY_ICONS: Record<SyncConflictEntityType, React.ReactNode> = {
-  TRIP: <PaperAirplaneIcon className="w-4 h-4" />,
-  LOCATION: <MapPinIcon className="w-4 h-4" />,
-  ACTIVITY: <CalendarIcon className="w-4 h-4" />,
-  TRANSPORTATION: <TruckIcon className="w-4 h-4" />,
-  LODGING: <HomeIcon className="w-4 h-4" />,
-  JOURNAL: <BookOpenIcon className="w-4 h-4" />,
-  CHECKLIST_ITEM: <CheckIcon className="w-4 h-4" />,
+  TRIP: <Icon name="trip" size={16} />,
+  LOCATION: <Icon name="place" size={16} />,
+  ACTIVITY: <Icon name="calendar" size={16} />,
+  TRANSPORTATION: <Icon name="transportation" size={16} />,
+  LODGING: <Icon name="lodging" size={16} />,
+  JOURNAL: <Icon name="journal" size={16} />,
+  CHECKLIST_ITEM: <Icon name="check" size={16} />,
 };
 
 export interface ConflictsListProps {
@@ -147,7 +134,7 @@ export default function ConflictsList({
       >
         <div className="flex flex-col items-center gap-3">
           <div className="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-            <CheckCircleIcon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            <Icon name="success" size={28} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <h3 className="font-semibold text-charcoal dark:text-warm-gray">No Sync Conflicts</h3>
@@ -174,7 +161,7 @@ export default function ConflictsList({
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40">
-                <ExclamationTriangleIcon className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <Icon name="alert" size={16} className="text-amber-600 dark:text-amber-400" />
               </div>
               <div>
                 <h3 className="font-semibold text-charcoal dark:text-warm-gray">
@@ -201,7 +188,7 @@ export default function ConflictsList({
                     transition-colors duration-200
                   "
                 >
-                  <DevicePhoneMobileIcon className="w-3.5 h-3.5" />
+                  <Icon name="smartphone" size={14} />
                   Keep All Local
                 </button>
                 <button
@@ -216,7 +203,7 @@ export default function ConflictsList({
                     transition-colors duration-200
                   "
                 >
-                  <ComputerDesktopIcon className="w-3.5 h-3.5" />
+                  <Icon name="computer" size={14} />
                   Keep All Server
                 </button>
               </div>
@@ -270,7 +257,7 @@ export default function ConflictsList({
                   </div>
 
                   {/* Chevron */}
-                  <ChevronRightIcon className="w-5 h-5 text-slate dark:text-warm-gray/50 flex-shrink-0" />
+                  <Icon name="chevronRight" className="text-slate dark:text-warm-gray/50 flex-shrink-0" />
                 </div>
               </button>
             );
@@ -316,9 +303,9 @@ export default function ConflictsList({
                 `}
               >
                 {showResolveAllConfirm === 'keep-local' ? (
-                  <DevicePhoneMobileIcon className="w-6 h-6 text-primary-600 dark:text-gold" />
+                  <Icon name="smartphone" size={24} className="text-primary-600 dark:text-gold" />
                 ) : (
-                  <ComputerDesktopIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Icon name="computer" size={24} className="text-blue-600 dark:text-blue-400" />
                 )}
               </div>
 
@@ -391,7 +378,7 @@ ConflictsList.Badge = function ConflictsBadge({
         ${className}
       `}
     >
-      <ExclamationTriangleIcon className="w-3 h-3" />
+      <Icon name="alert" size={12} />
       {count} {count === 1 ? 'conflict' : 'conflicts'}
     </span>
   );
@@ -432,7 +419,7 @@ ConflictsList.Indicator = function ConflictsIndicator({
       "
       title={`${count} sync ${count === 1 ? 'conflict' : 'conflicts'}`}
     >
-      <ExclamationTriangleIcon className="w-4 h-4" />
+      <Icon name="alert" size={16} />
       <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold">
         {count > 9 ? '9+' : count}
       </span>

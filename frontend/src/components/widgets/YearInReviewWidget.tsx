@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useUnits } from '../../hooks/useUnits';
 import { distanceValue, type MeasurementSystem } from '../../utils/units';
 /**
@@ -101,15 +102,7 @@ function YearInReviewBanner({ review, isPastYear }: YearInReviewBannerProps) {
         <div className="flex-shrink-0">
           <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-primary-600 dark:bg-gold dark:text-navy-900 font-body font-semibold shadow-md group-hover:shadow-lg group-hover:gap-3 transition-all duration-300">
             See your {review.year}
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <Icon name="chevronRight" className="w-5 h-5" />
           </span>
         </div>
       </div>

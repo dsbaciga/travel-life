@@ -2,6 +2,7 @@
  * TravelStatsWidget - Shows travel statistics at a glance
  */
 
+import Icon from '../ui/Icon';
 import { useState, useEffect } from 'react';
 import tripService from '../../services/trip.service';
 import photoService from '../../services/photo.service';
@@ -167,55 +168,35 @@ export default function TravelStatsWidget() {
     {
       label: 'Total Trips',
       value: stats.totalTrips,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      icon: 'globe' as const,
       color: 'from-blue-500 to-blue-600',
       valueDisplay: stats.totalTrips.toLocaleString(),
     },
     {
       label: 'Photos Captured',
       value: stats.totalPhotos,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
+      icon: 'photo' as const,
       color: 'from-purple-500 to-purple-600',
       valueDisplay: stats.totalPhotos.toLocaleString(),
     },
     {
       label: 'Places Visited',
       value: stats.totalLocations,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        </svg>
-      ),
+      icon: 'place' as const,
       color: 'from-green-500 to-green-600',
       valueDisplay: stats.totalLocations.toLocaleString(),
     },
     {
       label: 'Countries',
       value: stats.countriesVisited,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      icon: 'flag' as const,
       color: 'from-orange-500 to-orange-600',
       valueDisplay: stats.countriesVisited.toLocaleString(),
     },
     {
       label: 'Distance Traveled',
       value: stats.totalDistanceKm,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
+      icon: 'route' as const,
       color: 'from-cyan-500 to-cyan-600',
       valueDisplay: formatDistance(stats.totalDistanceKm),
       subtext: formatDistanceSubtext(stats.totalDistanceKm),
@@ -243,9 +224,7 @@ export default function TravelStatsWidget() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+          <Icon name="dashboard" className="w-6 h-6 text-white" />
         </div>
         <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
           Travel Stats
@@ -262,9 +241,7 @@ export default function TravelStatsWidget() {
             <div className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md flex-shrink-0`}>
                 <div className="text-white">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {stat.icon.props.children}
-                  </svg>
+                  <Icon name={stat.icon} size={16} />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
@@ -293,17 +270,12 @@ export default function TravelStatsWidget() {
       >
         {isRecalculating ? (
           <>
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
+            <Icon name="spinner" className="animate-spin h-4 w-4" />
             Recalculating...
           </>
         ) : (
           <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <Icon name="refresh" className="w-4 h-4" />
             Recalculate Distances
           </>
         )}

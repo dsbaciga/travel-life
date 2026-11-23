@@ -10,6 +10,7 @@ import { FOOD_RATINGS, MAX_FOOD_PHOTOS, type FoodLogEntry } from "../types/foodL
 import { groupByRestaurant, ratingStars } from "../utils/foodLog";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
+import Icon from "./ui/Icon";
 import FoodLogPhotoStrip from "./FoodLogPhotoStrip";
 import FoodLogThumb from "./FoodLogThumb";
 import ImmichBrowser from "./ImmichBrowser";
@@ -434,7 +435,7 @@ export default function FoodLogManager({
                         className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                         aria-label="Remove photo"
                       >
-                        ×
+                        <Icon name="close" size={14} />
                       </button>
                     </li>
                   );
@@ -454,7 +455,7 @@ export default function FoodLogManager({
                       className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${file.name}`}
                     >
-                      ×
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
@@ -474,7 +475,7 @@ export default function FoodLogManager({
                       className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${asset.originalFileName}`}
                     >
-                      ×
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
@@ -524,7 +525,7 @@ export default function FoodLogManager({
 
       {isLoading ? null : entries.length === 0 ? (
         <EmptyState
-          icon="🍽️"
+          icon="foodLog"
           message="No dishes logged yet"
           subMessage="Rate what you eat so you remember what to order again"
           actionLabel="Log a Dish"

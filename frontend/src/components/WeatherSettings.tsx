@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect } from 'react';
 import userService from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
@@ -107,7 +108,7 @@ export default function WeatherSettings() {
       {settings?.weatherApiKeySet && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ Weather API key is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> Weather API key is configured
           </p>
         </div>
       )}

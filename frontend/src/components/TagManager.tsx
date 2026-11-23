@@ -7,6 +7,7 @@ import { useSubmitLock } from "../hooks/useSubmitLock";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import { useFormReset } from "../hooks/useFormReset";
 import Modal from "./Modal";
+import Icon from "./ui/Icon";
 import {
   DEFAULT_TAG_COLORS,
   DEFAULT_TAG_COLOR,
@@ -202,7 +203,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
         isOpen={showTagForm}
         onClose={cancelForm}
         title={editingTagId ? "Edit Tag" : "Create Tag"}
-        icon="🏷️"
+        icon="tag"
         maxWidth="lg"
         formId="tag-form"
         focusFirstInput
@@ -304,7 +305,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
                   title="Edit tag"
                   aria-label={`Edit tag ${tag.name}`}
                 >
-                  ✏️
+                  <Icon name="edit" size={16} />
                 </button>
                 <button
                   onClick={() => handleUnlinkTag(tag.id)}
@@ -312,7 +313,7 @@ export default function TagManager({ tripId }: TagManagerProps) {
                   title="Remove from trip"
                   aria-label={`Remove tag ${tag.name} from trip`}
                 >
-                  ✕
+                  <Icon name="close" size={16} />
                 </button>
               </div>
             ))}

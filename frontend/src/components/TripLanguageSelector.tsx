@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect, useCallback } from 'react';
 import languagePhraseService from '../services/languagePhrase.service';
 import type { AvailableLanguage, TripLanguage, LanguageCode } from '../types/languagePhrase';
@@ -148,19 +149,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
                   className="ml-1 p-0.5 hover:bg-primary-200 dark:hover:bg-primary-800 rounded-full transition-colors"
                   aria-label={`Remove ${lang.languageName}`}
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <Icon name="close" className="w-4 h-4" />
                 </button>
               </div>
             );

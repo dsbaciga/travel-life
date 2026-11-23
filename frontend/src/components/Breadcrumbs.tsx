@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Link } from 'react-router';
+import Icon from './ui/Icon';
 
 interface BreadcrumbItem {
   label: string;
@@ -42,20 +43,7 @@ export default function Breadcrumbs({ items, className = '' }: BreadcrumbsProps)
           return (
             <li key={index} className={`flex items-center ${isFirst ? 'flex-shrink-0' : 'min-w-0'}`}>
               {index > 0 && (
-                <svg
-                  className="w-4 h-4 mx-2 text-slate/50 dark:text-warm-gray/50 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <Icon name="chevronRight" size={16} className="mx-2 text-slate/50 dark:text-warm-gray/50" />
               )}
 
               {item.href && !isLast ? (

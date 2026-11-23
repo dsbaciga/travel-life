@@ -4,6 +4,7 @@ import type { Location, CreateLocationInput, UpdateLocationInput, LocationCatego
 import locationService from "../services/location.service";
 import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
 import DirectionsButton from "./DirectionsButton";
 import { placeFromLocation } from "../lib/itineraryPlaces";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
@@ -610,20 +611,7 @@ export default function LocationManager({
                     : "text-gray-400 dark:text-dusk-400 hover:text-amber-500 dark:hover:text-gold"
                 }`}
               >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill={location.isFavorite ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth={location.isFavorite ? 0 : 2}
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                  />
-                </svg>
+                <Icon name={location.isFavorite ? "starFilled" : "star"} />
               </button>
               {/* Photo preview badge with popover */}
               {(() => {
@@ -639,9 +627,7 @@ export default function LocationManager({
                       onViewAll={() => openLinkPanel(location.id)}
                     >
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-800 cursor-pointer">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Icon name="photo" size={14} />
                         {photoCount}
                       </span>
                     </PhotoPreviewPopover>
@@ -736,7 +722,7 @@ export default function LocationManager({
         isOpen={manager.showForm}
         onClose={handleCloseForm}
         title={manager.editingId ? "Edit Location" : "Add Location"}
-        icon="📍"
+        icon="place"
         maxWidth="2xl"
         formId="location-form"
         footer={
@@ -797,7 +783,7 @@ export default function LocationManager({
           </div>
 
           {/* Map Search Section */}
-          <FormSection title="Search & Select Location" icon="🗺️">
+          <FormSection title="Search & Select Location" icon="map">
             <LocationSearchMap
               onLocationSelect={handleLocationSelect}
               initialPosition={
@@ -809,7 +795,7 @@ export default function LocationManager({
           </FormSection>
 
           {/* Basic Info Section */}
-          <FormSection title="Location Details" icon="📍">
+          <FormSection title="Location Details" icon="place">
             {/* Create mode: bring an activity or lodging of the same name along */}
             {!manager.editingId && (
               <div>
@@ -1030,7 +1016,7 @@ export default function LocationManager({
           onClick={() => mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
           className="md:hidden mb-4 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg border border-primary-500/30 dark:border-gold/30 text-sm font-medium text-primary-700 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-700"
         >
-          <span aria-hidden="true">🗺️</span> Show map
+          <Icon name="map" size={16} /> Show map
         </button>
       )}
 

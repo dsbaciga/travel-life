@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useNavigate } from 'react-router';
 
 interface TripSeriesBadgeProps {
@@ -41,7 +42,7 @@ export default function TripSeriesBadge({
         className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/40 text-white shadow-sm transition-all hover:shadow-md cursor-pointer max-w-full"
         title={`View series: ${seriesName}`}
       >
-        <span aria-hidden="true" className="shrink-0">📚</span>
+        <Icon name="series" size={16} />
         <span className="truncate">{label}</span>
       </button>
     );
@@ -54,7 +55,7 @@ export default function TripSeriesBadge({
       className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded-lg bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-gold border border-primary-200 dark:border-gold/30 hover:bg-primary-100 dark:hover:bg-navy-600 shadow-sm transition-all hover:shadow-md cursor-pointer max-w-full"
       title={`View series: ${seriesName}`}
     >
-      <span aria-hidden="true" className="shrink-0">📚</span>
+      <Icon name="series" size={16} />
       <span className="font-body truncate">{label}</span>
     </button>
   );

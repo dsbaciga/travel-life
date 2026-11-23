@@ -19,6 +19,7 @@ import {
 import type { CacheProgress, CacheSizeEstimate } from '../../services/mapTileCache.service';
 import { mapTileCacheService } from '../../services/mapTileCache.service';
 import { useMapTiles } from '../../hooks/useMapTiles';
+import Icon from '../ui/Icon';
 
 /**
  * Props for MapCachePreview
@@ -207,9 +208,7 @@ export function MapCachePreview({
     return (
       <div className="card p-6">
         <div className="text-center text-gray-500 dark:text-dusk-400">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-          </svg>
+          <Icon name="map" size={48} className="mx-auto text-gray-400" />
           <p className="mt-2 font-medium">No locations with coordinates</p>
           <p className="text-sm mt-1">Add locations with coordinates to enable map caching</p>
         </div>
@@ -414,9 +413,7 @@ export function MapCachePreview({
             onClick={handleCancel}
             className="btn-secondary flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" size={16} />
             Cancel Download
           </button>
         ) : (
@@ -426,9 +423,7 @@ export function MapCachePreview({
               onClick={handleDownload}
               className="btn-primary flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
+              <Icon name="download" size={16} />
               {hasCachedTiles ? 'Update Cache' : 'Download for Offline'}
             </button>
 
@@ -438,9 +433,7 @@ export function MapCachePreview({
                 onClick={handleClearCache}
                 className="btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
               >
-                <svg className="w-4 h-4 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <Icon name="delete" size={16} className="mr-2 inline-block" />
                 Clear Cache
               </button>
             )}
@@ -451,9 +444,7 @@ export function MapCachePreview({
       {/* Usage tips */}
       <div className="px-6 py-4 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800">
         <div className="flex gap-3">
-          <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <Icon name="info" className="text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-700 dark:text-blue-300">
             <p className="font-medium">Offline Map Tips</p>
             <ul className="mt-1 list-disc list-inside text-xs space-y-1 opacity-80">

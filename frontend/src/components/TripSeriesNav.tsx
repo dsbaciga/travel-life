@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import tripSeriesService from '../services/tripSeries.service';
@@ -47,7 +48,8 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
             to={`/trip-series/${seriesId}`}
             className="inline-flex items-center min-h-[44px] min-w-0 text-sm font-body font-medium text-primary-600 dark:text-gold hover:underline break-words [overflow-wrap:anywhere]"
           >
-            📚 {seriesName}
+            <Icon name="series" size={16} className="mr-1" />
+            {seriesName}
           </Link>
           <span className="text-xs text-slate dark:text-warm-gray/70">
             Trip {currentPosition} of {totalTrips}
@@ -63,15 +65,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
                 to={`/trips/${prevTrip.id}`}
                 className="group flex items-center gap-2 min-h-[44px] text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
               >
-                <svg
-                  className="w-4 h-4 flex-shrink-0 group-hover:-translate-x-0.5 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                <Icon name="chevronLeft" className="w-4 h-4 flex-shrink-0 group-hover:-translate-x-0.5 transition-transform" />
                 <span className="truncate font-body">{prevTrip.title}</span>
               </Link>
             ) : (
@@ -102,15 +96,7 @@ export default function TripSeriesNav({ tripId, seriesId, seriesName }: TripSeri
                 className="group flex items-center justify-end gap-2 min-h-[44px] text-sm text-slate dark:text-warm-gray hover:text-primary-600 dark:hover:text-gold transition-colors"
               >
                 <span className="truncate font-body">{nextTrip.title}</span>
-                <svg
-                  className="w-4 h-4 flex-shrink-0 group-hover:translate-x-0.5 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <Icon name="chevronRight" className="w-4 h-4 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             ) : (
               <div />
