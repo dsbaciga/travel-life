@@ -67,12 +67,15 @@ export default function TabGroup({
   // is scrolled to the end — a permanent fade would imply tabs that aren't there.
   const stripRef = useRef<HTMLElement>(null);
   const [hasOverflowRight, setHasOverflowRight] = useState(false);
+  const [hasOverflowLeft, setHasOverflowLeft] = useState(false);
 
   const updateOverflow = useCallback(() => {
     const strip = stripRef.current;
     if (!strip) return;
     // 1px tolerance: fractional scroll widths never settle exactly on the end.
     setHasOverflowRight(strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1);
+    // Once scrolled, tabs also hide off the left edge: fade that side too.
+    setHasOverflowLeft(strip.scrollLeft > 1);
   }, []);
 
   useEffect(() => {
@@ -168,6 +171,7 @@ export default function TabGroup({
         <div className="relative">
           <nav
             ref={stripRef}
+            aria-label="Sections"
             onScroll={updateOverflow}
             className="flex overflow-x-auto scrollbar-hide border-b-2 border-primary-500/10 dark:border-gold/20"
           >
@@ -210,6 +214,12 @@ export default function TabGroup({
             })}
           </nav>
 
+          {hasOverflowLeft && (
+            <div
+              className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white dark:from-navy-800 to-transparent"
+              aria-hidden="true"
+            />
+          )}
           {hasOverflowRight && (
             <div
               className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white dark:from-navy-800 to-transparent"

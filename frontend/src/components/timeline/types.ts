@@ -56,6 +56,8 @@ export interface TimelineItem {
   subtitle?: string;
   description?: string;
   location?: string;
+  /** Street address of `location`, when it differs from the name. */
+  locationAddress?: string;
   locationCoords?: { latitude: number; longitude: number };
   cost?: number;
   currency?: string;

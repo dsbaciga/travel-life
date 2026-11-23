@@ -99,3 +99,14 @@ export function placeFromTransportation(
   // Station and airport names geocode well, so a bare name is enough here.
   return hasUsableLocation(place) ? place : null;
 }
+
+/**
+ * The place line shown under an itinerary item's title (styled `.place-name`:
+ * italic serif). Only a real location counts: an activity's category
+ * ("sightseeing") is a label, not a place, and belongs in the subtitle.
+ * Used by both the Timeline and Today's Itinerary so they agree.
+ */
+export function getActivityPlaceName(activity: Pick<Activity, 'location'>): string | undefined {
+  const name = activity.location?.name?.trim();
+  return name ? name : undefined;
+}

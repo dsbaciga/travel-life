@@ -9,7 +9,7 @@ describe('contourStroke', () => {
   });
 
   it('keeps the scheme-based stroke off a hero', () => {
-    expect(contourStroke(lightPalette, false, false)).toEqual({ color: lightPalette.text, opacity: 0.06 });
+    expect(contourStroke(lightPalette, false, false)).toEqual({ color: lightPalette.text, opacity: 0.1 });
     expect(contourStroke(darkPalette, true, false)).toEqual({ color: darkPalette.primary, opacity: 0.08 });
   });
 });

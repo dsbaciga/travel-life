@@ -36,4 +36,16 @@ describe('computeRouteProgress', () => {
     expect(computeRouteProgress([], 0, true)).toEqual({ stops: [], segments: [] });
     expect(computeRouteProgress([items[0]], 0, true).segments).toEqual([]);
   });
+
+  it('never gives an all-day item the next marker or marks it past', () => {
+    const withStay = [{ start: 0, allDay: true }, ...items];
+    const { stops, segments } = computeRouteProgress(withStay, 2.5 * H, true);
+    expect(stops).toEqual(['future', 'past', 'next', 'future']);
+    expect(segments).toEqual(['solid', 'solid', 'dashed']);
+  });
+
+  it('lets the first timed stop be next when an all-day item precedes it', () => {
+    const { stops } = computeRouteProgress([{ start: 0, allDay: true }, ...items], 0, true);
+    expect(stops).toEqual(['future', 'next', 'future', 'future']);
+  });
 });

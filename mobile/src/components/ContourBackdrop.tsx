@@ -1,7 +1,7 @@
 /**
  * Faint topographic contour lines: a decorative layer for hero areas and empty
  * states. Fills its parent (absolute), takes no touches and is hidden from
- * accessibility. Gold at ~8% on dark, charcoal at ~6% on light; gold at ~10%
+ * accessibility. Gold at ~8% on dark, charcoal at ~10% on light; gold at ~10%
  * on a hero card (`onHero`), which is dark in both schemes.
  *
  * Put it as the first child of a `overflow: 'hidden'` container, before the

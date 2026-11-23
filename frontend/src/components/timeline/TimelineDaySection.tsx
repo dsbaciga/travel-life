@@ -63,7 +63,11 @@ export default function TimelineDaySection({
       console.warn('TimelineDaySection: items is not an array', { dateKey, items });
       return [];
     }
-    return [...items].sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+    // All-day items (a mid-stay night) lead the day, then by time
+    return [...items].sort((a, b) => {
+      if (!!a.isAllDay !== !!b.isAllDay) return a.isAllDay ? -1 : 1;
+      return a.dateTime.getTime() - b.dateTime.getTime();
+    });
   }, [items, dateKey]);
 
   // Where each item leaves the traveller, so the next item's Directions link
@@ -140,6 +144,7 @@ export default function TimelineDaySection({
         sortedItems.map((item) => ({
           start: item.dateTime.getTime(),
           end: item.endDateTime?.getTime(),
+          allDay: item.isAllDay,
         })),
         now.getTime(),
         isToday
