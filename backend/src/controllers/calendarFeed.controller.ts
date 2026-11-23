@@ -35,7 +35,7 @@ export const calendarFeedController = {
     // Accept both /:token and /:token.ics
     const token = rawToken.endsWith('.ics') ? rawToken.slice(0, -4) : rawToken;
     if (!TOKEN_PATTERN.test(token)) {
-      throw new AppError('Calendar feed not found', 404);
+      throw new AppError("We couldn't find that calendar feed.", 404);
     }
 
     const ics = await calendarFeedService.generateFeedForToken(token);

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 import { ChevronRightIcon } from '../icons';
 
@@ -29,20 +30,7 @@ interface FlightStatusWidgetProps {
  */
 function AirplaneIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"
-      />
-    </svg>
+    <Icon name="flight" className={className} />
   );
 }
 
@@ -51,20 +39,7 @@ function AirplaneIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 function AirplaneTakeoffIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 17h14M5.5 9.5l2.5 2v3l9-4.5-2.5-5-3.5 1.5L9 5 6.5 6.5l-1 3z"
-      />
-    </svg>
+    <Icon name="flightLand" className={className} />
   );
 }
 
@@ -73,20 +48,7 @@ function AirplaneTakeoffIcon({ className = 'w-4 h-4' }: { className?: string }) 
  */
 function RefreshIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-      />
-    </svg>
+    <Icon name="refresh" className={className} />
   );
 }
 
@@ -547,7 +509,7 @@ export default function FlightStatusWidget({
         <div className="flex items-center gap-2">
           <AirplaneIcon className="w-5 h-5 text-primary-500 dark:text-gold" />
           <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-            Flight Status
+            Flight status
           </h3>
         </div>
 

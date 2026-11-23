@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import Icon from '../ui/Icon';
 import type { Activity } from '../../types/activity';
 import type { Location } from '../../types/location';
 import type { PhotoAlbum } from '../../types/photo';
@@ -72,7 +73,7 @@ export default function ActivityCard({
             <div
               className={`w-12 h-12 rounded-xl ${colors.icon} flex items-center justify-center flex-shrink-0`}
             >
-              <span className="text-2xl">{getActivityIcon(activity.category)}</span>
+              <Icon name={getActivityIcon(activity.category)} size={24} />
             </div>
 
             {/* Main content */}
@@ -91,11 +92,11 @@ export default function ActivityCard({
               <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-600 dark:text-dusk-400">
                 {activity.allDay ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
-                    All Day
+                    All day
                   </span>
                 ) : activity.startTime ? (
                   <>
-                    <span className="font-medium">
+                    <span className="font-medium tabular-nums">
                       {formatTime(activity.startTime, timezone)}
                       {activity.endTime && ` - ${formatTime(activity.endTime, timezone)}`}
                     </span>
@@ -120,7 +121,7 @@ export default function ActivityCard({
           {/* Cost and actions */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             {activity.cost && activity.currency && (
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">
                 {formatCurrency(activity.cost, activity.currency)}
               </div>
             )}
@@ -138,14 +139,7 @@ export default function ActivityCard({
                 className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                 title="Edit activity"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <Icon name="edit" size={20} />
               </button>
             </div>
           </div>
@@ -161,14 +155,7 @@ export default function ActivityCard({
         {/* Booking info */}
         {activity.bookingReference && (
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-dusk-400">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Icon name="success" size={16} />
             <span className="font-mono">{activity.bookingReference}</span>
           </div>
         )}
@@ -177,19 +164,7 @@ export default function ActivityCard({
         {activity.notes && (
           <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-dusk-700/50 text-sm text-gray-600 dark:text-dusk-400">
             <div className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <Icon name="note" size={16} className="mt-0.5 flex-shrink-0 text-gray-400" />
               <MarkdownRenderer content={activity.notes} compact />
             </div>
           </div>
@@ -198,7 +173,7 @@ export default function ActivityCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -216,7 +191,7 @@ export default function ActivityCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">
@@ -245,7 +220,7 @@ export default function ActivityCard({
         {/* Sub-activities */}
         {activity.children && activity.children.length > 0 && (
           <div className="mt-4 border-t border-gray-200 dark:border-dusk-700 pt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-3">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-3">
               Sub-activities ({activity.children.length})
             </div>
             <div className="space-y-2">

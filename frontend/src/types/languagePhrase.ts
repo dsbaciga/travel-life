@@ -1,3 +1,5 @@
+import type { IconName } from '../components/ui/Icon';
+
 // Language codes supported by the phrase bank
 export type LanguageCode =
   | 'ja' // Japanese
@@ -66,11 +68,11 @@ export interface AddTripLanguageDTO {
 }
 
 // Category display info
-export const CATEGORY_INFO: Record<PhraseCategory, { label: string; emoji: string }> = {
-  greetings: { label: 'Greetings', emoji: '👋' },
-  dining: { label: 'Dining', emoji: '🍽️' },
-  directions: { label: 'Directions', emoji: '🧭' },
-  emergency: { label: 'Emergency', emoji: '🚨' },
-  shopping: { label: 'Shopping', emoji: '🛍️' },
-  courtesy: { label: 'Courtesy', emoji: '🙏' },
+export const CATEGORY_INFO: Record<PhraseCategory, { label: string; icon: IconName }> = {
+  greetings: { label: 'Greetings', icon: 'greeting' },
+  dining: { label: 'Dining', icon: 'restaurant' },
+  directions: { label: 'Directions', icon: 'navigate' },
+  emergency: { label: 'Emergency', icon: 'emergency' },
+  shopping: { label: 'Shopping', icon: 'shopping' },
+  courtesy: { label: 'Courtesy', icon: 'courtesy' },
 };

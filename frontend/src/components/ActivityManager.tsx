@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
+import Icon from "./ui/Icon";
 import FormModalFooter from "./shared/FormModalFooter";
 import BookingDeadlinesSection from "./BookingDeadlinesSection";
 import { useBookingDeadlineDrafts } from "../hooks/useBookingDeadlineDrafts";
@@ -261,7 +262,7 @@ export default function ActivityManager({
 
       try {
         const createdActivity = await activityService.createActivity(createData);
-        toast.success('Activity added successfully');
+        toast.success('Activity added');
         await deadlines.apply(createdActivity.id, createdActivity.timezone);
         invalidateLinkSummary();
 
@@ -279,7 +280,7 @@ export default function ActivityManager({
         }
       } catch (error) {
         console.error('Failed to create activity:', error);
-        toast.error('Failed to add activity');
+        toast.error("Couldn't add activity. Try again.");
       }
     }
     } finally {
@@ -347,9 +348,9 @@ export default function ActivityManager({
   // Custom delete handler with special confirmation message
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Activity",
-      message: "Delete this activity and all its sub-activities? This action cannot be undone.",
-      confirmLabel: "Delete",
+      title: "Delete activity",
+      message: "This activity and all its sub-activities are deleted. You can't undo this.",
+      confirmLabel: "Delete activity",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -362,9 +363,9 @@ export default function ActivityManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Activities",
-      message: `Delete ${selectedIds.length} selected activities? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "activity" : "activities"}`,
+      message: `The selected ${selectedIds.length === 1 ? "activity is" : "activities are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "activity" : "activities"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -378,7 +379,7 @@ export default function ActivityManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete activities:", error);
-      toast.error("Failed to delete some activities");
+      toast.error("Couldn't delete some activities. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -399,7 +400,7 @@ export default function ActivityManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update activities:", error);
-      toast.error("Failed to update some activities");
+      toast.error("Couldn't update some activities. Try again.");
     } finally {
       setIsBulkEditing(false);
     }
@@ -476,7 +477,7 @@ export default function ActivityManager({
           {activity.category && (
             <span className="text-xl sm:text-2xl">
               {activityCategories.find((c) => c.name === activity.category)
-                ?.emoji || "📍"}
+                ?.emoji || <Icon name="place" size={24} />}
             </span>
           )}
           <div className="flex-1 min-w-0">
@@ -545,7 +546,7 @@ export default function ActivityManager({
                 rel="noopener noreferrer"
                 className="inline-block py-2 -my-2 text-blue-600 hover:underline dark:text-blue-400"
               >
-                View Booking
+                View booking
               </a>
             </div>
           )}
@@ -634,13 +635,20 @@ export default function ActivityManager({
   };
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (activityFormDirtyRef.current && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (activityFormDirtyRef.current) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     activityFormDirtyRef.current = false;
     resetForm();
-  }, [resetForm]);
+  }, [resetForm, confirm]);
 
   // handleOpenForm uses the dedicated openCreateForm function
   const handleOpenForm = openCreateForm;
@@ -667,7 +675,7 @@ export default function ActivityManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Activity</span>
+              <span className="hidden sm:inline">+ Add activity</span>
             </button>
           )}
         </div>
@@ -677,15 +685,15 @@ export default function ActivityManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Activity" : "Add Activity"}
-        icon="🎯"
+        title={manager.editingId ? "Edit activity" : "Add activity"}
+        icon="activity"
         formId="activity-form"
         footer={
           <FormModalFooter
             onCancel={handleCloseForm}
             formId="activity-form"
             isSubmitting={isSubmitting}
-            submitLabel={manager.editingId ? "Update Activity" : "Add Activity"}
+            submitLabel={manager.editingId ? "Update activity" : "Add activity"}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(activityFormRef.current)}
           />
@@ -755,7 +763,7 @@ export default function ActivityManager({
               <option value="">All</option>
               {DIETARY_TAGS.map((tag) => (
                 <option key={tag.id} value={tag.id}>
-                  {tag.emoji} {tag.label}
+                  {tag.label}
                 </option>
               ))}
             </select>
@@ -785,9 +793,9 @@ export default function ActivityManager({
       ) : topLevelActivities.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoActivities />}
-          message="What Will You Discover?"
-          subMessage="Plan your adventures - from guided tours and museum visits to local dining experiences and outdoor excursions. Every activity tells a story."
-          actionLabel="Add Your First Activity"
+          message="No activities yet"
+          subMessage="Add a tour, a museum visit, a dinner booking, anything you want to do on this trip."
+          actionLabel="Add activity"
           onAction={handleOpenForm}
         />
       ) : filteredActivities.length === 0 && dietaryFilter.length > 0 ? (
@@ -807,7 +815,7 @@ export default function ActivityManager({
           {sortedScheduledActivities.length > 0 && (
             <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>📅</span> Scheduled Activities
+                <Icon name="calendar" /> Scheduled Activities
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedScheduledActivities.length})
                 </span>
@@ -822,7 +830,7 @@ export default function ActivityManager({
           {sortedUnscheduledActivities.length > 0 && (
             <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
-                <span>📋</span> Unscheduled Activities
+                <Icon name="list" /> Unscheduled Activities
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledActivities.length})
                 </span>

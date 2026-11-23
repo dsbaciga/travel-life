@@ -92,7 +92,7 @@ class CustomItemService {
       where: { userId, name: data.name },
     });
     if (duplicate) {
-      throw new AppError('A custom item type with that name already exists', 409);
+      throw new AppError('You already have a type with that name.', 409);
     }
 
     return prisma.customItemType.create({
@@ -112,7 +112,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!existing) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
 
     if (data.name && data.name !== existing.name) {
@@ -120,7 +120,7 @@ class CustomItemService {
         where: { userId, name: data.name, id: { not: typeId } },
       });
       if (duplicate) {
-        throw new AppError('A custom item type with that name already exists', 409);
+        throw new AppError('You already have a type with that name.', 409);
       }
     }
 
@@ -139,7 +139,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!existing) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
 
     await prisma.customItemType.delete({ where: { id: typeId } });
@@ -160,7 +160,7 @@ class CustomItemService {
       where: { id: typeId, userId },
     });
     if (!type) {
-      throw new AppError('Custom item type not found', 404);
+      throw new AppError("We couldn't find that item type.", 404);
     }
   }
 

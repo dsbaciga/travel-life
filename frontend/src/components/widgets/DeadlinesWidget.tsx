@@ -28,7 +28,7 @@ export default function DeadlinesWidget() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deadlines'] });
     },
-    onError: () => toast.error('Could not dismiss deadline'),
+    onError: () => toast.error("Couldn't dismiss deadline. Try again."),
   });
 
   if (!deadlines || deadlines.length === 0) {
@@ -41,7 +41,7 @@ export default function DeadlinesWidget() {
     <div className="animate-fade-in bg-white dark:bg-navy-800 rounded-2xl p-6 shadow-lg border-2 border-amber-200 dark:border-amber-500/30">
       <div className="mb-4">
         <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-          Booking Deadlines
+          Booking deadlines
         </h3>
         <p className="text-sm text-gray-500 dark:text-dusk-400">
           Due within 30 days, plus anything overdue

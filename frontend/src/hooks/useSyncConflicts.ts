@@ -260,7 +260,7 @@ export function useSyncConflicts(
           onAllConflictsResolved?.();
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to resolve conflict';
+        const errorMessage = err instanceof Error ? err.message : "Couldn't resolve conflict. Try again.";
         setError(errorMessage);
         throw err;
       } finally {
@@ -304,7 +304,7 @@ export function useSyncConflicts(
         // Notify all resolved
         onAllConflictsResolved?.();
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to resolve all conflicts';
+        const errorMessage = err instanceof Error ? err.message : "Couldn't resolve all conflicts. Try again.";
         setError(errorMessage);
         throw err;
       } finally {

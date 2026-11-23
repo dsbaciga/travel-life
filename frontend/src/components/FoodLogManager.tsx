@@ -10,6 +10,7 @@ import { FOOD_RATINGS, MAX_FOOD_PHOTOS, type FoodLogEntry } from "../types/foodL
 import { groupByRestaurant, ratingStars } from "../utils/foodLog";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import EmptyState from "./EmptyState";
+import Icon from "./ui/Icon";
 import FoodLogPhotoStrip from "./FoodLogPhotoStrip";
 import FoodLogThumb from "./FoodLogThumb";
 import ImmichBrowser from "./ImmichBrowser";
@@ -286,7 +287,7 @@ export default function FoodLogManager({
       closeForm();
       refresh();
     } catch {
-      toast.error("Could not save entry");
+      toast.error("Couldn't save entry. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -294,9 +295,9 @@ export default function FoodLogManager({
 
   const handleDelete = async (entry: FoodLogEntry) => {
     const confirmed = await confirm({
-      title: "Delete Entry",
-      message: `Delete "${entry.dish}" at ${entry.restaurantName}?`,
-      confirmLabel: "Delete",
+      title: "Delete entry",
+      message: `"${entry.dish}" at ${entry.restaurantName} is deleted. You can't undo this.`,
+      confirmLabel: "Delete entry",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -305,7 +306,7 @@ export default function FoodLogManager({
       toast.success("Entry deleted");
       refresh();
     } catch {
-      toast.error("Could not delete entry");
+      toast.error("Couldn't delete entry. Try again.");
     }
   };
 
@@ -313,7 +314,7 @@ export default function FoodLogManager({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Food Log</h2>
+          <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Food log</h2>
           <p className="text-sm text-gray-500 dark:text-dusk-400">
             Dishes, ratings and what to order again
           </p>
@@ -434,7 +435,7 @@ export default function FoodLogManager({
                         className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                         aria-label="Remove photo"
                       >
-                        ×
+                        <Icon name="close" size={14} />
                       </button>
                     </li>
                   );
@@ -454,7 +455,7 @@ export default function FoodLogManager({
                       className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${file.name}`}
                     >
-                      ×
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
@@ -474,7 +475,7 @@ export default function FoodLogManager({
                       className="touch-compact absolute -right-2 -top-2 flex h-6 w-6 min-h-0 min-w-0 items-center justify-center rounded-full bg-red-600 text-white text-sm leading-none shadow before:absolute before:-inset-2 before:content-['']"
                       aria-label={`Remove ${asset.originalFileName}`}
                     >
-                      ×
+                      <Icon name="close" size={14} />
                     </button>
                   </li>
                 ))}
@@ -516,7 +517,7 @@ export default function FoodLogManager({
           <div className="flex justify-end gap-3">
             <button type="button" className="btn-secondary" onClick={closeForm} disabled={isSaving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? "Saving…" : editingId ? "Save Changes" : "Save Dish"}
+              {isSaving ? "Saving…" : editingId ? "Save changes" : "Save dish"}
             </button>
           </div>
         </form>
@@ -524,10 +525,10 @@ export default function FoodLogManager({
 
       {isLoading ? null : entries.length === 0 ? (
         <EmptyState
-          icon="🍽️"
+          icon="foodLog"
           message="No dishes logged yet"
-          subMessage="Rate what you eat so you remember what to order again"
-          actionLabel="Log a Dish"
+          subMessage="Rate what you eat so you remember what to order again."
+          actionLabel="Log a dish"
           onAction={() => setShowForm(true)}
         />
       ) : (

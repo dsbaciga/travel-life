@@ -251,7 +251,7 @@ describe('OidcController — native clients', () => {
     expect(badNext).toHaveBeenCalledTimes(1);
 
     mockPairing.redeem.mockImplementation(() => {
-      throw new AppError('Pairing code is invalid or has expired', 401);
+      throw new AppError('That pairing code has expired. Create a new one in Settings and scan it again.', 401);
     });
     const expiredNext = createMockNext();
     oidcController.mobileExchange(
@@ -260,7 +260,7 @@ describe('OidcController — native clients', () => {
       expiredNext as never
     );
     await flushPromises();
-    expectAppError(expiredNext, 401, 'Pairing code is invalid or has expired');
+    expectAppError(expiredNext, 401, 'That pairing code has expired. Create a new one in Settings and scan it again.');
     expect(mockAuthService.issueTokensForUser).not.toHaveBeenCalled();
   });
 

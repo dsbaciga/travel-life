@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import Icon, { type IconName } from "./ui/Icon";
 import { DIETARY_TAGS } from "../constants/dietaryTags";
 
 interface DietaryBadgesProps {
@@ -27,7 +28,7 @@ function useDietaryTagData(tags: string[], userPreferences: string[]) {
       .filter(Boolean) as Array<{
         id: string;
         label: string;
-        emoji: string;
+        icon: IconName;
         isPreference: boolean;
       }>;
 
@@ -82,9 +83,7 @@ export default function DietaryBadges({
             }
           `}
         >
-          <span className={size === "sm" ? "text-sm" : "text-base"}>
-            {tag.emoji}
-          </span>
+          <Icon name={tag.icon} size={size === "sm" ? 16 : 20} />
         </span>
       ))}
       {remainingCount > 0 && (
@@ -133,20 +132,14 @@ export function DietaryBadgesExpanded({
             }
           `}
         >
-          <span>{tag.emoji}</span>
+          <Icon name={tag.icon} size={16} />
           <span>{tag.label}</span>
           {tag.isPreference && (
             <span
               className="ml-0.5 text-green-600 dark:text-green-400"
               title="Matches your dietary preference"
             >
-              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <Icon name="check" size={16} />
             </span>
           )}
         </span>

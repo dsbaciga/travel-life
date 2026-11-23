@@ -416,7 +416,7 @@ describe('EntityLinkService', () => {
         AppError
       );
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Link already exists between these entities'
+        'Those two are already linked.'
       );
     });
   });
@@ -440,7 +440,7 @@ describe('EntityLinkService', () => {
         AppError
       );
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Cannot link an entity to itself'
+        "Something can't be linked to itself."
       );
     });
 
@@ -839,7 +839,7 @@ describe('EntityLinkService', () => {
       ).rejects.toThrow(AppError);
       await expect(
         entityLinkService.deleteLinkById(TEST_USER_ID, TEST_TRIP_ID, 999)
-      ).rejects.toThrow('Link not found');
+      ).rejects.toThrow("We couldn't find that link.");
     });
   });
 
@@ -1046,7 +1046,7 @@ describe('EntityLinkService', () => {
 
     it('should throw error if user does not own trip', async () => {
       mockVerifyTripAccessWithPermission.mockRejectedValue(
-        new AppError('Trip not found or access denied', 404)
+        new AppError("We couldn't find that trip, or you don't have access to it.", 404)
       );
 
       const input = {
@@ -1058,7 +1058,7 @@ describe('EntityLinkService', () => {
       };
 
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });
@@ -1384,7 +1384,7 @@ describe('EntityLinkService', () => {
       mockPrisma.entityLink.findFirst.mockResolvedValue(null);
 
       await expect(entityLinkService.deleteLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Link not found'
+        "We couldn't find that link."
       );
     });
 
@@ -1539,7 +1539,7 @@ describe('EntityLinkService', () => {
           targetType: 'LOCATION',
           targetId: 2,
         })
-      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('already exists') });
+      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('already linked') });
       expect(mockPrisma.entityLink.create).not.toHaveBeenCalled();
     });
 

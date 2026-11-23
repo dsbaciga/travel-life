@@ -110,7 +110,7 @@ async function pick(assets: ImmichAsset[]) {
 async function fillAndSave() {
   fireEvent.change(screen.getByLabelText('Restaurant'), { target: { value: 'Trattoria' } });
   fireEvent.change(screen.getByLabelText('Dish'), { target: { value: 'Carbonara' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Save Dish' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Save dish' }));
 }
 
 describe('FoodLogManager - Immich photos', () => {
@@ -238,7 +238,7 @@ describe('FoodLogManager - Immich photos', () => {
     expect(h.foodLog.createEntry).toHaveBeenCalledTimes(1);
     expect(h.toast.success).not.toHaveBeenCalled();
     // The form closed: the entry was saved, not lost.
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save Dish' })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Save dish' })).not.toBeInTheDocument());
   });
 
   it('FLI-008: makes no Immich request when no Immich photo was picked', async () => {

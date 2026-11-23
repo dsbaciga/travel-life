@@ -25,6 +25,7 @@ import TripsKanbanView from '../components/TripsKanbanView';
 import TripListView from '../components/TripListView';
 import MultiSelectDropdown from '../components/MultiSelectDropdown';
 import type { MultiSelectOption } from '../components/MultiSelectDropdown';
+import Icon from '../components/ui/Icon';
 
 type SortOption = 'startDate-desc' | 'startDate-asc' | 'title-asc' | 'title-desc' | 'status';
 type ViewMode = 'grid' | 'kanban' | 'list';
@@ -219,7 +220,7 @@ export default function TripsPage() {
       if (context?.previousTripsData) {
         queryClient.setQueryData(['trips', queryParams], context.previousTripsData);
       }
-      toast.error('Failed to delete trip. Please try again.');
+      toast.error("Couldn't delete trip. Try again.");
     },
     onSuccess: (_data, deletedTripId) => {
       toast.success('Trip deleted.', {
@@ -256,7 +257,7 @@ export default function TripsPage() {
       if (context?.previousTripsData) {
         queryClient.setQueryData(['trips', queryParams], context.previousTripsData);
       }
-      toast.error('Failed to update trip status.');
+      toast.error("Couldn't update trip status. Try again.");
     },
     onSuccess: () => {
       toast.success('Trip status updated.');
@@ -279,7 +280,7 @@ export default function TripsPage() {
       return tripService.updateTrip(tripId, { archived });
     },
     onError: () => {
-      toast.error('Failed to update trip.');
+      toast.error("Couldn't update trip. Try again.");
     },
     onSuccess: (_data, { archived }) => {
       toast.success(archived ? 'Trip archived.' : 'Trip unarchived.');
@@ -347,10 +348,11 @@ export default function TripsPage() {
   }, [trips]);
 
   const handleDelete = async (id: number) => {
+    const trip = trips.find((t) => t.id === id);
     const confirmed = await confirm({
-      title: 'Delete Trip',
-      message: 'Are you sure you want to delete this trip? This will remove all associated locations, photos, transportation, lodging, activities, and journal entries.',
-      confirmLabel: 'Delete Trip',
+      title: 'Delete trip',
+      message: `${trip ? `"${trip.title}"` : 'This trip'} is deleted along with its places, photos, transport, stays, activities and journal entries. You can't undo this.`,
+      confirmLabel: 'Delete trip',
       variant: 'danger',
     });
 
@@ -527,7 +529,7 @@ export default function TripsPage() {
       <main className="max-w-[1600px] mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-          <h2 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">My Trips</h2>
+          <h2 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">My trips</h2>
           <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-3 sm:w-auto">
             <Link
               to="/trip-series"
@@ -551,12 +553,10 @@ export default function TripsPage() {
                     ? 'bg-primary-500 dark:bg-gold text-white dark:text-navy-900'
                     : 'bg-white dark:bg-navy-800 text-slate dark:text-warm-gray/70 hover:bg-parchment dark:hover:bg-navy-700'
                 }`}
-                title="Grid View"
-                aria-label="Grid View"
+                title="Grid view"
+                aria-label="Grid view"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
+                <Icon name="grid" />
               </button>
               <button
                 type="button"
@@ -566,12 +566,10 @@ export default function TripsPage() {
                     ? 'bg-primary-500 dark:bg-gold text-white dark:text-navy-900'
                     : 'bg-white dark:bg-navy-800 text-slate dark:text-warm-gray/70 hover:bg-parchment dark:hover:bg-navy-700'
                 }`}
-                title="List View"
-                aria-label="List View"
+                title="List view"
+                aria-label="List view"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
+                <Icon name="list" />
               </button>
               <button
                 type="button"
@@ -581,16 +579,15 @@ export default function TripsPage() {
                     ? 'bg-primary-500 dark:bg-gold text-white dark:text-navy-900'
                     : 'bg-white dark:bg-navy-800 text-slate dark:text-warm-gray/70 hover:bg-parchment dark:hover:bg-navy-700'
                 }`}
-                title="Kanban View"
-                aria-label="Kanban View"
+                title="Kanban view"
+                aria-label="Kanban view"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                </svg>
+                <Icon name="dashboard" />
               </button>
             </div>
             <Link to="/trips/new" className="btn btn-primary w-full justify-center text-center sm:w-auto">
-              + New Trip
+              <Icon name="add" className="mr-1 align-text-bottom" />
+              New trip
             </Link>
           </div>
         </div>
@@ -604,7 +601,7 @@ export default function TripsPage() {
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate/50 dark:text-warm-gray/50" />
               <input
                 type="text"
-                placeholder="Search trips..."
+                placeholder="Search trips…"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 aria-label="Search trips"
@@ -619,11 +616,11 @@ export default function TripsPage() {
               aria-label="Sort trips by"
               className="px-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors cursor-pointer"
             >
-              <option value="startDate-desc">Newest First</option>
-              <option value="startDate-asc">Oldest First</option>
+              <option value="startDate-desc">Newest first</option>
+              <option value="startDate-asc">Oldest first</option>
               <option value="title-asc">Title A-Z</option>
               <option value="title-desc">Title Z-A</option>
-              <option value="status">By Status</option>
+              <option value="status">By status</option>
             </select>
 
             {/* Advanced Filters Toggle */}
@@ -673,9 +670,7 @@ export default function TripsPage() {
                   : 'bg-parchment dark:bg-navy-700 text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-600'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
+              <Icon name="folder" size={16} />
               Archived
             </button>
           </div>
@@ -687,7 +682,7 @@ export default function TripsPage() {
                 {/* Date Range */}
                 <div>
                   <label htmlFor="startDateFrom" className="block text-sm font-medium text-slate dark:text-warm-gray mb-1.5">
-                    Start Date From
+                    Start date from
                   </label>
                   <input
                     type="date"
@@ -699,7 +694,7 @@ export default function TripsPage() {
                 </div>
                 <div>
                   <label htmlFor="startDateTo" className="block text-sm font-medium text-slate dark:text-warm-gray mb-1.5">
-                    Start Date To
+                    Start date to
                   </label>
                   <input
                     type="date"
@@ -775,17 +770,17 @@ export default function TripsPage() {
           !hasActiveFilters ? (
             <EmptyState
               icon={<EmptyIllustrations.NoTrips />}
-              message="Your Adventure Begins Here"
-              subMessage="Every great journey starts with a single step. Create your first trip to start planning, dreaming, and documenting your travels. From dream destinations to detailed itineraries - it all begins now."
-              actionLabel="Plan Your First Adventure"
+              message="No trips yet"
+              subMessage="Start with a name and some dates. Add stops, stays and photos as you go."
+              actionLabel="Plan your first trip"
               actionHref="/trips/new"
             />
           ) : (
             <EmptyState
-              icon="🔍"
-              message="No Trips Match Your Filters"
-              subMessage="Try adjusting your search terms, status filter, or selected tags to find what you're looking for."
-              actionLabel="Clear All Filters"
+              icon="search"
+              message="No trips match these filters"
+              subMessage="Try a different search, status or tag."
+              actionLabel="Clear filters"
               onAction={clearFilters}
             />
           )

@@ -91,7 +91,7 @@ class TripComparisonService {
     const found = new Set(trips.map((trip) => trip.id));
     const missing = tripIds.filter((id) => !found.has(id));
     if (missing.length > 0) {
-      throw new AppError(`Trip not found or access denied: ${missing.join(', ')}`, 404);
+      throw new AppError(`We couldn't find some of those trips, or you don't have access to them: ${missing.join(', ')}`, 404);
     }
     const byId = new Map(trips.map((trip) => [trip.id, trip]));
 

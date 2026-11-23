@@ -11,70 +11,47 @@ import storageManager, {
 import StorageUsageBar from './StorageUsageBar';
 import ConfirmDialog from '../ConfirmDialog';
 import LoadingSpinner from '../LoadingSpinner';
+import Icon from '../ui/Icon';
 
 /**
  * SVG Icons
  */
 const Icons = {
   HardDrive: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-    </svg>
+    <Icon name="storage" className={className} />
   ),
   Trash: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
+    <Icon name="delete" className={className} />
   ),
   Database: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-    </svg>
+    <Icon name="storage" className={className} />
   ),
   Image: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
+    <Icon name="photo" className={className} />
   ),
   Map: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-    </svg>
+    <Icon name="map" className={className} />
   ),
   Video: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
+    <Icon name="video" className={className} />
   ),
   Folder: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-    </svg>
+    <Icon name="folder" className={className} />
   ),
   Refresh: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-    </svg>
+    <Icon name="refresh" className={className} />
   ),
   Shield: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-    </svg>
+    <Icon name="shieldCheck" className={className} />
   ),
   Clock: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+    <Icon name="schedule" className={className} />
   ),
   ChevronRight: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
+    <Icon name="chevronRight" className={className} />
   ),
   Warning: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
+    <Icon name="alert" className={className} />
   ),
 };
 
@@ -86,45 +63,45 @@ const CATEGORY_CONFIG: Record<
   { label: string; icon: (props: { className?: string }) => ReactNode; clearLabel: string; description: string }
 > = {
   trips: {
-    label: 'Trips Data',
+    label: 'Trips data',
     icon: Icons.Database,
-    clearLabel: 'Clear Trip Data',
-    description: 'Trip details, locations, activities, lodging, and other trip information',
+    clearLabel: 'Clear trip data',
+    description: 'Trip details, locations, activities, stays, and other trip information',
   },
   photoThumbnails: {
-    label: 'Photo Thumbnails',
+    label: 'Photo thumbnails',
     icon: Icons.Image,
-    clearLabel: 'Clear Thumbnails',
+    clearLabel: 'Clear thumbnails',
     description: 'Cached thumbnail images for offline viewing',
   },
   photoFull: {
-    label: 'Full Photos',
+    label: 'Full photos',
     icon: Icons.Image,
-    clearLabel: 'Clear Full Photos',
+    clearLabel: 'Clear full photos',
     description: 'Full-resolution photos saved for offline access',
   },
   mapTiles: {
-    label: 'Map Tiles',
+    label: 'Map tiles',
     icon: Icons.Map,
-    clearLabel: 'Clear Map Tiles',
+    clearLabel: 'Clear map tiles',
     description: 'Cached map tiles for offline map viewing',
   },
   immichCache: {
-    label: 'Immich Cache',
+    label: 'Immich cache',
     icon: Icons.Image,
-    clearLabel: 'Clear Immich Cache',
+    clearLabel: 'Clear Immich cache',
     description: 'Cached photos from your Immich server',
   },
   videoCache: {
-    label: 'Video Cache',
+    label: 'Video cache',
     icon: Icons.Video,
-    clearLabel: 'Clear Video Cache',
+    clearLabel: 'Clear video cache',
     description: 'Cached videos for offline playback',
   },
   other: {
-    label: 'Other Data',
+    label: 'Other data',
     icon: Icons.Folder,
-    clearLabel: 'Clear Other Data',
+    clearLabel: 'Clear other data',
     description: 'Sync queue, drafts, search index, and metadata',
   },
 };
@@ -291,7 +268,7 @@ export default function StorageManagement({
   if (loading && !breakdown) {
     return (
       <div className={`${className}`}>
-        <LoadingSpinner.FullPage message="Loading storage information..." />
+        <LoadingSpinner.FullPage message="Loading storage information…" />
       </div>
     );
   }
@@ -306,7 +283,7 @@ export default function StorageManagement({
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold text-charcoal dark:text-warm-gray">
-              Storage Management
+              Storage management
             </h3>
             <p className="text-sm text-slate dark:text-warm-gray/70">
               Manage offline data and cache
@@ -343,7 +320,7 @@ export default function StorageManagement({
             <Icons.Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="font-medium text-amber-800 dark:text-amber-200">
-                Enable Persistent Storage
+                Enable persistent storage
               </h4>
               <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                 Your browser may automatically clear offline data when storage is low.
@@ -360,7 +337,7 @@ export default function StorageManagement({
                   min-h-[44px]
                 "
               >
-                Request Persistent Storage
+                Request persistent storage
               </button>
             </div>
           </div>
@@ -500,7 +477,7 @@ export default function StorageManagement({
                   <button
                     onClick={() =>
                       showConfirm(
-                        'Remove Trip Data',
+                        'Remove trip data',
                         `This will remove all offline data for "${trip.tripTitle}". You can re-download it later.`,
                         () => handleClearTrip(trip.tripId),
                         'warning'
@@ -624,7 +601,7 @@ export default function StorageManagement({
             <button
               onClick={() =>
                 showConfirm(
-                  'Clear Old Data',
+                  'Clear old data',
                   `This will clear all cached data older than ${autoCleanup.maxAgeInDays} days. This includes thumbnails, map tiles, and Immich cache.`,
                   handleClearOldData,
                   'warning'
@@ -662,7 +639,7 @@ export default function StorageManagement({
           <Icons.Warning className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="font-medium text-red-800 dark:text-red-200">
-              Clear All Offline Data
+              Clear all offline data
             </h4>
             <p className="text-sm text-red-700 dark:text-red-300 mt-1">
               This will remove all cached trips, photos, map tiles, and other offline data.
@@ -671,7 +648,7 @@ export default function StorageManagement({
             <button
               onClick={() =>
                 showConfirm(
-                  'Clear All Offline Data',
+                  'Clear all offline data',
                   'This will permanently delete all offline data including cached trips, photos, map tiles, and sync queue. You will need to re-download trips for offline access. This action cannot be undone.',
                   handleClearAll
                 )
@@ -692,7 +669,7 @@ export default function StorageManagement({
               ) : (
                 <>
                   <Icons.Trash className="w-4 h-4" />
-                  Clear All Offline Data
+                  Clear all offline data
                 </>
               )}
             </button>
@@ -711,7 +688,7 @@ export default function StorageManagement({
           }}
           title={confirmDialog.title}
           message={confirmDialog.message}
-          confirmLabel="Clear"
+          confirmLabel="Clear data"
           variant={confirmDialog.variant}
           isLoading={clearing !== null}
         />

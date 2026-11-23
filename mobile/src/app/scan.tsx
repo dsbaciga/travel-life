@@ -7,6 +7,7 @@ import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText, Banner, Button, Screen } from '@/components/ui';
+import { friendlyMessage } from '@/lib/errors';
 import { useSession } from '@/lib/session';
 import { syncNow } from '@/lib/sync';
 import { spacing } from '@/lib/theme';
@@ -29,7 +30,7 @@ export default function ScanScreen() {
       void syncNow();
       // The auth guard swaps the stack to the signed-in screens.
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Pairing failed');
+      setError(friendlyMessage(caught, "Couldn't pair this phone. Make sure the code is current and try again."));
       setBusy(false);
       handled.current = false;
     }

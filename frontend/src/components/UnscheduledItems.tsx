@@ -1,3 +1,5 @@
+import Icon from './ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useState, useEffect, useCallback } from "react";
 import type { Activity } from "../types/activity";
 import type { Transportation } from "../types/transportation";
@@ -184,7 +186,7 @@ export default function UnscheduledItems({
       const unscheduledLodging = lodgingData.filter((l) => !l.checkInDate);
       setLodging(unscheduledLodging);
     } catch {
-      toast.error("Failed to load data");
+      toast.error("Couldn't load data. Try again.");
     }
   }, [tripId]);
 
@@ -311,23 +313,29 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save activity");
+      toast.error("Couldn't save activity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
   const handleDeleteActivity = async (activityId: number) => {
-    if (!window.confirm('Delete this activity? This action cannot be undone.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Delete activity',
+      message: 'This activity is deleted. You can\'t undo this.',
+      confirmLabel: 'Delete activity',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await activityService.deleteActivity(activityId);
       toast.success('Activity deleted');
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error('Failed to delete activity');
+      toast.error("Couldn't delete activity. Try again.");
     }
   };
 
@@ -446,7 +454,7 @@ export default function UnscheduledItems({
 
     const transportationType = transportationForm.values.type;
     if (!isTransportationType(transportationType)) {
-      toast.error("Please select a valid transportation type");
+      toast.error("Select a valid transport type");
       return;
     }
 
@@ -495,17 +503,17 @@ export default function UnscheduledItems({
 
       if (isCreating) {
         await transportationService.createTransportation({ ...updateData, tripId });
-        toast.success("Transportation created");
+        toast.success("Transport created");
       } else if (editingId !== null) {
         await transportationService.updateTransportation(editingId, updateData);
-        toast.success("Transportation updated");
+        toast.success("Transport updated");
       }
 
       resetForm();
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save transportation");
+      toast.error("Couldn't save transport. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -522,7 +530,7 @@ export default function UnscheduledItems({
 
     const lodgingType = lodgingForm.values.type;
     if (!isLodgingType(lodgingType)) {
-      toast.error("Please select a valid lodging type");
+      toast.error("Select a valid stay type");
       return;
     }
 
@@ -568,12 +576,12 @@ export default function UnscheduledItems({
           bookingUrl: updateData.bookingUrl ?? undefined,
           notes: updateData.notes ?? undefined,
         });
-        toast.success("Lodging created");
+        toast.success("Stay created");
 
       } else if (editingId !== null) {
         // Update existing lodging
         await lodgingService.updateLodging(editingId, { ...updateData, locationId: newLocationId });
-        toast.success("Lodging updated");
+        toast.success("Stay updated");
 
       }
 
@@ -582,7 +590,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save lodging");
+      toast.error("Couldn't save stay. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -617,9 +625,10 @@ export default function UnscheduledItems({
 
   return (
     <div className="space-y-6">
+      <ConfirmDialogComponent />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Unscheduled Items
+          Unscheduled items
         </h2>
 
         {/* Add Button */}
@@ -628,7 +637,7 @@ export default function UnscheduledItems({
           onClick={() => setShowAddMenu(true)}
           className="btn btn-primary"
         >
-          + Add Item
+          + Add item
         </button>
       </div>
 
@@ -638,16 +647,14 @@ export default function UnscheduledItems({
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Add New Item
+                Add new item
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddMenu(false)}
                 className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" className="w-6 h-6" />
               </button>
             </div>
 
@@ -663,7 +670,7 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">🎯</span>
+                    <Icon name="activity" size={32} />
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">Activity</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Things to do, places to visit</div>
@@ -677,9 +684,9 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">✈️</span>
+                    <Icon name="transportation" size={32} />
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">Transportation</div>
+                      <div className="font-medium text-gray-900 dark:text-white">Transport</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Flights, trains, cars, etc.</div>
                     </div>
                   </div>
@@ -691,9 +698,9 @@ export default function UnscheduledItems({
                   className="w-full p-4 text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">🏨</span>
+                    <Icon name="lodging" size={32} />
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">Lodging</div>
+                      <div className="font-medium text-gray-900 dark:text-white">Stay</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Hotels, Airbnb, camping</div>
                     </div>
                   </div>
@@ -739,7 +746,7 @@ export default function UnscheduledItems({
               : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
-          Transportation ({transportation.length})
+          Transport ({transportation.length})
         </button>
         <button
           onClick={() => setActiveSection("lodging")}
@@ -749,7 +756,7 @@ export default function UnscheduledItems({
               : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
-          Lodging ({lodging.length})
+          Stays ({lodging.length})
         </button>
       </div>
 
@@ -757,8 +764,8 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "activity"}
         onClose={resetForm}
-        title={isCreating ? "Add Activity" : "Edit Activity"}
-        icon="🎯"
+        title={isCreating ? "Add activity" : "Edit activity"}
+        icon="activity"
         formId="unscheduled-activity-form"
         footer={
           <>
@@ -776,7 +783,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Activity" : "Update Activity"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add activity" : "Update activity"}
             </button>
           </>
         }
@@ -802,8 +809,8 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "transportation"}
         onClose={resetForm}
-        title={isCreating ? "Add Transportation" : "Edit Transportation"}
-        icon="✈️"
+        title={isCreating ? "Add transport" : "Edit transport"}
+        icon="transportation"
         formId="transportation-form"
         footer={
           <>
@@ -821,7 +828,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Transportation" : "Update Transportation"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add transport" : "Update transport"}
             </button>
           </>
         }
@@ -851,7 +858,7 @@ export default function UnscheduledItems({
                   htmlFor="unscheduled-transport-from"
                   className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
-                  From Location
+                  From location
                 </label>
                 <select
                   id="unscheduled-transport-from"
@@ -890,7 +897,7 @@ export default function UnscheduledItems({
                   htmlFor="unscheduled-transport-to"
                   className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 >
-                  To Location
+                  To location
                 </label>
                 <select
                   id="unscheduled-transport-to"
@@ -931,7 +938,7 @@ export default function UnscheduledItems({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                  Departure Time
+                  Departure time
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -962,7 +969,7 @@ export default function UnscheduledItems({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                  Arrival Time
+                  Arrival time
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -999,19 +1006,19 @@ export default function UnscheduledItems({
                 onChange={(value) =>
                   transportationForm.handleChange("startTimezone", value)
                 }
-                label="Departure Timezone"
+                label="Departure timezone"
               />
               <TimezoneSelect
                 value={transportationForm.values.endTimezone}
                 onChange={(value) =>
                   transportationForm.handleChange("endTimezone", value)
                 }
-                label="Arrival Timezone"
+                label="Arrival timezone"
               />
             </div>
           </FormSection>
 
-          <FormSection title="Carrier Details">
+          <FormSection title="Carrier details">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -1086,7 +1093,7 @@ export default function UnscheduledItems({
               }
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
             />
           </FormSection>
         </form>
@@ -1096,8 +1103,8 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "lodging"}
         onClose={resetForm}
-        title={isCreating ? "Add Lodging" : "Edit Lodging"}
-        icon="🏨"
+        title={isCreating ? "Add stay" : "Edit stay"}
+        icon="lodging"
         formId="lodging-form"
         footer={
           <>
@@ -1115,13 +1122,13 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Lodging" : "Update Lodging"}
+              {isSubmitting ? "Saving…" : isCreating ? "Add stay" : "Update stay"}
             </button>
           </>
         }
       >
         <form id="lodging-form" onSubmit={handleSubmitLodging} className="space-y-6">
-          <FormSection title="Basic Information">
+          <FormSection title="Basic information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label
@@ -1303,7 +1310,7 @@ export default function UnscheduledItems({
               }
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
             />
           </FormSection>
         </form>
@@ -1313,9 +1320,9 @@ export default function UnscheduledItems({
       <div className="space-y-4">
         {totalCount === 0 ? (
           <EmptyState
-            icon="📝"
+            icon="note"
             message="No unscheduled items"
-            subMessage="Items without dates/times will appear here"
+            subMessage="Items without a date or time show up here."
           />
         ) : (
           <>
@@ -1323,9 +1330,9 @@ export default function UnscheduledItems({
             {activeSection === "activity" &&
               (activities.length === 0 ? (
                 <EmptyState
-                  icon="🎯"
+                  icon="activity"
                   message="No unscheduled activities"
-                  subMessage="Activities without dates/times will appear here"
+                  subMessage="Activities without a date or time show up here."
                 />
               ) : (
                 activities.map((activity) => (
@@ -1340,7 +1347,7 @@ export default function UnscheduledItems({
                             <span className="text-xl">
                               {activityCategories.find(
                                 (c) => c.name === activity.category
-                              )?.emoji || "📍"}
+                              )?.emoji || <Icon name="place" size={24} />}
                             </span>
                           )}
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1376,7 +1383,7 @@ export default function UnscheduledItems({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
                               >
-                                View Booking
+                                View booking
                               </a>
                             </div>
                           )}
@@ -1416,14 +1423,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
                           title="Edit activity"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                         <button
                           type="button"
@@ -1431,14 +1431,7 @@ export default function UnscheduledItems({
                           className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-colors"
                           title="Delete activity"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <Icon name="delete" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
@@ -1450,9 +1443,9 @@ export default function UnscheduledItems({
             {activeSection === "transportation" &&
               (transportation.length === 0 ? (
                 <EmptyState
-                  icon="✈️"
-                  message="No unscheduled transportation"
-                  subMessage="Transportation without departure times will appear here"
+                  icon="transportation"
+                  message="No unscheduled transport"
+                  subMessage="Transport without a departure time shows up here."
                 />
               ) : (
                 transportation.map((transport) => (
@@ -1548,16 +1541,9 @@ export default function UnscheduledItems({
                           type="button"
                           onClick={() => handleEditTransportation(transport)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
-                          title="Edit transportation"
+                          title="Edit transport"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>
@@ -1569,9 +1555,9 @@ export default function UnscheduledItems({
             {activeSection === "lodging" &&
               (lodging.length === 0 ? (
                 <EmptyState
-                  icon="🏨"
-                  message="No unscheduled lodging"
-                  subMessage="Lodging without check-in dates will appear here"
+                  icon="lodging"
+                  message="No unscheduled stays"
+                  subMessage="Stays without check-in dates show up here."
                 />
               ) : (
                 lodging.map((lodgingItem) => (
@@ -1616,7 +1602,7 @@ export default function UnscheduledItems({
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline dark:text-blue-400"
                               >
-                                View Booking
+                                View booking
                               </a>
                             </div>
                           )}
@@ -1654,16 +1640,9 @@ export default function UnscheduledItems({
                           type="button"
                           onClick={() => handleEditLodging(lodgingItem)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
-                          title="Edit lodging"
+                          title="Edit stay"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
+                          <Icon name="edit" className="w-5 h-5" />
                         </button>
                       </div>
                     </div>

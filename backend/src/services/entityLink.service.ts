@@ -528,7 +528,7 @@ export const entityLinkService = {
 
     // Prevent self-linking
     if (data.sourceType === data.targetType && data.sourceId === data.targetId) {
-      throw new AppError('Cannot link an entity to itself', 400);
+      throw new AppError("Something can't be linked to itself.", 400);
     }
 
     // Older clients express "activity/lodging is at location" as a link: set the FK instead and
@@ -540,7 +540,7 @@ export const entityLinkService = {
       { type: data.targetType, id: data.targetId }
     );
     if (claim === 'already') {
-      throw new AppError('Link already exists between these entities', 400);
+      throw new AppError('Those two are already linked.', 400);
     }
     if (claim === 'claimed') {
       const entityIsSource = data.sourceType !== 'LOCATION';
@@ -575,7 +575,7 @@ export const entityLinkService = {
     });
 
     if (existingLink) {
-      throw new AppError('Link already exists between these entities', 400);
+      throw new AppError('Those two are already linked.', 400);
     }
 
     return await prisma.entityLink.create({
@@ -863,8 +863,7 @@ export const entityLinkService = {
       ]);
     } catch (error) {
       logger.error(`Failed to fetch links for entity ${entityType}:${entityId} in trip ${tripId}:`, error);
-      const message = error instanceof Error ? error.message : String(error);
-      throw new AppError('Failed to fetch entity links: ' + message, 500);
+      throw new AppError("Couldn't load the links for this item. Try again.", 500);
     }
 
     // Build summary counts
@@ -913,7 +912,7 @@ export const entityLinkService = {
         { type: data.targetType, id: data.targetId }
       );
       if (released) return;
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     await prisma.entityLink.delete({
@@ -935,7 +934,7 @@ export const entityLinkService = {
           ? await prisma.activity.updateMany({ where, data: { locationId: null } })
           : await prisma.lodging.updateMany({ where, data: { locationId: null } });
       if (count === 0) {
-        throw new AppError('Link not found', 404);
+        throw new AppError("We couldn't find that link.", 404);
       }
       return;
     }
@@ -945,7 +944,7 @@ export const entityLinkService = {
     });
 
     if (!link) {
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     await prisma.entityLink.delete({
@@ -972,7 +971,7 @@ export const entityLinkService = {
         entity: { type: synthetic.type, id: synthetic.entityId },
       });
       if (!current) {
-        throw new AppError('Link not found', 404);
+        throw new AppError("We couldn't find that link.", 404);
       }
       return current;
     }
@@ -982,7 +981,7 @@ export const entityLinkService = {
     });
 
     if (!link) {
-      throw new AppError('Link not found', 404);
+      throw new AppError("We couldn't find that link.", 404);
     }
 
     const updateData: Prisma.EntityLinkUpdateInput = {};

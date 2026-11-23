@@ -4,6 +4,7 @@ import type { Location, CreateLocationInput, UpdateLocationInput, LocationCatego
 import locationService from "../services/location.service";
 import toast from "react-hot-toast";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
 import DirectionsButton from "./DirectionsButton";
 import { placeFromLocation } from "../lib/itineraryPlaces";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
@@ -343,7 +344,7 @@ export default function LocationManager({
         // return, so create the place directly here.
         try {
           const created = await locationService.createLocation(createData);
-          toast.success("Location added successfully");
+          toast.success("Location added");
           await createCompanionForPlace(alsoCreate, created);
           invalidateLinkSummary();
           await manager.loadItems();
@@ -351,7 +352,7 @@ export default function LocationManager({
           success = true;
         } catch (error) {
           console.error("Failed to create location:", error);
-          toast.error("Failed to add location");
+          toast.error("Couldn't add location. Try again.");
           success = false;
         }
       }
@@ -388,7 +389,7 @@ export default function LocationManager({
       manager.setItems((prev) =>
         prev.map((l) => (l.id === location.id ? { ...l, isFavorite: !newValue } : l))
       );
-      toast.error("Failed to update favorite");
+      toast.error("Couldn't update favorite. Try again.");
     }
   };
 
@@ -397,11 +398,11 @@ export default function LocationManager({
     const hasChildren = manager.items.some(l => l.parentId === id);
 
     const confirmed = await confirm({
-      title: "Delete Location",
+      title: "Delete location",
       message: hasChildren
-        ? `Delete "${location?.name}" and all its child locations? This action cannot be undone.`
-        : `Delete "${location?.name}"? This action cannot be undone.`,
-      confirmLabel: "Delete",
+        ? `"${location?.name}" and all its child locations are deleted. You can't undo this.`
+        : `"${location?.name}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete location",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -414,9 +415,9 @@ export default function LocationManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Locations",
-      message: `Delete ${selectedIds.length} selected locations? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
+      message: `The selected ${selectedIds.length === 1 ? "location is" : "locations are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -430,7 +431,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete locations:", error);
-      toast.error("Failed to delete some locations");
+      toast.error("Couldn't delete some locations. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -451,7 +452,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update locations:", error);
-      toast.error("Failed to update some locations");
+      toast.error("Couldn't update some locations. Try again.");
     } finally {
       setIsBulkEditing(false);
     }
@@ -610,20 +611,7 @@ export default function LocationManager({
                     : "text-gray-400 dark:text-dusk-400 hover:text-amber-500 dark:hover:text-gold"
                 }`}
               >
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill={location.isFavorite ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth={location.isFavorite ? 0 : 2}
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                  />
-                </svg>
+                <Icon name={location.isFavorite ? "starFilled" : "star"} />
               </button>
               {/* Photo preview badge with popover */}
               {(() => {
@@ -639,9 +627,7 @@ export default function LocationManager({
                       onViewAll={() => openLinkPanel(location.id)}
                     >
                       <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-800 cursor-pointer">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Icon name="photo" size={14} />
                         {photoCount}
                       </span>
                     </PhotoPreviewPopover>
@@ -725,7 +711,7 @@ export default function LocationManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Location</span>
+              <span className="hidden sm:inline">+ Add location</span>
             </button>
           )}
         </div>
@@ -735,8 +721,8 @@ export default function LocationManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Location" : "Add Location"}
-        icon="📍"
+        title={manager.editingId ? "Edit location" : "Add location"}
+        icon="place"
         maxWidth="2xl"
         formId="location-form"
         footer={
@@ -744,7 +730,7 @@ export default function LocationManager({
             onCancel={handleCloseForm}
             formId="location-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Location`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} location`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('location-form'))}
             leftContent={
@@ -797,7 +783,7 @@ export default function LocationManager({
           </div>
 
           {/* Map Search Section */}
-          <FormSection title="Search & Select Location" icon="🗺️">
+          <FormSection title="Search & Select Location" icon="map">
             <LocationSearchMap
               onLocationSelect={handleLocationSelect}
               initialPosition={
@@ -809,7 +795,7 @@ export default function LocationManager({
           </FormSection>
 
           {/* Basic Info Section */}
-          <FormSection title="Location Details" icon="📍">
+          <FormSection title="Location details" icon="place">
             {/* Create mode: bring an activity or lodging of the same name along */}
             {!manager.editingId && (
               <div>
@@ -828,13 +814,13 @@ export default function LocationManager({
                 >
                   <option value="none">None</option>
                   <option value="activity">Activity</option>
-                  <option value="lodging">Lodging</option>
+                  <option value="lodging">Stay</option>
                 </select>
                 {alsoCreate !== "none" && (
                   <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                     {alsoCreate === "activity"
                       ? "Adds an activity with the same name, linked to this place. It starts unscheduled."
-                      : "Adds a lodging with the same name, linked to this place. It is set as a hotel with no dates; edit it under Lodging."}
+                      : "Adds a stay with the same name, linked to this place. It is set as a hotel with no dates; edit it under Stays."}
                   </p>
                 )}
               </div>
@@ -957,7 +943,7 @@ export default function LocationManager({
 
             <div>
               <label htmlFor="location-opening-hours" className="label">
-                Opening Hours
+                Opening hours
               </label>
               <input
                 type="text"
@@ -1030,7 +1016,7 @@ export default function LocationManager({
           onClick={() => mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
           className="md:hidden mb-4 inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg border border-primary-500/30 dark:border-gold/30 text-sm font-medium text-primary-700 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-700"
         >
-          <span aria-hidden="true">🗺️</span> Show map
+          <Icon name="map" size={16} /> Show map
         </button>
       )}
 
@@ -1041,9 +1027,9 @@ export default function LocationManager({
         ) : manager.items.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoLocations />}
-            message="Pin Your Destinations"
-            subMessage="Mark the places that matter - from iconic landmarks and hidden gems to cozy cafes and stunning viewpoints. Build your personal map of memories."
-            actionLabel="Add Your First Location"
+            message="No places yet"
+            subMessage="Save the places you want to see, from landmarks to the cafe you don't want to miss."
+            actionLabel="Add place"
             onAction={openCreateForm}
           />
         ) : (

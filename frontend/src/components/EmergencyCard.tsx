@@ -175,7 +175,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       setIsEditing(false);
       invalidate();
     } catch {
-      toast.error("Failed to save emergency details");
+      toast.error("Couldn't save emergency details. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -186,7 +186,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       title: "Clear emergency details",
       message:
         "This removes the insurance and embassy details saved for this trip. Local emergency numbers are not affected.",
-      confirmLabel: "Clear",
+      confirmLabel: "Clear details",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -197,7 +197,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       setIsEditing(false);
       invalidate();
     } catch {
-      toast.error("Failed to clear emergency details");
+      toast.error("Couldn't clear emergency details. Try again.");
     }
   };
 
@@ -221,7 +221,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       queryClient.invalidateQueries({ queryKey: ["companions"] });
       invalidate();
     } catch {
-      toast.error("Failed to save medical details");
+      toast.error("Couldn't save medical details. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -245,7 +245,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
   if (!card) {
     return (
       <EmptyState
-        icon="🆘"
+        icon="sos"
         message="Emergency card unavailable"
         subMessage={
           error
@@ -262,7 +262,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold text-charcoal dark:text-warm-gray">
-            Emergency Card
+            Emergency card
           </h2>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             {country.facts
@@ -487,7 +487,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
           </dl>
         ) : (
           <EmptyState.Compact
-            icon="📄"
+            icon="document"
             message="No insurance or embassy details saved yet"
           />
         )}
@@ -511,7 +511,7 @@ export default function EmergencyCard({ tripId, onUpdate }: EmergencyCardProps) 
         )}
         {card.companions.length === 0 ? (
           <EmptyState.Compact
-            icon="🧑‍🤝‍🧑"
+            icon="users"
             message="No companions are linked to this trip"
           />
         ) : (
@@ -643,7 +643,7 @@ function DetailRow({ label, value, asPhone = false }: DetailRowProps) {
 
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-slate dark:text-warm-gray/60">
+      <dt className="eyebrow text-slate dark:text-warm-gray/60">
         {label}
       </dt>
       <dd className="text-sm text-charcoal dark:text-warm-gray">

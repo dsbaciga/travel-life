@@ -29,8 +29,8 @@ export const ENTITY_TYPE_LABELS: Record<SyncConflictEntityType, string> = {
   TRIP: 'Trip',
   LOCATION: 'Location',
   ACTIVITY: 'Activity',
-  TRANSPORTATION: 'Transportation',
-  LODGING: 'Lodging',
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stay',
   JOURNAL: 'Journal Entry',
   CHECKLIST_ITEM: 'Checklist Item',
 };
@@ -61,7 +61,7 @@ export type ConflictResolution = 'keep-local' | 'keep-server' | 'merge';
  * Labels for conflict resolution options
  */
 export const RESOLUTION_LABELS: Record<ConflictResolution, string> = {
-  'keep-local': 'Keep My Changes',
+  'keep-local': 'Keep my changes',
   'keep-server': 'Use Server Version',
   merge: 'Merge Changes',
 };

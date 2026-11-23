@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from './Modal';
 import FormSection from './FormSection';
 import type { BulkEntityType } from './BulkActionBar';
+import Icon from "./ui/Icon";
 
 /**
  * Field configuration for bulk edit.
@@ -110,7 +111,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
 
     // Check if any updates were provided
     if (Object.keys(updates).length === 0) {
-      setErrors({ _form: 'Please fill in at least one field to update' });
+      setErrors({ _form: 'Fill in at least one field to update' });
       return;
     }
 
@@ -159,7 +160,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
             rows={3}
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
 
@@ -171,7 +172,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
             step="0.01"
           />
         );
@@ -184,7 +185,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
     }
@@ -201,21 +202,9 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
         {/* Info banner */}
         <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-gold/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <svg
-              className="w-5 h-5 text-primary-600 dark:text-gold mt-0.5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Icon name="info" className="text-primary-600 dark:text-gold mt-0.5" />
             <div className="text-sm text-primary-800 dark:text-primary-200">
-              <p className="font-medium">Bulk Edit Mode</p>
+              <p className="font-medium">Bulk edit mode</p>
               <p className="mt-1 text-primary-700 dark:text-primary-300">
                 Only filled fields will be updated. Leave fields empty to keep their current values.
                 This will update {selectedCount} {pluralLabel.toLowerCase()}.
@@ -232,7 +221,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
         )}
 
         {/* Fields */}
-        <FormSection title="Update Fields" icon="✏️">
+        <FormSection title="Update fields" icon="edit">
           <div className="space-y-4">
             {fields.map(field => (
               <div key={field.key}>
@@ -270,11 +259,8 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
           >
             {isSubmitting ? (
               <>
-                <svg className="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Updating...
+                <Icon name="spinner" size={16} className="animate-spin mr-2" />
+                Updating…
               </>
             ) : (
               `Update ${selectedCount} ${pluralLabel}`

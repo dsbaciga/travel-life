@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import InviteUserModal from './InviteUserModal';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useAuthStore } from '../store/authStore';
+import Icon from './ui/Icon';
 
 interface CollaboratorsManagerProps {
   tripId: number;
@@ -19,8 +20,8 @@ interface CollaboratorsManagerProps {
 }
 
 const PERMISSION_LABELS: Record<PermissionLevel, { label: string; color: string }> = {
-  view: { label: 'View Only', color: 'bg-gray-100 text-gray-700 dark:bg-dusk-700 dark:text-dusk-300' },
-  edit: { label: 'Can Edit', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  view: { label: 'View only', color: 'bg-gray-100 text-gray-700 dark:bg-dusk-700 dark:text-dusk-300' },
+  edit: { label: 'Can edit', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   admin: { label: 'Admin', color: 'bg-gold/20 text-gold dark:bg-gold/10 dark:text-gold' },
 };
 
@@ -48,7 +49,7 @@ export default function CollaboratorsManager({
       setOwner(response.owner);
     } catch (err) {
       console.error('Failed to load collaborators:', err);
-      toast.error('Failed to load collaborators');
+      toast.error("Couldn't load collaborators. Try again.");
     } finally {
       setLoading(false);
     }
@@ -79,15 +80,15 @@ export default function CollaboratorsManager({
       loadCollaborators();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || 'Failed to update permission');
+      toast.error(error.response?.data?.message || "Couldn't update permission. Try again.");
     }
   };
 
   const handleRemoveCollaborator = async (collaborator: Collaborator) => {
     const confirmed = await confirm({
-      title: 'Remove Collaborator',
-      message: `Remove ${collaborator.user.username} from this trip?`,
-      confirmLabel: 'Remove',
+      title: 'Remove collaborator',
+      message: `${collaborator.user.username} loses access to this trip.`,
+      confirmLabel: 'Remove collaborator',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -98,15 +99,15 @@ export default function CollaboratorsManager({
       loadCollaborators();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || 'Failed to remove collaborator');
+      toast.error(error.response?.data?.message || "Couldn't remove collaborator. Try again.");
     }
   };
 
   const handleCancelInvitation = async (invitation: TripInvitation) => {
     const confirmed = await confirm({
-      title: 'Cancel Invitation',
-      message: `Cancel invitation to ${invitation.email}?`,
-      confirmLabel: 'Cancel Invitation',
+      title: 'Cancel invitation',
+      message: `The invitation to ${invitation.email} is cancelled.`,
+      confirmLabel: 'Cancel invitation',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -117,7 +118,7 @@ export default function CollaboratorsManager({
       loadPendingInvitations();
     } catch (err) {
       console.error('Failed to cancel invitation:', err);
-      toast.error('Failed to cancel invitation');
+      toast.error("Couldn't cancel invitation. Try again.");
     }
   };
 
@@ -128,7 +129,7 @@ export default function CollaboratorsManager({
       loadPendingInvitations();
     } catch (err) {
       console.error('Failed to resend invitation:', err);
-      toast.error('Failed to resend invitation');
+      toast.error("Couldn't resend invitation. Try again.");
     }
   };
 
@@ -170,9 +171,7 @@ export default function CollaboratorsManager({
             onClick={() => setShowInviteModal(true)}
             className="px-4 py-2 bg-gold text-navy-900 rounded-lg hover:bg-gold/90 transition-colors font-medium flex items-center gap-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Icon name="add" />
             Invite
           </button>
         )}
@@ -233,8 +232,8 @@ export default function CollaboratorsManager({
                     }
                     className="px-3 py-1.5 text-sm border border-gray-200 dark:border-gold/30 rounded-lg bg-white dark:bg-navy-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-gold focus:border-transparent"
                   >
-                    <option value="view">View Only</option>
-                    <option value="edit">Can Edit</option>
+                    <option value="view">View only</option>
+                    <option value="edit">Can edit</option>
                     {isOwner && <option value="admin">Admin</option>}
                   </select>
                 ) : (
@@ -254,14 +253,7 @@ export default function CollaboratorsManager({
                     className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     title="Remove collaborator"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    <Icon name="delete" />
                   </button>
                 )}
                 </div>
@@ -288,14 +280,7 @@ export default function CollaboratorsManager({
               >
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:flex-nowrap">
                   <div className="w-10 h-10 shrink-0 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-yellow-600 dark:text-yellow-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <Icon name="mail" />
                   </div>
                   <div className="flex-1 min-w-0 basis-[calc(100%-3.5rem)] sm:basis-0">
                     <div className="font-medium text-gray-900 dark:text-white break-all sm:truncate">
@@ -319,28 +304,14 @@ export default function CollaboratorsManager({
                       className="p-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                       title="Resend invitation"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
+                      <Icon name="refresh" />
                     </button>
                     <button
                       onClick={() => handleCancelInvitation(invitation)}
                       className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                       title="Cancel invitation"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <Icon name="close" />
                     </button>
                   </div>
                   </div>
@@ -355,14 +326,7 @@ export default function CollaboratorsManager({
       {collaborators.length === 0 && pendingInvitations.length === 0 && (
         <div className="text-center py-8">
           <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-navy-700 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400 dark:text-dusk-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
+            <Icon name="users" size={32} className="text-gray-400 dark:text-dusk-400" />
           </div>
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-1">No collaborators yet</h4>
           <p className="text-gray-500 dark:text-dusk-400 mb-4">

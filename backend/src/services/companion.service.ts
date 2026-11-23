@@ -133,7 +133,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     return companion;
@@ -146,7 +146,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     return await prisma.travelCompanion.update({
@@ -162,7 +162,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     // The "myself" companion carries the trip owner's side of expenses (as payer and as split
@@ -201,7 +201,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     // Check if link already exists
@@ -237,7 +237,7 @@ export const companionService = {
     });
 
     if (!link) {
-      throw new AppError('Companion not linked to this trip', 404);
+      throw new AppError("That companion isn't on this trip.", 404);
     }
 
     await prisma.tripCompanion.delete({
@@ -272,7 +272,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     await ensureAvatarDir();
@@ -314,7 +314,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     // Delete old avatar if it was a local file
@@ -343,7 +343,7 @@ export const companionService = {
     });
 
     if (!companion) {
-      throw new AppError('Companion not found', 404);
+      throw new AppError("We couldn't find that companion.", 404);
     }
 
     // Delete file if it's a local avatar

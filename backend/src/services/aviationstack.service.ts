@@ -168,7 +168,7 @@ class AviationstackService {
     });
 
     if (!transportation) {
-      throw new AppError('Transportation not found', 404);
+      throw new AppError("We couldn't find that transport item.", 404);
     }
 
     // Verify user has access to this trip
@@ -331,7 +331,7 @@ class AviationstackService {
     });
 
     if (!transportation) {
-      throw new AppError('Transportation not found', 404);
+      throw new AppError("We couldn't find that transport item.", 404);
     }
 
     await verifyTripAccess(userId, transportation.tripId);
@@ -362,7 +362,7 @@ class AviationstackService {
 
     const result = this.mapFlightTrackingToResult(flightTracking);
     if (!result) {
-      throw new AppError('Failed to map flight tracking data', 500);
+      throw new AppError("Couldn't read the flight tracking data. Try again later.", 500);
     }
     return result;
   }
@@ -500,7 +500,7 @@ class AviationstackService {
     } catch (error) {
       if (isAxiosError(error)) {
         if (error.response?.status === 401) {
-          throw new AppError('Invalid AviationStack API key', 401);
+          throw new AppError("AviationStack didn't accept that API key. Check it and try again.", 401);
         }
         if (error.response?.status === 429) {
           // Provider-side throttling that survived fetchWithRetry's retries
@@ -630,7 +630,7 @@ class AviationstackService {
 
     if (identifiers.some((id) => INVALID_KEY_ERROR_IDS.has(id))) {
       console.warn(`[AviationStack] API key rejected (code: ${identifiers.join('/')}): ${detail}`);
-      throw new AppError('Invalid AviationStack API key', 401);
+      throw new AppError("AviationStack didn't accept that API key. Check it and try again.", 401);
     }
 
     console.error(

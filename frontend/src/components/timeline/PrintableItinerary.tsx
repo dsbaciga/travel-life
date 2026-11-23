@@ -252,7 +252,7 @@ const JournalItem = ({ item }: { item: TimelineItem }) => {
   return (
     <div className="print-item print-item-journal">
       <div className="print-item-header">
-        <span className="print-item-type">Journal Entry</span>
+        <span className="print-item-type">Journal entry</span>
       </div>
       {item.title && <div className="print-item-title">{item.title}</div>}
       {item.description && (
@@ -471,7 +471,7 @@ const PrintableItinerary = forwardRef<HTMLDivElement, PrintableItineraryProps>(
         {/* Unscheduled Section */}
         {hasUnscheduledItems && (
           <div className="print-unscheduled">
-            <div className="print-section-header">Unscheduled Items</div>
+            <div className="print-section-header">Unscheduled items</div>
 
             {unscheduled.activities.length > 0 && (
               <div className="print-unscheduled-group">
@@ -484,7 +484,7 @@ const PrintableItinerary = forwardRef<HTMLDivElement, PrintableItineraryProps>(
 
             {unscheduled.transportation.length > 0 && (
               <div className="print-unscheduled-group">
-                <div className="print-unscheduled-group-title">Transportation</div>
+                <div className="print-unscheduled-group-title">Transport</div>
                 {unscheduled.transportation.map((transport) => (
                   <UnscheduledTransportationItem key={transport.id} transport={transport} />
                 ))}
@@ -493,7 +493,7 @@ const PrintableItinerary = forwardRef<HTMLDivElement, PrintableItineraryProps>(
 
             {unscheduled.lodging.length > 0 && (
               <div className="print-unscheduled-group">
-                <div className="print-unscheduled-group-title">Lodging</div>
+                <div className="print-unscheduled-group-title">Stays</div>
                 {unscheduled.lodging.map((lodging) => (
                   <UnscheduledLodgingItem key={lodging.id} lodging={lodging} />
                 ))}

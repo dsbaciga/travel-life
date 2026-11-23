@@ -16,6 +16,7 @@
  * - Full dark mode support
  */
 
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 import { useUnits } from '../../hooks/useUnits';
 
@@ -51,172 +52,43 @@ export interface WeatherForecastWidgetProps {
  */
 function SunnyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="4" strokeWidth={2} fill="currentColor" opacity={0.2} />
-      <circle cx="12" cy="12" r="4" strokeWidth={2} />
-      <path strokeLinecap="round" strokeWidth={2} d="M12 2v2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M12 20v2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M4.93 4.93l1.41 1.41" />
-      <path strokeLinecap="round" strokeWidth={2} d="M17.66 17.66l1.41 1.41" />
-      <path strokeLinecap="round" strokeWidth={2} d="M2 12h2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M20 12h2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M6.34 17.66l-1.41 1.41" />
-      <path strokeLinecap="round" strokeWidth={2} d="M19.07 4.93l-1.41 1.41" />
-    </svg>
+    <Icon name="weatherClear" className={className} />
   );
 }
 
 function PartlyCloudyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      {/* Sun behind */}
-      <circle cx="8" cy="8" r="3" strokeWidth={2} fill="currentColor" opacity={0.2} />
-      <circle cx="8" cy="8" r="3" strokeWidth={1.5} />
-      <path strokeLinecap="round" strokeWidth={1.5} d="M8 3v1.5" />
-      <path strokeLinecap="round" strokeWidth={1.5} d="M3 8h1.5" />
-      <path strokeLinecap="round" strokeWidth={1.5} d="M4.46 4.46l1.06 1.06" />
-      {/* Cloud in front */}
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        fill="currentColor"
-        fillOpacity={0.1}
-        d="M19 16a3 3 0 100-6 3.5 3.5 0 00-6.77-1.18A4 4 0 107 16h12z"
-      />
-    </svg>
+    <Icon name="weatherPartlyCloudy" className={className} />
   );
 }
 
 function CloudyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        fill="currentColor"
-        fillOpacity={0.1}
-        d="M19 16a3 3 0 100-6 3.5 3.5 0 00-6.77-1.18A4 4 0 107 16h12z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M13 20a2 2 0 100-4 2.5 2.5 0 00-4.84-.85A2.86 2.86 0 105 20h8z"
-      />
-    </svg>
+    <Icon name="weatherCloudy" className={className} />
   );
 }
 
 function RainyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        fill="currentColor"
-        fillOpacity={0.1}
-        d="M19 12a3 3 0 100-6 3.5 3.5 0 00-6.77-1.18A4 4 0 107 12h12z"
-      />
-      <path strokeLinecap="round" strokeWidth={2} d="M8 15v3" />
-      <path strokeLinecap="round" strokeWidth={2} d="M12 14v4" />
-      <path strokeLinecap="round" strokeWidth={2} d="M16 15v3" />
-    </svg>
+    <Icon name="weatherRain" className={className} />
   );
 }
 
 function StormyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        fill="currentColor"
-        fillOpacity={0.1}
-        d="M19 10a3 3 0 100-6 3.5 3.5 0 00-6.77-1.18A4 4 0 107 10h12z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M13 12l-2 5h4l-2 5"
-      />
-    </svg>
+    <Icon name="weatherStorm" className={className} />
   );
 }
 
 function SnowyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        fill="currentColor"
-        fillOpacity={0.1}
-        d="M19 12a3 3 0 100-6 3.5 3.5 0 00-6.77-1.18A4 4 0 107 12h12z"
-      />
-      <circle cx="8" cy="16" r="1" fill="currentColor" />
-      <circle cx="12" cy="18" r="1" fill="currentColor" />
-      <circle cx="16" cy="16" r="1" fill="currentColor" />
-      <circle cx="10" cy="21" r="1" fill="currentColor" />
-      <circle cx="14" cy="21" r="1" fill="currentColor" />
-    </svg>
+    <Icon name="weatherSnow" className={className} />
   );
 }
 
 function WindyIcon({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeWidth={2} d="M9.59 4.59A2 2 0 1111 8H2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M12.59 19.41A2 2 0 1014 16H2" />
-      <path strokeLinecap="round" strokeWidth={2} d="M17.73 7.73A2.5 2.5 0 1119.5 12H2" />
-    </svg>
+    <Icon name="weatherWind" className={className} />
   );
 }
 
@@ -364,20 +236,7 @@ function getPackRecommendations(forecast: ForecastDay[]): string[] {
  */
 function RefreshIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-      />
-    </svg>
+    <Icon name="refresh" className={className} />
   );
 }
 
@@ -386,26 +245,7 @@ function RefreshIcon({ className = 'w-4 h-4' }: { className?: string }) {
  */
 function LocationIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
+    <Icon name="place" className={className} />
   );
 }
 
@@ -435,7 +275,7 @@ function ForecastDayCard({ day, isFirst = false }: ForecastDayCardProps) {
     >
       {/* Day name */}
       <span
-        className={`text-xs font-semibold uppercase tracking-wide mb-2
+        className={`eyebrow mb-2
           ${today ? 'text-primary-600 dark:text-gold' : 'text-slate dark:text-warm-gray/70'}
         `}
       >
@@ -465,9 +305,7 @@ function ForecastDayCard({ day, isFirst = false }: ForecastDayCardProps) {
       {/* Precipitation if available */}
       {day.precipitation !== undefined && day.precipitation > 0 && (
         <div className="flex items-center gap-1 mt-1.5 text-blue-500 dark:text-blue-400">
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
-          </svg>
+          <Icon name="humidity" className="w-3 h-3" />
           <span className="text-xs font-medium">{day.precipitation}%</span>
         </div>
       )}
@@ -519,29 +357,16 @@ function ErrorState({ error, onRefresh }: { error: string; onRefresh?: () => voi
     <div className="card animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
       </div>
 
       <div className="flex flex-col items-center justify-center py-6 text-center">
         <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-3">
-          <svg
-            className="w-6 h-6 text-red-500 dark:text-red-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
+          <Icon name="alert" className="w-6 h-6 text-red-500 dark:text-red-400" />
         </div>
         <p className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">
-          Unable to load forecast
+          Couldn't load the forecast. Try again.
         </p>
         <p className="text-xs text-slate dark:text-warm-gray/70 mb-4">{error}</p>
         {onRefresh && (
@@ -571,7 +396,7 @@ function EmptyState({ location }: { location: string }) {
     <div className="card animate-fade-in">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
       </div>
 
@@ -643,7 +468,7 @@ export default function WeatherForecastWidget({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body">
-          Weather Forecast
+          Weather forecast
         </h3>
         {onRefresh && (
           <button
@@ -683,21 +508,8 @@ export default function WeatherForecastWidget({
       {packRecommendations.length > 0 && (
         <div className="mt-4 pt-3 border-t border-slate/10 dark:border-warm-gray/10">
           <div className="flex items-center gap-2 mb-2">
-            <svg
-              className="w-4 h-4 text-primary-500 dark:text-gold"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-            <span className="text-xs font-semibold text-slate dark:text-warm-gray/70 uppercase tracking-wide">
+            <Icon name="luggage" className="w-4 h-4 text-primary-500 dark:text-gold" />
+            <span className="text-slate dark:text-warm-gray/70 eyebrow">
               Pack for your trip
             </span>
           </div>

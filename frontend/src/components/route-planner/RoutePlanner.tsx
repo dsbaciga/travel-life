@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { Fragment, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -156,9 +157,7 @@ function StopRow({
           aria-label={`Reorder ${stop.name}, stop ${index + 1} of ${count}. Press space to pick up, arrow keys to move.`}
           className="flex-none min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate dark:text-dusk-400 hover:bg-primary-50 dark:hover:bg-navy-700 cursor-grab active:cursor-grabbing touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 dark:focus-visible:ring-gold/50"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-          </svg>
+          <Icon name="menu" className="w-5 h-5" />
         </button>
       )}
 
@@ -184,10 +183,7 @@ function StopRow({
               className="inline-flex items-center gap-1 underline hover:text-charcoal dark:hover:text-white"
               aria-label={`Open ${stop.name} in this trip's places`}
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <Icon name="place" className="w-3 h-3" />
               Saved place
             </Link>
             {returnVisit && <span className="ml-2 font-medium">Return visit</span>}
@@ -230,9 +226,7 @@ function StopRow({
           aria-label={`Move ${stop.name} earlier`}
           className="min-w-[44px] min-h-[22px] sm:min-h-[44px] flex items-center justify-center rounded text-slate dark:text-dusk-300 hover:bg-primary-50 dark:hover:bg-navy-700 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
+          <Icon name="collapse" className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -241,9 +235,7 @@ function StopRow({
           aria-label={`Move ${stop.name} later`}
           className="min-w-[44px] min-h-[22px] sm:min-h-[44px] flex items-center justify-center rounded text-slate dark:text-dusk-300 hover:bg-primary-50 dark:hover:bg-navy-700 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <Icon name="expand" className="w-4 h-4" />
         </button>
       </div>
 
@@ -253,14 +245,7 @@ function StopRow({
         aria-label={`Remove ${stop.name}`}
         className="flex-none min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-          />
-        </svg>
+        <Icon name="delete" className="w-5 h-5" />
       </button>
       </>
       )}
@@ -401,7 +386,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
           queryClient.setQueryData(key, previous);
           queryClient.invalidateQueries({ queryKey: key });
         }
-        toast.error('Could not save the new order');
+        toast.error("Couldn't save the new order. Try again.");
         return false;
       }
     },
@@ -431,7 +416,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       queryClient.setQueryData<TripStop[]>(key, (current = []) => [...current, created]);
       void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
-      toast.error('Could not add the stop');
+      toast.error("Couldn't add the stop. Try again.");
     } finally {
       setBusy(false);
     }
@@ -447,7 +432,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       await tripStopService.updateStop(tripId, id, { nights });
     } catch {
       queryClient.setQueryData(key, previous);
-      toast.error('Could not save the number of nights');
+      toast.error("Couldn't save the number of nights. Try again.");
     }
   };
 
@@ -462,7 +447,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
       queryClient.setQueryData(key, previous);
-      toast.error('Could not remove the stop');
+      toast.error("Couldn't remove the stop. Try again.");
     }
   };
 
@@ -525,11 +510,11 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     onDragCancel: ({ active }) => `Moving ${byId.get(Number(active.id))?.name ?? 'stop'} cancelled.`,
   };
 
-  if (isLoading) return <LoadingSpinner.FullPage message="Loading route planner..." />;
+  if (isLoading) return <LoadingSpinner.FullPage message="Loading route planner…" />;
   if (isError) {
     return (
       <p role="alert" className="py-6 text-sm text-red-600 dark:text-red-400">
-        Could not load the route plan.
+        Couldn't load the route plan. Try again.
       </p>
     );
   }
@@ -537,7 +522,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route Planner</h2>
+        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route planner</h2>
         <p className="text-sm text-slate dark:text-dusk-400">
           Order the cities of your trip, see how far apart they are, and find a shorter route.
         </p>
@@ -567,7 +552,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
 
           {stops.length === 0 ? (
             <EmptyState
-              icon="🗺️"
+              icon="map"
               message="No stops yet"
               subMessage={
                 canEdit
@@ -598,9 +583,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
                               }
                               className="list-none flex items-center gap-2 pl-14 py-1.5 text-sm text-slate dark:text-dusk-300"
                             >
-                              <svg className="w-4 h-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                              </svg>
+                              <Icon name="arrowDown" className="w-4 h-4 flex-none" />
                               <span className="tabular-nums">
                                 {leg.routed ? '' : '≈ '}
                                 {formatDistance(leg.km)}
@@ -792,7 +775,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
         </div>
 
         <div className="mt-6 lg:mt-0 h-[320px] sm:h-[420px] lg:h-[calc(100vh-18rem)] lg:min-h-[420px] lg:sticky lg:top-48">
-          <Suspense fallback={<LoadingSpinner.FullPage message="Loading map..." />}>
+          <Suspense fallback={<LoadingSpinner.FullPage message="Loading map…" />}>
             <RoutePlannerMap stops={stops} activeId={activeId} onSelect={setActiveId} className="h-full" />
           </Suspense>
         </div>

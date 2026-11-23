@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from '../ui/Icon';
 import { useNavigate } from 'react-router';
 import type { JournalEntry } from '../../types/journalEntry';
 import type { Location } from '../../types/location';
@@ -59,7 +60,7 @@ export default function JournalCard({
             <div
               className={`w-12 h-12 rounded-xl ${colors.icon} flex items-center justify-center flex-shrink-0`}
             >
-              <span className="text-2xl">📝</span>
+              <Icon name="journal" size={24} />
             </div>
 
             {/* Main content */}
@@ -91,14 +92,7 @@ export default function JournalCard({
               className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
               title="Edit journal entry"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <Icon name="edit" size={20} />
             </button>
           </div>
         </div>
@@ -106,14 +100,7 @@ export default function JournalCard({
         {/* Weather notes */}
         {journal.weatherNotes && (
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-dusk-400">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
-              />
-            </svg>
+            <Icon name="cloud" size={16} />
             <span>{journal.weatherNotes}</span>
           </div>
         )}
@@ -125,7 +112,7 @@ export default function JournalCard({
               <MarkdownRenderer content={journal.content} />
             ) : (
               <p
-                className={`text-gray-700 dark:text-dusk-300 ${
+                className={`journal-prose text-gray-700 dark:text-dusk-300 ${
                   isLongContent ? 'line-clamp-6' : ''
                 }`}
               >
@@ -148,7 +135,7 @@ export default function JournalCard({
         {/* Linked locations */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -166,7 +153,7 @@ export default function JournalCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-4">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

@@ -7,6 +7,7 @@ import geocodingService, { countryCodeFromGeocode } from '../services/geocoding.
 import type { GeocodingResult } from '../services/geocoding.service';
 import { useMapTiles } from '../hooks/useMapTiles';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
 
 interface LocationSearchMapProps {
   onLocationSelect: (data: {
@@ -151,7 +152,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
       }
     } catch (error) {
       console.error('Reverse geocode error:', error);
-      toast.error('Failed to get address for this location');
+      toast.error("Couldn't get address for this location. Try again.");
     }
   };
 
@@ -248,7 +249,7 @@ const LocationSearchMap = ({ onLocationSelect, initialPosition }: LocationSearch
       </div>
 
       <p className="text-sm text-gray-600 dark:text-dusk-400">
-        💡 Search for a place above or tap on the map to select a location
+        <Icon name="lightbulb" size={16} className="align-text-bottom" /> Search for a place above or tap on the map to select a location
       </p>
     </div>
   );

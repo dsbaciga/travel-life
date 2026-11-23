@@ -23,6 +23,7 @@
  */
 
 import { useRef, useState, type DragEvent } from "react";
+import Icon from "./ui/Icon";
 
 interface DragDropUploadProps {
   /** Callback when files are selected */
@@ -193,20 +194,7 @@ export default function DragDropUpload({
         onDrop={handleDrop}
       >
         <div className="text-center text-white p-12 border-4 border-dashed border-white rounded-3xl max-w-2xl mx-4 bg-white/10">
-          <svg
-            className="w-24 h-24 mx-auto mb-6 animate-bounce-slow"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-            />
-          </svg>
+          <div className="flex justify-center mb-6 animate-bounce-slow"><Icon name="cloudUpload" size={96} /></div>
           <h2 className="text-4xl font-display font-bold mb-2">
             Drop to Upload
           </h2>
@@ -252,40 +240,14 @@ export default function DragDropUpload({
       >
         {isDragging ? (
           <div className="animate-scale-in">
-            <svg
-              className="w-16 h-16 mx-auto mb-4 text-primary-500 dark:text-accent-400 animate-bounce-slow"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
+            <div className="flex justify-center mb-4 text-primary-500 dark:text-accent-400 animate-bounce-slow"><Icon name="cloudUpload" size={64} /></div>
             <p className="text-lg font-semibold text-primary-600 dark:text-accent-400">
               Drop files here
             </p>
           </div>
         ) : (
           <>
-            <svg
-              className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-dusk-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
+            <div className="flex justify-center mb-4 text-gray-400 dark:text-dusk-400"><Icon name="cloudUpload" size={64} /></div>
             <p className="text-lg font-medium text-gray-700 dark:text-dusk-300 mb-2">
               {text}
             </p>

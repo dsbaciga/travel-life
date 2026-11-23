@@ -41,6 +41,8 @@ export type Trip = {
    */
   coverImagePath: string | null;
   coverImageThumbnailPath: string | null;
+  /** Dominant colour of the current cover (`#rrggbb`), derived by the server. Feed to `useTripTint`. */
+  coverColor?: string | null;
   bannerPhotoId: number | null;
   seriesId: number | null;
   seriesOrder: number | null;

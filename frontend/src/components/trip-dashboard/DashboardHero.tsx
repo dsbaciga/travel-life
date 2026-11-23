@@ -1,7 +1,11 @@
+import Icon from '../ui/Icon';
+import ContourBackdrop from '../brand/ContourBackdrop';
+import { contourSeed } from '../../lib/vendored/contours';
 import { TripStatus, type Trip } from '../../types/trip';
 import TripDayIndicator from './TripDayIndicator';
 import { formatTripDates } from '../../utils/dateFormat';
 import { stripMarkdown } from '../../utils/stripMarkdown';
+import { useTripTint, tintOverlay } from '../../hooks/useTripTint';
 
 interface DashboardHeroProps {
   trip: Trip;
@@ -24,6 +28,8 @@ export default function DashboardHero({
   coverPhotoUrl,
   className = '',
 }: DashboardHeroProps) {
+  const { hero: heroTint } = useTripTint(trip.coverColor);
+
   const formatDateRange = (startDate: string | null, endDate: string | null): string =>
     formatTripDates(startDate, endDate);
 
@@ -60,7 +66,23 @@ export default function DashboardHero({
         />
 
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        <div
+          className={`absolute inset-0 ${heroTint ? '' : 'bg-gradient-to-t from-black/80 via-black/40 to-black/20'}`}
+          style={
+            heroTint
+              ? {
+                  backgroundImage: tintOverlay(heroTint, 'to top', [
+                    { color: 'to', alpha: 0.88 },
+                    { color: 'from', alpha: 0.5 },
+                    { color: 'from', alpha: 0.3 },
+                  ]),
+                }
+              : undefined
+          }
+        />
+
+        {/* Topographic contour lines */}
+        <ContourBackdrop seed={contourSeed({ id: trip.id })} className="!text-white/10 dark:!text-white/10" />
 
         {/* Content */}
         <div className="relative h-full flex flex-col justify-end p-6 sm:p-8">
@@ -93,21 +115,8 @@ export default function DashboardHero({
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               {/* Dates */}
               <div className="flex items-center gap-2 text-white/80">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="text-sm sm:text-base font-medium">
+                <Icon name="calendar" className="w-5 h-5" />
+                <span className="eyebrow tabular-nums">
                   {formatDateRange(trip.startDate, trip.endDate)}
                 </span>
               </div>
@@ -131,6 +140,9 @@ export default function DashboardHero({
       className={`relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-500 to-primary-700 dark:from-navy-700 dark:to-navy-900 animate-fade-in ${className}`}
       style={{ minHeight: '240px' }}
     >
+      {/* Topographic contour lines */}
+      <ContourBackdrop seed={contourSeed({ id: trip.id })} className="!text-white/10 dark:!text-white/10" />
+
       {/* Decorative pattern overlay */}
       <div className="absolute inset-0 opacity-10">
         <svg
@@ -187,21 +199,8 @@ export default function DashboardHero({
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             {/* Dates */}
             <div className="flex items-center gap-2 text-white/70">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span className="text-sm sm:text-base font-medium">
+              <Icon name="calendar" className="w-5 h-5" />
+              <span className="eyebrow tabular-nums">
                 {formatDateRange(trip.startDate, trip.endDate)}
               </span>
             </div>

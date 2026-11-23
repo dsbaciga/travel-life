@@ -26,6 +26,7 @@ import FormModalFooter from "../components/shared/FormModalFooter";
 import { TrashIcon, ChevronRightIcon, PlusIcon } from "../components/icons";
 import DietaryTagSelector from "../components/DietaryTagSelector";
 import DietaryBadges from "../components/DietaryBadges";
+import Icon from "../components/ui/Icon";
 
 interface CompanionWithTrips extends Companion {
   tripAssignments?: Array<{
@@ -97,7 +98,7 @@ export default function CompanionsPage() {
       const allCompanions = await companionService.getCompanionsByUser();
       setCompanions(allCompanions);
     } catch {
-      toast.error("Failed to load companions");
+      toast.error("Couldn't load companions. Try again.");
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,7 @@ export default function CompanionsPage() {
       resetForm();
       await loadCompanions();
     } catch {
-      toast.error("Failed to create companion");
+      toast.error("Couldn't create companion. Try again.");
     }
   };
 
@@ -137,15 +138,15 @@ export default function CompanionsPage() {
       resetForm();
       loadCompanions();
     } catch {
-      toast.error("Failed to update companion");
+      toast.error("Couldn't update companion. Try again.");
     }
   };
 
   const handleDeleteCompanion = async (companionId: number) => {
     const confirmed = await confirm({
-      title: "Delete Companion",
-      message: "Delete this companion? They will be removed from all trips.",
-      confirmLabel: "Delete",
+      title: "Delete companion",
+      message: "This companion is removed from all trips.",
+      confirmLabel: "Delete companion",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -155,7 +156,7 @@ export default function CompanionsPage() {
       toast.success("Companion deleted");
       loadCompanions();
     } catch {
-      toast.error("Failed to delete companion");
+      toast.error("Couldn't delete companion. Try again.");
     }
   };
 
@@ -188,7 +189,7 @@ export default function CompanionsPage() {
       )) as CompanionWithTrips;
       setSelectedCompanionTrips(companionWithTrips);
     } catch {
-      toast.error("Failed to load trips");
+      toast.error("Couldn't load trips. Try again.");
       setShowTripsModal(false);
     } finally {
       setLoadingTrips(false);
@@ -226,7 +227,7 @@ export default function CompanionsPage() {
 
       setAllTrips(availableTrips);
     } catch {
-      toast.error("Failed to load trips");
+      toast.error("Couldn't load trips. Try again.");
       setShowAddToTripModal(false);
     } finally {
       setLoadingAllTrips(false);
@@ -252,7 +253,7 @@ export default function CompanionsPage() {
       if (error.response?.data?.message?.includes("already linked")) {
         toast.error("Companion already added to this trip");
       } else {
-        toast.error("Failed to add companion to trip");
+        toast.error("Couldn't add companion to trip. Try again.");
       }
     }
   };
@@ -282,7 +283,7 @@ export default function CompanionsPage() {
         prev.map((c) => (c.id === updated.id ? { ...c, avatarUrl: updated.avatarUrl } : c))
       );
     } catch {
-      toast.error("Failed to set avatar");
+      toast.error("Couldn't set avatar. Try again.");
     }
 
     setShowImmichBrowser(false);
@@ -304,9 +305,9 @@ export default function CompanionsPage() {
     e.stopPropagation(); // Stop event bubbling
 
     const confirmed = await confirm({
-      title: "Remove from Trip",
-      message: "Remove this companion from the trip?",
-      confirmLabel: "Remove",
+      title: "Remove from trip",
+      message: "This companion is removed from the trip. They stay in your companions list.",
+      confirmLabel: "Remove from trip",
       variant: "warning",
     });
     if (!confirmed) return;
@@ -326,14 +327,14 @@ export default function CompanionsPage() {
       // Refresh companions list to update counts
       loadCompanions();
     } catch {
-      toast.error("Failed to remove companion from trip");
+      toast.error("Couldn't remove companion from trip. Try again.");
     }
   };
 
   if (loading) {
     return (
       <div className="max-w-[1600px] mx-auto px-4 py-8">
-        <LoadingSpinner.FullPage message="Loading companions..." />
+        <LoadingSpinner.FullPage message="Loading companions…" />
       </div>
     );
   }
@@ -343,11 +344,12 @@ export default function CompanionsPage() {
       <ConfirmDialogComponent />
       
       <PageHeader
-        title="Travel Companions"
+        title="Travel companions"
         subtitle="Manage your travel companions and add them to trips"
         backLink={LIBRARY_BACK_LINK}
         action={{
-          label: "+ Add Companion",
+          label: "Add companion",
+          icon: "add",
           onClick: () => setShowForm(true),
         }}
       />
@@ -356,14 +358,14 @@ export default function CompanionsPage() {
       <FormModal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingCompanion ? "Edit Companion" : "Add New Companion"}
+        title={editingCompanion ? "Edit companion" : "Add new companion"}
         maxWidth="lg"
         formId="companion-form"
         footer={
           <FormModalFooter
             onCancel={resetForm}
             formId="companion-form"
-            submitLabel={editingCompanion ? "Update Companion" : "Create Companion"}
+            submitLabel={editingCompanion ? "Update companion" : "Create companion"}
             isEditMode={!!editingCompanion}
           />
         }
@@ -421,12 +423,12 @@ export default function CompanionsPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 className="input"
                 rows={3}
-                placeholder="Additional information about this companion..."
+                placeholder="Additional information about this companion…"
                 maxLength={1000}
               />
             </div>
             <div>
-              <label htmlFor="companion-dietary" className="label">Dietary Preferences</label>
+              <label htmlFor="companion-dietary" className="label">Dietary preferences</label>
               <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
                 Track dietary restrictions to easily find suitable restaurants when traveling together.
               </p>
@@ -446,9 +448,9 @@ export default function CompanionsPage() {
         {companions.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoCompanions />}
-            message="Share the Journey"
-            subMessage="Great adventures are even better when shared. Add your travel companions to keep track of who you're exploring the world with - from family and friends to new connections made along the way."
-            actionLabel="Add Your First Companion"
+            message="No travel companions yet"
+            subMessage="Add the people you travel with so you can share trips and split costs."
+            actionLabel="Add companion"
             onAction={() => setShowForm(true)}
           />
         ) : (
@@ -537,7 +539,10 @@ export default function CompanionsPage() {
                             }
                             className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                           >
-                            {isExpanded ? "↑ Hide details" : "↓ Show details"}
+                            <span className="inline-flex items-center gap-1">
+                              <Icon name={isExpanded ? "collapse" : "expand"} size={16} />
+                              {isExpanded ? "Hide details" : "Show details"}
+                            </span>
                           </button>
 
                           {isExpanded && (
@@ -628,7 +633,7 @@ export default function CompanionsPage() {
       >
         {loadingTrips ? (
           <div className="text-center py-8">
-            <LoadingSpinner label="Loading trips..." />
+            <LoadingSpinner label="Loading trips…" />
           </div>
         ) : selectedCompanionTrips?.tripAssignments &&
           selectedCompanionTrips.tripAssignments.length > 0 ? (
@@ -684,7 +689,7 @@ export default function CompanionsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState.Compact icon="🏝️" message="No trips found" />
+          <EmptyState.Compact icon="beach" message="No trips found" />
         )}
       </Modal>
 
@@ -702,7 +707,7 @@ export default function CompanionsPage() {
       >
         {loadingAllTrips ? (
           <div className="text-center py-8">
-            <LoadingSpinner label="Loading available trips..." />
+            <LoadingSpinner label="Loading available trips…" />
           </div>
         ) : allTrips.length > 0 ? (
           <div className="space-y-3">
@@ -736,7 +741,9 @@ export default function CompanionsPage() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className="text-4xl mb-2">✅</div>
+            <div className="mb-2 flex justify-center">
+              <Icon name="success" size={40} className="text-green-600 dark:text-green-400" />
+            </div>
             <p className="text-gray-900 dark:text-white font-semibold mb-1">
               All caught up!
             </p>
@@ -755,7 +762,7 @@ export default function CompanionsPage() {
           setShowImmichBrowser(false);
           setImmichTargetCompanion(null);
         }}
-        title="Choose Avatar from Immich"
+        title="Choose avatar from Immich"
         maxWidth="6xl"
       >
         <ImmichBrowser

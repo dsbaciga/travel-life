@@ -33,6 +33,7 @@ import ReceiptViewer from "./ReceiptViewer";
 import { getFullAssetUrl } from "../lib/config";
 import type { ReceiptScanResult } from "../services/receiptScan.service";
 import { receiptToExpenseForm, type ScannedField } from "../utils/receiptPrefill";
+import Icon from "./ui/Icon";
 
 /**
  * BudgetManager handles the trip budget and expense tracking tab.
@@ -84,8 +85,8 @@ const LINKED_ENTITY_TABS = {
 } as const;
 const LINKED_ENTITY_LABELS = {
   activity: "Activity",
-  transportation: "Transportation",
-  lodging: "Lodging",
+  transportation: "Transport",
+  lodging: "Stay",
   customItem: "Custom item",
 } as const;
 
@@ -257,7 +258,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to save budget");
+      toast.error("Couldn't save budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -265,9 +266,9 @@ export default function BudgetManager({
 
   const handleRemoveBudget = async () => {
     const confirmed = await confirm({
-      title: "Remove Budget",
-      message: "Remove the budget for this trip? Expenses will be kept.",
-      confirmLabel: "Remove",
+      title: "Remove budget",
+      message: "The budget for this trip is removed. Your expenses stay.",
+      confirmLabel: "Remove budget",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -279,7 +280,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to remove budget");
+      toast.error("Couldn't remove budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -461,7 +462,7 @@ export default function BudgetManager({
       closeExpenseForm();
       refreshData();
     } catch {
-      toast.error(editingExpenseId ? "Failed to update expense" : "Failed to add expense");
+      toast.error(editingExpenseId ? "Couldn't update expense. Try again." : "Couldn't add expense. Try again.");
     } finally {
       submitLock.current = false;
       setIsSavingExpense(false);
@@ -486,11 +487,11 @@ export default function BudgetManager({
 
   const handleDeleteExpense = async (expense: TripExpense) => {
     const confirmed = await confirm({
-      title: "Delete Expense",
+      title: "Delete expense",
       message: expense.linkedEntity
-        ? `Delete "${expense.description}"? This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays.`
-        : `Delete "${expense.description}"?`,
-      confirmLabel: "Delete",
+        ? `"${expense.description}" is deleted. This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays. You can't undo this.`
+        : `"${expense.description}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete expense",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -501,7 +502,7 @@ export default function BudgetManager({
       if (editingExpenseId === expense.id) closeExpenseForm();
       refreshData();
     } catch {
-      toast.error("Failed to delete expense");
+      toast.error("Couldn't delete expense. Try again.");
     }
   };
 
@@ -531,7 +532,7 @@ export default function BudgetManager({
             onClick={openCreateExpenseForm}
             className="btn-primary"
           >
-            + Add Expense
+            + Add expense
           </button>
         </div>
       </div>
@@ -543,11 +544,11 @@ export default function BudgetManager({
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-1">
-                  Trip Budget
+                  Trip budget
                 </p>
                 {budget !== null ? (
                   <>
-                    <p className="text-2xl sm:text-3xl break-words [overflow-wrap:anywhere] font-bold font-display text-charcoal dark:text-warm-gray">
+                    <p className="text-2xl sm:text-3xl break-words [overflow-wrap:anywhere] font-bold font-display tabular-nums text-charcoal dark:text-warm-gray">
                       {formatCurrency(budget, budgetCurrency)}
                       <span className="text-sm font-body font-normal text-slate dark:text-warm-gray/70 ml-2">
                         {budgetCurrency || displayCurrency}
@@ -561,8 +562,8 @@ export default function BudgetManager({
                     )}
                     {budgetNotComparable && (
                       <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                        Could not be converted to {displayCurrency} — progress
-                        below is unavailable.
+                        Couldn't convert this budget to {displayCurrency}, so progress
+                        is unavailable.
                       </p>
                     )}
                   </>
@@ -578,7 +579,7 @@ export default function BudgetManager({
                   onClick={openBudgetEditor}
                   className="btn-secondary"
                 >
-                  {budget !== null ? "Edit Budget" : "Set Budget"}
+                  {budget !== null ? "Edit budget" : "Set budget"}
                 </button>
                 {budget !== null && (
                   <button
@@ -597,7 +598,7 @@ export default function BudgetManager({
             <div className="mt-4">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-2">
                 <span
-                  className={`text-lg font-semibold ${
+                  className={`text-lg font-semibold tabular-nums ${
                     isOverBudget
                       ? "text-red-600 dark:text-red-400"
                       : isNearBudget
@@ -613,7 +614,7 @@ export default function BudgetManager({
                 </span>
                 {comparableBudget !== null && (
                   <span
-                    className={`text-sm font-medium ${
+                    className={`text-sm font-medium tabular-nums ${
                       isOverBudget
                         ? "text-red-600 dark:text-red-400"
                         : "text-slate dark:text-warm-gray/70"
@@ -641,7 +642,7 @@ export default function BudgetManager({
                 </div>
               )}
               <p className="mt-2 text-xs text-slate dark:text-warm-gray/60">
-                Includes activity, transportation, and lodging costs plus
+                Includes activity, transport and stay costs plus
                 recorded expenses, converted to {displayCurrency} at the rate
                 in effect on each item&apos;s date.
               </p>
@@ -695,7 +696,7 @@ export default function BudgetManager({
         ) : (
           <div>
             <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-3">
-              {budget !== null ? "Edit Trip Budget" : "Set Trip Budget"}
+              {budget !== null ? "Edit trip budget" : "Set trip budget"}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
@@ -740,7 +741,7 @@ export default function BudgetManager({
                 className="btn-primary"
                 disabled={isSavingBudget}
               >
-                {isSavingBudget ? "Saving..." : "Save Budget"}
+                {isSavingBudget ? "Saving…" : "Save budget"}
               </button>
             </div>
           </div>
@@ -762,7 +763,7 @@ export default function BudgetManager({
                 <p className="text-xs font-medium text-slate dark:text-warm-gray/70 capitalize mb-1">
                   {category}
                 </p>
-                <p className="text-lg font-semibold break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray">
+                <p className="text-lg font-semibold tabular-nums break-words [overflow-wrap:anywhere] text-charcoal dark:text-warm-gray">
                   {formatCurrency(amount)}
                 </p>
               </div>
@@ -778,8 +779,8 @@ export default function BudgetManager({
       <FormModal
         isOpen={showExpenseForm}
         onClose={closeExpenseForm}
-        title={editingExpenseId ? "Edit Expense" : "Add Expense"}
-        icon="💰"
+        title={editingExpenseId ? "Edit expense" : "Add expense"}
+        icon="expense"
         formId="expense-form"
         maxWidth="2xl"
         footer={
@@ -787,7 +788,7 @@ export default function BudgetManager({
             onCancel={closeExpenseForm}
             formId="expense-form"
             isSubmitting={isSavingExpense}
-            submitLabel={editingExpenseId ? "Update Expense" : "Add Expense"}
+            submitLabel={editingExpenseId ? "Update expense" : "Add expense"}
             isEditMode={!!editingExpenseId}
           />
         }
@@ -970,10 +971,10 @@ export default function BudgetManager({
           <ListItemSkeleton count={3} />
         ) : expenses.length === 0 ? (
           <EmptyState
-            icon="💰"
+            icon="expense"
             message="No expenses recorded yet"
-            subMessage="Track your trip spending by adding expenses"
-            actionLabel="Add Expense"
+            subMessage="Add expenses to track your trip spending."
+            actionLabel="Add expense"
             onAction={openCreateExpenseForm}
           />
         ) : (
@@ -1027,14 +1028,14 @@ export default function BudgetManager({
                 </div>
                 <div className="flex items-center justify-between gap-3 sm:justify-end sm:flex-shrink-0">
                   <div className="text-right">
-                    <span className="block font-semibold text-charcoal dark:text-warm-gray whitespace-nowrap">
+                    <span className="block font-semibold tabular-nums text-charcoal dark:text-warm-gray whitespace-nowrap">
                       {formatCurrency(expense.amount, expense.currency)}
                     </span>
                     {expense.currency &&
                       expense.currency !== displayCurrency &&
                       (expense.baseAmount !== null &&
                       expense.baseCurrency === displayCurrency ? (
-                        <span className="block text-xs text-slate dark:text-warm-gray/60 whitespace-nowrap">
+                        <span className="block text-xs tabular-nums text-slate dark:text-warm-gray/60 whitespace-nowrap">
                           ≈ {formatCurrency(expense.baseAmount, expense.baseCurrency)}
                         </span>
                       ) : (
@@ -1054,9 +1055,7 @@ export default function BudgetManager({
                         aria-label={`View receipt for ${expense.description}`}
                         title="View receipt"
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <Icon name="receipt" size={16} />
                       </button>
                     )}
                     <button
@@ -1065,9 +1064,7 @@ export default function BudgetManager({
                       className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors"
                       aria-label={`Edit ${expense.description}`}
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <Icon name="edit" size={16} />
                     </button>
                     <button
                       type="button"
@@ -1075,9 +1072,7 @@ export default function BudgetManager({
                       className="p-1.5 rounded-lg text-slate hover:text-red-600 dark:text-warm-gray/50 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       aria-label={`Delete ${expense.description}`}
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Icon name="delete" size={16} />
                     </button>
                   </div>
                 </div>

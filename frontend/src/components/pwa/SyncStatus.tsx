@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useOfflineReady, notifyOfflineSyncUpdate } from '../../hooks/useOfflineReady';
 import syncManager from '../../services/syncManager';
+import Icon from '../ui/Icon';
 
 /**
  * Sync status states
@@ -116,46 +117,14 @@ export default function SyncStatus({
       >
         {state === 'syncing' && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-gold">
-            <svg
-              className="w-3 h-3 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
+            <Icon name="spinner" size={12} className="animate-spin" />
             Syncing
           </span>
         )}
 
         {state === 'synced' && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400">
-            <svg
-              className="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            <Icon name="check" size={12} />
             Synced
           </span>
         )}
@@ -169,20 +138,7 @@ export default function SyncStatus({
 
         {state === 'error' && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400">
-            <svg
-              className="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Icon name="error" size={12} />
             Error
           </span>
         )}
@@ -218,101 +174,30 @@ export default function SyncStatus({
             `}
           >
             {state === 'syncing' && (
-              <svg
-                className="w-5 h-5 text-primary-600 dark:text-gold animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+              <Icon name="spinner" className="text-primary-600 dark:text-gold animate-spin" />
             )}
 
             {state === 'synced' && (
-              <svg
-                className="w-5 h-5 text-emerald-600 dark:text-emerald-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
+              <Icon name="check" className="text-emerald-600 dark:text-emerald-400" />
             )}
 
             {state === 'pending' && (
-              <svg
-                className="w-5 h-5 text-amber-600 dark:text-amber-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Icon name="schedule" className="text-amber-600 dark:text-amber-400" />
             )}
 
             {state === 'error' && (
-              <svg
-                className="w-5 h-5 text-red-600 dark:text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Icon name="error" className="text-red-600 dark:text-red-400" />
             )}
 
             {state === 'idle' && (
-              <svg
-                className="w-5 h-5 text-slate dark:text-warm-gray"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
+              <Icon name="refresh" className="text-slate dark:text-warm-gray" />
             )}
           </div>
 
           {/* Status text */}
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-charcoal dark:text-warm-gray">
-              {state === 'syncing' && 'Syncing...'}
+              {state === 'syncing' && 'Syncing…'}
               {state === 'synced' && 'All changes synced'}
               {state === 'pending' && `${pendingChanges} pending ${pendingChanges === 1 ? 'change' : 'changes'}`}
               {state === 'error' && 'Sync failed'}
@@ -361,21 +246,8 @@ export default function SyncStatus({
                 min-w-[44px] min-h-[44px]
               "
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Sync Now
+              <Icon name="refresh" size={16} />
+              Sync now
             </button>
           )}
 
@@ -396,20 +268,7 @@ export default function SyncStatus({
                 min-w-[44px] min-h-[44px]
               "
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
+              <Icon name="refresh" size={16} />
               Retry
             </button>
           )}
@@ -429,20 +288,7 @@ export default function SyncStatus({
               "
               aria-label="Dismiss error"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" size={16} />
             </button>
           )}
         </div>

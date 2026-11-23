@@ -5,6 +5,7 @@ import type { UserInvitation } from '../types/userInvitation';
 import toast from 'react-hot-toast';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import PendingInvitations from './PendingInvitations';
+import Icon from './ui/Icon';
 
 export default function InviteUsersSection() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
@@ -48,7 +49,7 @@ export default function InviteUsersSection() {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error('Please enter an email address');
+      toast.error('Enter an email address');
       return;
     }
 
@@ -64,15 +65,15 @@ export default function InviteUsersSection() {
       await loadInvitations();
 
       if (invitation.emailSent) {
-        toast.success('Invitation sent successfully!');
+        toast.success('Invitation sent');
       } else {
         toast.success('Invitation created! Email will be sent when SMTP is configured.');
       }
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to send invitation');
+        toast.error(error.response?.data?.message || "Couldn't send invitation. Try again.");
       } else {
-        toast.error('Failed to send invitation');
+        toast.error("Couldn't send invitation. Try again.");
       }
     } finally {
       setSending(false);
@@ -81,9 +82,9 @@ export default function InviteUsersSection() {
 
   const handleCancelInvitation = async (invitationId: number) => {
     const confirmed = await confirm({
-      title: 'Cancel Invitation',
-      message: 'Are you sure you want to cancel this invitation?',
-      confirmLabel: 'Cancel Invitation',
+      title: 'Cancel invitation',
+      message: 'The invitation link stops working.',
+      confirmLabel: 'Cancel invitation',
       variant: 'danger',
     });
 
@@ -95,9 +96,9 @@ export default function InviteUsersSection() {
       await loadInvitations();
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to cancel invitation');
+        toast.error(error.response?.data?.message || "Couldn't cancel invitation. Try again.");
       } else {
-        toast.error('Failed to cancel invitation');
+        toast.error("Couldn't cancel invitation. Try again.");
       }
     }
   };
@@ -109,15 +110,15 @@ export default function InviteUsersSection() {
       await loadInvitations();
 
       if (invitation.emailSent) {
-        toast.success('Invitation resent successfully!');
+        toast.success('Invitation resent');
       } else {
         toast.success('Invitation updated! Email will be sent when SMTP is configured.');
       }
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to resend invitation');
+        toast.error(error.response?.data?.message || "Couldn't resend invitation. Try again.");
       } else {
-        toast.error('Failed to resend invitation');
+        toast.error("Couldn't resend invitation. Try again.");
       }
     } finally {
       setResendingId(null);
@@ -173,12 +174,10 @@ export default function InviteUsersSection() {
       {!emailConfigured && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <div className="flex">
-            <svg className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <Icon name="alert" className="text-yellow-400 mr-2" />
             <div>
               <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Email Not Configured
+                Email not configured
               </h3>
               <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
                 SMTP is not configured on the server. Invitations will be created but emails won't be sent.
@@ -201,7 +200,7 @@ export default function InviteUsersSection() {
         <form onSubmit={handleSendInvitation} className="space-y-4">
           <div>
             <label htmlFor={emailInputId} className="label">
-              Email Address
+              Email address
             </label>
             <input
               type="email"
@@ -222,7 +221,7 @@ export default function InviteUsersSection() {
               id={messageInputId}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a personal message to include in the invitation email..."
+              placeholder="Add a personal message to include in the invitation email…"
               className="input w-full max-w-md h-24 resize-none"
               maxLength={1000}
             />
@@ -234,34 +233,13 @@ export default function InviteUsersSection() {
           <button type="submit" className="btn btn-primary" disabled={sending}>
             {sending ? (
               <>
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Sending...
+                <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
+                Sending…
               </>
             ) : (
               <>
-                <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Send Invitation
+                <Icon name="mail" size={16} className="mr-2 align-text-bottom" />
+                Send invitation
               </>
             )}
           </button>
@@ -271,24 +249,22 @@ export default function InviteUsersSection() {
       {/* Sent Invitations List */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Sent Invitations
+          Sent invitations
         </h2>
 
         {/* Accessibility: aria-live region for status updates */}
         <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {loading ? 'Loading invitations...' : `${invitations.length} invitation${invitations.length !== 1 ? 's' : ''} loaded`}
+          {loading ? 'Loading invitations…' : `${invitations.length} invitation${invitations.length !== 1 ? 's' : ''} loaded`}
         </div>
 
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 dark:text-dusk-400 mt-2">Loading invitations...</p>
+            <p className="text-gray-500 dark:text-dusk-400 mt-2">Loading invitations…</p>
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
-            <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+            <Icon name="mail" size={48} className="text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-dusk-400">
               No invitations sent yet. Invite someone to get started!
             </p>
@@ -337,7 +313,7 @@ export default function InviteUsersSection() {
                         disabled={resendingId === invitation.id}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium disabled:opacity-50"
                       >
-                        {resendingId === invitation.id ? 'Resending...' : 'Resend'}
+                        {resendingId === invitation.id ? 'Resending…' : 'Resend'}
                       </button>
                       {invitation.status === 'PENDING' && (
                         <button

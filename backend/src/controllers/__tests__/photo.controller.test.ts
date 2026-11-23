@@ -98,7 +98,7 @@ describe('photoController', () => {
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0];
-      expect(error.message).toBe('No file provided');
+      expect(error.message).toBe('Choose a file to upload.');
       expect(error.statusCode).toBe(400);
     });
 
@@ -430,7 +430,7 @@ describe('photoController', () => {
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0];
-      expect(error.message).toBe('Photo not found');
+      expect(error.message).toBe("We couldn't find that photo.");
       expect(error.statusCode).toBe(404);
     });
 
@@ -627,7 +627,7 @@ describe('photoController', () => {
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0];
-      expect(error.message).toBe('Invalid date format. Use YYYY-MM-DD');
+      expect(error.message).toBe('Use a date like 2027-03-14.');
       expect(error.statusCode).toBe(400);
     });
 

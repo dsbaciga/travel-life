@@ -48,7 +48,7 @@ const getRemainingTtlMs = (token: string): number | null => {
 export const authController = {
   register: asyncHandler(async (req: Request, res: Response) => {
     if (passwordAuthDisabled()) {
-      throw new AppError('Password registration is disabled; use single sign-on', 403);
+      throw new AppError('Password sign-up is turned off on this server. Use single sign-on.', 403);
     }
     if (config.auth.registrationDisabled) {
       throw new AppError('Registration is closed on this server. Ask an existing user for an invitation.', 403);
@@ -87,7 +87,7 @@ export const authController = {
 
   login: asyncHandler(async (req: Request, res: Response) => {
     if (passwordAuthDisabled()) {
-      throw new AppError('Password login is disabled; use single sign-on', 403);
+      throw new AppError('Password sign-in is turned off on this server. Use single sign-on.', 403);
     }
     const validatedData = loginSchema.parse(req.body);
     const result = await authService.login(validatedData);
@@ -131,7 +131,7 @@ export const authController = {
       : getRefreshTokenFromCookie(req.cookies) || refreshTokenSchema.parse(req.body).refreshToken;
 
     if (!refreshToken) {
-      throw new AppError('No refresh token provided', 401);
+      throw new AppError('You were signed out. Sign in again to continue.', 401);
     }
 
     if (mobile) {

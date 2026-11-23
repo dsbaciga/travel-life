@@ -213,13 +213,13 @@ describe('TagService', () => {
     it('should throw 404 when tag not found', async () => {
       mockPrisma.tripTag.findFirst.mockResolvedValue(null);
 
-      await expect(tagService.getTagById(1, 999)).rejects.toThrow('Tag not found');
+      await expect(tagService.getTagById(1, 999)).rejects.toThrow("We couldn't find that tag.");
     });
 
     it('should throw 404 when tag belongs to another user', async () => {
       mockPrisma.tripTag.findFirst.mockResolvedValue(null);
 
-      await expect(tagService.getTagById(2, 1)).rejects.toThrow('Tag not found');
+      await expect(tagService.getTagById(2, 1)).rejects.toThrow("We couldn't find that tag.");
     });
   });
 
@@ -262,7 +262,7 @@ describe('TagService', () => {
       mockPrisma.tripTag.findFirst.mockResolvedValue(null);
 
       await expect(tagService.updateTag(1, 999, { name: 'Test' })).rejects.toThrow(
-        'Tag not found'
+        "We couldn't find that tag."
       );
     });
   });
@@ -290,7 +290,7 @@ describe('TagService', () => {
     it('should throw 404 when tag not found', async () => {
       mockPrisma.tripTag.findFirst.mockResolvedValue(null);
 
-      await expect(tagService.deleteTag(1, 999)).rejects.toThrow('Tag not found');
+      await expect(tagService.deleteTag(1, 999)).rejects.toThrow("We couldn't find that tag.");
     });
   });
 
@@ -344,7 +344,7 @@ describe('TagService', () => {
 
       await expect(
         tagService.linkTagToTrip(1, { tripId: 100, tagId: 999 })
-      ).rejects.toThrow('Tag not found');
+      ).rejects.toThrow("We couldn't find that tag.");
     });
 
     it('should throw error when trip not found', async () => {
@@ -352,7 +352,7 @@ describe('TagService', () => {
 
       await expect(
         tagService.linkTagToTrip(1, { tripId: 999, tagId: 1 })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -388,7 +388,7 @@ describe('TagService', () => {
       mockPrisma.tripTagAssignment.findFirst.mockResolvedValue(null);
 
       await expect(tagService.unlinkTagFromTrip(1, 100, 1)).rejects.toThrow(
-        'Tag not linked to this trip'
+        "That tag isn't on this trip."
       );
     });
   });
@@ -424,7 +424,7 @@ describe('TagService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(tagService.getTagsByTrip(1, 999)).rejects.toThrow(
-        'Trip not found or access denied'
+        "We couldn't find that trip, or you don't have access to it."
       );
     });
   });

@@ -126,7 +126,7 @@ export function PrintRouteMap({
         <span><span style={{ color: '#ef4444' }}>●</span> To</span>
         <span style={{ marginLeft: 'auto', color: '#3b82f6' }}>
           <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-            Get Directions
+            Get directions
           </a>
         </span>
       </div>

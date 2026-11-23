@@ -18,11 +18,11 @@ import { buildWidgetSnapshot, type WidgetSnapshot } from '../domain/smart';
 import { buildTimelineItems, findNextUp, pickActiveTrip } from '../domain/timeline';
 import { getDb } from '../lib/db';
 
-/** Navy + gold, as hex literals: the widget renderer only accepts `#rrggbb`. */
+/** Dusk (DUSK 900/50/300 in lib/theme.ts) + gold, as hex literals: the widget renderer only accepts `#rrggbb`. */
 const COLORS = {
-  background: '#0f172a',
-  text: '#f8fafc',
-  muted: '#cbd5e1',
+  background: '#151820',
+  text: '#f9fafb',
+  muted: '#d1d4db',
   gold: '#fbbf24',
   amber: '#f59e0b',
 } as const;

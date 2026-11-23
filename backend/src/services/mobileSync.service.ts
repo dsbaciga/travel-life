@@ -68,12 +68,13 @@ class MobileSyncService {
         countryCode: true,
         budget: true,
         budgetCurrency: true,
+        coverColor: true,
         createdAt: true,
         updatedAt: true,
       },
     });
     if (!trip) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
 
     const checklistRows = await prisma.checklist.findMany({

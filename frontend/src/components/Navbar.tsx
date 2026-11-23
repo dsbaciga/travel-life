@@ -6,6 +6,7 @@ import { useClearPosition } from "../store/scrollStore";
 import GlobalSearch from "./GlobalSearch";
 import CaptureSheet from "./CaptureSheet";
 import BrandLogo from "./BrandLogo";
+import Icon from "./ui/Icon";
 import pdfImportService from "../services/pdfImport.service";
 import savedLinkService from "../services/savedLink.service";
 import { usePdfImportTrackerStore } from "../store/pdfImportTrackerStore";
@@ -258,15 +259,7 @@ const Navbar = memo(function Navbar() {
                     }`}
                   >
                     {link.label}
-                    <svg
-                      className={`w-4 h-4 transition-transform ${groupOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <Icon name="expand" size={16} className={`transition-transform ${groupOpen ? "rotate-180" : ""}`} />
                     <div
                       className={`absolute inset-x-2 bottom-1 h-0.5 bg-gradient-to-r from-primary-500 to-accent-400 dark:from-gold dark:to-accent-400 transition-transform origin-left ${
                         groupActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
@@ -322,9 +315,7 @@ const Navbar = memo(function Navbar() {
               className="md:hidden p-3 min-w-[44px] min-h-[44px] rounded-lg text-primary-600 dark:text-gold hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors flex items-center justify-center"
               aria-label="Search"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Icon name="search" size={24} />
             </button>
 
             {/* User Menu (Desktop) */}
@@ -342,22 +333,7 @@ const Navbar = memo(function Navbar() {
                 aria-haspopup="true"
               >
                 <span>{user.username}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    showDropdown ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <Icon name="expand" size={16} className={`transition-transform ${showDropdown ? "rotate-180" : ""}`} />
               </button>
 
               {showDropdown && (
@@ -394,35 +370,9 @@ const Navbar = memo(function Navbar() {
                 : { "aria-expanded": "false" })}
             >
               {showMobileMenu ? (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <Icon name="close" size={24} />
               ) : (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                <Icon name="menu" size={24} />
               )}
             </button>
           </div>
@@ -455,9 +405,7 @@ const Navbar = memo(function Navbar() {
               className="min-w-[44px] min-h-[44px] rounded-lg text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors flex items-center justify-center"
               aria-label="Close search"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Icon name="close" size={24} />
             </button>
           </div>
         </div>
@@ -495,20 +443,7 @@ const Navbar = memo(function Navbar() {
               className="p-3 min-w-[44px] min-h-[44px] rounded-lg text-slate dark:text-warm-gray hover:bg-primary-50 dark:hover:bg-navy-800 transition-colors flex items-center justify-center"
               aria-label="Close menu"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" size={20} />
             </button>
           </div>
 

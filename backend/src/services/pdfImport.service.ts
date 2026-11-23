@@ -141,7 +141,7 @@ interface ClaimedLlm {
 async function requireLlm(userId: number): Promise<ClaimedLlm> {
   const llmConfig = await pdfParserService.resolveLlm(userId);
   if (!llmConfig) {
-    throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
+    throw new AppError("PDF import needs AI features, which aren't set up on this server. Ask the admin to add an LLM key.", 503);
   }
   return { key: llmEndpointKey(llmConfig.baseUrl), llmConfig };
 }
@@ -207,11 +207,11 @@ class PdfImportService {
   private async storeUpload(userId: number, file: MulterFile) {
     // Validate PDF magic bytes
     if (!file.buffer) {
-      throw new AppError('File buffer is missing', 400);
+      throw new AppError("That file didn't upload. Try again.", 400);
     }
     const buffer = file.buffer;
     if (!buffer.slice(0, 4).toString('ascii').startsWith('%PDF')) {
-      throw new AppError('Uploaded file is not a valid PDF', 400);
+      throw new AppError("That file isn't a valid PDF.", 400);
     }
 
     // Ensure upload directory exists
@@ -244,10 +244,10 @@ class PdfImportService {
         where: { id: pdfImport.id },
         data: {
           status: PdfImportStatus.PARSE_FAILED,
-          errorMessage: 'Failed to save uploaded file',
+          errorMessage: "Couldn't save that file. Try again.",
         },
       });
-      throw new AppError('Failed to save uploaded file', 500);
+      throw new AppError("Couldn't save that file. Try again.", 500);
     }
 
     return { pdfImport, absolutePath };
@@ -410,7 +410,7 @@ class PdfImportService {
       where: { id, userId },
       include: { _count: { select: { pendingEntities: true } } },
     });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
     // 0 = being read, n = n PDFs ahead of it, null = not in the queue.
     return { ...record, queuePosition: pdfParseQueue.position(id) };
   }
@@ -436,8 +436,8 @@ class PdfImportService {
 
   async updatePendingEntity(userId: number, id: number, input: UpdatePendingEntityInput) {
     const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
-    if (!entity) throw new AppError('Pending entity not found', 404);
-    if (entity.status !== PendingEntityStatus.PENDING) throw new AppError('Entity has already been reviewed', 400);
+    if (!entity) throw new AppError("We couldn't find that item.", 404);
+    if (entity.status !== PendingEntityStatus.PENDING) throw new AppError('That item was already reviewed.', 400);
 
     return prisma.pendingEntity.update({
       where: { id },
@@ -475,7 +475,7 @@ class PdfImportService {
     // failure that we could have detected up front.
     const trip = await prisma.trip.findFirst({ where: { id: tripId, userId } });
     if (!trip) {
-      throw new AppError('Trip not found or access denied', 404);
+      throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
     }
     const userTimezone = await getUserTimezone(userId);
     const zoneFor = (entityZone: string | undefined) =>
@@ -491,14 +491,14 @@ class PdfImportService {
       });
       if (claimed.count === 0) {
         const existing = await tx.pendingEntity.findFirst({ where: { id, userId } });
-        if (!existing) throw new AppError('Pending entity not found', 404);
-        throw new AppError('Entity has already been reviewed', 400);
+        if (!existing) throw new AppError("We couldn't find that item.", 404);
+        throw new AppError('That item was already reviewed.', 400);
       }
 
       const entity = await tx.pendingEntity.findFirst({
         where: { id, userId },
       });
-      if (!entity) throw new AppError('Pending entity not found', 404);
+      if (!entity) throw new AppError("We couldn't find that item.", 404);
 
       const data = { ...(entity.parsedData as Record<string, unknown>), ...overrides };
       let createdEntityId: number;
@@ -532,14 +532,14 @@ class PdfImportService {
         }
         case PendingEntityType.LODGING: {
           if (typeof data.checkInDate !== 'string' || typeof data.checkOutDate !== 'string') {
-            throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
+            throw new AppError('Add check-in and check-out dates for this stay.', 400);
           }
           const lodgingTimezone = optZone(data.timezone);
           const lodgingZone = zoneFor(lodgingTimezone);
           const checkIn = parseBookingDateTime(data.checkInDate, lodgingZone, DEFAULT_CHECK_IN_TIME, 'checkInDate');
           const checkOut = parseBookingDateTime(data.checkOutDate, lodgingZone, DEFAULT_CHECK_OUT_TIME, 'checkOutDate');
           if (!checkIn || !checkOut) {
-            throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
+            throw new AppError('Add check-in and check-out dates for this stay.', 400);
           }
           const created = await tx.lodging.create({
             data: {
@@ -560,7 +560,7 @@ class PdfImportService {
         }
         case PendingEntityType.ACTIVITY: {
           if (typeof data.name !== 'string') {
-            throw new AppError('Activity requires a name', 400);
+            throw new AppError('Add a name for this activity.', 400);
           }
           const activityTimezone = optZone(data.timezone);
           const activityZone = zoneFor(activityTimezone);
@@ -587,7 +587,7 @@ class PdfImportService {
         }
         case PendingEntityType.LOCATION: {
           if (typeof data.name !== 'string') {
-            throw new AppError('Location requires a name', 400);
+            throw new AppError('Add a name for this place.', 400);
           }
           const created = await tx.location.create({
             data: {
@@ -634,15 +634,15 @@ class PdfImportService {
     });
     if (claimed.count === 0) {
       const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
-      if (!entity) throw new AppError('Pending entity not found', 404);
-      throw new AppError('Entity has already been reviewed', 400);
+      if (!entity) throw new AppError("We couldn't find that item.", 404);
+      throw new AppError('That item was already reviewed.', 400);
     }
     return prisma.pendingEntity.findFirst({ where: { id } });
   }
 
   async reparseImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
     if (
       record.status === PdfImportStatus.PARSING ||
       record.status === PdfImportStatus.UPLOADED ||
@@ -683,7 +683,7 @@ class PdfImportService {
    */
   async deletePdfImport(userId: number, id: number) {
     const record = await prisma.pdfImport.findFirst({ where: { id, userId } });
-    if (!record) throw new AppError('PDF import not found', 404);
+    if (!record) throw new AppError("We couldn't find that PDF import.", 404);
 
     if (pdfParseQueue.cancel(id)) {
       logger.info('Cancelled PDF import waiting or being read', { pdfImportId: id });

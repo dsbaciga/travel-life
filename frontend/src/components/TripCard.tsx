@@ -19,6 +19,7 @@ import { formatTripDates, getTripDateStatus, formatTripDuration } from '../utils
 import { MapPinIcon, PhotoIcon, CalendarIcon } from './icons';
 import { stripMarkdown } from '../utils/stripMarkdown';
 import TripActionsMenu from './TripActionsMenu';
+import { useTripTint, tintOverlay } from '../hooks/useTripTint';
 
 interface TripCardProps {
   trip: Trip;
@@ -44,6 +45,9 @@ function TransportIcon({ className = 'w-4 h-4' }: { className?: string }) {
 
 const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchiveToggle, showActions = true, onNavigateAway }: TripCardProps) {
   const counts = trip._count;
+  const { hero: heroTint, accent: accentTint } = useTripTint(trip.coverColor);
+  // The accent only means something next to the cover photo it was taken from.
+  const stripe = coverPhotoUrl && accentTint ? accentTint.ring : null;
   const hasStats = counts && (counts.locations > 0 || counts.photos > 0 || counts.transportation > 0);
 
   // One metadata line for the compact row: the counts that exist, in the order
@@ -61,7 +65,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
     {/* Compact row — the grid is a single column below md, where the photo-led
         card costs ~400px for 1.4 trips per screen. The full card returns at md,
         where a multi-column grid makes the imagery earn its height. */}
-    <div className={`md:hidden flex items-center rounded-xl bg-white dark:bg-navy-800 border-2 border-primary-500/10 dark:border-gold/20 shadow-sm ${trip.archived ? 'opacity-60 saturate-50' : ''}`}>
+    <div className={`md:hidden flex items-center rounded-xl bg-white dark:bg-navy-800 border-2 border-primary-500/10 dark:border-gold/20 shadow-sm ${trip.archived ? 'opacity-60 saturate-50' : ''}`} style={stripe ? { borderLeftColor: stripe, borderLeftWidth: 4 } : undefined}>
       <Link
         to={`/trips/${trip.id}`}
         onClick={() => onNavigateAway?.()}
@@ -134,6 +138,8 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
         <span className="sr-only">View trip details</span>
       </Link>
 
+      {stripe && <div className="absolute inset-x-0 top-0 z-20 h-1 pointer-events-none" style={{ backgroundColor: stripe }} />}
+
       {/* Cover Photo Section - fixed height */}
       <div className="relative h-48 flex-shrink-0 overflow-hidden">
         {coverPhotoUrl ? (
@@ -144,7 +150,20 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
               style={{ backgroundImage: `url(${coverPhotoUrl})` }}
             />
             {/* Gradient overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/60" />
+            <div
+              className={`absolute inset-0 ${heroTint ? '' : 'bg-gradient-to-b from-black/20 via-black/10 to-black/60'}`}
+              style={
+                heroTint
+                  ? {
+                      backgroundImage: tintOverlay(heroTint, 'to bottom', [
+                        { color: 'from', alpha: 0.2 },
+                        { color: 'from', alpha: 0.1 },
+                        { color: 'to', alpha: 0.65 },
+                      ]),
+                    }
+                  : undefined
+              }
+            />
           </>
         ) : (
           /* Fallback dark gradient with warm orange accents for trips without cover photos */
@@ -272,7 +291,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
               <Link
                 to={`/trips/${trip.id}?tab=transportation`}
                 className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                title={`${counts.transportation} transportation${counts.transportation !== 1 ? 's' : ''}`}
+                title={`${counts.transportation} transport`}
                 onClick={(e) => { e.stopPropagation(); onNavigateAway?.(); }}
               >
                 <TransportIcon className="w-4 h-4 text-green-500 dark:text-green-400" />

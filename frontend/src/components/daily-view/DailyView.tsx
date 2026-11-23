@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import Icon from '../ui/Icon';
 import { createPortal } from 'react-dom';
 import type { Activity } from '../../types/activity';
 import type { Location } from '../../types/location';
@@ -626,7 +627,7 @@ export default function DailyView({
         setAllDays(daysData);
       } catch (err) {
         console.error('Error loading daily view data:', err);
-        setError('Failed to load trip data. Please try refreshing the page.');
+        setError("Couldn't load this trip's days. Refresh the page to try again.");
       } finally {
         setLoading(false);
       }
@@ -720,7 +721,7 @@ export default function DailyView({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view...</span>
+        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view…</span>
       </div>
     );
   }
@@ -729,11 +730,9 @@ export default function DailyView({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+          <Icon name="alert" size={32} className="text-red-600 dark:text-red-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Data</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Couldn't load this trip</h3>
         <p className="text-gray-500 dark:text-dusk-400 max-w-md">{error}</p>
       </div>
     );
@@ -742,7 +741,7 @@ export default function DailyView({
   if (allDays.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
-        <p>No trip dates defined. Please set trip start and end dates.</p>
+        <p>This trip has no dates yet. Add a start and end date to plan day by day.</p>
       </div>
     );
   }
@@ -867,21 +866,9 @@ export default function DailyView({
         {currentDay?.unscheduledActivities && currentDay.unscheduledActivities.length > 0 && (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-sm border border-gray-200 dark:border-dusk-700 p-4">
             <div className="flex items-center gap-2 mb-4">
-              <svg
-                className="w-5 h-5 text-amber-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Icon name="schedule" size={20} className="text-amber-500" />
               <h3 className="text-sm font-semibold text-gray-700 dark:text-dusk-300">
-                Unscheduled Activities
+                Unscheduled activities
               </h3>
               <span className="text-xs text-gray-500 dark:text-dusk-400 bg-gray-100 dark:bg-dusk-700 px-2 py-0.5 rounded-full">
                 {currentDay.unscheduledActivities.length}
@@ -897,19 +884,7 @@ export default function DailyView({
                   className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-200 dark:border-amber-800/30"
                 >
                   <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-amber-600 dark:text-amber-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
+                    <Icon name="checklist" size={16} className="text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
@@ -922,25 +897,7 @@ export default function DailyView({
                     )}
                     {activity.linkedLocations && activity.linkedLocations.length > 0 && (
                       <div className="flex items-center gap-1 mt-1.5 text-xs text-gray-600 dark:text-dusk-400">
-                        <svg
-                          className="w-3 h-3 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
+                        <Icon name="place" size={16} className="flex-shrink-0" />
                         <span className="truncate">
                           {activity.linkedLocations.map(loc => loc.name).join(', ')}
                         </span>

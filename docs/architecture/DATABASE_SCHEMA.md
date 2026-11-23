@@ -133,6 +133,8 @@ Central entity representing a travel trip.
 | status | String | Dream, Planning, Planned, In Progress, Completed, Cancelled |
 | privacyLevel | String | Private, Shared, Public |
 | coverPhotoId | Int? | Cover photo foreign key |
+| coverImagePath, coverImageThumbnailPath | String? | Uploaded cover image (exclusive with coverPhotoId) |
+| coverColor | String? | `cover_color VARCHAR(7)`: dominant colour of the current cover as `#rrggbb`. Derived server-side wherever the cover changes (null when the cover is removed or has no usable hue); never user-supplied. Clients turn it into a tint with `tripTint` |
 | bannerPhotoId | Int? | Banner photo foreign key |
 | addToPlacesVisited | Boolean | Include in visited places map |
 

@@ -14,6 +14,7 @@ import AccountSettingsSection from "../components/settings/AccountSettingsSectio
 import TagsAndCategoriesSection from "../components/settings/TagsAndCategoriesSection";
 import BackupRestoreSection from "../components/settings/BackupRestoreSection";
 import IntegrationsSection from "../components/settings/IntegrationsSection";
+import Icon from '../components/ui/Icon';
 
 // Lazy-loaded heavy tab components (only loaded when their tab is active)
 const TravelDocumentManager = lazy(
@@ -100,7 +101,7 @@ export default function SettingsPage() {
       setUseCustomMapStyle(user.useCustomMapStyle ?? true);
       setUsername(user.username);
     } catch {
-      toast.error("Failed to load settings");
+      toast.error("Couldn't load settings. Try again.");
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export default function SettingsPage() {
       const allTags = await tagService.getAllTags();
       setTags(allTags);
     } catch {
-      toast.error("Failed to load tags");
+      toast.error("Couldn't load tags. Try again.");
     }
   };
 
@@ -134,7 +135,7 @@ export default function SettingsPage() {
       persistedCategoryNames.current = new Set(categories.map((c) => c.name));
       toast.success("Settings saved");
     } catch {
-      toast.error("Failed to save settings");
+      toast.error("Couldn't save settings. Try again.");
     }
   };
 
@@ -153,7 +154,8 @@ export default function SettingsPage() {
           to="/dashboard"
           className="text-blue-600 dark:text-blue-400 hover:underline mb-3 inline-flex items-center min-h-[44px]"
         >
-          ← Back to Today
+          <Icon name="back" size={16} className="mr-1" />
+          Back to Today
         </Link>
 
         <div className="flex justify-between items-center mb-8">
@@ -186,9 +188,9 @@ export default function SettingsPage() {
           >
             <option value="account">Account</option>
             <option value="tags-categories">Tags & Categories</option>
-            <option value="documents">Travel Documents</option>
+            <option value="documents">Travel documents</option>
             <option value="integrations">Integrations</option>
-            <option value="invites">Invite Users</option>
+            <option value="invites">Invite users</option>
             <option value="backup">Backup & Restore</option>
           </select>
         </div>
@@ -236,7 +238,7 @@ export default function SettingsPage() {
                 }
               `}
             >
-              Travel Documents
+              Travel documents
             </button>
             <button
               type="button"
@@ -264,7 +266,7 @@ export default function SettingsPage() {
                 }
               `}
             >
-              Invite Users
+              Invite users
             </button>
             <button
               type="button"
@@ -323,7 +325,7 @@ export default function SettingsPage() {
             <ErrorBoundary>
               <Suspense
                 fallback={
-                  <LoadingSpinner.FullPage message="Loading documents..." />
+                  <LoadingSpinner.FullPage message="Loading documents…" />
                 }
               >
                 <TravelDocumentManager />
@@ -338,7 +340,7 @@ export default function SettingsPage() {
             <ErrorBoundary>
               <Suspense
                 fallback={
-                  <LoadingSpinner.FullPage message="Loading loyalty programs..." />
+                  <LoadingSpinner.FullPage message="Loading loyalty programs…" />
                 }
               >
                 <LoyaltyProgramManager />
@@ -355,7 +357,7 @@ export default function SettingsPage() {
           <ErrorBoundary>
             <Suspense
               fallback={
-                <LoadingSpinner.FullPage message="Loading invitations..." />
+                <LoadingSpinner.FullPage message="Loading invitations…" />
               }
             >
               <InviteUsersSection />

@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  BookOpenIcon,
-  BuildingOffice2Icon,
-  MapPinIcon,
-  PaperAirplaneIcon,
-  PhotoIcon,
-  PlusIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+import Icon, { type IconName } from './ui/Icon';
 import { useActiveTrip, getDayOfTrip } from '../hooks/useActiveTrip';
 
 interface CaptureSheetProps {
@@ -20,7 +12,7 @@ interface CaptureOption {
   id: string;
   label: string;
   hint: string;
-  icon: React.ReactNode;
+  icon: IconName;
   /** Trip-detail tab this capture type lives on. */
   tab: string;
   /**
@@ -35,7 +27,7 @@ const CAPTURE_OPTIONS: CaptureOption[] = [
     id: 'photos',
     label: 'Photos',
     hint: 'Upload from camera roll',
-    icon: <PhotoIcon className="h-6 w-6" />,
+    icon: 'photo',
     tab: 'photos',
     opensForm: false,
   },
@@ -43,7 +35,7 @@ const CAPTURE_OPTIONS: CaptureOption[] = [
     id: 'location',
     label: 'Location',
     hint: 'A place you visited',
-    icon: <MapPinIcon className="h-6 w-6" />,
+    icon: 'place',
     tab: 'locations',
     opensForm: true,
   },
@@ -51,15 +43,15 @@ const CAPTURE_OPTIONS: CaptureOption[] = [
     id: 'journal',
     label: 'Journal entry',
     hint: 'Write about today',
-    icon: <BookOpenIcon className="h-6 w-6" />,
+    icon: 'journal',
     tab: 'journal',
     opensForm: true,
   },
   {
     id: 'lodging',
-    label: 'Lodging',
+    label: 'Stay',
     hint: 'Where you stayed',
-    icon: <BuildingOffice2Icon className="h-6 w-6" />,
+    icon: 'lodging',
     tab: 'lodging',
     opensForm: true,
   },
@@ -67,7 +59,7 @@ const CAPTURE_OPTIONS: CaptureOption[] = [
     id: 'transportation',
     label: 'Transport',
     hint: 'Flights, trains, drives',
-    icon: <PaperAirplaneIcon className="h-6 w-6" />,
+    icon: 'transportation',
     tab: 'transportation',
     opensForm: true,
   },
@@ -190,7 +182,7 @@ export default function CaptureSheet({ isOpen, onClose }: CaptureSheetProps) {
             aria-label="Close"
             className="flex h-11 w-11 flex-none items-center justify-center rounded-full text-slate hover:bg-parchment dark:text-warm-gray dark:hover:bg-navy-700"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <Icon name="close" />
           </button>
         </div>
 
@@ -205,7 +197,7 @@ export default function CaptureSheet({ isOpen, onClose }: CaptureSheetProps) {
                     className="flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left transition-colors hover:bg-parchment active:bg-parchment dark:hover:bg-navy-700 dark:active:bg-navy-700"
                   >
                     <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-parchment text-primary-600 dark:bg-navy-900 dark:text-gold">
-                      {option.icon}
+                      <Icon name={option.icon} size={24} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block font-body font-semibold text-charcoal dark:text-warm-gray">
@@ -229,7 +221,7 @@ export default function CaptureSheet({ isOpen, onClose }: CaptureSheetProps) {
                 }}
                 className="btn btn-primary flex w-full items-center justify-center gap-2"
               >
-                <PlusIcon className="h-5 w-5" />
+                <Icon name="add" />
                 New trip
               </button>
             )

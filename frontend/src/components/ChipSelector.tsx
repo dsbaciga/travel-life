@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import Icon from "./ui/Icon";
 
 interface ChipSelectorProps<T> {
   items: T[];
@@ -20,7 +21,7 @@ export default function ChipSelector<T>({
   getLabel,
   label,
   emptyMessage = "No items available",
-  searchPlaceholder = "Search...",
+  searchPlaceholder = "Search…",
   className = "",
 }: ChipSelectorProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +127,7 @@ export default function ChipSelector<T>({
                     }
                   `}
                 >
-                  {isSelected && <span className="mr-1 shrink-0">✓</span>}
+                  {isSelected && <Icon name="check" size={16} className="mr-1" />}
                   <span className="truncate">{getLabel(item)}</span>
                 </button>
               );

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import type { Activity } from '../../types/activity';
 import type { WeatherDisplay } from '../../types/weather';
 import MarkdownRenderer from '../MarkdownRenderer';
@@ -194,7 +195,7 @@ const JournalItemPrint = ({ item }: { item: Extract<DayItem, { type: 'journal' }
   return (
     <div className="print-item print-item-journal">
       <div className="print-item-header">
-        <span className="print-item-type">Journal Entry</span>
+        <span className="print-item-type">Journal entry</span>
       </div>
       {journal.title && <div className="print-item-title">{journal.title}</div>}
       {journal.content && <div className="print-item-description"><MarkdownRenderer content={journal.content} compact /></div>}
@@ -289,7 +290,7 @@ const DayItemRow = ({ item, timezone }: { item: DayItem; timezone?: string }) =>
 const UnscheduledActivityItemPrint = ({ activity }: { activity: UnscheduledActivityWithLocation }) => (
   <div className="print-item">
     <div className="print-item-header">
-      <span className="print-item-type">Unscheduled Activity</span>
+      <span className="print-item-type">Unscheduled activity</span>
     </div>
     <div className="print-item-title">{activity.name}</div>
     {activity.category && <div className="print-item-detail">Category: {activity.category}</div>}
@@ -338,7 +339,7 @@ export default function PrintableDayItinerary({
         {/* Weather info if available */}
         {weather && (
           <div className="print-weather">
-            <span className="print-weather-icon">{weather.icon}</span>
+            <span className="print-weather-icon"><Icon name={weather.icon} /></span>
             <span className="print-weather-temp">
               {weather.high !== null && weather.high !== undefined ? Math.round(weather.high) : '--'}°
               {weather.low !== null && weather.low !== undefined && ` / ${Math.round(weather.low)}°`}
@@ -369,7 +370,7 @@ export default function PrintableDayItinerary({
         {/* Unscheduled activities for this day */}
         {hasUnscheduled && (
           <div className="print-unscheduled">
-            <div className="print-section-header">Unscheduled Activities</div>
+            <div className="print-section-header">Unscheduled activities</div>
             <p className="print-unscheduled-note">
               These activities are linked to locations visited on this day but don't have scheduled times.
             </p>

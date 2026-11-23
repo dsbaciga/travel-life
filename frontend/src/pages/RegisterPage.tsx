@@ -49,10 +49,10 @@ export default function RegisterPage() {
 
     try {
       await register({ username, email, password });
-      toast.success('Registration successful!');
+      toast.success('Welcome to Travel Life.');
       navigate('/dashboard');
     } catch {
-      toast.error(error || 'Registration failed');
+      toast.error(error || "Couldn't create your account. Try again.");
     }
   };
 
@@ -88,7 +88,7 @@ export default function RegisterPage() {
           {/* Form card */}
           <div className="bg-white/90 dark:bg-navy-800/90 backdrop-blur-sm rounded-2xl shadow-[0_8px_32px_rgba(43,90,127,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border-2 border-primary-500/10 dark:border-sky/10 p-4 sm:p-6 md:p-8">
             <h2 className="text-2xl font-display font-semibold text-center mb-8 text-primary-700 dark:text-sky">
-              Create Your Account
+              Create your account
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -144,7 +144,7 @@ export default function RegisterPage() {
 
               <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="label">
-                  Confirm Password
+                  Confirm password
                 </label>
                 <input
                   type="password"
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                 className="btn-primary w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Start Your Journey'}
+                {isLoading ? 'Creating account…' : 'Start Your Journey'}
               </button>
             </form>
 

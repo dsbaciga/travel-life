@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useCallback } from 'react';
 import { ChevronRightIcon, ChevronDownIcon } from '../icons';
 import { formatCurrency as formatCurrencyValue } from '../../utils/formatCurrency';
@@ -21,20 +22,7 @@ interface BudgetSummaryWidgetProps {
  */
 function WalletIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-      />
-    </svg>
+    <Icon name="wallet" className={className} />
   );
 }
 
@@ -43,20 +31,7 @@ function WalletIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 function AlertIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    </svg>
+    <Icon name="alert" className={className} />
   );
 }
 
@@ -65,20 +40,7 @@ function AlertIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 function CheckCircleIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="success" className={className} />
   );
 }
 
@@ -87,30 +49,19 @@ function CheckCircleIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 const CategoryIcons: Record<string, React.FC<{ className?: string }>> = {
   lodging: ({ className = 'w-4 h-4' }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-    </svg>
+    <Icon name="lodging" className={className} />
   ),
   transportation: ({ className = 'w-4 h-4' }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    </svg>
+    <Icon name="transportation" className={className} />
   ),
   activities: ({ className = 'w-4 h-4' }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+    <Icon name="activity" className={className} />
   ),
   food: ({ className = 'w-4 h-4' }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-    </svg>
+    <Icon name="food" className={className} />
   ),
   other: ({ className = 'w-4 h-4' }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-    </svg>
+    <Icon name="more" className={className} />
   ),
 };
 
@@ -176,7 +127,7 @@ function CategoryRow({ name, amount, total, formatCurrency }: CategoryRowProps) 
           <span className="text-sm text-charcoal dark:text-warm-gray truncate">
             {displayName}
           </span>
-          <span className="text-sm font-medium text-charcoal dark:text-warm-gray flex-shrink-0">
+          <span className="text-sm font-medium tabular-nums text-charcoal dark:text-warm-gray flex-shrink-0">
             {formatCurrency(amount)}
           </span>
         </div>
@@ -249,7 +200,7 @@ export default function BudgetSummaryWidget({
             onClick={onNavigateToBudget}
             className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
               hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-            aria-label="Go to Budget"
+            aria-label="Go to budget"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </button>
@@ -304,7 +255,7 @@ export default function BudgetSummaryWidget({
           onClick={onNavigateToBudget}
           className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
             hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-          aria-label="Go to Budget"
+          aria-label="Go to budget"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>
@@ -315,7 +266,7 @@ export default function BudgetSummaryWidget({
         {/* Amount Display */}
         <div className="flex items-baseline justify-between mb-2">
           <div>
-            <span className={`text-2xl font-bold font-display ${
+            <span className={`text-2xl font-bold font-display tabular-nums ${
               isOverBudget
                 ? 'text-red-600 dark:text-red-400'
                 : isNearBudget
@@ -351,7 +302,7 @@ export default function BudgetSummaryWidget({
         {/* Remaining / Over Amount */}
         {budget !== null && (
           <div className="mt-2 text-right">
-            <span className={`text-sm ${
+            <span className={`text-sm tabular-nums ${
               isOverBudget
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-slate dark:text-warm-gray/70'
@@ -374,7 +325,7 @@ export default function BudgetSummaryWidget({
             aria-expanded={isBreakdownExpanded}
           >
             <span className="text-sm font-medium text-slate dark:text-warm-gray/70">
-              Spending Breakdown
+              Spending breakdown
             </span>
             <div className="text-slate dark:text-warm-gray/50">
               {isBreakdownExpanded ? (
@@ -406,9 +357,9 @@ export default function BudgetSummaryWidget({
               {/* Total */}
               <div className="mt-3 pt-2 border-t border-slate/10 dark:border-warm-gray/10 flex items-center justify-between">
                 <span className="text-sm font-medium text-charcoal dark:text-warm-gray">
-                  Total Spent
+                  Total spent
                 </span>
-                <span className="text-sm font-bold text-charcoal dark:text-warm-gray">
+                <span className="text-sm font-bold tabular-nums text-charcoal dark:text-warm-gray">
                   {formatCurrency(breakdownTotal)}
                 </span>
               </div>

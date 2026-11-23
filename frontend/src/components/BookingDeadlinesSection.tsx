@@ -70,7 +70,7 @@ export default function BookingDeadlinesSection({
   return (
     <FormSection
       title="Deadlines"
-      icon="⏰"
+      icon="alarm"
       description={`Cancellation cutoffs, check-in windows, payment dates. Times are local to the booking (${timezone}).`}
     >
       {drafts.length > 0 && (

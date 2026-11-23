@@ -117,6 +117,9 @@ export interface RequestOptions {
   timeoutMs?: number;
 }
 
+/** Shown when a request never reached the server: offline, DNS, TLS or a timeout. */
+export const OFFLINE_MESSAGE = "You're offline, or the server can't be reached.";
+
 export function createApiClient(deps: ApiClientDeps) {
   const timeoutMs = deps.timeoutMs ?? 30000;
   let refreshing: Promise<boolean> | null = null;
@@ -126,10 +129,10 @@ export function createApiClient(deps: ApiClientDeps) {
     const timer = setTimeout(() => controller.abort(), timeout);
     try {
       return await deps.fetch(url, { ...init, signal: controller.signal });
-    } catch (error) {
+    } catch {
       // Offline, DNS failure, TLS failure and timeout all look the same to the
       // sync engine: "not reachable, try later".
-      throw new ApiError(error instanceof Error ? error.message : 'Network request failed', null);
+      throw new ApiError(OFFLINE_MESSAGE, null);
     } finally {
       clearTimeout(timer);
     }
@@ -189,7 +192,7 @@ export function createApiClient(deps: ApiClientDeps) {
       }
       if (!response.ok) {
         // Server trouble is not a verdict on the token: keep the session.
-        throw new ApiError(`Token refresh failed (${response.status})`, response.status);
+        throw new ApiError(`The server couldn't refresh your sign-in (error ${response.status}). Try again.`, response.status);
       }
       const parsed = await parseBody<Partial<MobileAuthResponse>>(response);
       const data = parsed?.data;
@@ -225,7 +228,10 @@ export function createApiClient(deps: ApiClientDeps) {
 
     const parsed = await parseBody<T>(response);
     if (!response.ok) {
-      throw new ApiError(parsed?.message ?? `Request failed (${response.status})`, response.status);
+      throw new ApiError(
+        parsed?.message ?? `The server couldn't complete that (error ${response.status}). Try again.`,
+        response.status
+      );
     }
     // 204s and non-enveloped bodies yield undefined data.
     return (parsed?.data ?? null) as T;

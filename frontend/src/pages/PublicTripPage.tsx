@@ -20,6 +20,7 @@ import {
   formatDateOnly,
   resolveTimezone,
 } from '../utils/timezone';
+import Icon, { type IconName } from '../components/ui/Icon';
 
 // ---------------------------------------------------------------------------
 // Date helpers.
@@ -141,11 +142,11 @@ function buildItinerary(trip: PublicTrip): ItineraryDay[] {
 // Presentational bits
 // ---------------------------------------------------------------------------
 
-const EVENT_ICONS: Record<ItineraryEvent['kind'], string> = {
-  activity: '🎟️',
-  transportation: '🧭',
-  'lodging-checkin': '🛎️',
-  'lodging-checkout': '🧳',
+const EVENT_ICONS: Record<ItineraryEvent['kind'], IconName> = {
+  activity: 'activity',
+  transportation: 'transportation',
+  'lodging-checkin': 'checkIn',
+  'lodging-checkout': 'checkOut',
 };
 
 function EventCard({ event }: { event: ItineraryEvent }) {
@@ -181,8 +182,8 @@ function EventCard({ event }: { event: ItineraryEvent }) {
 
   return (
     <div className="flex gap-3 p-3 rounded-xl bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 shadow-sm">
-      <div className="text-xl leading-none pt-0.5" aria-hidden="true">
-        {EVENT_ICONS[event.kind]}
+      <div className="leading-none pt-0.5" aria-hidden="true">
+        <Icon name={EVENT_ICONS[event.kind]} size={24} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
@@ -192,7 +193,7 @@ function EventCard({ event }: { event: ItineraryEvent }) {
             </span>
           )}
           {event.kind === 'activity' && event.activity.allDay && (
-            <span className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+            <span className="eyebrow text-amber-700 dark:text-amber-400">
               All day
             </span>
           )}
@@ -319,10 +320,10 @@ function PhotoGrid({ photos }: { photos: PublicPhoto[] }) {
           <button
             type="button"
             onClick={close}
-            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white text-2xl leading-none"
+            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white leading-none"
             aria-label="Close"
           >
-            ✕
+            <Icon name="close" size={24} />
           </button>
           {photos.length > 1 && (
             <>
@@ -332,10 +333,10 @@ function PhotoGrid({ photos }: { photos: PublicPhoto[] }) {
                   e.stopPropagation();
                   step(-1);
                 }}
-                className="absolute left-2 sm:left-6 p-3 text-white/80 hover:text-white text-3xl leading-none"
+                className="absolute left-2 sm:left-6 p-3 text-white/80 hover:text-white leading-none"
                 aria-label="Previous photo"
               >
-                ‹
+                <Icon name="chevronLeft" size={32} />
               </button>
               <button
                 type="button"
@@ -343,10 +344,10 @@ function PhotoGrid({ photos }: { photos: PublicPhoto[] }) {
                   e.stopPropagation();
                   step(1);
                 }}
-                className="absolute right-2 sm:right-6 p-3 text-white/80 hover:text-white text-3xl leading-none"
+                className="absolute right-2 sm:right-6 p-3 text-white/80 hover:text-white leading-none"
                 aria-label="Next photo"
               >
-                ›
+                <Icon name="chevronRight" size={32} />
               </button>
             </>
           )}
@@ -433,8 +434,8 @@ export default function PublicTripPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dusk-900 px-4">
         <div className="text-center max-w-md">
-          <div className="text-5xl mb-4" aria-hidden="true">
-            🔗
+          <div className="mb-4 flex justify-center" aria-hidden="true">
+            <Icon name="unlink" size={48} />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-dusk-100 mb-2">
             Trip not available
@@ -522,7 +523,7 @@ export default function PublicTripPage() {
             <div className="space-y-6">
               {itinerary.map((day) => (
                 <div key={day.key}>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
+                  <h3 className="eyebrow text-amber-700 dark:text-amber-400 mb-2">
                     {day.label}
                   </h3>
                   <div className="space-y-2">

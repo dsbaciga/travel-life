@@ -6,6 +6,7 @@ import LinkButton from "./LinkButton";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import PhotoDetailsPanel from "./PhotoDetailsPanel";
 import FavoriteStarButton from "./FavoriteStarButton";
+import Icon from "./ui/Icon";
 import { pushModal, popModal } from "../utils/modalStack";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
@@ -547,20 +548,7 @@ export default function PhotoLightbox({
           </div>
         ) : (
           <div className="text-center text-gray-400">
-            <svg
-              className="w-24 h-24 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
+            <Icon name="photo" size={96} className="mx-auto mb-4" />
             <p>{isVideo ? 'Video' : 'Photo'} not available</p>
           </div>
         )}
@@ -603,20 +591,7 @@ export default function PhotoLightbox({
             className="text-white bg-black/50 hover:bg-black/75 pointer-events-auto rounded-full w-11 h-11 min-w-[44px] min-h-[44px] flex-shrink-0 flex items-center justify-center transition-colors"
             aria-label="Close lightbox"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
       </div>
@@ -631,20 +606,7 @@ export default function PhotoLightbox({
           }`}
           aria-label="Previous photo"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <Icon name="chevronLeft" size={24} />
         </button>
       )}
 
@@ -657,20 +619,7 @@ export default function PhotoLightbox({
           }`}
           aria-label="Next photo"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <Icon name="chevronRight" size={24} />
         </button>
       )}
 
@@ -693,7 +642,7 @@ export default function PhotoLightbox({
                 onChange={(e) => onEditCaptionChange?.(e.target.value)}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Add a caption..."
+                placeholder="Add a caption…"
                 autoFocus
               />
 
@@ -716,9 +665,7 @@ export default function PhotoLightbox({
                     title="Clear date"
                     aria-label="Clear date"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon name="close" />
                   </button>
                 )}
               </div>
@@ -751,20 +698,7 @@ export default function PhotoLightbox({
                 <div className="flex gap-2 md:gap-4 text-white text-xs md:text-sm flex-wrap justify-center md:justify-start">
                   {photo.takenAt && (
                     <span className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <Icon name="calendar" size={16} />
                       {new Date(photo.takenAt).toLocaleDateString()}
                     </span>
                   )}
@@ -799,20 +733,7 @@ export default function PhotoLightbox({
                     className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     aria-label="Zoom out"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"
-                      />
-                    </svg>
+                    <Icon name="zoomOut" />
                   </button>
                   <span className="px-2 text-white text-sm min-w-[3rem] text-center">
                     {Math.round(zoom * 100)}%
@@ -824,20 +745,7 @@ export default function PhotoLightbox({
                     className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     aria-label="Zoom in"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"
-                      />
-                    </svg>
+                    <Icon name="zoomIn" />
                   </button>
                   {zoom > 1 && (
                     <button
@@ -846,20 +754,7 @@ export default function PhotoLightbox({
                       className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white hover:bg-white/20 border-l border-white/20 transition-colors"
                       aria-label="Reset zoom"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
+                      <Icon name="refresh" />
                     </button>
                   )}
                 </div>
@@ -878,20 +773,7 @@ export default function PhotoLightbox({
                     aria-label="View photo details"
                     title="View details"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <Icon name="info" />
                   </button>
                   {/* Editors get a toggle; view-only users only see that the photo is starred */}
                   <FavoriteStarButton
@@ -907,20 +789,7 @@ export default function PhotoLightbox({
                       className="p-3 text-white bg-black/50 hover:bg-white/20 rounded-lg transition-colors"
                       aria-label="Edit caption"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                      <Icon name="edit" />
                     </button>
                   )}
                   {tripId && (
@@ -945,20 +814,7 @@ export default function PhotoLightbox({
                       className="p-3 text-white bg-black/50 hover:bg-green-600/70 rounded-lg transition-colors"
                       aria-label="Set as cover photo"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                      <Icon name="photo" />
                     </button>
                   )}
                   {onDelete && (
@@ -968,20 +824,7 @@ export default function PhotoLightbox({
                       className="p-3 text-white bg-black/50 hover:bg-red-600/70 rounded-lg transition-colors"
                       aria-label="Delete photo"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      <Icon name="delete" />
                     </button>
                   )}
                 </div>

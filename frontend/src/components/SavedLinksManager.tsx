@@ -16,6 +16,7 @@ import BulkActionBar from "./BulkActionBar";
 import EmptyState from "./EmptyState";
 import LinkButton from "./LinkButton";
 import { ListItemSkeleton } from "./SkeletonLoader";
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * SavedLinksManager handles the trip "Links" tab.
@@ -125,7 +126,7 @@ export default function SavedLinksManager({
       refreshData();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to save link";
+        getApiErrorMessage(err, "Couldn't save link. Try again.");
       toast.error(message);
     } finally {
       setSaving(false);
@@ -144,9 +145,9 @@ export default function SavedLinksManager({
 
   const handleDelete = async (link: SavedLink) => {
     const confirmed = await confirm({
-      title: "Delete link?",
-      message: `"${savedLinkDisplayTitle(link)}" will be removed, along with any items it is attached to.`,
-      confirmLabel: "Delete",
+      title: "Delete link",
+      message: `"${savedLinkDisplayTitle(link)}" is deleted, along with any items it is attached to. You can't undo this.`,
+      confirmLabel: "Delete link",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -156,7 +157,7 @@ export default function SavedLinksManager({
       toast.success("Link deleted");
       refreshData();
     } catch {
-      toast.error("Failed to delete link");
+      toast.error("Couldn't delete link. Try again.");
     }
   };
 
@@ -165,9 +166,9 @@ export default function SavedLinksManager({
     if (ids.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Links",
-      message: `Delete ${ids.length} selected link${ids.length === 1 ? "" : "s"}? They will be removed along with any items they are attached to.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${ids.length} link${ids.length === 1 ? "" : "s"}`,
+      message: `Delete ${ids.length} selected link${ids.length === 1 ? "" : "s"}? They are deleted along with any items they are attached to. You can't undo this.`,
+      confirmLabel: `Delete ${ids.length} link${ids.length === 1 ? "" : "s"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -180,7 +181,7 @@ export default function SavedLinksManager({
       refreshData();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to delete links",
+        getApiErrorMessage(err, "Couldn't delete links. Try again."),
       );
     } finally {
       setIsBulkDeleting(false);
@@ -189,7 +190,7 @@ export default function SavedLinksManager({
 
   const handleUnassign = async (link: SavedLink) => {
     const confirmed = await confirm({
-      title: "Move to inbox?",
+      title: "Move to inbox",
       message:
         "This link will be removed from the trip and returned to your inbox. Any items it is attached to will be unlinked.",
       confirmLabel: "Move to inbox",
@@ -201,7 +202,7 @@ export default function SavedLinksManager({
       toast.success("Moved to inbox");
       refreshData();
     } catch {
-      toast.error("Failed to move link");
+      toast.error("Couldn't move link. Try again.");
     }
   };
 
@@ -211,7 +212,7 @@ export default function SavedLinksManager({
       toast.success("Preview refreshed");
       refreshData();
     } catch {
-      toast.error("Failed to refresh preview");
+      toast.error("Couldn't refresh preview. Try again.");
     }
   };
 
@@ -223,7 +224,7 @@ export default function SavedLinksManager({
             Links
           </h2>
           <p className="text-sm text-slate dark:text-dusk-400">
-            Reference pages for this trip — attach them to activities, lodging,
+            Reference pages for this trip — attach them to activities, stays,
             or anywhere else.
           </p>
         </div>
@@ -243,7 +244,7 @@ export default function SavedLinksManager({
               className="btn-primary whitespace-nowrap"
               onClick={() => setIsAdding(true)}
             >
-              Add Link
+              Add link
             </button>
           </div>
         )}
@@ -315,8 +316,8 @@ export default function SavedLinksManager({
               {saving
                 ? "Saving…"
                 : editingId !== null
-                  ? "Save Changes"
-                  : "Save Link"}
+                  ? "Save changes"
+                  : "Save link"}
             </button>
           </div>
         </div>
@@ -326,10 +327,10 @@ export default function SavedLinksManager({
         <ListItemSkeleton count={3} />
       ) : !links || links.length === 0 ? (
         <EmptyState
-          icon="🔗"
+          icon="savedLink"
           message="No links yet"
-          subMessage="Save a page you want to remember for this trip"
-          actionLabel="Add Link"
+          subMessage="Save a page you want to remember for this trip."
+          actionLabel="Add link"
           onAction={() => setIsAdding(true)}
         />
       ) : (

@@ -27,6 +27,8 @@
 import { useState, useRef, useEffect } from 'react';
 import type { KeyboardEvent } from 'react';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
+import { getApiErrorMessage } from '../lib/errors';
 
 interface InlineEditProps {
   value: string;
@@ -103,7 +105,7 @@ export default function InlineEdit({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save';
+      const errorMessage = getApiErrorMessage(err, "Couldn't save. Try again.");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -149,7 +151,7 @@ export default function InlineEdit({
             {value || placeholder}
           </span>
           <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            ✏️
+            <Icon name="edit" size={16} />
           </span>
         </button>
       </div>
@@ -197,7 +199,7 @@ export default function InlineEdit({
           {isSaving && (
             <span className="flex items-center gap-1">
               <div className="w-3 h-3 border-2 border-primary-500 dark:border-sky border-t-transparent rounded-full animate-spin" />
-              Saving...
+              Saving…
             </span>
           )}
         </div>
@@ -268,7 +270,7 @@ export function InlineEditNumber({
       setIsEditing(false);
       toast.success('Saved');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save';
+      const errorMessage = getApiErrorMessage(err, "Couldn't save. Try again.");
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -293,7 +295,7 @@ export function InlineEditNumber({
             {value !== null ? `${prefix}${value}${suffix}` : placeholder}
           </span>
           <span className="ml-2 text-gray-400 dark:text-dusk-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            ✏️
+            <Icon name="edit" size={16} />
           </span>
         </button>
       </div>

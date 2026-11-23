@@ -9,6 +9,7 @@
  * - COVER-005: Replacing a cover deletes the previous files
  * - COVER-006: Removing a cover clears the row and deletes files
  * - COVER-007: Failed DB writes don't leave orphaned files
+ * - COVER-008: The dominant colour of the new cover is stored; greys store nothing
  */
 
 // Mock @prisma/client BEFORE any imports
@@ -47,6 +48,8 @@ const mockSharpInstance = {
   resize: jest.fn().mockReturnThis(),
   jpeg: jest.fn().mockReturnThis(),
   toFile: jest.fn().mockResolvedValue(undefined),
+  removeAlpha: jest.fn().mockReturnThis(),
+  stats: jest.fn(),
 };
 
 const mockSharp = jest.fn().mockReturnValue(mockSharpInstance);
@@ -81,6 +84,7 @@ describe('TripCoverImageService', () => {
     mockFs.mkdir.mockResolvedValue(undefined);
     mockFs.unlink.mockResolvedValue(undefined);
     mockSharpInstance.toFile.mockResolvedValue(undefined);
+    mockSharpInstance.stats.mockResolvedValue({ dominant: { r: 42, g: 127, b: 191 } });
     mockFileTypeFromFile.mockResolvedValue({ mime: 'image/jpeg', ext: 'jpg' });
   });
 
@@ -110,6 +114,18 @@ describe('TripCoverImageService', () => {
       expect(mockPrisma.trip.update.mock.calls[0][0].data.coverPhotoId).toBeNull();
     });
 
+    it('COVER-008: stores the dominant colour of the new cover, and nothing for a grey one', async () => {
+      mockPrisma.trip.findFirst.mockResolvedValue(baseTrip);
+      mockPrisma.trip.update.mockResolvedValue(baseTrip);
+
+      await tripCoverImageService.uploadCoverImage(mockUserId, mockTripId, mockFile);
+      expect(mockPrisma.trip.update.mock.calls[0][0].data.coverColor).toBe('#2a7fbf');
+
+      mockSharpInstance.stats.mockResolvedValue({ dominant: { r: 128, g: 128, b: 128 } });
+      await tripCoverImageService.uploadCoverImage(mockUserId, mockTripId, mockFile);
+      expect(mockPrisma.trip.update.mock.calls[1][0].data.coverColor).toBeNull();
+    });
+
     it('COVER-003: rejects files whose content is not an allowed image', async () => {
       mockPrisma.trip.findFirst.mockResolvedValue(baseTrip);
       mockFileTypeFromFile.mockResolvedValue({ mime: 'application/pdf', ext: 'pdf' });
@@ -128,7 +144,7 @@ describe('TripCoverImageService', () => {
 
       await expect(
         tripCoverImageService.uploadCoverImage(mockUserId, mockTripId, mockFile)
-      ).rejects.toThrow('Trip not found or you do not have permission to edit it');
+      ).rejects.toThrow("We couldn't find that trip, or you can only view it.");
 
       expect(mockPrisma.trip.update).not.toHaveBeenCalled();
     });
@@ -174,7 +190,7 @@ describe('TripCoverImageService', () => {
 
       expect(mockPrisma.trip.update).toHaveBeenCalledWith({
         where: { id: mockTripId },
-        data: { coverImagePath: null, coverImageThumbnailPath: null },
+        data: { coverImagePath: null, coverImageThumbnailPath: null, coverColor: null },
         include: { coverPhoto: true },
       });
 

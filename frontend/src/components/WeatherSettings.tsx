@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect } from 'react';
 import userService from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
@@ -28,7 +29,7 @@ export default function WeatherSettings() {
 
   const handleSave = async () => {
     if (!apiKey) {
-      setMessage({ type: 'error', text: 'Please enter an API key' });
+      setMessage({ type: 'error', text: 'Enter an API key' });
       return;
     }
 
@@ -45,7 +46,7 @@ export default function WeatherSettings() {
       setApiKey(''); // Clear the input after successful save
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't save settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -53,9 +54,9 @@ export default function WeatherSettings() {
 
   const handleClearSettings = async () => {
     const confirmed = await confirm({
-      title: 'Remove Weather API Key',
-      message: 'Are you sure you want to remove your weather API key?',
-      confirmLabel: 'Remove',
+      title: 'Remove weather API key',
+      message: 'Weather forecasts stop until you add a key again.',
+      confirmLabel: 'Remove key',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -75,7 +76,7 @@ export default function WeatherSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to clear settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't clear settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -84,14 +85,14 @@ export default function WeatherSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading weather settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading weather settings…</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Weather settings</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure your OpenWeatherMap One Call API 3.0 key to enable weather data for your trips. Weather information will be displayed in the timeline for each day of your trip.
@@ -107,7 +108,7 @@ export default function WeatherSettings() {
       {settings?.weatherApiKeySet && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ Weather API key is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> Weather API key is configured
           </p>
         </div>
       )}
@@ -150,7 +151,7 @@ export default function WeatherSettings() {
             disabled={isSaving || !apiKey}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving...' : 'Save API Key'}
+            {isSaving ? 'Saving…' : 'Save API Key'}
           </button>
 
           {settings?.weatherApiKeySet && (

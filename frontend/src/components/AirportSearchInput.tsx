@@ -5,6 +5,7 @@ import type { AirportSearchResult } from '../services/airport.service';
 import checklistService from '../services/checklist.service';
 import geocodingService from '../services/geocoding.service';
 import type { AirportMetadata } from '../types/checklist';
+import Icon from './ui/Icon';
 
 interface AirportSearchInputProps {
   /** ID of the airports checklist the airport will be added to. */
@@ -92,7 +93,7 @@ export default function AirportSearchInput({
         console.error('Airport search error:', error);
         if (latestQueryRef.current === trimmed) {
           setResults([]);
-          toast.error('Failed to search airports');
+          toast.error("Couldn't search airports. Try again.");
         }
       } finally {
         if (latestQueryRef.current === trimmed) {
@@ -140,7 +141,7 @@ export default function AirportSearchInput({
       await onAdded();
     } catch (error) {
       console.error('Failed to add airport:', error);
-      toast.error('Failed to add airport');
+      toast.error("Couldn't add airport. Try again.");
     } finally {
       setAddingCode(null);
     }
@@ -168,7 +169,7 @@ export default function AirportSearchInput({
       />
 
       {searching && (
-        <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">Searching...</div>
+        <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">Searching…</div>
       )}
 
       {!searching && results.length > 0 && (
@@ -197,7 +198,7 @@ export default function AirportSearchInput({
                 </span>
                 {alreadyAdded && (
                   <span className="text-xs text-green-600 dark:text-green-400 flex-shrink-0">
-                    ✓ Added
+                    <Icon name="check" size={16} className="align-text-bottom" /> Added
                   </span>
                 )}
                 {isAdding && (
@@ -213,12 +214,12 @@ export default function AirportSearchInput({
 
       {!searching && trimmed.length >= 2 && results.length === 0 && (
         <div className="text-sm text-gray-500 dark:text-dusk-400 py-2">
-          No airports found for &ldquo;{trimmed}&rdquo;
+          No airports match &ldquo;{trimmed}&rdquo;
         </div>
       )}
 
       <div className="mt-3 text-xs text-gray-500 dark:text-dusk-400">
-        ✈️ Search by IATA code, ICAO code, or airport/city name. Coordinates are
+        <Icon name="flight" size={16} className="align-text-bottom" /> Search by IATA code, ICAO code, or airport/city name. Coordinates are
         confirmed via OpenStreetMap when available.
       </div>
     </div>

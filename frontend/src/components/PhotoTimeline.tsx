@@ -9,6 +9,7 @@ import PhotoLightbox from './PhotoLightbox';
 import EmptyState, { EmptyIllustrations } from './EmptyState';
 import toast from 'react-hot-toast';
 import { formatDateOnly } from '../utils/timezone';
+import Icon from './ui/Icon';
 
 interface PhotoTimelineProps {
   tripId: number;
@@ -96,7 +97,7 @@ export default function PhotoTimeline({
       setFailedImages(new Set());
     } catch (error) {
       console.error('Error loading date groupings:', error);
-      toast.error('Failed to load photo timeline');
+      toast.error("Couldn't load photo timeline. Try again.");
     } finally {
       setLoading(false);
     }
@@ -184,7 +185,7 @@ export default function PhotoTimeline({
       setDayGroups(prev => prev.map(g =>
         g.rawDate === rawDate ? { ...g, loading: false, error: true } : g
       ));
-      toast.error(`Failed to load photos for ${rawDate}`);
+      toast.error(`Couldn't load photos for ${rawDate}. Try again.`);
     } finally {
       // Remove from pending
       pendingRequestsRef.current.delete(rawDate);
@@ -309,7 +310,7 @@ export default function PhotoTimeline({
     return (
       <div className="text-center py-8 text-gray-900 dark:text-white">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p>Loading photo timeline...</p>
+        <p>Loading photo timeline…</p>
       </div>
     );
   }
@@ -345,14 +346,14 @@ export default function PhotoTimeline({
             onClick={expandAllDays}
             className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
-            Expand All
+            Expand all
           </button>
           <button
             type="button"
             onClick={collapseAllDays}
             className="px-3 py-1.5 text-sm text-gray-600 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
-            Collapse All
+            Collapse all
           </button>
         </div>
       </div>
@@ -392,22 +393,7 @@ export default function PhotoTimeline({
                     {dayGroup.loading && (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                     )}
-                    <svg
-                      className={`w-5 h-5 text-gray-400 transition-transform ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    <Icon name="expand" className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
               </button>
@@ -418,13 +404,13 @@ export default function PhotoTimeline({
                   {dayGroup.loading && !dayGroup.photos && (
                     <div className="text-center py-8 text-gray-500">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm">Loading photos...</p>
+                      <p className="text-sm">Loading photos…</p>
                     </div>
                   )}
 
                   {dayGroup.error && (
                     <div className="text-center py-8 text-red-500">
-                      <p className="text-sm">Failed to load photos</p>
+                      <p className="text-sm">Couldn't load photos. Try again.</p>
                       <button
                         type="button"
                         onClick={() => loadPhotosForDay(dayGroup.rawDate)}
@@ -497,20 +483,7 @@ export default function PhotoTimeline({
                       onClick={() => toggleDay(dayGroup.rawDate)}
                       className="w-full mt-4 py-2 text-sm text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                     >
-                      <svg
-                        className="w-4 h-4 rotate-180"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
+                      <Icon name="collapse" size={16} />
                       Collapse day
                     </button>
                   )}

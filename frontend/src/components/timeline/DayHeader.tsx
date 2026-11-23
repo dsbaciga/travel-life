@@ -1,4 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from './icons';
+import Icon from '../ui/Icon';
 import { getTimezoneAbbr } from './utils';
 import type { DayHeaderProps } from './types';
 import type { WeatherDisplay } from '../../types/weather';
@@ -10,7 +11,7 @@ interface WeatherBadgeProps {
 function WeatherBadge({ weather }: WeatherBadgeProps) {
   return (
     <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm">
-      <span>{weather.icon}</span>
+      <Icon name={weather.icon} size={16} />
       <span className="font-medium">
         {weather.high !== null && weather.high !== undefined ? Math.round(weather.high) : '--'}°
         {weather.low !== null && weather.low !== undefined && (
@@ -116,7 +117,7 @@ export default function DayHeader({
     statParts.push(`${stats.transportation} ${stats.transportation === 1 ? 'transport' : 'transports'}`);
   }
   if (stats.lodging > 0) {
-    statParts.push(`${stats.lodging} ${stats.lodging === 1 ? 'lodging' : 'lodgings'}`);
+    statParts.push(`${stats.lodging} ${stats.lodging === 1 ? 'stay' : 'stays'}`);
   }
   if (stats.journal > 0) {
     statParts.push(`${stats.journal} ${stats.journal === 1 ? 'journal' : 'journals'}`);

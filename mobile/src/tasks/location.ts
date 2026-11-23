@@ -156,5 +156,5 @@ export async function getCurrentPosition(): Promise<{ latitude: number; longitud
 export function positionFailureMessage(purpose: string): string {
   return lastPositionFailure === 'denied'
     ? `Location permission is needed to ${purpose}.`
-    : `Could not get a GPS fix to ${purpose}. Try again outdoors, or enter the place by hand.`;
+    : `Couldn't get your location to ${purpose}. Try again outdoors, or enter the place by hand.`;
 }

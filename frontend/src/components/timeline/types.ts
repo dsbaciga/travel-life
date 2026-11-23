@@ -56,6 +56,8 @@ export interface TimelineItem {
   subtitle?: string;
   description?: string;
   location?: string;
+  /** Street address of `location`, when it differs from the name. */
+  locationAddress?: string;
   locationCoords?: { latitude: number; longitude: number };
   cost?: number;
   currency?: string;
@@ -105,7 +107,10 @@ export interface TimelineEventCardProps {
   linkSummary?: EntityLinkSummary;
   viewMode: 'standard' | 'compact';
   connectionInfo?: ConnectionInfo;
-  showConnectionLine?: boolean;
+  /** Where the stop sits relative to now; drives the gold/muted route marker. */
+  routeStop?: 'past' | 'next' | 'future';
+  /** Line style down to the next stop's marker; omit for the last stop. */
+  routeSegment?: 'solid' | 'dashed';
   /**
    * Where the traveller is coming from — the nearest preceding item on the day
    * that has a usable location. Pre-fills the origin of the Directions link.

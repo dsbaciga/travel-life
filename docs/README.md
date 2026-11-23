@@ -14,6 +14,7 @@ Welcome to the Travel Life documentation. This guide will help you navigate the 
 | **Write code that fits** | [Code Conventions](architecture/CODE_CONVENTIONS.md) |
 | **Use the API** | [API Reference](api/README.md) |
 | **Work on the UI** | [Style Guide](architecture/STYLE_GUIDE.md) |
+| **Write user-facing text** (toasts, errors, empty states, confirmations) | [Voice and Tone](guides/VOICE_AND_TONE.md) |
 | **Release a new version** | [Release Checklist](../RELEASE_CHECKLIST.md) |
 | **Track project progress** | [Implementation Status](development/IMPLEMENTATION_STATUS.md) |
 
@@ -44,8 +45,10 @@ docs/
 │   ├── BUILD_AND_PUSH.md
 │   ├── DEVELOPMENT_WORKFLOWS.md
 │   ├── DEBUGGING_AND_OPTIMIZATION.md
+│   ├── COPY_AUDIT.md
 │   ├── HTTPS_SETUP.md
 │   ├── TESTING_GUIDE.md
+│   ├── VOICE_AND_TONE.md
 │   └── ROUTING_SETUP.md
 ├── plans/                    # Future planning documents
 │   ├── COMPANION_APP_PLAN.md
@@ -86,6 +89,8 @@ Then review development processes:
 1. **[Debugging & Optimization](guides/DEBUGGING_AND_OPTIMIZATION.md)** - Agent-based debugging and code optimization
 1. **[Build and Push Guide](guides/BUILD_AND_PUSH.md)** - How to build and release
 1. **[Testing Guide](guides/TESTING_GUIDE.md)** - Testing strategy and patterns
+1. **[Voice and Tone](guides/VOICE_AND_TONE.md)** - How the app talks: principles, patterns and word list for any user-facing text
+1. **[Copy Audit](guides/COPY_AUDIT.md)** - Inventory of strings to rewrite to match the voice guide, with proposed text
 
 ### For DevOps / System Administrators
 

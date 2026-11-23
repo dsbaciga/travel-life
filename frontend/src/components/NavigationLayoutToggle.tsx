@@ -6,6 +6,7 @@
  */
 
 import { useNavigationStore } from '../store/navigationStore';
+import Icon from './ui/Icon';
 
 interface NavigationLayoutToggleProps {
   className?: string;
@@ -29,26 +30,12 @@ export default function NavigationLayoutToggle({
     >
       {layout === 'tabs' ? (
         <>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h7"
-            />
-          </svg>
+          <Icon name="menu" size={16} />
           <span className="hidden lg:inline">Sidebar</span>
         </>
       ) : (
         <>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 10h16M4 14h16M4 18h16"
-            />
-          </svg>
+          <Icon name="list" size={16} />
           <span className="hidden lg:inline">Tabs</span>
         </>
       )}

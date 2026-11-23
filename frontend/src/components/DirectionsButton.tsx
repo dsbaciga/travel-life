@@ -8,6 +8,7 @@ import {
   type TravelMode,
 } from '../lib/mapsDeepLinks';
 import { useMapsPreferences } from '../hooks/useMapsPreferences';
+import Icon from './ui/Icon';
 
 interface DirectionsButtonProps {
   /** Where the user wants to go. Nothing renders if it has no usable location. */
@@ -26,20 +27,7 @@ interface DirectionsButtonProps {
 
 function NavigationIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 3l7.5 17-7.5-4-7.5 4L12 3z"
-      />
-    </svg>
+    <Icon name="navigate" className={className} />
   );
 }
 
@@ -139,7 +127,7 @@ export default function DirectionsButton({
           className="absolute right-0 z-30 mt-1 w-64 rounded-lg border border-gray-200 dark:border-dusk-700 bg-white dark:bg-dusk-800 shadow-lg py-1 animate-scale-in"
         >
           <div className="px-3 py-2 border-b border-gray-100 dark:border-dusk-700">
-            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-dusk-400">
+            <p className="eyebrow text-gray-500 dark:text-dusk-400">
               Open directions in
             </p>
             {originLabel !== null && (

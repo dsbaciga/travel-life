@@ -38,7 +38,7 @@ export const memoriesController = {
     const userId = requireUserId(req);
     const year = Number(req.params.year);
     if (!Number.isInteger(year)) {
-      throw new AppError('Invalid year: must be an integer', 400);
+      throw new AppError('Year must be a whole number.', 400);
     }
     const review = await memoriesService.getYearInReview(
       userId,

@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler';
 import { CreateTripInput, UpdateTripInput, GetTripQuery, TripStatus, DuplicateTripInput } from '../types/trip.types';
 import { companionService } from './companion.service';
 import { tripCoverImageService } from './tripCoverImage.service';
+import { computeCoverColor } from './tripCoverColor.service';
 import { toSafePermissionLevel } from '../services/_shared/tripPermissions';
 import { buildConditionalUpdateData, tripDateTransformer } from '../services/_shared/prismaUpdateData';
 import { convertDecimals } from '../services/_shared/decimalConversion';
@@ -61,7 +62,7 @@ export class TripService {
     });
 
     if (!series) {
-      throw new AppError('Trip series not found or you do not have permission to use it', 404);
+      throw new AppError("We couldn't find that trip series, or you don't have permission to use it.", 404);
     }
   }
 
@@ -413,7 +414,7 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     // The share token is a secret capability — only the owner may see it.
@@ -432,7 +433,7 @@ export class TripService {
     });
 
     if (!existingTrip) {
-      throw new AppError('Trip not found or you do not have permission to edit it', 404);
+      throw new AppError("We couldn't find that trip, or you can only view it.", 404);
     }
 
     // A null seriesId detaches the trip from its series and needs no check; any other value
@@ -472,7 +473,7 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found or you do not have permission to delete it', 404);
+      throw new AppError("We couldn't find that trip, or you don't have permission to delete it.", 404);
     }
 
     // The database cascade removes the photo rows but knows nothing about the
@@ -543,17 +544,19 @@ export class TripService {
     });
 
     if (!trip) {
-      throw new AppError('Trip not found or you do not have permission to edit it', 404);
+      throw new AppError("We couldn't find that trip, or you can only view it.", 404);
     }
 
     // If photoId is provided, verify the photo belongs to this trip
+    let coverPhotoRow = null;
     if (photoId) {
       const photo = await prisma.photo.findFirst({
         where: { id: photoId, tripId },
       });
+      coverPhotoRow = photo;
 
       if (!photo) {
-        throw new AppError('Photo not found or does not belong to this trip', 404);
+        throw new AppError("We couldn't find that photo on this trip.", 404);
       }
     }
 
@@ -561,10 +564,26 @@ export class TripService {
     // mutually exclusive, so clear the upload and delete its files.
     const previousUpload = [trip.coverImagePath, trip.coverImageThumbnailPath];
 
+    // The cover tint follows the cover: sampled from the chosen photo, cleared when
+    // the cover is removed.
+    let coverColor: string | null = null;
+    if (coverPhotoRow) {
+      coverColor = await computeCoverColor({
+        userId: trip.userId,
+        coverImagePath: null,
+        coverImageThumbnailPath: null,
+        coverPhoto: coverPhotoRow,
+      });
+    } else if (trip.coverImagePath || trip.coverImageThumbnailPath) {
+      // Clearing the library cover leaves an uploaded one (if any) in place.
+      coverColor = trip.coverColor;
+    }
+
     const updatedTrip = await prisma.trip.update({
       where: { id: tripId },
       data: {
         coverPhotoId: photoId,
+        coverColor,
         ...(photoId ? { coverImagePath: null, coverImageThumbnailPath: null } : {}),
       },
       include: {
@@ -622,7 +641,7 @@ export class TripService {
     });
 
     if (!sourceTrip) {
-      throw new AppError('Trip not found or you do not have permission to duplicate it', 404);
+      throw new AppError("We couldn't find that trip, or you don't have permission to duplicate it.", 404);
     }
 
     // Albums and checklists are loaded separately because they are the only relations

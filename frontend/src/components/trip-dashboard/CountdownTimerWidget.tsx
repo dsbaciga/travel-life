@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useEffect, useMemo } from 'react';
 import { TripStatus, type TripStatusType } from '../../types/trip';
 import { useTimezoneResolver } from '../../hooks/useTimezoneResolver';
@@ -29,20 +30,7 @@ interface TripProgress {
  */
 function ClockIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="schedule" className={className} />
   );
 }
 
@@ -51,20 +39,7 @@ function ClockIcon({ className = 'w-6 h-6' }: { className?: string }) {
  */
 function PlaneIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-      />
-    </svg>
+    <Icon name="flight" className={className} />
   );
 }
 
@@ -73,20 +48,7 @@ function PlaneIcon({ className = 'w-6 h-6' }: { className?: string }) {
  */
 function CheckIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="success" className={className} />
   );
 }
 
@@ -263,7 +225,7 @@ function CountdownUnit({
           {value.toString().padStart(2, '0')}
         </span>
       </div>
-      <span className="mt-2 text-xs sm:text-sm font-medium text-slate dark:text-warm-gray/70 uppercase tracking-wider">
+      <span className="mt-2 text-slate dark:text-warm-gray/70 eyebrow">
         {label}
       </span>
     </div>
@@ -347,7 +309,7 @@ function TripCompletedDisplay() {
       </div>
 
       <h4 className="text-2xl font-bold font-display text-charcoal dark:text-warm-gray mb-2">
-        Trip Complete
+        Trip complete
       </h4>
       <p className="text-slate dark:text-warm-gray/70">
         Another adventure for the books!

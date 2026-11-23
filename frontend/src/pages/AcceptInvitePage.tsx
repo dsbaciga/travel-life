@@ -5,8 +5,11 @@ import userInvitationService from '../services/userInvitation.service';
 import { useAuthStore } from '../store/authStore';
 import type { UserInvitationPublicInfo } from '../types/userInvitation';
 import toast from 'react-hot-toast';
+import Icon from '../components/ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 export default function AcceptInvitePage() {
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -41,9 +44,9 @@ export default function AcceptInvitePage() {
       setEmail(data.email); // Pre-fill email from invitation
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        setError(error.response?.data?.message || 'Invitation not found or has expired.');
+        setError(error.response?.data?.message || "We can't find that invitation. It may have expired or been cancelled.");
       } else {
-        setError('Invitation not found or has expired.');
+        setError("We can't find that invitation. It may have expired or been cancelled.");
       }
     } finally {
       setLoading(false);
@@ -52,7 +55,7 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid invitation link. No token provided.');
+      setError('This invitation link is incomplete. Open the link from your email again.');
       setLoading(false);
       return;
     }
@@ -75,7 +78,7 @@ export default function AcceptInvitePage() {
     }
 
     if (!username.trim()) {
-      toast.error('Please enter a username');
+      toast.error('Enter a username');
       return;
     }
 
@@ -101,13 +104,13 @@ export default function AcceptInvitePage() {
       // Log the user in with the credentials they just created
       await login({ email, password });
 
-      toast.success('Account created successfully! Welcome to Travel Life!');
+      toast.success('Account created. Welcome to Travel Life.');
       navigate('/dashboard');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to create account');
+        toast.error(error.response?.data?.message || "Couldn't create account. Try again.");
       } else {
-        toast.error('Failed to create account');
+        toast.error("Couldn't create account. Try again.");
       }
     } finally {
       setSubmitting(false);
@@ -120,9 +123,12 @@ export default function AcceptInvitePage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Are you sure you want to decline this invitation? This action cannot be undone.'
-    );
+    const confirmed = await confirm({
+      title: 'Decline invitation',
+      message: "You'd need a new invitation to join this trip later.",
+      confirmLabel: 'Decline invitation',
+      variant: 'warning',
+    });
     if (!confirmed) return;
 
     try {
@@ -131,9 +137,9 @@ export default function AcceptInvitePage() {
       navigate('/');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to decline invitation');
+        toast.error(error.response?.data?.message || "Couldn't decline invitation. Try again.");
       } else {
-        toast.error('Failed to decline invitation');
+        toast.error("Couldn't decline invitation. Try again.");
       }
     }
   };
@@ -143,7 +149,7 @@ export default function AcceptInvitePage() {
       <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation...</p>
+          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation…</p>
         </div>
       </div>
     );
@@ -155,12 +161,10 @@ export default function AcceptInvitePage() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <Icon name="close" size={32} className="text-red-600 dark:text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
-              Invalid Invitation
+              Invalid invitation
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {error || 'This invitation is no longer valid.'}
@@ -183,18 +187,16 @@ export default function AcceptInvitePage() {
         <div className="max-w-md w-full text-center">
           <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
             <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Icon name="schedule" size={32} className="text-yellow-600 dark:text-yellow-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               {invitation.status === 'EXPIRED' ? 'Invitation Expired' : 'Invitation Already Used'}
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {invitation.status === 'EXPIRED'
-                ? 'This invitation has expired. Please ask the person who invited you to send a new invitation.'
+                ? 'This invitation has expired. Ask the person who invited you to send a new one.'
                 : invitation.status === 'ACCEPTED'
-                ? 'This invitation has already been accepted. You can log in to your account.'
+                ? 'This invitation has already been accepted. You can sign in to your account.'
                 : 'This invitation has been declined.'}
             </p>
             <Link
@@ -211,14 +213,13 @@ export default function AcceptInvitePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900 px-4 py-12">
+      <ConfirmDialogComponent />
       <div className="max-w-md w-full">
         <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <Icon name="mail" size={32} className="text-primary-600 dark:text-primary-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
               You're Invited!
@@ -233,7 +234,7 @@ export default function AcceptInvitePage() {
           {/* Description */}
           <div className="bg-cream dark:bg-navy-700 rounded-lg p-4 mb-6">
             <p className="text-sm text-navy-700 dark:text-dusk-200">
-              Travel Life helps you document your adventures. Track trips, locations, photos, transportation, lodging, and create beautiful travel journals.
+              Travel Life helps you document your adventures. Track trips, locations, photos, transport, stays, and create beautiful travel journals.
             </p>
           </div>
 
@@ -294,7 +295,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor={confirmPasswordId} className="label">
-                Confirm Password
+                Confirm password
               </label>
               <input
                 type="password"
@@ -315,30 +316,11 @@ export default function AcceptInvitePage() {
             >
               {submitting ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating Account...
+                  <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
+                  Creating Account…
                 </>
               ) : (
-                'Create Account'
+                'Create account'
               )}
             </button>
           </form>
@@ -359,7 +341,7 @@ export default function AcceptInvitePage() {
             <p className="text-sm text-navy-600 dark:text-dusk-300">
               Already have an account?{' '}
               <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
-                Log in
+                Sign in
               </Link>
             </p>
           </div>

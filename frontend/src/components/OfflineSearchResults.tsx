@@ -13,6 +13,7 @@
 
 import { useNavigate } from 'react-router';
 import { type UnifiedSearchResult } from '../hooks/useOfflineSearch';
+import Icon, { type IconName } from './ui/Icon';
 import {
   type GroupedSearchResults,
   type SearchableEntityType,
@@ -116,9 +117,9 @@ function formatTimestamp(timestamp: number): string {
 }
 
 /**
- * Gets the icon path for an entity type.
+ * Gets the icon name for an entity type.
  */
-function getIconPath(type: UnifiedSearchResult['type']): string {
+function getIconName(type: UnifiedSearchResult['type']): IconName {
   const typeMap: Record<UnifiedSearchResult['type'], SearchableEntityType> = {
     trip: 'TRIP',
     location: 'LOCATION',
@@ -141,8 +142,8 @@ function getTypeLabel(type: UnifiedSearchResult['type']): string {
     photo: 'Photo',
     journal: 'Journal',
     activity: 'Activity',
-    transportation: 'Transportation',
-    lodging: 'Lodging',
+    transportation: 'Transport',
+    lodging: 'Stay',
   };
   return labels[type] || type;
 }
@@ -158,19 +159,7 @@ function OfflineIndicator({ lastIndexed }: { lastIndexed?: number | null }) {
   return (
     <div className="px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800">
       <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
-        <svg
-          className="w-4 h-4 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
-          />
-        </svg>
+        <Icon name="offline" size={16} />
         <span className="font-medium">Searching offline data</span>
         {lastIndexed && (
           <span className="text-amber-600 dark:text-amber-400">
@@ -190,7 +179,7 @@ function SearchingIndicator() {
     <div className="p-6 flex items-center justify-center">
       <div className="flex items-center gap-3 text-gray-500 dark:text-dusk-400">
         <div className="w-5 h-5 border-2 border-primary-500 dark:border-gold border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm">Searching...</span>
+        <span className="text-sm">Searching…</span>
       </div>
     </div>
   );
@@ -203,19 +192,7 @@ function ErrorState({ error }: { error: string }) {
   return (
     <div className="p-6 text-center">
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-3">
-        <svg
-          className="w-6 h-6 text-red-500 dark:text-red-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
+        <Icon name="alert" size={24} className="text-red-500 dark:text-red-400" />
       </div>
       <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
     </div>
@@ -228,22 +205,10 @@ function ErrorState({ error }: { error: string }) {
 function EmptyState({ query }: { query: string }) {
   return (
     <div className="p-8 text-center">
-      <svg
-        className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-dusk-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-        />
-      </svg>
-      <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+      <Icon name="search" size={48} className="mx-auto mb-3 text-gray-400 dark:text-dusk-400" />
+      <p className="text-gray-600 dark:text-dusk-400 font-medium">Nothing matches &ldquo;{query}&rdquo;</p>
       <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-        No offline data matches "{query}"
+        Nothing saved on this device matches that.
       </p>
       <p className="text-xs text-gray-400 dark:text-dusk-600 mt-3">
         Try different keywords or check your downloaded trips
@@ -266,7 +231,7 @@ function ResultItem({
   isSelected: boolean;
   onClick: () => void;
 }) {
-  const iconPath = getIconPath(result.type);
+  const iconName = getIconName(result.type);
 
   return (
     <button
@@ -291,19 +256,7 @@ function ResultItem({
             }
           `}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d={iconPath}
-            />
-          </svg>
+          <Icon name={iconName} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-medium text-gray-900 dark:text-white truncate">
@@ -341,24 +294,12 @@ function GroupHeader({
   count: number;
 }) {
   const label = ENTITY_TYPE_LABELS[entityType];
-  const iconPath = ENTITY_TYPE_ICONS[entityType];
+  const iconName = ENTITY_TYPE_ICONS[entityType];
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-dusk-700 bg-gray-50 dark:bg-dusk-800/50">
-      <svg
-        className="w-4 h-4 text-gray-500 dark:text-dusk-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d={iconPath}
-        />
-      </svg>
-      <span className="text-xs font-semibold text-gray-600 dark:text-dusk-300 uppercase tracking-wide">
+      <Icon name={iconName} size={16} className="text-gray-500 dark:text-dusk-400" />
+      <span className="text-gray-600 dark:text-dusk-300 eyebrow">
         {label}
       </span>
       <span className="text-xs text-gray-400 dark:text-dusk-400">

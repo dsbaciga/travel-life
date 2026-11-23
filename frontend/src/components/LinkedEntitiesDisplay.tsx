@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Icon from './ui/Icon';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import entityLinkService from '../services/entityLink.service';
@@ -254,8 +255,8 @@ export default function LinkedEntitiesDisplay({
     <div className={`mt-3 ${className}`}>
       {/* Section header */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
-          Linked Items
+        <span className="text-gray-500 dark:text-dusk-400 eyebrow">
+          Linked items
         </span>
         <div className="flex-1 h-px bg-gray-200 dark:bg-dusk-700"></div>
         {manageable && (
@@ -268,14 +269,7 @@ export default function LinkedEntitiesDisplay({
             className="inline-flex items-center gap-1 px-2 py-1 -my-1 rounded-md text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
             aria-label="Edit linked items"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-              />
-            </svg>
+            <Icon name="link" size={14} />
             Edit links
           </button>
         )}
@@ -295,7 +289,7 @@ export default function LinkedEntitiesDisplay({
             <div key={type}>
               {/* Type label with count */}
               <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-sm">{config.emoji}</span>
+                <Icon name={config.icon} size={16} />
                 <span className={`text-xs font-medium ${colors.text} ${colors.textDark}`}>
                   {items.length === 1 ? config.label : config.pluralLabel} ({items.length})
                 </span>
@@ -316,7 +310,7 @@ export default function LinkedEntitiesDisplay({
                     `}
                     title={`${getRelationshipLabel(item.link.relationship)}: ${item.displayName}`}
                   >
-                    <span className={compact ? 'text-xs' : 'text-sm'}>{config.emoji}</span>
+                    <Icon name={config.icon} size={compact ? 14 : 16} />
                     <span className={`font-medium ${colors.text} ${colors.textDark} truncate max-w-[150px]`}>
                       {item.displayName}
                     </span>

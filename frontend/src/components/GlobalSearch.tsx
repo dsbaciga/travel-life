@@ -22,6 +22,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import searchService, { type SearchResult } from '../services/search.service';
+import Icon from './ui/Icon';
 
 interface GlobalSearchProps {
   /** Show as compact mode (for navbar) */
@@ -168,47 +169,19 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
     switch (type) {
       case 'trip':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-            />
-          </svg>
+          <Icon name="trip" />
         );
       case 'location':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-          </svg>
+          <Icon name="place" />
         );
       case 'photo':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          <Icon name="photo" />
         );
       case 'journal':
         return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-            />
-          </svg>
+          <Icon name="journal" />
         );
     }
   }, []);
@@ -267,20 +240,7 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
       {/* Search Input */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <svg
-            className="w-5 h-5 text-gray-400 dark:text-dusk-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <Icon name="search" className="text-gray-400 dark:text-dusk-400" />
         </div>
         <input
           ref={inputRef}
@@ -320,14 +280,7 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
               className="text-gray-400 hover:text-gray-600 dark:hover:text-dusk-300"
               aria-label="Clear search"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" />
             </button>
           ) : (
             <kbd className="[@media(pointer:coarse)]:hidden px-2 py-1 text-xs font-semibold text-gray-600 dark:text-dusk-300 bg-gray-100 dark:bg-dusk-700 border border-gray-300 dark:border-dusk-600 rounded">
@@ -349,8 +302,8 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
           {!query && recentSearches.length > 0 && (
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2">
-                <span className="text-xs font-semibold text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
-                  Recent Searches
+                <span className="text-gray-500 dark:text-dusk-400 eyebrow">
+                  Recent searches
                 </span>
                 <button
                   onClick={clearRecentSearches}
@@ -366,20 +319,7 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
                   className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-dusk-700 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <svg
-                      className="w-4 h-4 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <Icon name="history" size={16} className="text-gray-400" />
                     <span className="text-sm text-gray-700 dark:text-dusk-300">{search}</span>
                   </div>
                 </button>
@@ -393,23 +333,10 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
           {/* No Results */}
           {query && !isLoading && results.length === 0 && (
             <div className="p-8 text-center">
-              <svg
-                className="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-dusk-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+              <Icon name="search" size={48} className="mx-auto mb-3 text-gray-400 dark:text-dusk-400" />
+              <p className="text-gray-600 dark:text-dusk-400 font-medium">Nothing matches &ldquo;{query}&rdquo;</p>
               <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-                Try different keywords
+                Try a different spelling or fewer words.
               </p>
             </div>
           )}

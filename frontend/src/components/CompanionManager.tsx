@@ -11,6 +11,7 @@ import Modal from './Modal';
 import EmptyState from './EmptyState';
 import DietaryTagSelector from './DietaryTagSelector';
 import DietaryBadges, { DietaryBadgesExpanded } from './DietaryBadges';
+import Icon from './ui/Icon';
 
 interface CompanionFormData {
   name: string;
@@ -68,7 +69,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       const allCompanions = await companionService.getCompanionsByUser();
       setCompanions(allCompanions);
     } catch {
-      toast.error('Failed to load companions');
+      toast.error("Couldn't load companions. Try again.");
     }
   };
 
@@ -97,7 +98,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       // Automatically link the new companion to this trip
       await handleLinkCompanion(newCompanion.id);
     } catch {
-      toast.error('Failed to create companion');
+      toast.error("Couldn't create companion. Try again.");
     }
   };
 
@@ -119,7 +120,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       manager.loadItems();
       onUpdate?.();
     } catch {
-      toast.error('Failed to update companion');
+      toast.error("Couldn't update companion. Try again.");
     }
   };
 
@@ -134,7 +135,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       if (error.response?.data?.message?.includes('already linked')) {
         toast.error('Companion already added to this trip');
       } else {
-        toast.error('Failed to add companion');
+        toast.error("Couldn't add companion. Try again.");
       }
     }
   };
@@ -142,9 +143,9 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
   const handleUnlinkCompanion = async (companionId: number) => {
     const companion = manager.items.find((c) => c.id === companionId);
     const confirmed = await confirm({
-      title: 'Remove from Trip',
-      message: `Remove ${companion?.name ?? 'this companion'} from this trip? They stay in your companions list.`,
-      confirmLabel: 'Remove',
+      title: 'Remove from trip',
+      message: `${companion?.name ?? 'This companion'} is removed from this trip. They stay in your companions list.`,
+      confirmLabel: 'Remove from trip',
       variant: 'warning',
     });
     if (!confirmed) return;
@@ -155,7 +156,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       manager.loadItems();
       onUpdate?.();
     } catch {
-      toast.error('Failed to remove companion');
+      toast.error("Couldn't remove companion. Try again.");
     }
   };
 
@@ -173,7 +174,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
   // resetForm is now provided by useFormReset hook - eliminates 6 lines of boilerplate
 
   if (manager.loading) {
-    return <div className="text-center py-4">Loading companions...</div>;
+    return <div className="text-center py-4">Loading companions…</div>;
   }
 
   const availableCompanions = companions.filter(
@@ -190,14 +191,14 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Travel Companions
+          Travel companions
         </h2>
         <button
           onClick={openCreateForm}
           className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
         >
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Companion</span>
+          <span className="hidden sm:inline">+ Add companion</span>
         </button>
       </div>
 
@@ -205,8 +206,8 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
       <Modal
         isOpen={showCompanionForm}
         onClose={resetForm}
-        title={editingCompanionId ? "Edit Companion" : "Add Companion"}
-        icon="👥"
+        title={editingCompanionId ? "Edit companion" : "Add companion"}
+        icon="users"
         maxWidth="lg"
         formId="companion-form"
         focusFirstInput
@@ -226,7 +227,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : `${editingCompanionId ? 'Update' : 'Add'} Companion`}
+              {isSubmitting ? 'Saving…' : `${editingCompanionId ? 'Update' : 'Add'} companion`}
             </button>
           </>
         }
@@ -305,7 +306,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
           </div>
           <div>
             <label htmlFor="dietary-preferences" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2">
-              Dietary Preferences
+              Dietary preferences
             </label>
             <p className="text-xs text-gray-500 dark:text-dusk-400 mb-2">
               Track dietary restrictions to easily find suitable restaurants when traveling together.
@@ -325,7 +326,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
         <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Companions on this trip</h3>
         {manager.items.length === 0 ? (
           <EmptyState.Compact
-            icon="👥"
+            icon="users"
             message="No companions added yet"
           />
         ) : (
@@ -362,7 +363,11 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                           onClick={() => setExpandedId(isExpanded ? null : companion.id)}
                           className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                          {isExpanded ? 'Show less ↑' : 'Show details ↓'}
+                          {isExpanded ? (
+                            <>Show less <Icon name="collapse" size={16} className="align-text-bottom" /></>
+                          ) : (
+                            <>Show details <Icon name="expand" size={16} className="align-text-bottom" /></>
+                          )}
                         </button>
                       )}
                       {isExpanded && (
@@ -484,7 +489,7 @@ export default function CompanionManager({ tripId, onUpdate }: CompanionManagerP
                 ))
               ) : (
                 <div className="text-center py-4 text-gray-500 dark:text-dusk-400 text-sm">
-                  No companions found matching "{searchQuery}"
+                  No companions match "{searchQuery}"
                 </div>
               )}
             </div>

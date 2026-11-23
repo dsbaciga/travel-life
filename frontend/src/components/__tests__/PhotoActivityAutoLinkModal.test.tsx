@@ -207,7 +207,7 @@ describe('PhotoActivityAutoLinkModal', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Link 4 photos' }));
 
-    await waitFor(() => expect(h.toast.error).toHaveBeenCalledWith('Failed to link photos'));
+    await waitFor(() => expect(h.toast.error).toHaveBeenCalledWith("Couldn't link photos. Try again."));
     expect(onClose).not.toHaveBeenCalled();
     expect(h.invalidate).not.toHaveBeenCalled();
   });

@@ -533,7 +533,7 @@ describe('restore endpoint — backup integrity signature', () => {
     expect(next).toHaveBeenCalledTimes(1);
     const error = next.mock.calls[0][0] as { statusCode: number; message: string };
     expect(error.statusCode).toBe(400);
-    expect(error.message).toContain('integrity check failed');
+    expect(error.message).toContain('integrity check');
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -558,7 +558,7 @@ describe('restore endpoint — backup integrity signature', () => {
 
     const error = next.mock.calls[0][0] as { statusCode: number; message: string };
     expect(error.statusCode).toBe(400);
-    expect(error.message).toContain('missing or malformed');
+    expect(error.message).toContain('missing a valid integrity signature');
   });
 
   it('rejects a signed backup that still carries a traversal path (schema is the next gate)', async () => {

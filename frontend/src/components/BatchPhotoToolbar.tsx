@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Icon from './ui/Icon';
 
 interface BatchPhotoToolbarProps {
   selectedCount: number;
@@ -65,19 +66,7 @@ export default function BatchPhotoToolbar({
             <div className="flex items-center gap-3">
               {/* Checkmark indicator */}
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40">
-                <svg
-                  className="w-5 h-5 text-primary-600 dark:text-primary-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+                <Icon name="check" className="text-primary-600 dark:text-primary-400" />
               </div>
 
               {/* Selection count */}
@@ -122,9 +111,7 @@ export default function BatchPhotoToolbar({
                     title="Select all"
                     aria-label="Select all"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Icon name="success" />
                     <span className="text-[11px] leading-none whitespace-nowrap">All</span>
                   </button>
                 )}
@@ -138,9 +125,7 @@ export default function BatchPhotoToolbar({
                   title="Remove from album"
                   aria-label="Remove from album"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <Icon name="delete" size={16} />
                   <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Remove</span>
                 </button>
               ) : (
@@ -154,9 +139,7 @@ export default function BatchPhotoToolbar({
                       title="Add to album"
                       aria-label="Add to album"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
+                      <Icon name="album" size={16} />
                       <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Album</span>
                     </button>
                   )}
@@ -165,12 +148,10 @@ export default function BatchPhotoToolbar({
                   <button
                     onClick={onLinkToEntity}
                     className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors min-w-[44px] justify-center"
-                    title="Link to location, activity, or lodging"
-                    aria-label="Link to location, activity, or lodging"
+                    title="Link to location, activity, or stay"
+                    aria-label="Link to location, activity, or stay"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
+                    <Icon name="link" size={16} />
                     <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Link</span>
                   </button>
 
@@ -183,16 +164,11 @@ export default function BatchPhotoToolbar({
                     aria-label="Delete selected photos"
                   >
                     {isDeleting ? (
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
+                      <Icon name="spinner" size={16} className="animate-spin" />
                     ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Icon name="delete" size={16} />
                     )}
-                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">{isDeleting ? 'Deleting...' : 'Delete'}</span>
+                    <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">{isDeleting ? 'Deleting…' : 'Delete'}</span>
                   </button>
                 </>
               )}
@@ -204,9 +180,7 @@ export default function BatchPhotoToolbar({
                 title="Exit selection mode"
                 aria-label="Exit selection mode"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <Icon name="close" size={16} />
                 <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Done</span>
               </button>
             </div>

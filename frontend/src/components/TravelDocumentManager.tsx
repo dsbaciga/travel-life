@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Icon from './ui/Icon';
 import travelDocumentService from '../services/travelDocument.service';
 import type {
   TravelDocument,
@@ -89,7 +90,7 @@ export default function TravelDocumentManager() {
       const docs = await travelDocumentService.getAll();
       setDocuments(docs);
     } catch {
-      toast.error('Failed to load travel documents');
+      toast.error("Couldn't load travel documents. Try again.");
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,7 @@ export default function TravelDocumentManager() {
       resetForm();
       loadDocuments();
     } catch {
-      toast.error('Failed to add document');
+      toast.error("Couldn't add document. Try again.");
     }
   };
 
@@ -155,15 +156,15 @@ export default function TravelDocumentManager() {
       resetForm();
       loadDocuments();
     } catch {
-      toast.error('Failed to update document');
+      toast.error("Couldn't update document. Try again.");
     }
   };
 
   const handleDelete = async (doc: TravelDocument) => {
     const confirmed = await confirm({
-      title: 'Delete Document',
-      message: `Delete "${doc.name}"? This action cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: 'Delete document',
+      message: `"${doc.name}" is deleted. You can't undo this.`,
+      confirmLabel: 'Delete document',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -173,7 +174,7 @@ export default function TravelDocumentManager() {
       toast.success('Document deleted');
       loadDocuments();
     } catch {
-      toast.error('Failed to delete document');
+      toast.error("Couldn't delete document. Try again.");
     }
   };
 
@@ -202,19 +203,19 @@ export default function TravelDocumentManager() {
   }, {} as Record<DocumentType, TravelDocument[]>);
 
   if (loading) {
-    return <div className="text-center py-4">Loading documents...</div>;
+    return <div className="text-center py-4">Loading documents…</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Travel Documents
+          Travel documents
         </h2>
         {documents.length > 0 && (
         <button onClick={openCreateForm} className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Document</span>
+          <span className="hidden sm:inline">+ Add document</span>
         </button>
         )}
       </div>
@@ -222,7 +223,7 @@ export default function TravelDocumentManager() {
       {/* Privacy notice */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
-          Privacy Note
+          Privacy note
         </h3>
         <p className="text-sm text-blue-800 dark:text-blue-200">
           Document numbers are optional and stored securely. Only the last 4 characters are ever
@@ -234,7 +235,7 @@ export default function TravelDocumentManager() {
       <Modal
         isOpen={showDocumentForm}
         onClose={resetForm}
-        title={editingDocumentId ? 'Edit Document' : 'Add Travel Document'}
+        title={editingDocumentId ? 'Edit document' : 'Add travel document'}
         icon={getDocumentTypeIcon(formData.type)}
         maxWidth="lg"
         formId="document-form"
@@ -246,7 +247,7 @@ export default function TravelDocumentManager() {
               Cancel
             </button>
             <button type="submit" form="document-form" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : `${editingDocumentId ? 'Update' : 'Add'} Document`}
+              {isSubmitting ? 'Saving…' : `${editingDocumentId ? 'Update' : 'Add'} document`}
             </button>
           </>
         }
@@ -270,7 +271,7 @@ export default function TravelDocumentManager() {
               >
                 {DOCUMENT_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {getDocumentTypeIcon(type)} {DOCUMENT_TYPE_LABELS[type]}
+                    {DOCUMENT_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -355,7 +356,7 @@ export default function TravelDocumentManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="doc-issue-date" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                Issue Date
+                Issue date
               </label>
               <input
                 type="date"
@@ -367,7 +368,7 @@ export default function TravelDocumentManager() {
             </div>
             <div>
               <label htmlFor="doc-expiry-date" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-                Expiry Date
+                Expiry date
               </label>
               <input
                 type="date"
@@ -381,7 +382,7 @@ export default function TravelDocumentManager() {
 
           <div>
             <label htmlFor="doc-alert-days" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              Alert Days Before Expiry
+              Alert days before expiry
             </label>
             <select
               id="doc-alert-days"
@@ -408,7 +409,7 @@ export default function TravelDocumentManager() {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="input"
               rows={3}
-              placeholder="Additional notes..."
+              placeholder="Additional notes…"
               maxLength={1000}
             />
           </div>
@@ -435,10 +436,10 @@ export default function TravelDocumentManager() {
       {/* Document List */}
       {documents.length === 0 ? (
         <EmptyState
-          icon="📄"
+          icon="document"
           message="No travel documents yet"
-          subMessage="Add your passports, visas, and other travel documents to track expiration dates and receive alerts."
-          actionLabel="Add Document"
+          subMessage="Add passports, visas and other documents to track expiry dates."
+          actionLabel="Add document"
           onAction={openCreateForm}
         />
       ) : (
@@ -446,7 +447,7 @@ export default function TravelDocumentManager() {
           {(Object.entries(groupedDocuments) as [DocumentType, TravelDocument[]][]).map(([type, docs]) => (
             <div key={type} className="bg-white dark:bg-dusk-800 rounded-lg shadow p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>{getDocumentTypeIcon(type)}</span>
+                <Icon name={getDocumentTypeIcon(type)} />
                 {DOCUMENT_TYPE_LABELS[type]}s
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({docs.length})

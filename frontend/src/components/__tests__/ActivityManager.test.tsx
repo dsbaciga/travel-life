@@ -202,7 +202,7 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
     });
 
@@ -211,10 +211,10 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
 
       await waitFor(() => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -233,9 +233,9 @@ describe("ActivityManager", () => {
 
       renderActivityManager();
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
       await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
       fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "First Activity" } });
@@ -246,7 +246,7 @@ describe("ActivityManager", () => {
       expect(screen.getByRole("dialog")).toBeInTheDocument();
 
       fireEvent.change(screen.getByLabelText(/name/i), { target: { value: "Second Activity" } });
-      await user.click(screen.getByRole("button", { name: /^add activity$/i }));
+      await user.click(screen.getAllByRole("button", { name: /^add activity$/i }).at(-1)!);
 
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
       expect(activityService.createActivity).toHaveBeenCalledTimes(2);
@@ -264,11 +264,11 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
 
       // Click add button
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
 
       // Wait for modal
       await waitFor(() => {
@@ -280,7 +280,7 @@ describe("ActivityManager", () => {
       fireEvent.change(nameInput, { target: { value: "New Test Activity" } });
 
       // Submit the form
-      const submitButton = screen.getByRole("button", { name: /^add activity$/i });
+      const submitButton = screen.getAllByRole("button", { name: /^add activity$/i }).at(-1)!;
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -305,10 +305,10 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
 
       await waitFor(() => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -317,7 +317,7 @@ describe("ActivityManager", () => {
       const nameInput = screen.getByLabelText(/name/i);
       fireEvent.change(nameInput, { target: { value: "Test Activity" } });
 
-      await user.click(screen.getByRole("button", { name: /^add activity$/i }));
+      await user.click(screen.getAllByRole("button", { name: /^add activity$/i }).at(-1)!);
 
       await waitFor(() => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -340,10 +340,10 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
 
       await waitFor(() => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -352,7 +352,7 @@ describe("ActivityManager", () => {
       const nameInput = screen.getByLabelText(/name/i);
       fireEvent.change(nameInput, { target: { value: "Newly Created Activity" } });
 
-      await user.click(screen.getByRole("button", { name: /^add activity$/i }));
+      await user.click(screen.getAllByRole("button", { name: /^add activity$/i }).at(-1)!);
 
       await waitFor(() => {
         expect(screen.getByText("Newly Created Activity")).toBeInTheDocument();
@@ -507,7 +507,7 @@ describe("ActivityManager", () => {
       await user.click(screen.getByRole("button", { name: /delete activity/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete this activity/i)).toBeInTheDocument();
+        expect(screen.getByText(/this activity and all its sub-activities are deleted/i)).toBeInTheDocument();
       });
     });
 
@@ -527,11 +527,11 @@ describe("ActivityManager", () => {
       await user.click(screen.getByRole("button", { name: /delete activity/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete this activity/i)).toBeInTheDocument();
+        expect(screen.getByText(/this activity and all its sub-activities are deleted/i)).toBeInTheDocument();
       });
 
       // Click confirm in the dialog
-      const confirmButton = screen.getByRole("button", { name: /^delete$/i });
+      const confirmButton = screen.getByRole("button", { name: /^delete activity$/i });
       await user.click(confirmButton);
 
       await waitFor(() => {
@@ -552,7 +552,7 @@ describe("ActivityManager", () => {
       await user.click(screen.getByRole("button", { name: /delete activity/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete this activity/i)).toBeInTheDocument();
+        expect(screen.getByText(/this activity and all its sub-activities are deleted/i)).toBeInTheDocument();
       });
 
       // Click cancel in the dialog
@@ -579,10 +579,10 @@ describe("ActivityManager", () => {
       await user.click(screen.getByRole("button", { name: /delete activity/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete this activity/i)).toBeInTheDocument();
+        expect(screen.getByText(/this activity and all its sub-activities are deleted/i)).toBeInTheDocument();
       });
 
-      const confirmButton = screen.getByRole("button", { name: /^delete$/i });
+      const confirmButton = screen.getByRole("button", { name: /^delete activity$/i });
       await user.click(confirmButton);
 
       await waitFor(() => {
@@ -697,8 +697,8 @@ describe("ActivityManager", () => {
         expect(screen.getByText("Unscheduled Activity")).toBeInTheDocument();
       });
 
-      // Check for section headers - they contain emojis and counts like "📅 Scheduled Activities (1)"
-      // Use a more flexible regex that matches the text ignoring emojis
+      // Check for section headers - they contain an icon and counts like "Scheduled Activities (1)"
+      // Match on the heading text only, ignoring the icon
       const headings = screen.getAllByRole("heading");
       const scheduledHeading = headings.find(h => h.textContent?.toLowerCase().includes("scheduled activities"));
       const unscheduledHeading = headings.find(h => h.textContent?.toLowerCase().includes("unscheduled activities"));
@@ -718,7 +718,7 @@ describe("ActivityManager", () => {
       renderActivityManager();
 
       await waitFor(() => {
-        expect(screen.getByText(/what will you discover/i)).toBeInTheDocument();
+        expect(screen.getByText(/no activities yet/i)).toBeInTheDocument();
       });
     });
 
@@ -741,7 +741,7 @@ describe("ActivityManager", () => {
       resolveActivities!([]);
 
       await waitFor(() => {
-        expect(screen.getByText(/what will you discover/i)).toBeInTheDocument();
+        expect(screen.getByText(/no activities yet/i)).toBeInTheDocument();
       });
     });
 
@@ -801,10 +801,10 @@ describe("ActivityManager", () => {
       renderActivityManager({ onUpdate });
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: /add activity/i })).toBeInTheDocument();
+        expect(screen.getAllByRole("button", { name: /add activity/i })[0]).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole("button", { name: /add activity/i }));
+      await user.click(screen.getAllByRole("button", { name: /add activity/i })[0]);
 
       await waitFor(() => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -813,7 +813,7 @@ describe("ActivityManager", () => {
       const nameInput = screen.getByLabelText(/name/i);
       fireEvent.change(nameInput, { target: { value: "Test" } });
 
-      await user.click(screen.getByRole("button", { name: /^add activity$/i }));
+      await user.click(screen.getAllByRole("button", { name: /^add activity$/i }).at(-1)!);
 
       await waitFor(() => {
         expect(onUpdate).toHaveBeenCalled();

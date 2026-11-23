@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { ChevronDownIcon } from './icons';
+import Icon from './ui/Icon';
 
 export interface MultiSelectOption {
   value: string;
@@ -243,9 +244,7 @@ export default function MultiSelectDropdown({
                     }`}
                   >
                     {isSelected && (
-                      <svg className="w-3 h-3 text-white dark:text-navy-900" viewBox="0 0 12 12" fill="none">
-                        <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <Icon name="check" size={12} className="text-white dark:text-navy-900" />
                     )}
                   </span>
                   {option.emoji && <span>{option.emoji}</span>}

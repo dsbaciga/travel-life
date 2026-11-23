@@ -446,7 +446,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
       />
 
       {/* SECTION 1: Basic Info */}
-      <FormSection title="Basic Info" icon="🎯">
+      <FormSection title="Basic info" icon="activity">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
@@ -506,7 +506,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 
       {/* SECTION: Dietary Options - shown prominently when category is Dining */}
       {values.category.toLowerCase() === "dining" && (
-        <FormSection title="Dietary Options" icon="🍽️">
+        <FormSection title="Dietary options" icon="food">
           <p className="text-sm text-gray-600 dark:text-dusk-400 mb-3">
             Select dietary accommodations available at this restaurant.
           </p>
@@ -520,7 +520,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
       )}
 
       {/* SECTION 2: Schedule */}
-      <FormSection title="Schedule" icon="🕐">
+      <FormSection title="Schedule" icon="schedule">
         {/* Unscheduled Toggle */}
         <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
           <input
@@ -578,7 +578,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                     htmlFor={`${formId}-start-date`}
                     className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
-                    Start Date
+                    Start date
                   </label>
                   <input
                     type="date"
@@ -602,7 +602,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                     htmlFor={`${formId}-end-date`}
                     className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                   >
-                    End Date
+                    End date
                   </label>
                   <input
                     type="date"
@@ -630,7 +630,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                       htmlFor={`${formId}-start-date-time`}
                       className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                     >
-                      Start Time
+                      Start time
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -666,7 +666,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
                       htmlFor={`${formId}-end-date-time`}
                       className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                     >
-                      End Time
+                      End time
                     </label>
                     <div className="flex gap-2">
                       <input
@@ -714,7 +714,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
       </FormSection>
 
       {/* Place: linked through the entity link system */}
-      <FormSection title="Place" icon="📍">
+      <FormSection title="Place" icon="place">
         {showLocationQuickAdd ? (
           <LocationQuickAdd
             tripId={tripId}
@@ -768,8 +768,8 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 
       {/* COLLAPSIBLE: More Options */}
       <CollapsibleSection
-        title="More Options"
-        icon="⚙️"
+        title="More options"
+        icon="settings"
         isExpanded={showMoreOptions}
         onToggle={() => setShowMoreOptions(!showMoreOptions)}
         badge="description, booking, cost"
@@ -787,13 +787,13 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 
         {/* Organization */}
         {topLevelActivities.length > 0 && (
-          <FormSection title="Organization" icon="📂">
+          <FormSection title="Organization" icon="folder">
             <div>
               <label
                 htmlFor={`${formId}-parent`}
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
               >
-                Parent Activity
+                Parent activity
               </label>
               <select
                 id={`${formId}-parent`}
@@ -824,7 +824,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         )}
 
         {/* Booking Section */}
-        <FormSection title="Booking Details" icon="🎫">
+        <FormSection title="Booking details" icon="ticket">
           <BookingFields
             confirmationNumber={values.bookingReference}
             bookingUrl={values.bookingUrl}
@@ -837,7 +837,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
         </FormSection>
 
         {/* Cost Section */}
-        <FormSection title="Cost" icon="💰">
+        <FormSection title="Cost" icon="expense">
           <CostCurrencyFields
             cost={values.cost}
             currency={values.currency}
@@ -848,7 +848,7 @@ const ActivityForm = forwardRef<HTMLFormElement, ActivityFormProps>(function Act
 
         {/* Dietary Options - in More Options for non-dining activities */}
         {values.category.toLowerCase() !== "dining" && (
-          <FormSection title="Dietary Options" icon="🍽️">
+          <FormSection title="Dietary options" icon="food">
             <p className="text-sm text-gray-600 dark:text-dusk-400 mb-3">
               If this activity involves food, select available dietary accommodations.
             </p>

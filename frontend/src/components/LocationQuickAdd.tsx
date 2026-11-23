@@ -3,6 +3,7 @@ import geocodingService, { countryCodeFromGeocode } from '../services/geocoding.
 import locationService from '../services/location.service';
 import type { GeocodingResult } from '../services/geocoding.service';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
 
 interface LocationQuickAddProps {
   tripId: number;
@@ -35,7 +36,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
         setSearchResults(results);
       } catch (error) {
         console.error('Search error:', error);
-        toast.error('Failed to search locations');
+        toast.error("Couldn't search locations. Try again.");
       } finally {
         setSearching(false);
       }
@@ -70,7 +71,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
       onLocationCreated(newLocation.id, newLocation.name);
     } catch (error) {
       console.error('Failed to create location:', error);
-      toast.error('Failed to create location');
+      toast.error("Couldn't create location. Try again.");
     } finally {
       setCreating(false);
     }
@@ -80,7 +81,7 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
     <div className="border border-blue-300 dark:border-blue-700 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-          Add New Location
+          Add new location
         </h4>
         <button
           type="button"
@@ -96,14 +97,14 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search for a place..."
+          placeholder="Search for a place…"
           className="input"
           autoFocus
         />
 
         {searching && (
           <div className="text-sm text-gray-600 dark:text-dusk-400 py-2">
-            Searching...
+            Searching…
           </div>
         )}
 
@@ -136,13 +137,13 @@ export default function LocationQuickAdd({ tripId, onLocationCreated, onCancel }
 
         {creating && (
           <div className="text-sm text-blue-600 dark:text-blue-400 py-2">
-            Creating location...
+            Creating location…
           </div>
         )}
       </div>
 
       <div className="mt-3 text-xs text-gray-500 dark:text-dusk-400">
-        💡 Search for a place name, address, or landmark
+        <Icon name="lightbulb" size={14} className="align-text-bottom" /> Search for a place name, address, or landmark
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import checklistService from "../services/checklist.service";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import Breadcrumbs from "../components/Breadcrumbs";
 import AirportSearchInput from "../components/AirportSearchInput";
+import Icon from '../components/ui/Icon';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +29,7 @@ export default function ChecklistDetailPage() {
       setChecklistName(data.name);
     } catch (err) {
       console.error("Failed to load checklist:", err);
-      toast.error("Failed to load checklist");
+      toast.error("Couldn't load checklist. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +47,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update item:", err);
-      toast.error("Failed to update item");
+      toast.error("Couldn't update item. Try again.");
     }
   };
 
@@ -66,15 +67,15 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to add item:", err);
-      toast.error("Failed to add item");
+      toast.error("Couldn't add item. Try again.");
     }
   };
 
   const handleDeleteItem = async (itemId: number) => {
     const confirmed = await confirm({
-      title: "Delete Item",
-      message: "Are you sure you want to delete this item?",
-      confirmLabel: "Delete",
+      title: "Delete item",
+      message: "This item comes off the checklist.",
+      confirmLabel: "Delete item",
       variant: "danger",
     });
     if (!confirmed) {
@@ -86,7 +87,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to delete item:", err);
-      toast.error("Failed to delete item");
+      toast.error("Couldn't delete item. Try again.");
     }
   };
 
@@ -101,7 +102,7 @@ export default function ChecklistDetailPage() {
       await loadChecklist();
     } catch (err) {
       console.error("Failed to update checklist name:", err);
-      toast.error("Failed to update checklist name");
+      toast.error("Couldn't update checklist name. Try again.");
     }
   };
 
@@ -198,8 +199,9 @@ export default function ChecklistDetailPage() {
           onClick={() => handleDeleteItem(item.id)}
           className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex-shrink-0"
           title="Delete item"
+          aria-label="Delete item"
         >
-          🗑️
+          <Icon name="delete" size={20} />
         </button>
       )}
     </div>
@@ -253,8 +255,9 @@ export default function ChecklistDetailPage() {
                     <button
                       onClick={() => setEditingName(true)}
                       className="text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 shrink-0"
+                      aria-label="Edit name"
                     >
-                      ✏️
+                      <Icon name="edit" size={20} />
                     </button>
                   )}
                 </div>
@@ -294,7 +297,7 @@ export default function ChecklistDetailPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input flex-1"
-              placeholder="Search items..."
+              placeholder="Search items…"
               aria-label="Search checklist items"
             />
             {/* The inline item form has its own Cancel; the airport picker does not. */}
@@ -303,11 +306,12 @@ export default function ChecklistDetailPage() {
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="btn btn-primary"
               >
+                <Icon name={showAddForm ? "close" : "add"} size={20} className="mr-1 align-text-bottom" />
                 {showAddForm
                   ? "Cancel"
                   : isAirports
-                    ? "+ Add Airport"
-                    : "+ Add Item"}
+                    ? "Add airport"
+                    : "Add item"}
               </button>
             )}
           </div>
@@ -347,12 +351,12 @@ export default function ChecklistDetailPage() {
                   value={newItemDescription}
                   onChange={(e) => setNewItemDescription(e.target.value)}
                   className="input"
-                  placeholder="Optional description..."
+                  placeholder="Optional description…"
                 />
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Add Item
+                  Add item
                 </button>
                 <button
                   type="button"

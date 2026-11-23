@@ -684,7 +684,7 @@ class TransportationService {
     });
 
     if (transportations.length !== data.ids.length) {
-      throw new AppError('One or more transportation items not found or do not belong to this trip', 404);
+      throw new AppError("Some of those transport items aren't on this trip.", 404);
     }
 
     // Clean up entity links and delete atomically in a transaction (cost rows go with the legs)
@@ -723,7 +723,7 @@ class TransportationService {
     });
 
     if (transportations.length !== data.ids.length) {
-      throw new AppError('One or more transportation items not found or do not belong to this trip', 404);
+      throw new AppError("Some of those transport items aren't on this trip.", 404);
     }
 
     // Build update data from non-undefined values, mapping frontend names to DB names
@@ -733,7 +733,7 @@ class TransportationService {
     if (data.updates.notes !== undefined) updateData.notes = data.updates.notes;
 
     if (Object.keys(updateData).length === 0) {
-      throw new AppError('No valid update fields provided', 400);
+      throw new AppError('Nothing to save. Change a field first.', 400);
     }
 
     // Update all transportation items

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import Icon from './ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
@@ -92,7 +94,7 @@ export default function LinkPanel({
       void lightboxThumbnails.loadThumbnail(photo.id, photo.thumbnailPath, photo.source);
       setLightboxPhoto(photo);
     } catch {
-      toast.error('Failed to load photo');
+      toast.error("Couldn't load photo. Try again.");
     }
   };
 
@@ -153,7 +155,7 @@ export default function LinkPanel({
     },
     onError: (error: Error) => {
       console.error('Failed to delete link:', error);
-      toast.error('Failed to remove link');
+      toast.error("Couldn't remove link. Try again.");
     },
   });
 
@@ -347,8 +349,16 @@ export default function LinkPanel({
     return linksByType;
   }, [linksData]);
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
   const handleDeleteLink = async (linkId: number) => {
-    if (window.confirm('Remove this link?')) {
+    const confirmed = await confirm({
+      title: 'Remove link',
+      message: 'The two items are no longer linked. Neither one is deleted.',
+      confirmLabel: 'Remove link',
+      variant: 'warning',
+    });
+    if (confirmed) {
       deleteLinkMutation.mutate(linkId);
     }
   };
@@ -362,6 +372,7 @@ export default function LinkPanel({
       aria-modal="true"
       aria-labelledby="link-panel-title"
     >
+      <ConfirmDialogComponent />
       <div
         ref={panelRef}
         tabIndex={-1}
@@ -371,7 +382,7 @@ export default function LinkPanel({
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h3 id="link-panel-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-              {currentEntityConfig.emoji} Links
+              <Icon name={currentEntityConfig.icon} className="align-text-bottom" /> Links
             </h3>
             <p className="text-sm text-gray-500 dark:text-dusk-400">
               {linksData?.summary.totalLinks ?? 0} linked items
@@ -384,7 +395,7 @@ export default function LinkPanel({
               aria-label="Add link"
               className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md transition-colors"
             >
-              + Add Link
+              <Icon name="add" size={16} className="align-text-bottom" /> Add Link
             </button>
             <button
               onClick={onClose}
@@ -392,14 +403,7 @@ export default function LinkPanel({
               aria-label="Close"
               className="text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" size={24} />
             </button>
           </div>
         </div>
@@ -412,16 +416,16 @@ export default function LinkPanel({
             </div>
           ) : error ? (
             <div className="text-red-600 dark:text-red-400 text-center py-8">
-              Failed to load links. Please try again.
+              Failed to load links. Try again.
             </div>
           ) : linkedEntityTypes.length === 0 ? (
             <div className="text-center py-8">
-              <div className="text-4xl mb-3">🔗</div>
+              <Icon name="link" size={40} className="mb-3 text-gray-400 dark:text-dusk-400" />
               <p className="text-gray-600 dark:text-dusk-400">
                 No linked items yet
               </p>
               <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-                Click "Add Link" above to connect this item to photos, locations, or other entities.
+                Click "Add link" above to connect this item to photos, locations, or other entities.
               </p>
             </div>
           ) : (
@@ -434,7 +438,7 @@ export default function LinkPanel({
                 return (
                   <div key={type}>
                     <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2 flex items-center gap-2">
-                      <span>{config.emoji}</span>
+                      <Icon name={config.icon} />
                       <span>{config.pluralLabel}</span>
                       <span className="text-gray-500">({links.length})</span>
                     </h4>
@@ -489,9 +493,7 @@ export default function LinkPanel({
                                   <div className="w-12 h-12 bg-gray-200 dark:bg-dusk-700 rounded flex-shrink-0 animate-pulse" />
                                 )
                               ) : (
-                                <span className="text-lg flex-shrink-0">
-                                  {ENTITY_TYPE_CONFIG[linkedEntityType].emoji}
-                                </span>
+                                <Icon name={ENTITY_TYPE_CONFIG[linkedEntityType].icon} />
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className={`font-medium truncate ${colors.text} ${colors.textDark} hover:underline`}>
@@ -507,19 +509,7 @@ export default function LinkPanel({
                                 </div>
                               </div>
                               {/* Go to icon */}
-                              <svg
-                                className="w-4 h-4 text-gray-400 dark:text-dusk-400 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
+                              <Icon name="chevronRight" size={16} className="text-gray-400 dark:text-dusk-400" />
                             </div>
                             {/* Action buttons */}
                             <div className="flex items-center gap-1 ml-2 flex-shrink-0">
@@ -532,14 +522,7 @@ export default function LinkPanel({
                                 className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-dusk-400 dark:hover:text-blue-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Edit link"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
+                                <Icon name="edit" size={16} />
                               </button>
                               {/* Delete button */}
                               <button
@@ -551,14 +534,7 @@ export default function LinkPanel({
                                 className="p-1.5 text-gray-500 hover:text-red-600 dark:text-dusk-400 dark:hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Remove link"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
+                                <Icon name="close" size={16} />
                               </button>
                             </div>
                           </div>

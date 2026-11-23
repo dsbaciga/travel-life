@@ -205,7 +205,7 @@ describe('TripSeriesService', () => {
       mockPrisma.tripSeries.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.getById(1, 999)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
     });
 
@@ -213,7 +213,7 @@ describe('TripSeriesService', () => {
       mockPrisma.tripSeries.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.getById(2, 1)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
     });
   });
@@ -246,7 +246,7 @@ describe('TripSeriesService', () => {
 
       await expect(
         tripSeriesService.update(1, 999, { name: 'Test' })
-      ).rejects.toThrow('Trip series not found');
+      ).rejects.toThrow("We couldn't find that trip series.");
     });
   });
 
@@ -270,7 +270,7 @@ describe('TripSeriesService', () => {
       mockPrisma.tripSeries.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.delete(1, 999)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
     });
   });
@@ -328,7 +328,7 @@ describe('TripSeriesService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.addTrip(1, 1, 999)).rejects.toThrow(
-        'Trip not found'
+        "We couldn't find that trip."
       );
     });
   });
@@ -361,7 +361,7 @@ describe('TripSeriesService', () => {
       mockPrisma.trip.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.removeTrip(1, 1, 999)).rejects.toThrow(
-        'Trip not found in this series'
+        "That trip isn't in this series."
       );
     });
   });
@@ -393,7 +393,7 @@ describe('TripSeriesService', () => {
 
       await expect(
         tripSeriesService.reorderTrips(1, 1, [1, 2, 999])
-      ).rejects.toThrow('Trip 999 does not belong to this series');
+      ).rejects.toThrow("Trip 999 isn't in this series.");
     });
 
     it('should throw error if not all trips are included', async () => {
@@ -406,7 +406,7 @@ describe('TripSeriesService', () => {
 
       await expect(
         tripSeriesService.reorderTrips(1, 1, [1, 2])
-      ).rejects.toThrow('All trips in the series must be included in the reorder');
+      ).rejects.toThrow('Include every trip in the series when you reorder.');
     });
   });
 
@@ -418,7 +418,7 @@ describe('TripSeriesService', () => {
       mockPrisma.tripSeries.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.getById(2, 1)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
     });
 
@@ -426,19 +426,19 @@ describe('TripSeriesService', () => {
       mockPrisma.tripSeries.findFirst.mockResolvedValue(null);
 
       await expect(tripSeriesService.update(2, 1, { name: 'Test' })).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
       await expect(tripSeriesService.delete(2, 1)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
       await expect(tripSeriesService.addTrip(2, 1, 1)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
       await expect(tripSeriesService.removeTrip(2, 1, 1)).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
       await expect(tripSeriesService.reorderTrips(2, 1, [1])).rejects.toThrow(
-        'Trip series not found'
+        "We couldn't find that trip series."
       );
     });
   });

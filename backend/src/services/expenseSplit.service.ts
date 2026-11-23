@@ -59,7 +59,7 @@ class ExpenseSplitService {
 
     const expense = await prisma.tripExpense.findFirst({ where: { id: expenseId, tripId } });
     if (!expense) {
-      throw new AppError('Expense not found or does not belong to trip', 404);
+      throw new AppError("We couldn't find that expense on this trip.", 404);
     }
 
     if (input.paidBy === null) {

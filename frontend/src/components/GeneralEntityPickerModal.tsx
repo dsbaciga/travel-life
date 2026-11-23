@@ -7,6 +7,8 @@ import entityLinkService from '../services/entityLink.service';
 import { getFullAssetUrl } from '../lib/config';
 import { getAccessToken } from '../lib/axios';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
+import { getApiErrorMessage } from '../lib/errors';
 
 // Threshold for showing search bar
 const SEARCH_THRESHOLD = 5;
@@ -180,7 +182,7 @@ export default function GeneralEntityPickerModal({
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create link:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create link';
+      const message = getApiErrorMessage(error, "Couldn't create link. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);
@@ -205,14 +207,14 @@ export default function GeneralEntityPickerModal({
         toast.success(`${result.created} link${result.created > 1 ? 's' : ''} created`);
       }
       if (result.skipped > 0) {
-        toast(`${result.skipped} already linked`, { icon: 'ℹ️' });
+        toast(`${result.skipped} already linked`, { icon: <Icon name="info" /> });
       }
       invalidateEntityLinks(tripId);
       onSuccess?.();
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create links:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create links';
+      const message = getApiErrorMessage(error, "Couldn't create links. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);
@@ -260,14 +262,14 @@ export default function GeneralEntityPickerModal({
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h3 id="entity-picker-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-              Link to...
+              Link to…
             </h3>
             {selectedType && (
               <button
                 onClick={handleBack}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
-                ← Back to types
+                Back to types
               </button>
             )}
           </div>
@@ -277,14 +279,7 @@ export default function GeneralEntityPickerModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -301,7 +296,7 @@ export default function GeneralEntityPickerModal({
                     onClick={() => setSelectedType(type)}
                     className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 p-4 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
-                    <span className="text-2xl">{config.emoji}</span>
+                    <Icon name={config.icon} size={24} />
                     <span className="font-medium text-gray-900 dark:text-white text-center sm:text-left">{config.label}</span>
                   </button>
                 );
@@ -333,7 +328,7 @@ export default function GeneralEntityPickerModal({
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search..."
+                      placeholder="Search…"
                       className="input flex-1"
                     />
                   )}
@@ -422,13 +417,7 @@ export default function GeneralEntityPickerModal({
                           }`}
                         >
                           {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
+                            <Icon name="check" size={12} className="text-white" />
                           )}
                         </div>
                       )}
@@ -454,9 +443,7 @@ export default function GeneralEntityPickerModal({
                           />
                         )
                       ) : (
-                        <span className="text-lg">
-                          {selectedType && ENTITY_TYPE_CONFIG[selectedType].emoji}
-                        </span>
+                        selectedType && <Icon name={ENTITY_TYPE_CONFIG[selectedType].icon} />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 dark:text-white truncate">
@@ -513,7 +500,7 @@ export default function GeneralEntityPickerModal({
                 disabled={linking}
                 className="btn btn-primary flex-1"
               >
-                {linking ? 'Linking...' : `Link ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}`}
+                {linking ? 'Linking…' : `Link ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}`}
               </button>
             </div>
           ) : (

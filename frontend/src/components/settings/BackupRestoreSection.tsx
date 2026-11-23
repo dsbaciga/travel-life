@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import backupService from "../../services/backup.service";
 import type { RestoreOptions } from "../../types/backup";
 import type { ConfirmDialogProps } from "../ConfirmDialog";
+import Icon from "../ui/Icon";
 
 interface ApiError {
   response?: { data?: { message?: string } };
@@ -49,9 +50,9 @@ export default function BackupRestoreSection({
     try {
       const backupData = await backupService.createBackup();
       backupService.downloadBackupFile(backupData);
-      toast.success("Backup created and downloaded successfully");
+      toast.success("Backup created and downloaded");
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to create backup");
+      toast.error(getApiErrorMessage(err) || "Couldn't create backup. Try again.");
     } finally {
       setBackupInProgress(false);
     }
@@ -61,7 +62,7 @@ export default function BackupRestoreSection({
     const file = e.target.files?.[0];
     if (file) {
       if (!file.name.endsWith(".json")) {
-        toast.error("Please select a valid JSON backup file");
+        toast.error("Select a valid JSON backup file");
         return;
       }
       setSelectedBackupFile(file);
@@ -70,15 +71,15 @@ export default function BackupRestoreSection({
 
   const handleRestoreBackup = async () => {
     if (!selectedBackupFile) {
-      toast.error("Please select a backup file first");
+      toast.error("Select a backup file first");
       return;
     }
 
     const confirmed = await confirm({
-      title: "Restore from Backup",
+      title: "Restore from backup",
       message: restoreOptions.clearExistingData
-        ? "This will DELETE all your existing data and replace it with the backup. This action cannot be undone. Are you sure?"
-        : "This will merge the backup data with your existing data. Continue?",
+        ? "All your existing data is deleted and replaced with the backup. You can't undo this."
+        : "The backup is merged with your existing data.",
       confirmLabel: "Restore",
       variant: "danger",
     });
@@ -112,7 +113,7 @@ export default function BackupRestoreSection({
         toast.error(result.message || "Restore failed");
       }
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to restore from backup");
+      toast.error(getApiErrorMessage(err) || "Couldn't restore from backup. Try again.");
     } finally {
       setRestoreInProgress(false);
     }
@@ -123,7 +124,7 @@ export default function BackupRestoreSection({
       {/* Create Backup */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Create Backup
+          Create backup
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Download a complete backup of all your travel data including trips,
@@ -136,7 +137,7 @@ export default function BackupRestoreSection({
           </h3>
           <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
             <li>All trips with full details</li>
-            <li>Locations, activities, transportation, and lodging</li>
+            <li>Locations, activities, transport, and stays</li>
             <li>Photo metadata (not actual photo files)</li>
             <li>Journal entries and albums</li>
             <li>Tags, companions, and custom categories</li>
@@ -151,30 +152,11 @@ export default function BackupRestoreSection({
         >
           {backupInProgress ? (
             <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Creating Backup...
+              <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white align-text-bottom" />
+              Creating Backup…
             </>
           ) : (
-            "Download Backup"
+            "Download backup"
           )}
         </button>
       </div>
@@ -192,7 +174,7 @@ export default function BackupRestoreSection({
         {/* Warning */}
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-2">
-            ⚠️ Important Warning
+            <Icon name="alert" size={16} className="align-text-bottom" /> Important Warning
           </h3>
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             If you choose "Clear existing data", ALL your current data will be
@@ -207,7 +189,7 @@ export default function BackupRestoreSection({
             htmlFor="backup-file-input"
             className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2"
           >
-            Select Backup File
+            Select backup file
           </label>
           <input
             id="backup-file-input"
@@ -277,27 +259,8 @@ export default function BackupRestoreSection({
         >
           {restoreInProgress ? (
             <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Restoring...
+              <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white align-text-bottom" />
+              Restoring…
             </>
           ) : (
             "Restore from Backup"
@@ -308,7 +271,7 @@ export default function BackupRestoreSection({
       {/* Backup Tips */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Backup Best Practices
+          Backup best practices
         </h2>
         <ul className="text-sm text-gray-600 dark:text-dusk-400 space-y-2 list-disc list-inside">
           <li>

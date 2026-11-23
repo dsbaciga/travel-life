@@ -65,7 +65,7 @@ async function validateSmtpHost(host: string): Promise<void> {
   // Hostname or IPv4 literal only — keeps credentials, ports and paths from
   // being smuggled through the host field into the URL parsed below.
   if (!/^[A-Za-z0-9._-]+$/.test(host)) {
-    throw new AppError('Invalid SMTP host', 400);
+    throw new AppError("That SMTP host isn't valid.", 400);
   }
   if (config.security.allowPrivateIntegrationUrls && isLocalNetworkHostname(host)) return;
   await validateUrlNotInternal(`https://${host}`);
@@ -96,7 +96,7 @@ const updatePasswordSchema = z.object({
 });
 
 const searchUsersQuerySchema = z.object({
-  query: z.string().min(3, 'Search query must be at least 3 characters'),
+  query: z.string().min(3, 'Type at least 3 characters to search.'),
 });
 
 const travelPartnerSettingsSchema = z.object({
@@ -135,7 +135,7 @@ export const userController = {
       const isLocalHost = isLocalNetworkHostname(url.hostname);
       const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
       if (url.protocol !== 'https:' && !isLocalHost) {
-        throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
+        throw new AppError("Use an https:// URL for Immich unless it's on your local network.", 400);
       }
 
       // SSRF validation: ensure the Immich URL doesn't point to internal/private IPs.
@@ -235,7 +235,7 @@ export const userController = {
       const isLocalHost = isLocalNetworkHostname(hostname);
       const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
       if (url.protocol !== 'https:' && !isLocalHost) {
-        throw new AppError('LLM URL must use HTTPS for non-local connections', 400);
+        throw new AppError("Use an https:// URL for the LLM unless it's on your local network.", 400);
       }
       if (!allowLocal) {
         // SSRF validation: block private IPs (unless opted in), cloud metadata, DNS rebinding, etc.
@@ -454,7 +454,7 @@ export const userController = {
     } else {
       res.status(400).json({
         status: 'error',
-        message: 'Failed to send test email. Check your SMTP settings.',
+        message: "Couldn't send the test email. Check your SMTP settings.",
       });
     }
   }),

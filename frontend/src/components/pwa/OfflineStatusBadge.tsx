@@ -1,12 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-  ArrowDownTrayIcon,
-  CloudIcon,
-  CloudArrowDownIcon,
-  CheckIcon,
-  ArrowPathIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import { offlineDownloadService, type OfflineDownloadStatus } from '../../services/offlineDownload.service';
 
 export interface OfflineStatusBadgeProps {
@@ -107,7 +100,7 @@ export default function OfflineStatusBadge({
         return {
           bg: 'bg-emerald-100 dark:bg-emerald-900/40',
           text: 'text-emerald-700 dark:text-emerald-400',
-          icon: CloudArrowDownIcon,
+          icon: 'cloudDone' as const,
           label: 'Offline',
           tooltip: 'Available offline',
         };
@@ -115,16 +108,16 @@ export default function OfflineStatusBadge({
         return {
           bg: 'bg-primary-100 dark:bg-primary-900/40',
           text: 'text-primary-700 dark:text-gold',
-          icon: ArrowPathIcon,
+          icon: 'refresh' as const,
           label: 'Downloading',
-          tooltip: 'Downloading for offline...',
+          tooltip: 'Downloading for offline…',
           animate: true,
         };
       case 'outdated':
         return {
           bg: 'bg-amber-100 dark:bg-amber-900/40',
           text: 'text-amber-700 dark:text-amber-400',
-          icon: ArrowPathIcon,
+          icon: 'refresh' as const,
           label: 'Outdated',
           tooltip: 'Offline data may be outdated',
         };
@@ -133,7 +126,7 @@ export default function OfflineStatusBadge({
         return {
           bg: 'bg-parchment dark:bg-navy-700',
           text: 'text-slate dark:text-warm-gray/70',
-          icon: CloudIcon,
+          icon: 'cloud' as const,
           label: 'Online only',
           tooltip: 'Not downloaded for offline',
         };
@@ -141,7 +134,6 @@ export default function OfflineStatusBadge({
   };
 
   const config = getStatusConfig();
-  const Icon = config.icon;
   const sizeConfig = sizeClasses[size];
 
   // Loading state
@@ -156,7 +148,7 @@ export default function OfflineStatusBadge({
           ${className}
         `}
       >
-        <ArrowPathIcon className={`${sizeConfig.icon} animate-spin`} />
+        <Icon name="refresh" className={`${sizeConfig.icon} animate-spin`} />
         {showLabel && <span>Loading</span>}
       </span>
     );
@@ -176,11 +168,11 @@ export default function OfflineStatusBadge({
       aria-label={config.tooltip}
     >
       <Icon
+        name={config.icon}
         className={`
           ${sizeConfig.icon}
           ${config.animate ? 'animate-spin' : ''}
         `}
-        aria-hidden="true"
       />
       {showLabel && <span>{config.label}</span>}
     </span>
@@ -230,7 +222,8 @@ OfflineStatusBadge.Icon = function OfflineStatusIcon({
   const getIcon = () => {
     if (isLoading) {
       return (
-        <ArrowPathIcon
+        <Icon
+          name="refresh"
           className={`${iconSizes[size]} text-slate dark:text-warm-gray/70 animate-spin`}
         />
       );
@@ -239,19 +232,22 @@ OfflineStatusBadge.Icon = function OfflineStatusIcon({
     switch (status) {
       case 'downloaded':
         return (
-          <CloudArrowDownIcon
+          <Icon
+            name="cloudDone"
             className={`${iconSizes[size]} text-emerald-600 dark:text-emerald-400`}
           />
         );
       case 'downloading':
         return (
-          <ArrowPathIcon
+          <Icon
+            name="refresh"
             className={`${iconSizes[size]} text-primary-600 dark:text-gold animate-spin`}
           />
         );
       case 'outdated':
         return (
-          <ExclamationTriangleIcon
+          <Icon
+            name="alert"
             className={`${iconSizes[size]} text-amber-600 dark:text-amber-400`}
           />
         );
@@ -265,7 +261,7 @@ OfflineStatusBadge.Icon = function OfflineStatusIcon({
 
   const tooltips = {
     downloaded: 'Available offline',
-    downloading: 'Downloading...',
+    downloading: 'Downloading…',
     outdated: 'Offline data outdated',
     'not-downloaded': '',
   };
@@ -318,8 +314,8 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
           ${className}
         `}
       >
-        <ArrowPathIcon className="w-4 h-4 animate-spin" />
-        Checking...
+        <Icon name="refresh" className="w-4 h-4 animate-spin" />
+        Checking…
       </span>
     );
   }
@@ -331,37 +327,36 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
         return {
           bg: 'bg-emerald-500 dark:bg-emerald-600',
           text: 'text-white',
-          icon: CheckIcon,
-          label: 'Available Offline',
+          icon: 'check' as const,
+          label: 'Available offline',
         };
       case 'downloading':
         return {
           bg: 'bg-primary-500 dark:bg-gold',
           text: 'text-white dark:text-navy-900',
-          icon: ArrowPathIcon,
-          label: 'Downloading...',
+          icon: 'refresh' as const,
+          label: 'Downloading…',
           animate: true,
         };
       case 'outdated':
         return {
           bg: 'bg-amber-500 dark:bg-amber-600',
           text: 'text-white',
-          icon: ArrowPathIcon,
-          label: 'Update Available',
+          icon: 'refresh' as const,
+          label: 'Update available',
         };
       case 'not-downloaded':
       default:
         return {
           bg: 'bg-parchment dark:bg-navy-700',
           text: 'text-slate dark:text-warm-gray',
-          icon: ArrowDownTrayIcon,
-          label: 'Not Downloaded',
+          icon: 'download' as const,
+          label: 'Not downloaded',
         };
     }
   };
 
   const content = getContent();
-  const Icon = content.icon;
 
   return (
     <span
@@ -375,8 +370,8 @@ OfflineStatusBadge.Pill = function OfflineStatusPill({
       role="status"
     >
       <Icon
+        name={content.icon}
         className={`w-4 h-4 ${content.animate ? 'animate-spin' : ''}`}
-        aria-hidden="true"
       />
       {content.label}
     </span>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from './ui/Icon';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import loyaltyProgramService, { LOYALTY_PROGRAMS_QUERY_KEY } from '../services/loyaltyProgram.service';
@@ -117,15 +118,15 @@ export default function LoyaltyProgramManager() {
       resetForm();
       await refresh();
     } catch {
-      toast.error(editingId ? 'Failed to update loyalty program' : 'Failed to add loyalty program');
+      toast.error(editingId ? "Couldn't update loyalty program. Try again." : "Couldn't add loyalty program. Try again.");
     }
   };
 
   const handleDelete = async (program: LoyaltyProgram) => {
     const confirmed = await confirm({
-      title: 'Delete Loyalty Program',
-      message: `Delete "${program.name}"? Bookings that used it keep working but lose the link. This action cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: 'Delete loyalty program',
+      message: `"${program.name}" is deleted. Bookings that used it keep working but lose the link. You can't undo this.`,
+      confirmLabel: 'Delete program',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -135,7 +136,7 @@ export default function LoyaltyProgramManager() {
       toast.success('Loyalty program deleted');
       await refresh();
     } catch {
-      toast.error('Failed to delete loyalty program');
+      toast.error("Couldn't delete loyalty program. Try again.");
     }
   };
 
@@ -164,29 +165,29 @@ export default function LoyaltyProgramManager() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-4">Loading loyalty programs...</div>;
+    return <div className="text-center py-4">Loading loyalty programs…</div>;
   }
 
   if (isError) {
-    return <div className="text-center py-4 text-red-600">Failed to load loyalty programs</div>;
+    return <div className="text-center py-4 text-red-600">Couldn't load loyalty programs. Try again.</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Loyalty Programs
+          Loyalty programs
         </h2>
         {programs.length > 0 && (
         <button onClick={openCreateForm} className="btn btn-primary text-sm sm:text-base whitespace-nowrap">
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ Add Program</span>
+          <span className="hidden sm:inline">+ Add program</span>
         </button>
         )}
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Privacy Note</h3>
+        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Privacy note</h3>
         <p className="text-sm text-blue-800 dark:text-blue-200">
           Membership numbers are private to your account. They are never shown to people you share a
           trip with and never appear on public share pages. Flights, trains and stays offer to use a
@@ -197,7 +198,7 @@ export default function LoyaltyProgramManager() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingId ? 'Edit Loyalty Program' : 'Add Loyalty Program'}
+        title={editingId ? 'Edit loyalty program' : 'Add loyalty program'}
         icon={getLoyaltyProgramTypeIcon(formData.type)}
         maxWidth="lg"
         formId="loyalty-program-form"
@@ -214,7 +215,7 @@ export default function LoyaltyProgramManager() {
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : `${editingId ? 'Update' : 'Add'} Program`}
+              {isSubmitting ? 'Saving…' : `${editingId ? 'Update' : 'Add'} program`}
             </button>
           </>
         }
@@ -234,7 +235,7 @@ export default function LoyaltyProgramManager() {
               >
                 {LOYALTY_PROGRAM_TYPES.map((type) => (
                   <option key={type} value={type}>
-                    {getLoyaltyProgramTypeIcon(type)} {LOYALTY_PROGRAM_TYPE_LABELS[type]}
+                    {LOYALTY_PROGRAM_TYPE_LABELS[type]}
                   </option>
                 ))}
               </select>
@@ -308,7 +309,7 @@ export default function LoyaltyProgramManager() {
             </div>
             <div>
               <label htmlFor="lp-aliases" className={labelClass}>
-                Other Names
+                Other names
               </label>
               <input
                 type="text"
@@ -340,7 +341,7 @@ export default function LoyaltyProgramManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="lp-tier" className={labelClass}>
-                Status Tier
+                Status tier
               </label>
               <input
                 type="text"
@@ -354,7 +355,7 @@ export default function LoyaltyProgramManager() {
             </div>
             <div>
               <label htmlFor="lp-points" className={labelClass}>
-                Points Balance
+                Points balance
               </label>
               <input
                 type="number"
@@ -387,10 +388,10 @@ export default function LoyaltyProgramManager() {
 
       {programs.length === 0 ? (
         <EmptyState
-          icon="🎟️"
+          icon="ticket"
           message="No loyalty programs yet"
           subMessage="Add your frequent-flyer and hotel membership numbers to have them offered when you add a flight or stay."
-          actionLabel="Add Program"
+          actionLabel="Add program"
           onAction={openCreateForm}
         />
       ) : (
@@ -405,7 +406,7 @@ export default function LoyaltyProgramManager() {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <span aria-hidden="true">{getLoyaltyProgramTypeIcon(program.type)}</span>
+                      <Icon name={getLoyaltyProgramTypeIcon(program.type)} />
                       <h4 className="font-semibold text-gray-900 dark:text-white break-words min-w-0">
                         {program.providerName} - {program.name}
                       </h4>

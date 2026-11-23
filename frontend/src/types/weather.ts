@@ -1,3 +1,5 @@
+import type { IconName } from '../components/ui/Icon';
+
 export type WeatherData = {
   id: number;
   tripId: number;
@@ -21,7 +23,7 @@ export type WeatherDisplay = {
   high: number | null;
   low: number | null;
   conditions: string | null;
-  icon: string;
+  icon: IconName;
   precipitation: number | null;
   humidity: number | null;
   windSpeed: number | null;

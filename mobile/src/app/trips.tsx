@@ -3,8 +3,9 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { formatDateOnly } from '@travel-life/shared';
+import { contourSeed, formatDateOnly } from '@travel-life/shared';
 
+import { useTripTint } from '@/lib/tripTint';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
 import { listPinnedTripIds, setTripPinned } from '@/db/repository';
 import { getDb } from '@/lib/db';
@@ -50,6 +51,8 @@ export default function TripsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const rows = useRef(new Map<number, SwipeableMethods>());
 
+  const undoTint = useTripTint(undo?.trip.coverColor);
+
   // The undo bar disappears on its own; the trip stays retrievable below.
   useEffect(() => {
     if (!undo) return;
@@ -85,7 +88,7 @@ export default function TripsScreen() {
       </AppText>
       {notice ? <Banner tone="warning" text={notice} /> : null}
       {undo ? (
-        <Card tone="hero">
+        <Card tone="hero" tint={undoTint} contourSeed={contourSeed({ id: undo.trip.id })}>
           <Row style={styles.between}>
             <AppText style={styles.grow} numberOfLines={2}>
               Removed “{undo.trip.title}” from this phone.
@@ -183,7 +186,7 @@ export default function TripsScreen() {
       ) : null}
       {isError ? <Banner tone="warning" text="Couldn't reach the server to list your other trips." /> : null}
       {remote && !remote.complete ? (
-        <Banner tone="warning" text="Trips shared with you could not be loaded just now." />
+        <Banner tone="warning" text="Couldn't load trips shared with you. Try again in a moment." />
       ) : null}
 
       <Button label="Sync now" variant="secondary" onPress={() => void syncNow()} loading={syncing} />

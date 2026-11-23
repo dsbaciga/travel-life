@@ -28,7 +28,7 @@ import { getDb } from '@/lib/db';
 import { DARK_MAP_STYLE } from '@/lib/mapStyle';
 import { useActiveTrip, useEntities, useNow, useUserTimezone } from '@/lib/hooks';
 import { useSync } from '@/lib/sync';
-import { radius, spacing, usePalette, useResolvedColorScheme } from '@/lib/theme';
+import { DUSK, radius, spacing, usePalette, useResolvedColorScheme } from '@/lib/theme';
 import { getCurrentPosition, positionFailureMessage, isTracking, startTracking, stopTracking } from '@/tasks/location';
 
 /** "Walking distance" for the near-me filter. */
@@ -217,7 +217,7 @@ export default function MapScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" message="Choose a trip to see its map here." />
       </Screen>
     );
   }
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
     elevation: 2,
-    shadowColor: '#0f172a',
+    shadowColor: DUSK[900],
     shadowOpacity: 0.12,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

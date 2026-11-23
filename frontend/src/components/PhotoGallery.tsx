@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Photo, PhotoAlbum } from "../types/photo";
 import { stripMarkdown } from "../utils/stripMarkdown";
@@ -15,6 +14,7 @@ import EntityPickerModal from "./EntityPickerModal";
 import BatchPhotoToolbar from "./BatchPhotoToolbar";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import { formatDuration } from "../utils/duration";
+import Icon from "./ui/Icon";
 
 /** Number of photos beyond which we enable virtual scrolling for the grid */
 const VIRTUALIZATION_THRESHOLD = 50;
@@ -272,20 +272,7 @@ function PhotoGridItem({
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-slate/40 dark:text-warm-gray/40">
-          <svg
-            className="w-16 h-16"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          <Icon name="photo" size={64} />
         </div>
       )}
 
@@ -293,9 +280,7 @@ function PhotoGridItem({
       {photo.mediaType === 'video' && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-black/60 rounded-full p-3 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <Icon name="play" size={32} className="text-white" />
           </div>
         </div>
       )}
@@ -350,18 +335,7 @@ function PhotoGridItem({
             }`}
           >
             {isSelected && (
-              <svg
-                className="w-5 h-5 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <Icon name="check" className="text-white" />
             )}
           </div>
         </div>
@@ -695,17 +669,17 @@ export default function PhotoGallery({
       setFavoriteOverride(photo.id, undefined);
       setRetained((r) => (r?.photo.id === photo.id ? null : r));
       toast.error(
-        next ? "Failed to add to favorites" : "Failed to remove from favorites"
+        next ? "Couldn't add to favorites. Try again." : "Couldn't remove from favorites. Try again."
       );
     }
   };
 
   const handleDelete = async (photoId: number) => {
     const confirmed = await confirm({
-      title: "Delete Photo",
+      title: "Delete photo",
       message:
-        "Are you sure you want to delete this photo? This action cannot be undone.",
-      confirmLabel: "Delete",
+        "This photo is removed from the trip, albums and map. You can't undo this.",
+      confirmLabel: "Delete photo",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -715,7 +689,7 @@ export default function PhotoGallery({
       setSelectedPhoto(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photo");
+      toast.error("Couldn't delete photo. Try again.");
     }
   };
 
@@ -731,7 +705,7 @@ export default function PhotoGallery({
       onPhotoUpdated?.();
       toast.success("Photo updated");
     } catch {
-      toast.error("Failed to update photo");
+      toast.error("Couldn't update photo. Try again.");
     }
   };
 
@@ -795,7 +769,7 @@ export default function PhotoGallery({
       // The effect will handle selection once photos.length >= totalPhotosInView
     } catch {
       pendingSelectAll.current = false;
-      toast.error("Failed to load all photos");
+      toast.error("Couldn't load all photos. Try again.");
     }
   };
 
@@ -818,9 +792,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
-      toast.success(`Successfully added ${selectedPhotoIds.size} photo(s) to album`);
+      toast.success(`Added ${selectedPhotoIds.size} photo(s) to album`);
     } catch {
-      toast.error("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -858,10 +832,10 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
       toast.success(
-        `Successfully created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
+        `Created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
       );
     } catch {
-      toast.error("Failed to create album");
+      toast.error("Couldn't create album. Try again.");
     } finally {
       setIsCreatingAlbum(false);
     }
@@ -871,9 +845,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0 || !currentAlbumId) return;
 
     const confirmed = await confirm({
-      title: "Remove Photos",
-      message: `Remove ${selectedPhotoIds.size} photo(s) from this album? The photos will not be deleted, only removed from this album.`,
-      confirmLabel: "Remove",
+      title: "Remove from album",
+      message: `${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo comes" : "photos come"} out of this album. ${selectedPhotoIds.size === 1 ? "It stays" : "They stay"} in your library.`,
+      confirmLabel: `Remove ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "warning",
     });
     if (!confirmed) return;
@@ -889,9 +863,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosRemovedFromAlbum?.();
-      toast.success(`Successfully removed ${photoIds.length} photo(s) from album`);
+      toast.success(`Removed ${photoIds.length} photo(s) from album`);
     } catch {
-      toast.error("Failed to remove photos from album");
+      toast.error("Couldn't remove photos from album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -901,9 +875,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Photos",
-      message: `Are you sure you want to delete ${selectedPhotoIds.size} photo(s)? This action cannot be undone.`,
-      confirmLabel: "Delete",
+      title: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
+      message: `${selectedPhotoIds.size === 1 ? "This photo is" : "These photos are"} removed from the trip, albums and map. You can't undo this.`,
+      confirmLabel: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -919,7 +893,7 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photos");
+      toast.error("Couldn't delete photos. Try again.");
     } finally {
       setIsDeletingPhotos(false);
     }
@@ -1024,8 +998,8 @@ export default function PhotoGallery({
     return (
       <EmptyState
         icon={<EmptyIllustrations.NoPhotos />}
-        message="Your Photo Journey Begins Here"
-        subMessage="Upload photos to capture your travel memories. You can link photos to locations, add them to albums, and create a visual story of your adventures."
+        message="No photos yet"
+        subMessage="Upload photos or import them from Immich, then link them to places and days."
       />
     );
   }
@@ -1051,20 +1025,7 @@ export default function PhotoGallery({
               aria-label="Grid view"
               {...{ 'aria-pressed': viewMode === "grid" }}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                />
-              </svg>
+              <Icon name="grid" />
             </button>
             <button
               type="button"
@@ -1078,20 +1039,7 @@ export default function PhotoGallery({
               aria-label="List view"
               {...{ 'aria-pressed': viewMode === "list" }}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
+              <Icon name="list" />
             </button>
           </div>
 
@@ -1105,12 +1053,12 @@ export default function PhotoGallery({
             className="px-3 py-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-lg text-sm font-medium text-gray-700 dark:text-dusk-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all"
             aria-label="Sort photos"
           >
-            <option value="date-desc">Latest First</option>
-            <option value="date-asc">Oldest First</option>
+            <option value="date-desc">Latest first</option>
+            <option value="date-asc">Oldest first</option>
             <option value="caption-asc">Caption A-Z</option>
             <option value="caption-desc">Caption Z-A</option>
-            <option value="created-desc">Recently Added</option>
-            <option value="created-asc">First Added</option>
+            <option value="created-desc">Recently added</option>
+            <option value="created-asc">First added</option>
           </select>
         </div>
 
@@ -1135,9 +1083,7 @@ export default function PhotoGallery({
                 : "bg-white dark:bg-dusk-800 border-gray-200 dark:border-dusk-700 text-gray-700 dark:text-dusk-300 hover:border-amber-300"
             }`}
           >
-            <svg className="w-4 h-4" fill={favoritesOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-            </svg>
+            <Icon name={favoritesOnly ? "starFilled" : "star"} size={16} />
             Favorites{favoriteCount > 0 && (!isFavoritesControlled || (favoritesOnly && favoritesTotal !== undefined)) ? ` (${favoriteCount})` : ""}
           </button>
           <span className="text-sm text-gray-600 dark:text-dusk-400">
@@ -1160,9 +1106,7 @@ export default function PhotoGallery({
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded-full hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
                   title={`${retryableFailedCount} thumbnail(s) failed to load. Click to retry.`}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+                  <Icon name="refresh" size={14} />
                   Retry {retryableFailedCount}
                 </button>
               )}
@@ -1171,9 +1115,7 @@ export default function PhotoGallery({
                   className="inline-flex items-center gap-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30 rounded-full"
                   title={`${permanentlyFailedCount} thumbnail(s) failed after maximum retries`}
                 >
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                  <Icon name="error" size={12} />
                   {permanentlyFailedCount} failed
                 </span>
               )}
@@ -1189,10 +1131,8 @@ export default function PhotoGallery({
             onClick={() => setSelectionMode(true)}
             className="btn btn-secondary inline-flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Select Photos
+            <Icon name="success" size={16} />
+            Select photos
           </button>
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
@@ -1340,17 +1280,7 @@ export default function PhotoGallery({
                         }`}
                       >
                         {isSelected && (
-                          <svg
-                            className="w-5 h-5 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <Icon name="check" className="text-white" />
                         )}
                       </div>
                     </div>
@@ -1369,20 +1299,7 @@ export default function PhotoGallery({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-dusk-700 text-gray-400">
-                        <svg
-                          className="w-10 h-10"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
+                        <Icon name="photo" size={40} />
                       </div>
                     )}
                   </div>
@@ -1399,20 +1316,7 @@ export default function PhotoGallery({
                         <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
                           {photo.takenAt && (
                             <span className="flex items-center gap-1">
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                aria-hidden="true"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
+                              <Icon name="calendar" size={16} />
                               {new Date(photo.takenAt).toLocaleDateString()}
                             </span>
                           )}
@@ -1431,9 +1335,7 @@ export default function PhotoGallery({
                         )}
                         {photo.mediaType === 'video' && (
                           <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded text-xs">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
+                            <Icon name="play" size={12} />
                             Video
                             {photo.duration && (
                               <span className="font-mono">
@@ -1534,7 +1436,7 @@ export default function PhotoGallery({
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {showCreateAlbumForm ? "Create New Album" : "Select Album"}
+                {showCreateAlbumForm ? "Create new album" : "Select album"}
               </h3>
               <button
                 onClick={() => {
@@ -1547,7 +1449,7 @@ export default function PhotoGallery({
                 aria-label="Close"
                 className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
-                <XMarkIcon className="w-6 h-6" />
+                <Icon name="close" size={24} />
               </button>
             </div>
 
@@ -1564,21 +1466,8 @@ export default function PhotoGallery({
                   onClick={() => setShowCreateAlbumForm(true)}
                   className="w-full p-4 mb-4 rounded-lg border-2 border-dashed border-blue-500 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-600 dark:text-blue-400 font-medium flex items-center justify-center gap-2"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Create New Album
+                  <Icon name="add" />
+                  Create new album
                 </button>
 
                 {/* Existing Albums List */}
@@ -1661,7 +1550,7 @@ export default function PhotoGallery({
                     }
                     className="flex-1 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreatingAlbum ? "Creating..." : "Create Album"}
+                    {isCreatingAlbum ? "Creating…" : "Create album"}
                   </button>
                 </div>
               </>

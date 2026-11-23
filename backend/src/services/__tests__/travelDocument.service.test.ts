@@ -295,7 +295,7 @@ describe('TravelDocumentService', () => {
       mockPrisma.travelDocument.findFirst.mockResolvedValue(null);
 
       await expect(travelDocumentService.getById(1, 999)).rejects.toThrow(
-        'Travel document not found'
+        "We couldn't find that travel document."
       );
     });
 
@@ -303,7 +303,7 @@ describe('TravelDocumentService', () => {
       mockPrisma.travelDocument.findFirst.mockResolvedValue(null);
 
       await expect(travelDocumentService.getById(2, 1)).rejects.toThrow(
-        'Travel document not found'
+        "We couldn't find that travel document."
       );
     });
   });
@@ -332,7 +332,7 @@ describe('TravelDocumentService', () => {
 
       await expect(
         travelDocumentService.update(1, 999, { name: 'Test' })
-      ).rejects.toThrow('Travel document not found');
+      ).rejects.toThrow("We couldn't find that travel document.");
     });
 
     it('should unset other primaries when setting as primary during update', async () => {
@@ -377,7 +377,7 @@ describe('TravelDocumentService', () => {
       mockPrisma.travelDocument.findFirst.mockResolvedValue(null);
 
       await expect(travelDocumentService.delete(1, 999)).rejects.toThrow(
-        'Travel document not found'
+        "We couldn't find that travel document."
       );
     });
   });
@@ -508,7 +508,7 @@ describe('TravelDocumentService', () => {
 
       await expect(
         travelDocumentService.checkDocumentValidityForTrip(1, 999)
-      ).rejects.toThrow('Trip not found');
+      ).rejects.toThrow("We couldn't find that trip.");
     });
 
     it('should flag documents with no expiry date', async () => {

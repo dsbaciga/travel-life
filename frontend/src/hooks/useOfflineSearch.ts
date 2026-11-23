@@ -254,7 +254,7 @@ export function useOfflineSearch(
       if (generation !== searchGenerationRef.current) return;
 
       console.error('[useOfflineSearch] Offline search failed:', err);
-      setError('Search failed. Please try again.');
+      setError('Search failed. Try again.');
       setResults([]);
       setGroupedResults(null);
     }
@@ -347,7 +347,7 @@ export function useOfflineSearch(
           err instanceof Error &&
           err.name !== 'AbortError'
         ) {
-          setError('Search failed. Please try again.');
+          setError('Search failed. Try again.');
         }
       } finally {
         // A stale request finishing late must not clear the spinner of the

@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useEffect, useMemo } from 'react';
 import { useTimezoneResolver } from '../../hooks/useTimezoneResolver';
 
@@ -13,20 +14,7 @@ interface LocalTimeWidgetProps {
  */
 function ClockIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="schedule" className={className} />
   );
 }
 
@@ -35,20 +23,7 @@ function ClockIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 function GlobeIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-      />
-    </svg>
+    <Icon name="timezone" className={className} />
   );
 }
 
@@ -222,7 +197,7 @@ export default function LocalTimeWidget({
       <div className="flex items-center gap-2 mb-3">
         <ClockIcon className="w-5 h-5 text-primary-500 dark:text-gold" />
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body text-sm">
-          Local Time
+          Local time
         </h3>
       </div>
 

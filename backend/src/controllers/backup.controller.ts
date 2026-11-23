@@ -59,7 +59,7 @@ export const restoreFromBackup = asyncHandler(async (req: Request, res: Response
     }
 
     if (typeof integrity.signature !== 'string' || !/^[0-9a-fA-F]+$/.test(integrity.signature)) {
-      throw new AppError('Backup integrity signature is missing or malformed.', 400);
+      throw new AppError('This backup is missing a valid integrity signature.', 400);
     }
 
     const expectedSignature = computeBackupHmac(dataWithoutIntegrity);
@@ -67,7 +67,7 @@ export const restoreFromBackup = asyncHandler(async (req: Request, res: Response
     const sigBuffer = Buffer.from(integrity.signature, 'hex');
     const expectedBuffer = Buffer.from(expectedSignature, 'hex');
     if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
-      throw new AppError('Backup integrity check failed. The backup file may have been tampered with.', 400);
+      throw new AppError("This backup didn't pass its integrity check. It may have been changed after it was made.", 400);
     }
   } else if (allowUnsigned) {
     logger.warn(

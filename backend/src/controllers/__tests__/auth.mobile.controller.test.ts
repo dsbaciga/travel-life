@@ -173,7 +173,7 @@ describe('AuthController — native clients', () => {
   });
 
   it('AUTH-MOB-005: mobile refresh propagates a service failure without touching cookies', async () => {
-    mockAuthService.refreshToken.mockRejectedValue(new AppError('Invalid refresh token', 401) as never);
+    mockAuthService.refreshToken.mockRejectedValue(new AppError('You were signed out. Sign in again to continue.', 401) as never);
     const req = createMockRequest({ body: { refreshToken: 'stale' }, headers: MOBILE });
     const res = createMockResponse();
     const next = createMockNext();
@@ -181,7 +181,7 @@ describe('AuthController — native clients', () => {
     authController.refreshToken(req as never, res as never, next as never);
     await flushPromises();
 
-    expectAppError(next, 401, 'Invalid refresh token');
+    expectAppError(next, 401, 'You were signed out. Sign in again to continue.');
     expect(mockClearRefreshTokenCookie).not.toHaveBeenCalled();
     expect(res.json).not.toHaveBeenCalled();
   });
@@ -265,7 +265,7 @@ describe('AuthController — native clients', () => {
 
   it('AUTH-MOB-010: redeemPairingToken propagates an invalid/expired token as 401', async () => {
     mockPairing.redeem.mockImplementation(() => {
-      throw new AppError('Pairing code is invalid or has expired', 401);
+      throw new AppError('That pairing code has expired. Create a new one in Settings and scan it again.', 401);
     });
     const next = createMockNext();
     authController.redeemPairingToken(
@@ -275,7 +275,7 @@ describe('AuthController — native clients', () => {
     );
     await flushPromises();
 
-    expectAppError(next, 401, 'Pairing code is invalid or has expired');
+    expectAppError(next, 401, 'That pairing code has expired. Create a new one in Settings and scan it again.');
     expect(mockAuthService.issueTokensForUser).not.toHaveBeenCalled();
   });
 

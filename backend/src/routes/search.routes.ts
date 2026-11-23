@@ -9,7 +9,7 @@ const router = Router();
 const searchLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 30, // 30 requests per minute per IP
-  message: 'Too many search requests from this IP, please try again later.',
+  message: 'Too many searches. Wait a few minutes and try again.',
   standardHeaders: true,
   legacyHeaders: false,
 });

@@ -5,6 +5,7 @@ import photoService, {
 } from '../services/photo.service';
 import { useImmichThumbnailCache } from '../hooks/useImmichThumbnail';
 import toast from 'react-hot-toast';
+import Icon from './ui/Icon';
 
 interface AlbumSuggestionsProps {
   tripId: number;
@@ -157,9 +158,7 @@ function SuggestionPreview({ albumName, photos, totalCount }: SuggestionPreviewP
                   )}
                   {photo.mediaType === 'video' && (
                     <span className="absolute bottom-0.5 right-0.5 text-white drop-shadow">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M6.3 4.7a1 1 0 011.5-.86l7 5.3a1 1 0 010 1.72l-7 5.3a1 1 0 01-1.5-.86V4.7z" />
-                      </svg>
+                      <Icon name="play" size={12} />
                     </span>
                   )}
                 </div>
@@ -214,14 +213,14 @@ export default function AlbumSuggestions({
         name: suggestion.name,
         photoIds: suggestion.photoIds,
       });
-      toast.success(`Album "${suggestion.name}" created!`);
+      toast.success(`Album "${suggestion.name}" created`);
       // Remove this suggestion from the list
       setSuggestions(prev => prev.filter(s =>
         !(s.type === suggestion.type && s.name === suggestion.name)
       ));
       onAlbumCreated();
     } catch (error) {
-      toast.error('Failed to create album');
+      toast.error("Couldn't create album. Try again.");
       console.error(error);
     } finally {
       setAccepting(null);
@@ -262,24 +261,14 @@ export default function AlbumSuggestions({
           aria-controls={listId}
           className="flex flex-1 min-w-0 items-center gap-2 text-left"
         >
-          <svg className="w-5 h-5 flex-shrink-0 text-primary-600 dark:text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
+          <Icon name="lightbulb" className="text-primary-600 dark:text-gold" />
           <h3 className="text-sm font-semibold text-charcoal dark:text-warm-gray truncate">
-            Smart Album Suggestions
+            Smart album suggestions
           </h3>
           <span className="flex-shrink-0 rounded-full bg-primary-100 dark:bg-navy-700 px-2 py-0.5 text-xs font-medium text-primary-700 dark:text-gold">
             {suggestions.length}
           </span>
-          <svg
-            className={`w-4 h-4 flex-shrink-0 text-slate dark:text-warm-gray/70 transition-transform ${expanded ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <Icon name="expand" size={16} className={`text-slate dark:text-warm-gray/70 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </button>
         <button
           type="button"
@@ -288,9 +277,7 @@ export default function AlbumSuggestions({
           title="Dismiss all suggestions"
           aria-label="Dismiss all suggestions"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <Icon name="close" size={16} />
         </button>
       </div>
 
@@ -314,14 +301,9 @@ export default function AlbumSuggestions({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     {suggestion.type === 'date' ? (
-                      <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                      <Icon name="calendar" size={16} className="text-orange-500" />
                     ) : (
-                      <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
+                      <Icon name="place" size={16} className="text-green-500" />
                     )}
                     <span className="font-medium text-charcoal dark:text-warm-gray truncate">
                       {suggestion.name}
@@ -357,10 +339,10 @@ export default function AlbumSuggestions({
                     {isAccepting ? (
                       <>
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Creating...
+                        Creating…
                       </>
                     ) : (
-                      'Create Album'
+                      'Create album'
                     )}
                   </button>
                 </div>

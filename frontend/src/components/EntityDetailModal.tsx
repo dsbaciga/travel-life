@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Icon, { type IconName } from './ui/Icon';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -61,30 +62,30 @@ function formatDateTime(dateString: string | null | undefined, timezone?: string
 }
 
 // Type icons for transportation
-const TRANSPORT_ICONS: Record<string, string> = {
-  flight: '✈️',
-  train: '🚆',
-  bus: '🚌',
-  car: '🚗',
-  ferry: '⛴️',
-  bicycle: '🚲',
-  walk: '🚶',
-  other: '🚐',
+const TRANSPORT_ICONS: Record<string, IconName> = {
+  flight: 'flight',
+  train: 'train',
+  bus: 'bus',
+  car: 'car',
+  ferry: 'ferry',
+  bicycle: 'bike',
+  walk: 'walk',
+  other: 'rocket',
 };
 
 // Type icons for lodging
-const LODGING_ICONS: Record<string, string> = {
-  hotel: '🏨',
-  hostel: '🛏️',
-  airbnb: '🏠',
-  vacation_rental: '🏡',
-  camping: '⛺',
-  resort: '🏖️',
-  motel: '🏩',
-  bed_and_breakfast: '🍳',
-  apartment: '🏢',
-  friends_family: '👨‍👩‍👧‍👦',
-  other: '🏠',
+const LODGING_ICONS: Record<string, IconName> = {
+  hotel: 'hotel',
+  hostel: 'hostel',
+  airbnb: 'house',
+  vacation_rental: 'villa',
+  camping: 'camping',
+  resort: 'resort',
+  motel: 'hotel',
+  bed_and_breakfast: 'cottage',
+  apartment: 'apartment',
+  friends_family: 'users',
+  other: 'lodging',
 };
 
 // Detail row component
@@ -142,14 +143,14 @@ function LocationDetails({ entity }: { entity: Location }) {
           }
         />
       )}
-      {entity.parent && <DetailRow label="Parent Location" value={entity.parent.name} />}
-      <DetailRow label="Visit Date" value={formatDateTime(entity.visitDatetime)} />
+      {entity.parent && <DetailRow label="Parent location" value={entity.parent.name} />}
+      <DetailRow label="Visit date" value={formatDateTime(entity.visitDatetime)} />
       {entity.visitDurationMinutes && (
         <DetailRow label="Duration" value={`${entity.visitDurationMinutes} minutes`} />
       )}
       {entity.openingHours && (
         <DetailRow
-          label="Opening Hours"
+          label="Opening hours"
           value={
             <div>
               {formatOpeningHours(entity.openingHours).map((line, index) => (
@@ -189,15 +190,15 @@ function CustomItemDetails({ entity }: { entity: CustomItem }) {
         <DetailRow label="Time" value="All Day" />
       ) : (
         <>
-          <DetailRow label="Start Time" value={formatDateTime(entity.startTime, entity.timezone)} />
-          <DetailRow label="End Time" value={formatDateTime(entity.endTime, entity.timezone)} />
+          <DetailRow label="Start time" value={formatDateTime(entity.startTime, entity.timezone)} />
+          <DetailRow label="End time" value={formatDateTime(entity.endTime, entity.timezone)} />
         </>
       )}
       <DetailRow label="Location" value={entity.location?.name} />
       {entity.cost != null && (
         <DetailRow label="Cost" value={formatCurrency(entity.cost, entity.currency)} />
       )}
-      <DetailRow label="Confirmation Number" value={entity.confirmationNumber} />
+      <DetailRow label="Confirmation number" value={entity.confirmationNumber} />
       {entity.url && (
         <DetailRow
           label="URL"
@@ -231,14 +232,14 @@ function ActivityDetails({ entity }: { entity: Activity }) {
         <DetailRow label="Time" value="All Day" />
       ) : (
         <>
-          <DetailRow label="Start Time" value={formatDateTime(entity.startTime, entity.timezone)} />
-          <DetailRow label="End Time" value={formatDateTime(entity.endTime, entity.timezone)} />
+          <DetailRow label="Start time" value={formatDateTime(entity.startTime, entity.timezone)} />
+          <DetailRow label="End time" value={formatDateTime(entity.endTime, entity.timezone)} />
         </>
       )}
       {entity.cost != null && (
         <DetailRow label="Cost" value={formatCurrency(entity.cost, entity.currency)} />
       )}
-      <DetailRow label="Booking Reference" value={entity.bookingReference} />
+      <DetailRow label="Booking reference" value={entity.bookingReference} />
       {entity.bookingUrl && (
         <DetailRow
           label="Booking URL"
@@ -268,7 +269,7 @@ function LodgingDetails({ entity }: { entity: Lodging }) {
         label="Type"
         value={
           <span className="inline-flex items-center gap-1">
-            <span>{typeIcon}</span>
+            <Icon name={typeIcon} size={16} />
             <span className="capitalize">{entity.type.replace(/_/g, ' ')}</span>
           </span>
         }
@@ -319,7 +320,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
         label="Type"
         value={
           <span className="inline-flex items-center gap-1">
-            <span>{typeIcon}</span>
+            <Icon name={typeIcon} size={16} />
             <span className="capitalize">{entity.type}</span>
           </span>
         }
@@ -362,7 +363,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
         <>
           <DetailRow label="Gate" value={entity.flightTracking.gate} />
           <DetailRow label="Terminal" value={entity.flightTracking.terminal} />
-          <DetailRow label="Baggage Claim" value={entity.flightTracking.baggageClaim} />
+          <DetailRow label="Baggage claim" value={entity.flightTracking.baggageClaim} />
         </>
       )}
       <DetailRow label="Notes" value={entity.notes ? <MarkdownRenderer content={entity.notes} compact /> : null} />
@@ -416,12 +417,12 @@ function PhotoDetails({ entity }: { entity: Photo }) {
       )}
       {imageError && (
         <div className="py-4 text-center text-gray-500 dark:text-dusk-400">
-          <span className="text-4xl">📷</span>
+          <Icon name="photo" size={40} />
           <p className="mt-2 text-sm">Image could not be loaded</p>
         </div>
       )}
       <DetailRow label="Caption" value={entity.caption} />
-      <DetailRow label="Taken At" value={formatDateTime(entity.takenAt)} />
+      <DetailRow label="Taken at" value={formatDateTime(entity.takenAt)} />
       {entity.latitude && entity.longitude && (
         <DetailRow
           label="Location"
@@ -444,7 +445,7 @@ function AlbumPhotoPreview({ photo }: { photo: Photo }) {
   if (imageError) {
     return (
       <div className="w-16 h-16 flex items-center justify-center bg-gray-100 dark:bg-dusk-700 rounded text-gray-400">
-        📷
+        <Icon name="photo" size={24} />
       </div>
     );
   }
@@ -672,7 +673,7 @@ export default function EntityDetailModal({
             id="entity-detail-modal-title"
             className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"
           >
-            <span>{config.emoji}</span>
+            <Icon name={config.icon} />
             <span>{config.label} Details</span>
           </h2>
           <button
@@ -681,14 +682,7 @@ export default function EntityDetailModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -700,7 +694,7 @@ export default function EntityDetailModal({
             </div>
           ) : error ? (
             <div className="text-center py-8 text-red-500 dark:text-red-400">
-              Failed to load details
+              Couldn't load details. Try again.
             </div>
           ) : (
             renderDetails()

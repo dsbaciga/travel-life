@@ -332,7 +332,7 @@ class PhotoService {
           } catch (cleanupError) {
             console.error('[PhotoService] Failed to clean up rejected video file:', cleanupError instanceof Error ? cleanupError.message : cleanupError);
           }
-          throw new AppError(`Video duration exceeds maximum allowed length of 1 hour. Your video is ${Math.round(videoDuration / 60)} minutes long.`, 400);
+          throw new AppError(`That video is ${Math.round(videoDuration / 60)} minutes long. The limit is 1 hour.`, 400);
         }
 
         // Detect potentially corrupted video (null duration)
@@ -519,7 +519,7 @@ class PhotoService {
     } catch (error) {
       // Handle unique constraint violation (tripId + immichAssetId)
       if (error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002') {
-        throw new AppError('This Immich photo is already linked to this trip', 409);
+        throw new AppError('That Immich photo is already on this trip.', 409);
       }
       throw error;
     }
@@ -687,7 +687,7 @@ class PhotoService {
       };
     } catch (error) {
       console.error(`[PhotoService] Failed to fetch photos for trip ${tripId}:`, error instanceof Error ? error.message : error);
-      throw new AppError('Failed to fetch photos for trip', 500);
+      throw new AppError("Couldn't load photos for this trip.", 500);
     }
   }
 
@@ -776,7 +776,7 @@ class PhotoService {
       };
     } catch (error) {
       console.error(`[PhotoService] Failed to fetch unsorted photos for trip ${tripId}:`, error instanceof Error ? error.message : error);
-      throw new AppError('Failed to fetch unsorted photos for trip', 500);
+      throw new AppError("Couldn't load unsorted photos for this trip.", 500);
     }
   }
 
@@ -836,7 +836,7 @@ class PhotoService {
     // Validate timezone format to prevent SQL injection
     // Valid timezones contain only alphanumeric, /, _, +, - characters
     if (!/^[a-zA-Z0-9/_+-]+$/.test(tz)) {
-      throw new AppError('Invalid timezone format', 400);
+      throw new AppError("That time zone isn't recognized. Pick one from the list.", 400);
     }
 
     // Use raw SQL for efficient date grouping with timezone conversion
@@ -888,7 +888,7 @@ class PhotoService {
     // Validate timezone format to prevent SQL injection
     // Valid timezones contain only alphanumeric, /, _, +, - characters
     if (!/^[a-zA-Z0-9/_+-]+$/.test(tz)) {
-      throw new AppError('Invalid timezone format', 400);
+      throw new AppError("That time zone isn't recognized. Pick one from the list.", 400);
     }
 
     // Raw query result type
@@ -987,6 +987,8 @@ class PhotoService {
     // Clean up entity links and delete atomically in a transaction
     await prisma.$transaction(async (tx) => {
       await cleanupEntityLinks(verifiedPhoto.tripId, 'PHOTO', photoId, tx);
+      // The FK nulls coverPhotoId when this photo is a trip cover; its tint goes too.
+      await tx.trip.updateMany({ where: { coverPhotoId: photoId }, data: { coverColor: null } });
       await tx.photo.delete({
         where: { id: photoId },
       });

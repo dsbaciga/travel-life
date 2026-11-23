@@ -9,6 +9,7 @@ import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View, type
 import type { EntityId, LocationDto, LodgingDto, TransportationDto, TripDto } from '@travel-life/shared';
 import {
   buildMapsAppLinks,
+  contourSeed,
   dayKeyInTimezone,
   formatCountdown,
   formatDateOnly,
@@ -26,6 +27,7 @@ import { SkeletonList } from '@/components/Skeleton';
 import { AppText, Banner, Button, Card, Chip, EmptyState, IconButton, Row, Screen } from '@/components/ui';
 import { getEntity } from '@/db/repository';
 import { adjustTime, listLinkedEntities, reorderActivities } from '@/domain/mutations';
+import { buildRouteLine } from '@/domain/routeLine';
 import { computeBurnRate, meterStatus, type ParkingPin } from '@/domain/smart';
 import {
   buildTripDays,
@@ -35,6 +37,7 @@ import {
   type TimelineItem,
 } from '@/domain/timeline';
 import { getDb } from '@/lib/db';
+import { useTripTint } from '@/lib/tripTint';
 import { copyWithFeedback, tapFeedback } from '@/lib/feedback';
 import {
   useActiveTrip,
@@ -114,7 +117,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
   const tripZone = resolveTimezone(trip.timezone, homeZone);
   if (tripZone === homeZone) {
     return (
-      <AppText muted>
+      <AppText muted style={styles.tabular}>
         {formatTimeInTimezone(now, tripZone)} {getTimezoneAbbreviation(tripZone, now)}
       </AppText>
     );
@@ -122,7 +125,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
   const diffHours = (timezoneOffsetMinutes(tripZone, now) - timezoneOffsetMinutes(homeZone, now)) / 60;
   const sign = diffHours >= 0 ? '+' : '−';
   return (
-    <AppText muted>
+    <AppText muted style={styles.tabular}>
       Here {formatTimeInTimezone(now, tripZone)} {getTimezoneAbbreviation(tripZone, now)} · Home{' '}
       {formatTimeInTimezone(now, homeZone)} ({sign}
       {Math.abs(diffHours)}h)
@@ -136,6 +139,7 @@ export default function TodayScreen() {
   const now = useNow();
   const userTimezone = useUserTimezone();
   const { data: trip, isLoading } = useActiveTrip();
+  const tint = useTripTint(trip?.coverColor);
   const { data: timeline } = useTripTimeline(trip);
   const { data: expenses = [] } = useEntities(trip?.id, 'EXPENSE');
   const { data: dirty } = useDirtyKeys(trip?.id);
@@ -167,6 +171,7 @@ export default function TodayScreen() {
   const todayItems = useMemo(() => itemsForDay(items, activeDay), [items, activeDay]);
   const unscheduled = useMemo(() => unscheduledItems(items), [items]);
   const nextUp = useMemo(() => findNextUp(items, now), [items, now]);
+  const routeLine = useMemo(() => buildRouteLine(todayItems, now, isToday), [todayItems, now, isToday]);
 
   const stripRef = useRef<ScrollViewInstance>(null);
   const [stripWidth, setStripWidth] = useState(0);
@@ -305,7 +310,7 @@ export default function TodayScreen() {
       {burn ? <BudgetMeter burn={burn} currency={trip.budgetCurrency} /> : null}
 
       {counts.conflict > 0 ? (
-        <Banner tone="warning" text="Someone else changed an item you edited offline. Tap the conflict chip to choose." />
+        <Banner tone="warning" text="Someone changed an item you edited offline. Tap the conflict chip to choose which version to keep." />
       ) : null}
 
       <Row style={styles.dayNav}>
@@ -374,16 +379,16 @@ export default function TodayScreen() {
       ) : null}
 
       {isToday ? (
-      <Card tone="hero">
-        <AppText variant="label" color={palette.heroAccent}>
-          {nextUp ? (nextUp.inProgress ? 'HAPPENING NOW' : 'NEXT UP') : 'NEXT UP'}
+      <Card tone="hero" tint={tint} contourSeed={trip ? contourSeed({ id: trip.id }) : undefined}>
+        <AppText variant="eyebrow" color={palette.heroAccent}>
+          {nextUp ? (nextUp.inProgress ? 'Happening now' : 'Next up') : 'Next up'}
         </AppText>
         {nextUp && nextUp.item.start ? (
           <>
             <AppText variant="title" numberOfLines={2}>
               {nextUp.item.title}
             </AppText>
-            <AppText variant="heading" color={palette.heroAccent}>
+            <AppText variant="heading" color={palette.heroAccent} style={styles.tabular}>
               {nextUp.inProgress
                 ? `Started ${formatCountdown(nextUp.item.start, now)}`
                 : formatCountdown(nextUp.item.start, now)}
@@ -474,11 +479,13 @@ export default function TodayScreen() {
     <Screen scroll={false} padded={false}>
       <FlashList
         data={todayItems}
+        extraData={routeLine}
         keyExtractor={(item) => item.key}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={styles.rowWrap}>
             <TimelineRow
               item={item}
+              route={routeLine[index]}
               tripId={trip.id}
               dayKey={activeDay}
               tripTimezone={tripZone}
@@ -534,6 +541,7 @@ const DAY_STRIP_PADDING = spacing.xs;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  tabular: { fontVariant: ['tabular-nums'] },
   dayNav: { flexWrap: 'nowrap', alignItems: 'center' },
   dayStrip: { gap: DAY_CHIP_GAP, paddingHorizontal: DAY_STRIP_PADDING },
   dayChip: {
@@ -551,6 +559,6 @@ const styles = StyleSheet.create({
   unscheduledItem: { gap: spacing.xs },
   header: { padding: spacing.lg, gap: spacing.md },
   titleRow: { flexWrap: 'nowrap' },
-  rowWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+  rowWrap: { paddingHorizontal: spacing.lg },
   list: { paddingBottom: FAB_CLEARANCE },
 });

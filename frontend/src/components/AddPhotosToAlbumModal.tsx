@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import type { Photo } from "../types/photo";
 import photoService from "../services/photo.service";
 import { getFullAssetUrl } from "../lib/config";
 import { getAccessToken } from "../lib/axios";
 import ProgressiveImage from "./ProgressiveImage";
+import Icon from "./ui/Icon";
 
 interface AddPhotosToAlbumModalProps {
   tripId: number;
@@ -193,7 +195,7 @@ export default function AddPhotosToAlbumModal({
       onClose();
     } catch (error) {
       console.error("Failed to add photos to album:", error);
-      alert("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAdding(false);
     }
@@ -223,19 +225,7 @@ export default function AddPhotosToAlbumModal({
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-dusk-700 transition-colors"
             aria-label="Close"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -247,9 +237,7 @@ export default function AddPhotosToAlbumModal({
               ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
               : "bg-gray-100 dark:bg-dusk-700 text-gray-600 dark:text-dusk-400"
           }`}>
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <Icon name="photo" size={16} className="mr-1.5" />
             {selectedPhotoIds.size} of {photos.length} selected
           </span>
 
@@ -285,19 +273,7 @@ export default function AddPhotosToAlbumModal({
             </div>
           ) : photos.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-dusk-400">
-              <svg
-                className="w-16 h-16 mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+              <Icon name="photo" size={64} className="mb-4" />
               <p className="text-lg font-medium">No photos available</p>
               <p className="text-sm mt-1">
                 All photos are already in this album
@@ -328,19 +304,7 @@ export default function AddPhotosToAlbumModal({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-dusk-700 text-gray-400">
-                        <svg
-                          className="w-8 h-8"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
+                        <Icon name="photo" size={32} />
                       </div>
                     )}
 
@@ -354,17 +318,7 @@ export default function AddPhotosToAlbumModal({
                         }`}
                       >
                         {isSelected && (
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <Icon name="check" size={16} className="text-white" />
                         )}
                       </div>
                     </div>
@@ -399,7 +353,7 @@ export default function AddPhotosToAlbumModal({
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAdding
-                ? "Adding..."
+                ? "Adding…"
                 : `Add ${selectedPhotoIds.size} Photo${
                     selectedPhotoIds.size !== 1 ? "s" : ""
                   }`}

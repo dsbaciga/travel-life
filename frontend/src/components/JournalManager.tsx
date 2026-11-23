@@ -7,6 +7,7 @@ import { Link } from "react-router";
 import { isAxiosError } from "axios";
 import EmptyState, { EmptyIllustrations } from "./EmptyState";
 import LinkButton from "./LinkButton";
+import Icon from "./ui/Icon";
 import LinkedEntitiesDisplay from "./LinkedEntitiesDisplay";
 import FormModal from "./FormModal";
 import FormModalFooter from "./shared/FormModalFooter";
@@ -349,11 +350,13 @@ export default function JournalManager({
     if (!date || aiDrafting) return;
 
     if (confirmReplace && (formValues.title.trim() || formValues.content.trim())) {
-      // Same native prompt the close button uses: this form is already a modal, and a
-      // second stacked modal fights it for focus.
-      const replace = window.confirm(
-        "The form already has text. Drafting with AI will replace the title and content. Continue?"
-      );
+      const replace = await confirm({
+        title: 'Replace your text with an AI draft?',
+        message: 'The AI draft replaces the title and content already in this form.',
+        confirmLabel: 'Replace with draft',
+        cancelLabel: 'Keep my text',
+        variant: 'warning',
+      });
       if (!replace) return;
     }
 
@@ -378,7 +381,7 @@ export default function JournalManager({
           kind: 'failed',
           message: typeof serverMessage === 'string' && serverMessage
             ? serverMessage
-            : "Couldn't generate a draft. Please try again.",
+            : "Couldn't generate a draft. Try again.",
         });
       }
     } finally {
@@ -430,9 +433,9 @@ export default function JournalManager({
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Journal Entry",
-      message: "Delete this journal entry? This action cannot be undone.",
-      confirmLabel: "Delete",
+      title: "Delete journal entry",
+      message: "This journal entry is deleted. You can't undo this.",
+      confirmLabel: "Delete journal entry",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -445,12 +448,19 @@ export default function JournalManager({
   };
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (isFormDirty) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     resetForm();
-  }, [isFormDirty, resetForm]);
+  }, [isFormDirty, resetForm, confirm]);
 
   return (
     <div className="space-y-6">
@@ -466,7 +476,7 @@ export default function JournalManager({
           className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
         >
           <span className="sm:hidden">+ Add</span>
-          <span className="hidden sm:inline">+ New Entry</span>
+          <span className="hidden sm:inline">+ New entry</span>
         </button>
       </div>
       )}
@@ -475,15 +485,15 @@ export default function JournalManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Entry" : "New Journal Entry"}
-        icon="📔"
+        title={manager.editingId ? "Edit entry" : "New journal entry"}
+        icon="journal"
         formId="journal-form"
         footer={
           <FormModalFooter
             onCancel={handleCloseForm}
             formId="journal-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Create"} Entry`}
+            submitLabel={`${manager.editingId ? "Update" : "Create"} entry`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('journal-form'))}
             leftContent={
@@ -540,7 +550,7 @@ export default function JournalManager({
                   htmlFor={entryDateFieldId}
                   className="block text-sm font-medium text-charcoal dark:text-warm-gray mb-1"
                 >
-                  Entry Date
+                  Entry date
                 </label>
                 <input
                   type="date"
@@ -584,7 +594,12 @@ export default function JournalManager({
                     }
                     className="btn btn-secondary text-sm disabled:opacity-50"
                   >
-                    {aiDrafting ? "Drafting…" : "✨ Draft with AI"}
+                    {aiDrafting ? "Drafting…" : (
+                      <>
+                        <Icon name="sparkle" size={16} className="align-text-bottom mr-1" />
+                        Draft with AI
+                      </>
+                    )}
                   </button>
                 </div>
               )}
@@ -637,7 +652,7 @@ export default function JournalManager({
             <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  💡 <strong>Tip:</strong> After creating your journal entry, use the link button (🔗) to connect it to locations, activities, lodging, transportation, photos, or albums.
+                  <Icon name="lightbulb" size={16} className="align-text-bottom" /> <strong>Tip:</strong> After creating your journal entry, use the link button (<Icon name="link" size={16} className="align-text-bottom" />) to connect it to locations, activities, stays, transport, photos, or albums.
                 </p>
               </div>
             </div>
@@ -647,9 +662,9 @@ export default function JournalManager({
       {formOnly ? null : manager.items.length === 0 ? (
         <EmptyState
           icon={<EmptyIllustrations.NoJournalEntries />}
-          message="Tell Your Story"
-          subMessage="Every journey has a story worth telling. Write about your experiences, capture the emotions, and preserve the small moments that make travel unforgettable. Your future self will thank you."
-          actionLabel="Write Your First Entry"
+          message="No journal entries yet"
+          subMessage="Write down what happened today while you still remember the details."
+          actionLabel="Write an entry"
           onAction={openCreateForm}
         />
       ) : (
@@ -670,7 +685,11 @@ export default function JournalManager({
                         {entry.title || "Untitled Entry"}
                       </h3>
                       <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-dusk-400">
-                        {entry.date && <span>📅 {formatDate(entry.date, 'full')}</span>}
+                        {entry.date && (
+                          <span className="inline-flex items-center gap-1">
+                            <Icon name="calendar" size={16} /> {formatDate(entry.date, 'full')}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 self-start">
@@ -705,7 +724,7 @@ export default function JournalManager({
                   {isExpanded ? (
                     <MarkdownRenderer content={entry.content} />
                   ) : (
-                    <p className="text-gray-700 dark:text-dusk-300">
+                    <p className="journal-prose text-gray-700 dark:text-dusk-300">
                       {stripMarkdown(truncateContent(entry.content))}
                     </p>
                   )}
@@ -720,7 +739,11 @@ export default function JournalManager({
                       {...{ 'aria-expanded': isExpanded }}
                       aria-label={isExpanded ? `Collapse ${entry.title || 'entry'} content` : `Expand ${entry.title || 'entry'} content`}
                     >
-                      {isExpanded ? "Show less" : "Read more →"}
+                      {isExpanded ? "Show less" : (
+                        <>
+                          Read more <Icon name="forward" size={16} className="align-text-bottom" />
+                        </>
+                      )}
                     </button>
                   )}
 

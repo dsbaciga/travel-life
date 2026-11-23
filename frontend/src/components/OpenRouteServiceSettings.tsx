@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import userService from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 export default function OpenRouteServiceSettings() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
@@ -28,7 +29,7 @@ export default function OpenRouteServiceSettings() {
 
   const handleSave = async () => {
     if (!apiKey) {
-      setMessage({ type: 'error', text: 'Please enter an API key' });
+      setMessage({ type: 'error', text: 'Enter an API key' });
       return;
     }
 
@@ -45,7 +46,7 @@ export default function OpenRouteServiceSettings() {
       setApiKey(''); // Clear the input after successful save
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't save settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -53,9 +54,9 @@ export default function OpenRouteServiceSettings() {
 
   const handleClearSettings = async () => {
     const confirmed = await confirm({
-      title: 'Remove OpenRouteService API Key',
-      message: 'Are you sure you want to remove your OpenRouteService API key?',
-      confirmLabel: 'Remove',
+      title: 'Remove OpenRouteService API key',
+      message: 'Route planning stops until you add a key again.',
+      confirmLabel: 'Remove key',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -75,7 +76,7 @@ export default function OpenRouteServiceSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to clear settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't clear settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -84,7 +85,7 @@ export default function OpenRouteServiceSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading OpenRouteService settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading OpenRouteService settings…</p>
       </div>
     );
   }
@@ -107,7 +108,7 @@ export default function OpenRouteServiceSettings() {
       {settings?.openrouteserviceApiKeySet && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ OpenRouteService API key is configured
+            <Icon name="check" size={16} className="mr-1 align-text-bottom" />OpenRouteService API key is configured
           </p>
         </div>
       )}
@@ -150,7 +151,7 @@ export default function OpenRouteServiceSettings() {
             disabled={isSaving || !apiKey}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving...' : 'Save API Key'}
+            {isSaving ? 'Saving…' : 'Save API Key'}
           </button>
 
           {settings?.openrouteserviceApiKeySet && (
@@ -171,7 +172,7 @@ export default function OpenRouteServiceSettings() {
         </h3>
         <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
           <li>Go to <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">openrouteservice.org/dev/#/signup</a></li>
-          <li>Click "Sign Up" and complete the registration</li>
+          <li>Click "Sign up" and complete the registration</li>
           <li>Verify your email address</li>
           <li>Log in and navigate to your dashboard</li>
           <li>Click "Request a Token" to generate an API key</li>

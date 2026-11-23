@@ -140,7 +140,7 @@ const requireOwnedTrip = async (userId: number, tripId: number) => {
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or you do not have permission to manage sharing', 404);
+    throw new AppError("We couldn't find that trip, or you don't have permission to manage sharing.", 404);
   }
 
   return trip;
@@ -247,7 +247,7 @@ class ShareService {
     });
 
     if (!trip) {
-      throw new AppError('Shared trip not found', 404);
+      throw new AppError("We couldn't find that shared trip.", 404);
     }
 
     // Activity -> location name, from the activity's own locationId
@@ -352,12 +352,12 @@ class ShareService {
     });
 
     if (!photo) {
-      throw new AppError('Not found', 404);
+      throw new AppError("We couldn't find that.", 404);
     }
 
     const stored = variant === 'thumbnail' ? (photo.thumbnailPath ?? photo.localPath) : photo.localPath;
     if (!stored || !stored.startsWith('/uploads/')) {
-      throw new AppError('Not found', 404);
+      throw new AppError("We couldn't find that.", 404);
     }
 
     // Stored paths look like /uploads/photos/<file>; the uploads root on disk
@@ -366,7 +366,7 @@ class ShareService {
     const absolute = path.resolve(uploadsRoot, stored.slice('/uploads/'.length));
 
     if (!absolute.startsWith(uploadsRoot + path.sep)) {
-      throw new AppError('Not found', 404);
+      throw new AppError("We couldn't find that.", 404);
     }
 
     return absolute;

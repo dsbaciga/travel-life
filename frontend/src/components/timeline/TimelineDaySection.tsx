@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import DayHeader from './DayHeader';
@@ -11,6 +12,10 @@ import {
   mapTimelineTypeToEntityType,
 } from './utils';
 import { pickPreviousPlace } from '../../lib/mapsDeepLinks';
+import { computeRouteProgress } from '../../lib/vendored/routeProgress';
+import useNow from '../../hooks/useNow';
+import useTimezoneResolver from '../../hooks/useTimezoneResolver';
+import { getTodayInTimezone } from '../../utils/tripDashboardUtils';
 import type { DayGroup, TimelineItem } from './types';
 import type { EntityLinkSummary } from '../../types/entityLink';
 import { getEntityKey } from '../../types/entityLink';
@@ -58,7 +63,11 @@ export default function TimelineDaySection({
       console.warn('TimelineDaySection: items is not an array', { dateKey, items });
       return [];
     }
-    return [...items].sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+    // All-day items (a mid-stay night) lead the day, then by time
+    return [...items].sort((a, b) => {
+      if (!!a.isAllDay !== !!b.isAllDay) return a.isAllDay ? -1 : 1;
+      return a.dateTime.getTime() - b.dateTime.getTime();
+    });
   }, [items, dateKey]);
 
   // Where each item leaves the traveller, so the next item's Directions link
@@ -125,6 +134,24 @@ export default function TimelineDaySection({
 
   const isCompact = viewMode === 'compact';
 
+  // Route line: gold marker on the current or next stop, solid line up to it.
+  const now = useNow(60_000);
+  const resolveTz = useTimezoneResolver();
+  const isToday = dateKey === getTodayInTimezone(resolveTz(tripTimezone));
+  const route = useMemo(
+    () =>
+      computeRouteProgress(
+        sortedItems.map((item) => ({
+          start: item.dateTime.getTime(),
+          end: item.endDateTime?.getTime(),
+          allDay: item.isAllDay,
+        })),
+        now.getTime(),
+        isToday
+      ),
+    [sortedItems, now, isToday]
+  );
+
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-xl shadow-sm border border-gray-200 dark:border-dusk-700 overflow-hidden mb-4">
       {/* Day Header */}
@@ -158,12 +185,12 @@ export default function TimelineDaySection({
                 <div className="flex-1 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
+                    <span className="text-gray-500 dark:text-dusk-400 eyebrow">
                       Trip Time ({tripTimezone && getTimezoneAbbr(tripTimezone)})
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
+                    <span className="text-gray-500 dark:text-dusk-400 eyebrow">
                       Home Time ({userTimezone && getTimezoneAbbr(userTimezone)})
                     </span>
                     <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-dusk-500" />
@@ -174,18 +201,10 @@ export default function TimelineDaySection({
 
             {/* Timeline vertical line container */}
             <div className="relative">
-              {/* Vertical timeline line */}
-              <div className={`absolute ${isCompact ? 'left-[15px]' : 'left-[17px]'} sm:left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dusk-700`} />
-
-              {/* Events list */}
-              <div className={isCompact ? 'space-y-3' : 'space-y-4'}>
+              {/* Events list: each stop draws its own leg of the route line */}
+              <div>
                 {sortedItems.map((item, index) => {
                   const connectionInfo = getConnectionInfo(item, sortedItems);
-                  const nextItem = sortedItems[index + 1];
-                  const showConnectionLine =
-                    connectionInfo &&
-                    !connectionInfo.isLast &&
-                    nextItem?.connectionGroupId === item.connectionGroupId;
 
                   return (
                     <TimelineEventCard
@@ -199,7 +218,8 @@ export default function TimelineDaySection({
                       linkSummary={getLinkSummary(item)}
                       viewMode={viewMode}
                       connectionInfo={connectionInfo || undefined}
-                      showConnectionLine={showConnectionLine ?? undefined}
+                      routeStop={route.stops[index]}
+                      routeSegment={route.segments[index]}
                       originPlace={pickPreviousPlace(endPlaces, index)}
                       onEdit={onEdit}
                       onDelete={onDelete}
@@ -214,21 +234,9 @@ export default function TimelineDaySection({
             {dayGroup.unscheduledActivities && dayGroup.unscheduledActivities.length > 0 && (
               <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-dusk-700 pt-4`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <svg
-                    className="w-4 h-4 text-gray-500 dark:text-dusk-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <Icon name="schedule" className="w-4 h-4 text-gray-500 dark:text-dusk-400" />
                   <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300">
-                    Unscheduled Activities
+                    Unscheduled activities
                   </h4>
                   <span className="text-xs text-gray-500 dark:text-dusk-400">
                     ({dayGroup.unscheduledActivities.length})

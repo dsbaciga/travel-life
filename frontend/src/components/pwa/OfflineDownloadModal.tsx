@@ -1,15 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import {
-  ArrowDownTrayIcon,
-  PhotoIcon,
-  PlusIcon,
-  MapIcon,
-  DocumentTextIcon,
-  ServerIcon,
-  CheckIcon,
-  ExclamationTriangleIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import Modal from '../Modal';
 import {
   offlineDownloadService,
@@ -228,11 +218,11 @@ export default function OfflineDownloadModal({
   const getPhaseLabel = (phase: DownloadProgress['phase']): string => {
     switch (phase) {
       case 'metadata':
-        return 'Downloading trip data...';
+        return 'Downloading trip data…';
       case 'photos':
-        return 'Downloading photos...';
+        return 'Downloading photos…';
       case 'maps':
-        return 'Downloading map tiles...';
+        return 'Downloading map tiles…';
       case 'complete':
         return 'Download complete!';
     }
@@ -252,8 +242,8 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleComplete}
-        title="Download Complete"
-        icon={<CheckIcon className="w-5 h-5 text-emerald-500" />}
+        title="Download complete"
+        icon="success"
         maxWidth="md"
         footer={
           <button
@@ -266,10 +256,10 @@ export default function OfflineDownloadModal({
       >
         <div className="flex flex-col items-center py-6 text-center">
           <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-4">
-            <CheckIcon className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            <Icon name="check" size={32} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <h3 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
-            Trip Downloaded Successfully
+            Trip saved for offline use
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70 max-w-sm">
             {tripTitle ? `"${tripTitle}"` : 'Your trip'} is now available offline.
@@ -291,8 +281,8 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleCancel}
-        title="Downloading for Offline"
-        icon={<ArrowDownTrayIcon className="w-5 h-5" />}
+        title="Downloading for offline use"
+        icon="download"
         maxWidth="md"
         closeOnBackdropClick={false}
         closeOnEscape={false}
@@ -309,7 +299,7 @@ export default function OfflineDownloadModal({
           {/* Phase indicator */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
-              <ArrowPathIcon className="w-5 h-5 text-primary-600 dark:text-gold animate-spin" />
+              <Icon name="refresh" className="text-primary-600 dark:text-gold animate-spin" />
             </div>
             <div>
               <p className="text-sm font-medium text-charcoal dark:text-warm-gray">
@@ -357,8 +347,8 @@ export default function OfflineDownloadModal({
     <Modal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="Download for Offline"
-      icon={<ArrowDownTrayIcon className="w-5 h-5" />}
+      title="Download for offline use"
+      icon="download"
       maxWidth="md"
       footer={
         <>
@@ -373,7 +363,7 @@ export default function OfflineDownloadModal({
             disabled={isEstimating}
             className="btn-primary min-w-[44px] min-h-[44px]"
           >
-            <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+            <Icon name="download" size={16} className="mr-2" />
             Download ({formatBytes(calculateTotalSize())})
           </button>
         </>
@@ -391,10 +381,10 @@ export default function OfflineDownloadModal({
         {error && (
           <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
             <div className="flex items-start gap-2">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <Icon name="alert" className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-700 dark:text-red-300">
-                  Download Failed
+                  Couldn't download this trip
                 </p>
                 <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                   {error}
@@ -410,18 +400,18 @@ export default function OfflineDownloadModal({
           <div className="p-3 rounded-lg bg-parchment dark:bg-navy-700/50">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                <DocumentTextIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <Icon name="document" size={16} className="text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-charcoal dark:text-warm-gray">
                   Trip details & itinerary
                 </p>
                 <p className="text-xs text-slate dark:text-warm-gray/70">
-                  Locations, activities, transportation, lodging, journals, checklists
+                  Locations, activities, transport, stays, journals, checklists
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <CheckIcon className="w-4 h-4 text-emerald-500" />
+                <Icon name="check" size={16} className="text-emerald-500" />
                 <span className="text-xs text-slate dark:text-warm-gray/70">
                   {sizeEstimate ? formatBytes(sizeEstimate.metadataSize) : '...'}
                 </span>
@@ -433,7 +423,7 @@ export default function OfflineDownloadModal({
           <div className="p-3 rounded-lg bg-parchment dark:bg-navy-700/50">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                <PhotoIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <Icon name="photo" size={16} className="text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-charcoal dark:text-warm-gray">
@@ -444,7 +434,7 @@ export default function OfflineDownloadModal({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <CheckIcon className="w-4 h-4 text-emerald-500" />
+                <Icon name="check" size={16} className="text-emerald-500" />
                 <span className="text-xs text-slate dark:text-warm-gray/70">
                   {sizeEstimate ? formatBytes(sizeEstimate.thumbnailSize) : '...'}
                 </span>
@@ -456,7 +446,7 @@ export default function OfflineDownloadModal({
           <label className="p-3 rounded-lg border border-primary-100 dark:border-gold/20 cursor-pointer hover:bg-parchment/50 dark:hover:bg-navy-700/30 transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
-                <PlusIcon className="w-4 h-4 text-primary-600 dark:text-gold" />
+                <Icon name="add" size={16} className="text-primary-600 dark:text-gold" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-charcoal dark:text-warm-gray">
@@ -486,7 +476,7 @@ export default function OfflineDownloadModal({
           <label className="p-3 rounded-lg border border-primary-100 dark:border-gold/20 cursor-pointer hover:bg-parchment/50 dark:hover:bg-navy-700/30 transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
-                <MapIcon className="w-4 h-4 text-primary-600 dark:text-gold" />
+                <Icon name="map" size={16} className="text-primary-600 dark:text-gold" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-charcoal dark:text-warm-gray">
@@ -517,9 +507,9 @@ export default function OfflineDownloadModal({
         {storageInfo && (
           <div className="p-3 rounded-lg bg-parchment dark:bg-navy-700/50">
             <div className="flex items-center gap-3 mb-2">
-              <ServerIcon className="w-4 h-4 text-slate dark:text-warm-gray/70" />
+              <Icon name="storage" size={16} className="text-slate dark:text-warm-gray/70" />
               <span className="text-xs font-medium text-slate dark:text-warm-gray/70">
-                Storage Usage
+                Storage usage
               </span>
             </div>
             <div className="h-2 bg-navy-200 dark:bg-navy-600 rounded-full overflow-hidden mb-1">

@@ -2,17 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import mobilePairingService from '../services/mobilePairing.service';
 import { resolvePairingServerUrl } from '../utils/pairingServerUrl';
-
-interface ApiError {
-  response?: { data?: { message?: string } };
-  message?: string;
-}
-
-function getApiErrorMessage(err: unknown): string | undefined {
-  if (err === null || typeof err !== 'object') return undefined;
-  const apiError = err as ApiError;
-  return apiError.response?.data?.message ?? apiError.message;
-}
+import { getApiErrorMessage } from '../lib/errors';
 
 interface ActivePairing {
   qrDataUrl: string;
@@ -74,7 +64,7 @@ export default function MobilePairingSettings() {
         }
       }, 1000);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || 'Failed to create a pairing code');
+      setError(getApiErrorMessage(err, "Couldn't create a pairing code. Try again."));
     } finally {
       setIsWorking(false);
     }
@@ -82,7 +72,7 @@ export default function MobilePairingSettings() {
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mobile App</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mobile app</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Sign in to the Travel Life companion app by scanning a code — it sets the server address
@@ -130,7 +120,7 @@ export default function MobilePairingSettings() {
           disabled={isWorking}
           className="min-h-[44px] px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors"
         >
-          {isWorking ? 'Generating...' : pairing ? 'Generate New Code' : 'Pair Mobile App'}
+          {isWorking ? 'Generating…' : pairing ? 'Generate new code' : 'Pair mobile app'}
         </button>
         {pairing && (
           <button
@@ -138,7 +128,7 @@ export default function MobilePairingSettings() {
             onClick={handleHide}
             className="min-h-[44px] px-4 py-2 border border-gray-300 dark:border-dusk-600 text-gray-700 dark:text-dusk-200 hover:bg-gray-50 dark:hover:bg-dusk-700 rounded-lg transition-colors"
           >
-            Hide Code
+            Hide code
           </button>
         )}
       </div>

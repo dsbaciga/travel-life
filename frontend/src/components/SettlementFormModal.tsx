@@ -82,7 +82,7 @@ export default function SettlementFormModal({
         onSaved();
         onClose();
       } catch {
-        toast.error("Failed to save payment");
+        toast.error("Couldn't save payment. Try again.");
       }
     });
   };
@@ -91,8 +91,8 @@ export default function SettlementFormModal({
     <FormModal
       isOpen={isOpen}
       onClose={onClose}
-      title={editing ? "Edit Payment" : "Record Payment"}
-      icon="💸"
+      title={editing ? "Edit payment" : "Record payment"}
+      icon="money"
       formId="settlement-form"
       maxWidth="lg"
       footer={
@@ -100,7 +100,7 @@ export default function SettlementFormModal({
           onCancel={onClose}
           formId="settlement-form"
           isSubmitting={isSubmitting}
-          submitLabel={editing ? "Update Payment" : "Record Payment"}
+          submitLabel={editing ? "Update payment" : "Record payment"}
           isEditMode={!!editing}
         />
       }

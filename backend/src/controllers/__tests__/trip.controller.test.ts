@@ -218,7 +218,7 @@ describe('TripController', () => {
       expect(mockTripService.createTrip).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalled();
       const error = expectAppError(next);
-      expect(error.message).toBe('Unauthorized');
+      expect(error.message).toBe('Sign in to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -346,7 +346,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors (e.g., trip not found)', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripService.getTripById.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -413,7 +413,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripService.updateTrip.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -462,7 +462,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripService.deleteTrip.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -556,7 +556,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Photo not found', 404);
+      const serviceError = new AppError("We couldn't find that photo.", 404);
       mockTripService.updateCoverPhoto.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -591,7 +591,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripValidatorService.validateTrip.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -637,7 +637,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripValidatorService.getQuickStatus.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -730,7 +730,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripValidatorService.dismissIssue.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -793,7 +793,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripValidatorService.restoreIssue.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {
@@ -878,7 +878,7 @@ describe('TripController', () => {
     });
 
     it('should propagate service errors via next()', async () => {
-      const serviceError = new AppError('Trip not found', 404);
+      const serviceError = new AppError("We couldn't find that trip.", 404);
       mockTripService.duplicateTrip.mockRejectedValue(serviceError);
 
       const { req, res, next } = createAuthenticatedControllerArgs(testUsers.user1, {

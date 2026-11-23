@@ -1,5 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { CrimsonPro_400Regular_Italic, CrimsonPro_600SemiBold, CrimsonPro_700Bold } from '@expo-google-fonts/crimson-pro';
+import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import * as ExpoCrypto from 'expo-crypto';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
 import * as Font from 'expo-font';
@@ -16,6 +18,7 @@ import { ActionSheetHost } from '@/components/ActionSheet';
 import ShareIntentRouter from '@/components/ShareIntentRouter';
 import { ToastHost } from '@/components/Toast';
 import { setIdFactory } from '@/domain/mutations';
+import { useFontStore } from '@/lib/fonts';
 import { useSession } from '@/lib/session';
 import { syncNow } from '@/lib/sync';
 import { darkPalette, lightPalette, useResolvedColorScheme, useThemeStore, type Palette } from '@/lib/theme';
@@ -82,6 +85,29 @@ async function loadIconFont(): Promise<void> {
   }
 }
 
+/**
+ * The text fonts (Crimson Pro for display, Manrope for body), as on the web.
+ * They ship inside the app, so this works offline. Like the icon font, they
+ * never hold the splash screen for long: text uses the system font until they
+ * arrive, and `useFontStore` flips the app over to them the moment they do.
+ */
+async function loadTextFonts(): Promise<void> {
+  try {
+    const loading = Font.loadAsync({
+      CrimsonPro_400Regular_Italic,
+      CrimsonPro_600SemiBold,
+      CrimsonPro_700Bold,
+      Manrope_400Regular,
+      Manrope_500Medium,
+      Manrope_600SemiBold,
+      Manrope_700Bold,
+    }).then(() => useFontStore.getState().setReady());
+    await Promise.race([loading, new Promise<void>((resolve) => setTimeout(resolve, 2000))]);
+  } catch {
+    // Text stays on the system font; the app still works.
+  }
+}
+
 export default function RootLayout() {
   const colorScheme = useResolvedColorScheme();
   const hydrated = useSession((state) => state.hydrated);
@@ -92,7 +118,7 @@ export default function RootLayout() {
   useEffect(() => {
     void useSession.getState().hydrate();
     void useThemeStore.getState().hydrate();
-    void loadIconFont().finally(() => setIconsReady(true));
+    void Promise.all([loadIconFont(), loadTextFonts()]).finally(() => setIconsReady(true));
   }, []);
 
   const ready = hydrated && iconsReady;

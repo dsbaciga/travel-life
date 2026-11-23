@@ -15,7 +15,7 @@ import logger from '../config/logger';
 const parseShareToken = (raw: string | undefined): string => {
   const result = shareTokenSchema.safeParse(raw);
   if (!result.success) {
-    throw new AppError('Shared trip not found', 404);
+    throw new AppError("We couldn't find that shared trip.", 404);
   }
   return result.data;
 };

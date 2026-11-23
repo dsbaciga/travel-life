@@ -69,14 +69,14 @@ describe('errorHandler', () => {
 
   describe('AppError handling', () => {
     it('should return correct status and message for AppError', () => {
-      const error = new UtilsAppError('Not found', 404);
+      const error = new UtilsAppError("We couldn't find that.", 404);
 
       errorHandler(error, mockRequest, mockResponse, mockNext);
 
       expect(mockStatus).toHaveBeenCalledWith(404);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Not found',
+        message: "We couldn't find that.",
       });
     });
 
@@ -93,14 +93,14 @@ describe('errorHandler', () => {
     });
 
     it('should handle 401 Unauthorized AppError', () => {
-      const error = new UtilsAppError('Unauthorized', 401);
+      const error = new UtilsAppError('Sign in to continue.', 401);
 
       errorHandler(error, mockRequest, mockResponse, mockNext);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Unauthorized',
+        message: 'Sign in to continue.',
       });
     });
 
@@ -138,7 +138,7 @@ describe('errorHandler', () => {
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Internal server error',
+        message: "Couldn't finish that. Try again, and reload the page if it keeps happening.",
       });
     });
 
@@ -149,7 +149,7 @@ describe('errorHandler', () => {
 
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Internal server error',
+        message: "Couldn't finish that. Try again, and reload the page if it keeps happening.",
       });
     });
   });
@@ -175,7 +175,7 @@ describe('errorHandler', () => {
       // in the error body.
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Validation failed',
+        message: "Some of those details aren't valid. Check them and try again.",
         fields: ['email'],
       });
 
@@ -225,7 +225,7 @@ describe('errorHandler', () => {
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Validation failed',
+        message: "Some of those details aren't valid. Check them and try again.",
         fields: undefined,
       });
     });

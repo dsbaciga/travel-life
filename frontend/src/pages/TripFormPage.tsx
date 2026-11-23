@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import MarkdownEditor from '../components/MarkdownEditor';
 import TripCoverImageField from '../components/TripCoverImageField';
 import { useNavigationBlock } from '../hooks/useNavigationBlock';
+import Icon from '../components/ui/Icon';
 
 interface FormErrors {
   title?: string;
@@ -164,7 +165,7 @@ export default function TripFormPage() {
         excludeFromAutoShare: trip.excludeFromAutoShare || false,
       };
     } catch {
-      toast.error('Failed to load trip');
+      toast.error("Couldn't load trip. Try again.");
       navigate('/trips');
     } finally {
       setLoading(false);
@@ -198,21 +199,21 @@ export default function TripFormPage() {
     runShareAction(
       () => shareService.enableShare(parseInt(id as string)),
       'Sharing enabled',
-      'Failed to enable sharing'
+      "Couldn't enable sharing. Try again."
     );
 
   const handleRotateShare = () =>
     runShareAction(
       () => shareService.rotateShareToken(parseInt(id as string)),
       'New share link generated — the old link no longer works',
-      'Failed to regenerate share link'
+      "Couldn't regenerate share link. Try again."
     );
 
   const handleDisableShare = () =>
     runShareAction(
       () => shareService.disableShare(parseInt(id as string)),
       'Sharing disabled',
-      'Failed to disable sharing'
+      "Couldn't disable sharing. Try again."
     );
 
   const handleCopyShareUrl = async () => {
@@ -221,7 +222,7 @@ export default function TripFormPage() {
       await navigator.clipboard.writeText(shareUrl);
       toast.success('Share link copied to clipboard');
     } catch {
-      toast.error('Failed to copy link');
+      toast.error("Couldn't copy link. Try again.");
     }
   };
 
@@ -309,7 +310,7 @@ export default function TripFormPage() {
 
       if (isEdit && id) {
         await tripService.updateTrip(parseInt(id), data);
-        toast.success('Trip updated successfully');
+        toast.success('Trip updated');
 
         // Celebrate if trip status changed to COMPLETED
         const wasCompleted = originalStatusRef.current === TripStatus.COMPLETED;
@@ -319,7 +320,7 @@ export default function TripFormPage() {
         }
       } else {
         await tripService.createTrip(data);
-        toast.success('Trip created successfully');
+        toast.success('Trip created');
       }
 
       // Invalidate trips cache so the list refreshes
@@ -336,7 +337,7 @@ export default function TripFormPage() {
     } catch (err: unknown) {
       formSavedRef.current = false;
       const error = err as import('axios').AxiosError<{ message?: string }>;
-      toast.error(error.response?.data?.message || 'Failed to save trip');
+      toast.error(error.response?.data?.message || "Couldn't save trip. Try again.");
     } finally {
       setLoading(false);
     }
@@ -376,9 +377,9 @@ export default function TripFormPage() {
       {blocker.state === 'blocked' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-dusk-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved Changes</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved changes</h3>
             <p className="text-gray-600 dark:text-dusk-400 mb-4">
-              You have unsaved changes. Are you sure you want to leave?
+              Your edits to this trip will be lost if you leave now.
             </p>
             <div className="flex gap-3 justify-end">
               <button
@@ -414,18 +415,15 @@ export default function TripFormPage() {
               onClick={() => navigate(`/trips/${id}`)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              View Trip
+              <Icon name="visible" size={16} />
+              View trip
             </button>
           )}
         </div>
 
         <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 border border-gray-200 dark:border-dusk-700">
           <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-dusk-100">
-            {isEdit ? 'Edit Trip' : 'New Trip'}
+            {isEdit ? 'Edit trip' : 'New trip'}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -487,7 +485,7 @@ export default function TripFormPage() {
                 <span>
                   {showOptionalFields ? 'Hide' : 'Add'} dates, description and more
                 </span>
-                <span aria-hidden="true">{showOptionalFields ? '▲' : '▼'}</span>
+                <Icon name={showOptionalFields ? 'collapse' : 'expand'} size={16} />
               </button>
             )}
 
@@ -498,7 +496,7 @@ export default function TripFormPage() {
                 value={description}
                 onChange={setDescription}
                 rows={4}
-                placeholder="Tell us about your trip..."
+                placeholder="Tell us about your trip…"
                 label="Description"
               />
             </div>
@@ -515,7 +513,7 @@ export default function TripFormPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="startDate" className="label">
-                  Start Date
+                  Start date
                 </label>
                 <input
                   type="date"
@@ -528,7 +526,7 @@ export default function TripFormPage() {
 
               <div>
                 <label htmlFor="endDate" className="label">
-                  End Date
+                  End date
                 </label>
                 <input
                   type="date"
@@ -588,7 +586,7 @@ export default function TripFormPage() {
             {userTripTypes.length > 0 && (
               <div>
                 <label htmlFor="tripType" className="label">
-                  Trip Type
+                  Trip type
                 </label>
                 <select
                   id="tripType"
@@ -640,9 +638,7 @@ export default function TripFormPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5M10.172 13.828a4 4 0 010-5.656l3-3a4 4 0 015.656 5.656l-1.5 1.5" />
-                      </svg>
+                      <Icon name="link" size={16} />
                       Public share link
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
@@ -738,7 +734,7 @@ export default function TripFormPage() {
                 className="flex-auto md:flex-1 btn btn-primary !px-4 md:!px-6 whitespace-normal md:whitespace-nowrap text-center mt-4 md:mt-0"
                 disabled={loading}
               >
-                {loading ? 'Saving...' : isEdit ? 'Update Trip' : 'Begin Your Journey'}
+                {loading ? 'Saving…' : isEdit ? 'Update trip' : 'Begin your journey'}
               </button>
               <button
                 type="button"

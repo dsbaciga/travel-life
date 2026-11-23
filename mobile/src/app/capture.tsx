@@ -39,7 +39,7 @@ export default function CaptureScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" message="Pick a trip first, then capture into it." />
+        <EmptyState title="Pick a trip first" message="Choose a trip, then capture into it." />
       </Screen>
     );
   }
@@ -56,7 +56,7 @@ export default function CaptureScreen() {
     if (source === 'camera') {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        setMessage('Camera permission is needed to take a photo.');
+        setMessage('Allow camera access in Settings to take a photo.');
         return;
       }
     }
@@ -150,7 +150,7 @@ export default function CaptureScreen() {
     { key: 'food', icon: 'food', title: 'Find food nearby', detail: 'Search around you, with a dietary filter', run: () => router.replace('/food') },
     { key: 'meal', icon: 'meal', title: 'Log a meal', detail: 'Rating, dish and “order again?”', run: () => openForm('FOOD_LOG') },
     { key: 'note', icon: 'note', title: 'Quick journal note', detail: 'Tip: use the keyboard’s microphone to dictate', run: quickNote },
-    { key: 'transit', icon: 'transit', title: 'Log transit', detail: 'A train, bus, ferry or taxi you just took', run: () => openForm('TRANSPORTATION') },
+    { key: 'transit', icon: 'transit', title: 'Log transport', detail: 'A train, bus, ferry or taxi you just took', run: () => openForm('TRANSPORTATION') },
     { key: 'link', icon: 'link', title: 'Save a link', detail: 'Keep a URL with this trip', run: () => openForm('SAVED_LINK') },
     { key: 'parked', icon: 'parking', title: 'Where I parked', detail: 'Pin, photo and meter timer', run: () => router.replace('/parked') },
   ];

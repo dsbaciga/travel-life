@@ -1,13 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import {
-  ExclamationTriangleIcon,
-  DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
-  ArrowsPointingInIcon,
-  CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
 import Modal from '../Modal';
 import ConflictFieldDiff from './ConflictFieldDiff';
 import type {
@@ -131,8 +123,8 @@ export default function ConflictResolutionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Sync Conflict Detected"
-      icon={<ExclamationTriangleIcon className="w-5 h-5 text-amber-500" />}
+      title="Choose which version to keep"
+      icon="alert"
       maxWidth="4xl"
       closeOnBackdropClick={!isResolving}
       closeOnEscape={!isResolving}
@@ -154,32 +146,13 @@ export default function ConflictResolutionModal({
           >
             {isResolving ? (
               <>
-                <svg
-                  className="animate-spin w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Resolving...
+                <Icon name="spinner" size={16} className="animate-spin" />
+                Resolving…
               </>
             ) : (
               <>
-                <CheckIcon className="w-4 h-4" />
-                Apply Resolution
+                <Icon name="check" size={16} />
+                Apply resolution
               </>
             )}
           </button>
@@ -191,7 +164,7 @@ export default function ConflictResolutionModal({
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex-shrink-0">
-              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <Icon name="alert" className="text-amber-600 dark:text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-amber-900 dark:text-amber-100">
@@ -203,11 +176,11 @@ export default function ConflictResolutionModal({
               </p>
               <div className="flex flex-wrap gap-4 mt-3 text-xs text-amber-600 dark:text-amber-400">
                 <span className="flex items-center gap-1.5">
-                  <DevicePhoneMobileIcon className="w-3.5 h-3.5" />
+                  <Icon name="smartphone" size={14} />
                   Your edit: {formatTimestamp(conflict.localTimestamp)}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <ComputerDesktopIcon className="w-3.5 h-3.5" />
+                  <Icon name="computer" size={14} />
                   Server edit: {formatTimestamp(conflict.serverTimestamp)}
                 </span>
               </div>
@@ -218,7 +191,7 @@ export default function ConflictResolutionModal({
         {/* Resolution Options */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-charcoal dark:text-warm-gray">
-            Choose Resolution Method
+            Choose resolution method
           </h4>
 
           <div className="grid gap-3">
@@ -243,7 +216,7 @@ export default function ConflictResolutionModal({
               />
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40">
-                  <DevicePhoneMobileIcon className="w-4 h-4 text-primary-600 dark:text-gold" />
+                  <Icon name="smartphone" size={16} className="text-primary-600 dark:text-gold" />
                 </div>
                 <div>
                   <div className="font-medium text-charcoal dark:text-warm-gray">
@@ -277,7 +250,7 @@ export default function ConflictResolutionModal({
               />
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40">
-                  <ComputerDesktopIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <Icon name="computer" size={16} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <div className="font-medium text-charcoal dark:text-warm-gray">
@@ -311,7 +284,7 @@ export default function ConflictResolutionModal({
               />
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40">
-                  <ArrowsPointingInIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <Icon name="fitAll" size={16} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <div className="font-medium text-charcoal dark:text-warm-gray">
@@ -352,7 +325,7 @@ export default function ConflictResolutionModal({
               ))
             ) : (
               <div className="text-center py-8 text-slate dark:text-warm-gray/70">
-                <p>No field differences found (metadata only conflict)</p>
+                <p>The visible details match. Only background data differs.</p>
               </div>
             )}
           </div>
@@ -367,13 +340,13 @@ export default function ConflictResolutionModal({
           >
             {showPreview ? (
               <>
-                <ChevronUpIcon className="w-4 h-4" />
-                Hide Preview
+                <Icon name="collapse" size={16} />
+                Hide preview
               </>
             ) : (
               <>
-                <ChevronDownIcon className="w-4 h-4" />
-                Preview Resolved Data
+                <Icon name="expand" size={16} />
+                Preview resolved data
               </>
             )}
           </button>

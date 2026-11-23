@@ -66,7 +66,7 @@ export default function ReceiptScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" />
       </Screen>
     );
   }
@@ -98,7 +98,7 @@ export default function ReceiptScreen() {
     if (source === 'camera') {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        setError('Camera permission is needed to scan a receipt.');
+        setError('Allow camera access in Settings to scan a receipt.');
         return;
       }
     }
@@ -234,7 +234,7 @@ export default function ReceiptScreen() {
       ) : (
         <>
           {draft.confidence > 0 && draft.confidence < 0.5 ? (
-            <Banner tone="warning" text="The total was hard to read — please check the amount." />
+            <Banner tone="warning" text="The total was hard to read. Check the amount." />
           ) : null}
           <Field label="Merchant / description" value={draft.description} onChangeText={(description) => setDraft({ ...draft, description })} />
           <Field label="Amount" keyboardType="decimal-pad" value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value })} />

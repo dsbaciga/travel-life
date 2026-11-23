@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useCallback } from 'react';
 import { ChevronRightIcon, ChevronDownIcon } from '../icons';
 import type { Checklist } from '../../types/checklist';
@@ -14,20 +15,7 @@ interface ChecklistsWidgetProps {
  */
 function ChecklistIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-      />
-    </svg>
+    <Icon name="checklist" className={className} />
   );
 }
 
@@ -36,20 +24,7 @@ function ChecklistIcon({ className = 'w-5 h-5' }: { className?: string }) {
  */
 function CheckCircleIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="success" className={className} />
   );
 }
 
@@ -100,19 +75,7 @@ function ChecklistItemRow({
           `}
         >
           {item.isChecked && (
-            <svg
-              className="w-3 h-3 text-white animate-scale-in"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            <Icon name="check" className="w-3 h-3 text-white animate-scale-in" />
           )}
         </div>
       </div>
@@ -374,7 +337,7 @@ export default function ChecklistsWidget({
             onClick={onNavigateToChecklists}
             className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
               hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-            aria-label="Go to Checklists"
+            aria-label="Go to checklists"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </button>
@@ -417,7 +380,7 @@ export default function ChecklistsWidget({
           onClick={onNavigateToChecklists}
           className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
             hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-          aria-label="Go to Checklists"
+          aria-label="Go to checklists"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>
@@ -428,7 +391,7 @@ export default function ChecklistsWidget({
         <div className="mb-4 pb-4 border-b border-slate/10 dark:border-warm-gray/10">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-medium text-slate dark:text-warm-gray/70">
-              Overall Progress
+              Overall progress
             </span>
             <span
               className={`text-xs font-medium ${

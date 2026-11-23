@@ -1,3 +1,4 @@
+import Icon from './ui/Icon';
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import tagService from "../services/tag.service";
@@ -37,7 +38,7 @@ export default function TagsModal({
       setTripTags(tripTagsData);
       setAllTags(allTagsData);
     } catch {
-      toast.error("Failed to load tags");
+      toast.error("Couldn't load tags. Try again.");
     } finally {
       setLoading(false);
     }
@@ -68,7 +69,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag created and added to trip");
     } catch {
-      toast.error("Failed to create tag");
+      toast.error("Couldn't create tag. Try again.");
     }
   };
 
@@ -79,7 +80,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag added to trip");
     } catch {
-      toast.error("Failed to add tag");
+      toast.error("Couldn't add tag. Try again.");
     }
   };
 
@@ -90,7 +91,7 @@ export default function TagsModal({
       onTagsUpdated();
       toast.success("Tag removed from trip");
     } catch {
-      toast.error("Failed to remove tag");
+      toast.error("Couldn't remove tag. Try again.");
     }
   };
 
@@ -106,7 +107,7 @@ export default function TagsModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Manage Tags
+            Manage tags
           </h2>
           <button
             onClick={onClose}
@@ -114,19 +115,7 @@ export default function TagsModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} className="w-6 h-6" />
           </button>
         </div>
 
@@ -135,7 +124,7 @@ export default function TagsModal({
           {loading ? (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-dusk-400">
-                Loading tags...
+                Loading tags…
               </p>
             </div>
           ) : (
@@ -143,7 +132,7 @@ export default function TagsModal({
               {/* Current Trip Tags */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Current Tags
+                  Current tags
                 </h3>
                 {tripTags.length === 0 ? (
                   <p className="text-gray-500 dark:text-dusk-400 text-sm">
@@ -167,19 +156,7 @@ export default function TagsModal({
                           aria-label={`Remove tag ${tag.name}`}
                           className="hover:bg-white hover:bg-opacity-20 rounded-full p-0.5"
                         >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
+                          <Icon name="close" size={16} className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
@@ -190,7 +167,7 @@ export default function TagsModal({
               {/* Create New Tag */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Create New Tag
+                  Create new tag
                 </h3>
                 <form onSubmit={handleCreateTag} className="space-y-3">
                   <label htmlFor="tag-name-input" className="sr-only">
@@ -210,7 +187,7 @@ export default function TagsModal({
                         htmlFor="tag-background-color"
                         className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                       >
-                        Background Color
+                        Background color
                       </label>
                       <input
                         type="color"
@@ -225,7 +202,7 @@ export default function TagsModal({
                         htmlFor="tag-text-color"
                         className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                       >
-                        Text Color
+                        Text color
                       </label>
                       <input
                         type="color"
@@ -245,19 +222,19 @@ export default function TagsModal({
               {/* Search and Add Existing Tags */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Add Existing Tags
+                  Add existing tags
                 </h3>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tags..."
+                  placeholder="Search tags…"
                   className="input mb-3"
                 />
                 {filteredAvailableTags.length === 0 ? (
                   <p className="text-gray-500 dark:text-dusk-400 text-sm">
                     {searchQuery
-                      ? "No tags found matching your search."
+                      ? "No tags match your search."
                       : "All tags are already added to this trip."}
                   </p>
                 ) : (

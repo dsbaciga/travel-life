@@ -149,7 +149,7 @@ app.use(cors(corsOptions));
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 15, // Limit each IP to 15 login/register attempts per 15 minutes
-  message: 'Too many authentication attempts from this IP, please try again later.',
+  message: 'Too many sign-in attempts. Wait a few minutes and try again.',
   standardHeaders: true,
   legacyHeaders: false,
   // These read-only routes are hit on every login page load and have their own
@@ -163,7 +163,7 @@ const authLimiter = rateLimit({
 const silentRefreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 60, // Allow 60 requests per 15 minutes (4 per minute for page navigation)
-  message: 'Too many refresh attempts from this IP, please try again later.',
+  message: 'Too many attempts. Wait a few minutes and try again.',
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -172,7 +172,7 @@ const silentRefreshLimiter = rateLimit({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // Limit each IP to 1000 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  message: 'Too many requests. Wait a few minutes and try again.',
 });
 
 // Apply silent-refresh rate limiter before auth limiter (more specific route first)
@@ -205,7 +205,7 @@ app.use('/api', validateCsrf);
 // Every failure under /uploads answers 404 so the route never reveals whether a
 // file exists, who owns it, or why access was refused.
 const uploadNotFound = (res: Response): void => {
-  res.status(404).json({ status: 'error', message: 'Not found' });
+  res.status(404).json({ status: 'error', message: "We couldn't find that." });
 };
 
 // Reuses the SAME passwordVersion cache as the API path (middleware/auth.ts).
@@ -433,7 +433,7 @@ app.use('/uploads', authenticateFileAccess, authorizeFileAccess, express.static(
 
 // Catch-all for files not found under /uploads — return 404 without leaking path info
 app.use('/uploads', (_req: Request, res: Response) => {
-  res.status(404).json({ status: 'error', message: 'Not found' });
+  res.status(404).json({ status: 'error', message: "We couldn't find that." });
 });
 
 // Health check endpoint

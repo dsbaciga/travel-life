@@ -18,7 +18,7 @@ interface ImmichBulkImportDialogProps {
 type Phase = "counting" | "confirm" | "running" | "done" | "error";
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
+  return error instanceof Error ? error.message : "Couldn't finish that. Try again.";
 }
 
 function plural(count: number, noun: string): string {

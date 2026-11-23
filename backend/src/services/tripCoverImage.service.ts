@@ -6,25 +6,11 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
 import { config } from '../config';
+import { resolveUploadPath } from './_shared/uploadPaths';
+import { dominantColor } from './tripCoverColor.service';
 
 const UPLOADS_ROOT = path.resolve(config.upload.dir);
 const COVER_DIR = path.join(UPLOADS_ROOT, 'covers');
-
-/**
- * Resolve a stored `/uploads/...` web path to an absolute path confined to the
- * uploads root. Returns null when the value is not a stored upload path or when
- * it escapes the root once normalised.
- *
- * Cover paths are always server-generated, so anything that fails this check is
- * tampered data (e.g. a poisoned backup restore) and must never reach fs.unlink().
- * Mirrors the containment pattern in share.service.getPublicPhotoFilePath().
- */
-function resolveUploadPath(storedPath: string): string | null {
-  if (!storedPath.startsWith('/uploads/')) return null;
-  const absolute = path.resolve(UPLOADS_ROOT, storedPath.slice('/uploads/'.length));
-  if (!absolute.startsWith(UPLOADS_ROOT + path.sep)) return null;
-  return absolute;
-}
 
 // Cover images are decorative, so we only accept formats browsers can render directly
 // after re-encoding. Validated via magic bytes, not the client-supplied mimetype.
@@ -102,11 +88,11 @@ async function deleteCoverFiles(paths: Array<string | null | undefined>): Promis
 async function requireOwnedTrip(userId: number, tripId: number) {
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, userId },
-    select: { id: true, coverImagePath: true, coverImageThumbnailPath: true },
+    select: { id: true, coverPhotoId: true, coverImagePath: true, coverImageThumbnailPath: true },
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or you do not have permission to edit it', 404);
+    throw new AppError("We couldn't find that trip, or you can only view it.", 404);
   }
 
   return trip;
@@ -157,6 +143,9 @@ export const tripCoverImageService = {
         .jpeg({ quality: 80 })
         .toFile(path.join(COVER_DIR, thumbnailFilename));
 
+      // Sampled from the finished thumbnail; an unreadable image just means no tint.
+      const coverColor = await dominantColor(path.join(COVER_DIR, thumbnailFilename));
+
       const coverImagePath = `/uploads/covers/${filename}`;
       const coverImageThumbnailPath = `/uploads/covers/${thumbnailFilename}`;
 
@@ -169,6 +158,7 @@ export const tripCoverImageService = {
             coverImageThumbnailPath,
             // An uploaded cover replaces a gallery-photo cover
             coverPhotoId: null,
+            coverColor,
           },
           include: { coverPhoto: true },
         });
@@ -195,7 +185,13 @@ export const tripCoverImageService = {
 
     const updatedTrip = await prisma.trip.update({
       where: { id: tripId },
-      data: { coverImagePath: null, coverImageThumbnailPath: null },
+      data: {
+        coverImagePath: null,
+        coverImageThumbnailPath: null,
+        // The tint belongs to the cover being removed. A trip that (against the
+        // exclusivity rule) still has a library cover keeps that cover's colour.
+        ...(existing.coverPhotoId ? {} : { coverColor: null }),
+      },
       include: { coverPhoto: true },
     });
 

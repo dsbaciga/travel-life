@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import customItemService from "../services/customItem.service";
 import type { CustomItemType } from "../types/customItem";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * Manages the user's custom item type registry.
@@ -62,7 +63,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       reset();
       refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save type");
+      toast.error(getApiErrorMessage(err, "Couldn't save type. Try again."));
     } finally {
       setSaving(false);
     }
@@ -76,9 +77,9 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
 
   const handleDelete = async (type: CustomItemType) => {
     const confirmed = await confirm({
-      title: "Delete type?",
-      message: `"${type.name}" will be removed. Items using it are kept and become untyped.`,
-      confirmLabel: "Delete",
+      title: "Delete type",
+      message: `"${type.name}" is deleted. Items using it are kept and become untyped.`,
+      confirmLabel: "Delete type",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -89,7 +90,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
       if (editingId === type.id) reset();
       refresh();
     } catch {
-      toast.error("Failed to delete type");
+      toast.error("Couldn't delete type. Try again.");
     }
   };
 
@@ -147,7 +148,7 @@ export default function CustomItemTypeManager({ onUpdate }: CustomItemTypeManage
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving…" : editingId !== null ? "Save" : "Add Type"}
+            {saving ? "Saving…" : editingId !== null ? "Save" : "Add type"}
           </button>
         </div>
       </div>

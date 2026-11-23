@@ -202,6 +202,36 @@ Dark mode: `from-gold to-accent-400`
 
 ---
 
+## Editorial typography
+
+Crimson Pro (display, serif) and Manrope (body, sans) are paired so the app reads like a travel journal. Three rules apply on web and mobile.
+
+### Type scale
+
+| Role | Web | Mobile (`AppText` variant) |
+| ---- | --- | -------------------------- |
+| Title | `font-display` 700, `text-2xl`+ | `title`: Crimson Pro 700, 31/36 |
+| Heading | `font-display` 600 | `heading`: Crimson Pro 600, 22/27 |
+| Body | `font-body` 400, `text-sm`/`text-base` | `body`: Manrope 400, 15/22 |
+| Label | `font-body` 500-600, `text-sm` | `label`: Manrope 600, 13/18 |
+| Caption | `font-body` 400, `text-xs` | `caption`: Manrope 400, 13/18 |
+| Eyebrow | `.eyebrow`: Manrope 600, 11px, tracking 0.08em, uppercase | `eyebrow`: Manrope 600, 12/16, letterSpacing 1, uppercase |
+| Place / journal | `.place-name`, `.journal-prose`: Crimson Pro italic 400 | `place`: Crimson Pro Italic 400, 16/22 |
+
+### 1. Eyebrow labels
+
+Section headers, stat captions and "Next up" style labels are small, tracked caps, not bold uppercase. Use `.eyebrow` (`frontend/src/index.css`) and do not combine it with `text-xs`, `uppercase` or `tracking-*`; set only the colour and margin. Manrope has no true small caps, so `.eyebrow` is uppercase at a reduced size rather than `font-variant-caps`, which would synthesize them. On mobile use `<AppText variant="eyebrow">` (`SectionHeader` already does).
+
+### 2. Italic serif for places and journal text
+
+Place names in secondary positions (location lines under an activity, restaurant names; never a category such as "sightseeing", which is a plain subtitle) use `.place-name` (web) or `variant="place"` (mobile). Journal bodies and excerpts use `.journal-prose` (web) or `variant="place"` (mobile). Primary titles stay in the upright display face.
+
+### 3. Tabular numbers
+
+Times, durations, countdowns, currency amounts and budget figures take `tabular-nums` (web) or `fontVariant: ['tabular-nums']` (mobile) so columns of figures line up and live clocks do not jiggle.
+
+---
+
 ## Spacing & Layout
 
 ### Container
@@ -788,30 +818,31 @@ For sequential animations:
 
 ## Icons
 
-### Icon System
+### Rule: Material Symbols outlined only, by meaning
 
-All icons are centralized in `src/components/icons/index.tsx`:
+Every icon is a Material Symbols (outlined, weight 400) glyph drawn with the `Icon` component, the same family the Android app uses (`mobile/src/components/iconGlyphs.ts`). Pick an icon by what it means, never by glyph.
 
-- SVG-based, stroke style (not filled)
-- Default size: `w-5 h-5`
-- `aria-hidden` by default
+- **No emoji as UI icons.** Type badges, buttons, headers, tabs, toasts, empty states, weather and transport markers all use `Icon`. Emoji stay only where they are content: user-entered text, a user-chosen trip type or category emoji, journal mood faces, country flags.
+- **No `@heroicons/react`, `lucide-react` or hand-written `<svg>` icons.** If a meaning has no name, add one to `src/components/ui/iconRegistry.ts` (semantic name to a `material-symbols` `*-outline` glyph, imported through `~icons/material-symbols/...`) instead of drawing a new one. Spinners, logos, charts, maps and illustrations are not icons and may stay SVG.
+- **Names mirror mobile** where they overlap (`today`, `map`, `trip`, `place`, `stay`, `parking`, `receipt`, `chevronRight`, ...). Entity types (`activity`, `transportation`, `lodging`, `location`, `journal`, `expense`, `photo`, `document`, `checklist`), transport modes (`flight`, `train`, `bus`, `car`, `ferry`, `bike`, `walk`), weather (`weatherRain`, ...) and status (`success`, `alert`, `error`, `info`) are all names.
+- Data that used to hold an emoji holds an `IconName` (`ENTITY_TYPE_CONFIG[type].icon`, `DIETARY_TAGS[].icon`, `getWeatherIcon()`, `getTransportationIcon()`). Anything persisted to the backend keeps its stored value.
 
 ### Usage
 
 ```tsx
-import { MapPinIcon, CalendarIcon, PhotoIcon } from '@/components/icons';
+import Icon from '@/components/ui/Icon';
 
-<MapPinIcon className="w-4 h-4 text-primary-500 dark:text-gold" />
+<Icon name="flight" />                                   {/* 20px inline with text, decorative */}
+<Icon name="alert" size={16} className="text-amber-600" /> {/* 16px in dense chips */}
+<Icon name="delete" size={24} title="Delete trip" />     {/* 24px in buttons/headers; title makes it role="img" */}
 ```
 
-### Available Icons
-
-| Category | Icons |
-|----------|-------|
-| Core | `CloseIcon`, `SearchIcon`, `FilterIcon`, `PlusIcon`, `TrashIcon`, `EditIcon`, `PencilIcon`, `ListIcon`, `EllipsisVerticalIcon` |
-| Content | `PhotoIcon`, `CameraIcon`, `MapPinIcon`, `CalendarIcon` |
-| Chevrons | `ChevronRightIcon`, `ChevronDownIcon`, `ChevronUpIcon` |
-| Status | `SpinnerIcon` (includes `animate-spin` automatically) |
+- Sizes: 20 inline with text (default), 16 in dense chips, 24 in buttons and headers. A `size-*` / `w-* h-*` class overrides.
+- Colour is `currentColor`: set it with a text colour class.
+- Decorative by default (`aria-hidden`); pass `title` only when the icon is the only label, and keep `aria-label` on icon-only buttons.
+- Props that take an icon (`EmptyState`, `FormSection`, `Modal`, `FormModal`, `PageHeader` actions) take an `IconName`, not an emoji.
+- Glyphs are bundled at build time by `unplugin-icons` (custom compiler in `frontend/vite.icons.ts`), so they work offline. Non-React consumers (Leaflet divIcons) use `iconSvgString(name)`.
+- `components/icons/index.tsx` keeps the old named wrappers (`CloseIcon`, `PlusIcon`, ...) around `Icon` for existing call sites; use `Icon` in new code.
 
 ### Icon Colors
 
@@ -945,6 +976,21 @@ says it is.
 - Tab navigation follows logical order
 
 ---
+
+## Route line and contours
+
+A day's itinerary is drawn as a journey, not a stack of cards.
+
+- **Route line.** A continuous line runs down the left of the day with a stop marker at each item. Items have no card chrome (no border, shadow or fill; only a faint hover wash on web), so the line carries the structure.
+- **Stop markers.** Colour comes from the item type (web: `getTypeColor`, in both the Timeline and Today's Itinerary; mobile: `typeColors`). All-day items (a mid-stay night) list first, show "All day" instead of a clock time, keep the type colour, and never take the gold marker (`RouteTimes.allDay`). The current or next stop is a filled gold marker (`accent-500` light, `gold` dark; `palette.primary` on mobile) with a soft 4px halo. Finished stops are muted grey with 70% content opacity. Mobile draws upcoming stops outlined in their type colour with a wash fill; web fills them with the type colour.
+- **Line.** Solid gold, 2px, up to the current or next stop; dashed after it (2px wide, 4px dash, 5px gap, muted grey at about 50%). On a day that is not today there is no gold stop and the line is dashed (or solid for days already finished). The rule lives in `packages/shared/src/brand/routeProgress.ts` (`computeRouteProgress`); never re-implement it per screen.
+- **Not for print.** `PrintableItinerary` keeps its own layout.
+
+**Contour backdrop.** `ContourBackdrop` (web `components/brand/`, mobile `components/`) draws 6 to 10 closed, wobbly iso-lines from a seed (`generateContours` in `packages/shared/src/brand/contours.ts`). Same seed, same terrain: use the trip id, or `contourSeed({ id, latitude, longitude })`. Stroke 1.25px, gold at about 8% on dark, charcoal at about 10% on light. It is `aria-hidden` and takes no pointer events.
+
+- Use it as the first child of a `relative overflow-hidden` container (web) or an `overflow: 'hidden'` View (mobile), and give the content above it `relative` so text paints over the lines.
+- Empty states already include it. For a hero, drop it into the hero container with the trip's seed; do not stack it on top of photos.
+- Keep it faint. Raising the opacity turns decoration into noise.
 
 ## Print Styles
 

@@ -5,9 +5,10 @@ import { getFullAssetUrl } from '../lib/config';
 import { getApiErrorMessage } from '../lib/errors';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import Icon from './ui/Icon';
 
 const PERMISSION_LABELS: Record<PermissionLevel, string> = {
-  view: 'View Only',
+  view: 'View only',
   edit: 'Can Edit',
   admin: 'Admin',
 };
@@ -47,7 +48,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       // Navigate to the trip
       navigate(`/trips/${collaborator.tripId}`);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, 'Failed to accept invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't accept invitation. Try again."));
     } finally {
       setProcessingId(null);
     }
@@ -62,7 +63,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       onUpdate?.();
     } catch (err: unknown) {
       console.error('Failed to decline invitation:', err);
-      toast.error(getApiErrorMessage(err, 'Failed to decline invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't decline invitation. Try again."));
     } finally {
       setProcessingId(null);
     }
@@ -95,7 +96,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-          Pending Invitations
+          Pending invitations
         </h3>
         <span className="px-2 py-1 text-xs font-medium bg-gold/20 text-gold rounded-full">
           {invitations.length} new
@@ -126,14 +127,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-dusk-400">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <Icon name="trip" size={32} />
                   </div>
                 )}
               </div>
@@ -179,9 +173,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
                   <span className="w-4 h-4 border-2 border-navy-900/30 border-t-navy-900 rounded-full animate-spin" />
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Icon name="check" />
                     Accept
                   </>
                 )}

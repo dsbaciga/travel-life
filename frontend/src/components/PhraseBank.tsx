@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Icon, { type IconName } from './ui/Icon';
 import languagePhraseService from '../services/languagePhrase.service';
 import type {
   LanguageWithPhrases,
@@ -38,7 +39,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
         setActiveLanguage(data.languages[0].code);
       }
     } catch {
-      toast.error('Failed to load phrases');
+      toast.error("Couldn't load phrases. Try again.");
     } finally {
       setLoading(false);
     }
@@ -48,10 +49,10 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
     try {
       await navigator.clipboard.writeText(phrase.translation);
       setCopiedId(phrase.id);
-      toast.success('Copied to clipboard!');
+      toast.success('Copied to clipboard');
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      toast.error('Failed to copy');
+      toast.error("Couldn't copy. Try again.");
     }
   };
 
@@ -74,7 +75,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" label="Loading phrases..." />
+        <LoadingSpinner size="lg" label="Loading phrases…" />
       </div>
     );
   }
@@ -82,7 +83,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
   if (languages.length === 0) {
     return (
       <EmptyState
-        icon="🗣️"
+        icon="phrasebook"
         message="No languages selected"
         subMessage="Add languages to your trip to access the phrase bank"
       />
@@ -116,7 +117,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
       {/* Category filters */}
       <div className="flex flex-wrap gap-2">
         {categories.map((cat) => {
-          const info = cat === 'all' ? { label: 'All', emoji: '📚' } : CATEGORY_INFO[cat];
+          const info = cat === 'all' ? { label: 'All', icon: 'list' as IconName } : CATEGORY_INFO[cat];
           return (
             <button
               key={cat}
@@ -127,7 +128,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
                   : 'bg-gray-100 dark:bg-navy-700 text-gray-700 dark:text-dusk-300 hover:bg-gray-200 dark:hover:bg-navy-600'
               }`}
             >
-              <span className="mr-1">{info.emoji}</span>
+              <Icon name={info.icon} size={16} className="mr-1 align-text-bottom" />
               {info.label}
             </button>
           );
@@ -137,7 +138,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
       {/* Phrase cards */}
       {filteredPhrases.length === 0 ? (
         <EmptyState.Compact
-          icon="🔍"
+          icon="search"
           message="No phrases in this category"
         />
       ) : (
@@ -176,40 +177,16 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
                   title="Copy to clipboard"
                 >
                   {copiedId === phrase.id ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <Icon name="check" />
                   ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
+                    <Icon name="copy" />
                   )}
                 </button>
               </div>
               {/* Category badge */}
               <div className="mt-3 pt-3 border-t border-gray-100 dark:border-dusk-700">
                 <span className="inline-flex items-center text-xs text-gray-500 dark:text-dusk-400">
-                  <span className="mr-1">{CATEGORY_INFO[phrase.category].emoji}</span>
+                  <Icon name={CATEGORY_INFO[phrase.category].icon} size={16} className="mr-1" />
                   {CATEGORY_INFO[phrase.category].label}
                 </span>
               </div>

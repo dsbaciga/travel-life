@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import toast from "react-hot-toast";
 import immichService from "../services/immich.service";
 import type {
   ImmichAsset,
@@ -11,6 +12,7 @@ import { getAccessToken } from "../lib/axios";
 import { extractDatePortion } from "../utils/timezone";
 import { useTimezoneResolver } from "../hooks/useTimezoneResolver";
 import ImmichBulkImportDialog from "./ImmichBulkImportDialog";
+import Icon from "./ui/Icon";
 
 interface ImmichBrowserProps {
   onSelect: (assets: ImmichAsset[]) => Promise<void>;
@@ -306,7 +308,7 @@ export default function ImmichBrowser({
         setLoadError(
           error instanceof Error && error.message
             ? error.message
-            : "Failed to load photos from Immich. Please check your Immich settings."
+            : "Couldn't load photos from Immich. Check your Immich settings."
         );
       })
       .finally(() => {
@@ -381,14 +383,14 @@ export default function ImmichBrowser({
       const albumAssets = requireArrayField(albumData.assets, "assets");
 
       if (albumAssets.length === 0) {
-        alert("This album has no photos to import");
+        toast("This album has no photos to import.");
         return;
       }
 
       await onImportAlbum(album, albumAssets);
     } catch (error) {
       console.error("Failed to import album:", error);
-      alert("Failed to import album. Please try again.");
+      toast.error("Couldn't import album. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -420,7 +422,7 @@ export default function ImmichBrowser({
         <div className="px-3 py-1 sm:px-6 sm:py-3 border-b border-gray-200 dark:border-dusk-700 shrink-0">
           <div className="flex justify-between items-center gap-2">
             <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-              Browse Immich Library
+              Browse Immich library
             </h2>
             <button
               onClick={onClose}
@@ -429,20 +431,7 @@ export default function ImmichBrowser({
               aria-label="Close"
               className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <Icon name="close" size={24} />
             </button>
           </div>
         </div>
@@ -457,7 +446,7 @@ export default function ImmichBrowser({
           {/* View Tabs */}
           <div className="flex gap-2 mb-3 sm:mb-4">
             <button onClick={() => setView("assets")} type="button" className={tabClass(view === "assets")}>
-              All Photos
+              All photos
             </button>
             <button onClick={() => setView("albums")} type="button" className={tabClass(view === "albums")}>
               Albums
@@ -487,8 +476,8 @@ export default function ImmichBrowser({
                   maxLength={200}
                   placeholder={
                     filters.searchMode === "smart"
-                      ? "Describe what is in the photo, e.g. beach sunset..."
-                      : "Search by file name..."
+                      ? "Describe what is in the photo, e.g. beach sunset…"
+                      : "Search by file name…"
                   }
                   aria-label="Search assets"
                   className="flex-1 min-w-0 basis-40 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
@@ -627,7 +616,7 @@ export default function ImmichBrowser({
                 type="text"
                 value={albumSearchTerm}
                 onChange={(e) => setAlbumSearchTerm(e.target.value)}
-                placeholder="Search albums..."
+                placeholder="Search albums…"
                 aria-label="Search albums"
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white"
               />
@@ -675,7 +664,7 @@ export default function ImmichBrowser({
               </div>
               {filteredAlbums.length === 0 && (
                 <div className="text-center py-12">
-                  <p className="text-gray-600 dark:text-dusk-400">No albums found</p>
+                  <p className="text-gray-600 dark:text-dusk-400">No albums yet</p>
                 </div>
               )}
             </>
@@ -711,7 +700,7 @@ export default function ImmichBrowser({
                         type="button"
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Link all matching...
+                        Link all matching…
                       </button>
                       {smartActive && (
                         <span className="self-center text-xs text-gray-600 dark:text-dusk-400">
@@ -727,7 +716,7 @@ export default function ImmichBrowser({
                         type="button"
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
                       >
-                        Deselect All
+                        Deselect all
                       </button>
                       <div className="px-4 py-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-lg text-sm font-medium">
                         {selectedAssetsMap.size} selected
@@ -797,9 +786,7 @@ export default function ImmichBrowser({
                           className="absolute top-2 right-2 text-yellow-300 drop-shadow"
                           aria-label="Favourite"
                         >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
+                          <Icon name="starFilled" />
                         </div>
                       )}
                       {asset.type === "VIDEO" && (
@@ -807,9 +794,7 @@ export default function ImmichBrowser({
                           {/* Video play icon overlay */}
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="bg-black/50 rounded-full p-2">
-                              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M8 5v14l11-7z" />
-                              </svg>
+                              <Icon name="play" size={24} className="text-white" />
                             </div>
                           </div>
                           {/* Duration badge */}
@@ -822,18 +807,7 @@ export default function ImmichBrowser({
                       )}
                       {selected && (
                         <div className="absolute inset-0 bg-blue-600 bg-opacity-25 flex items-center justify-center">
-                          <svg
-                            className="w-12 h-12 text-white"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            aria-hidden="true"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <Icon name="success" size={48} className="text-white" />
                         </div>
                       )}
                     </button>
@@ -848,7 +822,7 @@ export default function ImmichBrowser({
                       ? "Everything on this page is already on the entry"
                       : hasActiveFilters
                         ? "No photos match these filters"
-                        : "No photos found"}
+                        : "No photos yet"}
                   </p>
                 </div>
               )}
@@ -893,7 +867,7 @@ export default function ImmichBrowser({
               className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
             >
               {isLinking ? (
-                "Linking..."
+                "Linking…"
               ) : (
                 <>
                   Link{" "}

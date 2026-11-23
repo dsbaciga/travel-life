@@ -6,6 +6,7 @@ import type {
   TapWaterSafety,
 } from '../constants/countryFacts';
 import { useTripCountries, type AddressBearing } from '../hooks/useTripCountries';
+import Icon, { type IconName } from './ui/Icon';
 
 // =============================================================================
 // PRESENTATION TABLES
@@ -18,12 +19,12 @@ import { useTripCountries, type AddressBearing } from '../hooks/useTripCountries
 const EMERGENCY_SERVICES: ReadonlyArray<{
   key: keyof EmergencyNumbers;
   label: string;
-  icon: string;
+  icon: IconName;
 }> = [
-  { key: 'universal', label: 'All emergencies', icon: '🆘' },
-  { key: 'police', label: 'Police', icon: '🚓' },
-  { key: 'ambulance', label: 'Ambulance', icon: '🚑' },
-  { key: 'fire', label: 'Fire', icon: '🚒' },
+  { key: 'universal', label: 'All emergencies', icon: 'sos' },
+  { key: 'police', label: 'Police', icon: 'police' },
+  { key: 'ambulance', label: 'Ambulance', icon: 'emergency' },
+  { key: 'fire', label: 'Fire', icon: 'fireDept' },
 ];
 
 const TAP_WATER_PRESENTATION: Readonly<
@@ -75,7 +76,7 @@ const MIXED_GRID_NOTES: Readonly<Record<string, string>> = {
 // =============================================================================
 
 interface NormSectionProps {
-  icon: string;
+  icon: IconName;
   title: string;
   children: ReactNode;
   className?: string;
@@ -87,7 +88,7 @@ function NormSection({ icon, title, children, className = '' }: NormSectionProps
       className={`rounded-xl border border-primary-100 dark:border-gold/20 bg-white/70 dark:bg-navy-900/40 p-4 ${className}`}
     >
       <h4 className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-warm-gray mb-3">
-        <span aria-hidden="true">{icon}</span>
+        <Icon name={icon} />
         {title}
       </h4>
       {children}
@@ -155,7 +156,7 @@ export default function LocalNormsCard({
   const handleSelectCountry = useCallback(
     (code: string | null) => {
       void selectCountry(code).catch(() => {
-        toast.error('Could not save the country for this trip');
+        toast.error("Couldn't save the country for this trip. Try again.");
       });
     },
     [selectCountry]
@@ -198,7 +199,7 @@ export default function LocalNormsCard({
       <div className={`space-y-4 ${className}`}>
         <header>
           <h3 className="font-display text-xl font-bold text-charcoal dark:text-warm-gray">
-            Local Norms
+            Local norms
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             Tipping, plugs, tap water, driving side and emergency numbers — bundled offline.
@@ -209,9 +210,7 @@ export default function LocalNormsCard({
           className="rounded-xl border border-primary-100 dark:border-gold/20 bg-white/70 dark:bg-navy-900/40 p-6 text-center"
           role="status"
         >
-          <span className="text-3xl" aria-hidden="true">
-            🧭
-          </span>
+          <Icon name="explore" size={32} className="mx-auto" />
           <p className="mt-2 text-sm font-medium text-charcoal dark:text-warm-gray">
             We could not work out which country this trip is in
           </p>
@@ -234,7 +233,7 @@ export default function LocalNormsCard({
       <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
           <h3 className="font-display text-xl font-bold text-charcoal dark:text-warm-gray">
-            Local Norms
+            Local norms
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70">
             Practical conventions in {selected.name}. Bundled offline — confirm anything
@@ -279,13 +278,13 @@ export default function LocalNormsCard({
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <NormSection icon="📞" title="Emergency numbers">
+        <NormSection icon="phone" title="Emergency numbers">
           {known.length > 0 ? (
             <dl className="space-y-2">
               {known.map((service) => (
                 <div key={service.key} className="flex items-center justify-between gap-3">
                   <dt className="flex items-center gap-2 text-sm text-slate dark:text-warm-gray/80">
-                    <span aria-hidden="true">{service.icon}</span>
+                    <Icon name={service.icon} />
                     {service.label}
                   </dt>
                   <dd>
@@ -315,7 +314,7 @@ export default function LocalNormsCard({
           )}
         </NormSection>
 
-        <NormSection icon="🔌" title="Plugs and power">
+        <NormSection icon="plug" title="Plugs and power">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {selected.electricity.plugTypes.map((plug) => (
               <span
@@ -342,7 +341,7 @@ export default function LocalNormsCard({
           )}
         </NormSection>
 
-        <NormSection icon="🚰" title="Tap water">
+        <NormSection icon="water" title="Tap water">
           <span
             className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${tapWater.badgeClass}`}
           >
@@ -351,14 +350,14 @@ export default function LocalNormsCard({
           <p className="mt-3 text-sm text-slate dark:text-warm-gray/80">{tapWater.detail}</p>
         </NormSection>
 
-        <NormSection icon="🚗" title="Driving">
+        <NormSection icon="car" title="Driving">
           <p className="text-sm font-semibold text-charcoal dark:text-warm-gray">
             {driving.label}
           </p>
           <p className="mt-1 text-sm text-slate dark:text-warm-gray/80">{driving.detail}</p>
         </NormSection>
 
-        <NormSection icon="💵" title="Tipping" className="md:col-span-2">
+        <NormSection icon="money" title="Tipping" className="md:col-span-2">
           <p className="text-sm text-slate dark:text-warm-gray/80">{selected.tipping}</p>
         </NormSection>
       </div>

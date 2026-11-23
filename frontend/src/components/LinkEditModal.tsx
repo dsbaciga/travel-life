@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Icon from './ui/Icon';
 import { useMutation } from '@tanstack/react-query';
 import entityLinkService from '../services/entityLink.service';
 import { useInvalidateEntityLinks } from '../hooks/useInvalidateEntityLinks';
@@ -10,6 +11,7 @@ import {
   getRelationshipLabel,
 } from '../lib/entityConfig';
 import toast from 'react-hot-toast';
+import { getApiErrorMessage } from '../lib/errors';
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -94,7 +96,7 @@ export default function LinkEditModal({
       onSuccess();
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : 'Failed to update link';
+      const message = getApiErrorMessage(error, "Couldn't update link. Try again.");
       toast.error(message);
     },
   });
@@ -124,7 +126,7 @@ export default function LinkEditModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <h3 id="link-edit-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-            Edit Link
+            Edit link
           </h3>
           <button
             onClick={onClose}
@@ -132,9 +134,7 @@ export default function LinkEditModal({
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 dark:text-dusk-400 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -143,18 +143,16 @@ export default function LinkEditModal({
           {/* Link visualization */}
           <div className="flex items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-dusk-700/50 rounded-lg">
             <div className="text-center">
-              <span className="text-xl">{sourceConfig.emoji}</span>
+              <Icon name={sourceConfig.icon} />
               <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {sourceName}
               </div>
             </div>
             <div className="flex items-center gap-1 text-gray-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <Icon name="forward" size={16} />
             </div>
             <div className="text-center">
-              <span className="text-xl">{targetConfig.emoji}</span>
+              <Icon name={targetConfig.icon} />
               <div className="text-xs text-gray-600 dark:text-dusk-400 mt-1 max-w-[100px] truncate">
                 {targetName}
               </div>
@@ -164,7 +162,7 @@ export default function LinkEditModal({
           {/* Relationship type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              Relationship Type
+              Relationship type
             </label>
             <select
               value={relationship}
@@ -187,7 +185,7 @@ export default function LinkEditModal({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add a note about this link..."
+              placeholder="Add a note about this link…"
               rows={3}
               maxLength={1000}
               className="input w-full resize-none"
@@ -211,7 +209,7 @@ export default function LinkEditModal({
               disabled={updateMutation.isPending}
               className="btn btn-primary flex-1"
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updateMutation.isPending ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>

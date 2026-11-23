@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  ArrowDownTrayIcon,
-  CloudIcon,
-  CloudArrowDownIcon,
-  CheckIcon,
-  ArrowPathIcon,
-  TrashIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+import Icon from '../ui/Icon';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { offlineDownloadService, type OfflineDownloadStatus, type DownloadSizeEstimate } from '../../services/offlineDownload.service';
 import OfflineDownloadModal from './OfflineDownloadModal';
 
@@ -49,6 +42,7 @@ export default function OfflineDownloadButton({
   onDownloadComplete,
   onRemove,
 }: OfflineDownloadButtonProps) {
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [status, setStatus] = useState<OfflineDownloadStatus>('not-downloaded');
   const [sizeEstimate, setSizeEstimate] = useState<DownloadSizeEstimate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +63,7 @@ export default function OfflineDownloadButton({
       setError(null);
     } catch (err) {
       console.error('Failed to load offline status:', err);
-      setError('Failed to check status');
+      setError("Couldn't check status. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -93,9 +87,15 @@ export default function OfflineDownloadButton({
 
   // Handle remove offline data
   const handleRemove = useCallback(async () => {
-    if (!window.confirm('Remove offline data for this trip? You will need to download again to access offline.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Remove offline copy',
+      message: tripTitle
+        ? `"${tripTitle}" is no longer saved on this device. Download it again to use it offline.`
+        : 'This trip is no longer saved on this device. Download it again to use it offline.',
+      confirmLabel: 'Remove offline copy',
+      variant: 'warning',
+    });
+    if (!confirmed) return;
 
     try {
       setIsRemoving(true);
@@ -104,11 +104,11 @@ export default function OfflineDownloadButton({
       onRemove?.();
     } catch (err) {
       console.error('Failed to remove offline data:', err);
-      setError('Failed to remove');
+      setError("Couldn't remove. Try again.");
     } finally {
       setIsRemoving(false);
     }
-  }, [tripId, onRemove]);
+  }, [tripId, tripTitle, onRemove, confirm]);
 
   // Handle refresh (re-download)
   const handleRefresh = useCallback(() => {
@@ -128,6 +128,7 @@ export default function OfflineDownloadButton({
   if (compact) {
     return (
       <>
+        <ConfirmDialogComponent />
         <button
           onClick={status === 'downloaded' || status === 'outdated' ? handleRemove : handleDownloadClick}
           disabled={isLoading || isRemoving || status === 'downloading'}
@@ -153,7 +154,7 @@ export default function OfflineDownloadButton({
               : status === 'outdated'
               ? 'Offline data outdated - Click to update'
               : status === 'downloading'
-              ? 'Downloading...'
+              ? 'Downloading…'
               : 'Download for offline'
           }
           aria-label={
@@ -167,15 +168,15 @@ export default function OfflineDownloadButton({
           }
         >
           {isLoading || isRemoving ? (
-            <ArrowPathIcon className="w-5 h-5 animate-spin" />
+            <Icon name="refresh" className="animate-spin" />
           ) : status === 'downloaded' ? (
-            <CheckIcon className="w-5 h-5" />
+            <Icon name="check" />
           ) : status === 'outdated' ? (
-            <ArrowPathIcon className="w-5 h-5" />
+            <Icon name="refresh" />
           ) : status === 'downloading' ? (
-            <ArrowPathIcon className="w-5 h-5 animate-spin" />
+            <Icon name="refresh" className="animate-spin" />
           ) : (
-            <ArrowDownTrayIcon className="w-5 h-5" />
+            <Icon name="download" />
           )}
         </button>
 
@@ -194,6 +195,7 @@ export default function OfflineDownloadButton({
   // Render full button
   return (
     <>
+      <ConfirmDialogComponent />
       <div
         className={`
           rounded-xl p-4
@@ -217,15 +219,15 @@ export default function OfflineDownloadButton({
               `}
             >
               {isLoading ? (
-                <ArrowPathIcon className="w-5 h-5 text-slate dark:text-warm-gray animate-spin" />
+                <Icon name="refresh" className="text-slate dark:text-warm-gray animate-spin" />
               ) : status === 'downloaded' ? (
-                <CloudArrowDownIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Icon name="cloudDone" className="text-emerald-600 dark:text-emerald-400" />
               ) : status === 'outdated' ? (
-                <ExclamationCircleIcon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <Icon name="error" className="text-amber-600 dark:text-amber-400" />
               ) : status === 'downloading' ? (
-                <ArrowPathIcon className="w-5 h-5 text-primary-600 dark:text-gold animate-spin" />
+                <Icon name="refresh" className="text-primary-600 dark:text-gold animate-spin" />
               ) : (
-                <CloudIcon className="w-5 h-5 text-slate dark:text-warm-gray" />
+                <Icon name="cloud" className="text-slate dark:text-warm-gray" />
               )}
             </div>
 
@@ -233,13 +235,13 @@ export default function OfflineDownloadButton({
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-charcoal dark:text-warm-gray">
                 {isLoading
-                  ? 'Checking status...'
+                  ? 'Checking status…'
                   : status === 'downloaded'
                   ? 'Available Offline'
                   : status === 'outdated'
                   ? 'Offline Data Outdated'
                   : status === 'downloading'
-                  ? 'Downloading...'
+                  ? 'Downloading…'
                   : 'Download for Offline'}
               </span>
 
@@ -291,7 +293,7 @@ export default function OfflineDownloadButton({
                   min-w-[44px] min-h-[44px]
                 "
               >
-                <ArrowDownTrayIcon className="w-4 h-4" />
+                <Icon name="download" size={16} />
                 Download
               </button>
             )}
@@ -315,7 +317,7 @@ export default function OfflineDownloadButton({
                   title="Update offline data"
                   aria-label="Update offline data"
                 >
-                  <ArrowPathIcon className="w-4 h-4" />
+                  <Icon name="refresh" size={16} />
                 </button>
                 <button
                   onClick={handleRemove}
@@ -335,9 +337,9 @@ export default function OfflineDownloadButton({
                   aria-label="Remove offline data"
                 >
                   {isRemoving ? (
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    <Icon name="refresh" size={16} className="animate-spin" />
                   ) : (
-                    <TrashIcon className="w-4 h-4" />
+                    <Icon name="delete" size={16} />
                   )}
                 </button>
               </>
@@ -360,7 +362,7 @@ export default function OfflineDownloadButton({
                     min-w-[44px] min-h-[44px]
                   "
                 >
-                  <ArrowPathIcon className="w-4 h-4" />
+                  <Icon name="refresh" size={16} />
                   Update
                 </button>
                 <button
@@ -380,9 +382,9 @@ export default function OfflineDownloadButton({
                   aria-label="Remove offline data"
                 >
                   {isRemoving ? (
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    <Icon name="refresh" size={16} className="animate-spin" />
                   ) : (
-                    <TrashIcon className="w-4 h-4" />
+                    <Icon name="delete" size={16} />
                   )}
                 </button>
               </>

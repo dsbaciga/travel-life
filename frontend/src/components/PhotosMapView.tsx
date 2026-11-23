@@ -11,6 +11,7 @@ import type { Photo } from '../types/photo';
 import { getFullAssetUrl } from '../lib/config';
 import { getAccessToken } from '../lib/axios';
 import photoService from '../services/photo.service';
+import Icon from './ui/Icon';
 import {
   usePhotoLocations,
   type PhotoWithResolvedLocation,
@@ -114,44 +115,21 @@ function LocationSourceIndicator({ source, locationName }: { source: LocationSou
     case 'exif':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-            />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+          <Icon name="camera" size={12} />
           <span>GPS from photo</span>
         </div>
       );
     case 'linked_location':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
+          <Icon name="place" size={12} />
           <span>Linked to {locationName || 'location'}</span>
         </div>
       );
     case 'album_location':
       return (
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-dusk-400">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-            />
-          </svg>
+          <Icon name="album" size={12} />
           <span>Album at {locationName || 'location'}</span>
         </div>
       );
@@ -345,7 +323,7 @@ export default function PhotosMapView({
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4" />
-        <p className="text-gray-500 dark:text-dusk-400">Loading photo locations...</p>
+        <p className="text-gray-500 dark:text-dusk-400">Loading photo locations…</p>
       </div>
     );
   }
@@ -354,20 +332,7 @@ export default function PhotosMapView({
   if (geotaggedPhotos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
-        <svg
-          className="w-16 h-16 text-gray-400 dark:text-dusk-400 mb-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-          />
-        </svg>
+        <Icon name="map" size={64} className="text-gray-400 dark:text-dusk-400 mb-4" />
         <p className="text-gray-500 dark:text-dusk-400 text-lg font-medium">No photos with locations</p>
         <p className="text-gray-400 dark:text-dusk-400 text-sm mt-1 text-center max-w-md px-4">
           Photos will appear on the map if they have GPS data, are linked to a location, or belong to an album linked
@@ -416,14 +381,7 @@ export default function PhotosMapView({
                         />
                       ) : (
                         <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-t-lg">
-                          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
+                          <Icon name="photo" size={32} className="text-gray-400" />
                         </div>
                       )}
                       <div className="p-2">

@@ -43,7 +43,7 @@ export default function PrintableEmergencyCard({
   return (
     <div className="print-emg">
       <header className="print-emg-header">
-        <h1 className="print-emg-title">Emergency Card</h1>
+        <h1 className="print-emg-title">Emergency card</h1>
         <p className="print-emg-trip">{card.tripTitle}</p>
         {country.facts && <p className="print-emg-country">{country.facts.name}</p>}
       </header>

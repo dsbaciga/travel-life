@@ -1,6 +1,7 @@
 import { useState, useEffect, useId } from 'react';
 import userService, { type LlmSettingsResponse } from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 interface Preset {
   label: string;
@@ -77,7 +78,7 @@ export default function LlmSettings() {
 
   const handleSave = async () => {
     if (!baseUrl && !apiKey && !settings?.llmConfigured) {
-      setMessage({ type: 'error', text: 'Please provide at least a base URL or an API key' });
+      setMessage({ type: 'error', text: 'Provide at least a base URL or an API key' });
       return;
     }
 
@@ -100,7 +101,7 @@ export default function LlmSettings() {
       setApiKey('');
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't save settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -108,9 +109,9 @@ export default function LlmSettings() {
 
   const handleClear = async () => {
     const confirmed = await confirm({
-      title: 'Clear LLM Settings',
+      title: 'Clear LLM settings',
       message: 'Remove your LLM configuration? AI features will fall back to any server-level LLM_API_KEY env var, or be disabled if none is set.',
-      confirmLabel: 'Clear',
+      confirmLabel: 'Clear settings',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -131,7 +132,7 @@ export default function LlmSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to clear settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't clear settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -139,9 +140,9 @@ export default function LlmSettings() {
 
   const handleClearApiKey = async () => {
     const confirmed = await confirm({
-      title: 'Remove API Key',
+      title: 'Remove API key',
       message: 'Remove the stored API key? This is useful when switching to a no-auth local LLM like Ollama.',
-      confirmLabel: 'Remove Key',
+      confirmLabel: 'Remove key',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -156,7 +157,7 @@ export default function LlmSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to remove API key' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't remove API key. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -165,7 +166,7 @@ export default function LlmSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading LLM settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading LLM settings…</p>
       </div>
     );
   }
@@ -183,7 +184,7 @@ export default function LlmSettings() {
       {settings?.llmConfigured && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ LLM is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> LLM is configured
             {settings.llmApiKeySet ? ' (with API key)' : ' (no-auth / local mode)'}
           </p>
         </div>
@@ -279,7 +280,7 @@ export default function LlmSettings() {
             disabled={isSaving}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving...' : 'Save Settings'}
+            {isSaving ? 'Saving…' : 'Save settings'}
           </button>
 
           {settings?.llmApiKeySet && (

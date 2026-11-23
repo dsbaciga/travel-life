@@ -1,3 +1,5 @@
+import type { IconName } from '../components/ui/Icon';
+
 // Document types matching backend enum
 export const DOCUMENT_TYPES = [
   'PASSPORT',
@@ -136,19 +138,19 @@ export function getExpirationStatusLabel(status: ExpirationStatus | undefined, d
 }
 
 // Document type icons
-export function getDocumentTypeIcon(type: DocumentType): string {
+export function getDocumentTypeIcon(type: DocumentType): IconName {
   switch (type) {
     case 'PASSPORT':
-      return '🛂';
+      return 'passport';
     case 'VISA':
-      return '📋';
+      return 'visa';
     case 'ID_CARD':
-      return '🪪';
+      return 'idCard';
     case 'GLOBAL_ENTRY':
-      return '🌐';
+      return 'globe';
     case 'VACCINATION':
-      return '💉';
+      return 'vaccine';
     default:
-      return '📄';
+      return 'document';
   }
 }

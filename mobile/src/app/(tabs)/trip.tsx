@@ -46,8 +46,8 @@ type Mode = 'days' | 'types' | 'checklists' | 'review';
 const TYPE_TABS: readonly { kind: FormKind; label: string }[] = [
   { kind: 'ACTIVITY', label: 'Activities' },
   { kind: 'LOCATION', label: 'Locations' },
-  { kind: 'TRANSPORTATION', label: 'Transit' },
-  { kind: 'LODGING', label: 'Lodging' },
+  { kind: 'TRANSPORTATION', label: 'Transport' },
+  { kind: 'LODGING', label: 'Stays' },
   { kind: 'SAVED_LINK', label: 'Links' },
   { kind: 'EXPENSE', label: 'Expenses' },
   { kind: 'FOOD_LOG', label: 'Food log' },
@@ -198,7 +198,7 @@ export default function TripScreen() {
         await api.request(`/pdf-imports/pending/${entity.id}/${verb}`, { method: 'POST', body: {} });
         if (verb === 'accept') successFeedback();
         else warningFeedback();
-        showToast(verb === 'accept' ? 'Added to the trip' : 'Rejected');
+        showToast(verb === 'accept' ? 'Added to the trip' : 'Dismissed');
         await refetchPending();
         // Accepting creates a real entity server-side; pull it into the mirror.
         if (verb === 'accept') void syncNow();
@@ -222,7 +222,7 @@ export default function TripScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" message="Choose a trip to see its plan here." />
         <Button label="Choose a trip" onPress={() => router.push('/trips')} />
       </Screen>
     );
@@ -344,11 +344,18 @@ export default function TripScreen() {
                   {dirty?.has(`${typeKind}:${row.id}`) ? <PendingDot /> : null}
                 </Row>
                 {typeKind === 'EXPENSE' && typeof row.amount === 'number' ? (
-                  <AppText muted>{formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}</AppText>
+                  <AppText muted style={styles.tabular}>
+                    {formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}
+                  </AppText>
                 ) : null}
                 {typeKind === 'FOOD_LOG' ? (
-                  <AppText muted>
+                  <AppText variant="place" muted>
                     {'★'.repeat(Number(row.rating) || 0)} · {String(row.restaurantName ?? '')}
+                  </AppText>
+                ) : null}
+                {typeKind === 'JOURNAL_ENTRY' && typeof row.content === 'string' && row.content.trim() ? (
+                  <AppText variant="place" muted numberOfLines={3}>
+                    {row.content.trim()}
                   </AppText>
                 ) : null}
                 <View style={styles.mapTo}>
@@ -415,7 +422,7 @@ export default function TripScreen() {
   return (
     <Screen>
       {modeBar}
-      {offline ? <Banner tone="warning" text="The review queue needs a connection." /> : null}
+      {offline ? <Banner tone="warning" text="Reviewing needs a connection. Try again when you're back online." /> : null}
       {pending.length === 0 ? (
         <EmptyState
           title="Nothing to review"
@@ -441,6 +448,7 @@ export default function TripScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  tabular: { fontVariant: ['tabular-nums'] },
   mapTo: { alignSelf: 'flex-start' },
   modeBar: { padding: spacing.lg, gap: spacing.sm },
   chips: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },

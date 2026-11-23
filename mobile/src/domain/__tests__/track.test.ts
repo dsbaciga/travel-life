@@ -108,7 +108,7 @@ describe('track buffer', () => {
     await storeTrackPoints(db, 11, [point(0)]);
 
     const uploaded = await uploadPendingTrack(db, async (tripId) => {
-      if (tripId === 10) throw new ApiError('Trip not found or access denied', 404);
+      if (tripId === 10) throw new ApiError("We couldn't find that trip, or you don't have access to it.", 404);
     });
 
     expect(uploaded).toBe(1);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import userService from '../services/user.service';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import Icon from './ui/Icon';
 
 export default function AviationstackSettings() {
   const { confirm, ConfirmDialogComponent } = useConfirmDialog();
@@ -28,7 +29,7 @@ export default function AviationstackSettings() {
 
   const handleSave = async () => {
     if (!apiKey) {
-      setMessage({ type: 'error', text: 'Please enter an API key' });
+      setMessage({ type: 'error', text: 'Enter an API key' });
       return;
     }
 
@@ -45,7 +46,7 @@ export default function AviationstackSettings() {
       setApiKey(''); // Clear the input after successful save
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't save settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -53,9 +54,9 @@ export default function AviationstackSettings() {
 
   const handleClearSettings = async () => {
     const confirmed = await confirm({
-      title: 'Remove Aviationstack API Key',
-      message: 'Are you sure you want to remove your Aviationstack API key?',
-      confirmLabel: 'Remove',
+      title: 'Remove Aviationstack API key',
+      message: 'Flight tracking stops until you add a key again.',
+      confirmLabel: 'Remove key',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -75,7 +76,7 @@ export default function AviationstackSettings() {
       await loadSettings();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to clear settings' });
+      setMessage({ type: 'error', text: error.response?.data?.message || "Couldn't clear settings. Try again." });
     } finally {
       setIsSaving(false);
     }
@@ -84,14 +85,14 @@ export default function AviationstackSettings() {
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-        <p className="text-gray-600 dark:text-dusk-400">Loading Aviationstack settings...</p>
+        <p className="text-gray-600 dark:text-dusk-400">Loading Aviationstack settings…</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Aviationstack Settings</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Aviationstack settings</h2>
 
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Configure your Aviationstack API key to enable real-time flight tracking data for your trips. Flight information will be displayed in the timeline for each flight.
@@ -100,7 +101,7 @@ export default function AviationstackSettings() {
       {settings?.aviationstackApiKeySet && (
         <div className="mb-4 p-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg">
           <p className="text-green-800 dark:text-green-200 font-medium">
-            ✓ Aviationstack API key is configured
+            <Icon name="check" size={16} className="align-text-bottom" /> Aviationstack API key is configured
           </p>
         </div>
       )}
@@ -143,7 +144,7 @@ export default function AviationstackSettings() {
             disabled={isSaving || !apiKey}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {isSaving ? 'Saving...' : 'Save API Key'}
+            {isSaving ? 'Saving…' : 'Save API Key'}
           </button>
 
           {settings?.aviationstackApiKeySet && (
@@ -164,7 +165,7 @@ export default function AviationstackSettings() {
         </h3>
         <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
           <li>Go to <a href="https://aviationstack.com/product" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">aviationstack.com</a></li>
-          <li>Click "Sign Up" or "Get Free API Key"</li>
+          <li>Click "Sign up" or "Get Free API Key"</li>
           <li>Complete the registration process</li>
           <li>Navigate to your dashboard</li>
           <li>Copy your API key and paste it above</li>

@@ -72,7 +72,7 @@ export default function SettingsScreen() {
     Alert.alert(
       'Sign out?',
       unsynced > 0
-        ? `${unsynced} change${unsynced === 1 ? '' : 's'} made offline have not been uploaded and will be lost.`
+        ? `${unsynced} change${unsynced === 1 ? '' : 's'} made offline haven't uploaded and will be lost if you sign out.`
         : 'Offline trip data is removed from this phone.',
       [
         { text: 'Cancel', style: 'cancel' },

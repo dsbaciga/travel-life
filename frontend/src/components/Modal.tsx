@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons';
+import Icon, { type IconName } from './ui/Icon';
 import { pushModal, popModal, isTopModal } from '../utils/modalStack';
 
 export interface ModalProps {
@@ -10,8 +11,8 @@ export interface ModalProps {
   onClose: () => void;
   /** Modal title */
   title: string;
-  /** Optional icon (emoji or component) to show next to title */
-  icon?: ReactNode;
+  /** Optional icon name (see `ui/Icon`) to show next to the title */
+  icon?: IconName;
   /** Modal content */
   children: ReactNode;
   /** Optional footer content (buttons, etc.) */
@@ -59,7 +60,7 @@ const maxWidthClasses = {
  *   isOpen={showModal}
  *   onClose={() => setShowModal(false)}
  *   title="Edit Item"
- *   icon="✏️"
+ *   icon="edit"
  *   footer={
  *     <div className="flex gap-2">
  *       <button onClick={handleSave} className="btn btn-primary">Save</button>
@@ -262,7 +263,7 @@ export default function Modal({
             id={titleId}
             className="text-lg sm:text-xl font-bold text-charcoal dark:text-warm-gray flex items-center gap-2 min-w-0 break-words"
           >
-            {icon && <span className="shrink-0">{icon}</span>}
+            {icon && <Icon name={icon} size={24} className="text-primary-600 dark:text-gold" />}
             {title}
           </h2>
           {showCloseButton && (

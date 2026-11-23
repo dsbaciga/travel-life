@@ -290,7 +290,7 @@ describe('ShareService — share management', () => {
 
     await expect(shareService[method](999, 7)).rejects.toMatchObject({
       statusCode: 404,
-      message: 'Trip not found or you do not have permission to manage sharing',
+      message: "We couldn't find that trip, or you don't have permission to manage sharing.",
     });
     expect(mockPrismaClient.trip.update).not.toHaveBeenCalled();
   });
@@ -310,7 +310,7 @@ describe('ShareService.getPublicTrip — sensitive field exclusion', () => {
 
     await expect(shareService.getPublicTrip(VALID_TOKEN)).rejects.toMatchObject({
       statusCode: 404,
-      message: 'Shared trip not found',
+      message: "We couldn't find that shared trip.",
     });
   });
 

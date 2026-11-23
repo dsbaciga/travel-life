@@ -197,7 +197,7 @@ export default function TripPopup({ trip, position, onClose }: TripPopupProps) {
           className="block w-full text-center py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium transition-colors"
           onClick={onClose}
         >
-          View Details
+          View details
         </Link>
       </div>
     </div>

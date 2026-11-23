@@ -17,7 +17,7 @@ import {
 async function findInTrip(stopId: number, tripId: number) {
   const stop = await prisma.tripStop.findFirst({ where: { id: stopId, tripId } });
   if (!stop) {
-    throw new AppError('Stop not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that stop on this trip.", 404);
   }
   return stop;
 }
@@ -36,10 +36,10 @@ async function loadLinkedLocation(locationId: number, tripId: number) {
     select: { name: true, latitude: true, longitude: true },
   });
   if (!location) {
-    throw new AppError('Location not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that place on this trip.", 404);
   }
   if (location.latitude == null || location.longitude == null) {
-    throw new AppError('That place has no coordinates, so it cannot be a stop', 400);
+    throw new AppError("That place has no coordinates, so it can't be a stop.", 400);
   }
   return {
     name: location.name,
@@ -184,7 +184,7 @@ class TripStopService {
       name = name ?? location.name;
     }
     if (name === undefined || latitude === undefined || longitude === undefined) {
-      throw new AppError('name, latitude and longitude are required', 400);
+      throw new AppError('Add a name and pick a point on the map.', 400);
     }
 
     const last = await prisma.tripStop.findFirst({

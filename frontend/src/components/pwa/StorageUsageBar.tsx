@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
+import Icon from '../ui/Icon';
 import storageManager, {
   type StorageBreakdown,
   type StorageUsage,
@@ -11,44 +12,28 @@ import storageManager, {
  */
 const Icons = {
   HardDrive: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-    </svg>
+    <Icon name="storage" className={className} />
   ),
   Database: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-    </svg>
+    <Icon name="storage" className={className} />
   ),
   Image: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-    </svg>
+    <Icon name="photo" className={className} />
   ),
   Map: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-    </svg>
+    <Icon name="map" className={className} />
   ),
   Video: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
+    <Icon name="video" className={className} />
   ),
   Folder: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-    </svg>
+    <Icon name="folder" className={className} />
   ),
   Check: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
+    <Icon name="check" className={className} />
   ),
   Warning: ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
+    <Icon name="alert" className={className} />
   ),
 };
 
@@ -70,37 +55,37 @@ const CATEGORY_CONFIG: Record<CategoryKey, {
   icon: (props: { className?: string }) => ReactNode;
 }> = {
   trips: {
-    label: 'Trips Data',
+    label: 'Trips data',
     color: 'bg-primary-500 dark:bg-primary-400',
     textColor: 'text-primary-600 dark:text-primary-400',
     icon: Icons.Database,
   },
   photoThumbnails: {
-    label: 'Photo Thumbnails',
+    label: 'Photo thumbnails',
     color: 'bg-accent-500 dark:bg-accent-400',
     textColor: 'text-accent-600 dark:text-accent-400',
     icon: Icons.Image,
   },
   photoFull: {
-    label: 'Full Photos',
+    label: 'Full photos',
     color: 'bg-amber-500 dark:bg-amber-400',
     textColor: 'text-amber-600 dark:text-amber-400',
     icon: Icons.Image,
   },
   mapTiles: {
-    label: 'Map Tiles',
+    label: 'Map tiles',
     color: 'bg-emerald-500 dark:bg-emerald-400',
     textColor: 'text-emerald-600 dark:text-emerald-400',
     icon: Icons.Map,
   },
   immichCache: {
-    label: 'Immich Cache',
+    label: 'Immich cache',
     color: 'bg-purple-500 dark:bg-purple-400',
     textColor: 'text-purple-600 dark:text-purple-400',
     icon: Icons.Image,
   },
   videoCache: {
-    label: 'Video Cache',
+    label: 'Video cache',
     color: 'bg-rose-500 dark:bg-rose-400',
     textColor: 'text-rose-600 dark:text-rose-400',
     icon: Icons.Video,

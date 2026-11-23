@@ -11,6 +11,7 @@
  * - All events passed: "Trip complete! View your memories"
  */
 
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
@@ -45,20 +46,7 @@ function NoEventsState({ onAddActivity }: { onAddActivity: () => void }) {
   return (
     <div className="text-center py-8">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-        <svg
-          className="w-8 h-8 text-amber-500 dark:text-amber-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <Icon name="schedule" className="w-8 h-8 text-amber-500 dark:text-amber-400" />
       </div>
       <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
         No upcoming events
@@ -71,7 +59,7 @@ function NoEventsState({ onAddActivity }: { onAddActivity: () => void }) {
         className="btn-primary"
       >
         <PlusIcon className="w-4 h-4" />
-        Add Activity
+        Add activity
       </button>
     </div>
   );
@@ -92,15 +80,8 @@ function DreamTripState({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-          />
-        </svg>
-        <span className="text-sm font-medium">Dream Trip</span>
+        <Icon name="sparkle" className="w-5 h-5" />
+        <span className="text-sm font-medium">Dream trip</span>
       </div>
 
       <p className="text-sm text-slate dark:text-warm-gray/80">
@@ -136,20 +117,7 @@ function CompletedTripState({
   return (
     <div className="text-center py-6">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
-        <svg
-          className="w-8 h-8 text-green-500 dark:text-green-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
+        <Icon name="success" className="w-8 h-8 text-green-500 dark:text-green-400" />
       </div>
       <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
         Trip Complete!
@@ -164,14 +132,14 @@ function CompletedTripState({
           onClick={onViewMemories}
           className="btn-primary"
         >
-          View Photos
+          View photos
           <ChevronRightIcon className="w-4 h-4" />
         </button>
         <button
           onClick={onViewTimeline}
           className="btn-secondary"
         >
-          View Timeline
+          View timeline
         </button>
       </div>
     </div>
@@ -200,20 +168,7 @@ function DatesPassedState({
   return (
     <div className="text-center py-6">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-        <svg
-          className="w-8 h-8 text-amber-600 dark:text-amber-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
+        <Icon name="calendar" className="w-8 h-8 text-amber-600 dark:text-amber-400" />
       </div>
       <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
         These dates have passed
@@ -226,10 +181,10 @@ function DatesPassedState({
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <button onClick={onViewMemories} className="btn-secondary">
-          View Memories
+          View memories
         </button>
         <button onClick={onViewTimeline} className="btn-secondary">
-          View Timeline
+          View timeline
         </button>
       </div>
     </div>
@@ -310,7 +265,7 @@ export default function NextUpCard({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div className="flex-1">
           <div className="flex items-center justify-between sm:justify-start gap-3 mb-2">
-            <h3 className="font-semibold text-lg text-charcoal dark:text-warm-gray">
+            <h3 className="eyebrow text-charcoal dark:text-warm-gray">
               {getHeaderText()}
             </h3>
             {hasScheduledEvents &&
@@ -322,7 +277,7 @@ export default function NextUpCard({
                 onClick={() => onNavigateToTab('timeline')}
                 className="text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 transition-colors sm:hidden"
               >
-                View Timeline
+                View timeline
                 <ChevronRightIcon className="w-4 h-4" />
               </button>
             )}
@@ -343,7 +298,7 @@ export default function NextUpCard({
             onClick={() => onNavigateToTab('timeline')}
             className="hidden sm:flex text-sm text-primary-600 dark:text-gold hover:text-primary-700 dark:hover:text-amber-300 font-medium items-center gap-1 transition-colors shrink-0"
           >
-            View Timeline
+            View timeline
             <ChevronRightIcon className="w-4 h-4" />
           </button>
         )}
@@ -374,20 +329,7 @@ export default function NextUpCard({
       {displayState === 'cancelled' && (
         <div className="text-center py-6">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate/10 dark:bg-navy-700 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-slate dark:text-warm-gray/50"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" className="w-8 h-8 text-slate dark:text-warm-gray/50" />
           </div>
           <h4 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
             This trip was cancelled

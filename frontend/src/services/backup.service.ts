@@ -87,7 +87,7 @@ async function readBackupFile(file: File): Promise<BackupData> {
     };
 
     reader.onerror = () => {
-      reject(new Error('Failed to read backup file'));
+      reject(new Error("Couldn't read backup file. Try again."));
     };
 
     reader.readAsText(file);

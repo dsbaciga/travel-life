@@ -8,6 +8,7 @@
  */
 
 import type { EntityType, LinkRelationship } from '../types/entityLink';
+import type { IconName } from '../components/ui/Icon';
 
 // =============================================================================
 // Entity Type Configuration
@@ -16,21 +17,21 @@ import type { EntityType, LinkRelationship } from '../types/entityLink';
 export interface EntityTypeConfig {
   label: string;
   pluralLabel: string;
-  emoji: string;
+  icon: IconName;
   color: string;
 }
 
 export const ENTITY_TYPE_CONFIG: Record<EntityType, EntityTypeConfig> = {
-  PHOTO: { label: 'Photo', pluralLabel: 'Photos', emoji: '📷', color: 'gray' },
-  LOCATION: { label: 'Location', pluralLabel: 'Locations', emoji: '📍', color: 'blue' },
-  ACTIVITY: { label: 'Activity', pluralLabel: 'Activities', emoji: '🎯', color: 'green' },
-  LODGING: { label: 'Lodging', pluralLabel: 'Lodging', emoji: '🏨', color: 'purple' },
-  TRANSPORTATION: { label: 'Transportation', pluralLabel: 'Transportation', emoji: '🚗', color: 'orange' },
-  JOURNAL_ENTRY: { label: 'Journal Entry', pluralLabel: 'Journal Entries', emoji: '📝', color: 'yellow' },
-  PHOTO_ALBUM: { label: 'Album', pluralLabel: 'Albums', emoji: '📸', color: 'pink' },
-  PDF_IMPORT: { label: 'PDF Import', pluralLabel: 'PDF Imports', emoji: '📄', color: 'gray' },
-  SAVED_LINK: { label: 'Link', pluralLabel: 'Links', emoji: '🔗', color: 'teal' },
-  CUSTOM_ITEM: { label: 'Custom', pluralLabel: 'Custom', emoji: '📌', color: 'indigo' },
+  PHOTO: { label: 'Photo', pluralLabel: 'Photos', icon: 'photo', color: 'gray' },
+  LOCATION: { label: 'Location', pluralLabel: 'Locations', icon: 'place', color: 'blue' },
+  ACTIVITY: { label: 'Activity', pluralLabel: 'Activities', icon: 'activity', color: 'green' },
+  LODGING: { label: 'Stay', pluralLabel: 'Stays', icon: 'lodging', color: 'purple' },
+  TRANSPORTATION: { label: 'Transport', pluralLabel: 'Transport', icon: 'transportation', color: 'orange' },
+  JOURNAL_ENTRY: { label: 'Journal Entry', pluralLabel: 'Journal Entries', icon: 'journal', color: 'yellow' },
+  PHOTO_ALBUM: { label: 'Album', pluralLabel: 'Albums', icon: 'album', color: 'pink' },
+  PDF_IMPORT: { label: 'PDF Import', pluralLabel: 'PDF Imports', icon: 'pdf', color: 'gray' },
+  SAVED_LINK: { label: 'Link', pluralLabel: 'Links', icon: 'savedLink', color: 'teal' },
+  CUSTOM_ITEM: { label: 'Custom', pluralLabel: 'Custom', icon: 'custom', color: 'indigo' },
 };
 
 // =============================================================================

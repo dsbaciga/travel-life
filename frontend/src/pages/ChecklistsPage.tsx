@@ -13,6 +13,7 @@ import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
+import Icon, { type IconName } from '../components/ui/Icon';
 
 export default function ChecklistsPage() {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
@@ -41,7 +42,7 @@ export default function ChecklistsPage() {
       setChecklists(data);
     } catch (err) {
       console.error('Failed to load checklists:', err);
-      toast.error('Failed to load checklists');
+      toast.error("Couldn't load checklists. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +68,9 @@ export default function ChecklistsPage() {
 
   const handleInitializeDefaults = async () => {
     const confirmed = await confirm({
-      title: 'Initialize Default Checklists',
-      message: 'This will create default checklists for Airports, Countries, and Cities. Continue?',
-      confirmLabel: 'Initialize',
+      title: 'Add default checklists',
+      message: 'Adds default checklists for airports, countries and cities.',
+      confirmLabel: 'Add checklists',
       variant: 'info',
     });
     if (!confirmed) {
@@ -80,10 +81,10 @@ export default function ChecklistsPage() {
     try {
       await checklistService.initializeDefaults();
       await loadChecklists();
-      toast.success('Default checklists initialized successfully!');
+      toast.success('Default checklists initialized');
     } catch (err) {
       console.error('Failed to initialize defaults:', err);
-      toast.error('Failed to initialize default checklists. They may already exist.');
+      toast.error("Couldn't add the default checklists. They may already exist.");
     } finally {
       setIsInitializing(false);
     }
@@ -94,14 +95,14 @@ export default function ChecklistsPage() {
     try {
       const result = await checklistService.autoCheckFromTrips();
       await loadChecklists();
-      let message = `Successfully auto-checked ${result.updated} item${result.updated === 1 ? '' : 's'} based on your trips!`;
+      let message = `Checked off ${result.updated} item${result.updated === 1 ? '' : 's'} from your trips.`;
       if (result.added > 0) {
         message += ` Added ${result.added} new airport${result.added === 1 ? '' : 's'} from your trips to the Airports list.`;
       }
       toast.success(message);
     } catch (err) {
       console.error('Failed to auto-check items:', err);
-      toast.error('Failed to auto-check items from trips');
+      toast.error("Couldn't auto-check items from trips. Try again.");
     } finally {
       setIsAutoChecking(false);
     }
@@ -126,15 +127,15 @@ export default function ChecklistsPage() {
       await loadChecklists();
     } catch (err) {
       console.error('Failed to create checklist:', err);
-      toast.error('Failed to create checklist');
+      toast.error("Couldn't create checklist. Try again.");
     }
   };
 
   const handleDeleteChecklist = async (id: number) => {
     const confirmed = await confirm({
-      title: 'Delete Checklist',
-      message: 'Are you sure you want to delete this checklist? This cannot be undone.',
-      confirmLabel: 'Delete',
+      title: 'Delete checklist',
+      message: 'This checklist and all its items are deleted. You can\'t undo this.',
+      confirmLabel: 'Delete checklist',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -146,7 +147,7 @@ export default function ChecklistsPage() {
       await loadChecklists();
     } catch (err) {
       console.error('Failed to delete checklist:', err);
-      toast.error('Failed to delete checklist');
+      toast.error("Couldn't delete checklist. Try again.");
     }
   };
 
@@ -165,27 +166,27 @@ export default function ChecklistsPage() {
       const result = await checklistService.addDefaults(selectedTypes);
       await loadChecklists();
       await loadDefaultsStatus();
-      toast.success(`Successfully added ${result.added} default checklists`);
+      toast.success(`Added ${result.added} default checklists`);
     } else {
       const result = await checklistService.removeDefaultsByType(selectedTypes);
       await loadChecklists();
       await loadDefaultsStatus();
-      toast.success(`Successfully removed ${result.removed} default checklists`);
+      toast.success(`Removed ${result.removed} default checklists`);
     }
   };
 
-  const getChecklistIcon = (type: string) => {
+  const getChecklistIcon = (type: string): IconName => {
     switch (type) {
       case 'airports':
-        return '✈️';
+        return 'flight';
       case 'countries':
-        return '🌍';
+        return 'globe';
       case 'cities':
-        return '🏙️';
+        return 'city';
       case 'us_states':
-        return '🗽';
+        return 'landmark';
       default:
-        return '📋';
+        return 'checklist';
     }
   };
 
@@ -194,7 +195,7 @@ export default function ChecklistsPage() {
   
   if (checklists.length === 0) {
     secondaryActions.push({
-      label: isInitializing ? 'Initializing...' : 'Initialize All Defaults',
+      label: isInitializing ? 'Initializing…' : 'Initialize All Defaults',
       onClick: handleInitializeDefaults,
       disabled: isInitializing,
       variant: 'secondary' as const,
@@ -203,14 +204,15 @@ export default function ChecklistsPage() {
   
   if (defaultChecklistsStatus.some(c => !c.exists)) {
     secondaryActions.push({
-      label: '+ Add Defaults',
+      label: 'Add defaults',
+      icon: 'add' as const,
       onClick: handleOpenAddModal,
       variant: 'secondary' as const,
     });
   }
 
   secondaryActions.push({
-    label: isAutoChecking ? 'Syncing...' : 'Sync Default Lists from Trips',
+    label: isAutoChecking ? 'Syncing…' : 'Sync Default Lists from Trips',
     onClick: handleAutoCheck,
     disabled: isAutoChecking || checklists.length === 0,
     variant: 'secondary' as const,
@@ -221,7 +223,7 @@ export default function ChecklistsPage() {
     return (
       <div className="min-h-screen bg-cream dark:bg-navy-900">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
-          <LoadingSpinner.FullPage message="Loading checklists..." />
+          <LoadingSpinner.FullPage message="Loading checklists…" />
         </div>
       </div>
     );
@@ -235,7 +237,8 @@ export default function ChecklistsPage() {
           subtitle="Track your travel achievements"
           backLink={LIBRARY_BACK_LINK}
           action={{
-            label: showCreateForm ? 'Cancel' : '+ Create Custom List',
+            label: showCreateForm ? 'Cancel' : 'Create custom list',
+            icon: showCreateForm ? 'close' : 'add',
             onClick: () => setShowCreateForm(!showCreateForm),
           }}
           secondaryActions={secondaryActions}
@@ -244,7 +247,7 @@ export default function ChecklistsPage() {
         {showCreateForm && (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Create Custom Checklist
+              Create custom checklist
             </h2>
             <form onSubmit={handleCreateChecklist}>
               <div className="mb-4">
@@ -271,7 +274,7 @@ export default function ChecklistsPage() {
                   onChange={(e) => setNewChecklistDescription(e.target.value)}
                   className="input"
                   rows={3}
-                  placeholder="Optional description..."
+                  placeholder="Optional description…"
                 />
               </div>
               <div className="mb-4">
@@ -282,7 +285,7 @@ export default function ChecklistsPage() {
                   value={newChecklistTripId ?? ''}
                   onChange={(e) => setNewChecklistTripId(e.target.value ? parseInt(e.target.value) : null)}
                   className="input"
-                  aria-label="Associate with Trip"
+                  aria-label="Associate with trip"
                 >
                   <option value="">None (General checklist)</option>
                   {trips.map((trip) => (
@@ -297,7 +300,7 @@ export default function ChecklistsPage() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Create Checklist
+                  Create checklist
                 </button>
                 <button
                   type="button"
@@ -313,10 +316,10 @@ export default function ChecklistsPage() {
 
         {checklists.length === 0 ? (
           <EmptyState
-            icon="📋"
-            message="No Checklists Yet"
-            subMessage="Get started by initializing default lists or creating your own custom checklist"
-            actionLabel={isInitializing ? 'Initializing...' : 'Initialize Default Lists'}
+            icon="checklist"
+            message="No checklists yet"
+            subMessage="Add the default packing and pre-trip lists, or start one of your own."
+            actionLabel={isInitializing ? 'Adding…' : 'Add default lists'}
             onAction={handleInitializeDefaults}
           />
         ) : (
@@ -330,7 +333,7 @@ export default function ChecklistsPage() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-3xl">{getChecklistIcon(checklist.type)}</span>
+                      <Icon name={getChecklistIcon(checklist.type)} size={32} />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {checklist.name}
@@ -353,7 +356,7 @@ export default function ChecklistsPage() {
                         title="Delete checklist"
                         aria-label="Delete checklist"
                       >
-                        🗑️
+                        <Icon name="delete" size={20} />
                       </button>
                     )}
                   </div>

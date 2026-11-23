@@ -55,7 +55,7 @@ async function verifyExpenseInTrip(expenseId: number, tripId: number) {
   });
 
   if (!expense) {
-    throw new AppError('Expense not found or does not belong to trip', 404);
+    throw new AppError("We couldn't find that expense on this trip.", 404);
   }
 
   return expense;
@@ -346,7 +346,7 @@ class ExpenseService {
     ]);
 
     if (!trip) {
-      throw new AppError('Trip not found', 404);
+      throw new AppError("We couldn't find that trip.", 404);
     }
 
     const records: CostedRecord[] = expenses.map((item): CostedRecord => ({

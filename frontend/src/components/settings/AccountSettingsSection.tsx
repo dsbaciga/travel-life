@@ -86,7 +86,7 @@ export default function AccountSettingsSection({
       updateUser({ username: result.username });
       toast.success(result.message);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to update username");
+      toast.error(getApiErrorMessage(err) || "Couldn't update username. Try again.");
     }
   };
 
@@ -94,7 +94,7 @@ export default function AccountSettingsSection({
     e.preventDefault();
 
     if (!currentPassword || !newPassword) {
-      toast.error("Please fill in all password fields");
+      toast.error("Fill in all password fields");
       return;
     }
 
@@ -118,7 +118,7 @@ export default function AccountSettingsSection({
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err) || "Failed to update password");
+      toast.error(getApiErrorMessage(err) || "Couldn't update password. Try again.");
     }
   };
 
@@ -129,7 +129,7 @@ export default function AccountSettingsSection({
       });
       toast.success("Dietary preferences saved");
     } catch {
-      toast.error("Failed to save dietary preferences");
+      toast.error("Couldn't save dietary preferences. Try again.");
     }
   };
 
@@ -145,7 +145,7 @@ export default function AccountSettingsSection({
           : "Home currency cleared"
       );
     } catch {
-      toast.error("Failed to save home currency");
+      toast.error("Couldn't save home currency. Try again.");
     } finally {
       setSavingBaseCurrency(false);
     }
@@ -164,7 +164,7 @@ export default function AccountSettingsSection({
       );
     } catch {
       onCustomMapStyleChange(!newValue);
-      toast.error("Failed to update map style preference");
+      toast.error("Couldn't update map style preference. Try again.");
     }
   };
 
@@ -181,7 +181,7 @@ export default function AccountSettingsSection({
         <form onSubmit={handleUpdateUsername} className="space-y-4">
           <div>
             <label className="label" htmlFor={currentUsernameId}>
-              Current Name
+              Current name
             </label>
             <input
               type="text"
@@ -193,7 +193,7 @@ export default function AccountSettingsSection({
           </div>
           <div>
             <label className="label" htmlFor={newUsernameId}>
-              New Name
+              New name
             </label>
             <input
               type="text"
@@ -211,7 +211,7 @@ export default function AccountSettingsSection({
             className="btn btn-primary"
             disabled={!newUsername.trim() || newUsername === username}
           >
-            Update Name
+            Update name
           </button>
         </form>
       </div>
@@ -219,7 +219,7 @@ export default function AccountSettingsSection({
       {/* Password */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Change Password
+          Change password
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Update your password (minimum 8 characters).
@@ -227,7 +227,7 @@ export default function AccountSettingsSection({
         <form onSubmit={handleUpdatePassword} className="space-y-4">
           <div>
             <label className="label" htmlFor={currentPasswordId}>
-              Current Password
+              Current password
             </label>
             <input
               type="password"
@@ -240,7 +240,7 @@ export default function AccountSettingsSection({
           </div>
           <div>
             <label className="label" htmlFor={newPasswordId}>
-              New Password
+              New password
             </label>
             <input
               type="password"
@@ -254,7 +254,7 @@ export default function AccountSettingsSection({
           </div>
           <div>
             <label className="label" htmlFor={confirmPasswordId}>
-              Confirm New Password
+              Confirm new password
             </label>
             <input
               type="password"
@@ -267,7 +267,7 @@ export default function AccountSettingsSection({
             />
           </div>
           <button type="submit" className="btn btn-primary">
-            Update Password
+            Update password
           </button>
         </form>
       </div>
@@ -301,7 +301,7 @@ export default function AccountSettingsSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Timezone
+            Save timezone
           </button>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function AccountSettingsSection({
       {/* Home Currency Setting */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Home Currency
+          Home currency
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Trip budgets and expenses recorded in other currencies are converted
@@ -341,7 +341,7 @@ export default function AccountSettingsSection({
             className="btn btn-primary"
             disabled={savingBaseCurrency}
           >
-            {savingBaseCurrency ? "Saving..." : "Save Home Currency"}
+            {savingBaseCurrency ? "Saving…" : "Save home currency"}
           </button>
         </div>
       </div>
@@ -349,7 +349,7 @@ export default function AccountSettingsSection({
       {/* Dietary Preferences */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Dietary Preferences
+          Dietary preferences
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Select your dietary needs. Activities matching these preferences will
@@ -368,7 +368,7 @@ export default function AccountSettingsSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Dietary Preferences
+            Save dietary preferences
           </button>
         </div>
       </div>
@@ -377,7 +377,7 @@ export default function AccountSettingsSection({
       <ErrorBoundary>
         <Suspense
           fallback={
-            <LoadingSpinner.FullPage message="Loading travel partners..." />
+            <LoadingSpinner.FullPage message="Loading travel partners…" />
           }
         >
           <TravelPartnerSettings />
@@ -397,7 +397,7 @@ export default function AccountSettingsSection({
           <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-dusk-700">
             <div>
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                Dark Mode
+                Dark mode
               </h3>
               <p className="text-sm text-gray-500 dark:text-dusk-400">
                 Switch between light and dark color schemes
@@ -429,7 +429,7 @@ export default function AccountSettingsSection({
           <div className="flex items-center justify-between py-3">
             <div>
               <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                Custom Map Style
+                Custom map style
               </h3>
               <p className="text-sm text-gray-500 dark:text-dusk-400">
                 Use softer grey map tiles in light mode. Dark mode always uses the full-colour map.

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import Modal from './Modal';
+import Icon from './ui/Icon';
 import LoadingSpinner from './LoadingSpinner';
 import { usePdfImportPolling } from '../hooks/usePdfImportPolling';
 import pdfImportService from '../services/pdfImport.service';
@@ -28,8 +29,8 @@ interface Props {
 }
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
-  TRANSPORTATION: 'Transportation',
-  LODGING: 'Lodging',
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stay',
   ACTIVITY: 'Activity',
   LOCATION: 'Location',
 };
@@ -91,7 +92,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     const next = currentIndex + 1;
     if (next >= entities.length) {
       if (skipped && next === entities.length) {
-        toast('All entities reviewed', { icon: '✓' });
+        toast('All entities reviewed', { icon: <Icon name="check" /> });
       }
       onComplete();
     } else {
@@ -103,7 +104,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
 
   const handleAccept = async () => {
     if (!currentEntity || !selectedTripId) {
-      toast.error('Please select a trip');
+      toast.error('Select a trip');
       return;
     }
     setIsSubmitting(true);
@@ -140,7 +141,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
       advance();
     } catch {
-      toast.error('Failed to add entity');
+      toast.error("Couldn't add entity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +155,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       queryClient.invalidateQueries({ queryKey: ['pendingCount'] });
       advance();
     } catch {
-      toast.error('Failed to reject entity');
+      toast.error("Couldn't reject entity. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -173,7 +174,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
       setSelectedTripId(undefined);
       queryClient.invalidateQueries({ queryKey: ['pdfImport', importId] });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to reparse';
+      const message = err instanceof Error ? err.message : "Couldn't reparse. Try again.";
       toast.error(message);
     } finally {
       setReparsing(false);
@@ -183,7 +184,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Polling timed out without reaching a terminal status — background job likely crashed
   if (timedOut && importData && (importData.status === 'UPLOADED' || importData.status === 'PARSING')) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Processing Timed Out" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Processing timed out" maxWidth="md">
         <div className="py-4 space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">
             PDF processing has taken longer than expected and may have stalled.
@@ -204,7 +205,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting...' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try again'}
           </button>
         </div>
       </Modal>
@@ -220,8 +221,8 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
           <LoadingSpinner />
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             {ahead > 0
-              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one...`
-              : 'Extracting travel details from your PDF...'}
+              ? `Waiting for ${ahead} ${ahead === 1 ? 'PDF' : 'PDFs'} ahead of this one…`
+              : 'Extracting travel details from your PDF…'}
           </p>
         </div>
       </Modal>
@@ -231,10 +232,10 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSE_FAILED
   if (importData.status === 'PARSE_FAILED') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Processing Failed" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Couldn't process this PDF" maxWidth="md">
         <div className="py-4 space-y-3">
           <p className="text-sm text-red-600 dark:text-red-400">
-            {importData.errorMessage || 'Failed to extract entities from the PDF.'}
+            {importData.errorMessage || "Couldn't extract entities from the PDF. Try again."}
           </p>
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             You can try parsing again or close this dialog.
@@ -252,7 +253,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={reparsing}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50"
           >
-            {reparsing ? 'Starting...' : 'Try Again'}
+            {reparsing ? 'Starting…' : 'Try again'}
           </button>
         </div>
       </Modal>
@@ -262,10 +263,10 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: NO_ENTITIES
   if (importData.status === 'NO_ENTITIES') {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="No Entities Found" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="No bookings found" maxWidth="md">
         <div className="py-4">
           <p className="text-sm text-stone-600 dark:text-dusk-400">
-            No travel entities were found in this PDF. The document may not contain recognizable booking information.
+            We didn't find any bookings in this PDF. It may not be a booking confirmation.
           </p>
         </div>
         <div className="mt-4 flex justify-end">
@@ -280,7 +281,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSED, and everything in it was already accepted or rejected
   if (entitiesLoaded && entities.length === 0) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Nothing Left to Review" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={onClose} title="Nothing left to review" maxWidth="md">
         <div className="py-4">
           <p className="text-sm text-stone-600 dark:text-dusk-400">
             Every booking from this PDF has already been added or dismissed.
@@ -298,7 +299,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   // Status: PARSED but no entities loaded yet
   if (entities.length === 0) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
+      <Modal isOpen={isOpen} onClose={onClose} title="Review extracted entities" maxWidth="lg">
         <div className="flex justify-center py-8">
           <LoadingSpinner />
         </div>
@@ -315,10 +316,10 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
   const fields = ENTITY_FIELDS[currentEntity.entityType] ?? Object.keys(currentEntity.parsedData);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Review extracted entities" maxWidth="lg">
       {/* Progress */}
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs text-stone-500 dark:text-dusk-400 font-medium uppercase tracking-wide">
+        <span className="text-stone-500 dark:text-dusk-400 eyebrow">
           {ENTITY_TYPE_LABELS[currentEntity.entityType]}
         </span>
         <span className="text-xs text-stone-500 dark:text-dusk-400">
@@ -407,7 +408,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
             disabled={isSubmitting || !selectedTripId}
             className="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Adding...' : 'Accept'}
+            {isSubmitting ? 'Adding…' : 'Accept'}
           </button>
         </div>
       </div>

@@ -226,7 +226,7 @@ describe('TripStopService.getLegs', () => {
   });
 
   it('TSL-006: a denied permission propagates and nothing is routed', async () => {
-    mockVerifyTrip.mockRejectedValue(new AppError('Trip not found or access denied', 404));
+    mockVerifyTrip.mockRejectedValue(new AppError("We couldn't find that trip, or you don't have access to it.", 404));
 
     await expect(loadService('key').getLegs(5, 10, 'driving-car')).rejects.toMatchObject({ statusCode: 404 });
     expect(mockPrisma.tripStop.findMany).not.toHaveBeenCalled();

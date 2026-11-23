@@ -70,6 +70,7 @@ const mockPrisma = {
   },
   trip: {
     findFirst: jest.fn(),
+    updateMany: jest.fn(),
   },
   userIntegrations: {
     findUnique: jest.fn(),
@@ -541,7 +542,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { isFavorite: true })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
       expect(mockPrisma.photo.update).not.toHaveBeenCalled();
     });
 
@@ -762,7 +763,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.updatePhoto(mockUserId, mockPhotoId, { caption: 'New' })
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -907,6 +908,19 @@ describe('PhotoService', () => {
 
       expect(mockPrisma.photo.delete).toHaveBeenCalledWith({
         where: { id: mockPhotoId },
+      });
+    });
+
+    it('PHOTO-011b: clears the cover tint of any trip using the photo as its cover', async () => {
+      mockPrisma.photo.findUnique.mockResolvedValue(mockPhoto);
+      mockPrisma.entityLink.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.photo.delete.mockResolvedValue(mockPhoto);
+
+      await photoService.deletePhoto(mockUserId, mockPhotoId);
+
+      expect(mockPrisma.trip.updateMany).toHaveBeenCalledWith({
+        where: { coverPhotoId: mockPhotoId },
+        data: { coverColor: null },
       });
     });
   });
@@ -1208,7 +1222,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.getPhotoById(mockUserId, 99999)
-      ).rejects.toThrow('Photo not found');
+      ).rejects.toThrow("We couldn't find that photo.");
     });
 
     it('should handle video exceeding duration limit', async () => {
@@ -1229,7 +1243,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.uploadPhoto(mockUserId, videoFile, { tripId: mockTripId })
-      ).rejects.toThrow('Video duration exceeds maximum');
+      ).rejects.toThrow('That video is');
     });
 
     it('should get unsorted photos not in any album', async () => {

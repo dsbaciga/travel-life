@@ -270,7 +270,7 @@ describe('CollaborationService', () => {
           email: 'test@example.com',
           permissionLevel: 'view',
         })
-      ).rejects.toThrow('You do not have permission to invite collaborators');
+      ).rejects.toThrow("You don't have permission to invite collaborators.");
     });
   });
 
@@ -287,7 +287,7 @@ describe('CollaborationService', () => {
           email: 'owner@example.com',
           permissionLevel: 'edit',
         })
-      ).rejects.toThrow('Cannot invite the trip owner');
+      ).rejects.toThrow("You can't invite the trip owner.");
     });
   });
 
@@ -389,7 +389,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or already responded to');
+      ).rejects.toThrow('This invitation was already answered or has been cancelled.');
     });
 
     it('should throw error when user not found', async () => {
@@ -397,7 +397,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(999, 1)
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
   });
 
@@ -415,7 +415,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.acceptInvitation(1, 1)
-      ).rejects.toThrow('Invitation has expired');
+      ).rejects.toThrow('This invitation has expired. Ask the person who invited you to send a new one.');
     });
   });
 
@@ -449,7 +449,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.declineInvitation(1, 999)
-      ).rejects.toThrow('Invitation not found or already responded to');
+      ).rejects.toThrow('This invitation was already answered or has been cancelled.');
     });
   });
 
@@ -483,7 +483,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.getCollaborators(999, 100)
-      ).rejects.toThrow('Trip not found or access denied');
+      ).rejects.toThrow("We couldn't find that trip, or you don't have access to it.");
     });
   });
 
@@ -523,7 +523,7 @@ describe('CollaborationService', () => {
         collaborationService.updateCollaborator(1, 100, 1, {
           permissionLevel: 'view',
         })
-      ).rejects.toThrow('Cannot modify trip owner permissions');
+      ).rejects.toThrow("You can't change the trip owner's permissions.");
     });
 
     it('should throw error when non-owner tries to grant admin', async () => {
@@ -564,7 +564,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.removeCollaborator(1, 100, 1)
-      ).rejects.toThrow('Cannot remove the trip owner');
+      ).rejects.toThrow("You can't remove the trip owner.");
     });
 
     it('should throw error when collaborator not found', async () => {
@@ -574,7 +574,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.removeCollaborator(1, 100, 999)
-      ).rejects.toThrow('Collaborator not found');
+      ).rejects.toThrow("We couldn't find that collaborator.");
     });
   });
 
@@ -621,7 +621,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.cancelInvitation(1, 100, 999)
-      ).rejects.toThrow('Invitation not found');
+      ).rejects.toThrow("We couldn't find that invitation.");
     });
 
     it('should throw error when user has no permission', async () => {
@@ -629,7 +629,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.cancelInvitation(999, 100, 1)
-      ).rejects.toThrow('You do not have permission to cancel invitations');
+      ).rejects.toThrow("You don't have permission to cancel invitations.");
     });
   });
 
@@ -653,7 +653,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.getPendingInvitationsForUser(999)
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow("We couldn't find that user.");
     });
 
     it('should expire old invitations before returning', async () => {

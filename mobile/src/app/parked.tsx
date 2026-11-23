@@ -47,7 +47,7 @@ export default function ParkedScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" />
       </Screen>
     );
   }

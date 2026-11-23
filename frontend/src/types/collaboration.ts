@@ -17,6 +17,7 @@ export interface TripSummary {
   /** Uploaded cover image, used when the trip has no gallery photo as its cover */
   coverImagePath?: string | null;
   coverImageThumbnailPath?: string | null;
+  coverColor?: string | null;
   coverPhoto?: {
     id: number;
     localPath: string | null;

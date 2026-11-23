@@ -585,14 +585,14 @@ describe('sync engine', () => {
     await createEntity(db, 'ACTIVITY', TRIP, activityInput({ name: 'Unrelated' }));
 
     // Requests in causal order: location, then the first activity (rejected).
-    server.failNext = { afterRequests: 2, status: 400, message: 'Validation failed: name' };
+    server.failNext = { afterRequests: 2, status: 400, message: "Some of those details aren't valid. Check them and try again." };
     const result = await flushOutbox(db, server);
 
     expect(result).toMatchObject({ sent: 2, failed: 1, blocked: 1, interrupted: false });
     expect(server.all('ACTIVITY').map((a) => a.name)).toEqual(['Unrelated']);
     const failed = await listOutbox(db, { status: 'failed' });
     expect(failed).toHaveLength(1);
-    expect(failed[0].lastError).toContain('Validation failed');
+    expect(failed[0].lastError).toContain("aren't valid");
     // The link waits; it was never sent with a local id.
     expect(server.links.size).toBe(0);
     expect((await listOutbox(db, { status: 'pending' })).map((e) => e.kind)).toEqual(['LINK']);
@@ -873,7 +873,7 @@ describe('sync engine', () => {
   });
 
   it('SYNC-061: migrations are idempotent and wipe() empties every table', async () => {
-    expect(await migrate(db)).toBe(2);
+    expect(await migrate(db)).toBe(3);
     server.seed('ACTIVITY', activityInput());
     await pullTrip(db, server, TRIP);
     await createEntity(db, 'ACTIVITY', TRIP, activityInput());

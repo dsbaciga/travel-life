@@ -21,6 +21,7 @@ import '../utils/mapUtils'; // Runs the leaflet icon setup
 import { formatTripDates } from '../utils/dateFormat';
 import { useUnits } from '../hooks/useUnits';
 import { formatDistance as formatUnits, otherMeasurementSystem } from '../utils/units';
+import Icon, { type IconName } from '../components/ui/Icon';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -38,16 +39,14 @@ interface StatCardProps {
   value: string;
   subtext?: string;
   gradient: string;
-  icon: React.ReactNode;
+  icon: IconName;
 }
 
 function StatCard({ label, value, subtext, gradient, icon }: StatCardProps) {
   return (
     <div className="p-4 rounded-xl bg-white dark:bg-navy-800 shadow-md border-2 border-primary-100 dark:border-gold/20 hover:shadow-lg transition-shadow duration-300">
       <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center shadow-md mb-3`}>
-        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          {icon}
-        </svg>
+        <Icon name={icon} className="text-white" />
       </div>
       <div className="text-2xl sm:text-3xl font-display font-bold text-gray-900 dark:text-white leading-none">
         {value}
@@ -140,7 +139,7 @@ export default function YearInReviewPage() {
         <div className="mb-8 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="text-sm font-medium uppercase tracking-widest text-accent-500 dark:text-gold mb-2">
+              <p className="eyebrow text-accent-500 dark:text-gold mb-2">
                 Year in Review
               </p>
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-primary-600 dark:text-sky tracking-tight leading-none">
@@ -180,22 +179,22 @@ export default function YearInReviewPage() {
 
         {isError && (
           <EmptyState
-            icon="⚠️"
-            message="Could not load your year in review"
-            subMessage="Please try again in a moment"
+            icon="alert"
+            message="Couldn't load your year in review. Try again."
+            subMessage="Try again in a moment"
           />
         )}
 
         {review && !isLoading && review.tripCount === 0 && (
           <EmptyState
-            icon="🧳"
+            icon="luggage"
             message={`No travel recorded in ${year}`}
             subMessage={
               hasAnyData
                 ? 'Pick another year above to relive your adventures'
                 : 'Add dates to your trips and they will show up here'
             }
-            actionLabel="Go to Trips"
+            actionLabel="Go to trips"
             actionHref="/trips"
           />
         )}
@@ -208,39 +207,39 @@ export default function YearInReviewPage() {
                 label={review.tripCount === 1 ? 'Trip' : 'Trips'}
                 value={review.tripCount.toLocaleString()}
                 gradient="from-blue-500 to-blue-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />}
+                icon="globe"
               />
               <StatCard
-                label="Days Traveled"
+                label="Days traveled"
                 value={review.daysTraveled.toLocaleString()}
                 gradient="from-amber-500 to-orange-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />}
+                icon="calendar"
               />
               <StatCard
                 label={review.countries.length === 1 ? 'Country' : 'Countries'}
                 value={review.countries.length.toLocaleString()}
                 gradient="from-green-500 to-emerald-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z" />}
+                icon="flag"
               />
               <StatCard
                 label={review.cities.length === 1 ? 'City' : 'Cities'}
                 value={review.cities.length.toLocaleString()}
                 gradient="from-teal-500 to-cyan-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />}
+                icon="place"
               />
               <StatCard
                 label="Traveled"
                 value={formatDistance(review.totalDistanceKm)}
                 subtext={`${formatUnits(review.totalDistanceKm, otherMeasurementSystem(system))} · ${review.flightCount} flight${review.flightCount !== 1 ? 's' : ''}`}
                 gradient="from-cyan-500 to-blue-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />}
+                icon="route"
               />
               <StatCard
                 label="Photos"
                 value={review.photoCount.toLocaleString()}
                 subtext={`${review.journalEntryCount} journal entr${review.journalEntryCount !== 1 ? 'ies' : 'y'}`}
                 gradient="from-pink-500 to-rose-600"
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />}
+                icon="photo"
               />
             </div>
 
@@ -320,9 +319,7 @@ export default function YearInReviewPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <svg className="w-8 h-8 text-gray-300 dark:text-dusk-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            <Icon name="photo" size={32} className="text-gray-300 dark:text-dusk-600" />
                           </div>
                         )}
                         <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -342,7 +339,7 @@ export default function YearInReviewPage() {
             {yearLocations.length > 0 && (
               <div className="animate-fade-in">
                 <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">
-                  Where You Went
+                  Where you went
                 </h2>
                 <div className="h-64 sm:h-[420px] rounded-2xl overflow-hidden shadow-lg border-2 border-primary-100 dark:border-gold/20 relative z-0">
                   <PlacesVisitedMapContainer
@@ -425,9 +422,13 @@ function TripCoverThumb({
       {url ? (
         <img src={url} alt={`Cover for ${title}`} className="w-full h-full object-cover" loading="lazy" />
       ) : (
-        <span className="text-2xl" aria-hidden="true">
-          {emoji || '🧭'}
-        </span>
+        emoji ? (
+          <span className="text-2xl" aria-hidden="true">
+            {emoji}
+          </span>
+        ) : (
+          <Icon name="trip" size={24} className="text-primary-600 dark:text-gold" />
+        )
       )}
     </div>
   );

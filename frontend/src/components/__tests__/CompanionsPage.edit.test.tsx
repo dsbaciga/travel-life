@@ -41,7 +41,7 @@ describe('CompanionsPage edit', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit Zed' }));
 
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveTextContent('Edit Companion');
+    expect(dialog).toHaveTextContent('Edit companion');
     expect(screen.getByLabelText('Name *')).toHaveValue('Zed');
   });
 });

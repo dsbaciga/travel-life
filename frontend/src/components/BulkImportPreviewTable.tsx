@@ -66,7 +66,7 @@ export default function BulkImportPreviewTable({
   return (
     <div className="sm:overflow-x-auto rounded-lg border border-stone-200 dark:border-dusk-600">
       <table className="block sm:table min-w-full text-sm">
-        <thead className="hidden sm:table-header-group bg-stone-50 dark:bg-dusk-800 text-left text-xs uppercase tracking-wide text-stone-500 dark:text-dusk-400">
+        <thead className="hidden sm:table-header-group bg-stone-50 dark:bg-dusk-800 text-left eyebrow text-stone-500 dark:text-dusk-400">
           <tr>
             <th className="px-3 py-2 w-10">
               <span className="sr-only">Include</span>

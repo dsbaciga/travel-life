@@ -20,6 +20,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Activities | `activity` | `ActivityManager`, `components/forms/ActivityForm` |
 | Transportation (flights, trains, …) and flight status | `transportation`, `aviationstack`, `airport`, `routing`, `travelTime` | `TransportationManager`, `FlightStatusBadge`, `FlightRouteMap`, `AirportSearchInput` |
 | Lodging | `lodging` | `LodgingManager` |
+| Route line (a day's itinerary drawn as a journey) and contour backdrops | none (client only). Shared: `packages/shared/src/brand/routeProgress.ts` and `contours.ts`, vendored to `frontend/src/lib/vendored/` by `npm run sync:vendored`. Mobile: `RouteRail`, `ContourBackdrop`, `domain/routeLine` | `components/brand/` (`ContourBackdrop`, `RouteSegment`), used by `timeline/TimelineEventCard`, `trip-dashboard/TodaysItinerary` and `EmptyState` |
 | Custom items | `customItem` ([spec](../development/CUSTOM_ITEM_SPEC.md)) | `CustomItemsManager`, `CustomItemTypeManager` |
 | Journal (+ AI drafting, per-day AI draft) | `journalEntry`, `journalEntryAi`, `journalDayDraft`, `services/_shared/dayDraft` | `JournalManager`, `MarkdownEditor` |
 | Entity links (any entity to any entity) | `entityLink`, `services/_shared/entityLinkCleanup` | `LinkPanel`, `LinkedEntitiesDisplay`, `EntityPickerModal`, `useEntityLinking` |
@@ -98,6 +99,8 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 `mobilePairing`, `mobileSync`, `track`, `mobile.routes`.
 
+Trip tint: `TripDto.coverColor` arrives with the trip list, shared trips and `mobile-sync`; `useTripTint` (`mobile/src/lib/tripTint.ts`) feeds `<Card tone="hero" tint={...}>`.
+
 ## Shared building blocks (reuse before writing new)
 
 ### Backend
@@ -117,6 +120,9 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | A user's integration settings (Immich/weather/LLM/SMTP keys, ciphertext) or preferences (categories, currency, units, partner permission): read, update, create the missing row; give a new user both rows | `getUserIntegrations`, `getUserPreferences`, `findUser*` (null for a missing user), `updateUserIntegrations`, `updateUserPreferences`, `defaultUserSettingsCreate` (nested create in `user.create`), `findUserIdBySender` | `services/_shared/userSettings.ts` |
 | Timezone fallback chain | `resolveTimezone`, `getUserTimezone` | `services/_shared/timezoneResolution.ts` |
 | Trip list ordering (open trips before Completed) | `tripListOrder` | `services/_shared/` |
+| A trip's cover colour: sample a cover (upload, library photo, Immich), keep `Trip.coverColor` in step with the cover; one-off fill for old trips: `npx tsx scripts/backfill-trip-cover-color.ts` | `dominantColor`, `computeCoverColor`, `refreshCoverColor` | `services/tripCoverColor.service.ts` |
+| Resolve a stored `/uploads/...` path safely inside the uploads root | `resolveUploadPath` | `services/_shared/uploadPaths.ts` |
+| Turn a trip's `coverColor` into hero/soft/ring colours (clamped, contrast-safe; null for greys). Source `packages/shared/src/utils/tripTint.ts`, vendored to `backend/.../vendored/` and `frontend/src/lib/vendored/` by `npm run sync:vendored` | `tripTint(hex, scheme)` | `packages/shared` |
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |
 | Zod helpers (`nullableOptional`, ids, coords, currency, URLs) | `zodHelpers` | `validation/zodHelpers.ts` |
 | Outbound URL safety (SSRF) | `urlValidation` | `security/` |
@@ -131,6 +137,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 
 | Need | Use | Where |
 | ---- | --- | ----- |
+| An icon (any entity type, transport mode, weather, status) | `Icon` (`name` is a semantic `IconName`; Material Symbols outlined; registry in `iconRegistry.ts`; `iconSvgString` for Leaflet) | `components/ui/Icon.tsx` |
 | Manager component CRUD state | `useManagerCRUD`, `useManagerFormWrapper`, `useFormReset` | `hooks/` |
 | Stop double-submit | `useSubmitLock` | `hooks/` |
 | "Save & Add Another" | `useSaveAndAddAnother` | `hooks/` |
@@ -151,6 +158,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 | List the calendar days of a trip (date-only, device-zone safe) | `timeline/tripDays` | `components/` |
 | Clamped text with "Show more" | `shared/ExpandableText` | `components/` |
 | Trip row actions menu (edit, archive, delete) | `TripActionsMenu` | `components/` |
+| Per-trip tint for hero surfaces and photo overlays (used by `TripHeroHeader`, `DashboardHero`, `TripCard`) | `useTripTint`, `tintOverlay`, `withAlpha` | `hooks/useTripTint.ts` |
 | Safe post-login redirect / auth-page checks | `lib/authRedirect` | `lib/` |
 | Photo viewer touch gestures (swipe, pinch, double-tap) | `utils/lightboxGestures` | `utils/` |
 | Entity type metadata (labels, icons, colors) | `lib/entityConfig` | `lib/` |

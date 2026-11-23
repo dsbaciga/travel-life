@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Icon from './ui/Icon';
 import type { EntityType } from '../types/entityLink';
 import { ENTITY_TYPE_CONFIG } from '../lib/entityConfig';
 import { useEntityFetcher, useEntityFilter } from '../hooks/useEntityFetcher';
@@ -61,7 +62,7 @@ export default function EntityPickerModal({
       onClose();
     } catch (error) {
       console.error('Failed to link photos:', error);
-      toast.error('Failed to link photos');
+      toast.error("Couldn't link photos. Try again.");
     } finally {
       setLinking(false);
     }
@@ -71,7 +72,7 @@ export default function EntityPickerModal({
     <Modal
       isOpen
       onClose={onClose}
-      title={`Link ${photoIds.length} Photo${photoIds.length !== 1 ? 's' : ''} to...`}
+      title={`Link ${photoIds.length} Photo${photoIds.length !== 1 ? 's' : ''} to…`}
       maxWidth="lg"
       footer={
         <button onClick={onClose} className="btn btn-secondary w-full">
@@ -89,7 +90,7 @@ export default function EntityPickerModal({
             type="button"
             className="text-sm text-blue-600 dark:text-blue-400 hover:underline mb-3"
           >
-            ← Back to types
+            <Icon name="back" size={16} className="align-text-bottom" /> Back to types
           </button>
         )}
 
@@ -106,7 +107,7 @@ export default function EntityPickerModal({
                     onClick={() => setSelectedType(type)}
                     className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 p-3 sm:p-4 min-w-0 text-center sm:text-left rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                   >
-                    <span className="text-2xl">{config.emoji}</span>
+                    <Icon name={config.icon} size={24} />
                     <span className="font-medium text-gray-900 dark:text-white min-w-0 break-words">{config.label}</span>
                   </button>
                 );
@@ -132,7 +133,7 @@ export default function EntityPickerModal({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
+                  placeholder="Search…"
                   className="input mb-3 w-full"
                 />
               )}
@@ -144,9 +145,7 @@ export default function EntityPickerModal({
                     disabled={linking}
                     className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-dusk-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left disabled:opacity-50"
                   >
-                    <span className="text-lg">
-                      {selectedType && ENTITY_TYPE_CONFIG[selectedType].emoji}
-                    </span>
+                    {selectedType && <Icon name={ENTITY_TYPE_CONFIG[selectedType].icon} />}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-white truncate">
                         {entity.name}

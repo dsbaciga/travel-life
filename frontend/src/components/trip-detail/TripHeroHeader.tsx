@@ -1,3 +1,6 @@
+import Icon from "../ui/Icon";
+import ContourBackdrop from "../brand/ContourBackdrop";
+import { contourSeed } from "../../lib/vendored/contours";
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import type { Trip } from "../../types/trip";
@@ -5,6 +8,7 @@ import { TripStatus } from "../../types/trip";
 import type { TripTag } from "../../types/tag";
 import type { Checklist } from "../../types/checklist";
 import { resolveTripCoverUrl } from "../../lib/tripCover";
+import { useTripTint, tintOverlay, withAlpha } from "../../hooks/useTripTint";
 import TripSeriesBadge from "../TripSeriesBadge";
 import TripHeaderActions from "../TripHeaderActions";
 import MarkdownRenderer from "../MarkdownRenderer";
@@ -100,11 +104,13 @@ export default function TripHeroHeader({
   }, [coverPhoto, coverImagePath, coverImageThumbnailPath]);
 
   const tagsCount = tags.length;
+  const { hero: heroTint, accent: accentTint } = useTripTint(trip.coverColor);
 
   return (
     <div
       ref={headerRef}
       className="bg-white dark:bg-navy-800 rounded-2xl shadow-lg border border-primary-100 dark:border-gold/20 mb-6"
+      style={coverPhotoUrl && accentTint ? { borderColor: withAlpha(accentTint.ring, 0.55) } : undefined}
     >
       {/* Cover Photo Background */}
       {coverPhotoUrl ? (
@@ -115,7 +121,24 @@ export default function TripHeroHeader({
             "--cover-photo-url": `url(${coverPhotoUrl})`,
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70"></div>
+          <div
+            className={`absolute inset-0 ${heroTint ? "" : "bg-gradient-to-b from-black/30 via-black/50 to-black/70"}`}
+            style={
+              heroTint
+                ? {
+                    backgroundImage: tintOverlay(heroTint, "to bottom", [
+                      { color: "from", alpha: 0.4 },
+                      { color: "from", alpha: 0.6 },
+                      { color: "to", alpha: 0.8 },
+                    ]),
+                  }
+                : undefined
+            }
+          ></div>
+          {/* Topographic contour lines (own clip layer so the actions menu is not cut off) */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <ContourBackdrop seed={contourSeed({ id: trip.id })} className="!text-white/10 dark:!text-white/10" />
+          </div>
           <div className="relative h-full p-4 sm:p-6 flex flex-col justify-between text-white">
             <div className="flex flex-wrap justify-between items-start gap-4">
               <div className="min-w-0 flex-1 basis-[16rem] pr-4">
@@ -164,22 +187,10 @@ export default function TripHeroHeader({
             <button
               onClick={onDuplicate}
               className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/40 rounded-lg transition-colors hover:shadow-lg"
-              title="Duplicate Trip"
-              aria-label="Duplicate Trip"
+              title="Duplicate trip"
+              aria-label="Duplicate trip"
             >
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
+              <Icon name="copy" className="w-5 h-5 text-white" />
             </button>
 
             <div>
@@ -194,10 +205,10 @@ export default function TripHeroHeader({
 
               {/* Trip Dates - Natural Language Format */}
               <div className="text-sm mb-4">
-                <div className="text-white font-medium drop-shadow-md">
+                <div className="eyebrow tabular-nums text-white drop-shadow-md">
                   {formatTripDates(trip.startDate, trip.endDate)}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-white/80">
+                <div className="flex flex-wrap items-center gap-2 mt-1 eyebrow tabular-nums text-white/80">
                   {formatTripDuration(trip.startDate, trip.endDate) && (
                     <span>{formatTripDuration(trip.startDate, trip.endDate)}</span>
                   )}
@@ -280,6 +291,10 @@ export default function TripHeroHeader({
         </div>
       ) : (
         <div className="p-6 relative bg-gradient-to-br from-primary-50/50 to-parchment dark:from-navy-800 dark:to-navy-900 rounded-2xl">
+          {/* Topographic contour lines (own clip layer so the actions menu is not cut off) */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <ContourBackdrop seed={contourSeed({ id: trip.id })} />
+          </div>
           <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
             <div className="min-w-0 flex-1 basis-[16rem] pr-4">
               <h1 title={trip.title} className="trip-title-hero text-charcoal dark:text-warm-gray break-words line-clamp-3 sm:line-clamp-none">
@@ -317,22 +332,10 @@ export default function TripHeroHeader({
           <button
             onClick={onDuplicate}
             className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-dusk-700 dark:hover:bg-dusk-600 border border-gray-300 dark:border-dusk-600 rounded-lg transition-colors hover:shadow-lg"
-            title="Duplicate Trip"
-            aria-label="Duplicate Trip"
+            title="Duplicate trip"
+            aria-label="Duplicate trip"
           >
-            <svg
-              className="w-5 h-5 text-gray-700 dark:text-dusk-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
+            <Icon name="copy" className="w-5 h-5 text-gray-700 dark:text-dusk-300" />
           </button>
 
           {trip.description && (
@@ -343,10 +346,10 @@ export default function TripHeroHeader({
 
           {/* Trip Dates - Natural Language Format */}
           <div className="text-sm">
-            <div className="text-gray-900 dark:text-white font-medium">
+            <div className="eyebrow tabular-nums text-gray-900 dark:text-white">
               {formatTripDates(trip.startDate, trip.endDate)}
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-600 dark:text-dusk-400">
+            <div className="flex flex-wrap items-center gap-2 mt-1 eyebrow tabular-nums text-gray-600 dark:text-dusk-400">
               {formatTripDuration(trip.startDate, trip.endDate) && (
                 <span>{formatTripDuration(trip.startDate, trip.endDate)}</span>
               )}

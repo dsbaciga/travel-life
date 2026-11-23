@@ -5,6 +5,7 @@ import { useTripLinkSummary } from "../hooks/useTripLinkSummary";
 import MarkdownEditor from "./MarkdownEditor";
 import ImmichAlbumPanel from "./ImmichAlbumPanel";
 import { pushModal, popModal, isTopModal } from "../utils/modalStack";
+import Icon from "./ui/Icon";
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -133,7 +134,7 @@ export default function AlbumModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
           <h2 id="album-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
-            {isEdit ? "Edit Album" : "Create Album"}
+            {isEdit ? "Edit album" : "Create album"}
           </h2>
           <button
             onClick={onClose}
@@ -141,19 +142,7 @@ export default function AlbumModal({
             aria-label="Close"
             className="text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-dusk-700"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Icon name="close" size={24} />
           </button>
         </div>
 
@@ -182,7 +171,7 @@ export default function AlbumModal({
             value={description}
             onChange={(val) => setDescription(val)}
             rows={3}
-            placeholder="Add a description for this album..."
+            placeholder="Add a description for this album…"
             label="Description (Optional)"
             compact
           />
@@ -213,7 +202,7 @@ export default function AlbumModal({
           ) : (
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                💡 After creating this album, you'll be able to link it to locations, activities, and other trip entities.
+                <Icon name="lightbulb" size={16} className="align-text-bottom" /> After creating this album, you'll be able to link it to locations, activities, and other trip entities.
               </p>
             </div>
           )}
@@ -235,7 +224,7 @@ export default function AlbumModal({
               className="btn btn-primary"
               disabled={saving || !name.trim()}
             >
-              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Album"}
+              {saving ? "Saving…" : isEdit ? "Save changes" : "Create album"}
             </button>
           </div>
         </form>

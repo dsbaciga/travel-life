@@ -45,7 +45,7 @@ class JournalDayDraftService {
       where: { id: tripId },
       select: { title: true, timezone: true, startDate: true, endDate: true },
     });
-    if (!trip) throw new AppError('Trip not found', 404);
+    if (!trip) throw new AppError("We couldn't find that trip.", 404);
 
     // Before any day data is read or the LLM is considered: a date outside the
     // trip is rejected outright. Trips without dates are not restricted.
@@ -196,14 +196,14 @@ class JournalDayDraftService {
       });
     } catch (err) {
       if (err instanceof LlmError) {
-        throw new AppError(`AI draft generation failed: ${err.message}`, 502);
+        throw new AppError(`Couldn't generate the AI draft. ${err.message}`, 502);
       }
       throw err;
     }
 
     const parsed = parseDayDraftReply(reply, `Journal for ${date}`);
     if (!parsed.body) {
-      throw new AppError('AI draft generation returned no content.', 502);
+      throw new AppError('The AI draft came back empty. Try again.', 502);
     }
 
     return { ...parsed, date, truncated: facts.truncated };

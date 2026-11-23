@@ -26,7 +26,16 @@ export const VENDORED = [
   { from: 'receipt/receiptParser.ts', to: 'receiptParser.ts' },
   { from: 'food/nearbyFood.ts', to: 'nearbyFood.ts' },
   { from: 'constants/countryFacts.ts', to: 'countryFacts.ts' },
+  { from: 'utils/tripTint.ts', to: 'tripTint.ts' },
 ];
+
+/** Copied into the frontend, whose Docker build context cannot reach packages/shared. */
+export const FRONTEND_VENDORED = [
+  { from: 'utils/tripTint.ts', to: 'tripTint.ts' },
+  { from: 'brand/contours.ts', to: 'contours.ts' },
+  { from: 'brand/routeProgress.ts', to: 'routeProgress.ts' },
+];
+const frontendVendored = resolve(here, '../../../frontend/src/lib/vendored');
 
 export const header = (from) =>
   `// GENERATED FILE - DO NOT EDIT.\n` +
@@ -38,14 +47,19 @@ const normalize = (text) => text.replace(/\r\n/g, '\n');
 const check = process.argv.includes('--check');
 let drift = false;
 
-for (const { from, to } of VENDORED) {
+const TARGETS = [
+  ...VENDORED.map((entry) => ({ ...entry, dir: backendVendored })),
+  ...FRONTEND_VENDORED.map((entry) => ({ ...entry, dir: frontendVendored })),
+];
+
+for (const { from, to, dir } of TARGETS) {
   const source = normalize(readFileSync(resolve(sharedSrc, from), 'utf8'));
   if (/^\s*import\s/m.test(source)) {
     console.error(`${from} has imports and cannot be vendored as a single file.`);
     process.exit(1);
   }
   const expected = header(from) + source;
-  const target = resolve(backendVendored, to);
+  const target = resolve(dir, to);
   if (check) {
     const actual = existsSync(target) ? normalize(readFileSync(target, 'utf8')) : '';
     if (actual !== expected) {
@@ -53,7 +67,7 @@ for (const { from, to } of VENDORED) {
       drift = true;
     }
   } else {
-    mkdirSync(backendVendored, { recursive: true });
+    mkdirSync(dir, { recursive: true });
     writeFileSync(target, expected, 'utf8');
     console.log(`vendored ${from} -> ${target}`);
   }

@@ -1,6 +1,5 @@
 import type { MouseEvent, KeyboardEvent } from "react";
-import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
-import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import Icon from "./ui/Icon";
 
 interface FavoriteStarButtonProps {
   isFavorite: boolean;
@@ -52,12 +51,12 @@ export default function FavoriteStarButton({
             : VARIANT_CLASSES[variant]
         } ${className}`}
       >
-        <StarSolid className="w-5 h-5 text-amber-400" aria-hidden="true" />
+        <Icon name="starFilled" className="text-amber-400" />
       </span>
     );
   }
 
-  const Icon = isFavorite ? StarSolid : StarOutline;
+  const starName = isFavorite ? "starFilled" : "star";
   const iconColor = isFavorite
     ? "text-amber-400"
     : variant === "inline"
@@ -79,10 +78,10 @@ export default function FavoriteStarButton({
     >
       {variant === "overlay" ? (
         <span className="flex rounded-full bg-black/50 group-hover:bg-black/70 backdrop-blur-sm shadow-lg p-1">
-          <Icon className={`w-4 h-4 ${iconColor}`} aria-hidden="true" />
+          <Icon name={starName} size={16} className={iconColor} />
         </span>
       ) : (
-        <Icon className={`w-5 h-5 ${iconColor}`} aria-hidden="true" />
+        <Icon name={starName} className={iconColor} />
       )}
     </button>
   );

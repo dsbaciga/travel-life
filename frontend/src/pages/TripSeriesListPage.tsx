@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import Modal from '../components/Modal';
 import PageHeader from '../components/PageHeader';
+import Icon from '../components/ui/Icon';
 
 /**
  * Compute a date range string from a series' trips.
@@ -63,33 +64,33 @@ export default function TripSeriesListPage() {
       setNewDescription('');
       toast.success('Series created');
     } catch {
-      toast.error('Failed to create series');
+      toast.error("Couldn't create series. Try again.");
     } finally {
       setCreating(false);
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner.FullPage message="Loading trip series..." />;
+    return <LoadingSpinner.FullPage message="Loading trip series…" />;
   }
 
   return (
     <div className="min-h-screen bg-cream dark:bg-navy-900">
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <PageHeader
-          title="Trip Series"
+          title="Trip series"
           subtitle="Group related trips together into a series"
           backLink={LIBRARY_BACK_LINK}
-          action={{ label: '+ Create Series', onClick: () => setShowCreateModal(true) }}
+          action={{ label: 'Create series', icon: 'add', onClick: () => setShowCreateModal(true) }}
         />
 
         {/* Content */}
         {seriesList.length === 0 ? (
           <EmptyState
-            icon="📚"
+            icon="series"
             message="No trip series yet"
             subMessage="Create a series to group related trips together, like a multi-city tour or annual vacation tradition."
-            actionLabel="Create Series"
+            actionLabel="Create series"
             onAction={() => setShowCreateModal(true)}
           />
         ) : (
@@ -104,7 +105,7 @@ export default function TripSeriesListPage() {
                   {/* Series icon and name */}
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
-                      <span className="text-lg" aria-hidden="true">📚</span>
+                      <Icon name="series" size={24} className="text-primary-600 dark:text-gold" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="text-lg font-display font-bold text-charcoal dark:text-warm-gray group-hover:text-primary-600 dark:group-hover:text-gold transition-colors truncate">
@@ -121,9 +122,7 @@ export default function TripSeriesListPage() {
                   {/* Stats */}
                   <div className="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-navy-700">
                     <div className="flex items-center gap-1.5 text-sm text-slate dark:text-warm-gray/70">
-                      <svg className="w-4 h-4 text-primary-500 dark:text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                      <Icon name="globe" size={16} className="text-primary-500 dark:text-gold" />
                       <span className="font-body">
                         {series._count?.trips ?? series.trips?.length ?? 0} trip{(series._count?.trips ?? series.trips?.length ?? 0) !== 1 ? 's' : ''}
                       </span>
@@ -147,8 +146,8 @@ export default function TripSeriesListPage() {
           setNewName('');
           setNewDescription('');
         }}
-        title="Create Trip Series"
-        icon={<span className="text-2xl">📚</span>}
+        title="Create trip series"
+        icon="series"
       >
         <div className="space-y-4">
           <div>
@@ -181,7 +180,7 @@ export default function TripSeriesListPage() {
               onChange={(e) => setNewDescription(e.target.value)}
               className="input"
               rows={3}
-              placeholder="Describe your trip series..."
+              placeholder="Describe your trip series…"
             />
           </div>
           <div className="flex gap-3 pt-2">
@@ -191,7 +190,7 @@ export default function TripSeriesListPage() {
               className="flex-1 btn btn-primary"
               disabled={creating || !newName.trim()}
             >
-              {creating ? 'Creating...' : 'Create Series'}
+              {creating ? 'Creating…' : 'Create series'}
             </button>
             <button
               type="button"
