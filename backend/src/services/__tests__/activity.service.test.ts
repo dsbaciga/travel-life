@@ -1031,7 +1031,7 @@ describe('ActivityService', () => {
 
       await expect(
         activityService.updateActivity(userId, activityId, { parentId: activityId })
-      ).rejects.toThrow('Activity cannot be its own parent');
+      ).rejects.toThrow("An activity can't be its own parent.");
     });
 
     it('should clear optional fields when set to null', async () => {

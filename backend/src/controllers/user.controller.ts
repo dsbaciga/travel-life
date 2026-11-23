@@ -65,7 +65,7 @@ async function validateSmtpHost(host: string): Promise<void> {
   // Hostname or IPv4 literal only — keeps credentials, ports and paths from
   // being smuggled through the host field into the URL parsed below.
   if (!/^[A-Za-z0-9._-]+$/.test(host)) {
-    throw new AppError('Invalid SMTP host', 400);
+    throw new AppError("That SMTP host isn't valid.", 400);
   }
   if (config.security.allowPrivateIntegrationUrls && isLocalNetworkHostname(host)) return;
   await validateUrlNotInternal(`https://${host}`);

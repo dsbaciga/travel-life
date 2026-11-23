@@ -416,7 +416,7 @@ describe('EntityLinkService', () => {
         AppError
       );
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Link already exists between these entities'
+        'Those two are already linked.'
       );
     });
   });
@@ -440,7 +440,7 @@ describe('EntityLinkService', () => {
         AppError
       );
       await expect(entityLinkService.createLink(TEST_USER_ID, input)).rejects.toThrow(
-        'Cannot link an entity to itself'
+        "Something can't be linked to itself."
       );
     });
 

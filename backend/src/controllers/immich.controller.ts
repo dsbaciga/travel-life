@@ -62,7 +62,7 @@ export const immichController = {
     const { apiUrl, apiKey } = req.body;
 
     if (typeof apiUrl !== 'string' || typeof apiKey !== 'string' || !apiUrl || !apiKey) {
-      throw new AppError('API URL and API Key are required', 400);
+      throw new AppError('Enter an API URL and an API key.', 400);
     }
 
     // The same rules as saving the URL (user.controller updateImmichSettings).
@@ -74,7 +74,7 @@ export const immichController = {
     try {
       parsedUrl = new URL(apiUrl);
     } catch {
-      throw new AppError('Invalid URL format', 400);
+      throw new AppError('Enter a full URL, like https://example.com.', 400);
     }
     const isLocalHost = isLocalNetworkHostname(parsedUrl.hostname);
     if (parsedUrl.protocol !== 'https:' && !isLocalHost) {
@@ -205,7 +205,7 @@ export const immichController = {
     const { startDate, endDate, skip, take } = req.query;
 
     if (!startDate || !endDate) {
-      throw new AppError('Start date and end date are required', 400);
+      throw new AppError('Add a start date and an end date.', 400);
     }
 
     const { apiUrl, apiKey } = await getUserImmichSettings(userId);

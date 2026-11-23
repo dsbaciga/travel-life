@@ -466,7 +466,7 @@ class PhotoAlbumService {
     });
 
     if (!assignment) {
-      throw new AppError('Photo is not in this album', 404);
+      throw new AppError("That photo isn't in this album.", 404);
     }
 
     await prisma.photoAlbumAssignment.delete({

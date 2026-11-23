@@ -406,7 +406,7 @@ describe('TripSeriesService', () => {
 
       await expect(
         tripSeriesService.reorderTrips(1, 1, [1, 2])
-      ).rejects.toThrow('All trips in the series must be included in the reorder');
+      ).rejects.toThrow('Include every trip in the series when you reorder.');
     });
   });
 

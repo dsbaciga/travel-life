@@ -269,7 +269,7 @@ export class TripSeriesService {
 
     // Verify all series trips are accounted for
     if (tripIds.length !== seriesTrips.length) {
-      throw new AppError('All trips in the series must be included in the reorder', 400);
+      throw new AppError('Include every trip in the series when you reorder.', 400);
     }
 
     // Update order atomically

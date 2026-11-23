@@ -788,7 +788,7 @@ describe('bulkUpdateEntities', () => {
 
     await expect(
       bulkUpdateEntities('activity', userId, tripId, ids, updates)
-    ).rejects.toThrow('No valid update fields provided');
+    ).rejects.toThrow('Nothing to save. Change a field first.');
   });
 
   it('throws when entities not found or not belonging to trip', async () => {

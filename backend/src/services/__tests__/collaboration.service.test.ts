@@ -287,7 +287,7 @@ describe('CollaborationService', () => {
           email: 'owner@example.com',
           permissionLevel: 'edit',
         })
-      ).rejects.toThrow('Cannot invite the trip owner');
+      ).rejects.toThrow("You can't invite the trip owner.");
     });
   });
 
@@ -523,7 +523,7 @@ describe('CollaborationService', () => {
         collaborationService.updateCollaborator(1, 100, 1, {
           permissionLevel: 'view',
         })
-      ).rejects.toThrow('Cannot modify trip owner permissions');
+      ).rejects.toThrow("You can't change the trip owner's permissions.");
     });
 
     it('should throw error when non-owner tries to grant admin', async () => {
@@ -564,7 +564,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.removeCollaborator(1, 100, 1)
-      ).rejects.toThrow('Cannot remove the trip owner');
+      ).rejects.toThrow("You can't remove the trip owner.");
     });
 
     it('should throw error when collaborator not found', async () => {

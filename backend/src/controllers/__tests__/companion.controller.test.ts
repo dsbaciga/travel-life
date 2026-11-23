@@ -423,7 +423,7 @@ describe('Companion Controller', () => {
 
       expect(next).toHaveBeenCalled();
       const error = (next as jest.Mock).mock.calls[0][0] as { message: string; statusCode: number };
-      expect(error.message).toBe('No file uploaded');
+      expect(error.message).toBe('Choose a file to upload.');
       expect(error.statusCode).toBe(400);
     });
 

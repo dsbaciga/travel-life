@@ -528,7 +528,7 @@ export const entityLinkService = {
 
     // Prevent self-linking
     if (data.sourceType === data.targetType && data.sourceId === data.targetId) {
-      throw new AppError('Cannot link an entity to itself', 400);
+      throw new AppError("Something can't be linked to itself.", 400);
     }
 
     // Older clients express "activity/lodging is at location" as a link: set the FK instead and
@@ -540,7 +540,7 @@ export const entityLinkService = {
       { type: data.targetType, id: data.targetId }
     );
     if (claim === 'already') {
-      throw new AppError('Link already exists between these entities', 400);
+      throw new AppError('Those two are already linked.', 400);
     }
     if (claim === 'claimed') {
       const entityIsSource = data.sourceType !== 'LOCATION';
@@ -575,7 +575,7 @@ export const entityLinkService = {
     });
 
     if (existingLink) {
-      throw new AppError('Link already exists between these entities', 400);
+      throw new AppError('Those two are already linked.', 400);
     }
 
     return await prisma.entityLink.create({

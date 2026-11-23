@@ -198,7 +198,7 @@ export class LocationService {
 
       // Enforce single-level hierarchy: parent cannot already be a child
       if (parent.parentId) {
-        throw new AppError('Cannot nest locations more than one level deep. The selected parent is already a child of another location.', 400);
+        throw new AppError('A place can only sit one level inside another, and the one you picked is already inside a place.', 400);
       }
     }
 
@@ -422,7 +422,7 @@ export class LocationService {
     if (data.parentId !== undefined && data.parentId !== null) {
       // Prevent self-referencing
       if (data.parentId === locationId) {
-        throw new AppError('A location cannot be its own parent', 400);
+        throw new AppError("A place can't be its own parent.", 400);
       }
 
       // Enforce single-level hierarchy: location with children cannot become a child
@@ -430,7 +430,7 @@ export class LocationService {
         where: { parentId: locationId },
       });
       if (hasChildren > 0) {
-        throw new AppError('Cannot set a parent for a location that has children. Remove children first or use a different location.', 400);
+        throw new AppError('This place has places inside it. Move them out first, or pick a different place.', 400);
       }
 
       const parent = await prisma.location.findFirst({
@@ -446,13 +446,13 @@ export class LocationService {
 
       // Enforce single-level hierarchy: parent cannot already be a child
       if (parent.parentId) {
-        throw new AppError('Cannot nest locations more than one level deep. The selected parent is already a child of another location.', 400);
+        throw new AppError('A place can only sit one level inside another, and the one you picked is already inside a place.', 400);
       }
 
       // Prevent circular references (check if new parent is a child of this location)
       const descendants = await this.getDescendants(locationId);
       if (descendants.some(d => d.id === data.parentId)) {
-        throw new AppError('Cannot set parent to a descendant location (would create circular reference)', 400);
+        throw new AppError("A place can't sit inside one of its own child places.", 400);
       }
     }
 
@@ -723,7 +723,7 @@ export class LocationService {
     if (data.updates.notes !== undefined) updateData.notes = data.updates.notes;
 
     if (Object.keys(updateData).length === 0) {
-      throw new AppError('No valid update fields provided', 400);
+      throw new AppError('Nothing to save. Change a field first.', 400);
     }
 
     // Update all locations

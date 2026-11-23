@@ -75,7 +75,7 @@ export const tagService = {
         where: { userId, name: data.name, id: { not: tagId } },
       });
       if (duplicate) {
-        throw new AppError('A tag with that name already exists', 400);
+        throw new AppError('You already have a tag with that name.', 400);
       }
     }
 

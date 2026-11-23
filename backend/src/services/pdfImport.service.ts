@@ -207,11 +207,11 @@ class PdfImportService {
   private async storeUpload(userId: number, file: MulterFile) {
     // Validate PDF magic bytes
     if (!file.buffer) {
-      throw new AppError('File buffer is missing', 400);
+      throw new AppError("That file didn't upload. Try again.", 400);
     }
     const buffer = file.buffer;
     if (!buffer.slice(0, 4).toString('ascii').startsWith('%PDF')) {
-      throw new AppError('Uploaded file is not a valid PDF', 400);
+      throw new AppError("That file isn't a valid PDF.", 400);
     }
 
     // Ensure upload directory exists
@@ -244,10 +244,10 @@ class PdfImportService {
         where: { id: pdfImport.id },
         data: {
           status: PdfImportStatus.PARSE_FAILED,
-          errorMessage: 'Failed to save uploaded file',
+          errorMessage: "Couldn't save that file. Try again.",
         },
       });
-      throw new AppError('Failed to save uploaded file', 500);
+      throw new AppError("Couldn't save that file. Try again.", 500);
     }
 
     return { pdfImport, absolutePath };
@@ -437,7 +437,7 @@ class PdfImportService {
   async updatePendingEntity(userId: number, id: number, input: UpdatePendingEntityInput) {
     const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
     if (!entity) throw new AppError("We couldn't find that item.", 404);
-    if (entity.status !== PendingEntityStatus.PENDING) throw new AppError('Entity has already been reviewed', 400);
+    if (entity.status !== PendingEntityStatus.PENDING) throw new AppError('That item was already reviewed.', 400);
 
     return prisma.pendingEntity.update({
       where: { id },
@@ -492,7 +492,7 @@ class PdfImportService {
       if (claimed.count === 0) {
         const existing = await tx.pendingEntity.findFirst({ where: { id, userId } });
         if (!existing) throw new AppError("We couldn't find that item.", 404);
-        throw new AppError('Entity has already been reviewed', 400);
+        throw new AppError('That item was already reviewed.', 400);
       }
 
       const entity = await tx.pendingEntity.findFirst({
@@ -532,14 +532,14 @@ class PdfImportService {
         }
         case PendingEntityType.LODGING: {
           if (typeof data.checkInDate !== 'string' || typeof data.checkOutDate !== 'string') {
-            throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
+            throw new AppError('Add check-in and check-out dates for this stay.', 400);
           }
           const lodgingTimezone = optZone(data.timezone);
           const lodgingZone = zoneFor(lodgingTimezone);
           const checkIn = parseBookingDateTime(data.checkInDate, lodgingZone, DEFAULT_CHECK_IN_TIME, 'checkInDate');
           const checkOut = parseBookingDateTime(data.checkOutDate, lodgingZone, DEFAULT_CHECK_OUT_TIME, 'checkOutDate');
           if (!checkIn || !checkOut) {
-            throw new AppError('Lodging requires checkInDate and checkOutDate', 400);
+            throw new AppError('Add check-in and check-out dates for this stay.', 400);
           }
           const created = await tx.lodging.create({
             data: {
@@ -560,7 +560,7 @@ class PdfImportService {
         }
         case PendingEntityType.ACTIVITY: {
           if (typeof data.name !== 'string') {
-            throw new AppError('Activity requires a name', 400);
+            throw new AppError('Add a name for this activity.', 400);
           }
           const activityTimezone = optZone(data.timezone);
           const activityZone = zoneFor(activityTimezone);
@@ -587,7 +587,7 @@ class PdfImportService {
         }
         case PendingEntityType.LOCATION: {
           if (typeof data.name !== 'string') {
-            throw new AppError('Location requires a name', 400);
+            throw new AppError('Add a name for this place.', 400);
           }
           const created = await tx.location.create({
             data: {
@@ -635,7 +635,7 @@ class PdfImportService {
     if (claimed.count === 0) {
       const entity = await prisma.pendingEntity.findFirst({ where: { id, userId } });
       if (!entity) throw new AppError("We couldn't find that item.", 404);
-      throw new AppError('Entity has already been reviewed', 400);
+      throw new AppError('That item was already reviewed.', 400);
     }
     return prisma.pendingEntity.findFirst({ where: { id } });
   }

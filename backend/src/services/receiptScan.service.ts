@@ -51,7 +51,7 @@ export async function detectReceiptMime(buffer: Buffer): Promise<string | null> 
 /** Throws a 400 AppError unless the buffer is a supported image of acceptable size. */
 export async function assertReceiptImage(buffer: Buffer | undefined): Promise<string> {
   if (!buffer || buffer.length === 0) {
-    throw new AppError('No image uploaded', 400);
+    throw new AppError('Choose an image to upload.', 400);
   }
   if (buffer.length > RECEIPT_MAX_BYTES) {
     throw new AppError('Image is too large (10 MB maximum)', 413);

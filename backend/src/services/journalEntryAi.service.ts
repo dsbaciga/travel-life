@@ -56,7 +56,7 @@ class JournalEntryAiService {
 
     if (!trip) throw new AppError("We couldn't find that trip.", 404);
     if (entries.length === 0) {
-      throw new AppError('No journal entries found for this trip', 400);
+      throw new AppError('This trip has no journal entries yet.', 400);
     }
 
     const entriesText = entries

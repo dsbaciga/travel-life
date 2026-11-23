@@ -590,7 +590,7 @@ class UserService {
   ) {
     // Validate basic constraints before starting transaction
     if (data.travelPartnerId === userId) {
-      throw new AppError('Cannot set yourself as travel partner', 400);
+      throw new AppError("You can't be your own travel partner.", 400);
     }
 
     // Use interactive transaction with row-level locking to prevent race conditions

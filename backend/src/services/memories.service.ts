@@ -165,7 +165,7 @@ class MemoriesService {
     const targetDay = day ?? today.getDate();
 
     if (targetMonth < 1 || targetMonth > 12 || targetDay < 1 || targetDay > 31) {
-      throw new AppError('Invalid month or day', 400);
+      throw new AppError("That month or day isn't valid.", 400);
     }
 
     const currentYear = today.getFullYear();
@@ -271,7 +271,7 @@ class MemoriesService {
     includePlanning = false
   ): Promise<YearInReview> {
     if (year < 1900 || year > 2100) {
-      throw new AppError('Invalid year: must be between 1900 and 2100', 400);
+      throw new AppError('Year must be between 1900 and 2100.', 400);
     }
 
     const yearStart = new Date(Date.UTC(year, 0, 1));

@@ -122,7 +122,7 @@ export const travelPartnerRequestService = {
     // AUTHORIZATION: nobody may request themselves. Also enforced by a CHECK
     // constraint on the table.
     if (data.recipientId === userId) {
-      throw new AppError('You cannot send a travel partner request to yourself', 400);
+      throw new AppError("You can't send a travel partner request to yourself.", 400);
     }
 
     const [requester, recipient] = await Promise.all([

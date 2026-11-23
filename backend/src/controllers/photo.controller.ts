@@ -49,7 +49,7 @@ function transformPhoto(photo: PhotoWithOptionalAlbums): TransformedPhoto {
 export const photoController = {
   uploadPhoto: asyncHandler(async (req: Request, res: Response) => {
     if (!req.file) {
-      throw new AppError('No file provided', 400);
+      throw new AppError('Choose a file to upload.', 400);
     }
 
     const validatedData = uploadPhotoSchema.parse({
@@ -201,13 +201,13 @@ export const photoController = {
 
     // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      throw new AppError('Invalid date format. Use YYYY-MM-DD', 400);
+      throw new AppError('Use a date like 2027-03-14.', 400);
     }
 
     // Validate date is a valid calendar date
     const parsedDate = new Date(date + 'T12:00:00Z');
     if (isNaN(parsedDate.getTime())) {
-      throw new AppError('Invalid date value', 400);
+      throw new AppError("That date isn't valid.", 400);
     }
 
     const result = await photoService.getPhotosByDate(

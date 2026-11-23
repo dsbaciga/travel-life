@@ -287,7 +287,7 @@ describe('TravelPartnerRequestService', () => {
       await expectAppErrorFrom(
         travelPartnerRequestService.sendRequest(REQUESTER_ID, { recipientId: REQUESTER_ID }),
         {
-          message: 'You cannot send a travel partner request to yourself',
+          message: "You can't send a travel partner request to yourself.",
           statusCode: 400,
         }
       );

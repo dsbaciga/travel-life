@@ -85,7 +85,7 @@ class BookingDeadlineService {
     // A standalone deadline is named by its title, so it cannot lose it.
     const standalone = !existing.lodgingId && !existing.transportationId && !existing.activityId;
     if (standalone && data.title !== undefined && !data.title?.trim()) {
-      throw new AppError('A deadline that is not attached to a booking needs a title', 400);
+      throw new AppError('Give this deadline a title, or attach it to a booking.', 400);
     }
 
     const dueChanged =

@@ -528,7 +528,7 @@ export async function bulkUpdateEntities(
   }
 
   if (Object.keys(updateData).length === 0) {
-    throw new AppError('No valid update fields provided', 400);
+    throw new AppError('Nothing to save. Change a field first.', 400);
   }
 
   // Update all entities

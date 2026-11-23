@@ -349,7 +349,7 @@ describe('PhotoAlbumService', () => {
 
       await expect(
         photoAlbumService.removePhotoFromAlbum(mockUserId, mockAlbumId, 1)
-      ).rejects.toThrow('Photo is not in this album');
+      ).rejects.toThrow("That photo isn't in this album.");
 
       expect(mockPrisma.photoAlbumAssignment.delete).not.toHaveBeenCalled();
     });

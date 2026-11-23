@@ -1055,7 +1055,7 @@ describe('LocationService', () => {
 
       await expect(
         locationService.updateLocation(userId, locationId, { parentId: locationId })
-      ).rejects.toThrow('A location cannot be its own parent');
+      ).rejects.toThrow("A place can't be its own parent.");
     });
 
     it('should prevent setting parent if location has children', async () => {

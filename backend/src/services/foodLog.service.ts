@@ -180,7 +180,7 @@ class FoodLogService {
       select: { id: true, immichAssetId: true, mediaType: true },
     });
     if (existing.some((p) => p.mediaType !== MediaType.IMAGE)) {
-      throw new AppError('Only photos can be attached to a food log entry, not videos', 400);
+      throw new AppError('Only photos can be attached to a food log entry.', 400);
     }
 
     const linkedAssetIds = new Set(existing.map((p) => p.immichAssetId));

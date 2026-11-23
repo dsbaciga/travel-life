@@ -92,7 +92,7 @@ class CustomItemService {
       where: { userId, name: data.name },
     });
     if (duplicate) {
-      throw new AppError('A custom item type with that name already exists', 409);
+      throw new AppError('You already have a type with that name.', 409);
     }
 
     return prisma.customItemType.create({
@@ -120,7 +120,7 @@ class CustomItemService {
         where: { userId, name: data.name, id: { not: typeId } },
       });
       if (duplicate) {
-        throw new AppError('A custom item type with that name already exists', 409);
+        throw new AppError('You already have a type with that name.', 409);
       }
     }
 

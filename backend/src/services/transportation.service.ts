@@ -733,7 +733,7 @@ class TransportationService {
     if (data.updates.notes !== undefined) updateData.notes = data.updates.notes;
 
     if (Object.keys(updateData).length === 0) {
-      throw new AppError('No valid update fields provided', 400);
+      throw new AppError('Nothing to save. Change a field first.', 400);
     }
 
     // Update all transportation items

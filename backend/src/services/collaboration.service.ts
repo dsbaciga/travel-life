@@ -115,7 +115,7 @@ export const collaborationService = {
 
     // Check if invited email is the trip owner
     if (trip.user.email.toLowerCase() === data.email.toLowerCase()) {
-      throw new AppError('Cannot invite the trip owner', 400);
+      throw new AppError("You can't invite the trip owner.", 400);
     }
 
     // Check if user is already a collaborator
@@ -537,7 +537,7 @@ export const collaborationService = {
     });
 
     if (trip?.userId === collaboratorUserId) {
-      throw new AppError('Cannot modify trip owner permissions', 400);
+      throw new AppError("You can't change the trip owner's permissions.", 400);
     }
 
     // Find the collaborator
@@ -593,7 +593,7 @@ export const collaborationService = {
     });
 
     if (trip?.userId === collaboratorUserId) {
-      throw new AppError('Cannot remove the trip owner', 400);
+      throw new AppError("You can't remove the trip owner.", 400);
     }
 
     // Find the collaborator
