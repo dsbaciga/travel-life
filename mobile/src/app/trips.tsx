@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { formatDateOnly } from '@travel-life/shared';
+import { contourSeed, formatDateOnly } from '@travel-life/shared';
 
 import { useTripTint } from '@/lib/tripTint';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
@@ -88,7 +88,7 @@ export default function TripsScreen() {
       </AppText>
       {notice ? <Banner tone="warning" text={notice} /> : null}
       {undo ? (
-        <Card tone="hero" tint={undoTint}>
+        <Card tone="hero" tint={undoTint} contourSeed={contourSeed({ id: undo.trip.id })}>
           <Row style={styles.between}>
             <AppText style={styles.grow} numberOfLines={2}>
               Removed “{undo.trip.title}” from this phone.

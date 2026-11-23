@@ -144,9 +144,20 @@ interface CardProps {
   tone?: 'default' | 'hero';
   /** A trip's tint: replaces the hero gradient colours (the gold top bar stays). Hero only. */
   tint?: { from: string; to: string };
+  /** Draws faint topographic contour lines behind a hero card's content. Pass `contourSeed({ id: trip.id })`. Hero only. */
+  contourSeed?: string;
 }
 
-export function Card({ children, style, onPress, onLongPress, accessibilityLabel, tone = 'default', tint }: CardProps) {
+export function Card({
+  children,
+  style,
+  onPress,
+  onLongPress,
+  accessibilityLabel,
+  tone = 'default',
+  tint,
+  contourSeed,
+}: CardProps) {
   const palette = usePalette();
   const hero = tone === 'hero';
   const dark = useResolvedColorScheme() === 'dark';
@@ -183,6 +194,7 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
             end={{ x: 1, y: 0 }}
             style={styles.heroBar}
           />
+          {contourSeed ? <ContourBackdrop seed={contourSeed} /> : null}
         </>
       ) : null}
       {children}

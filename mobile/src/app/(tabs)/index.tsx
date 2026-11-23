@@ -9,6 +9,7 @@ import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View, type
 import type { EntityId, LocationDto, LodgingDto, TransportationDto, TripDto } from '@travel-life/shared';
 import {
   buildMapsAppLinks,
+  contourSeed,
   dayKeyInTimezone,
   formatCountdown,
   formatDateOnly,
@@ -378,7 +379,7 @@ export default function TodayScreen() {
       ) : null}
 
       {isToday ? (
-      <Card tone="hero" tint={tint}>
+      <Card tone="hero" tint={tint} contourSeed={trip ? contourSeed({ id: trip.id }) : undefined}>
         <AppText variant="eyebrow" color={palette.heroAccent}>
           {nextUp ? (nextUp.inProgress ? 'Happening now' : 'Next up') : 'Next up'}
         </AppText>
