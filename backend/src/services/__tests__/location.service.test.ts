@@ -753,7 +753,7 @@ describe('LocationService', () => {
       mockPrisma.location.findMany.mockResolvedValue([]);
 
       await expect(locationService.getLocationsByTrip(userId, tripId)).rejects.toThrow(
-        'Access denied'
+        "You don't have access to this trip."
       );
 
       expect(mockPrisma.location.findMany).not.toHaveBeenCalled();

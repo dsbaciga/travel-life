@@ -612,11 +612,11 @@ describe('JournalEntryService', () => {
         trip: { ...mockTrip, userId: 999 },
       };
       mockPrisma.journalEntry.findUnique.mockResolvedValue(otherUserEntry);
-      (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(new AppError('Access denied', 403));
+      (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(new AppError("You don't have access to this trip.", 403));
 
       await expect(
         journalEntryService.deleteJournalEntry(mockUserId, mockEntryId)
-      ).rejects.toThrow('Access denied');
+      ).rejects.toThrow("You don't have access to this trip.");
     });
   });
 

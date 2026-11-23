@@ -317,7 +317,7 @@ describe('EmergencyInfoService', () => {
 
       await expect(
         emergencyInfoService.upsertEmergencyInfo(1, 10, { insuranceProvider: 'Acme' })
-      ).rejects.toThrow('Insufficient permissions');
+      ).rejects.toThrow("You don't have permission to do that.");
       expect(mockPrisma.tripEmergencyInfo.upsert).not.toHaveBeenCalled();
     });
 
@@ -338,7 +338,7 @@ describe('EmergencyInfoService', () => {
       );
 
       await expect(emergencyInfoService.deleteEmergencyInfo(1, 10)).rejects.toThrow(
-        'Insufficient permissions'
+        "You don't have permission to do that."
       );
       expect(mockPrisma.tripEmergencyInfo.deleteMany).not.toHaveBeenCalled();
     });

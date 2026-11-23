@@ -804,12 +804,12 @@ describe('PhotoAlbumService', () => {
       };
       mockPrisma.photoAlbum.findUnique.mockResolvedValue(otherUserAlbum);
       (verifyEntityAccessWithPermission as jest.Mock).mockRejectedValue(
-        new AppError('Access denied', 403)
+        new AppError("You don't have access to this trip.", 403)
       );
 
       await expect(
         photoAlbumService.deleteAlbum(mockUserId, mockAlbumId)
-      ).rejects.toThrow('Access denied');
+      ).rejects.toThrow("You don't have access to this trip.");
     });
 
     it('should delete album even if it contains photos (photos remain in trip)', async () => {

@@ -270,7 +270,7 @@ describe('CollaborationService', () => {
           email: 'test@example.com',
           permissionLevel: 'view',
         })
-      ).rejects.toThrow('You do not have permission to invite collaborators');
+      ).rejects.toThrow("You don't have permission to invite collaborators.");
     });
   });
 
@@ -629,7 +629,7 @@ describe('CollaborationService', () => {
 
       await expect(
         collaborationService.cancelInvitation(999, 100, 1)
-      ).rejects.toThrow('You do not have permission to cancel invitations');
+      ).rejects.toThrow("You don't have permission to cancel invitations.");
     });
   });
 

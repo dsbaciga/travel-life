@@ -95,7 +95,7 @@ export const collaborationService = {
     // Verify user can manage collaborators (owner or admin)
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to invite collaborators', 403);
+      throw new AppError("You don't have permission to invite collaborators.", 403);
     }
 
     // Get trip details for response
@@ -487,7 +487,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to view invitations', 403);
+      throw new AppError("You don't have permission to view invitations.", 403);
     }
 
     // Mark expired invitations
@@ -528,7 +528,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to manage collaborators', 403);
+      throw new AppError("You don't have permission to manage collaborators.", 403);
     }
 
     // Check if target is the trip owner
@@ -583,7 +583,7 @@ export const collaborationService = {
       // Verify user can manage collaborators
       const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
       if (!hasAccess) {
-        throw new AppError('You do not have permission to remove collaborators', 403);
+        throw new AppError("You don't have permission to remove collaborators.", 403);
       }
     }
 
@@ -624,7 +624,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to cancel invitations', 403);
+      throw new AppError("You don't have permission to cancel invitations.", 403);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({
@@ -653,7 +653,7 @@ export const collaborationService = {
     // Verify user can manage collaborators
     const hasAccess = await this.verifyTripOwnerOrAdmin(userId, tripId);
     if (!hasAccess) {
-      throw new AppError('You do not have permission to resend invitations', 403);
+      throw new AppError("You don't have permission to resend invitations.", 403);
     }
 
     const invitation = await prisma.tripInvitation.findFirst({

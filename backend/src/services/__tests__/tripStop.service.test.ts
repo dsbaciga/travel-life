@@ -201,7 +201,7 @@ describe('TripStopService', () => {
   });
 
   it('TST-008: a permission failure stops every write', async () => {
-    mockVerifyTrip.mockRejectedValue(new AppError('Insufficient permissions', 403));
+    mockVerifyTrip.mockRejectedValue(new AppError("You don't have permission to do that.", 403));
 
     await expect(
       tripStopService.createStop(2, 10, { name: 'A', latitude: 0, longitude: 0 })

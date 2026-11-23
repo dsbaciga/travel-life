@@ -391,7 +391,7 @@ describe('ReceiptService', () => {
   });
 
   it('RCPT-005: access control - edit permission is enforced', async () => {
-    mockVerifyTrip.mockRejectedValue(new AppError('Insufficient permissions', 403) as never);
+    mockVerifyTrip.mockRejectedValue(new AppError("You don't have permission to do that.", 403) as never);
     await expect(receiptService.parseReceipt(USER, TRIP, { text: TEXT })).rejects.toMatchObject({
       statusCode: 403,
     });

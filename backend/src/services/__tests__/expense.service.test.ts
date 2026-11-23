@@ -850,7 +850,7 @@ describe('ExpenseService', () => {
           category: 'food',
           amount: 10,
         })
-      ).rejects.toThrow('Insufficient permissions');
+      ).rejects.toThrow("You don't have permission to do that.");
       expect(mockPrisma.tripExpense.create).not.toHaveBeenCalled();
     });
 
