@@ -374,7 +374,7 @@ describe('AviationstackService', () => {
 
       await expect(
         aviationstackService.getFlightStatus(1, 1)
-      ).rejects.toThrow('Invalid AviationStack API key');
+      ).rejects.toThrow("AviationStack didn't accept that API key. Check it and try again.");
     });
   });
 

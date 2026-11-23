@@ -414,7 +414,7 @@ class WeatherService {
       };
     } catch (error: unknown) {
       if (isAxiosError(error) && error.response?.status === 401) {
-        throw new AppError('Invalid OpenWeatherMap API key', 500);
+        throw new AppError("OpenWeatherMap didn't accept that API key. Check it and try again.", 500);
       }
       throw error;
     }
@@ -501,7 +501,7 @@ class WeatherService {
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         if (error.response?.status === 401) {
-          throw new AppError('Invalid OpenWeatherMap API key', 500);
+          throw new AppError("OpenWeatherMap didn't accept that API key. Check it and try again.", 500);
         }
         if (error.response?.status === 403) {
           // Historical data requires paid subscription - log and return null gracefully

@@ -141,7 +141,7 @@ interface ClaimedLlm {
 async function requireLlm(userId: number): Promise<ClaimedLlm> {
   const llmConfig = await pdfParserService.resolveLlm(userId);
   if (!llmConfig) {
-    throw new AppError('LLM not configured — cannot process PDFs. Set LLM_API_KEY to enable.', 503);
+    throw new AppError("PDF import needs AI features, which aren't set up on this server. Ask the admin to add an LLM key.", 503);
   }
   return { key: llmEndpointKey(llmConfig.baseUrl), llmConfig };
 }

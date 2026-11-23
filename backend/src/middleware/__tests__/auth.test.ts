@@ -534,7 +534,7 @@ describe('Auth Middleware - authenticate', () => {
 
   // AUTH-M10: Reject blacklisted access token (e.g., after logout)
   describe('AUTH-M10: Blacklisted access token', () => {
-    it('should reject a blacklisted access token with 401 'You were signed out. Sign in again to continue.'', async () => {
+    it('should reject a blacklisted access token with 401 and a signed-out message', async () => {
       mockFindUnique.mockResolvedValue({ passwordVersion: 0 });
       mockIsBlacklisted.mockReturnValue(true);
 

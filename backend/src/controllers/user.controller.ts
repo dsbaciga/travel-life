@@ -135,7 +135,7 @@ export const userController = {
       const isLocalHost = isLocalNetworkHostname(url.hostname);
       const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
       if (url.protocol !== 'https:' && !isLocalHost) {
-        throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
+        throw new AppError("Use an https:// URL for Immich unless it's on your local network.", 400);
       }
 
       // SSRF validation: ensure the Immich URL doesn't point to internal/private IPs.
@@ -235,7 +235,7 @@ export const userController = {
       const isLocalHost = isLocalNetworkHostname(hostname);
       const allowLocal = config.security.allowPrivateIntegrationUrls && isLocalHost;
       if (url.protocol !== 'https:' && !isLocalHost) {
-        throw new AppError('LLM URL must use HTTPS for non-local connections', 400);
+        throw new AppError("Use an https:// URL for the LLM unless it's on your local network.", 400);
       }
       if (!allowLocal) {
         // SSRF validation: block private IPs (unless opted in), cloud metadata, DNS rebinding, etc.

@@ -1243,7 +1243,7 @@ describe('PhotoService', () => {
 
       await expect(
         photoService.uploadPhoto(mockUserId, videoFile, { tripId: mockTripId })
-      ).rejects.toThrow('Video duration exceeds maximum');
+      ).rejects.toThrow('That video is');
     });
 
     it('should get unsorted photos not in any album', async () => {

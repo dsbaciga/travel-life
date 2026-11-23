@@ -1539,7 +1539,7 @@ describe('EntityLinkService', () => {
           targetType: 'LOCATION',
           targetId: 2,
         })
-      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('already exists') });
+      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('already linked') });
       expect(mockPrisma.entityLink.create).not.toHaveBeenCalled();
     });
 

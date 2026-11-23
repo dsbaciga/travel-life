@@ -78,7 +78,7 @@ export const immichController = {
     }
     const isLocalHost = isLocalNetworkHostname(parsedUrl.hostname);
     if (parsedUrl.protocol !== 'https:' && !isLocalHost) {
-      throw new AppError('Immich URL must use HTTPS for non-local connections', 400);
+      throw new AppError("Use an https:// URL for Immich unless it's on your local network.", 400);
     }
     if (!(config.security.allowPrivateIntegrationUrls && isLocalHost)) {
       await validateUrlNotInternal(apiUrl);

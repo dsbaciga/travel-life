@@ -393,7 +393,7 @@ describe('TripSeriesService', () => {
 
       await expect(
         tripSeriesService.reorderTrips(1, 1, [1, 2, 999])
-      ).rejects.toThrow('Trip 999 does not belong to this series');
+      ).rejects.toThrow("Trip 999 isn't in this series.");
     });
 
     it('should throw error if not all trips are included', async () => {

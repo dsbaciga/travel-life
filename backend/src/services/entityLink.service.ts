@@ -863,8 +863,7 @@ export const entityLinkService = {
       ]);
     } catch (error) {
       logger.error(`Failed to fetch links for entity ${entityType}:${entityId} in trip ${tripId}:`, error);
-      const message = error instanceof Error ? error.message : String(error);
-      throw new AppError('Failed to fetch entity links: ' + message, 500);
+      throw new AppError("Couldn't load the links for this item. Try again.", 500);
     }
 
     // Build summary counts

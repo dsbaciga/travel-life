@@ -211,7 +211,7 @@ class FoodLogService {
         }),
       });
       if (result.failed > 0) {
-        throw new AppError('Could not link one or more Immich photos to this trip', 500);
+        throw new AppError("Couldn't add some of those Immich photos to this trip.", 500);
       }
     }
 

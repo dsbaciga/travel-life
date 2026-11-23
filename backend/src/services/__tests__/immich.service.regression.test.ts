@@ -230,7 +230,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAssets(TEST_API_URL, TEST_API_KEY),
         500,
-        'Failed to fetch assets from Immich'
+        "Couldn't load photos from Immich"
       );
     });
 
@@ -240,7 +240,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.searchAssets(TEST_API_URL, TEST_API_KEY, { city: 'Rome' }),
         500,
-        'Failed to search assets in Immich'
+        "Couldn't search your Immich library."
       );
     });
 
@@ -256,7 +256,7 @@ describe('ImmichService regressions', () => {
           { skip: 0, take: 10 }
         ),
         500,
-        'Failed to fetch assets by date range'
+        "Couldn't load photos for those dates from Immich."
       );
     });
 
@@ -419,7 +419,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         400,
-        'Cannot connect to Immich server'
+        'reach your Immich server'
       );
     });
 
@@ -429,7 +429,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         408,
-        'timed out'
+        'too long to respond'
       );
     });
 
@@ -441,7 +441,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         401,
-        'Invalid Immich API key'
+        "Immich didn't accept that API key"
       );
     });
 
@@ -453,7 +453,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         401,
-        'Invalid Immich API key'
+        "Immich didn't accept that API key"
       );
     });
 
@@ -465,7 +465,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         404,
-        'endpoint not found'
+        "didn't respond at that address"
       );
     });
 
@@ -475,7 +475,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.testConnection(TEST_API_URL, TEST_API_KEY),
         400,
-        'Failed to connect to Immich server'
+        'reach your Immich server'
       );
     });
 
@@ -487,7 +487,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAssetById(TEST_API_URL, TEST_API_KEY, 'missing-asset'),
         404,
-        'Failed to fetch asset from Immich'
+        "Couldn't load that photo from Immich."
       );
     });
 
@@ -497,7 +497,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAlbumById(TEST_API_URL, TEST_API_KEY, 'missing-album'),
         404,
-        'Failed to fetch album from Immich'
+        "Couldn't load that album from Immich."
       );
     });
 
@@ -507,7 +507,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAssetThumbnailStream(TEST_API_URL, TEST_API_KEY, 'asset-1'),
         500,
-        'Failed to fetch thumbnail from Immich'
+        "Couldn't load that thumbnail from Immich."
       );
     });
 
@@ -517,7 +517,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAssetOriginalStream(TEST_API_URL, TEST_API_KEY, 'asset-1'),
         500,
-        'Failed to fetch original file from Immich'
+        "Couldn't load the original file from Immich."
       );
     });
 
@@ -527,7 +527,7 @@ describe('ImmichService regressions', () => {
       await expectAppError(
         immichService.getAssets(TEST_API_URL, TEST_API_KEY),
         500,
-        'Failed to fetch assets from Immich'
+        "Couldn't load photos from Immich"
       );
     });
 
@@ -547,7 +547,7 @@ describe('ImmichService regressions', () => {
           '2024-07-10'
         ),
         500,
-        'Failed to fetch assets by date range'
+        "Couldn't load photos for those dates from Immich."
       );
     });
   });

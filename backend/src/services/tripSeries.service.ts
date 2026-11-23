@@ -263,7 +263,7 @@ export class TripSeriesService {
 
     for (const tripId of tripIds) {
       if (!seriesTripIds.has(tripId)) {
-        throw new AppError(`Trip ${tripId} does not belong to this series`, 400);
+        throw new AppError(`Trip ${tripId} isn't in this series.`, 400);
       }
     }
 

@@ -192,9 +192,9 @@ class NearbyFoodService {
     }
 
     if (sawBusy) {
-      throw new AppError('Nearby search is busy right now. Please try again in a moment.', 503);
+      throw new AppError('Nearby search is busy. Try again in a moment.', 503);
     }
-    throw new AppError('Nearby search is unavailable right now.', 502);
+    throw new AppError("Nearby search isn't available right now.", 502);
   }
 
   /** The cached, de-duplicated elements around a point. Failures are never cached. */

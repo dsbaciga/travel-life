@@ -332,7 +332,7 @@ class PhotoService {
           } catch (cleanupError) {
             console.error('[PhotoService] Failed to clean up rejected video file:', cleanupError instanceof Error ? cleanupError.message : cleanupError);
           }
-          throw new AppError(`Video duration exceeds maximum allowed length of 1 hour. Your video is ${Math.round(videoDuration / 60)} minutes long.`, 400);
+          throw new AppError(`That video is ${Math.round(videoDuration / 60)} minutes long. The limit is 1 hour.`, 400);
         }
 
         // Detect potentially corrupted video (null duration)
@@ -687,7 +687,7 @@ class PhotoService {
       };
     } catch (error) {
       console.error(`[PhotoService] Failed to fetch photos for trip ${tripId}:`, error instanceof Error ? error.message : error);
-      throw new AppError('Failed to fetch photos for trip', 500);
+      throw new AppError("Couldn't load photos for this trip.", 500);
     }
   }
 
@@ -776,7 +776,7 @@ class PhotoService {
       };
     } catch (error) {
       console.error(`[PhotoService] Failed to fetch unsorted photos for trip ${tripId}:`, error instanceof Error ? error.message : error);
-      throw new AppError('Failed to fetch unsorted photos for trip', 500);
+      throw new AppError("Couldn't load unsorted photos for this trip.", 500);
     }
   }
 

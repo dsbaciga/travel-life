@@ -1035,7 +1035,7 @@ describe('LocationService', () => {
       mockPrisma.location.findFirst.mockResolvedValue(mockParentLocation);
 
       await expect(locationService.createLocation(userId, input)).rejects.toThrow(
-        'Cannot nest locations more than one level deep'
+        'one level inside another'
       );
     });
 
@@ -1075,7 +1075,7 @@ describe('LocationService', () => {
       await expect(
         locationService.updateLocation(userId, locationId, { parentId: 5 })
       ).rejects.toThrow(
-        'Cannot set a parent for a location that has children'
+        'This place has places inside it'
       );
     });
 

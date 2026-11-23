@@ -447,7 +447,7 @@ describe('WeatherService', () => {
 
       await expect(
         weatherService.refreshWeatherForDate(1, 1, '2024-07-01')
-      ).rejects.toThrow('No coordinates available');
+      ).rejects.toThrow('no coordinates for that date');
     });
   });
 
