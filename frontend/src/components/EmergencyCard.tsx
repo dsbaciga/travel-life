@@ -643,7 +643,7 @@ function DetailRow({ label, value, asPhone = false }: DetailRowProps) {
 
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-slate dark:text-warm-gray/60">
+      <dt className="eyebrow text-slate dark:text-warm-gray/60">
         {label}
       </dt>
       <dd className="text-sm text-charcoal dark:text-warm-gray">

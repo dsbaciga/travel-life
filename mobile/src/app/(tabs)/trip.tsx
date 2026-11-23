@@ -344,11 +344,18 @@ export default function TripScreen() {
                   {dirty?.has(`${typeKind}:${row.id}`) ? <PendingDot /> : null}
                 </Row>
                 {typeKind === 'EXPENSE' && typeof row.amount === 'number' ? (
-                  <AppText muted>{formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}</AppText>
+                  <AppText muted style={styles.tabular}>
+                    {formatMoney(row.amount, typeof row.currency === 'string' ? row.currency : null, false)}
+                  </AppText>
                 ) : null}
                 {typeKind === 'FOOD_LOG' ? (
-                  <AppText muted>
+                  <AppText variant="place" muted>
                     {'★'.repeat(Number(row.rating) || 0)} · {String(row.restaurantName ?? '')}
+                  </AppText>
+                ) : null}
+                {typeKind === 'JOURNAL_ENTRY' && typeof row.content === 'string' && row.content.trim() ? (
+                  <AppText variant="place" muted numberOfLines={3}>
+                    {row.content.trim()}
                   </AppText>
                 ) : null}
                 <View style={styles.mapTo}>
@@ -441,6 +448,7 @@ export default function TripScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  tabular: { fontVariant: ['tabular-nums'] },
   mapTo: { alignSelf: 'flex-start' },
   modeBar: { padding: spacing.lg, gap: spacing.sm },
   chips: { gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.xs },

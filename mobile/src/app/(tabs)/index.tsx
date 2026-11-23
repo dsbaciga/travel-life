@@ -114,7 +114,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
   const tripZone = resolveTimezone(trip.timezone, homeZone);
   if (tripZone === homeZone) {
     return (
-      <AppText muted>
+      <AppText muted style={styles.tabular}>
         {formatTimeInTimezone(now, tripZone)} {getTimezoneAbbreviation(tripZone, now)}
       </AppText>
     );
@@ -122,7 +122,7 @@ function DualClock({ trip, now }: { trip: TripDto; now: Date }) {
   const diffHours = (timezoneOffsetMinutes(tripZone, now) - timezoneOffsetMinutes(homeZone, now)) / 60;
   const sign = diffHours >= 0 ? '+' : '−';
   return (
-    <AppText muted>
+    <AppText muted style={styles.tabular}>
       Here {formatTimeInTimezone(now, tripZone)} {getTimezoneAbbreviation(tripZone, now)} · Home{' '}
       {formatTimeInTimezone(now, homeZone)} ({sign}
       {Math.abs(diffHours)}h)
@@ -375,15 +375,15 @@ export default function TodayScreen() {
 
       {isToday ? (
       <Card tone="hero">
-        <AppText variant="label" color={palette.heroAccent}>
-          {nextUp ? (nextUp.inProgress ? 'HAPPENING NOW' : 'NEXT UP') : 'NEXT UP'}
+        <AppText variant="eyebrow" color={palette.heroAccent}>
+          {nextUp ? (nextUp.inProgress ? 'Happening now' : 'Next up') : 'Next up'}
         </AppText>
         {nextUp && nextUp.item.start ? (
           <>
             <AppText variant="title" numberOfLines={2}>
               {nextUp.item.title}
             </AppText>
-            <AppText variant="heading" color={palette.heroAccent}>
+            <AppText variant="heading" color={palette.heroAccent} style={styles.tabular}>
               {nextUp.inProgress
                 ? `Started ${formatCountdown(nextUp.item.start, now)}`
                 : formatCountdown(nextUp.item.start, now)}
@@ -534,6 +534,7 @@ const DAY_STRIP_PADDING = spacing.xs;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  tabular: { fontVariant: ['tabular-nums'] },
   dayNav: { flexWrap: 'nowrap', alignItems: 'center' },
   dayStrip: { gap: DAY_CHIP_GAP, paddingHorizontal: DAY_STRIP_PADDING },
   dayChip: {

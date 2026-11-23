@@ -93,7 +93,7 @@ export default function CustomItemCard({
                 {item.cost != null && (
                   <>
                     <span className="text-gray-300 dark:text-dusk-600">·</span>
-                    <span>{formatCurrency(item.cost, item.currency)}</span>
+                    <span className="tabular-nums">{formatCurrency(item.cost, item.currency)}</span>
                   </>
                 )}
               </div>
@@ -138,7 +138,7 @@ export default function CustomItemCard({
                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                 />
               </svg>
-              <span className="truncate">{item.location.name}</span>
+              <span className="truncate place-name">{item.location.name}</span>
             </div>
             {destination && (
               <DirectionsButton destination={destination} origin={originPlace} variant="icon" />

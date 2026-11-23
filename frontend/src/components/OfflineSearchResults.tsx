@@ -358,7 +358,7 @@ function GroupHeader({
           d={iconPath}
         />
       </svg>
-      <span className="text-xs font-semibold text-gray-600 dark:text-dusk-300 uppercase tracking-wide">
+      <span className="text-gray-600 dark:text-dusk-300 eyebrow">
         {label}
       </span>
       <span className="text-xs text-gray-400 dark:text-dusk-400">

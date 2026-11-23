@@ -192,7 +192,7 @@ function EventCard({ event }: { event: ItineraryEvent }) {
             </span>
           )}
           {event.kind === 'activity' && event.activity.allDay && (
-            <span className="text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+            <span className="eyebrow text-amber-700 dark:text-amber-400">
               All day
             </span>
           )}
@@ -522,7 +522,7 @@ export default function PublicTripPage() {
             <div className="space-y-6">
               {itinerary.map((day) => (
                 <div key={day.key}>
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-2">
+                  <h3 className="eyebrow text-amber-700 dark:text-amber-400 mb-2">
                     {day.label}
                   </h3>
                   <div className="space-y-2">

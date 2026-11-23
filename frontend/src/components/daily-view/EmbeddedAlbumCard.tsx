@@ -100,7 +100,7 @@ export default function EmbeddedAlbumCard({
       className={`p-3 rounded-lg border ${colors.bg} ${colors.border} cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-dusk-800`}
     >
       {label && (
-        <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+        <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
           {label}
         </div>
       )}

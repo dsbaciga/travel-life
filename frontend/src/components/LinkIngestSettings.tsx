@@ -131,7 +131,7 @@ export default function LinkIngestSettings() {
         </div>
       ) : (
         <div className="rounded-lg bg-parchment dark:bg-navy-900/50 p-3">
-          <p className="text-xs uppercase tracking-wide text-slate dark:text-dusk-400">
+          <p className="eyebrow text-slate dark:text-dusk-400">
             Forward links to
           </p>
           <p className="font-mono text-sm text-charcoal dark:text-dusk-100 mt-1 break-all">

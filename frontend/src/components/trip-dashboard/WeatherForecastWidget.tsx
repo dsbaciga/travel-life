@@ -435,7 +435,7 @@ function ForecastDayCard({ day, isFirst = false }: ForecastDayCardProps) {
     >
       {/* Day name */}
       <span
-        className={`text-xs font-semibold uppercase tracking-wide mb-2
+        className={`eyebrow mb-2
           ${today ? 'text-primary-600 dark:text-gold' : 'text-slate dark:text-warm-gray/70'}
         `}
       >
@@ -697,7 +697,7 @@ export default function WeatherForecastWidget({
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
               />
             </svg>
-            <span className="text-xs font-semibold text-slate dark:text-warm-gray/70 uppercase tracking-wide">
+            <span className="text-slate dark:text-warm-gray/70 eyebrow">
               Pack for your trip
             </span>
           </div>

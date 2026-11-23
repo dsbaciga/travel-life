@@ -310,7 +310,7 @@ export default function NextUpCard({
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div className="flex-1">
           <div className="flex items-center justify-between sm:justify-start gap-3 mb-2">
-            <h3 className="font-semibold text-lg text-charcoal dark:text-warm-gray">
+            <h3 className="eyebrow text-charcoal dark:text-warm-gray">
               {getHeaderText()}
             </h3>
             {hasScheduledEvents &&

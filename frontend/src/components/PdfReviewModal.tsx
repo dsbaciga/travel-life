@@ -318,7 +318,7 @@ export default function PdfReviewModal({ isOpen, importId, onClose, onComplete }
     <Modal isOpen={isOpen} onClose={onClose} title="Review Extracted Entities" maxWidth="lg">
       {/* Progress */}
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-xs text-stone-500 dark:text-dusk-400 font-medium uppercase tracking-wide">
+        <span className="text-stone-500 dark:text-dusk-400 eyebrow">
           {ENTITY_TYPE_LABELS[currentEntity.entityType]}
         </span>
         <span className="text-xs text-stone-500 dark:text-dusk-400">

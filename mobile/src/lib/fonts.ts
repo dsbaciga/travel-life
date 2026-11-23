@@ -11,11 +11,12 @@
 import type { TextStyle } from 'react-native';
 import { create } from 'zustand';
 
-export type FontKind = 'display' | 'body';
+export type FontKind = 'display' | 'displayItalic' | 'body';
 export type FontWeightName = '400' | '500' | '600' | '700';
 
 const FAMILIES: Record<FontKind, Partial<Record<FontWeightName, string>>> = {
   display: { '600': 'CrimsonPro_600SemiBold', '700': 'CrimsonPro_700Bold' },
+  displayItalic: { '400': 'CrimsonPro_400Regular_Italic' },
   body: {
     '400': 'Manrope_400Regular',
     '500': 'Manrope_500Medium',

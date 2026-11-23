@@ -263,7 +263,7 @@ function CountdownUnit({
           {value.toString().padStart(2, '0')}
         </span>
       </div>
-      <span className="mt-2 text-xs sm:text-sm font-medium text-slate dark:text-warm-gray/70 uppercase tracking-wider">
+      <span className="mt-2 text-slate dark:text-warm-gray/70 eyebrow">
         {label}
       </span>
     </div>

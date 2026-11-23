@@ -349,7 +349,7 @@ export default function GlobalSearch({ compact = false, onClose, embedded = fals
           {!query && recentSearches.length > 0 && (
             <div className="p-2">
               <div className="flex items-center justify-between px-3 py-2">
-                <span className="text-xs font-semibold text-gray-500 dark:text-dusk-400 uppercase tracking-wide">
+                <span className="text-gray-500 dark:text-dusk-400 eyebrow">
                   Recent Searches
                 </span>
                 <button

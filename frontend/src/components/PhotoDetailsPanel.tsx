@@ -20,7 +20,7 @@ function DetailRow({ label, value, icon }: DetailRowProps) {
 
   return (
     <div className="py-2 border-b border-white/10 last:border-b-0">
-      <div className="text-white/60 text-xs uppercase tracking-wide mb-1 flex items-center gap-1.5">
+      <div className="text-white/60 eyebrow mb-1 flex items-center gap-1.5">
         {icon}
         {label}
       </div>

@@ -176,7 +176,7 @@ function CategoryRow({ name, amount, total, formatCurrency }: CategoryRowProps) 
           <span className="text-sm text-charcoal dark:text-warm-gray truncate">
             {displayName}
           </span>
-          <span className="text-sm font-medium text-charcoal dark:text-warm-gray flex-shrink-0">
+          <span className="text-sm font-medium tabular-nums text-charcoal dark:text-warm-gray flex-shrink-0">
             {formatCurrency(amount)}
           </span>
         </div>
@@ -315,7 +315,7 @@ export default function BudgetSummaryWidget({
         {/* Amount Display */}
         <div className="flex items-baseline justify-between mb-2">
           <div>
-            <span className={`text-2xl font-bold font-display ${
+            <span className={`text-2xl font-bold font-display tabular-nums ${
               isOverBudget
                 ? 'text-red-600 dark:text-red-400'
                 : isNearBudget
@@ -351,7 +351,7 @@ export default function BudgetSummaryWidget({
         {/* Remaining / Over Amount */}
         {budget !== null && (
           <div className="mt-2 text-right">
-            <span className={`text-sm ${
+            <span className={`text-sm tabular-nums ${
               isOverBudget
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-slate dark:text-warm-gray/70'
@@ -408,7 +408,7 @@ export default function BudgetSummaryWidget({
                 <span className="text-sm font-medium text-charcoal dark:text-warm-gray">
                   Total Spent
                 </span>
-                <span className="text-sm font-bold text-charcoal dark:text-warm-gray">
+                <span className="text-sm font-bold tabular-nums text-charcoal dark:text-warm-gray">
                   {formatCurrency(breakdownTotal)}
                 </span>
               </div>

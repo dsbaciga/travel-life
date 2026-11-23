@@ -195,7 +195,7 @@ export function Card({ children, style, onPress, onLongPress, accessibilityLabel
 
 interface AppTextProps {
   children: ReactNode;
-  variant?: 'title' | 'heading' | 'body' | 'label' | 'caption';
+  variant?: 'title' | 'heading' | 'body' | 'label' | 'caption' | 'eyebrow' | 'place';
   muted?: boolean;
   color?: string;
   style?: StyleProp<TextStyle>;
@@ -440,7 +440,9 @@ export function Field({ label, error, hideLabel, ...input }: FieldProps) {
 export function SectionHeader({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <View style={styles.sectionHeader}>
-      <AppText variant="heading">{title}</AppText>
+      <AppText variant="eyebrow" muted accessibilityRole="header">
+        {title}
+      </AppText>
       {action}
     </View>
   );
@@ -490,6 +492,8 @@ const TEXT_FACES: Record<NonNullable<AppTextProps['variant']>, [FontKind, FontWe
   body: ['body', '400'],
   label: ['body', '600'],
   caption: ['body', '400'],
+  eyebrow: ['body', '600'],
+  place: ['displayItalic', '400'],
 };
 
 const textStyles = StyleSheet.create({
@@ -499,6 +503,10 @@ const textStyles = StyleSheet.create({
   body: { fontSize: 15, lineHeight: 22 },
   label: { fontSize: 13, lineHeight: 18, letterSpacing: 0.2 },
   caption: { fontSize: 13, lineHeight: 18 },
+  // Tracked small-caps style label (NEXT UP, section headers).
+  eyebrow: { fontSize: 12, lineHeight: 16, letterSpacing: 1, textTransform: 'uppercase' },
+  // Place and location names: Crimson Pro italic, larger to match Manrope's x-height.
+  place: { fontSize: 16, lineHeight: 22, fontStyle: 'italic' },
 });
 
 const styles = StyleSheet.create({

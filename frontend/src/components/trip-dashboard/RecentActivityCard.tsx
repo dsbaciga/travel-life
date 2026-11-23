@@ -74,7 +74,7 @@ function EmptyActivityState() {
 function DayGroupHeader({ label }: { label: string }) {
   return (
     <div className="px-2 py-1 mt-2 first:mt-0">
-      <span className="text-xs font-semibold text-slate dark:text-warm-gray uppercase tracking-wide">
+      <span className="text-slate dark:text-warm-gray eyebrow">
         {label}
       </span>
     </div>

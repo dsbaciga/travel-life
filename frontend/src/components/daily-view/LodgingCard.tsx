@@ -124,7 +124,7 @@ export default function LodgingCard({
           {/* Cost and actions */}
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
             {showCost && lodging.cost && lodging.currency && (
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="text-lg font-semibold tabular-nums text-gray-900 dark:text-white">
                 {formatCurrency(lodging.cost, lodging.currency)}
                 {totalNights && totalNights > 1 && (
                   <span className="text-sm text-gray-500 dark:text-dusk-400 font-normal">
@@ -165,7 +165,7 @@ export default function LodgingCard({
         <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-4">
           {/* Check-in */}
           <div className={showCheckIn ? '' : 'opacity-50'}>
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-1">
               Check-in
             </div>
             {lodging.checkInDate ? (
@@ -193,7 +193,7 @@ export default function LodgingCard({
 
           {/* Check-out */}
           <div className={showCheckOut ? '' : 'opacity-50'}>
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-1">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-1">
               Check-out
             </div>
             {lodging.checkOutDate ? (
@@ -308,7 +308,7 @@ export default function LodgingCard({
         {/* Linked locations (from entity links) */}
         {linkedLocations.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Locations ({linkedLocations.length})
             </div>
             <div className="space-y-3">
@@ -326,7 +326,7 @@ export default function LodgingCard({
         {/* Linked albums */}
         {linkedAlbums.length > 0 && (
           <div className="mt-3">
-            <div className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider mb-2">
+            <div className="text-gray-500 dark:text-dusk-400 eyebrow mb-2">
               Related Albums ({linkedAlbums.length})
             </div>
             <div className="space-y-3">

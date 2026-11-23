@@ -202,6 +202,36 @@ Dark mode: `from-gold to-accent-400`
 
 ---
 
+## Editorial typography
+
+Crimson Pro (display, serif) and Manrope (body, sans) are paired so the app reads like a travel journal. Three rules apply on web and mobile.
+
+### Type scale
+
+| Role | Web | Mobile (`AppText` variant) |
+| ---- | --- | -------------------------- |
+| Title | `font-display` 700, `text-2xl`+ | `title`: Crimson Pro 700, 31/36 |
+| Heading | `font-display` 600 | `heading`: Crimson Pro 600, 22/27 |
+| Body | `font-body` 400, `text-sm`/`text-base` | `body`: Manrope 400, 15/22 |
+| Label | `font-body` 500-600, `text-sm` | `label`: Manrope 600, 13/18 |
+| Caption | `font-body` 400, `text-xs` | `caption`: Manrope 400, 13/18 |
+| Eyebrow | `.eyebrow`: Manrope 600, 11px, tracking 0.08em, uppercase | `eyebrow`: Manrope 600, 12/16, letterSpacing 1, uppercase |
+| Place / journal | `.place-name`, `.journal-prose`: Crimson Pro italic 400 | `place`: Crimson Pro Italic 400, 16/22 |
+
+### 1. Eyebrow labels
+
+Section headers, stat captions and "Next up" style labels are small, tracked caps, not bold uppercase. Use `.eyebrow` (`frontend/src/index.css`) and do not combine it with `text-xs`, `uppercase` or `tracking-*`; set only the colour and margin. Manrope has no true small caps, so `.eyebrow` is uppercase at a reduced size rather than `font-variant-caps`, which would synthesize them. On mobile use `<AppText variant="eyebrow">` (`SectionHeader` already does).
+
+### 2. Italic serif for places and journal text
+
+Place names in secondary positions (location lines under an activity, restaurant names) use `.place-name` (web) or `variant="place"` (mobile). Journal bodies and excerpts use `.journal-prose` (web) or `variant="place"` (mobile). Primary titles stay in the upright display face.
+
+### 3. Tabular numbers
+
+Times, durations, countdowns, currency amounts and budget figures take `tabular-nums` (web) or `fontVariant: ['tabular-nums']` (mobile) so columns of figures line up and live clocks do not jiggle.
+
+---
+
 ## Spacing & Layout
 
 ### Container
