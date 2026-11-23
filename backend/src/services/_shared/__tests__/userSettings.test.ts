@@ -153,7 +153,7 @@ describe('userSettings accessors', () => {
 
   it('USS-005: a write for a user that no longer exists is a 404', async () => {
     mockPrisma.user.update.mockRejectedValue(
-      new Prisma.PrismaClientKnownRequestError('Record not found', { code: 'P2025', clientVersion: 'test' })
+      new Prisma.PrismaClientKnownRequestError("We couldn't find that.", { code: 'P2025', clientVersion: 'test' })
     );
 
     await expect(updateUserPreferences(999, { baseCurrency: 'EUR' })).rejects.toMatchObject({ statusCode: 404 });

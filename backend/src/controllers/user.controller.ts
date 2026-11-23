@@ -96,7 +96,7 @@ const updatePasswordSchema = z.object({
 });
 
 const searchUsersQuerySchema = z.object({
-  query: z.string().min(3, 'Search query must be at least 3 characters'),
+  query: z.string().min(3, 'Type at least 3 characters to search.'),
 });
 
 const travelPartnerSettingsSchema = z.object({
@@ -454,7 +454,7 @@ export const userController = {
     } else {
       res.status(400).json({
         status: 'error',
-        message: 'Failed to send test email. Check your SMTP settings.',
+        message: "Couldn't send the test email. Check your SMTP settings.",
       });
     }
   }),

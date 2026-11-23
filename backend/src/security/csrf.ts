@@ -186,7 +186,7 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   if (!cookieToken || !headerToken || typeof cookieToken !== 'string' || typeof headerToken !== 'string') {
     res.status(403).json({
       status: 'error',
-      message: 'Invalid CSRF token',
+      message: "That request couldn't be verified. Reload the page and try again.",
     });
     return;
   }
@@ -197,7 +197,7 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   if (cookieBuffer.length !== headerBuffer.length || !crypto.timingSafeEqual(cookieBuffer, headerBuffer)) {
     res.status(403).json({
       status: 'error',
-      message: 'Invalid CSRF token',
+      message: "That request couldn't be verified. Reload the page and try again.",
     });
     return;
   }
@@ -206,7 +206,7 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   if (!signed) {
     res.status(403).json({
       status: 'error',
-      message: 'Invalid CSRF token',
+      message: "That request couldn't be verified. Reload the page and try again.",
     });
     return;
   }
@@ -218,7 +218,7 @@ export const validateCsrf = (req: Request, res: Response, next: NextFunction): v
   if (expectedBuffer.length !== cookieBuffer.length || !crypto.timingSafeEqual(expectedBuffer, cookieBuffer)) {
     res.status(403).json({
       status: 'error',
-      message: 'Invalid CSRF token',
+      message: "That request couldn't be verified. Reload the page and try again.",
     });
     return;
   }

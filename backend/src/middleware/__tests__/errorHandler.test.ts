@@ -138,7 +138,7 @@ describe('errorHandler', () => {
       expect(mockStatus).toHaveBeenCalledWith(500);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Internal server error',
+        message: "Couldn't finish that. Try again, and reload the page if it keeps happening.",
       });
     });
 
@@ -149,7 +149,7 @@ describe('errorHandler', () => {
 
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Internal server error',
+        message: "Couldn't finish that. Try again, and reload the page if it keeps happening.",
       });
     });
   });
@@ -175,7 +175,7 @@ describe('errorHandler', () => {
       // in the error body.
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Validation failed',
+        message: "Some of those details aren't valid. Check them and try again.",
         fields: ['email'],
       });
 
@@ -225,7 +225,7 @@ describe('errorHandler', () => {
       expect(mockStatus).toHaveBeenCalledWith(400);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Validation failed',
+        message: "Some of those details aren't valid. Check them and try again.",
         fields: undefined,
       });
     });
