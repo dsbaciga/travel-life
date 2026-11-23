@@ -39,10 +39,12 @@ const renderCard = (it: TimelineItem, routeStop: 'past' | 'next' | 'future') => 
       item={it}
       tripId={1}
       tripTimezone="Asia/Tokyo"
+      showDualTime={false}
       viewMode="standard"
       routeStop={routeStop}
       onEdit={vi.fn()}
       onDelete={vi.fn()}
+      onLinkUpdate={vi.fn()}
     />
   );
   const marker = container.querySelector('.rounded-full.z-10') as HTMLElement;
