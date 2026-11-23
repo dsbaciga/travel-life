@@ -3,6 +3,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { TransportationRoute, TransportationType } from "../types/transportation";
 import { useMapTiles } from "../hooks/useMapTiles";
+import type { IconName } from "./ui/Icon";
+import { iconSvgString } from "./ui/iconRegistry";
 
 interface FlightRouteMapProps {
   route: TransportationRoute;
@@ -13,38 +15,38 @@ interface FlightRouteMapProps {
 
 // Get icon based on transportation type
 const getTransportationIcon = (type?: TransportationType) => {
-  let emoji = "✈️"; // Default to airplane
+  let iconName: IconName = "flight"; // Default to airplane
 
   switch (type) {
     case "flight":
-      emoji = "✈️";
+      iconName = "flight";
       break;
     case "train":
-      emoji = "🚆";
+      iconName = "train";
       break;
     case "bus":
-      emoji = "🚌";
+      iconName = "bus";
       break;
     case "car":
-      emoji = "🚗";
+      iconName = "car";
       break;
     case "ferry":
-      emoji = "⛴️";
+      iconName = "ferry";
       break;
     case "bicycle":
-      emoji = "🚴";
+      iconName = "bike";
       break;
     case "walk":
-      emoji = "🚶";
+      iconName = "walk";
       break;
     case "other":
     default:
-      emoji = "🚗"; // Default to car for "other"
+      iconName = "car"; // Default to car for "other"
       break;
   }
 
   return L.divIcon({
-    html: `<div style="font-size: 24px;">${emoji}</div>`,
+    html: iconSvgString(iconName, 24),
     className: "custom-div-icon",
     iconSize: [30, 30],
     iconAnchor: [15, 15],

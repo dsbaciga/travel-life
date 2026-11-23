@@ -131,6 +131,7 @@ See [MOBILE_AND_SHARED.md](MOBILE_AND_SHARED.md): `mobile/`, `packages/shared/`,
 
 | Need | Use | Where |
 | ---- | --- | ----- |
+| An icon (any entity type, transport mode, weather, status) | `Icon` (`name` is a semantic `IconName`; Material Symbols outlined; registry in `iconRegistry.ts`; `iconSvgString` for Leaflet) | `components/ui/Icon.tsx` |
 | Manager component CRUD state | `useManagerCRUD`, `useManagerFormWrapper`, `useFormReset` | `hooks/` |
 | Stop double-submit | `useSubmitLock` | `hooks/` |
 | "Save & Add Another" | `useSaveAndAddAnother` | `hooks/` |
