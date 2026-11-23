@@ -264,8 +264,9 @@ export default function TimelineEventCard({
     );
   };
 
-  // Get address from data object (now via TimelineItem.location from linked entities)
-  const address: string | null = item.location || null;
+  // Street address under the place name; only when it adds something
+  const address: string | null =
+    item.locationAddress && item.locationAddress !== item.location ? item.locationAddress : null;
 
   // Route-line marker: gold when it is the current or next stop, muted once
   // passed, otherwise the item type's colour.

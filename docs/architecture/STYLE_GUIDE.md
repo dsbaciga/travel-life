@@ -224,7 +224,7 @@ Section headers, stat captions and "Next up" style labels are small, tracked cap
 
 ### 2. Italic serif for places and journal text
 
-Place names in secondary positions (location lines under an activity, restaurant names) use `.place-name` (web) or `variant="place"` (mobile). Journal bodies and excerpts use `.journal-prose` (web) or `variant="place"` (mobile). Primary titles stay in the upright display face.
+Place names in secondary positions (location lines under an activity, restaurant names; never a category such as "sightseeing", which is a plain subtitle) use `.place-name` (web) or `variant="place"` (mobile). Journal bodies and excerpts use `.journal-prose` (web) or `variant="place"` (mobile). Primary titles stay in the upright display face.
 
 ### 3. Tabular numbers
 
@@ -982,11 +982,11 @@ says it is.
 A day's itinerary is drawn as a journey, not a stack of cards.
 
 - **Route line.** A continuous line runs down the left of the day with a stop marker at each item. Items have no card chrome (no border, shadow or fill; only a faint hover wash on web), so the line carries the structure.
-- **Stop markers.** Colour comes from the item type (web: `getTypeColor`; mobile: `typeColors`). The current or next stop is a filled gold marker (`accent-500` light, `gold` dark; `palette.primary` on mobile) with a soft 4px halo. Finished stops are muted grey with 70% content opacity. Mobile draws upcoming stops outlined in their type colour with a wash fill; web fills them with the type colour.
+- **Stop markers.** Colour comes from the item type (web: `getTypeColor`, in both the Timeline and Today's Itinerary; mobile: `typeColors`). All-day items (a mid-stay night) list first, show "All day" instead of a clock time, keep the type colour, and never take the gold marker (`RouteTimes.allDay`). The current or next stop is a filled gold marker (`accent-500` light, `gold` dark; `palette.primary` on mobile) with a soft 4px halo. Finished stops are muted grey with 70% content opacity. Mobile draws upcoming stops outlined in their type colour with a wash fill; web fills them with the type colour.
 - **Line.** Solid gold, 2px, up to the current or next stop; dashed after it (2px wide, 4px dash, 5px gap, muted grey at about 50%). On a day that is not today there is no gold stop and the line is dashed (or solid for days already finished). The rule lives in `packages/shared/src/brand/routeProgress.ts` (`computeRouteProgress`); never re-implement it per screen.
 - **Not for print.** `PrintableItinerary` keeps its own layout.
 
-**Contour backdrop.** `ContourBackdrop` (web `components/brand/`, mobile `components/`) draws 6 to 10 closed, wobbly iso-lines from a seed (`generateContours` in `packages/shared/src/brand/contours.ts`). Same seed, same terrain: use the trip id, or `contourSeed({ id, latitude, longitude })`. Stroke 1.25px, gold at about 8% on dark, charcoal at about 6% on light. It is `aria-hidden` and takes no pointer events.
+**Contour backdrop.** `ContourBackdrop` (web `components/brand/`, mobile `components/`) draws 6 to 10 closed, wobbly iso-lines from a seed (`generateContours` in `packages/shared/src/brand/contours.ts`). Same seed, same terrain: use the trip id, or `contourSeed({ id, latitude, longitude })`. Stroke 1.25px, gold at about 8% on dark, charcoal at about 10% on light. It is `aria-hidden` and takes no pointer events.
 
 - Use it as the first child of a `relative overflow-hidden` container (web) or an `overflow: 'hidden'` View (mobile), and give the content above it `relative` so text paints over the lines.
 - Empty states already include it. For a hero, drop it into the hero container with the trip's seed; do not stack it on top of photos.

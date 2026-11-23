@@ -37,6 +37,7 @@ import { useTripLinkSummary } from '../hooks/useTripLinkSummary';
 import { getEntityKey } from '../types/entityLink';
 import type { TripLinkSummary } from '../types/entityLink';
 import EmptyState from './EmptyState';
+import { getActivityPlaceName } from '../lib/itineraryPlaces';
 
 /**
  * Timeline component displays a chronological view of all trip events including
@@ -428,6 +429,8 @@ const Timeline = ({
             endDateTime: activity.endTime ? new Date(activity.endTime) : undefined,
             title: activity.name,
             subtitle: activity.category || undefined,
+            location: getActivityPlaceName(activity),
+            locationAddress: activity.location?.address || undefined,
             description: activity.description || undefined,
             cost: activity.cost || undefined,
             currency: activity.currency || undefined,

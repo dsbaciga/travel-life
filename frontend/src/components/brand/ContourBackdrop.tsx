@@ -16,7 +16,7 @@ const HEIGHT = 300;
 /**
  * Faint topographic contour lines, a decorative layer for hero areas and empty
  * states. Fills its nearest positioned ancestor, never takes pointer events and
- * is hidden from assistive tech. Charcoal at ~6% on light, gold at ~8% on dark.
+ * is hidden from assistive tech. Charcoal at ~10% on light, gold at ~8% on dark.
  *
  * Drop it in as the first child of a `relative overflow-hidden` container.
  */
@@ -32,7 +32,7 @@ function ContourBackdrop({ seed, count = 8, className = '' }: ContourBackdropPro
       focusable="false"
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="xMidYMid slice"
-      className={`pointer-events-none absolute inset-0 h-full w-full text-charcoal/[0.06] dark:text-gold/[0.08] ${className}`}
+      className={`pointer-events-none absolute inset-0 h-full w-full text-charcoal/[0.10] dark:text-gold/[0.08] ${className}`}
     >
       <g fill="none" stroke="currentColor" strokeWidth={1.25}>
         {paths.map((d, index) => (

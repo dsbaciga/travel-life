@@ -17,6 +17,12 @@ export type RouteSegmentStyle = 'solid' | 'dashed';
 export interface RouteTimes {
   start: number;
   end?: number | null;
+  /**
+   * An all-day item (a mid-stay night, a day-long pass) has no moment to be
+   * "past" or "next": it never takes the gold marker from the first real stop.
+   * Mirrors mobile `findNextUp`, which skips all-day items.
+   */
+  allDay?: boolean;
 }
 
 export interface RouteProgress {
@@ -35,8 +41,8 @@ export function computeRouteProgress(
   nowMs: number,
   isToday: boolean
 ): RouteProgress {
-  const isPast = (item: RouteTimes) => (item.end ?? item.start) < nowMs;
-  const firstOpen = items.findIndex((item) => !isPast(item));
+  const isPast = (item: RouteTimes) => !item.allDay && (item.end ?? item.start) < nowMs;
+  const firstOpen = items.findIndex((item) => !item.allDay && !isPast(item));
   const nextIndex = isToday ? firstOpen : -1;
 
   const stops: RouteStop[] = items.map((item, index) => {

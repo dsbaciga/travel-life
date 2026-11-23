@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **One icon style across the web app.** Every icon now comes from the same Material Symbols outline set the Android app uses, drawn through one shared `Icon` component with meaning-based names. This replaces the mix of Heroicons, hand-drawn SVG icons and emoji (type badges, buttons, headers, weather, transport modes, toast icons, empty states). Icons are bundled with the app, so they still work offline. Content you type yourself (trip names, labels, your own category and trip type emoji, journal moods, country flags) is untouched. The Heroicons and Lucide dependencies are gone.
 - **Mobile dark mode matches the web app.** The Android app's dark theme drops the stock navy-slate for the same cool-grey "dusk" ramp the web app uses, including the dark map and the home-screen widget. The highlighted card ("Next up", the Trips screen notice) gets a gold-to-amber bar along its top edge, a subtle diagonal wash, and a deeper surface in dark mode. Titles and headings now use Crimson Pro and body text Manrope, as on the web. Light mode colours are unchanged. This adds native code (`expo-linear-gradient`), so it needs a new APK and cannot ship as an over-the-air update.
 
+### Fixed
+
+- **Ongoing hotel stays in Today's Itinerary.** A middle night of a stay now shows "All day" at the top of the list instead of a red "12:00 AM" after the "Now" marker, and it no longer steals the gold "next" marker from the real next event (the Timeline treats all-day items the same way). Today's Itinerary also compared event times against a wall-clock date in the device's zone, so "completed" and the "Now" time were wrong whenever the trip zone differed from the device's; they now use the real instant and the trip zone.
+- **Place lines.** An activity's category ("sightseeing") is no longer set in the italic place style; only a real location is. The Timeline now shows the activity's location under its title, with the street address only when it adds something, and Today's Itinerary uses the same item-type colours as the Timeline.
+- **Contour lines on light backgrounds** are a little stronger (about 10% instead of 6%) on the web and in the Android app; dark mode and hero cards are unchanged. The trip tab bar also fades on its left edge once scrolled and is labelled for screen readers.
+
 ## [8.3.0] - 2026-11-22
 
 ### Added

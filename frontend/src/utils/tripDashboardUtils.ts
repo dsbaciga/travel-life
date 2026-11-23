@@ -57,6 +57,11 @@ export interface ItineraryEvent {
   location?: string;
   subtitle?: string;
   isCompleted: boolean;
+  /**
+   * All-day items (a mid-stay night) have no clock time: they list before the
+   * timed items, are never "completed" and never become the next event.
+   */
+  allDay?: boolean;
   data: Activity | Transportation | Lodging;
 }
 
@@ -158,7 +163,10 @@ export function getTodaysEvents(
   timezone: string
 ): ItineraryEvent[] {
   const todayStr = getTodayInTimezone(timezone);
-  const now = getCurrentTimeInTimezone(timezone);
+  // Real instant: event times are real instants too. (`getCurrentTimeInTimezone`
+  // is a wall-clock Date in the machine zone, so comparing it with them is wrong
+  // whenever the trip zone differs from the device's.)
+  const now = new Date();
   const events: ItineraryEvent[] = [];
 
   // Process activities
@@ -177,8 +185,10 @@ export function getTodaysEvents(
       name: activity.name,
       startTime,
       endTime,
-      location: activity.category || undefined,
-      subtitle: activity.description || undefined,
+      // The place is the activity's own location; the category is only a label,
+      // so it goes in the subtitle and does not get the place-name styling.
+      location: activity.location?.name || undefined,
+      subtitle: activity.category || activity.description || undefined,
       isCompleted: endTime ? endTime < now : startTime < now,
       data: activity,
     });
@@ -267,7 +277,7 @@ export function getTodaysEvents(
       !isDateToday(lodge.checkInDate, todayStr, timezone) &&
       !isDateToday(lodge.checkOutDate, todayStr, timezone)
     ) {
-      // Create an all-day event at midnight for ongoing stays
+      // All-day: the start is only a sort anchor and is never shown as a clock time
       const todayMidnight = new Date(todayStr + 'T00:00:00');
 
       events.push({
@@ -278,13 +288,17 @@ export function getTodaysEvents(
         location: lodge.address || undefined,
         subtitle: 'Ongoing stay',
         isCompleted: false, // Ongoing stays are never "completed"
+        allDay: true,
         data: lodge,
       });
     }
   }
 
-  // Sort by start time
-  events.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  // All-day items first, then by start time
+  events.sort((a, b) => {
+    if (!!a.allDay !== !!b.allDay) return a.allDay ? -1 : 1;
+    return a.startTime.getTime() - b.startTime.getTime();
+  });
 
   return events;
 }
@@ -318,10 +332,11 @@ export function getCurrentTimePosition(
 }
 
 /**
- * Find the next upcoming event (first event that hasn't completed yet)
+ * Find the next upcoming event (first timed event that hasn't completed yet).
+ * All-day items never qualify, like mobile `findNextUp`.
  */
 export function getNextEvent(events: ItineraryEvent[]): ItineraryEvent | null {
-  return events.find(event => !event.isCompleted) || null;
+  return events.find(event => !event.allDay && !event.isCompleted) || null;
 }
 
 /**
@@ -363,8 +378,20 @@ export function formatEventDuration(startTime: Date, endTime?: Date): string | n
  * Calculate the time span needed to display all events
  * Returns the earliest start hour and latest end hour
  */
-export function calculateTimeSpan(events: ItineraryEvent[]): { startHour: number; endHour: number } {
-  if (events.length === 0) {
+export function calculateTimeSpan(
+  events: ItineraryEvent[],
+  timezone?: string
+): { startHour: number; endHour: number } {
+  const hourOf = (date: Date): number =>
+    timezone
+      ? Number(
+          new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', hourCycle: 'h23' })
+            .formatToParts(date)
+            .find(part => part.type === 'hour')?.value ?? 0
+        ) % 24
+      : date.getHours();
+
+  if (events.every(event => event.allDay)) {
     return { startHour: 6, endHour: 22 }; // Default 6 AM to 10 PM
   }
 
@@ -372,8 +399,9 @@ export function calculateTimeSpan(events: ItineraryEvent[]): { startHour: number
   let maxHour = 0;
 
   for (const event of events) {
-    const startHour = event.startTime.getHours();
-    const endHour = event.endTime ? event.endTime.getHours() + 1 : startHour + 1;
+    if (event.allDay) continue;
+    const startHour = hourOf(event.startTime);
+    const endHour = event.endTime ? hourOf(event.endTime) + 1 : startHour + 1;
 
     minHour = Math.min(minHour, startHour);
     maxHour = Math.max(maxHour, endHour);

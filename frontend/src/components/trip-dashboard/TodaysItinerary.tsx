@@ -10,13 +10,13 @@ import {
   formatEventTime,
   formatEventDuration,
   calculateTimeSpan,
-  getCurrentTimeInTimezone,
   getTodayInTimezone,
   type ItineraryEvent,
 } from '../../utils/tripDashboardUtils';
 import RouteSegment from '../brand/RouteSegment';
 import ContourBackdrop from '../brand/ContourBackdrop';
 import type { RouteSegmentStyle } from '../../lib/vendored/routeProgress';
+import { getTypeColor, getTypeTextColor } from '../timeline/utils';
 
 /**
  * Props for the TodaysItinerary component
@@ -88,60 +88,6 @@ function getEventIcon(type: string, className?: string) {
 }
 
 /**
- * Get colors for an event type following the style guide
- */
-function getEventColors(type: string, isCompleted: boolean, isNext: boolean) {
-  const baseColors = {
-    activity: {
-      bg: 'bg-emerald-500',
-      bgLight: 'bg-emerald-100 dark:bg-emerald-900/30',
-      border: 'border-emerald-500',
-      text: 'text-emerald-600 dark:text-emerald-400',
-      ring: 'ring-emerald-500',
-    },
-    transportation: {
-      bg: 'bg-amber-500',
-      bgLight: 'bg-amber-100 dark:bg-amber-900/30',
-      border: 'border-amber-500',
-      text: 'text-amber-600 dark:text-amber-400',
-      ring: 'ring-amber-500',
-    },
-    lodging: {
-      bg: 'bg-rose-500',
-      bgLight: 'bg-rose-100 dark:bg-rose-900/30',
-      border: 'border-rose-500',
-      text: 'text-rose-600 dark:text-rose-400',
-      ring: 'ring-rose-500',
-    },
-  };
-
-  const colors = baseColors[type as keyof typeof baseColors] || baseColors.activity;
-
-  if (isCompleted) {
-    return {
-      ...colors,
-      opacity: 'opacity-60',
-      bgIcon: 'bg-gray-400 dark:bg-dusk-600',
-    };
-  }
-
-  if (isNext) {
-    return {
-      ...colors,
-      opacity: '',
-      bgIcon: colors.bg,
-      highlight: 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-navy-800 ' + colors.ring,
-    };
-  }
-
-  return {
-    ...colors,
-    opacity: '',
-    bgIcon: colors.bg,
-  };
-}
-
-/**
  * Format today's date for the header
  */
 function formatTodayHeader(timezone: string): string {
@@ -175,19 +121,21 @@ function EventItem({
   segmentEndsAtEdge?: boolean;
   onClick: () => void;
 }) {
-  const colors = getEventColors(event.type, event.isCompleted, isNext);
-  const duration = formatEventDuration(event.startTime, event.endTime);
-  // Gold for the current/next stop, muted once done, else the type colour.
+  const allDay = !!event.allDay;
+  const duration = allDay ? null : formatEventDuration(event.startTime, event.endTime);
+  // Same rule as the Timeline: gold for the current/next stop, muted once done,
+  // else the item type's colour (`getTypeColor`).
   const markerClass = event.isCompleted
     ? 'bg-gray-300 dark:bg-dusk-600 text-white dark:text-dusk-300'
     : isNext
       ? 'bg-accent-500 dark:bg-gold text-white dark:text-dusk-900 ring-4 ring-accent-500/20 dark:ring-gold/20'
-      : `${colors.bg} text-white`;
+      : `${getTypeColor(event.type)} text-white`;
 
   return (
     <div
       className={`relative flex items-start gap-3 pb-3 cursor-pointer group ${event.isCompleted ? 'opacity-70' : ''}`}
       data-route-stop={event.isCompleted ? 'past' : isNext ? 'next' : 'future'}
+      data-all-day={allDay || undefined}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -221,10 +169,14 @@ function EventItem({
       <div className="flex-1 min-w-0 rounded-lg px-2 py-1 -mt-0.5 group-hover:bg-gray-50 dark:group-hover:bg-dusk-800/60 transition-colors">
         {/* Time */}
         <div className="flex items-center gap-2 text-xs tabular-nums text-gray-500 dark:text-dusk-400">
-          <span className={`font-medium ${event.isCompleted ? '' : colors.text}`}>
-            {formatEventTime(event.startTime, timezone)}
-          </span>
-          {event.endTime && (
+          {allDay ? (
+            <span className="font-medium">All day</span>
+          ) : (
+            <span className={`font-medium ${event.isCompleted ? '' : getTypeTextColor(event.type)}`}>
+              {formatEventTime(event.startTime, timezone)}
+            </span>
+          )}
+          {!allDay && event.endTime && (
             <>
               <span>-</span>
               <span>{formatEventTime(event.endTime, timezone)}</span>
@@ -271,8 +223,7 @@ function EventItem({
  * Current time indicator line
  */
 function CurrentTimeIndicator({ timezone }: { timezone: string }) {
-  const now = getCurrentTimeInTimezone(timezone);
-  const timeStr = formatEventTime(now, timezone);
+  const timeStr = formatEventTime(new Date(), timezone);
 
   return (
     <div className="relative flex items-center gap-3 pb-3">
@@ -344,7 +295,7 @@ export default function TodaysItinerary({
   const nextEvent = useMemo(() => getNextEvent(events), [events]);
 
   // Calculate time span for the timeline
-  const { startHour, endHour } = useMemo(() => calculateTimeSpan(events), [events]);
+  const { startHour, endHour } = useMemo(() => calculateTimeSpan(events, tripTimezone), [events, tripTimezone]);
 
   // Get current time position
   const currentTimePosition = useMemo(
@@ -366,12 +317,13 @@ export default function TodaysItinerary({
     }
   }, [events]);
 
-  // Split events into completed and upcoming
-  const pastEvents = events.filter(e => e.isCompleted);
-  const upcomingEvents = events.filter(e => !e.isCompleted);
+  // All-day items lead the list; the rest split into completed and upcoming
+  const allDayEvents = events.filter(e => e.allDay);
+  const pastEvents = events.filter(e => !e.allDay && e.isCompleted);
+  const upcomingEvents = events.filter(e => !e.allDay && !e.isCompleted);
 
   // Route line: solid once the traveller has reached the next stop, dashed ahead.
-  const ordered = [...pastEvents, ...upcomingEvents];
+  const ordered = [...allDayEvents, ...pastEvents, ...upcomingEvents];
   const segmentAfter = (index: number): RouteSegmentStyle | undefined => {
     const following = ordered[index + 1];
     if (!following) return undefined;
@@ -442,6 +394,23 @@ export default function TodaysItinerary({
           <EmptyState />
         ) : (
           <div>
+            {/* All-day items (a mid-stay night): no clock time, never "next" */}
+            {allDayEvents.map((event, index) => (
+              <EventItem
+                key={`allday-${event.id}-${index}`}
+                event={event}
+                isNext={false}
+                timezone={tripTimezone}
+                segment={segmentAfter(index)}
+                segmentEndsAtEdge={
+                  index === allDayEvents.length - 1 &&
+                  pastEvents.length === 0 &&
+                  currentTimePosition !== null
+                }
+                onClick={() => handleEventClick(event)}
+              />
+            ))}
+
             {/* Past events */}
             {pastEvents.map((event, index) => (
               <EventItem
@@ -449,7 +418,7 @@ export default function TodaysItinerary({
                 event={event}
                 isNext={false}
                 timezone={tripTimezone}
-                segment={segmentAfter(index)}
+                segment={segmentAfter(allDayEvents.length + index)}
                 segmentEndsAtEdge={index === pastEvents.length - 1 && currentTimePosition !== null}
                 onClick={() => handleEventClick(event)}
               />
@@ -469,7 +438,7 @@ export default function TodaysItinerary({
                 event={event}
                 isNext={nextEvent?.id === event.id}
                 timezone={tripTimezone}
-                segment={segmentAfter(pastEvents.length + index)}
+                segment={segmentAfter(allDayEvents.length + pastEvents.length + index)}
                 onClick={() => handleEventClick(event)}
               />
             ))}
