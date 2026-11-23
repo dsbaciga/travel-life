@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useIsDarkMode } from '../store/themeStore';
-import { tripTint, type TripTint } from '../utils/vendored/tripTint';
+import { tripTint, type TripTint } from '../lib/vendored/tripTint';
 
 export interface TripTints {
   /**

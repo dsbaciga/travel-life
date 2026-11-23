@@ -20,6 +20,7 @@ For layering rules see [BACKEND_ARCHITECTURE.md](BACKEND_ARCHITECTURE.md) and
 | Activities | `activity` | `ActivityManager`, `components/forms/ActivityForm` |
 | Transportation (flights, trains, …) and flight status | `transportation`, `aviationstack`, `airport`, `routing`, `travelTime` | `TransportationManager`, `FlightStatusBadge`, `FlightRouteMap`, `AirportSearchInput` |
 | Lodging | `lodging` | `LodgingManager` |
+| Route line (a day's itinerary drawn as a journey) and contour backdrops | none (client only). Shared: `packages/shared/src/brand/routeProgress.ts` and `contours.ts`, vendored to `frontend/src/lib/vendored/` by `npm run sync:vendored`. Mobile: `RouteRail`, `ContourBackdrop`, `domain/routeLine` | `components/brand/` (`ContourBackdrop`, `RouteSegment`), used by `timeline/TimelineEventCard`, `trip-dashboard/TodaysItinerary` and `EmptyState` |
 | Custom items | `customItem` ([spec](../development/CUSTOM_ITEM_SPEC.md)) | `CustomItemsManager`, `CustomItemTypeManager` |
 | Journal (+ AI drafting, per-day AI draft) | `journalEntry`, `journalEntryAi`, `journalDayDraft`, `services/_shared/dayDraft` | `JournalManager`, `MarkdownEditor` |
 | Entity links (any entity to any entity) | `entityLink`, `services/_shared/entityLinkCleanup` | `LinkPanel`, `LinkedEntitiesDisplay`, `EntityPickerModal`, `useEntityLinking` |
@@ -121,7 +122,7 @@ Trip tint: `TripDto.coverColor` arrives with the trip list, shared trips and `mo
 | Trip list ordering (open trips before Completed) | `tripListOrder` | `services/_shared/` |
 | A trip's cover colour: sample a cover (upload, library photo, Immich), keep `Trip.coverColor` in step with the cover; one-off fill for old trips: `npx tsx scripts/backfill-trip-cover-color.ts` | `dominantColor`, `computeCoverColor`, `refreshCoverColor` | `services/tripCoverColor.service.ts` |
 | Resolve a stored `/uploads/...` path safely inside the uploads root | `resolveUploadPath` | `services/_shared/uploadPaths.ts` |
-| Turn a trip's `coverColor` into hero/soft/ring colours (clamped, contrast-safe; null for greys). Source `packages/shared/src/utils/tripTint.ts`, vendored to `backend/.../vendored/` and `frontend/src/utils/vendored/` by `npm run sync:vendored` | `tripTint(hex, scheme)` | `packages/shared` |
+| Turn a trip's `coverColor` into hero/soft/ring colours (clamped, contrast-safe; null for greys). Source `packages/shared/src/utils/tripTint.ts`, vendored to `backend/.../vendored/` and `frontend/src/lib/vendored/` by `npm run sync:vendored` | `tripTint(hex, scheme)` | `packages/shared` |
 | Reusable Prisma `include`s, model delegates | `prismaIncludes`, `modelDelegates` | `prisma/` |
 | Zod helpers (`nullableOptional`, ids, coords, currency, URLs) | `zodHelpers` | `validation/zodHelpers.ts` |
 | Outbound URL safety (SSRF) | `urlValidation` | `security/` |

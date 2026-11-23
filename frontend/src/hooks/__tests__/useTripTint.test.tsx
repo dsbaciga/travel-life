@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTripTint, tintOverlay, withAlpha } from '../useTripTint';
 import { useThemeStore } from '../../store/themeStore';
-import { tripTint } from '../../utils/vendored/tripTint';
+import { tripTint } from '../../lib/vendored/tripTint';
 
 describe('useTripTint', () => {
   beforeEach(() => {

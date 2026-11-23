@@ -29,9 +29,13 @@ export const VENDORED = [
   { from: 'utils/tripTint.ts', to: 'tripTint.ts' },
 ];
 
-/** Modules the web app also needs (it does not depend on this package). */
-export const FRONTEND_VENDORED = [{ from: 'utils/tripTint.ts', to: 'tripTint.ts' }];
-const frontendVendored = resolve(here, '../../../frontend/src/utils/vendored');
+/** Copied into the frontend, whose Docker build context cannot reach packages/shared. */
+export const FRONTEND_VENDORED = [
+  { from: 'utils/tripTint.ts', to: 'tripTint.ts' },
+  { from: 'brand/contours.ts', to: 'contours.ts' },
+  { from: 'brand/routeProgress.ts', to: 'routeProgress.ts' },
+];
+const frontendVendored = resolve(here, '../../../frontend/src/lib/vendored');
 
 export const header = (from) =>
   `// GENERATED FILE - DO NOT EDIT.\n` +

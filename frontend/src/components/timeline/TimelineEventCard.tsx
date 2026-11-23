@@ -5,7 +5,6 @@ import {
   formatTime,
   formatDuration,
   getTypeColor,
-  getTypeBorderColor,
   getTimezoneAbbr,
   mapTimelineTypeToEntityType,
   getTimelineItemPlace,
@@ -16,6 +15,7 @@ import DirectionsButton from '../DirectionsButton';
 import entityLinkService from '../../services/entityLink.service';
 import { getFullAssetUrl } from '../../lib/config';
 import { getAccessToken } from '../../lib/axios';
+import RouteSegment from '../brand/RouteSegment';
 import type { TimelineEventCardProps, TimelineItem } from './types';
 import type { Activity } from '../../types/activity';
 import type { Photo } from '../../types/photo';
@@ -30,7 +30,8 @@ export default function TimelineEventCard({
   linkSummary,
   viewMode,
   connectionInfo,
-  showConnectionLine,
+  routeStop = 'future',
+  routeSegment,
   originPlace = null,
   onEdit,
   onDelete,
@@ -266,30 +267,39 @@ export default function TimelineEventCard({
   // Get address from data object (now via TimelineItem.location from linked entities)
   const address: string | null = item.location || null;
 
-  return (
-    <div className="timeline-item relative flex gap-2 sm:gap-3">
-      {/* Connection line to next item */}
-      {showConnectionLine && (
-        <div className={`absolute ${isCompact ? 'left-[15px] top-8' : 'left-[17px] top-9'} sm:left-5 sm:top-10 h-full w-0.5 border-l-2 border-dashed border-green-400 dark:border-green-500 z-0`} />
-      )}
+  // Route-line marker: gold when it is the current or next stop, muted once
+  // passed, otherwise the item type's colour.
+  const markerClass =
+    routeStop === 'next'
+      ? 'bg-accent-500 dark:bg-gold text-white dark:text-dusk-900 ring-4 ring-accent-500/20 dark:ring-gold/20'
+      : routeStop === 'past'
+        ? 'bg-gray-300 dark:bg-dusk-600 text-white dark:text-dusk-300'
+        : `${getTypeColor(item.type)} text-white`;
+  const markerSize = isCompact ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-9 h-9 sm:w-11 sm:h-11';
 
-      {/* Icon dot */}
-      <div
-        className={`flex-shrink-0 ${isCompact ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-9 h-9 sm:w-11 sm:h-11'} rounded-full ${getTypeColor(
-          item.type
-        )} text-white flex items-center justify-center z-10 shadow-md ${
-          connectionInfo ? 'ring-2 ring-green-400 dark:ring-green-500' : ''
-        }`}
-      >
-        {getTimelineItemIcon(item, isCompact ? 'w-4 h-4' : 'w-5 h-5')}
+  return (
+    <div className="timeline-item relative flex gap-2 sm:gap-3" data-route-stop={routeStop}>
+      {/* Route rail: this stop's marker and the leg down to the next one */}
+      <div className={`relative flex-shrink-0 ${isCompact ? 'w-8 sm:w-10' : 'w-9 sm:w-11'}`}>
+        {routeSegment && (
+          <RouteSegment
+            style={routeSegment}
+            className={isCompact ? 'top-4 -bottom-4 sm:top-5 sm:-bottom-5' : 'top-[18px] -bottom-[18px] sm:top-[22px] sm:-bottom-[22px]'}
+          />
+        )}
+        <div
+          className={`relative ${markerSize} rounded-full ${markerClass} flex items-center justify-center z-10 ${
+            connectionInfo ? 'outline outline-2 outline-offset-2 outline-green-400 dark:outline-green-500' : ''
+          }`}
+        >
+          {getTimelineItemIcon(item, isCompact ? 'w-4 h-4' : 'w-5 h-5')}
+        </div>
       </div>
 
-      {/* Content card */}
+      {/* Content: no card chrome, the route line carries the structure */}
       <div
-        className={`group flex-1 bg-white dark:bg-dusk-800 border-l-4 ${getTypeBorderColor(
-          item.type
-        )} rounded-lg ${isCompact ? 'p-2.5' : 'p-3 sm:p-4'} shadow-sm hover:shadow-md transition-shadow relative border border-gray-200 dark:border-dusk-700 border-l-4 ${
-          connectionInfo ? 'ring-1 ring-green-200 dark:ring-green-800' : ''
+        className={`group flex-1 min-w-0 rounded-lg ${isCompact ? 'p-2 mb-1' : 'p-2 sm:p-3 mb-2'} hover:bg-gray-50 dark:hover:bg-dusk-800/60 transition-colors relative ${
+          routeStop === 'past' ? 'opacity-70' : ''
         }`}
       >
         {/* Quick action buttons - appear on hover */}
@@ -484,7 +494,7 @@ export default function TimelineEventCard({
         />
 
         {/* Link + directions buttons */}
-        <div className={`flex items-center gap-2 border-t border-gray-100 dark:border-dusk-700 ${isCompact ? 'mt-2 pt-2' : 'mt-3 pt-3'}`}>
+        <div className={`flex items-center gap-2 ${isCompact ? 'mt-1' : 'mt-2'}`}>
           <LinkButton
             tripId={tripId}
             entityType={entityType}

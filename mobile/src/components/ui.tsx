@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { fontStyle, useFontStore, type FontKind, type FontWeightName } from '../lib/fonts';
 import { splitLeadingEmoji } from '../lib/labels';
 import { DUSK, radius, spacing, TOUCH_TARGET, usePalette, useResolvedColorScheme } from '../lib/theme';
+import ContourBackdrop from './ContourBackdrop';
 import Icon, { type IconName } from './Icon';
 
 /**
@@ -457,6 +458,8 @@ export function SectionHeader({ title, action }: { title: string; action?: React
 export function EmptyState({ title, message }: { title: string; message?: string }) {
   return (
     <View style={styles.empty}>
+      {/* Seeded by the title so each empty state has its own steady terrain. */}
+      <ContourBackdrop seed={title} count={6} />
       <AppText variant="heading">{title}</AppText>
       {message ? (
         <AppText muted style={styles.center}>
@@ -582,7 +585,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing.sm,
   },
-  empty: { alignItems: 'center', gap: spacing.sm, padding: spacing.xl },
+  empty: { alignItems: 'center', gap: spacing.sm, padding: spacing.xl, overflow: 'hidden' },
   center: { textAlign: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
   banner: { borderWidth: 1, borderRadius: radius.sm, padding: spacing.md },

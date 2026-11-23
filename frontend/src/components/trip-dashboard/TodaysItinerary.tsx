@@ -13,6 +13,9 @@ import {
   getTodayInTimezone,
   type ItineraryEvent,
 } from '../../utils/tripDashboardUtils';
+import RouteSegment from '../brand/RouteSegment';
+import ContourBackdrop from '../brand/ContourBackdrop';
+import type { RouteSegmentStyle } from '../../lib/vendored/routeProgress';
 
 /**
  * Props for the TodaysItinerary component
@@ -196,24 +199,32 @@ function EventItem({
   event,
   isNext,
   timezone,
+  segment,
+  segmentEndsAtEdge = false,
   onClick,
 }: {
   event: ItineraryEvent;
   isNext: boolean;
   timezone: string;
+  /** Route-line leg down to the next stop; omit for the last stop. */
+  segment?: RouteSegmentStyle;
+  /** The leg stops at this row's edge because the "Now" marker follows. */
+  segmentEndsAtEdge?: boolean;
   onClick: () => void;
 }) {
   const colors = getEventColors(event.type, event.isCompleted, isNext);
   const duration = formatEventDuration(event.startTime, event.endTime);
+  // Gold for the current/next stop, muted once done, else the type colour.
+  const markerClass = event.isCompleted
+    ? 'bg-gray-300 dark:bg-dusk-600 text-white dark:text-dusk-300'
+    : isNext
+      ? 'bg-accent-500 dark:bg-gold text-white dark:text-dusk-900 ring-4 ring-accent-500/20 dark:ring-gold/20'
+      : `${colors.bg} text-white`;
 
   return (
     <div
-      className={`relative flex items-start gap-3 py-3 px-3 rounded-lg cursor-pointer transition-all duration-200
-        ${colors.opacity}
-        ${colors.bgLight}
-        ${isNext && 'highlight' in colors ? colors.highlight : 'hover:bg-opacity-80'}
-        group
-      `}
+      className={`relative flex items-start gap-3 pb-3 cursor-pointer group ${event.isCompleted ? 'opacity-70' : ''}`}
+      data-route-stop={event.isCompleted ? 'past' : isNext ? 'next' : 'future'}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -224,22 +235,27 @@ function EventItem({
         }
       }}
     >
-      {/* Event icon with completion indicator */}
-      <div
-        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-          ${event.isCompleted ? 'bg-gray-400 dark:bg-dusk-600' : colors.bgIcon}
-          text-white shadow-sm
-        `}
-      >
-        {event.isCompleted ? (
-          <CheckIcon className="w-4 h-4" />
-        ) : (
-          getEventIcon(event.type, 'w-4 h-4')
+      {/* Route rail: stop marker plus the leg down to the next stop */}
+      <div className="relative flex-shrink-0 w-8 self-stretch">
+        {segment && (
+          <RouteSegment
+            style={segment}
+            className={segmentEndsAtEdge ? 'top-4 bottom-0' : 'top-4 -bottom-4'}
+          />
         )}
+        <div
+          className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${markerClass}`}
+        >
+          {event.isCompleted ? (
+            <CheckIcon className="w-4 h-4" />
+          ) : (
+            getEventIcon(event.type, 'w-4 h-4')
+          )}
+        </div>
       </div>
 
       {/* Event content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 rounded-lg px-2 py-1 -mt-0.5 group-hover:bg-gray-50 dark:group-hover:bg-dusk-800/60 transition-colors">
         {/* Time */}
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-dusk-400">
           <span className={`font-medium ${event.isCompleted ? '' : colors.text}`}>
@@ -284,10 +300,6 @@ function EventItem({
         )}
       </div>
 
-      {/* Next indicator */}
-      {isNext && (
-        <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent-500 rounded-full" />
-      )}
     </div>
   );
 }
@@ -300,7 +312,11 @@ function CurrentTimeIndicator({ timezone }: { timezone: string }) {
   const timeStr = formatEventTime(now, timezone);
 
   return (
-    <div className="relative flex items-center gap-2 py-2">
+    <div className="relative flex items-center gap-3 pb-3">
+      {/* The route line passes through the Now marker, solid up to here */}
+      <div className="relative w-8 self-stretch flex-shrink-0">
+        <RouteSegment style="solid" className="top-0 -bottom-4" />
+      </div>
       {/* Line */}
       <div className="flex-1 h-0.5 bg-accent-500 rounded-full" />
 
@@ -322,8 +338,9 @@ function CurrentTimeIndicator({ timezone }: { timezone: string }) {
  */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-center">
-      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center mb-3">
+    <div className="relative overflow-hidden flex flex-col items-center justify-center py-8 text-center">
+      <ContourBackdrop seed="today-empty" count={6} />
+      <div className="relative w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center mb-3">
         <svg
           className="w-6 h-6 text-gray-400 dark:text-dusk-400"
           fill="none"
@@ -338,10 +355,10 @@ function EmptyState() {
           />
         </svg>
       </div>
-      <p className="text-sm font-medium text-gray-600 dark:text-dusk-400">
+      <p className="relative text-sm font-medium text-gray-600 dark:text-dusk-400">
         No events scheduled for today
       </p>
-      <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
+      <p className="relative text-xs text-gray-500 dark:text-dusk-400 mt-1">
         Add activities, transportation, or lodging to see them here
       </p>
     </div>
@@ -401,6 +418,14 @@ export default function TodaysItinerary({
   // Split events into completed and upcoming
   const pastEvents = events.filter(e => e.isCompleted);
   const upcomingEvents = events.filter(e => !e.isCompleted);
+
+  // Route line: solid once the traveller has reached the next stop, dashed ahead.
+  const ordered = [...pastEvents, ...upcomingEvents];
+  const segmentAfter = (index: number): RouteSegmentStyle | undefined => {
+    const following = ordered[index + 1];
+    if (!following) return undefined;
+    return following.isCompleted || nextEvent?.id === following.id ? 'solid' : 'dashed';
+  };
 
   // Handle event click
   const handleEventClick = (event: ItineraryEvent) => {
@@ -465,7 +490,7 @@ export default function TodaysItinerary({
         {events.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="space-y-2">
+          <div>
             {/* Past events */}
             {pastEvents.map((event, index) => (
               <EventItem
@@ -473,6 +498,8 @@ export default function TodaysItinerary({
                 event={event}
                 isNext={false}
                 timezone={tripTimezone}
+                segment={segmentAfter(index)}
+                segmentEndsAtEdge={index === pastEvents.length - 1 && currentTimePosition !== null}
                 onClick={() => handleEventClick(event)}
               />
             ))}
@@ -491,6 +518,7 @@ export default function TodaysItinerary({
                 event={event}
                 isNext={nextEvent?.id === event.id}
                 timezone={tripTimezone}
+                segment={segmentAfter(pastEvents.length + index)}
                 onClick={() => handleEventClick(event)}
               />
             ))}

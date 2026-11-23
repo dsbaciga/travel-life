@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import ContourBackdrop from './brand/ContourBackdrop';
 
 interface EmptyStateProps {
   icon?: string | ReactNode;
@@ -76,11 +77,12 @@ export default function EmptyState({
 
   return (
     <div
-      className={`text-center py-12 px-6 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-2xl border-2 border-primary-500/10 dark:border-gold/20 ${className}`}
+      className={`relative overflow-hidden text-center py-12 px-6 bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-2xl border-2 border-primary-500/10 dark:border-gold/20 ${className}`}
       role="status"
     >
+      <ContourBackdrop seed={message} />
       {icon && (
-        <div className="text-6xl mb-4 animate-bounce-slow" aria-hidden="true">
+        <div className="relative text-6xl mb-4 animate-bounce-slow" aria-hidden="true">
           {typeof icon === 'string' ? (
             <span className="inline-block">{icon}</span>
           ) : (
@@ -88,16 +90,16 @@ export default function EmptyState({
           )}
         </div>
       )}
-      <p className="text-lg font-medium text-charcoal dark:text-warm-gray mb-2 font-body">
+      <p className="relative text-lg font-medium text-charcoal dark:text-warm-gray mb-2 font-body">
         {message}
       </p>
       {subMessage && (
-        <p className="text-sm text-slate dark:text-warm-gray/70 font-body max-w-md mx-auto mb-2">
+        <p className="relative text-sm text-slate dark:text-warm-gray/70 font-body max-w-md mx-auto mb-2">
           {subMessage}
         </p>
       )}
       {actionLabel && (actionHref || onAction) && (
-        <div className="mt-6">
+        <div className="relative mt-6">
           <ActionButton />
         </div>
       )}

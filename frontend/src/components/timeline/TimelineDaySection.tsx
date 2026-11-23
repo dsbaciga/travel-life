@@ -11,6 +11,10 @@ import {
   mapTimelineTypeToEntityType,
 } from './utils';
 import { pickPreviousPlace } from '../../lib/mapsDeepLinks';
+import { computeRouteProgress } from '../../lib/vendored/routeProgress';
+import useNow from '../../hooks/useNow';
+import useTimezoneResolver from '../../hooks/useTimezoneResolver';
+import { getTodayInTimezone } from '../../utils/tripDashboardUtils';
 import type { DayGroup, TimelineItem } from './types';
 import type { EntityLinkSummary } from '../../types/entityLink';
 import { getEntityKey } from '../../types/entityLink';
@@ -125,6 +129,23 @@ export default function TimelineDaySection({
 
   const isCompact = viewMode === 'compact';
 
+  // Route line: gold marker on the current or next stop, solid line up to it.
+  const now = useNow(60_000);
+  const resolveTz = useTimezoneResolver();
+  const isToday = dateKey === getTodayInTimezone(resolveTz(tripTimezone));
+  const route = useMemo(
+    () =>
+      computeRouteProgress(
+        sortedItems.map((item) => ({
+          start: item.dateTime.getTime(),
+          end: item.endDateTime?.getTime(),
+        })),
+        now.getTime(),
+        isToday
+      ),
+    [sortedItems, now, isToday]
+  );
+
   return (
     <div className="bg-white dark:bg-dusk-800 rounded-xl shadow-sm border border-gray-200 dark:border-dusk-700 overflow-hidden mb-4">
       {/* Day Header */}
@@ -174,18 +195,10 @@ export default function TimelineDaySection({
 
             {/* Timeline vertical line container */}
             <div className="relative">
-              {/* Vertical timeline line */}
-              <div className={`absolute ${isCompact ? 'left-[15px]' : 'left-[17px]'} sm:left-[22px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dusk-700`} />
-
-              {/* Events list */}
-              <div className={isCompact ? 'space-y-3' : 'space-y-4'}>
+              {/* Events list: each stop draws its own leg of the route line */}
+              <div>
                 {sortedItems.map((item, index) => {
                   const connectionInfo = getConnectionInfo(item, sortedItems);
-                  const nextItem = sortedItems[index + 1];
-                  const showConnectionLine =
-                    connectionInfo &&
-                    !connectionInfo.isLast &&
-                    nextItem?.connectionGroupId === item.connectionGroupId;
 
                   return (
                     <TimelineEventCard
@@ -199,7 +212,8 @@ export default function TimelineDaySection({
                       linkSummary={getLinkSummary(item)}
                       viewMode={viewMode}
                       connectionInfo={connectionInfo || undefined}
-                      showConnectionLine={showConnectionLine ?? undefined}
+                      routeStop={route.stops[index]}
+                      routeSegment={route.segments[index]}
                       originPlace={pickPreviousPlace(endPlaces, index)}
                       onEdit={onEdit}
                       onDelete={onDelete}
