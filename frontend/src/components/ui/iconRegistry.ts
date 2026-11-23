@@ -20,6 +20,9 @@ import MiSailingOutline from '~icons/material-symbols/sailing-outline';
 import MiTwoWheelerOutline from '~icons/material-symbols/two-wheeler-outline';
 import MiLocalTaxiOutline from '~icons/material-symbols/local-taxi-outline';
 import MiSubwayOutline from '~icons/material-symbols/subway-outline';
+import MiUnfoldMore from '~icons/material-symbols/unfold-more';
+import MiUnfoldLess from '~icons/material-symbols/unfold-less';
+import MiTag from '~icons/material-symbols/tag';
 import MiTramOutline from '~icons/material-symbols/tram-outline';
 import MiAccountBalanceOutline from '~icons/material-symbols/account-balance-outline';
 import MiAccountBalanceWalletOutline from '~icons/material-symbols/account-balance-wallet-outline';
@@ -268,6 +271,9 @@ export const ICONS = {
   star: MiStarOutline,
   starFilled: MiStar,
   tag: MiSellOutline,
+  hash: MiTag,
+  unfoldMore: MiUnfoldMore,
+  unfoldLess: MiUnfoldLess,
   label: MiLabelOutline,
   folder: MiFolderOutline,
   pin: MiPushPinOutline,

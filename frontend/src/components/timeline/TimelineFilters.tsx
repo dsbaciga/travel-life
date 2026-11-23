@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useState, useRef, useEffect } from 'react';
 import type { TimelineItemType } from './types';
 
@@ -99,9 +100,7 @@ export default function TimelineFilters({
             className="p-2.5 sm:p-2 rounded-lg text-gray-500 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 hover:text-gray-700 dark:hover:text-dusk-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Expand all days"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
+            <Icon name="unfoldMore" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -109,9 +108,7 @@ export default function TimelineFilters({
             className="p-2.5 sm:p-2 rounded-lg text-gray-500 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 hover:text-gray-700 dark:hover:text-dusk-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Collapse all days"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-            </svg>
+            <Icon name="unfoldLess" className="w-4 h-4" />
           </button>
 
           {/* Divider */}
@@ -128,9 +125,7 @@ export default function TimelineFilters({
             }`}
             title="Standard view"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Icon name="list" className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -142,9 +137,7 @@ export default function TimelineFilters({
             }`}
             title="Compact view"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
+            <Icon name="menu" className="w-4 h-4" />
           </button>
 
           {/* Divider */}
@@ -159,19 +152,7 @@ export default function TimelineFilters({
               className="p-2.5 sm:p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Refresh weather data"
             >
-              <svg
-                className={`w-4 h-4 ${refreshingWeather ? 'animate-spin' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
+              <Icon name="refresh" className={`w-4 h-4 ${refreshingWeather ? 'animate-spin' : ''}`} />
             </button>
           )}
 
@@ -214,14 +195,7 @@ function PrintDropdown({ onPrint }: { onPrint: (option: PrintOption) => void }) 
         className="p-2.5 sm:p-2 rounded-lg text-gray-500 dark:text-dusk-400 hover:bg-gray-100 dark:hover:bg-dusk-800 hover:text-gray-700 dark:hover:text-dusk-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
         title="Print timeline"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-          />
-        </svg>
+        <Icon name="print" className="w-4 h-4" />
       </button>
 
       {isOpen && (
@@ -232,9 +206,7 @@ function PrintDropdown({ onPrint }: { onPrint: (option: PrintOption) => void }) 
               onClick={() => handlePrint('standard')}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <Icon name="document" className="w-4 h-4" />
               Print Itinerary
             </button>
             <button
@@ -242,9 +214,7 @@ function PrintDropdown({ onPrint }: { onPrint: (option: PrintOption) => void }) 
               onClick={() => handlePrint('with-maps')}
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
+              <Icon name="map" className="w-4 h-4" />
               Print with Maps
             </button>
           </div>
