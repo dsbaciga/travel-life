@@ -30,7 +30,7 @@ const TYPE_CONFIG: Record<TimelineItemType, { label: string; shortLabel: string;
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',
   },
   lodging: {
-    label: 'Lodging',
+    label: 'Stays',
     shortLabel: 'Lodge',
     color: 'text-purple-600 dark:text-purple-400',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',

@@ -29,8 +29,8 @@ interface Props {
 }
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
-  TRANSPORTATION: 'Transportation',
-  LODGING: 'Lodging',
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stay',
   ACTIVITY: 'Activity',
   LOCATION: 'Location',
 };

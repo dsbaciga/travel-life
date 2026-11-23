@@ -29,8 +29,8 @@ export const ENTITY_TYPE_LABELS: Record<SyncConflictEntityType, string> = {
   TRIP: 'Trip',
   LOCATION: 'Location',
   ACTIVITY: 'Activity',
-  TRANSPORTATION: 'Transportation',
-  LODGING: 'Lodging',
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stay',
   JOURNAL: 'Journal Entry',
   CHECKLIST_ITEM: 'Checklist Item',
 };

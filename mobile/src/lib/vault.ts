@@ -10,7 +10,7 @@ export type VaultDocType = (typeof VAULT_DOC_TYPES)[number];
 
 export const VAULT_DOC_LABELS: Readonly<Record<VaultDocType, string>> = {
   boarding_pass: 'Boarding pass',
-  lodging: 'Lodging confirmation',
+  lodging: 'Stay confirmation',
   visa: 'Visa',
   passport: 'Passport',
   ticket: 'Ticket',

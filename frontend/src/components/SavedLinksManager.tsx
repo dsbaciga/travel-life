@@ -223,7 +223,7 @@ export default function SavedLinksManager({
             Links
           </h2>
           <p className="text-sm text-slate dark:text-dusk-400">
-            Reference pages for this trip — attach them to activities, lodging,
+            Reference pages for this trip — attach them to activities, stays,
             or anywhere else.
           </p>
         </div>

@@ -21,8 +21,8 @@ export type BulkEntityType =
 const ENTITY_LABELS: Record<BulkEntityType, { singular: string; plural: string }> = {
   activity: { singular: 'Activity', plural: 'Activities' },
   location: { singular: 'Location', plural: 'Locations' },
-  transportation: { singular: 'Transportation', plural: 'Transportation' },
-  lodging: { singular: 'Lodging', plural: 'Lodging' },
+  transportation: { singular: 'Transport', plural: 'Transport' },
+  lodging: { singular: 'Stay', plural: 'Stays' },
   link: { singular: 'Link', plural: 'Links' },
   customItem: { singular: 'Custom item', plural: 'Custom items' },
 };

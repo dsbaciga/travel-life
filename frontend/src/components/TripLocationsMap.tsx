@@ -230,7 +230,7 @@ export default function TripLocationsMap({ locations, transportations = [], show
       <div className="text-sm text-gray-600 dark:text-dusk-400">
         <p>Click on markers and route lines to see details</p>
         {showRoutes && transportations.length > 0 && (
-          <p className="mt-1">Routes are color-coded by transportation type (flights shown as dashed arcs)</p>
+          <p className="mt-1">Routes are color-coded by transport type (flights shown as dashed arcs)</p>
         )}
       </div>
     </div>

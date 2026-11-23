@@ -117,7 +117,7 @@ export default function DayHeader({
     statParts.push(`${stats.transportation} ${stats.transportation === 1 ? 'transport' : 'transports'}`);
   }
   if (stats.lodging > 0) {
-    statParts.push(`${stats.lodging} ${stats.lodging === 1 ? 'lodging' : 'lodgings'}`);
+    statParts.push(`${stats.lodging} ${stats.lodging === 1 ? 'stay' : 'stays'}`);
   }
   if (stats.journal > 0) {
     statParts.push(`${stats.journal} ${stats.journal === 1 ? 'journal' : 'journals'}`);

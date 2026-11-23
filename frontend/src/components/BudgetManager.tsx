@@ -85,8 +85,8 @@ const LINKED_ENTITY_TABS = {
 } as const;
 const LINKED_ENTITY_LABELS = {
   activity: "Activity",
-  transportation: "Transportation",
-  lodging: "Lodging",
+  transportation: "Transport",
+  lodging: "Stays",
   customItem: "Custom item",
 } as const;
 
@@ -642,7 +642,7 @@ export default function BudgetManager({
                 </div>
               )}
               <p className="mt-2 text-xs text-slate dark:text-warm-gray/60">
-                Includes activity, transportation, and lodging costs plus
+                Includes activity, transport and stay costs plus
                 recorded expenses, converted to {displayCurrency} at the rate
                 in effect on each item&apos;s date.
               </p>

@@ -228,7 +228,7 @@ export default function AcceptInvitePage() {
           {/* Description */}
           <div className="bg-cream dark:bg-navy-700 rounded-lg p-4 mb-6">
             <p className="text-sm text-navy-700 dark:text-dusk-200">
-              Travel Life helps you document your adventures. Track trips, locations, photos, transportation, lodging, and create beautiful travel journals.
+              Travel Life helps you document your adventures. Track trips, locations, photos, transport, stays, and create beautiful travel journals.
             </p>
           </div>
 

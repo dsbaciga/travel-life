@@ -77,8 +77,8 @@ import { getActivityPlaceName } from '../lib/itineraryPlaces';
  */
 const TIMELINE_TYPE_LABELS: Record<TimelineItemType, string> = {
   activity: 'Activity',
-  transportation: 'Transportation',
-  lodging: 'Lodging',
+  transportation: 'Transport',
+  lodging: 'Stay',
   journal: 'Journal',
   customItem: 'Custom item',
 };
@@ -1360,7 +1360,7 @@ const Timeline = ({
     return (
       <EmptyState.Compact
         icon="calendar"
-        message="No timeline items yet. Add activities, transportation, lodging, or journal entries to see them here."
+        message="No timeline items yet. Add activities, transport, stays, or journal entries to see them here."
       />
     );
   }

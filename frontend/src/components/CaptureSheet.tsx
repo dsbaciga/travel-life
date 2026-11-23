@@ -49,7 +49,7 @@ const CAPTURE_OPTIONS: CaptureOption[] = [
   },
   {
     id: 'lodging',
-    label: 'Lodging',
+    label: 'Stay',
     hint: 'Where you stayed',
     icon: 'lodging',
     tab: 'lodging',

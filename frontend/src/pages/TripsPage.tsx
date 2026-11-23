@@ -350,7 +350,7 @@ export default function TripsPage() {
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
       title: 'Delete Trip',
-      message: 'Are you sure you want to delete this trip? This will remove all associated locations, photos, transportation, lodging, activities, and journal entries.',
+      message: 'Are you sure you want to delete this trip? This will remove all associated locations, photos, transport, stays, activities, and journal entries.',
       confirmLabel: 'Delete Trip',
       variant: 'danger',
     });

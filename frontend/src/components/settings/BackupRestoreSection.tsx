@@ -137,7 +137,7 @@ export default function BackupRestoreSection({
           </h3>
           <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
             <li>All trips with full details</li>
-            <li>Locations, activities, transportation, and lodging</li>
+            <li>Locations, activities, transport, and stays</li>
             <li>Photo metadata (not actual photo files)</li>
             <li>Journal entries and albums</li>
             <li>Tags, companions, and custom categories</li>

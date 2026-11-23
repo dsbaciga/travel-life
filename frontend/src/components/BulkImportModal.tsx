@@ -37,8 +37,8 @@ const ENTITY_ORDER: ImportEntity[] = ['locations', 'activities', 'lodging', 'tra
 const ENTITY_LABEL: Record<ImportEntity, string> = {
   locations: 'Locations',
   activities: 'Activities',
-  lodging: 'Lodging',
-  transportation: 'Transportation',
+  lodging: 'Stays',
+  transportation: 'Transport',
 };
 
 /** [singular, plural] for the result sentence. */

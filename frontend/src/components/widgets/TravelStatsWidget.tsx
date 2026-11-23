@@ -152,7 +152,7 @@ export default function TravelStatsWidget() {
         }
       }
 
-      toast.success(`Recalculated distances for ${totalRecalculated} transportation entries`);
+      toast.success(`Recalculated distances for ${totalRecalculated} transport entries`);
 
       // Reload stats to show updated distances
       await loadStats();

@@ -148,8 +148,8 @@ export default function BatchPhotoToolbar({
                   <button
                     onClick={onLinkToEntity}
                     className="inline-flex flex-col sm:flex-row items-center gap-0.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-sm font-medium rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors min-w-[44px] justify-center"
-                    title="Link to location, activity, or lodging"
-                    aria-label="Link to location, activity, or lodging"
+                    title="Link to location, activity, or stay"
+                    aria-label="Link to location, activity, or stay"
                   >
                     <Icon name="link" size={16} />
                     <span className="text-[11px] leading-none sm:text-sm whitespace-nowrap">Link</span>

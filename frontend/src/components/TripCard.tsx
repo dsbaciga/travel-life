@@ -291,7 +291,7 @@ const TripCard = memo(function TripCard({ trip, coverPhotoUrl, onDelete, onArchi
               <Link
                 to={`/trips/${trip.id}?tab=transportation`}
                 className="flex items-center gap-1 text-sm text-slate dark:text-warm-gray/70 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                title={`${counts.transportation} transportation${counts.transportation !== 1 ? 's' : ''}`}
+                title={`${counts.transportation} transport`}
                 onClick={(e) => { e.stopPropagation(); onNavigateAway?.(); }}
               >
                 <TransportIcon className="w-4 h-4 text-green-500 dark:text-green-400" />

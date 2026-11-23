@@ -142,8 +142,8 @@ function getTypeLabel(type: UnifiedSearchResult['type']): string {
     photo: 'Photo',
     journal: 'Journal',
     activity: 'Activity',
-    transportation: 'Transportation',
-    lodging: 'Lodging',
+    transportation: 'Transport',
+    lodging: 'Stay',
   };
   return labels[type] || type;
 }

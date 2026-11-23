@@ -776,7 +776,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
         invalidateEntityLinks(tripId);
       } catch (error) {
         console.error("Failed to update location link:", error);
-        toast.error("Lodging saved but failed to update location link");
+        toast.error("Stay saved, but the location link could not be updated");
       }
     }
   };
@@ -802,9 +802,9 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       case "activity":
         return "Activity";
       case "transportation":
-        return "Transportation";
+        return "Transport";
       case "lodging":
-        return "Lodging";
+        return "Stay";
       case "journal":
         return "Journal Entry";
     }
@@ -1682,7 +1682,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
           <p className="text-sm text-blue-700 dark:text-blue-300">
             <strong>Tip:</strong> After saving, use the Link button on the
             timeline to connect this journal entry to locations, activities,
-            lodging, transportation, photos, or albums.
+            stays, transport, photos, or albums.
           </p>
         </div>
       </div>

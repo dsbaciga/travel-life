@@ -261,7 +261,7 @@ function EmptyState() {
         No events scheduled for today
       </p>
       <p className="relative text-xs text-gray-500 dark:text-dusk-400 mt-1">
-        Add activities, transportation, or lodging to see them here
+        Add activities, transport, or stays to see them here
       </p>
     </div>
   );

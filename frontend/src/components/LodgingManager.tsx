@@ -161,7 +161,7 @@ export default function LodgingManager({
 
   // Initialize CRUD hook
   const manager = useManagerCRUD<Lodging, CreateLodgingInput, UpdateLodgingInput>(lodgingServiceAdapter, tripId, {
-    itemName: "lodging",
+    itemName: "stay",
     onUpdate,
   });
 
@@ -181,7 +181,7 @@ export default function LodgingManager({
   // Bulk operations (selection + delete/edit) via shared hook
   const bulk = useBulkOperations<Lodging>({
     tripId,
-    entityName: 'lodging',
+    entityName: 'stay',
     service: {
       bulkDelete: lodgingService.bulkDeleteLodging,
       bulkUpdate: lodgingService.bulkUpdateLodging,
@@ -484,7 +484,7 @@ export default function LodgingManager({
           ...createDataBase,
           locationId: newLocationId,
         });
-        toast.success('Lodging added successfully');
+        toast.success('Stay added successfully');
         await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
@@ -519,15 +519,15 @@ export default function LodgingManager({
         }
       } catch (error) {
         console.error('Failed to create lodging:', error);
-        toast.error('Failed to add lodging');
+        toast.error('Failed to add stay');
       }
     }
   };
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Lodging",
-      message: "Delete this lodging? This action cannot be undone.",
+      title: "Delete stay",
+      message: "Delete this stay? This action cannot be undone.",
       confirmLabel: "Delete",
       variant: "danger",
     });
@@ -555,7 +555,7 @@ export default function LodgingManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected lodging\u2026",
+      placeholder: "Add notes to all selected stays\u2026",
     },
   ], []);
 
@@ -593,7 +593,7 @@ export default function LodgingManager({
       <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Lodging
+          Stays
         </h2>
         <div className="flex items-center gap-2">
           {manager.items.length > 0 && !bulk.selection.selectionMode && (
@@ -610,7 +610,7 @@ export default function LodgingManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Lodging</span>
+              <span className="hidden sm:inline">+ Add stay</span>
             </button>
           )}
         </div>
@@ -620,7 +620,7 @@ export default function LodgingManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Lodging" : "Add Lodging"}
+        title={manager.editingId ? "Edit stay" : "Add stay"}
         icon="lodging"
         formId="lodging-form"
         footer={
@@ -628,7 +628,7 @@ export default function LodgingManager({
             onCancel={handleCloseForm}
             formId="lodging-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Lodging`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} stay`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => {
               addAnother.submit(document.getElementById('lodging-form'));
@@ -1066,14 +1066,14 @@ export default function LodgingManager({
                 <button
                   onClick={() => handleEdit(lodging)}
                   className="px-2.5 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 whitespace-nowrap shrink-0"
-                  aria-label={`Edit lodging ${lodging.name}`}
+                  aria-label={`Edit stay ${lodging.name}`}
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(lodging.id)}
                   className="px-2.5 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 whitespace-nowrap shrink-0"
-                  aria-label={`Delete lodging ${lodging.name}`}
+                  aria-label={`Delete stay ${lodging.name}`}
                 >
                   Delete
                 </button>

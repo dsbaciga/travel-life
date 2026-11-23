@@ -46,8 +46,8 @@ type Mode = 'days' | 'types' | 'checklists' | 'review';
 const TYPE_TABS: readonly { kind: FormKind; label: string }[] = [
   { kind: 'ACTIVITY', label: 'Activities' },
   { kind: 'LOCATION', label: 'Locations' },
-  { kind: 'TRANSPORTATION', label: 'Transit' },
-  { kind: 'LODGING', label: 'Lodging' },
+  { kind: 'TRANSPORTATION', label: 'Transport' },
+  { kind: 'LODGING', label: 'Stays' },
   { kind: 'SAVED_LINK', label: 'Links' },
   { kind: 'EXPENSE', label: 'Expenses' },
   { kind: 'FOOD_LOG', label: 'Food log' },

@@ -286,7 +286,7 @@ class OfflineDownloadService {
         phase: 'metadata',
         current: 3,
         total: 8,
-        currentItem: 'Transportation',
+        currentItem: 'Transport',
         bytesDownloaded,
       });
 
@@ -297,7 +297,7 @@ class OfflineDownloadService {
         phase: 'metadata',
         current: 4,
         total: 8,
-        currentItem: 'Lodging',
+        currentItem: 'Stays',
         bytesDownloaded,
       });
 

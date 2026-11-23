@@ -143,7 +143,7 @@ export default function CalendarFeedSettings() {
       <p className="text-gray-600 dark:text-dusk-400 mb-6">
         Subscribe to your trips from Google Calendar, Apple Calendar, Outlook, or any calendar app.
         The feed is a read-only iCal (.ics) URL containing your trips, flights and other
-        transportation, and lodging stays. Your calendar app refreshes it automatically.
+        transport and stays. Your calendar app refreshes it automatically.
       </p>
 
       <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">

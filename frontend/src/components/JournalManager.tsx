@@ -643,7 +643,7 @@ export default function JournalManager({
             <div className="border-t border-gray-200 dark:border-dusk-700 pt-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <Icon name="lightbulb" size={16} className="align-text-bottom" /> <strong>Tip:</strong> After creating your journal entry, use the link button (<Icon name="link" size={16} className="align-text-bottom" />) to connect it to locations, activities, lodging, transportation, photos, or albums.
+                  <Icon name="lightbulb" size={16} className="align-text-bottom" /> <strong>Tip:</strong> After creating your journal entry, use the link button (<Icon name="link" size={16} className="align-text-bottom" />) to connect it to locations, activities, stays, transport, photos, or albums.
                 </p>
               </div>
             </div>

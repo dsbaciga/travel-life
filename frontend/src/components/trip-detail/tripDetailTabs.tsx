@@ -223,7 +223,7 @@ export function useTripTabGroups({
           },
           {
             id: "lodging",
-            label: "Lodging",
+            label: "Stays",
             count: lodgingCount,
             icon: (
               <Icon name="lodging" className="w-full h-full" />

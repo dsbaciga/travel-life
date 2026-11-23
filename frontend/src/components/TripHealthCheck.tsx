@@ -24,7 +24,7 @@ const CATEGORY_CONFIG: Record<ValidationIssueCategory, {
     bgColor: 'bg-amber-50 dark:bg-amber-900/20',
   },
   ACCOMMODATIONS: {
-    label: 'Accommodations',
+    label: 'Stays',
     icon: (
       <Icon name="lodging" className="w-5 h-5" />
     ),
@@ -32,7 +32,7 @@ const CATEGORY_CONFIG: Record<ValidationIssueCategory, {
     bgColor: 'bg-blue-50 dark:bg-blue-900/20',
   },
   TRANSPORTATION: {
-    label: 'Transportation',
+    label: 'Transport',
     icon: (
       <Icon name="transportation" className="w-5 h-5" />
     ),

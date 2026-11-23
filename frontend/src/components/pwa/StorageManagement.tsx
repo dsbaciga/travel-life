@@ -66,7 +66,7 @@ const CATEGORY_CONFIG: Record<
     label: 'Trips Data',
     icon: Icons.Database,
     clearLabel: 'Clear Trip Data',
-    description: 'Trip details, locations, activities, lodging, and other trip information',
+    description: 'Trip details, locations, activities, stays, and other trip information',
   },
   photoThumbnails: {
     label: 'Photo Thumbnails',

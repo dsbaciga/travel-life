@@ -94,14 +94,14 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         key: `lodging:${l.id}`,
         entityType: "lodging" as const,
         entityId: l.id,
-        label: `Lodging: ${l.name}`,
+        label: `Stay: ${l.name}`,
         timezone: l.timezone ?? null,
       })),
       ...transportation.map((t) => ({
         key: `transportation:${t.id}`,
         entityType: "transportation" as const,
         entityId: t.id,
-        label: `Transportation: ${t.type}${t.carrier ? ` (${t.carrier})` : ""}`,
+        label: `Transport: ${t.type}${t.carrier ? ` (${t.carrier})` : ""}`,
         timezone: t.startTimezone ?? null,
       })),
       ...activities.map((a) => ({

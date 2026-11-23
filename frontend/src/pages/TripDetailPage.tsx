@@ -875,7 +875,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading transportation..." />
+                          <LoadingSpinner.FullPage message="Loading transport..." />
                         }
                       >
                         <TransportationManager
@@ -904,7 +904,7 @@ export default function TripDetailPage() {
                     <ErrorBoundary>
                       <Suspense
                         fallback={
-                          <LoadingSpinner.FullPage message="Loading lodging..." />
+                          <LoadingSpinner.FullPage message="Loading stays..." />
                         }
                       >
                         <LodgingManager

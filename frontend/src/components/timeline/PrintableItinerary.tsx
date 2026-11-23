@@ -484,7 +484,7 @@ const PrintableItinerary = forwardRef<HTMLDivElement, PrintableItineraryProps>(
 
             {unscheduled.transportation.length > 0 && (
               <div className="print-unscheduled-group">
-                <div className="print-unscheduled-group-title">Transportation</div>
+                <div className="print-unscheduled-group-title">Transport</div>
                 {unscheduled.transportation.map((transport) => (
                   <UnscheduledTransportationItem key={transport.id} transport={transport} />
                 ))}
@@ -493,7 +493,7 @@ const PrintableItinerary = forwardRef<HTMLDivElement, PrintableItineraryProps>(
 
             {unscheduled.lodging.length > 0 && (
               <div className="print-unscheduled-group">
-                <div className="print-unscheduled-group-title">Lodging</div>
+                <div className="print-unscheduled-group-title">Stays</div>
                 {unscheduled.lodging.map((lodging) => (
                   <UnscheduledLodgingItem key={lodging.id} lodging={lodging} />
                 ))}

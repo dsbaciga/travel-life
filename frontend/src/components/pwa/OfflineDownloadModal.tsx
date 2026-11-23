@@ -407,7 +407,7 @@ export default function OfflineDownloadModal({
                   Trip details & itinerary
                 </p>
                 <p className="text-xs text-slate dark:text-warm-gray/70">
-                  Locations, activities, transportation, lodging, journals, checklists
+                  Locations, activities, transport, stays, journals, checklists
                 </p>
               </div>
               <div className="flex items-center gap-2">

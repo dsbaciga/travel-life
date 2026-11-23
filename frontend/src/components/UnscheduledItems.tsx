@@ -447,7 +447,7 @@ export default function UnscheduledItems({
 
     const transportationType = transportationForm.values.type;
     if (!isTransportationType(transportationType)) {
-      toast.error("Please select a valid transportation type");
+      toast.error("Please select a valid transport type");
       return;
     }
 
@@ -496,17 +496,17 @@ export default function UnscheduledItems({
 
       if (isCreating) {
         await transportationService.createTransportation({ ...updateData, tripId });
-        toast.success("Transportation created");
+        toast.success("Transport created");
       } else if (editingId !== null) {
         await transportationService.updateTransportation(editingId, updateData);
-        toast.success("Transportation updated");
+        toast.success("Transport updated");
       }
 
       resetForm();
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save transportation");
+      toast.error("Failed to save transport");
     } finally {
       setIsSubmitting(false);
     }
@@ -523,7 +523,7 @@ export default function UnscheduledItems({
 
     const lodgingType = lodgingForm.values.type;
     if (!isLodgingType(lodgingType)) {
-      toast.error("Please select a valid lodging type");
+      toast.error("Please select a valid stay type");
       return;
     }
 
@@ -569,12 +569,12 @@ export default function UnscheduledItems({
           bookingUrl: updateData.bookingUrl ?? undefined,
           notes: updateData.notes ?? undefined,
         });
-        toast.success("Lodging created");
+        toast.success("Stay created");
 
       } else if (editingId !== null) {
         // Update existing lodging
         await lodgingService.updateLodging(editingId, { ...updateData, locationId: newLocationId });
-        toast.success("Lodging updated");
+        toast.success("Stay updated");
 
       }
 
@@ -583,7 +583,7 @@ export default function UnscheduledItems({
       loadAllData();
       onUpdate?.();
     } catch {
-      toast.error("Failed to save lodging");
+      toast.error("Failed to save stay");
     } finally {
       setIsSubmitting(false);
     }
@@ -678,7 +678,7 @@ export default function UnscheduledItems({
                   <div className="flex items-center gap-3">
                     <Icon name="transportation" size={32} />
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">Transportation</div>
+                      <div className="font-medium text-gray-900 dark:text-white">Transport</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Flights, trains, cars, etc.</div>
                     </div>
                   </div>
@@ -692,7 +692,7 @@ export default function UnscheduledItems({
                   <div className="flex items-center gap-3">
                     <Icon name="lodging" size={32} />
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">Lodging</div>
+                      <div className="font-medium text-gray-900 dark:text-white">Stay</div>
                       <div className="text-sm text-gray-500 dark:text-dusk-400">Hotels, Airbnb, camping</div>
                     </div>
                   </div>
@@ -738,7 +738,7 @@ export default function UnscheduledItems({
               : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
-          Transportation ({transportation.length})
+          Transport ({transportation.length})
         </button>
         <button
           onClick={() => setActiveSection("lodging")}
@@ -748,7 +748,7 @@ export default function UnscheduledItems({
               : "border-transparent text-gray-600 dark:text-dusk-400 hover:text-gray-900 dark:hover:text-dusk-200"
           }`}
         >
-          Lodging ({lodging.length})
+          Stays ({lodging.length})
         </button>
       </div>
 
@@ -801,7 +801,7 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "transportation"}
         onClose={resetForm}
-        title={isCreating ? "Add Transportation" : "Edit Transportation"}
+        title={isCreating ? "Add transport" : "Edit transport"}
         icon="transportation"
         formId="transportation-form"
         footer={
@@ -820,7 +820,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Transportation" : "Update Transportation"}
+              {isSubmitting ? "Saving..." : isCreating ? "Add transport" : "Update transport"}
             </button>
           </>
         }
@@ -1095,7 +1095,7 @@ export default function UnscheduledItems({
       <FormModal
         isOpen={showFormModal && editingType === "lodging"}
         onClose={resetForm}
-        title={isCreating ? "Add Lodging" : "Edit Lodging"}
+        title={isCreating ? "Add stay" : "Edit stay"}
         icon="lodging"
         formId="lodging-form"
         footer={
@@ -1114,7 +1114,7 @@ export default function UnscheduledItems({
               disabled={isSubmitting}
               className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "Saving..." : isCreating ? "Add Lodging" : "Update Lodging"}
+              {isSubmitting ? "Saving..." : isCreating ? "Add stay" : "Update stay"}
             </button>
           </>
         }
@@ -1436,8 +1436,8 @@ export default function UnscheduledItems({
               (transportation.length === 0 ? (
                 <EmptyState
                   icon="transportation"
-                  message="No unscheduled transportation"
-                  subMessage="Transportation without departure times will appear here"
+                  message="No unscheduled transport"
+                  subMessage="Transport without departure times will appear here"
                 />
               ) : (
                 transportation.map((transport) => (
@@ -1533,7 +1533,7 @@ export default function UnscheduledItems({
                           type="button"
                           onClick={() => handleEditTransportation(transport)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
-                          title="Edit transportation"
+                          title="Edit transport"
                         >
                           <Icon name="edit" className="w-5 h-5" />
                         </button>
@@ -1548,8 +1548,8 @@ export default function UnscheduledItems({
               (lodging.length === 0 ? (
                 <EmptyState
                   icon="lodging"
-                  message="No unscheduled lodging"
-                  subMessage="Lodging without check-in dates will appear here"
+                  message="No unscheduled stays"
+                  subMessage="Stays without check-in dates will appear here"
                 />
               ) : (
                 lodging.map((lodgingItem) => (
@@ -1632,7 +1632,7 @@ export default function UnscheduledItems({
                           type="button"
                           onClick={() => handleEditLodging(lodgingItem)}
                           className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
-                          title="Edit lodging"
+                          title="Edit stay"
                         >
                           <Icon name="edit" className="w-5 h-5" />
                         </button>

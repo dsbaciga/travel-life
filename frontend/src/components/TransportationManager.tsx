@@ -220,7 +220,7 @@ function TransportationItem({
                 e.stopPropagation();
                 onToggleSelection?.(transportation.id, index, e.shiftKey);
               }}
-              aria-label="Select transportation"
+              aria-label="Select transport"
               className="w-5 h-5 rounded border-primary-200 dark:border-gold/30 text-primary-600 dark:text-gold focus:ring-primary-500 dark:focus:ring-gold/50"
             />
           </div>
@@ -395,14 +395,14 @@ function TransportationItem({
         <button
           onClick={() => onEdit(transportation)}
           className="px-2.5 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 whitespace-nowrap shrink-0"
-          aria-label={`Edit ${transportation.type} transportation`}
+          aria-label={`Edit ${transportation.type} transport`}
         >
           Edit
         </button>
         <button
           onClick={() => onDelete(transportation.id)}
           className="px-2.5 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 whitespace-nowrap shrink-0"
-          aria-label={`Delete ${transportation.type} transportation`}
+          aria-label={`Delete ${transportation.type} transport`}
         >
           Delete
         </button>
@@ -449,7 +449,7 @@ export default function TransportationManager({
 
   // Initialize CRUD hook
   const manager = useManagerCRUD<Transportation, CreateTransportationInput, UpdateTransportationInput>(transportationServiceAdapter, tripId, {
-    itemName: "transportation",
+    itemName: "transport",
     onUpdate,
   });
 
@@ -915,8 +915,8 @@ export default function TransportationManager({
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Transportation",
-      message: "Delete this transportation? This action cannot be undone.",
+      title: "Delete transport",
+      message: "Delete this transport? This action cannot be undone.",
       confirmLabel: "Delete",
       variant: "danger",
     });
@@ -930,8 +930,8 @@ export default function TransportationManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Transportation",
-      message: `Delete ${selectedIds.length} selected transportation items? This action cannot be undone.`,
+      title: "Delete transport",
+      message: `Delete ${selectedIds.length} selected transport items? This action cannot be undone.`,
       confirmLabel: "Delete All",
       variant: "danger",
     });
@@ -940,13 +940,13 @@ export default function TransportationManager({
     setIsBulkDeleting(true);
     try {
       await transportationService.bulkDeleteTransportation(tripId, selectedIds);
-      toast.success(`Deleted ${selectedIds.length} transportation items`);
+      toast.success(`Deleted ${selectedIds.length} transport items`);
       bulkSelection.exitSelectionMode();
       await manager.loadItems();
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete transportation:", error);
-      toast.error("Failed to delete some transportation items");
+      toast.error("Failed to delete some transport items");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -960,14 +960,14 @@ export default function TransportationManager({
     setIsBulkEditing(true);
     try {
       await transportationService.bulkUpdateTransportation(tripId, selectedIds, updates);
-      toast.success(`Updated ${selectedIds.length} transportation items`);
+      toast.success(`Updated ${selectedIds.length} transport items`);
       setShowBulkEditModal(false);
       bulkSelection.exitSelectionMode();
       await manager.loadItems();
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update transportation:", error);
-      toast.error("Failed to update some transportation items");
+      toast.error("Failed to update some transport items");
     } finally {
       setIsBulkEditing(false);
     }
@@ -1000,7 +1000,7 @@ export default function TransportationManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected transportation\u2026",
+      placeholder: "Add notes to all selected transport\u2026",
     },
   ], []);
 
@@ -1113,7 +1113,7 @@ export default function TransportationManager({
       <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Transportation
+          Transport
         </h2>
         <div className="flex items-center gap-2">
           {manager.items.length > 0 && !bulkSelection.selectionMode && (
@@ -1130,7 +1130,7 @@ export default function TransportationManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Transportation</span>
+              <span className="hidden sm:inline">+ Add transport</span>
             </button>
           )}
         </div>
@@ -1160,7 +1160,7 @@ export default function TransportationManager({
 
       {/* Filter Tabs */}
       {manager.items.length > 0 && (
-        <div className="flex gap-2 border-b border-gray-200 dark:border-dusk-700" role="tablist" aria-label="Transportation filters">
+        <div className="flex gap-2 border-b border-gray-200 dark:border-dusk-700" role="tablist" aria-label="Transport filters">
           <button
             onClick={() => setActiveTab("all")}
             className={`px-4 py-2 font-medium text-sm transition-colors ${
@@ -1170,7 +1170,7 @@ export default function TransportationManager({
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "all" }}
-            aria-label={`Show all transportation (${counts.all})`}
+            aria-label={`Show all transport (${counts.all})`}
           >
             All {counts.all > 0 && `(${counts.all})`}
           </button>
@@ -1183,7 +1183,7 @@ export default function TransportationManager({
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "upcoming" }}
-            aria-label={`Show upcoming transportation (${counts.upcoming})`}
+            aria-label={`Show upcoming transport (${counts.upcoming})`}
           >
             Upcoming {counts.upcoming > 0 && `(${counts.upcoming})`}
           </button>
@@ -1196,7 +1196,7 @@ export default function TransportationManager({
             }`}
             role="tab"
             {...{ 'aria-selected': activeTab === "historical" }}
-            aria-label={`Show historical transportation (${counts.historical})`}
+            aria-label={`Show historical transport (${counts.historical})`}
           >
             Historical {counts.historical > 0 && `(${counts.historical})`}
           </button>
@@ -1225,7 +1225,7 @@ export default function TransportationManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Transportation" : "Add Transportation"}
+        title={manager.editingId ? "Edit transport" : "Add transport"}
         icon="transportation"
         formId="transportation-form"
         footer={
@@ -1233,7 +1233,7 @@ export default function TransportationManager({
             onCancel={handleCloseForm}
             formId="transportation-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Transportation`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} transport`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('transportation-form'))}
             leftContent={
@@ -1263,7 +1263,7 @@ export default function TransportationManager({
                 htmlFor="transportation-type"
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300"
               >
-                Transportation Type
+                Transport type
               </label>
               <select
                 id="transportation-type"
@@ -1613,7 +1613,7 @@ export default function TransportationManager({
           icon={<EmptyIllustrations.NoTransportation />}
           message="Plan Your Journey"
           subMessage="How will you get there? Add flights, trains, road trips, and more. Track departure times, booking confirmations, and never miss a connection."
-          actionLabel="Add Transportation"
+          actionLabel="Add transport"
           onAction={openCreateForm}
         />
       ) : (
@@ -1622,7 +1622,7 @@ export default function TransportationManager({
           {scheduledItems.length > 0 && (
             <div className="bg-white dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Icon name="calendar" /> Scheduled Transportation
+                <Icon name="calendar" /> Scheduled transport
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({filteredScheduledItems.length})
                 </span>
@@ -1630,7 +1630,7 @@ export default function TransportationManager({
               {filteredScheduledItems.length === 0 ? (
                 <EmptyState.Compact
                   icon="search"
-                  message={`No ${activeTab} transportation`}
+                  message={`No ${activeTab} transport`}
                 />
               ) : (
                 <div className="space-y-4">
@@ -1664,7 +1664,7 @@ export default function TransportationManager({
           {sortedUnscheduledItems.length > 0 && (
             <div className="bg-gray-50 dark:bg-dusk-900 border border-gray-200 dark:border-dusk-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-700 dark:text-dusk-300 mb-4 flex items-center gap-2">
-                <Icon name="checklist" /> Unscheduled Transportation
+                <Icon name="checklist" /> Unscheduled transport
                 <span className="text-sm font-normal text-gray-500 dark:text-dusk-400">
                   ({sortedUnscheduledItems.length})
                 </span>

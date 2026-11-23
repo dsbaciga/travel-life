@@ -814,13 +814,13 @@ export default function LocationManager({
                 >
                   <option value="none">None</option>
                   <option value="activity">Activity</option>
-                  <option value="lodging">Lodging</option>
+                  <option value="lodging">Stay</option>
                 </select>
                 {alsoCreate !== "none" && (
                   <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                     {alsoCreate === "activity"
                       ? "Adds an activity with the same name, linked to this place. It starts unscheduled."
-                      : "Adds a lodging with the same name, linked to this place. It is set as a hotel with no dates; edit it under Lodging."}
+                      : "Adds a stay with the same name, linked to this place. It is set as a hotel with no dates; edit it under Stays."}
                   </p>
                 )}
               </div>
