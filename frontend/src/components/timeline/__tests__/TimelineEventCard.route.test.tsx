@@ -39,7 +39,7 @@ const renderCard = (it: TimelineItem, routeStop: 'past' | 'next' | 'future') => 
       item={it}
       tripId={1}
       tripTimezone="Asia/Tokyo"
-      viewMode="detailed"
+      viewMode="standard"
       routeStop={routeStop}
       onEdit={vi.fn()}
       onDelete={vi.fn()}
