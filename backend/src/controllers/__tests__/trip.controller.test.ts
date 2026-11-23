@@ -218,7 +218,7 @@ describe('TripController', () => {
       expect(mockTripService.createTrip).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalled();
       const error = expectAppError(next);
-      expect(error.message).toBe('Unauthorized');
+      expect(error.message).toBe('Sign in to continue.');
       expect(error.statusCode).toBe(401);
     });
 

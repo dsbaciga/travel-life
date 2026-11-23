@@ -20,7 +20,7 @@ describe('controllerHelpers', () => {
       const req = {} as Request;
 
       expect(() => requireUser(req)).toThrow(AppError);
-      expect(() => requireUser(req)).toThrow('Unauthorized');
+      expect(() => requireUser(req)).toThrow('Sign in to continue.');
     });
 
     it('should throw AppError with 401 status code when user is undefined', () => {
@@ -33,7 +33,7 @@ describe('controllerHelpers', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(AppError);
         expect((error as AppError).statusCode).toBe(401);
-        expect((error as AppError).message).toBe('Unauthorized');
+        expect((error as AppError).message).toBe('Sign in to continue.');
       }
     });
 
@@ -77,7 +77,7 @@ describe('controllerHelpers', () => {
       const req = {} as Request;
 
       expect(() => requireUserId(req)).toThrow(AppError);
-      expect(() => requireUserId(req)).toThrow('Unauthorized');
+      expect(() => requireUserId(req)).toThrow('Sign in to continue.');
     });
 
     it('should throw AppError with 401 status code when user is undefined', () => {

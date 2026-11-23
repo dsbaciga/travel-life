@@ -19,7 +19,7 @@ describe('AppError', () => {
 
   it('should create errors with different status codes', () => {
     const error400 = new AppError('Bad Request', 400);
-    const error401 = new AppError('Unauthorized', 401);
+    const error401 = new AppError('Sign in to continue.', 401);
     const error403 = new AppError('Forbidden', 403);
     const error404 = new AppError('Not Found', 404);
     const error500 = new AppError('Internal Server Error', 500);

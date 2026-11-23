@@ -301,7 +301,7 @@ describe('AuthController', () => {
     });
 
     it('should propagate service errors for invalid credentials', async () => {
-      const serviceError = new AppError('Invalid email or password', 401);
+      const serviceError = new AppError("That email and password don't match. Check them and try again.", 401);
       mockAuthService.login.mockRejectedValue(serviceError);
 
       const req = createMockRequest({
@@ -397,7 +397,7 @@ describe('AuthController', () => {
       mockGetRefreshTokenFromCookie.mockReturnValue('blacklisted-token');
       mockIsBlacklisted.mockReturnValue(true);
       mockAuthService.refreshToken.mockRejectedValue(
-        new AppError('Refresh token has been revoked', 401)
+        new AppError('You were signed out. Sign in again to continue.', 401)
       );
 
       const req = createMockRequest({
@@ -419,13 +419,13 @@ describe('AuthController', () => {
       // Error passed to next via asyncHandler
       expect(next).toHaveBeenCalled();
       const error = expectAppError(next);
-      expect(error.message).toBe('Refresh token has been revoked');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
       expect(error.statusCode).toBe(401);
     });
 
     it('should propagate service errors via next()', async () => {
       mockGetRefreshTokenFromCookie.mockReturnValue('expired-token');
-      mockAuthService.refreshToken.mockRejectedValue(new AppError('Invalid refresh token', 401));
+      mockAuthService.refreshToken.mockRejectedValue(new AppError('You were signed out. Sign in again to continue.', 401));
 
       const req = createMockRequest({
         cookies: { refreshToken: 'expired-token' },
@@ -438,7 +438,7 @@ describe('AuthController', () => {
 
       expect(next).toHaveBeenCalled();
       const error = expectAppError(next);
-      expect(error.message).toBe('Invalid refresh token');
+      expect(error.message).toBe('You were signed out. Sign in again to continue.');
     });
   });
 
@@ -468,7 +468,7 @@ describe('AuthController', () => {
       expect(mockAuthService.getCurrentUser).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalled();
       const error = expectAppError(next);
-      expect(error.message).toBe('Unauthorized');
+      expect(error.message).toBe('Sign in to continue.');
       expect(error.statusCode).toBe(401);
     });
 
@@ -675,7 +675,7 @@ describe('AuthController', () => {
       mockGetRefreshTokenFromCookie.mockReturnValue('blacklisted-token');
       mockIsBlacklisted.mockReturnValue(true);
       mockAuthService.refreshToken.mockRejectedValue(
-        new AppError('Refresh token has been revoked', 401)
+        new AppError('You were signed out. Sign in again to continue.', 401)
       );
 
       const req = createMockRequest({

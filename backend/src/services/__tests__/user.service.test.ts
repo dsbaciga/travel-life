@@ -393,7 +393,7 @@ describe('UserService', () => {
       mockPrisma.user.findFirst.mockResolvedValue({ id: 2, username: 'taken' });
 
       await expect(userService.updateUsername(1, 'taken')).rejects.toThrow(
-        'Username is already taken'
+        'That username is taken. Choose another.'
       );
     });
   });
@@ -441,7 +441,7 @@ describe('UserService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(userService.updatePassword(1, 'wrongpass', 'newpass')).rejects.toThrow(
-        'Current password is incorrect'
+        "That isn't your current password. Check it and try again."
       );
     });
   });

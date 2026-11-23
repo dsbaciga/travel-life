@@ -113,7 +113,7 @@ export class OidcService {
         `OIDC discovery fetch failed for ${url}: ${detail}. ` +
         'Check that OIDC_ISSUER_URL is correct and reachable from the backend container.'
       );
-      throw new AppError('Single sign-on is temporarily unavailable', 502);
+      throw new AppError("Single sign-on isn't available right now. Try again in a moment.", 502);
     }
     const doc = response.data;
 

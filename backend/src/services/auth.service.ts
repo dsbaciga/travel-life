@@ -124,14 +124,14 @@ export class AuthService {
       // straight away makes "no such account" measurably faster than "wrong
       // password", which lets a caller find out which emails are registered.
       await comparePassword(data.password, await getDummyPasswordHash());
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError("That email and password don't match. Check them and try again.", 401);
     }
 
     // Verify password
     const isPasswordValid = await comparePassword(data.password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw new AppError('Invalid email or password', 401);
+      throw new AppError("That email and password don't match. Check them and try again.", 401);
     }
 
     // Ensure "Myself" companion exists for existing users (migration support)
@@ -201,7 +201,7 @@ export class AuthService {
         logger.warn(
           `Concurrent refresh for user ${decoded.userId} with no recorded result; rejecting without invalidating sessions`
         );
-        throw new AppError('Refresh token has been revoked', 401);
+        throw new AppError('You were signed out. Sign in again to continue.', 401);
       }
 
       if (claimOutcome === 'revoked') {
@@ -212,7 +212,7 @@ export class AuthService {
           where: { id: decoded.userId },
           data: { passwordVersion: { increment: 1 } },
         });
-        throw new AppError('Refresh token has been revoked', 401);
+        throw new AppError('You were signed out. Sign in again to continue.', 401);
       }
 
       // Verify user still exists and fetch current passwordVersion
@@ -235,7 +235,7 @@ export class AuthService {
       // Reject refresh if password was changed since this token was issued
       const tokenPasswordVersion = decoded.passwordVersion ?? 0;
       if (tokenPasswordVersion !== user.passwordVersion) {
-        throw new AppError('Password has been changed. Please log in again.', 401);
+        throw new AppError('Your password was changed. Sign in again to continue.', 401);
       }
 
       // Generate new tokens with current passwordVersion
@@ -270,7 +270,7 @@ export class AuthService {
 
       return result;
     } catch (error) {
-      throw new AppError('Invalid refresh token', 401);
+      throw new AppError('You were signed out. Sign in again to continue.', 401);
     }
   }
 

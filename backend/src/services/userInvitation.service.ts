@@ -201,7 +201,7 @@ export const userInvitationService = {
 
     // Verify email matches
     if (invitation.email.toLowerCase() !== data.email.toLowerCase()) {
-      throw new AppError('Email does not match the invitation', 400);
+      throw new AppError("That email doesn't match the invitation.", 400);
     }
 
     // Check if username already exists

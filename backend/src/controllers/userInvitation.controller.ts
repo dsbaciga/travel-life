@@ -24,7 +24,7 @@ export const userInvitationController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError('Authentication required', 401);
+        throw new AppError('Sign in to continue.', 401);
       }
 
       const validatedData = sendUserInvitationSchema.parse(req.body);
@@ -67,7 +67,7 @@ export const userInvitationController = {
       // a full session, so it must honor SSO-only mode exactly like
       // register/login do — otherwise it is a bypass of DISABLE_PASSWORD_LOGIN.
       if (passwordAuthDisabled()) {
-        throw new AppError('Password registration is disabled; use single sign-on', 403);
+        throw new AppError('Password sign-up is turned off on this server. Use single sign-on.', 403);
       }
 
       const validatedData = acceptInvitationSchema.parse(req.body);
@@ -130,7 +130,7 @@ export const userInvitationController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError('Authentication required', 401);
+        throw new AppError('Sign in to continue.', 401);
       }
 
       // Parse pagination params with defaults
@@ -156,7 +156,7 @@ export const userInvitationController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError('Authentication required', 401);
+        throw new AppError('Sign in to continue.', 401);
       }
 
       const invitationId = parseInt(req.params.invitationId, 10);
@@ -183,7 +183,7 @@ export const userInvitationController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError('Authentication required', 401);
+        throw new AppError('Sign in to continue.', 401);
       }
 
       const invitationId = parseInt(req.params.invitationId, 10);
@@ -210,7 +210,7 @@ export const userInvitationController = {
     try {
       const userId = req.user?.userId;
       if (!userId) {
-        throw new AppError('Authentication required', 401);
+        throw new AppError('Sign in to continue.', 401);
       }
 
       // Check both global (env var) SMTP and per-user SMTP settings

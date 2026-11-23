@@ -98,7 +98,7 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('No token provided', 401);
+      throw new AppError('Sign in to continue.', 401);
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -108,7 +108,7 @@ export const authenticate = async (
     // Check if this access token has been revoked (e.g., user logged out).
     // Done after signature verification so we don't waste a lookup on garbage tokens.
     if (isBlacklisted(token)) {
-      throw new AppError('Token has been revoked', 401);
+      throw new AppError('You were signed out. Sign in again to continue.', 401);
     }
 
     // Check passwordVersion to reject tokens issued before a password change.
@@ -123,7 +123,7 @@ export const authenticate = async (
       });
 
       if (!user) {
-        throw new AppError('Token invalidated. Please log in again.', 401);
+        throw new AppError('You were signed out. Sign in again to continue.', 401);
       }
 
       dbPwVersion = user.passwordVersion ?? 0;
@@ -131,7 +131,7 @@ export const authenticate = async (
     }
 
     if (tokenPwVersion !== dbPwVersion) {
-      throw new AppError('Token invalidated. Please log in again.', 401);
+      throw new AppError('You were signed out. Sign in again to continue.', 401);
     }
 
     req.user = decoded;
@@ -141,7 +141,7 @@ export const authenticate = async (
     if (error instanceof AppError) {
       next(error);
     } else {
-      next(new AppError('Invalid or expired token', 401));
+      next(new AppError('Your session has expired. Sign in again to continue.', 401));
     }
   }
 };

@@ -329,7 +329,7 @@ describe('UserInvitationService', () => {
           email: 'wrong@example.com',
           password: 'SecurePass123!',
         })
-      ).rejects.toThrow('Email does not match the invitation');
+      ).rejects.toThrow("That email doesn't match the invitation.");
     });
 
     it('should reject when username already exists', async () => {

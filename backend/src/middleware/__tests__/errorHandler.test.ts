@@ -93,14 +93,14 @@ describe('errorHandler', () => {
     });
 
     it('should handle 401 Unauthorized AppError', () => {
-      const error = new UtilsAppError('Unauthorized', 401);
+      const error = new UtilsAppError('Sign in to continue.', 401);
 
       errorHandler(error, mockRequest, mockResponse, mockNext);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
       expect(mockJson).toHaveBeenCalledWith({
         status: 'error',
-        message: 'Unauthorized',
+        message: 'Sign in to continue.',
       });
     });
 

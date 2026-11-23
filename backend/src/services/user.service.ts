@@ -346,7 +346,7 @@ class UserService {
     });
 
     if (existingUser) {
-      throw new AppError('Username is already taken', 400);
+      throw new AppError('That username is taken. Choose another.', 400);
     }
 
     const user = await prisma.user.update({
@@ -470,7 +470,7 @@ class UserService {
     // Verify current password
     const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValidPassword) {
-      throw new AppError('Current password is incorrect', 401);
+      throw new AppError("That isn't your current password. Check it and try again.", 401);
     }
 
     // Hash new password. Routed through the shared helper so the cost factor is

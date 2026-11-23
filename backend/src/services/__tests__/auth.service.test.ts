@@ -333,7 +333,7 @@ describe('AuthService', () => {
       await expect(authService.login({
         email: 'nonexistent@example.com',
         password: 'anypassword',
-      })).rejects.toThrow('Invalid email or password');
+      })).rejects.toThrow("That email and password don't match. Check them and try again.");
     });
 
     it('does a password comparison even when the email has no account', async () => {
@@ -346,7 +346,7 @@ describe('AuthService', () => {
 
       await expect(
         authService.login({ email: 'nobody@example.com', password: 'whatever-1' })
-      ).rejects.toThrow('Invalid email or password');
+      ).rejects.toThrow("That email and password don't match. Check them and try again.");
 
       expect(comparePassword).toHaveBeenCalledTimes(1);
       expect(comparePassword).toHaveBeenCalledWith('whatever-1', expect.any(String));
@@ -363,7 +363,7 @@ describe('AuthService', () => {
       await expect(authService.login({
         email: 'test@example.com',
         password: 'WrongPassword123',
-      })).rejects.toThrow('Invalid email or password');
+      })).rejects.toThrow("That email and password don't match. Check them and try again.");
     });
 
     // AUTH-008: Generate access token with correct expiry (15min)
@@ -457,7 +457,7 @@ describe('AuthService', () => {
     // AUTH-011 & AUTH-012: Token blacklisting is not implemented in current service
     it('AUTH-011/012: should throw error for invalid refresh token', async () => {
       await expect(authService.refreshToken('invalid-token')).rejects.toThrow(AppError);
-      await expect(authService.refreshToken('invalid-token')).rejects.toThrow('Invalid refresh token');
+      await expect(authService.refreshToken('invalid-token')).rejects.toThrow('You were signed out. Sign in again to continue.');
     });
 
     // AUTH-013: Token refresh should work (silent refresh is controller/frontend concern)
@@ -485,7 +485,7 @@ describe('AuthService', () => {
       const { generateRefreshToken } = await import('../../auth/jwt');
       const validToken = generateRefreshToken({ id: 999, userId: 999, email: 'deleted@example.com', passwordVersion: 0 });
 
-      await expect(authService.refreshToken(validToken)).rejects.toThrow('Invalid refresh token');
+      await expect(authService.refreshToken(validToken)).rejects.toThrow('You were signed out. Sign in again to continue.');
     });
 
     // AUTH-011: The consumed token is revoked, making refresh tokens single-use.

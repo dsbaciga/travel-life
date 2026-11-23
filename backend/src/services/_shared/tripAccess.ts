@@ -35,18 +35,20 @@ export type VerifiableEntityType =
 interface EntityConfig {
   model: keyof typeof prisma;
   displayName: string;
+  /** Lowercase noun used in user-facing messages. */
+  noun: string;
 }
 
 const entityConfigs: Record<VerifiableEntityType, EntityConfig> = {
-  location: { model: 'location', displayName: 'Location' },
-  photo: { model: 'photo', displayName: 'Photo' },
-  activity: { model: 'activity', displayName: 'Activity' },
-  lodging: { model: 'lodging', displayName: 'Lodging' },
-  transportation: { model: 'transportation', displayName: 'Transportation' },
-  journalEntry: { model: 'journalEntry', displayName: 'Journal entry' },
-  album: { model: 'photoAlbum', displayName: 'Album' },
-  photoAlbum: { model: 'photoAlbum', displayName: 'Album' },
-  customItem: { model: 'customItem', displayName: 'Custom item' },
+  location: { model: 'location', displayName: 'Location', noun: 'place' },
+  photo: { model: 'photo', displayName: 'Photo', noun: 'photo' },
+  activity: { model: 'activity', displayName: 'Activity', noun: 'activity' },
+  lodging: { model: 'lodging', displayName: 'Lodging', noun: 'stay' },
+  transportation: { model: 'transportation', displayName: 'Transportation', noun: 'transport item' },
+  journalEntry: { model: 'journalEntry', displayName: 'Journal entry', noun: 'journal entry' },
+  album: { model: 'photoAlbum', displayName: 'Album', noun: 'album' },
+  photoAlbum: { model: 'photoAlbum', displayName: 'Album', noun: 'album' },
+  customItem: { model: 'customItem', displayName: 'Custom item', noun: 'custom item' },
 };
 
 /**
@@ -71,7 +73,7 @@ export async function verifyEntityInTrip(
   });
 
   if (!entity) {
-    throw new AppError(`${config.displayName} not found or does not belong to trip`, 404);
+    throw new AppError(`We couldn't find that ${config.noun} on this trip.`, 404);
   }
 }
 
@@ -103,7 +105,7 @@ export async function verifyEntityAccessById<T = unknown>(
   });
 
   if (!entity) {
-    throw new AppError(`${config.displayName} not found or access denied`, 404);
+    throw new AppError(`We couldn't find that ${config.noun}, or you don't have access to it.`, 404);
   }
 
   return entity as T;
@@ -124,7 +126,7 @@ export async function verifyTripAccess(
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or access denied', 404);
+    throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
   }
 
   return trip;
@@ -183,7 +185,7 @@ export async function verifyTripAccessWithPermission(
   });
 
   if (!trip) {
-    throw new AppError('Trip not found or access denied', 404);
+    throw new AppError("We couldn't find that trip, or you don't have access to it.", 404);
   }
 
   const isOwner = trip.userId === userId;
@@ -197,12 +199,12 @@ export async function verifyTripAccessWithPermission(
     permissionLevel = toSafePermissionLevel(trip.collaborators[0].permissionLevel, 'view');
   } else {
     // Should not reach here, but handle gracefully
-    throw new AppError('Access denied', 403);
+    throw new AppError("You don't have access to this trip.", 403);
   }
 
   // Check if user has required permission level
   if (PERMISSION_HIERARCHY[permissionLevel] < PERMISSION_HIERARCHY[requiredPermission]) {
-    throw new AppError('Insufficient permissions', 403);
+    throw new AppError("You don't have permission to do that.", 403);
   }
 
   return {
@@ -244,7 +246,7 @@ export async function verifyEntityAccessWithPermission<T = unknown>(
   });
 
   if (!entity || !hasNumericTripId(entity)) {
-    throw new AppError(`${config.displayName} not found`, 404);
+    throw new AppError(`We couldn't find that ${config.noun}.`, 404);
   }
 
   // Then verify trip access with permission
@@ -282,11 +284,11 @@ export async function verifyEntityAccess<T extends { trip: { userId: number } }>
   entityName: string
 ): Promise<T> {
   if (!entity) {
-    throw new AppError(`${entityName} not found`, 404);
+    throw new AppError(`We couldn't find that ${entityName.toLowerCase()}.`, 404);
   }
 
   if (entity.trip.userId !== userId) {
-    throw new AppError('Access denied', 403);
+    throw new AppError("You don't have access to this trip.", 403);
   }
 
   return entity;

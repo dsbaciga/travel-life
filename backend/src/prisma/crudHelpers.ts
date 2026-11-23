@@ -230,9 +230,9 @@ const entityTypeToLinkType: Partial<Record<VerifiableEntityType, EntityType>> = 
  */
 const entityTypeDisplayNames: Record<VerifiableEntityType, string> = {
   activity: 'activities',
-  lodging: 'lodging items',
-  transportation: 'transportation items',
-  location: 'locations',
+  lodging: 'stays',
+  transportation: 'transport items',
+  location: 'places',
   journalEntry: 'journal entries',
   photo: 'photos',
   album: 'albums',
@@ -398,7 +398,7 @@ export async function bulkDeleteEntities(
 
   if (entities.length !== ids.length) {
     throw new AppError(
-      `One or more ${displayName} not found or do not belong to this trip`,
+      `Some of those ${displayName} aren't on this trip.`,
       404
     );
   }
@@ -511,7 +511,7 @@ export async function bulkUpdateEntities(
 
   if ((entities as unknown[]).length !== ids.length) {
     throw new AppError(
-      `One or more ${displayName} not found or do not belong to this trip`,
+      `Some of those ${displayName} aren't on this trip.`,
       404
     );
   }
