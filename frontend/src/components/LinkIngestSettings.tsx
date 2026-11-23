@@ -32,7 +32,7 @@ export default function LinkIngestSettings() {
         const data = await userService.getLinkIngestSettings();
         if (active) setSettings(data);
       } catch {
-        if (active) toast.error("Failed to load link ingest settings");
+        if (active) toast.error("Couldn't load link ingest settings. Try again.");
       } finally {
         if (active) setLoading(false);
       }
@@ -52,7 +52,7 @@ export default function LinkIngestSettings() {
       return true;
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to save trusted senders"
+        err instanceof Error ? err.message : "Couldn't save trusted senders. Try again."
       );
       return false;
     } finally {
@@ -86,9 +86,9 @@ export default function LinkIngestSettings() {
     if (!settings) return;
 
     const confirmed = await confirm({
-      title: "Remove trusted sender?",
-      message: `Links forwarded from ${address} will no longer be accepted.`,
-      confirmLabel: "Remove",
+      title: "Remove trusted sender",
+      message: `Links forwarded from ${address} are no longer accepted.`,
+      confirmLabel: "Remove sender",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -113,7 +113,7 @@ export default function LinkIngestSettings() {
     <div className="card space-y-4">
       <div>
         <h3 className="text-lg font-display font-semibold text-charcoal dark:text-dusk-100">
-          Link Ingest
+          Link ingest
         </h3>
         <p className="text-sm text-slate dark:text-dusk-400 mt-1">
           Forward a link to the ingest mailbox and it appears in your saved-links

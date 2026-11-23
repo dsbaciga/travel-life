@@ -180,14 +180,14 @@ export default function EntityScreen() {
   if (!kind || !definition) {
     return (
       <Screen>
-        <EmptyState title="This item cannot be edited on the phone" />
+        <EmptyState title="This one can only be edited on the web for now" />
       </Screen>
     );
   }
   if (tripId === undefined) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" />
       </Screen>
     );
   }
@@ -273,10 +273,10 @@ export default function EntityScreen() {
   const confirmDelete = () => {
     if (entityId === undefined) return;
     // Two buttons: within Android's alert limit.
-    Alert.alert(`Delete this ${definition.noun}?`, 'It will be removed from the trip for everyone.', [
+    Alert.alert(`Delete this ${definition.noun}?`, 'It comes off the trip for everyone. You can\'t undo this.', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Delete',
+        text: `Delete ${definition.noun}`,
         style: 'destructive',
         onPress: async () => {
           await deleteEntity(await getDb(), kind, entityId);

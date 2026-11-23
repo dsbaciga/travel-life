@@ -217,7 +217,7 @@ export default function MapScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" message="Choose a trip to see its map here." />
       </Screen>
     );
   }

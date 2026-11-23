@@ -186,7 +186,7 @@ export default function TripsScreen() {
       ) : null}
       {isError ? <Banner tone="warning" text="Couldn't reach the server to list your other trips." /> : null}
       {remote && !remote.complete ? (
-        <Banner tone="warning" text="Trips shared with you could not be loaded just now." />
+        <Banner tone="warning" text="Couldn't load trips shared with you. Try again in a moment." />
       ) : null}
 
       <Button label="Sync now" variant="secondary" onPress={() => void syncNow()} loading={syncing} />

@@ -669,17 +669,17 @@ export default function PhotoGallery({
       setFavoriteOverride(photo.id, undefined);
       setRetained((r) => (r?.photo.id === photo.id ? null : r));
       toast.error(
-        next ? "Failed to add to favorites" : "Failed to remove from favorites"
+        next ? "Couldn't add to favorites. Try again." : "Couldn't remove from favorites. Try again."
       );
     }
   };
 
   const handleDelete = async (photoId: number) => {
     const confirmed = await confirm({
-      title: "Delete Photo",
+      title: "Delete photo",
       message:
-        "Are you sure you want to delete this photo? This action cannot be undone.",
-      confirmLabel: "Delete",
+        "This photo is removed from the trip, albums and map. You can't undo this.",
+      confirmLabel: "Delete photo",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -689,7 +689,7 @@ export default function PhotoGallery({
       setSelectedPhoto(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photo");
+      toast.error("Couldn't delete photo. Try again.");
     }
   };
 
@@ -705,7 +705,7 @@ export default function PhotoGallery({
       onPhotoUpdated?.();
       toast.success("Photo updated");
     } catch {
-      toast.error("Failed to update photo");
+      toast.error("Couldn't update photo. Try again.");
     }
   };
 
@@ -769,7 +769,7 @@ export default function PhotoGallery({
       // The effect will handle selection once photos.length >= totalPhotosInView
     } catch {
       pendingSelectAll.current = false;
-      toast.error("Failed to load all photos");
+      toast.error("Couldn't load all photos. Try again.");
     }
   };
 
@@ -792,9 +792,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
-      toast.success(`Successfully added ${selectedPhotoIds.size} photo(s) to album`);
+      toast.success(`Added ${selectedPhotoIds.size} photo(s) to album`);
     } catch {
-      toast.error("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -832,10 +832,10 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotosAddedToAlbum?.();
       toast.success(
-        `Successfully created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
+        `Created album "${newAlbum.name}" with ${selectedPhotoIds.size} photo(s)`
       );
     } catch {
-      toast.error("Failed to create album");
+      toast.error("Couldn't create album. Try again.");
     } finally {
       setIsCreatingAlbum(false);
     }
@@ -845,9 +845,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0 || !currentAlbumId) return;
 
     const confirmed = await confirm({
-      title: "Remove Photos",
-      message: `Remove ${selectedPhotoIds.size} photo(s) from this album? The photos will not be deleted, only removed from this album.`,
-      confirmLabel: "Remove",
+      title: "Remove from album",
+      message: `${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo comes" : "photos come"} out of this album. ${selectedPhotoIds.size === 1 ? "It stays" : "They stay"} in your library.`,
+      confirmLabel: `Remove ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "warning",
     });
     if (!confirmed) return;
@@ -863,9 +863,9 @@ export default function PhotoGallery({
       setSelectedPhotoIds(new Set());
       setLastSelectedIndex(null);
       onPhotosRemovedFromAlbum?.();
-      toast.success(`Successfully removed ${photoIds.length} photo(s) from album`);
+      toast.success(`Removed ${photoIds.length} photo(s) from album`);
     } catch {
-      toast.error("Failed to remove photos from album");
+      toast.error("Couldn't remove photos from album. Try again.");
     } finally {
       setIsAddingToAlbum(false);
     }
@@ -875,9 +875,9 @@ export default function PhotoGallery({
     if (selectedPhotoIds.size === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Photos",
-      message: `Are you sure you want to delete ${selectedPhotoIds.size} photo(s)? This action cannot be undone.`,
-      confirmLabel: "Delete",
+      title: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
+      message: `${selectedPhotoIds.size === 1 ? "This photo is" : "These photos are"} removed from the trip, albums and map. You can't undo this.`,
+      confirmLabel: `Delete ${selectedPhotoIds.size} ${selectedPhotoIds.size === 1 ? "photo" : "photos"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -893,7 +893,7 @@ export default function PhotoGallery({
       setLastSelectedIndex(null);
       onPhotoDeleted?.();
     } catch {
-      toast.error("Failed to delete photos");
+      toast.error("Couldn't delete photos. Try again.");
     } finally {
       setIsDeletingPhotos(false);
     }
@@ -998,8 +998,8 @@ export default function PhotoGallery({
     return (
       <EmptyState
         icon={<EmptyIllustrations.NoPhotos />}
-        message="Your Photo Journey Begins Here"
-        subMessage="Upload photos to capture your travel memories. You can link photos to locations, add them to albums, and create a visual story of your adventures."
+        message="No photos yet"
+        subMessage="Upload photos or import them from Immich, then link them to places and days."
       />
     );
   }
@@ -1053,12 +1053,12 @@ export default function PhotoGallery({
             className="px-3 py-2 bg-white dark:bg-dusk-800 border-2 border-gray-200 dark:border-dusk-700 rounded-lg text-sm font-medium text-gray-700 dark:text-dusk-300 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sky transition-all"
             aria-label="Sort photos"
           >
-            <option value="date-desc">Latest First</option>
-            <option value="date-asc">Oldest First</option>
+            <option value="date-desc">Latest first</option>
+            <option value="date-asc">Oldest first</option>
             <option value="caption-asc">Caption A-Z</option>
             <option value="caption-desc">Caption Z-A</option>
-            <option value="created-desc">Recently Added</option>
-            <option value="created-asc">First Added</option>
+            <option value="created-desc">Recently added</option>
+            <option value="created-asc">First added</option>
           </select>
         </div>
 
@@ -1132,7 +1132,7 @@ export default function PhotoGallery({
             className="btn btn-secondary inline-flex items-center gap-2"
           >
             <Icon name="success" size={16} />
-            Select Photos
+            Select photos
           </button>
         ) : (
           <div className="flex items-center gap-3 flex-wrap">
@@ -1436,7 +1436,7 @@ export default function PhotoGallery({
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {showCreateAlbumForm ? "Create New Album" : "Select Album"}
+                {showCreateAlbumForm ? "Create new album" : "Select album"}
               </h3>
               <button
                 onClick={() => {
@@ -1467,7 +1467,7 @@ export default function PhotoGallery({
                   className="w-full p-4 mb-4 rounded-lg border-2 border-dashed border-blue-500 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-600 dark:text-blue-400 font-medium flex items-center justify-center gap-2"
                 >
                   <Icon name="add" />
-                  Create New Album
+                  Create new album
                 </button>
 
                 {/* Existing Albums List */}
@@ -1550,7 +1550,7 @@ export default function PhotoGallery({
                     }
                     className="flex-1 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCreatingAlbum ? "Creating..." : "Create Album"}
+                    {isCreatingAlbum ? "Creating…" : "Create album"}
                   </button>
                 </div>
               </>

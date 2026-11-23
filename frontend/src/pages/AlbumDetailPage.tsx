@@ -174,7 +174,7 @@ export default function AlbumDetailPage() {
       loadAlbum();
       toast.success("Album updated");
     } catch {
-      toast.error("Failed to update album");
+      toast.error("Couldn't update album. Try again.");
     }
   };
 
@@ -195,7 +195,7 @@ export default function AlbumDetailPage() {
       setAvailablePhotos(available);
     } catch (err) {
       console.error("Failed to load available photos:", err);
-      toast.error("Failed to load photos");
+      toast.error("Couldn't load photos. Try again.");
     }
   };
 
@@ -233,7 +233,7 @@ export default function AlbumDetailPage() {
       await loadAlbum();
     } catch (err) {
       console.error("Failed to add photos:", err);
-      toast.error("Failed to add photos to album");
+      toast.error("Couldn't add photos to album. Try again.");
     } finally {
       setIsAddingPhotos(false);
     }
@@ -249,7 +249,7 @@ export default function AlbumDetailPage() {
       await loadAlbum();
     } catch (err) {
       console.error("Failed to set cover photo", err);
-      toast.error("Failed to set cover photo");
+      toast.error("Couldn't set cover photo. Try again.");
     }
   };
 
@@ -298,7 +298,7 @@ export default function AlbumDetailPage() {
         {isEditMode ? (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Edit Album
+              Edit album
             </h2>
             <form onSubmit={handleUpdateAlbum} className="space-y-4">
               <div>
@@ -342,7 +342,7 @@ export default function AlbumDetailPage() {
               </div>
               <div className="flex gap-2">
                 <button type="submit" className="btn btn-primary">
-                  Save Changes
+                  Save changes
                 </button>
                 <button
                   type="button"
@@ -402,7 +402,7 @@ export default function AlbumDetailPage() {
                   onClick={handleOpenPhotoSelector}
                   className="btn btn-primary w-full sm:w-auto"
                 >
-                  + Add Photos
+                  + Add photos
                 </button>
                 <LinkButton
                   tripId={parseInt(tripId!)}
@@ -419,7 +419,7 @@ export default function AlbumDetailPage() {
                   onClick={() => setIsEditMode(true)}
                   className="btn btn-secondary w-full sm:w-auto"
                 >
-                  Edit Album
+                  Edit album
                 </button>
               </div>
             </div>
@@ -436,7 +436,7 @@ export default function AlbumDetailPage() {
                 onClick={handleOpenPhotoSelector}
                 className="btn btn-primary"
               >
-                + Add Photos
+                + Add photos
               </button>
               <Link
                 to={`/trips/${tripId}`}
@@ -577,7 +577,7 @@ export default function AlbumDetailPage() {
                   }}
                   className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium whitespace-nowrap self-start sm:self-auto"
                 >
-                  {selectedPhotoIds.size === availablePhotos.length ? "Deselect All" : "Select All"}
+                  {selectedPhotoIds.size === availablePhotos.length ? "Deselect all" : "Select all"}
                 </button>
                 <div className="flex gap-3 justify-end">
                   <button
@@ -594,7 +594,7 @@ export default function AlbumDetailPage() {
                     className="btn btn-primary"
                   >
                     {isAddingPhotos
-                      ? "Adding..."
+                      ? "Adding…"
                       : `Add ${selectedPhotoIds.size} Photo${selectedPhotoIds.size !== 1 ? 's' : ''}`}
                   </button>
                 </div>

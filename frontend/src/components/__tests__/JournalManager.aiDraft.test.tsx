@@ -13,7 +13,7 @@
  * - JAD-009: The first day, last day, day before and day after the trip stay draftable; a trip with no end date is open-ended
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { AxiosError, type AxiosResponse } from 'axios';
 
@@ -110,27 +110,28 @@ describe('JournalManager Draft with AI', () => {
   });
 
   it('JAD-004: asks before replacing text, and keeps it when declined', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const button = await openForm();
     fireEvent.change(screen.getByLabelText(/^title/i), { target: { value: 'My own title' } });
 
     fireEvent.click(button);
-    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    const dialog = await screen.findByRole('dialog', { name: /replace your text with an ai draft/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Keep my text' }));
+
+    await waitFor(() => expect(screen.queryByText(/replace your text with an ai draft/i)).not.toBeInTheDocument());
     expect(h.journal.generateDayDraft).not.toHaveBeenCalled();
     expect(screen.getByDisplayValue('My own title')).toBeInTheDocument();
-    confirmSpy.mockRestore();
   });
 
   it('JAD-004: replaces the text once confirmed', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const button = await openForm();
     fireEvent.change(screen.getByLabelText(/^title/i), { target: { value: 'My own title' } });
 
     fireEvent.click(button);
+    const dialog = await screen.findByRole('dialog', { name: /replace your text with an ai draft/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Replace with draft' }));
 
     expect(await screen.findByDisplayValue('A day in Alfama')).toBeInTheDocument();
     expect(h.journal.generateDayDraft).toHaveBeenCalledTimes(1);
-    confirmSpy.mockRestore();
   });
 
   it('JAD-005: no AI key shows setup guidance', async () => {

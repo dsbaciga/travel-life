@@ -126,8 +126,8 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     ],
   },
   TRANSPORTATION: {
-    title: 'Transit',
-    noun: 'transit leg',
+    title: 'Transport',
+    noun: 'transport leg',
     titleKey: 'endLocationText',
     schema: transportationFormSchema,
     defaults: { type: 'train', status: 'on_time' },
@@ -153,7 +153,7 @@ export const ENTITY_FORMS: Readonly<Record<FormKind, EntityFormDefinition>> = {
     ],
   },
   LODGING: {
-    title: 'Lodging',
+    title: 'Stays',
     noun: 'stay',
     titleKey: 'name',
     schema: lodgingFormSchema,

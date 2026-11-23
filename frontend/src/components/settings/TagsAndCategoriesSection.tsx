@@ -91,15 +91,15 @@ export default function TagsAndCategoriesSection({
       await onReloadTags();
       toast.success("Tag created");
     } catch {
-      toast.error("Failed to create tag");
+      toast.error("Couldn't create tag. Try again.");
     }
   };
 
   const handleDeleteTag = async (tagId: number) => {
     const confirmed = await confirm({
-      title: "Delete Tag",
-      message: "Delete this tag? It will be removed from all trips.",
-      confirmLabel: "Delete",
+      title: "Delete tag",
+      message: "This tag is removed from all trips.",
+      confirmLabel: "Delete tag",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -110,7 +110,7 @@ export default function TagsAndCategoriesSection({
       invalidateTripTagCaches();
       toast.success("Tag deleted");
     } catch {
-      toast.error("Failed to delete tag");
+      toast.error("Couldn't delete tag. Try again.");
     }
   };
 
@@ -153,7 +153,7 @@ export default function TagsAndCategoriesSection({
       setEditingTagNewName("");
       toast.success("Tag renamed");
     } catch {
-      toast.error("Failed to rename tag");
+      toast.error("Couldn't rename tag. Try again.");
     }
   };
 
@@ -165,7 +165,7 @@ export default function TagsAndCategoriesSection({
     try {
       await tagService.reorderTags(newTags.map((t) => t.id));
     } catch {
-      toast.error("Failed to reorder tags");
+      toast.error("Couldn't reorder tags. Try again.");
       await onReloadTags();
     }
   };
@@ -178,7 +178,7 @@ export default function TagsAndCategoriesSection({
     try {
       await tagService.reorderTags(newTags.map((t) => t.id));
     } catch {
-      toast.error("Failed to reorder tags");
+      toast.error("Couldn't reorder tags. Try again.");
       await onReloadTags();
     }
   };
@@ -206,7 +206,7 @@ export default function TagsAndCategoriesSection({
       setEditingTagId(null);
       toast.success("Tag colors updated");
     } catch {
-      toast.error("Failed to update tag colors");
+      toast.error("Couldn't update tag colors. Try again.");
     }
   };
 
@@ -230,9 +230,9 @@ export default function TagsAndCategoriesSection({
 
   const handleDeleteCategory = async (categoryName: string) => {
     const confirmed = await confirm({
-      title: "Delete Category",
-      message: `Delete "${categoryName}"? It will be removed from all activities that use it.`,
-      confirmLabel: "Delete",
+      title: "Delete category",
+      message: `"${categoryName}" is removed from all activities that use it.`,
+      confirmLabel: "Delete category",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -247,7 +247,7 @@ export default function TagsAndCategoriesSection({
       );
       toast.success("Category deleted");
     } catch {
-      toast.error("Failed to delete category");
+      toast.error("Couldn't delete category. Try again.");
     }
   };
 
@@ -290,7 +290,7 @@ export default function TagsAndCategoriesSection({
       setEditingCategoryNewName("");
       toast.success("Category renamed");
     } catch {
-      toast.error("Failed to rename category");
+      toast.error("Couldn't rename category. Try again.");
     }
   };
 
@@ -345,9 +345,9 @@ export default function TagsAndCategoriesSection({
 
   const handleRemoveTripType = async (typeName: string) => {
     const confirmed = await confirm({
-      title: "Delete Trip Type",
-      message: `Delete "${typeName}"? It will be removed from all trips that use it.`,
-      confirmLabel: "Delete",
+      title: "Delete trip type",
+      message: `"${typeName}" is removed from all trips that use it.`,
+      confirmLabel: "Delete trip type",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -360,7 +360,7 @@ export default function TagsAndCategoriesSection({
       onTripTypesChange((prev) => prev.filter((t) => t.name !== typeName));
       toast.success("Trip type deleted");
     } catch {
-      toast.error("Failed to delete trip type");
+      toast.error("Couldn't delete trip type. Try again.");
     }
   };
 
@@ -411,7 +411,7 @@ export default function TagsAndCategoriesSection({
       setEditingTripTypeNewName("");
       toast.success("Trip type renamed");
     } catch {
-      toast.error("Failed to rename trip type");
+      toast.error("Couldn't rename trip type. Try again.");
     }
   };
 
@@ -443,7 +443,7 @@ export default function TagsAndCategoriesSection({
       persistedTripTypeNames.current = new Set(tripTypes.map((t) => t.name));
       toast.success("Trip types saved");
     } catch {
-      toast.error("Failed to save trip types");
+      toast.error("Couldn't save trip types. Try again.");
     }
   };
 
@@ -452,7 +452,7 @@ export default function TagsAndCategoriesSection({
       {/* Activity Categories */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Activity Categories
+          Activity categories
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Customize the activity categories available when creating activities in
@@ -481,7 +481,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full sm:w-auto"
           >
-            Add Category
+            Add category
           </button>
         </div>
 
@@ -600,7 +600,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Settings
+            Save settings
           </button>
         </div>
       </div>
@@ -608,7 +608,7 @@ export default function TagsAndCategoriesSection({
       {/* Trip Types */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Trip Types
+          Trip types
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Customize the trip types available when creating trips. Each type
@@ -637,7 +637,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full sm:w-auto"
           >
-            Add Type
+            Add type
           </button>
         </div>
 
@@ -756,7 +756,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary"
           >
-            Save Trip Types
+            Save trip types
           </button>
         </div>
       </div>
@@ -764,7 +764,7 @@ export default function TagsAndCategoriesSection({
       {/* Global Tag Management */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Trip Tags
+          Trip tags
         </h2>
         <p className="text-sm text-gray-600 dark:text-dusk-400 mb-4">
           Create and manage tags that can be assigned to trips. Tags help
@@ -788,7 +788,7 @@ export default function TagsAndCategoriesSection({
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 htmlFor={newTagColorId}
               >
-                Background Color
+                Background color
               </label>
               <input
                 type="color"
@@ -803,7 +803,7 @@ export default function TagsAndCategoriesSection({
                 className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                 htmlFor={newTagTextColorId}
               >
-                Text Color
+                Text color
               </label>
               <input
                 type="color"
@@ -819,7 +819,7 @@ export default function TagsAndCategoriesSection({
             type="button"
             className="btn btn-primary w-full"
           >
-            Create Tag
+            Create tag
           </button>
         </div>
 
@@ -858,7 +858,7 @@ export default function TagsAndCategoriesSection({
                           className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                           htmlFor={`edit-tag-bg-${tag.id}`}
                         >
-                          Background Color
+                          Background color
                         </label>
                         <input
                           type="color"
@@ -873,7 +873,7 @@ export default function TagsAndCategoriesSection({
                           className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1"
                           htmlFor={`edit-tag-text-${tag.id}`}
                         >
-                          Text Color
+                          Text color
                         </label>
                         <input
                           type="color"
@@ -892,7 +892,7 @@ export default function TagsAndCategoriesSection({
                         type="button"
                         className="btn btn-primary text-sm"
                       >
-                        Save Colors
+                        Save colors
                       </button>
                       <button
                         onClick={handleCancelEditTag}
@@ -1016,7 +1016,7 @@ export default function TagsAndCategoriesSection({
                         type="button"
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                       >
-                        Edit Colors
+                        Edit colors
                       </button>
                       <button
                         onClick={() => handleDeleteTag(tag.id)}

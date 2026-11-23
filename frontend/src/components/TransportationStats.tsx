@@ -128,7 +128,7 @@ export default function TransportationStats({
       {flightStats && (
         <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Flight Statistics
+            Flight statistics
           </h3>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6">
@@ -137,7 +137,7 @@ export default function TransportationStats({
                 {flightStats.count}
               </div>
               <div className="text-sm text-gray-600 dark:text-dusk-400">
-                Total Flights
+                Total flights
               </div>
             </div>
 
@@ -173,7 +173,7 @@ export default function TransportationStats({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                 <div className="text-sm text-gray-600 dark:text-dusk-400 mb-1">
-                  Total Distance
+                  Total distance
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatDistance(flightStats.distance)}
@@ -190,7 +190,7 @@ export default function TransportationStats({
 
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                 <div className="text-sm text-gray-600 dark:text-dusk-400 mb-1">
-                  Total Flight Time
+                  Total flight time
                 </div>
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatDuration(flightStats.duration)}
@@ -223,7 +223,7 @@ export default function TransportationStats({
                   {stats.count}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-dusk-400">
-                  Total Trips
+                  Total trips
                 </div>
               </div>
 
@@ -251,7 +251,7 @@ export default function TransportationStats({
                 {stats.distance > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                     <div className="text-sm text-gray-600 dark:text-dusk-400 mb-1">
-                      Total Distance
+                      Total distance
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatDistance(stats.distance)}
@@ -265,7 +265,7 @@ export default function TransportationStats({
                 {stats.duration > 0 && (
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <div className="text-sm text-gray-600 dark:text-dusk-400 mb-1">
-                      Total Travel Time
+                      Total Travel time
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {formatDuration(stats.duration)}

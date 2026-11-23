@@ -32,7 +32,7 @@ export default function PdfUploadModal({ isOpen, onClose, tripId: initialTripId 
 
   const handleFile = (f: File) => {
     if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
-      toast.error('Please select a PDF file');
+      toast.error('Select a PDF file');
       return;
     }
     if (f.size > 25 * 1024 * 1024) {
@@ -60,7 +60,7 @@ export default function PdfUploadModal({ isOpen, onClose, tripId: initialTripId 
       trackImport(result.id, file.name);
       onClose();
     } catch (err) {
-      toast.error(getApiErrorMessage(err, 'Upload failed. Please try again.'));
+      toast.error(getApiErrorMessage(err, 'Upload failed. Try again.'));
     } finally {
       setUploading(false);
     }
@@ -133,7 +133,7 @@ export default function PdfUploadModal({ isOpen, onClose, tripId: initialTripId 
           disabled={!file || uploading}
           className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {uploading ? 'Uploading...' : 'Upload & Parse'}
+          {uploading ? 'Uploading…' : 'Upload & Parse'}
         </button>
       </div>
     </Modal>

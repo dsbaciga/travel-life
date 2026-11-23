@@ -143,14 +143,14 @@ function LocationDetails({ entity }: { entity: Location }) {
           }
         />
       )}
-      {entity.parent && <DetailRow label="Parent Location" value={entity.parent.name} />}
-      <DetailRow label="Visit Date" value={formatDateTime(entity.visitDatetime)} />
+      {entity.parent && <DetailRow label="Parent location" value={entity.parent.name} />}
+      <DetailRow label="Visit date" value={formatDateTime(entity.visitDatetime)} />
       {entity.visitDurationMinutes && (
         <DetailRow label="Duration" value={`${entity.visitDurationMinutes} minutes`} />
       )}
       {entity.openingHours && (
         <DetailRow
-          label="Opening Hours"
+          label="Opening hours"
           value={
             <div>
               {formatOpeningHours(entity.openingHours).map((line, index) => (
@@ -190,15 +190,15 @@ function CustomItemDetails({ entity }: { entity: CustomItem }) {
         <DetailRow label="Time" value="All Day" />
       ) : (
         <>
-          <DetailRow label="Start Time" value={formatDateTime(entity.startTime, entity.timezone)} />
-          <DetailRow label="End Time" value={formatDateTime(entity.endTime, entity.timezone)} />
+          <DetailRow label="Start time" value={formatDateTime(entity.startTime, entity.timezone)} />
+          <DetailRow label="End time" value={formatDateTime(entity.endTime, entity.timezone)} />
         </>
       )}
       <DetailRow label="Location" value={entity.location?.name} />
       {entity.cost != null && (
         <DetailRow label="Cost" value={formatCurrency(entity.cost, entity.currency)} />
       )}
-      <DetailRow label="Confirmation Number" value={entity.confirmationNumber} />
+      <DetailRow label="Confirmation number" value={entity.confirmationNumber} />
       {entity.url && (
         <DetailRow
           label="URL"
@@ -232,14 +232,14 @@ function ActivityDetails({ entity }: { entity: Activity }) {
         <DetailRow label="Time" value="All Day" />
       ) : (
         <>
-          <DetailRow label="Start Time" value={formatDateTime(entity.startTime, entity.timezone)} />
-          <DetailRow label="End Time" value={formatDateTime(entity.endTime, entity.timezone)} />
+          <DetailRow label="Start time" value={formatDateTime(entity.startTime, entity.timezone)} />
+          <DetailRow label="End time" value={formatDateTime(entity.endTime, entity.timezone)} />
         </>
       )}
       {entity.cost != null && (
         <DetailRow label="Cost" value={formatCurrency(entity.cost, entity.currency)} />
       )}
-      <DetailRow label="Booking Reference" value={entity.bookingReference} />
+      <DetailRow label="Booking reference" value={entity.bookingReference} />
       {entity.bookingUrl && (
         <DetailRow
           label="Booking URL"
@@ -363,7 +363,7 @@ function TransportationDetails({ entity }: { entity: Transportation }) {
         <>
           <DetailRow label="Gate" value={entity.flightTracking.gate} />
           <DetailRow label="Terminal" value={entity.flightTracking.terminal} />
-          <DetailRow label="Baggage Claim" value={entity.flightTracking.baggageClaim} />
+          <DetailRow label="Baggage claim" value={entity.flightTracking.baggageClaim} />
         </>
       )}
       <DetailRow label="Notes" value={entity.notes ? <MarkdownRenderer content={entity.notes} compact /> : null} />
@@ -422,7 +422,7 @@ function PhotoDetails({ entity }: { entity: Photo }) {
         </div>
       )}
       <DetailRow label="Caption" value={entity.caption} />
-      <DetailRow label="Taken At" value={formatDateTime(entity.takenAt)} />
+      <DetailRow label="Taken at" value={formatDateTime(entity.takenAt)} />
       {entity.latitude && entity.longitude && (
         <DetailRow
           label="Location"
@@ -694,7 +694,7 @@ export default function EntityDetailModal({
             </div>
           ) : error ? (
             <div className="text-center py-8 text-red-500 dark:text-red-400">
-              Failed to load details
+              Couldn't load details. Try again.
             </div>
           ) : (
             renderDetails()

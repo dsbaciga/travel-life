@@ -188,7 +188,7 @@ export default function MapPreviewWidget({
             onClick={onNavigateToMap}
             className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
               hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-            aria-label="Go to Map"
+            aria-label="Go to map"
           >
             <ChevronRightIcon className="w-4 h-4" />
           </button>
@@ -233,7 +233,7 @@ export default function MapPreviewWidget({
           onClick={onNavigateToMap}
           className="p-1.5 rounded-lg text-slate hover:text-primary-600 dark:text-warm-gray/50 dark:hover:text-gold
             hover:bg-primary-50 dark:hover:bg-navy-700 transition-colors duration-200"
-          aria-label="Go to Map"
+          aria-label="Go to map"
         >
           <ChevronRightIcon className="w-4 h-4" />
         </button>

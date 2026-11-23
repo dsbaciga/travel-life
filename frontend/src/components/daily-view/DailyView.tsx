@@ -627,7 +627,7 @@ export default function DailyView({
         setAllDays(daysData);
       } catch (err) {
         console.error('Error loading daily view data:', err);
-        setError('Failed to load trip data. Please try refreshing the page.');
+        setError("Couldn't load this trip's days. Refresh the page to try again.");
       } finally {
         setLoading(false);
       }
@@ -721,7 +721,7 @@ export default function DailyView({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view...</span>
+        <span className="ml-3 text-gray-600 dark:text-dusk-400">Loading day view…</span>
       </div>
     );
   }
@@ -732,7 +732,7 @@ export default function DailyView({
         <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
           <Icon name="alert" size={32} className="text-red-600 dark:text-red-400" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error Loading Data</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Couldn't load this trip</h3>
         <p className="text-gray-500 dark:text-dusk-400 max-w-md">{error}</p>
       </div>
     );
@@ -741,7 +741,7 @@ export default function DailyView({
   if (allDays.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-dusk-400">
-        <p>No trip dates defined. Please set trip start and end dates.</p>
+        <p>This trip has no dates yet. Add a start and end date to plan day by day.</p>
       </div>
     );
   }
@@ -868,7 +868,7 @@ export default function DailyView({
             <div className="flex items-center gap-2 mb-4">
               <Icon name="schedule" size={20} className="text-amber-500" />
               <h3 className="text-sm font-semibold text-gray-700 dark:text-dusk-300">
-                Unscheduled Activities
+                Unscheduled activities
               </h3>
               <span className="text-xs text-gray-500 dark:text-dusk-400 bg-gray-100 dark:bg-dusk-700 px-2 py-0.5 rounded-full">
                 {currentDay.unscheduledActivities.length}

@@ -201,7 +201,7 @@ export default function DashboardPage() {
                     activeKey={activeKey}
                     onActiveChange={setActiveKey}
                     onOpen={openItem}
-                    emptyMessage="Nothing is scheduled for today."
+                    emptyMessage="Nothing planned today. Enjoy the free time."
                   />
                 )}
               </section>
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                 </h2>
                 <p className="mt-1 text-slate dark:text-warm-gray">
                   {countdown == null
-                    ? 'No dates set yet'
+                    ? 'No dates yet'
                     : countdown > 1
                       ? `Starts in ${countdown} days, on ${formatDateOnly(activeTrip.startDate)}`
                       : countdown === 1

@@ -642,7 +642,7 @@ export default function PhotoLightbox({
                 onChange={(e) => onEditCaptionChange?.(e.target.value)}
                 rows={2}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-dusk-600 rounded-lg bg-white dark:bg-dusk-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Add a caption..."
+                placeholder="Add a caption…"
                 autoFocus
               />
 

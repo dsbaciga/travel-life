@@ -6,8 +6,10 @@ import { useAuthStore } from '../store/authStore';
 import type { UserInvitationPublicInfo } from '../types/userInvitation';
 import toast from 'react-hot-toast';
 import Icon from '../components/ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 
 export default function AcceptInvitePage() {
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuthStore();
@@ -42,9 +44,9 @@ export default function AcceptInvitePage() {
       setEmail(data.email); // Pre-fill email from invitation
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        setError(error.response?.data?.message || 'Invitation not found or has expired.');
+        setError(error.response?.data?.message || "We can't find that invitation. It may have expired or been cancelled.");
       } else {
-        setError('Invitation not found or has expired.');
+        setError("We can't find that invitation. It may have expired or been cancelled.");
       }
     } finally {
       setLoading(false);
@@ -53,7 +55,7 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid invitation link. No token provided.');
+      setError('This invitation link is incomplete. Open the link from your email again.');
       setLoading(false);
       return;
     }
@@ -76,7 +78,7 @@ export default function AcceptInvitePage() {
     }
 
     if (!username.trim()) {
-      toast.error('Please enter a username');
+      toast.error('Enter a username');
       return;
     }
 
@@ -102,13 +104,13 @@ export default function AcceptInvitePage() {
       // Log the user in with the credentials they just created
       await login({ email, password });
 
-      toast.success('Account created successfully! Welcome to Travel Life!');
+      toast.success('Account created. Welcome to Travel Life.');
       navigate('/dashboard');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to create account');
+        toast.error(error.response?.data?.message || "Couldn't create account. Try again.");
       } else {
-        toast.error('Failed to create account');
+        toast.error("Couldn't create account. Try again.");
       }
     } finally {
       setSubmitting(false);
@@ -121,9 +123,12 @@ export default function AcceptInvitePage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Are you sure you want to decline this invitation? This action cannot be undone.'
-    );
+    const confirmed = await confirm({
+      title: 'Decline invitation',
+      message: "You'd need a new invitation to join this trip later.",
+      confirmLabel: 'Decline invitation',
+      variant: 'warning',
+    });
     if (!confirmed) return;
 
     try {
@@ -132,9 +137,9 @@ export default function AcceptInvitePage() {
       navigate('/');
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to decline invitation');
+        toast.error(error.response?.data?.message || "Couldn't decline invitation. Try again.");
       } else {
-        toast.error('Failed to decline invitation');
+        toast.error("Couldn't decline invitation. Try again.");
       }
     }
   };
@@ -144,7 +149,7 @@ export default function AcceptInvitePage() {
       <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation...</p>
+          <p className="mt-4 text-navy-600 dark:text-dusk-200">Loading invitation…</p>
         </div>
       </div>
     );
@@ -159,7 +164,7 @@ export default function AcceptInvitePage() {
               <Icon name="close" size={32} className="text-red-600 dark:text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-navy-900 dark:text-white mb-2">
-              Invalid Invitation
+              Invalid invitation
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {error || 'This invitation is no longer valid.'}
@@ -189,9 +194,9 @@ export default function AcceptInvitePage() {
             </h1>
             <p className="text-navy-600 dark:text-dusk-300 mb-6">
               {invitation.status === 'EXPIRED'
-                ? 'This invitation has expired. Please ask the person who invited you to send a new invitation.'
+                ? 'This invitation has expired. Ask the person who invited you to send a new one.'
                 : invitation.status === 'ACCEPTED'
-                ? 'This invitation has already been accepted. You can log in to your account.'
+                ? 'This invitation has already been accepted. You can sign in to your account.'
                 : 'This invitation has been declined.'}
             </p>
             <Link
@@ -208,6 +213,7 @@ export default function AcceptInvitePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-navy-900 px-4 py-12">
+      <ConfirmDialogComponent />
       <div className="max-w-md w-full">
         <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl p-8">
           {/* Header */}
@@ -228,7 +234,7 @@ export default function AcceptInvitePage() {
           {/* Description */}
           <div className="bg-cream dark:bg-navy-700 rounded-lg p-4 mb-6">
             <p className="text-sm text-navy-700 dark:text-dusk-200">
-              Travel Life helps you document your adventures. Track trips, locations, photos, transportation, lodging, and create beautiful travel journals.
+              Travel Life helps you document your adventures. Track trips, locations, photos, transport, stays, and create beautiful travel journals.
             </p>
           </div>
 
@@ -289,7 +295,7 @@ export default function AcceptInvitePage() {
 
             <div>
               <label htmlFor={confirmPasswordId} className="label">
-                Confirm Password
+                Confirm password
               </label>
               <input
                 type="password"
@@ -311,10 +317,10 @@ export default function AcceptInvitePage() {
               {submitting ? (
                 <>
                   <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
-                  Creating Account...
+                  Creating Account…
                 </>
               ) : (
-                'Create Account'
+                'Create account'
               )}
             </button>
           </form>
@@ -335,7 +341,7 @@ export default function AcceptInvitePage() {
             <p className="text-sm text-navy-600 dark:text-dusk-300">
               Already have an account?{' '}
               <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
-                Log in
+                Sign in
               </Link>
             </p>
           </div>

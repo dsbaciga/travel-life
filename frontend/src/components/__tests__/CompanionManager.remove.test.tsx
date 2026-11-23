@@ -43,7 +43,7 @@ describe('CompanionManager remove', () => {
     await user.click(await screen.findByRole('button', { name: /Remove companion Alexandria/ }));
     expect(companionService.unlinkCompanionFromTrip).not.toHaveBeenCalled();
 
-    await user.click(await screen.findByRole('button', { name: 'Remove' }));
+    await user.click(await screen.findByRole('button', { name: 'Remove from trip' }));
     await waitFor(() =>
       expect(companionService.unlinkCompanionFromTrip).toHaveBeenCalledWith(1, 7)
     );

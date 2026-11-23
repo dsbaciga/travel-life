@@ -125,7 +125,7 @@ export default function WeatherCard({
                 </div>
               </div>
               <div>
-                <div className="text-gray-500 dark:text-dusk-400">Wind Speed</div>
+                <div className="text-gray-500 dark:text-dusk-400">Wind speed</div>
                 <div className="font-medium text-gray-900 dark:text-white">
                   {formatWindSpeed(weather.windSpeed)}
                 </div>
@@ -186,7 +186,7 @@ export default function WeatherCard({
           </div>
         </div>
         <div>
-          <div className="text-gray-500 dark:text-dusk-400">Wind Speed</div>
+          <div className="text-gray-500 dark:text-dusk-400">Wind speed</div>
           <div className="font-medium text-gray-900 dark:text-white">
             {formatWindSpeed(weather.windSpeed)}
           </div>

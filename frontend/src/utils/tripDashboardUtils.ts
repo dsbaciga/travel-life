@@ -1215,7 +1215,7 @@ export function getRecentActivity(
       entityType: 'lodging',
       entityId: lodge.id,
       actionType: getActivityActionType(lodge.createdAt, lodge.updatedAt),
-      name: lodge.name || 'Lodging',
+      name: lodge.name || 'Stay',
       description: lodge.type || undefined,
       timestamp: lodge.updatedAt,
     });

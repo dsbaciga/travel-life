@@ -213,14 +213,14 @@ export default function AlbumSuggestions({
         name: suggestion.name,
         photoIds: suggestion.photoIds,
       });
-      toast.success(`Album "${suggestion.name}" created!`);
+      toast.success(`Album "${suggestion.name}" created`);
       // Remove this suggestion from the list
       setSuggestions(prev => prev.filter(s =>
         !(s.type === suggestion.type && s.name === suggestion.name)
       ));
       onAlbumCreated();
     } catch (error) {
-      toast.error('Failed to create album');
+      toast.error("Couldn't create album. Try again.");
       console.error(error);
     } finally {
       setAccepting(null);
@@ -263,7 +263,7 @@ export default function AlbumSuggestions({
         >
           <Icon name="lightbulb" className="text-primary-600 dark:text-gold" />
           <h3 className="text-sm font-semibold text-charcoal dark:text-warm-gray truncate">
-            Smart Album Suggestions
+            Smart album suggestions
           </h3>
           <span className="flex-shrink-0 rounded-full bg-primary-100 dark:bg-navy-700 px-2 py-0.5 text-xs font-medium text-primary-700 dark:text-gold">
             {suggestions.length}
@@ -339,10 +339,10 @@ export default function AlbumSuggestions({
                     {isAccepting ? (
                       <>
                         <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Creating...
+                        Creating…
                       </>
                     ) : (
-                      'Create Album'
+                      'Create album'
                     )}
                   </button>
                 </div>

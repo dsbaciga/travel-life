@@ -86,7 +86,7 @@ export default function UpcomingTripsWidget() {
             <Icon name="calendar" className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-            Upcoming Trips
+            Upcoming trips
           </h3>
         </div>
         <Link
@@ -104,7 +104,7 @@ export default function UpcomingTripsWidget() {
             <Icon name="globe" className="w-10 h-10 text-primary-500 dark:text-sky" />
           </div>
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Your Adventures Await
+            Your adventures await
           </h4>
           <p className="text-gray-500 dark:text-dusk-400 text-sm mb-4 max-w-xs mx-auto">
             "The world is a book, and those who do not travel read only one page." - Saint Augustine
@@ -114,7 +114,7 @@ export default function UpcomingTripsWidget() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-primary-500 to-primary-600 dark:from-accent-400 dark:to-accent-600 text-white shadow-lg shadow-primary-500/20 dark:shadow-accent-400/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
           >
             <Icon name="add" className="w-4 h-4" />
-            Plan Your First Trip
+            Plan your first trip
           </Link>
         </div>
       ) : (

@@ -8,6 +8,7 @@ import { getFullAssetUrl } from '../lib/config';
 import { getAccessToken } from '../lib/axios';
 import toast from 'react-hot-toast';
 import Icon from './ui/Icon';
+import { getApiErrorMessage } from '../lib/errors';
 
 // Threshold for showing search bar
 const SEARCH_THRESHOLD = 5;
@@ -181,7 +182,7 @@ export default function GeneralEntityPickerModal({
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create link:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create link';
+      const message = getApiErrorMessage(error, "Couldn't create link. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);
@@ -213,7 +214,7 @@ export default function GeneralEntityPickerModal({
       onClose();
     } catch (error: unknown) {
       console.error('Failed to create links:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create links';
+      const message = getApiErrorMessage(error, "Couldn't create links. Try again.");
       toast.error(message);
     } finally {
       setLinking(false);
@@ -261,7 +262,7 @@ export default function GeneralEntityPickerModal({
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <div>
             <h3 id="entity-picker-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-              Link to...
+              Link to…
             </h3>
             {selectedType && (
               <button
@@ -327,7 +328,7 @@ export default function GeneralEntityPickerModal({
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search..."
+                      placeholder="Search…"
                       className="input flex-1"
                     />
                   )}
@@ -499,7 +500,7 @@ export default function GeneralEntityPickerModal({
                 disabled={linking}
                 className="btn btn-primary flex-1"
               >
-                {linking ? 'Linking...' : `Link ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}`}
+                {linking ? 'Linking…' : `Link ${selectedIds.size} item${selectedIds.size > 1 ? 's' : ''}`}
               </button>
             </div>
           ) : (

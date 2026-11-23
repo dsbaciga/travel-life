@@ -40,7 +40,7 @@ export default function OnboardingScreen() {
     try {
       await work();
     } catch (caught) {
-      setError(messageOf(caught, 'Something went wrong'));
+      setError(messageOf(caught, "Couldn't connect. Check the address and try again."));
     } finally {
       setBusy(false);
     }
@@ -55,9 +55,9 @@ export default function OnboardingScreen() {
       try {
         const info = await checkServer(url);
         setServer({ url, ...info });
-      } catch (caught) {
+      } catch {
         throw new Error(
-          `Could not reach a Travel Life server at ${url.replace(/\/api$/, '')}. ${messageOf(caught, '')}`.trim()
+          `Couldn't reach a Travel Life server at ${url.replace(/\/api$/, '')}. Check the address and your connection.`
         );
       }
     });
@@ -96,7 +96,7 @@ export default function OnboardingScreen() {
       // Cancel on the confirmation page: treat it like closing the browser.
       if (params.get('error') === 'cancelled') return;
       const code = params.get('code');
-      if (!code) throw new Error('Single sign-on did not complete. Please try again.');
+      if (!code) throw new Error("Sign-in didn't finish. Try again.");
       await useSession.getState().signInWithOidcCode(server.url, code, codeVerifier);
       void syncNow();
     });

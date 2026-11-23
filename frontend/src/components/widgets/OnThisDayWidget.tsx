@@ -65,7 +65,7 @@ export default function OnThisDayWidget() {
         </div>
         <div>
           <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white">
-            On This Day
+            On this day
           </h3>
           <p className="text-xs text-gray-500 dark:text-dusk-400">{todayLabel}, in years past</p>
         </div>

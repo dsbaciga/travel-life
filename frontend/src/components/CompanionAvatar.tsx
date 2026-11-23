@@ -130,7 +130,7 @@ export default function CompanionAvatar({
       toast.success("Avatar updated");
       onUpdate?.(updated);
     } catch {
-      toast.error("Failed to upload avatar");
+      toast.error("Couldn't upload avatar. Try again.");
     } finally {
       setUploading(false);
       setShowMenu(false);
@@ -148,7 +148,7 @@ export default function CompanionAvatar({
       toast.success("Avatar removed");
       onUpdate?.(updated);
     } catch {
-      toast.error("Failed to remove avatar");
+      toast.error("Couldn't remove avatar. Try again.");
     }
     setShowMenu(false);
   };
@@ -231,7 +231,7 @@ export default function CompanionAvatar({
             className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-300 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
           >
             <Icon name="upload" size={16} />
-            Upload Photo
+            Upload photo
           </button>
 
           {showImmichOption && (
@@ -252,7 +252,7 @@ export default function CompanionAvatar({
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
             >
               <Icon name="delete" size={16} />
-              Remove Avatar
+              Remove avatar
             </button>
           )}
         </div>

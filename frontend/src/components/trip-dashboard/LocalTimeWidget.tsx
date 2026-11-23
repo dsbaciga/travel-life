@@ -197,7 +197,7 @@ export default function LocalTimeWidget({
       <div className="flex items-center gap-2 mb-3">
         <ClockIcon className="w-5 h-5 text-primary-500 dark:text-gold" />
         <h3 className="font-semibold text-charcoal dark:text-warm-gray font-body text-sm">
-          Local Time
+          Local time
         </h3>
       </div>
 

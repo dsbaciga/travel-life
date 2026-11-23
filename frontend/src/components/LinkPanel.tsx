@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import Icon from './ui/Icon';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
@@ -93,7 +94,7 @@ export default function LinkPanel({
       void lightboxThumbnails.loadThumbnail(photo.id, photo.thumbnailPath, photo.source);
       setLightboxPhoto(photo);
     } catch {
-      toast.error('Failed to load photo');
+      toast.error("Couldn't load photo. Try again.");
     }
   };
 
@@ -154,7 +155,7 @@ export default function LinkPanel({
     },
     onError: (error: Error) => {
       console.error('Failed to delete link:', error);
-      toast.error('Failed to remove link');
+      toast.error("Couldn't remove link. Try again.");
     },
   });
 
@@ -348,8 +349,16 @@ export default function LinkPanel({
     return linksByType;
   }, [linksData]);
 
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
   const handleDeleteLink = async (linkId: number) => {
-    if (window.confirm('Remove this link?')) {
+    const confirmed = await confirm({
+      title: 'Remove link',
+      message: 'The two items are no longer linked. Neither one is deleted.',
+      confirmLabel: 'Remove link',
+      variant: 'warning',
+    });
+    if (confirmed) {
       deleteLinkMutation.mutate(linkId);
     }
   };
@@ -363,6 +372,7 @@ export default function LinkPanel({
       aria-modal="true"
       aria-labelledby="link-panel-title"
     >
+      <ConfirmDialogComponent />
       <div
         ref={panelRef}
         tabIndex={-1}
@@ -406,7 +416,7 @@ export default function LinkPanel({
             </div>
           ) : error ? (
             <div className="text-red-600 dark:text-red-400 text-center py-8">
-              Failed to load links. Please try again.
+              Failed to load links. Try again.
             </div>
           ) : linkedEntityTypes.length === 0 ? (
             <div className="text-center py-8">
@@ -415,7 +425,7 @@ export default function LinkPanel({
                 No linked items yet
               </p>
               <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-                Click "Add Link" above to connect this item to photos, locations, or other entities.
+                Click "Add link" above to connect this item to photos, locations, or other entities.
               </p>
             </div>
           ) : (

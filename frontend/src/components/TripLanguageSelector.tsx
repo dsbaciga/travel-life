@@ -27,7 +27,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
       setAvailableLanguages(available);
       setTripLanguages(selected);
     } catch {
-      toast.error('Failed to load languages');
+      toast.error("Couldn't load languages. Try again.");
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
       if (error.response?.data?.message?.includes('already added')) {
         toast.error('Language already added to this trip');
       } else {
-        toast.error('Failed to add language');
+        toast.error("Couldn't add language. Try again.");
       }
     } finally {
       setAdding(false);
@@ -75,7 +75,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
       await loadData();
       onUpdate?.();
     } catch {
-      toast.error('Failed to remove language');
+      toast.error("Couldn't remove language. Try again.");
     }
   };
 
@@ -105,7 +105,7 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
           <option value="">
             {unselectedLanguages.length === 0
               ? 'All languages added'
-              : 'Select a language...'}
+              : 'Select a language…'}
           </option>
           {unselectedLanguages.map((lang) => (
             <option key={lang.code} value={lang.code}>
@@ -120,10 +120,10 @@ export default function TripLanguageSelector({ tripId, onUpdate }: TripLanguageS
         >
           {adding ? (
             <>
-              <LoadingSpinner.Inline /> Adding...
+              <LoadingSpinner.Inline /> Adding…
             </>
           ) : (
-            'Add Language'
+            'Add language'
           )}
         </button>
       </div>

@@ -28,25 +28,25 @@ function getSeverityStyles(severity: 'none' | 'mild' | 'moderate' | 'severe') {
       return {
         badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
         icon: 'text-green-500 dark:text-green-400',
-        label: 'No Jet Lag',
+        label: 'No jet lag',
       };
     case 'mild':
       return {
         badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
         icon: 'text-yellow-500 dark:text-yellow-400',
-        label: 'Mild Jet Lag',
+        label: 'Mild jet lag',
       };
     case 'moderate':
       return {
         badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
         icon: 'text-orange-500 dark:text-orange-400',
-        label: 'Moderate Jet Lag',
+        label: 'Moderate jet lag',
       };
     case 'severe':
       return {
         badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
         icon: 'text-red-500 dark:text-red-400',
-        label: 'Severe Jet Lag',
+        label: 'Severe jet lag',
       };
   }
 }
@@ -108,7 +108,7 @@ export default function JetLagCalculator({
       <div className={`inline-flex items-center gap-2 text-amber-600 dark:text-amber-400 ${className}`}>
         <InfoIcon className="w-4 h-4" />
         <span className="text-sm">
-          {jetLagInfo.recommendations[0] || 'Unable to calculate jet lag'}
+          {jetLagInfo.recommendations[0] || "Couldn't work out jet lag for these dates."}
         </span>
       </div>
     );
@@ -150,7 +150,7 @@ export default function JetLagCalculator({
             <div className="flex items-center gap-2 mb-3 text-white">
               <MoonIcon className="w-5 h-5" />
               <span className="font-medium">
-                Sleep Adjustment Tips
+                Sleep adjustment tips
                 {jetLagInfo.adjustmentDays > 0 && (
                   <span className="ml-2 text-white/80 font-normal text-sm">
                     (~{jetLagInfo.adjustmentDays} day{jetLagInfo.adjustmentDays !== 1 ? 's' : ''} to adjust)
@@ -246,7 +246,7 @@ export default function JetLagCalculator({
           <div className="flex items-center gap-2 mt-4 mb-3">
             <MoonIcon className="w-4 h-4 text-primary-500 dark:text-gold" />
             <span className="text-sm font-medium text-gray-700 dark:text-dusk-200">
-              Sleep Adjustment Recommendations
+              Sleep adjustment recommendations
             </span>
           </div>
           <ul className="space-y-2 ml-6">

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router';
 import Icon from './ui/Icon';
 
 const PERMISSION_LABELS: Record<PermissionLevel, string> = {
-  view: 'View Only',
+  view: 'View only',
   edit: 'Can Edit',
   admin: 'Admin',
 };
@@ -48,7 +48,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       // Navigate to the trip
       navigate(`/trips/${collaborator.tripId}`);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, 'Failed to accept invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't accept invitation. Try again."));
     } finally {
       setProcessingId(null);
     }
@@ -63,7 +63,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       onUpdate?.();
     } catch (err: unknown) {
       console.error('Failed to decline invitation:', err);
-      toast.error(getApiErrorMessage(err, 'Failed to decline invitation'));
+      toast.error(getApiErrorMessage(err, "Couldn't decline invitation. Try again."));
     } finally {
       setProcessingId(null);
     }
@@ -96,7 +96,7 @@ export default function PendingInvitations({ onUpdate }: PendingInvitationsProps
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
           <span className="w-2 h-2 bg-gold rounded-full animate-pulse" />
-          Pending Invitations
+          Pending invitations
         </h3>
         <span className="px-2 py-1 text-xs font-medium bg-gold/20 text-gold rounded-full">
           {invitations.length} new

@@ -37,6 +37,8 @@ import { useTripLinkSummary } from '../hooks/useTripLinkSummary';
 import { getEntityKey } from '../types/entityLink';
 import type { TripLinkSummary } from '../types/entityLink';
 import EmptyState from './EmptyState';
+import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { getApiErrorMessage } from '../lib/errors';
 import { getActivityPlaceName } from '../lib/itineraryPlaces';
 
 /**
@@ -77,8 +79,8 @@ import { getActivityPlaceName } from '../lib/itineraryPlaces';
  */
 const TIMELINE_TYPE_LABELS: Record<TimelineItemType, string> = {
   activity: 'Activity',
-  transportation: 'Transportation',
-  lodging: 'Lodging',
+  transportation: 'Transport',
+  lodging: 'Stay',
   journal: 'Journal',
   customItem: 'Custom item',
 };
@@ -222,12 +224,18 @@ const Timeline = ({
   };
 
   // Handle delete
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const handleDelete = async (item: TimelineItem) => {
     const itemId = item.data.id;
+    const typeLabel = TIMELINE_TYPE_LABELS[item.type].toLowerCase();
 
-    if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: `Delete ${typeLabel}`,
+      message: `"${item.title}" comes off your timeline. You can't undo this.`,
+      confirmLabel: `Delete ${typeLabel}`,
+      variant: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       switch (item.type) {
@@ -253,7 +261,7 @@ const Timeline = ({
       onRefresh?.();
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast.error(`Failed to delete ${TIMELINE_TYPE_LABELS[item.type].toLowerCase()}`);
+      toast.error(getApiErrorMessage(error, `Couldn't delete ${TIMELINE_TYPE_LABELS[item.type].toLowerCase()}. Try again.`));
     }
   };
 
@@ -815,7 +823,7 @@ const Timeline = ({
         operation: 'loadTimelineData.error',
         data: { tripId, errorMessage: error instanceof Error ? error.message : String(error) }
       });
-      toast.error('Failed to load timeline data');
+      toast.error("Couldn't load timeline data. Try again.");
       console.error('Error loading timeline:', error);
     } finally {
       setLoading(false);
@@ -1307,10 +1315,10 @@ const Timeline = ({
       }
       setWeatherData(weatherByDate);
 
-      toast.success(`Weather data refreshed successfully (${weather?.length || 0} days)`);
+      toast.success(`Weather data refreshed (${weather?.length || 0} days)`);
     } catch (error) {
       console.error('Error refreshing weather:', error);
-      toast.error('Failed to refresh weather data');
+      toast.error("Couldn't refresh weather data. Try again.");
     } finally {
       setRefreshingWeather(false);
     }
@@ -1352,7 +1360,7 @@ const Timeline = ({
 
   if (loading) {
     return (
-      <div className="text-center py-8 text-gray-900 dark:text-white">Loading timeline...</div>
+      <div className="text-center py-8 text-gray-900 dark:text-white">Loading timeline…</div>
     );
   }
 
@@ -1360,7 +1368,7 @@ const Timeline = ({
     return (
       <EmptyState.Compact
         icon="calendar"
-        message="No timeline items yet. Add activities, transportation, lodging, or journal entries to see them here."
+        message="No timeline items yet. Add activities, transport, stays, or journal entries to see them here."
       />
     );
   }
@@ -1373,13 +1381,14 @@ const Timeline = ({
     });
     return (
       <div className="text-center py-8 text-red-500">
-        Error loading timeline. Please refresh the page.
+        Couldn't load the timeline. Refresh the page to try again.
       </div>
     );
   }
 
   return (
     <div className="timeline-container">
+      <ConfirmDialogComponent />
       {/* Filter Bar */}
       <div className="timeline-filter-bar mb-4 print:hidden">
         <TimelineFilters

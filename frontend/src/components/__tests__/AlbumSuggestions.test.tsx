@@ -44,6 +44,6 @@ describe('AlbumSuggestions', () => {
 
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Day 1')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Create Album' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create album' })).toBeInTheDocument();
   });
 });

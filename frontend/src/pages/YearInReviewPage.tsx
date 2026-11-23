@@ -180,8 +180,8 @@ export default function YearInReviewPage() {
         {isError && (
           <EmptyState
             icon="alert"
-            message="Could not load your year in review"
-            subMessage="Please try again in a moment"
+            message="Couldn't load your year in review. Try again."
+            subMessage="Try again in a moment"
           />
         )}
 
@@ -194,7 +194,7 @@ export default function YearInReviewPage() {
                 ? 'Pick another year above to relive your adventures'
                 : 'Add dates to your trips and they will show up here'
             }
-            actionLabel="Go to Trips"
+            actionLabel="Go to trips"
             actionHref="/trips"
           />
         )}
@@ -210,7 +210,7 @@ export default function YearInReviewPage() {
                 icon="globe"
               />
               <StatCard
-                label="Days Traveled"
+                label="Days traveled"
                 value={review.daysTraveled.toLocaleString()}
                 gradient="from-amber-500 to-orange-600"
                 icon="calendar"
@@ -339,7 +339,7 @@ export default function YearInReviewPage() {
             {yearLocations.length > 0 && (
               <div className="animate-fade-in">
                 <h2 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-4">
-                  Where You Went
+                  Where you went
                 </h2>
                 <div className="h-64 sm:h-[420px] rounded-2xl overflow-hidden shadow-lg border-2 border-primary-100 dark:border-gold/20 relative z-0">
                   <PlacesVisitedMapContainer

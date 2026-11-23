@@ -173,12 +173,12 @@ describe('ImmichBrowser', () => {
     const { unmount } = render(
       <ImmichBrowser onSelect={vi.fn()} onClose={vi.fn()} tripId={42} onBulkImported={vi.fn()} />
     );
-    expect(await screen.findByRole('button', { name: 'Link all matching...' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Link all matching…' })).toBeInTheDocument();
     unmount();
 
     render(<ImmichBrowser onSelect={vi.fn()} onClose={vi.fn()} />);
     await waitForTiles();
-    expect(screen.queryByRole('button', { name: 'Link all matching...' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Link all matching…' })).not.toBeInTheDocument();
   });
 
   it('IB-008: shows a load failure and retries', async () => {
@@ -227,14 +227,14 @@ describe('ImmichBrowser', () => {
   it('IB-012: smart mode disables "Link all matching" with a reason', async () => {
     renderBrowser();
     await waitForTiles();
-    expect(screen.getByRole('button', { name: 'Link all matching...' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Link all matching…' })).toBeEnabled();
 
     fireEvent.change(screen.getByLabelText('Search mode'), { target: { value: 'smart' } });
     const input = screen.getByLabelText('Search assets');
     fireEvent.change(input, { target: { value: 'beach' } });
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Link all matching...' })).toBeDisabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Link all matching…' })).toBeDisabled());
     expect(screen.getByText(/Smart search ranks your whole library/)).toBeInTheDocument();
   });
 

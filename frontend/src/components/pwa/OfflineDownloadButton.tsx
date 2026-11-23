@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Icon from '../ui/Icon';
+import { useConfirmDialog } from '../../hooks/useConfirmDialog';
 import { offlineDownloadService, type OfflineDownloadStatus, type DownloadSizeEstimate } from '../../services/offlineDownload.service';
 import OfflineDownloadModal from './OfflineDownloadModal';
 
@@ -41,6 +42,7 @@ export default function OfflineDownloadButton({
   onDownloadComplete,
   onRemove,
 }: OfflineDownloadButtonProps) {
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const [status, setStatus] = useState<OfflineDownloadStatus>('not-downloaded');
   const [sizeEstimate, setSizeEstimate] = useState<DownloadSizeEstimate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +63,7 @@ export default function OfflineDownloadButton({
       setError(null);
     } catch (err) {
       console.error('Failed to load offline status:', err);
-      setError('Failed to check status');
+      setError("Couldn't check status. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -85,9 +87,15 @@ export default function OfflineDownloadButton({
 
   // Handle remove offline data
   const handleRemove = useCallback(async () => {
-    if (!window.confirm('Remove offline data for this trip? You will need to download again to access offline.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: 'Remove offline copy',
+      message: tripTitle
+        ? `"${tripTitle}" is no longer saved on this device. Download it again to use it offline.`
+        : 'This trip is no longer saved on this device. Download it again to use it offline.',
+      confirmLabel: 'Remove offline copy',
+      variant: 'warning',
+    });
+    if (!confirmed) return;
 
     try {
       setIsRemoving(true);
@@ -96,11 +104,11 @@ export default function OfflineDownloadButton({
       onRemove?.();
     } catch (err) {
       console.error('Failed to remove offline data:', err);
-      setError('Failed to remove');
+      setError("Couldn't remove. Try again.");
     } finally {
       setIsRemoving(false);
     }
-  }, [tripId, onRemove]);
+  }, [tripId, tripTitle, onRemove, confirm]);
 
   // Handle refresh (re-download)
   const handleRefresh = useCallback(() => {
@@ -120,6 +128,7 @@ export default function OfflineDownloadButton({
   if (compact) {
     return (
       <>
+        <ConfirmDialogComponent />
         <button
           onClick={status === 'downloaded' || status === 'outdated' ? handleRemove : handleDownloadClick}
           disabled={isLoading || isRemoving || status === 'downloading'}
@@ -145,7 +154,7 @@ export default function OfflineDownloadButton({
               : status === 'outdated'
               ? 'Offline data outdated - Click to update'
               : status === 'downloading'
-              ? 'Downloading...'
+              ? 'Downloading…'
               : 'Download for offline'
           }
           aria-label={
@@ -186,6 +195,7 @@ export default function OfflineDownloadButton({
   // Render full button
   return (
     <>
+      <ConfirmDialogComponent />
       <div
         className={`
           rounded-xl p-4
@@ -225,13 +235,13 @@ export default function OfflineDownloadButton({
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-charcoal dark:text-warm-gray">
                 {isLoading
-                  ? 'Checking status...'
+                  ? 'Checking status…'
                   : status === 'downloaded'
                   ? 'Available Offline'
                   : status === 'outdated'
                   ? 'Offline Data Outdated'
                   : status === 'downloading'
-                  ? 'Downloading...'
+                  ? 'Downloading…'
                   : 'Download for Offline'}
               </span>
 

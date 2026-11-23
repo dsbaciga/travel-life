@@ -97,14 +97,14 @@ describe('LoyaltyProgramManager', () => {
     vi.mocked(loyaltyProgramService.create).mockResolvedValue(program);
     renderManager();
 
-    await userEvent.click((await screen.findAllByRole('button', { name: /Add Program|\+ Add/ }))[0]);
+    await userEvent.click((await screen.findAllByRole('button', { name: /Add program|\+ Add/ }))[0]);
     const dialog = await screen.findByRole('dialog');
 
     await userEvent.type(within(dialog).getByLabelText('Program Name *'), 'SkyMiles');
     await userEvent.type(within(dialog).getByLabelText('Airline / Hotel / Brand *'), 'Delta Air Lines');
-    await userEvent.type(within(dialog).getByLabelText('Other Names'), 'Delta, ,DL');
+    await userEvent.type(within(dialog).getByLabelText('Other names'), 'Delta, ,DL');
     await userEvent.type(within(dialog).getByLabelText('Membership Number *'), '9876543210');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Add Program' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add program' }));
 
     await waitFor(() => expect(loyaltyProgramService.create).toHaveBeenCalled());
     expect(loyaltyProgramService.create).toHaveBeenCalledWith({
@@ -130,10 +130,10 @@ describe('LoyaltyProgramManager', () => {
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).getByLabelText('Membership Number *')).toHaveValue('9876543210');
-    const tier = within(dialog).getByLabelText('Status Tier');
+    const tier = within(dialog).getByLabelText('Status tier');
     await userEvent.clear(tier);
     await userEvent.type(tier, 'Platinum');
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Update Program' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Update program' }));
 
     await waitFor(() => expect(loyaltyProgramService.update).toHaveBeenCalled());
     expect(loyaltyProgramService.update).toHaveBeenCalledWith(
@@ -151,7 +151,7 @@ describe('LoyaltyProgramManager', () => {
     expect(loyaltyProgramService.delete).not.toHaveBeenCalled();
 
     const confirmDialog = await screen.findByRole('dialog');
-    await userEvent.click(within(confirmDialog).getByRole('button', { name: 'Delete' }));
+    await userEvent.click(within(confirmDialog).getByRole('button', { name: 'Delete program' }));
 
     await waitFor(() => expect(loyaltyProgramService.delete).toHaveBeenCalledWith(1));
   });

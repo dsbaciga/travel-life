@@ -94,14 +94,14 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
         key: `lodging:${l.id}`,
         entityType: "lodging" as const,
         entityId: l.id,
-        label: `Lodging: ${l.name}`,
+        label: `Stay: ${l.name}`,
         timezone: l.timezone ?? null,
       })),
       ...transportation.map((t) => ({
         key: `transportation:${t.id}`,
         entityType: "transportation" as const,
         entityId: t.id,
-        label: `Transportation: ${t.type}${t.carrier ? ` (${t.carrier})` : ""}`,
+        label: `Transport: ${t.type}${t.carrier ? ` (${t.carrier})` : ""}`,
         timezone: t.startTimezone ?? null,
       })),
       ...activities.map((a) => ({
@@ -160,7 +160,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       closeForm();
       refresh();
     } catch {
-      toast.error("Could not add deadline");
+      toast.error("Couldn't add deadline. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -171,15 +171,15 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       await bookingDeadlineService.updateDeadline(tripId, d.id, { dismissed: !d.dismissedAt });
       refresh();
     } catch {
-      toast.error("Could not update deadline");
+      toast.error("Couldn't update deadline. Try again.");
     }
   };
 
   const handleDelete = async (d: BookingDeadline) => {
     const confirmed = await confirm({
-      title: "Delete Deadline",
-      message: `Delete "${deadlineName(d)}"?`,
-      confirmLabel: "Delete",
+      title: "Delete deadline",
+      message: `"${deadlineName(d)}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete deadline",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -188,7 +188,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
       toast.success("Deadline deleted");
       refresh();
     } catch {
-      toast.error("Could not delete deadline");
+      toast.error("Couldn't delete deadline. Try again.");
     }
   };
 
@@ -208,7 +208,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
           className="btn-primary"
           onClick={() => (showForm ? closeForm() : setShowForm(true))}
         >
-          {showForm ? "Cancel" : "Add Deadline"}
+          {showForm ? "Cancel" : "Add deadline"}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
           <div className="flex justify-end gap-3">
             <button type="button" className="btn-secondary" onClick={closeForm} disabled={isSaving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? "Saving…" : "Save Deadline"}
+              {isSaving ? "Saving…" : "Save deadline"}
             </button>
           </div>
         </form>
@@ -296,14 +296,14 @@ export default function DeadlinesManager({ tripId, tripTimezone, onUpdate }: Dea
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <LoadingSpinner label="Loading deadlines..." />
+          <LoadingSpinner label="Loading deadlines…" />
         </div>
       ) : deadlines.length === 0 ? (
         <EmptyState
           icon="alarm"
           message="No deadlines yet"
-          subMessage="Track free-cancellation cutoffs, check-in windows and payment dates, or anything you want to keep an eye on"
-          actionLabel="Add Deadline"
+          subMessage="Track free-cancellation cutoffs, check-in windows and payment dates."
+          actionLabel="Add deadline"
           onAction={() => setShowForm(true)}
         />
       ) : (

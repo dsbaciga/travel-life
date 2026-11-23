@@ -95,7 +95,7 @@ export default function TripSeriesPage() {
       setEditingName(false);
       toast.success('Name updated');
     } catch {
-      toast.error('Failed to update name');
+      toast.error("Couldn't update name. Try again.");
     } finally {
       setSaving(false);
     }
@@ -109,7 +109,7 @@ export default function TripSeriesPage() {
       setEditingDescription(false);
       toast.success('Description updated');
     } catch {
-      toast.error('Failed to update description');
+      toast.error("Couldn't update description. Try again.");
     } finally {
       setSaving(false);
     }
@@ -124,7 +124,7 @@ export default function TripSeriesPage() {
       await tripSeriesService.reorderTrips(seriesId, newOrder.map((t) => t.id));
       await queryClient.invalidateQueries({ queryKey: ['tripSeries', seriesId] });
     } catch {
-      toast.error('Failed to reorder trips');
+      toast.error("Couldn't reorder trips. Try again.");
     } finally {
       setReordering(false);
     }
@@ -139,7 +139,7 @@ export default function TripSeriesPage() {
       await tripSeriesService.reorderTrips(seriesId, newOrder.map((t) => t.id));
       await queryClient.invalidateQueries({ queryKey: ['tripSeries', seriesId] });
     } catch {
-      toast.error('Failed to reorder trips');
+      toast.error("Couldn't reorder trips. Try again.");
     } finally {
       setReordering(false);
     }
@@ -147,9 +147,9 @@ export default function TripSeriesPage() {
 
   const handleRemoveTrip = async (trip: TripSeriesTrip) => {
     const confirmed = await confirm({
-      title: 'Remove from Series',
-      message: `Remove "${trip.title}" from this series? The trip itself will not be deleted.`,
-      confirmLabel: 'Remove',
+      title: 'Remove from series',
+      message: `Remove "${trip.title}" from this series? The trip itself is not deleted.`,
+      confirmLabel: 'Remove from series',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -159,7 +159,7 @@ export default function TripSeriesPage() {
       await queryClient.invalidateQueries({ queryKey: ['trips'] });
       toast.success('Trip removed from series');
     } catch {
-      toast.error('Failed to remove trip');
+      toast.error("Couldn't remove trip. Try again.");
     }
   };
 
@@ -173,7 +173,7 @@ export default function TripSeriesPage() {
       setSelectedTripToAdd('');
       toast.success('Trip added to series');
     } catch {
-      toast.error('Failed to add trip');
+      toast.error("Couldn't add trip. Try again.");
     } finally {
       setAddingTrip(false);
     }
@@ -181,9 +181,9 @@ export default function TripSeriesPage() {
 
   const handleDeleteSeries = async () => {
     const confirmed = await confirm({
-      title: 'Delete Series',
-      message: `Delete "${series?.name}"? All trips will be unlinked from this series but will not be deleted.`,
-      confirmLabel: 'Delete Series',
+      title: 'Delete series',
+      message: `Delete "${series?.name}"? All trips will be unlinked from this series but not deleted.`,
+      confirmLabel: 'Delete series',
       variant: 'danger',
     });
     if (!confirmed) return;
@@ -194,12 +194,12 @@ export default function TripSeriesPage() {
       toast.success('Series deleted');
       navigate('/trip-series');
     } catch {
-      toast.error('Failed to delete series');
+      toast.error("Couldn't delete series. Try again.");
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner.FullPage message="Loading series..." />;
+    return <LoadingSpinner.FullPage message="Loading series…" />;
   }
 
   if (!series) {
@@ -223,7 +223,7 @@ export default function TripSeriesPage() {
       <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
         <Breadcrumbs
           items={[
-            { label: 'Trip Series', href: '/trip-series' },
+            { label: 'Trip series', href: '/trip-series' },
             { label: series.name },
           ]}
         />
@@ -248,7 +248,7 @@ export default function TripSeriesPage() {
                   />
                   <div className="flex gap-3">
                     <button onClick={handleSaveName} disabled={saving} className="btn btn-primary text-sm">
-                      {saving ? 'Saving...' : 'Save'}
+                      {saving ? 'Saving…' : 'Save'}
                     </button>
                     <button onClick={() => setEditingName(false)} className="btn btn-secondary text-sm">
                       Cancel
@@ -285,12 +285,12 @@ export default function TripSeriesPage() {
                     onChange={(e) => setDescriptionValue(e.target.value)}
                     className="input w-full"
                     rows={3}
-                    placeholder="Describe your trip series..."
+                    placeholder="Describe your trip series…"
                     autoFocus
                   />
                   <div className="flex gap-2">
                     <button onClick={handleSaveDescription} disabled={saving} className="btn btn-primary text-sm">
-                      {saving ? 'Saving...' : 'Save'}
+                      {saving ? 'Saving…' : 'Save'}
                     </button>
                     <button onClick={() => setEditingDescription(false)} className="btn btn-secondary text-sm">
                       Cancel
@@ -434,7 +434,7 @@ export default function TripSeriesPage() {
                   onChange={(e) => setSelectedTripToAdd(e.target.value)}
                   className="input flex-1"
                 >
-                  <option value="">Select a trip to add...</option>
+                  <option value="">Select a trip to add…</option>
                   {availableTrips.map((t) => (
                     <option key={t.id} value={t.id.toString()}>
                       {t.title} ({t.status})
@@ -446,7 +446,7 @@ export default function TripSeriesPage() {
                   disabled={!selectedTripToAdd || addingTrip}
                   className="btn btn-primary text-sm px-6"
                 >
-                  {addingTrip ? 'Adding...' : 'Add'}
+                  {addingTrip ? 'Adding…' : 'Add'}
                 </button>
               </div>
             )}
@@ -457,7 +457,7 @@ export default function TripSeriesPage() {
         <div className="bg-white dark:bg-dusk-800 rounded-lg shadow border border-red-200 dark:border-red-900/50">
           <div className="px-6 py-4 border-b border-red-200 dark:border-red-900/50">
             <h2 className="text-lg font-display font-bold text-red-600 dark:text-red-400">
-              Danger Zone
+              Danger zone
             </h2>
           </div>
           <div className="p-6 flex items-center justify-between">
@@ -471,7 +471,7 @@ export default function TripSeriesPage() {
               onClick={handleDeleteSeries}
               className="btn btn-danger text-sm"
             >
-              Delete Series
+              Delete series
             </button>
           </div>
         </div>

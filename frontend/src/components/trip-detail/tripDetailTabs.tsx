@@ -115,7 +115,7 @@ export function useTripTabGroups({
         subTabs: [
           {
             id: "itinerary",
-            label: "Day Plan",
+            label: "Day plan",
             icon: (
               <Icon name="list" className="w-full h-full" />
             ),
@@ -129,21 +129,21 @@ export function useTripTabGroups({
           },
           {
             id: "daily",
-            label: "Day By Day",
+            label: "Day by day",
             icon: (
               <Icon name="calendar" className="w-full h-full" />
             ),
           },
           {
             id: "trip-map",
-            label: "Trip Map",
+            label: "Trip map",
             icon: (
               <Icon name="map" className="w-full h-full" />
             ),
           },
           {
             id: "route-planner",
-            label: "Route Planner",
+            label: "Route planner",
             icon: (
               <Icon name="directions" className="w-full h-full" />
             ),
@@ -167,14 +167,14 @@ export function useTripTabGroups({
           },
           {
             id: "photo-map",
-            label: "Photo Map",
+            label: "Photo map",
             icon: (
               <Icon name="map" className="w-full h-full" />
             ),
           },
           {
             id: "photo-timeline",
-            label: "Photo Timeline",
+            label: "Photo timeline",
             icon: (
               <Icon name="schedule" className="w-full h-full" />
             ),
@@ -223,7 +223,7 @@ export function useTripTabGroups({
           },
           {
             id: "lodging",
-            label: "Lodging",
+            label: "Stays",
             count: lodgingCount,
             icon: (
               <Icon name="lodging" className="w-full h-full" />
@@ -264,7 +264,7 @@ export function useTripTabGroups({
           },
           {
             id: "food-log",
-            label: "Food Log",
+            label: "Food log",
             icon: (
               <Icon name="foodLog" className="w-full h-full" />
             ),
@@ -309,7 +309,7 @@ export function useTripTabGroups({
           },
           {
             id: "local-norms",
-            label: "Local Norms",
+            label: "Local norms",
             icon: (
               <Icon name="globe" className="w-full h-full" />
             ),

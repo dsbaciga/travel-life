@@ -82,7 +82,7 @@ export default function TripDayIndicator({
     switch (status) {
       case TripStatus.DREAM:
         return {
-          label: 'Dream Trip',
+          label: 'Dream trip',
           subLabel: 'Waiting to become reality',
           icon: 'dream',
         };

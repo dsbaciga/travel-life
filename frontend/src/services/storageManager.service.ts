@@ -564,7 +564,7 @@ async function clearAllOfflineData(): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
     request.onsuccess = () => resolve();
-    request.onerror = () => reject(new Error('Failed to delete IndexedDB'));
+    request.onerror = () => reject(new Error("Couldn't delete IndexedDB. Try again."));
     request.onblocked = () => {
       // Database is in use, try to resolve anyway
       resolve();

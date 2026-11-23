@@ -21,7 +21,7 @@ export default function ChipSelector<T>({
   getLabel,
   label,
   emptyMessage = "No items available",
-  searchPlaceholder = "Search...",
+  searchPlaceholder = "Search…",
   className = "",
 }: ChipSelectorProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");

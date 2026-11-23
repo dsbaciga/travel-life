@@ -14,7 +14,7 @@ function errorMessage(error: unknown): string {
     const message = (error as { response?: { data?: { message?: unknown } } }).response?.data?.message;
     if (typeof message === "string" && message) return message;
   }
-  return "Could not scan the receipt. You can enter the expense by hand.";
+  return "Couldn't scan the receipt. You can enter the expense by hand.";
 }
 
 /** Small marker shown beside a form field whose value was read from a receipt. */
@@ -78,7 +78,7 @@ export default function ReceiptScanButton({ tripId, disabled, onScanned }: Recei
         aria-busy={isScanning}
         onClick={() => inputRef.current?.click()}
       >
-        {isScanning ? "Reading receipt..." : "Scan Receipt"}
+        {isScanning ? "Reading receipt…" : "Scan Receipt"}
       </button>
     </>
   );

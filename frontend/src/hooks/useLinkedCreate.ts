@@ -56,7 +56,7 @@ export function useLinkedCreate(tripId: number) {
       kind: Exclude<PlaceCompanion, 'none'>,
       place: Pick<Location, 'id' | 'name' | 'address'>
     ): Promise<boolean> => {
-      const label = kind === 'activity' ? 'activity' : 'lodging';
+      const label = kind === 'activity' ? 'activity' : 'stay';
       try {
         if (kind === 'activity') {
           await activityService.createActivity({ tripId, locationId: place.id, name: place.name });

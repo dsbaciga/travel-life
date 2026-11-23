@@ -109,7 +109,7 @@ export default function TripMap({ transportations, height = "500px" }: TripMapPr
         <Icon name="map" className="w-16 h-16 mb-4 text-gray-300 dark:text-dusk-600" />
         <p className="text-lg font-medium">No ground or sea routes to display</p>
         <p className="text-sm mt-1">
-          Add transportation segments (train, bus, car, ferry, etc.) with locations to see them on
+          Add transport legs (train, bus, car, ferry, etc.) with locations to see them on
           the map.
         </p>
       </div>

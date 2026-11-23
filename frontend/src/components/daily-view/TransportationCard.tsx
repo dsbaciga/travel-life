@@ -128,7 +128,7 @@ export default function TransportationCard({
                 type="button"
                 onClick={handleEdit}
                 className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
-                title="Edit transportation"
+                title="Edit transport"
               >
                 <Icon name="edit" size={20} />
               </button>
@@ -231,7 +231,7 @@ export default function TransportationCard({
             <EmbeddedLocationCard
               location={transportation.fromLocation}
               tripId={tripId}
-              label="Departure Location"
+              label="Departure location"
             />
           </div>
         )}
@@ -241,7 +241,7 @@ export default function TransportationCard({
             <EmbeddedLocationCard
               location={transportation.toLocation}
               tripId={tripId}
-              label="Arrival Location"
+              label="Arrival location"
             />
           </div>
         )}

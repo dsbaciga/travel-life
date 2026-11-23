@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { capitalize } from '../utils/stringHelpers';
+import { capitalize, pluralize } from '../utils/stringHelpers';
+import { getApiErrorMessage } from '../lib/errors';
 
 /**
  * Generic CRUD state management hook for Manager components
@@ -20,7 +21,7 @@ import { capitalize } from '../utils/stringHelpers';
  * @param service.delete - Delete an item
  * @param tripId - The trip ID to fetch items for
  * @param options - Configuration options
- * @param options.itemName - Display name for the entity (e.g., 'activity', 'lodging')
+ * @param options.itemName - Display name for the entity (e.g., 'activity', 'stay')
  * @param options.onUpdate - Callback after successful create/update/delete
  *
  * @returns Object with state and CRUD operation handlers
@@ -70,8 +71,8 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
       const data = await service.getByTrip(tripId);
       setItems(data);
     } catch (error) {
-      console.error(`Failed to load ${itemName}s:`, error);
-      toast.error(`Failed to load ${itemName}s`);
+      console.error(`Failed to load ${pluralize(itemName)}:`, error);
+      toast.error(getApiErrorMessage(error, `Couldn't load ${pluralize(itemName)}. Try again.`));
     } finally {
       setLoading(false);
     }
@@ -85,13 +86,13 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
     async (data: TCreateData): Promise<T | null> => {
       try {
         const created = await service.create(data);
-        toast.success(`${capitalize(itemName)} added successfully`);
+        toast.success(`${capitalize(itemName)} added`);
         await loadItems();
         onUpdate?.();
         return created;
       } catch (error) {
         console.error(`Failed to create ${itemName}:`, error);
-        toast.error(`Failed to add ${itemName}`);
+        toast.error(getApiErrorMessage(error, `Couldn't add ${itemName}. Try again.`));
         return null;
       }
     },
@@ -115,13 +116,13 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
     async (id: number, data: TUpdateData): Promise<boolean> => {
       try {
         await service.update(id, data);
-        toast.success(`${capitalize(itemName)} updated successfully`);
+        toast.success(`${capitalize(itemName)} updated`);
         await loadItems();
         onUpdate?.();
         return true;
       } catch (error) {
         console.error(`Failed to update ${itemName}:`, error);
-        toast.error(`Failed to update ${itemName}`);
+        toast.error(getApiErrorMessage(error, `Couldn't update ${itemName}. Try again.`));
         return false;
       }
     },
@@ -136,13 +137,13 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
     async (id: number): Promise<boolean> => {
       try {
         await service.delete(id);
-        toast.success(`${capitalize(itemName)} deleted successfully`);
+        toast.success(`${capitalize(itemName)} deleted`);
         await loadItems();
         onUpdate?.();
         return true;
       } catch (error) {
         console.error(`Failed to delete ${itemName}:`, error);
-        toast.error(`Failed to delete ${itemName}`);
+        toast.error(getApiErrorMessage(error, `Couldn't delete ${itemName}. Try again.`));
         return false;
       }
     },
@@ -154,9 +155,9 @@ export function useManagerCRUD<T extends { id: number }, TCreateData = unknown, 
    * Use with ConfirmDialog for consistent messaging
    */
   const getDeleteConfirmation = useCallback(() => ({
-    title: `Delete ${capitalize(itemName)}`,
-    message: `Are you sure you want to delete this ${itemName}? This action cannot be undone.`,
-    confirmLabel: 'Delete',
+    title: `Delete ${itemName}`,
+    message: `Delete this ${itemName}? You can't undo this.`,
+    confirmLabel: `Delete ${itemName}`,
     variant: 'danger' as const,
   }), [itemName]);
 

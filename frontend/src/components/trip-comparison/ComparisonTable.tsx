@@ -59,7 +59,7 @@ export default function ComparisonTable({ comparison }: ComparisonTableProps) {
     { label: 'Locations', render: (t) => t.locationCount },
     { label: 'Activities', render: (t) => t.activityCount },
     { label: 'Photos', render: (t) => t.photoCount },
-    { label: 'Transportation legs', render: (t) => t.transportationCount },
+    { label: 'Transport legs', render: (t) => t.transportationCount },
     {
       label: 'Total distance',
       render: (t) =>

@@ -296,7 +296,7 @@ describe('RoutePlanner', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Move Lisbon later' }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Could not save the new order'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't save the new order. Try again."));
     await waitFor(() => expect(listNames()).toEqual(['Lisbon', 'Warsaw', 'Madrid', 'Berlin', 'Paris']));
   });
 

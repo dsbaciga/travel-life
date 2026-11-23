@@ -55,7 +55,7 @@ export default function AlbumsPage() {
 
   const albumPagination = usePagedPagination<PhotoAlbum>(loadAlbumsPage, {
     pageSize: 30,
-    onError: () => toast.error('Failed to load albums'),
+    onError: () => toast.error("Couldn't load albums. Try again."),
   });
   const paginationRef = useRef(albumPagination);
   paginationRef.current = albumPagination;
@@ -221,15 +221,15 @@ export default function AlbumsPage() {
       setShowCreateForm(false);
       albumPagination.reset();
     } catch {
-      alert('Failed to create album');
+      toast.error("Couldn't create album. Try again.");
     }
   };
 
   const handleDeleteAlbum = async (albumId: number) => {
     const confirmed = await confirm({
-      title: 'Delete Album',
-      message: 'Are you sure you want to delete this album? Photos will not be deleted.',
-      confirmLabel: 'Delete',
+      title: 'Delete album',
+      message: 'The album is deleted. The photos stay in your library.',
+      confirmLabel: 'Delete album',
       variant: 'danger',
     });
     if (!confirmed) {
@@ -241,7 +241,7 @@ export default function AlbumsPage() {
       // Reload current page (or go to previous if this was the last item on the page)
       albumPagination.loadPage(albumPagination.currentPage);
     } catch {
-      alert('Failed to delete album');
+      toast.error("Couldn't delete album. Try again.");
     }
   };
 
@@ -290,7 +290,7 @@ export default function AlbumsPage() {
       }
     } catch (err) {
       console.error('Failed to load album photos:', err);
-      toast.error('Failed to load album photos');
+      toast.error("Couldn't load album photos. Try again.");
     }
   };
 
@@ -308,7 +308,7 @@ export default function AlbumsPage() {
       albumPagination.loadPage(albumPagination.currentPage);
     } catch (err) {
       console.error('Failed to set cover photo:', err);
-      toast.error('Failed to set cover photo');
+      toast.error("Couldn't set cover photo. Try again.");
     }
   };
 
@@ -316,7 +316,7 @@ export default function AlbumsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
         <div className="max-w-[1600px] mx-auto px-6 py-8">
-          <LoadingSpinner.FullPage message="Loading albums..." />
+          <LoadingSpinner.FullPage message="Loading albums…" />
         </div>
       </div>
     );
@@ -326,10 +326,10 @@ export default function AlbumsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-dusk-900">
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         <PageHeader
-          title="Photo Albums"
+          title="Photo albums"
           backLink={{ label: "← Back to Trip", href: `/trips/${tripId}` }}
           action={{
-            label: showCreateForm ? 'Cancel' : 'Create Album',
+            label: showCreateForm ? 'Cancel' : 'Create album',
             icon: showCreateForm ? 'close' : 'add',
             onClick: () => setShowCreateForm(!showCreateForm),
           }}
@@ -337,7 +337,7 @@ export default function AlbumsPage() {
 
         {showCreateForm && (
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create New Album</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create new album</h2>
             <form onSubmit={handleCreateAlbum} className="space-y-4">
               <div>
                 <label htmlFor="album-name" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
@@ -364,12 +364,12 @@ export default function AlbumsPage() {
                 onChange={(e) => setAlbumDescription(e.target.value)}
                 rows={3}
                 className="input"
-                placeholder="A collection of our best summer moments..."
+                placeholder="A collection of our best summer moments…"
               />
             </div>
 
             <button type="submit" className="btn btn-primary">
-              Create Album
+              Create album
             </button>
           </form>
         </div>
@@ -379,8 +379,8 @@ export default function AlbumsPage() {
         <EmptyState
           icon="album"
           message="No albums yet"
-          subMessage="Create your first album to organize your photos!"
-          actionLabel="+ Create Album"
+          subMessage="Create an album to group your photos."
+          actionLabel="Create album"
           onAction={() => setShowCreateForm(true)}
         />
       ) : (
@@ -410,7 +410,7 @@ export default function AlbumsPage() {
                 ) : failedThumbnails.has(album.id) ? (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-dusk-400 gap-2">
                     <PhotoIcon className="w-12 h-12" />
-                    <p className="text-xs text-gray-500 dark:text-dusk-400">Failed to load</p>
+                    <p className="text-xs text-gray-500 dark:text-dusk-400">Couldn't load</p>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -460,7 +460,7 @@ export default function AlbumsPage() {
                     onClick={() => navigate(`/trips/${tripId}/albums/${album.id}`)}
                     className="btn btn-secondary w-full"
                   >
-                    View Album
+                    View album
                   </button>
                   <div className="flex gap-2 items-center">
                     {parsedTripId && (
@@ -481,7 +481,7 @@ export default function AlbumsPage() {
                       className="btn btn-secondary flex-1 text-sm"
                       disabled={!album._count?.photoAssignments || album._count.photoAssignments === 0}
                     >
-                      Set Cover
+                      Set cover
                     </button>
                     <button
                       onClick={() => handleDeleteAlbum(album.id)}
@@ -523,7 +523,7 @@ export default function AlbumsPage() {
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-dusk-700">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Set Cover Photo
+                  Set cover photo
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                   Select a photo to use as the album cover
@@ -591,7 +591,7 @@ export default function AlbumsPage() {
                         {isCurrentCover && (
                           <div className="absolute inset-0 bg-green-500 bg-opacity-20 flex items-center justify-center">
                             <div className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                              Current Cover
+                              Current cover
                             </div>
                           </div>
                         )}

@@ -111,7 +111,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
 
     // Check if any updates were provided
     if (Object.keys(updates).length === 0) {
-      setErrors({ _form: 'Please fill in at least one field to update' });
+      setErrors({ _form: 'Fill in at least one field to update' });
       return;
     }
 
@@ -160,7 +160,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
             rows={3}
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
 
@@ -172,7 +172,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
             step="0.01"
           />
         );
@@ -185,7 +185,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             value={value}
             onChange={(e) => handleChange(field.key, e.target.value)}
             className="input"
-            placeholder={field.placeholder || 'Leave empty to skip...'}
+            placeholder={field.placeholder || 'Leave empty to skip…'}
           />
         );
     }
@@ -204,7 +204,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
           <div className="flex items-start gap-3">
             <Icon name="info" className="text-primary-600 dark:text-gold mt-0.5" />
             <div className="text-sm text-primary-800 dark:text-primary-200">
-              <p className="font-medium">Bulk Edit Mode</p>
+              <p className="font-medium">Bulk edit mode</p>
               <p className="mt-1 text-primary-700 dark:text-primary-300">
                 Only filled fields will be updated. Leave fields empty to keep their current values.
                 This will update {selectedCount} {pluralLabel.toLowerCase()}.
@@ -221,7 +221,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
         )}
 
         {/* Fields */}
-        <FormSection title="Update Fields" icon="edit">
+        <FormSection title="Update fields" icon="edit">
           <div className="space-y-4">
             {fields.map(field => (
               <div key={field.key}>
@@ -260,7 +260,7 @@ export default function BulkEditModal<T extends Record<string, unknown>>({
             {isSubmitting ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin mr-2" />
-                Updating...
+                Updating…
               </>
             ) : (
               `Update ${selectedCount} ${pluralLabel}`

@@ -49,7 +49,7 @@ export default function InviteUsersSection() {
     e.preventDefault();
 
     if (!email.trim()) {
-      toast.error('Please enter an email address');
+      toast.error('Enter an email address');
       return;
     }
 
@@ -65,15 +65,15 @@ export default function InviteUsersSection() {
       await loadInvitations();
 
       if (invitation.emailSent) {
-        toast.success('Invitation sent successfully!');
+        toast.success('Invitation sent');
       } else {
         toast.success('Invitation created! Email will be sent when SMTP is configured.');
       }
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to send invitation');
+        toast.error(error.response?.data?.message || "Couldn't send invitation. Try again.");
       } else {
-        toast.error('Failed to send invitation');
+        toast.error("Couldn't send invitation. Try again.");
       }
     } finally {
       setSending(false);
@@ -82,9 +82,9 @@ export default function InviteUsersSection() {
 
   const handleCancelInvitation = async (invitationId: number) => {
     const confirmed = await confirm({
-      title: 'Cancel Invitation',
-      message: 'Are you sure you want to cancel this invitation?',
-      confirmLabel: 'Cancel Invitation',
+      title: 'Cancel invitation',
+      message: 'The invitation link stops working.',
+      confirmLabel: 'Cancel invitation',
       variant: 'danger',
     });
 
@@ -96,9 +96,9 @@ export default function InviteUsersSection() {
       await loadInvitations();
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to cancel invitation');
+        toast.error(error.response?.data?.message || "Couldn't cancel invitation. Try again.");
       } else {
-        toast.error('Failed to cancel invitation');
+        toast.error("Couldn't cancel invitation. Try again.");
       }
     }
   };
@@ -110,15 +110,15 @@ export default function InviteUsersSection() {
       await loadInvitations();
 
       if (invitation.emailSent) {
-        toast.success('Invitation resent successfully!');
+        toast.success('Invitation resent');
       } else {
         toast.success('Invitation updated! Email will be sent when SMTP is configured.');
       }
     } catch (error: unknown) {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to resend invitation');
+        toast.error(error.response?.data?.message || "Couldn't resend invitation. Try again.");
       } else {
-        toast.error('Failed to resend invitation');
+        toast.error("Couldn't resend invitation. Try again.");
       }
     } finally {
       setResendingId(null);
@@ -177,7 +177,7 @@ export default function InviteUsersSection() {
             <Icon name="alert" className="text-yellow-400 mr-2" />
             <div>
               <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Email Not Configured
+                Email not configured
               </h3>
               <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
                 SMTP is not configured on the server. Invitations will be created but emails won't be sent.
@@ -200,7 +200,7 @@ export default function InviteUsersSection() {
         <form onSubmit={handleSendInvitation} className="space-y-4">
           <div>
             <label htmlFor={emailInputId} className="label">
-              Email Address
+              Email address
             </label>
             <input
               type="email"
@@ -221,7 +221,7 @@ export default function InviteUsersSection() {
               id={messageInputId}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a personal message to include in the invitation email..."
+              placeholder="Add a personal message to include in the invitation email…"
               className="input w-full max-w-md h-24 resize-none"
               maxLength={1000}
             />
@@ -234,12 +234,12 @@ export default function InviteUsersSection() {
             {sending ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin -ml-1 mr-2 text-white" />
-                Sending...
+                Sending…
               </>
             ) : (
               <>
                 <Icon name="mail" size={16} className="mr-2 align-text-bottom" />
-                Send Invitation
+                Send invitation
               </>
             )}
           </button>
@@ -249,18 +249,18 @@ export default function InviteUsersSection() {
       {/* Sent Invitations List */}
       <div className="bg-white dark:bg-dusk-800 rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Sent Invitations
+          Sent invitations
         </h2>
 
         {/* Accessibility: aria-live region for status updates */}
         <div aria-live="polite" aria-atomic="true" className="sr-only">
-          {loading ? 'Loading invitations...' : `${invitations.length} invitation${invitations.length !== 1 ? 's' : ''} loaded`}
+          {loading ? 'Loading invitations…' : `${invitations.length} invitation${invitations.length !== 1 ? 's' : ''} loaded`}
         </div>
 
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 dark:text-dusk-400 mt-2">Loading invitations...</p>
+            <p className="text-gray-500 dark:text-dusk-400 mt-2">Loading invitations…</p>
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
@@ -313,7 +313,7 @@ export default function InviteUsersSection() {
                         disabled={resendingId === invitation.id}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium disabled:opacity-50"
                       >
-                        {resendingId === invitation.id ? 'Resending...' : 'Resend'}
+                        {resendingId === invitation.id ? 'Resending…' : 'Resend'}
                       </button>
                       {invitation.status === 'PENDING' && (
                         <button

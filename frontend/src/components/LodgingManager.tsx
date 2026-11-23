@@ -161,7 +161,7 @@ export default function LodgingManager({
 
   // Initialize CRUD hook
   const manager = useManagerCRUD<Lodging, CreateLodgingInput, UpdateLodgingInput>(lodgingServiceAdapter, tripId, {
-    itemName: "lodging",
+    itemName: "stay",
     onUpdate,
   });
 
@@ -181,7 +181,7 @@ export default function LodgingManager({
   // Bulk operations (selection + delete/edit) via shared hook
   const bulk = useBulkOperations<Lodging>({
     tripId,
-    entityName: 'lodging',
+    entityName: 'stay',
     service: {
       bulkDelete: lodgingService.bulkDeleteLodging,
       bulkUpdate: lodgingService.bulkUpdateLodging,
@@ -484,7 +484,7 @@ export default function LodgingManager({
           ...createDataBase,
           locationId: newLocationId,
         });
-        toast.success('Lodging added successfully');
+        toast.success('Stay added');
         await deadlines.apply(createdLodging.id, createdLodging.timezone);
         markSaved();
 
@@ -519,16 +519,16 @@ export default function LodgingManager({
         }
       } catch (error) {
         console.error('Failed to create lodging:', error);
-        toast.error('Failed to add lodging');
+        toast.error("Couldn't add stay. Try again.");
       }
     }
   };
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: "Delete Lodging",
-      message: "Delete this lodging? This action cannot be undone.",
-      confirmLabel: "Delete",
+      title: "Delete stay",
+      message: "This stay and its booking details are deleted. You can't undo this.",
+      confirmLabel: "Delete stay",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -545,7 +545,7 @@ export default function LodgingManager({
       options: [
         { value: "hotel", label: "Hotel" },
         { value: "hostel", label: "Hostel" },
-        { value: "vacation_rental", label: "Vacation Rental" },
+        { value: "vacation_rental", label: "Vacation rental" },
         { value: "camping", label: "Camping" },
         { value: "resort", label: "Resort" },
         { value: "other", label: "Other" },
@@ -555,7 +555,7 @@ export default function LodgingManager({
       key: "notes",
       label: "Notes",
       type: "textarea" as const,
-      placeholder: "Add notes to all selected lodging\u2026",
+      placeholder: "Add notes to all selected stays\u2026",
     },
   ], []);
 
@@ -581,19 +581,26 @@ export default function LodgingManager({
   }, [manager.items, sortBy]);
 
   // Wrap close handler with unsaved changes confirmation
-  const handleCloseForm = useCallback(() => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
-      return;
+  const handleCloseForm = useCallback(async () => {
+    if (isFormDirty) {
+      const discard = await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to this form will be lost.',
+        confirmLabel: 'Discard changes',
+        cancelLabel: 'Keep editing',
+        variant: 'warning',
+      });
+      if (!discard) return;
     }
     resetForm();
-  }, [isFormDirty, resetForm]);
+  }, [isFormDirty, resetForm, confirm]);
 
   return (
     <div className="space-y-6">
       <ConfirmDialogComponent />
       <div className="flex flex-col-reverse items-start gap-3 sm:flex-row sm:justify-between sm:items-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-          Lodging
+          Stays
         </h2>
         <div className="flex items-center gap-2">
           {manager.items.length > 0 && !bulk.selection.selectionMode && (
@@ -610,7 +617,7 @@ export default function LodgingManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Lodging</span>
+              <span className="hidden sm:inline">+ Add stay</span>
             </button>
           )}
         </div>
@@ -620,7 +627,7 @@ export default function LodgingManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Lodging" : "Add Lodging"}
+        title={manager.editingId ? "Edit stay" : "Add stay"}
         icon="lodging"
         formId="lodging-form"
         footer={
@@ -628,7 +635,7 @@ export default function LodgingManager({
             onCancel={handleCloseForm}
             formId="lodging-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Lodging`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} stay`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => {
               addAnother.submit(document.getElementById('lodging-form'));
@@ -654,7 +661,7 @@ export default function LodgingManager({
 
         <form id="lodging-form" onSubmit={handleSubmit} className="space-y-6">
           {/* SECTION 1: Basic Info (Name & Type) */}
-          <FormSection title="Basic Info" icon="lodging">
+          <FormSection title="Basic info" icon="lodging">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -696,7 +703,7 @@ export default function LodgingManager({
                 >
                   <option value="hotel">Hotel</option>
                   <option value="hostel">Hostel</option>
-                  <option value="vacation_rental">Vacation Rental</option>
+                  <option value="vacation_rental">Vacation rental</option>
                   <option value="camping">Camping</option>
                   <option value="resort">Resort</option>
                   <option value="other">Other</option>
@@ -706,7 +713,7 @@ export default function LodgingManager({
           </FormSection>
 
           {/* SECTION 2: Stay Dates */}
-          <FormSection title="Stay Dates" icon="calendar">
+          <FormSection title="Stay dates" icon="calendar">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label
@@ -844,14 +851,14 @@ export default function LodgingManager({
 
           {/* COLLAPSIBLE: More Options (Booking, Cost, Notes) */}
           <CollapsibleSection
-            title="More Options"
+            title="More options"
             icon="settings"
             isExpanded={showMoreOptions}
             onToggle={() => setShowMoreOptions(!showMoreOptions)}
             badge="booking, cost, notes"
           >
             {/* Booking Section */}
-            <FormSection title="Booking Details" icon="ticket">
+            <FormSection title="Booking details" icon="ticket">
               <BookingFields
                 confirmationNumber={values.confirmationNumber}
                 bookingUrl={values.bookingUrl}
@@ -917,9 +924,9 @@ export default function LodgingManager({
         ) : manager.items.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoLodging />}
-            message="Where Will You Stay?"
-            subMessage="From boutique hotels and cozy Airbnbs to camping under the stars - add your accommodations to keep all your booking details in one place."
-            actionLabel="Add Your First Stay"
+            message="No stays yet"
+            subMessage="Add a hotel, rental or campsite to keep your booking details in one place."
+            actionLabel="Add stay"
             onAction={openCreateForm}
           />
         ) : (
@@ -1010,7 +1017,7 @@ export default function LodgingManager({
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline dark:text-blue-400"
                     >
-                      View Booking
+                      View booking
                     </a>
                   </div>
                 )}
@@ -1066,14 +1073,14 @@ export default function LodgingManager({
                 <button
                   onClick={() => handleEdit(lodging)}
                   className="px-2.5 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 whitespace-nowrap shrink-0"
-                  aria-label={`Edit lodging ${lodging.name}`}
+                  aria-label={`Edit stay ${lodging.name}`}
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(lodging.id)}
                   className="px-2.5 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 whitespace-nowrap shrink-0"
-                  aria-label={`Delete lodging ${lodging.name}`}
+                  aria-label={`Delete stay ${lodging.name}`}
                 >
                   Delete
                 </button>

@@ -386,7 +386,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
           queryClient.setQueryData(key, previous);
           queryClient.invalidateQueries({ queryKey: key });
         }
-        toast.error('Could not save the new order');
+        toast.error("Couldn't save the new order. Try again.");
         return false;
       }
     },
@@ -416,7 +416,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       queryClient.setQueryData<TripStop[]>(key, (current = []) => [...current, created]);
       void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
-      toast.error('Could not add the stop');
+      toast.error("Couldn't add the stop. Try again.");
     } finally {
       setBusy(false);
     }
@@ -432,7 +432,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       await tripStopService.updateStop(tripId, id, { nights });
     } catch {
       queryClient.setQueryData(key, previous);
-      toast.error('Could not save the number of nights');
+      toast.error("Couldn't save the number of nights. Try again.");
     }
   };
 
@@ -447,7 +447,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
       void queryClient.invalidateQueries({ queryKey: legsKey(tripId) });
     } catch {
       queryClient.setQueryData(key, previous);
-      toast.error('Could not remove the stop');
+      toast.error("Couldn't remove the stop. Try again.");
     }
   };
 
@@ -510,11 +510,11 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
     onDragCancel: ({ active }) => `Moving ${byId.get(Number(active.id))?.name ?? 'stop'} cancelled.`,
   };
 
-  if (isLoading) return <LoadingSpinner.FullPage message="Loading route planner..." />;
+  if (isLoading) return <LoadingSpinner.FullPage message="Loading route planner…" />;
   if (isError) {
     return (
       <p role="alert" className="py-6 text-sm text-red-600 dark:text-red-400">
-        Could not load the route plan.
+        Couldn't load the route plan. Try again.
       </p>
     );
   }
@@ -522,7 +522,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
   return (
     <div>
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route Planner</h2>
+        <h2 className="text-2xl font-bold text-charcoal dark:text-white">Route planner</h2>
         <p className="text-sm text-slate dark:text-dusk-400">
           Order the cities of your trip, see how far apart they are, and find a shorter route.
         </p>
@@ -775,7 +775,7 @@ export default function RoutePlanner({ tripId, tripStartDate, tripEndDate, locat
         </div>
 
         <div className="mt-6 lg:mt-0 h-[320px] sm:h-[420px] lg:h-[calc(100vh-18rem)] lg:min-h-[420px] lg:sticky lg:top-48">
-          <Suspense fallback={<LoadingSpinner.FullPage message="Loading map..." />}>
+          <Suspense fallback={<LoadingSpinner.FullPage message="Loading map…" />}>
             <RoutePlannerMap stops={stops} activeId={activeId} onSelect={setActiveId} className="h-full" />
           </Suspense>
         </div>

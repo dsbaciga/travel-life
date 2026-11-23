@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
 import LocationManager from "../LocationManager";
@@ -598,7 +598,7 @@ describe("LocationManager", () => {
       await user.click(screen.getByRole("button", { name: /delete location/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete.*location/i)).toBeInTheDocument();
+        expect(screen.getByText(/is deleted. you can.t undo this/i)).toBeInTheDocument();
       });
     });
 
@@ -618,11 +618,11 @@ describe("LocationManager", () => {
       await user.click(screen.getByRole("button", { name: /delete location/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete.*location/i)).toBeInTheDocument();
+        expect(screen.getByText(/is deleted. you can.t undo this/i)).toBeInTheDocument();
       });
 
       // Click confirm in the dialog
-      const confirmButton = screen.getByRole("button", { name: /^delete$/i });
+      const confirmButton = within(screen.getByRole("dialog")).getByRole("button", { name: "Delete location" });
       await user.click(confirmButton);
 
       await waitFor(() => {
@@ -643,7 +643,7 @@ describe("LocationManager", () => {
       await user.click(screen.getByRole("button", { name: /delete location/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete.*location/i)).toBeInTheDocument();
+        expect(screen.getByText(/is deleted. you can.t undo this/i)).toBeInTheDocument();
       });
 
       // Click cancel in the dialog
@@ -670,10 +670,10 @@ describe("LocationManager", () => {
       await user.click(screen.getByRole("button", { name: /delete location/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/delete.*location/i)).toBeInTheDocument();
+        expect(screen.getByText(/is deleted. you can.t undo this/i)).toBeInTheDocument();
       });
 
-      const confirmButton = screen.getByRole("button", { name: /^delete$/i });
+      const confirmButton = within(screen.getByRole("dialog")).getByRole("button", { name: "Delete location" });
       await user.click(confirmButton);
 
       await waitFor(() => {
@@ -876,7 +876,7 @@ describe("LocationManager", () => {
       renderLocationManager();
 
       await waitFor(() => {
-        expect(screen.getByText(/pin your destinations/i)).toBeInTheDocument();
+        expect(screen.getByText(/no places yet/i)).toBeInTheDocument();
       });
     });
 
@@ -898,7 +898,7 @@ describe("LocationManager", () => {
       resolveLocations!([]);
 
       await waitFor(() => {
-        expect(screen.getByText(/pin your destinations/i)).toBeInTheDocument();
+        expect(screen.getByText(/no places yet/i)).toBeInTheDocument();
       });
     });
 
@@ -971,7 +971,7 @@ describe("LocationManager", () => {
       renderLocationManager();
 
       await waitFor(() => {
-        expect(screen.getByText(/pin your destinations/i)).toBeInTheDocument();
+        expect(screen.getByText(/no places yet/i)).toBeInTheDocument();
       });
 
       expect(screen.queryByTestId("mock-trip-locations-map")).not.toBeInTheDocument();

@@ -77,7 +77,7 @@ describe('UnitsSetting', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /Metric/ }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to save units'));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't save units. Try again."));
     expect(useAuthStore.getState().user?.measurementSystem).toBe('imperial');
     expect(screen.getByRole('radio', { name: /Imperial/ })).toBeChecked();
   });

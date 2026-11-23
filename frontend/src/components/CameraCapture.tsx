@@ -72,7 +72,7 @@ export default function CameraCapture({
         ) : (
           <Icon name="photo" />
         )}
-        {isCapturing ? 'Opening...' : buttonText}
+        {isCapturing ? 'Opening…' : buttonText}
       </button>
     </div>
   );
@@ -210,7 +210,7 @@ export function PhotoSourcePicker({
         >
           <Icon name="camera" size={40} className="text-primary-600 dark:text-sky" />
           <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
-            Take Photo
+            Take photo
           </span>
         </button>
       </div>

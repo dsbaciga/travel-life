@@ -187,8 +187,8 @@ export default function TripHeroHeader({
             <button
               onClick={onDuplicate}
               className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/40 rounded-lg transition-colors hover:shadow-lg"
-              title="Duplicate Trip"
-              aria-label="Duplicate Trip"
+              title="Duplicate trip"
+              aria-label="Duplicate trip"
             >
               <Icon name="copy" className="w-5 h-5 text-white" />
             </button>
@@ -332,8 +332,8 @@ export default function TripHeroHeader({
           <button
             onClick={onDuplicate}
             className="hidden sm:flex absolute bottom-4 right-4 p-3 min-w-[44px] min-h-[44px] items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-dusk-700 dark:hover:bg-dusk-600 border border-gray-300 dark:border-dusk-600 rounded-lg transition-colors hover:shadow-lg"
-            title="Duplicate Trip"
-            aria-label="Duplicate Trip"
+            title="Duplicate trip"
+            aria-label="Duplicate trip"
           >
             <Icon name="copy" className="w-5 h-5 text-gray-700 dark:text-dusk-300" />
           </button>

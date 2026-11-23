@@ -50,7 +50,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
       setShowCreate(false);
       toast.success('Series created');
     } catch {
-      toast.error('Failed to create series');
+      toast.error("Couldn't create series. Try again.");
     } finally {
       setCreating(false);
     }
@@ -64,7 +64,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
   return (
     <div>
       <label htmlFor="seriesId" className="label">
-        Trip Series
+        Trip series
       </label>
       <select
         id="seriesId"
@@ -79,7 +79,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
             {s.name} {s._count ? `(${s._count.trips} trips)` : ''}
           </option>
         ))}
-        <option value="__create__">+ Create New Series...</option>
+        <option value="__create__">+ Create new series…</option>
       </select>
       <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
         Group related trips together in a series
@@ -88,7 +88,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
       {showCreate && (
         <div className="mt-3 p-3 bg-gray-50 dark:bg-dusk-800 border border-gray-200 dark:border-dusk-700 rounded-lg">
           <label htmlFor="newSeriesName" className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-            New Series Name
+            New series name
           </label>
           <div className="flex gap-2">
             <input
@@ -114,7 +114,7 @@ export default function TripSeriesSelector({ selectedSeriesId, onChange }: TripS
               className="btn btn-primary text-sm px-4"
               disabled={creating || !newSeriesName.trim()}
             >
-              {creating ? 'Creating...' : 'Create'}
+              {creating ? 'Creating…' : 'Create'}
             </button>
             <button
               type="button"

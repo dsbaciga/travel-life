@@ -215,8 +215,8 @@ describe('BulkImportModal', () => {
     mockImportRows.mockResolvedValueOnce({ ...dryRunResult, total: 1, valid: 1, rows: [stayRow] });
     mockImportRows.mockResolvedValueOnce({ ...dryRunResult, dryRun: false, total: 1, valid: 1, created: 1, rows: [{ ...stayRow, status: 'created' }] });
 
-    await user.click(screen.getByLabelText('Lodging'));
-    expect(screen.getByRole('button', { name: 'Download transportation template' })).toBeInTheDocument();
+    await user.click(screen.getByLabelText('Stays'));
+    expect(screen.getByRole('button', { name: 'Download transport template' })).toBeInTheDocument();
     await upload(user, 'Hotel,Type,Check In,Check Out,Total,Currency\nLutetia,Hotel,2026-04-05 15:00,2026-04-08 11:00,480,EUR\n', 'stays.csv');
     await screen.findByText(/1 row, 6 columns/);
     await user.click(screen.getByRole('button', { name: 'Next: map columns' }));
@@ -257,7 +257,7 @@ describe('BulkImportModal', () => {
       ],
     });
 
-    await user.click(screen.getByLabelText('Transportation'));
+    await user.click(screen.getByLabelText('Transport'));
     await upload(user, 'type,from,to,departure,arrival\nflight,CDG,JFK,2026-04-10 11:00,2026-04-10 13:30\n', 'legs.csv');
     await screen.findByText(/1 row, 5 columns/);
     await user.click(screen.getByRole('button', { name: 'Next: map columns' }));

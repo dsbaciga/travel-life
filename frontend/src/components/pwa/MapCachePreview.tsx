@@ -59,7 +59,7 @@ interface ZoomConfig {
 const ZOOM_OPTIONS: ZoomConfig[] = [
   {
     id: 'CITY_OVERVIEW',
-    label: 'City Overview',
+    label: 'City overview',
     description: 'Zoom 10-12 (fastest)',
     minZoom: 10,
     maxZoom: 12,
@@ -73,7 +73,7 @@ const ZOOM_OPTIONS: ZoomConfig[] = [
   },
   {
     id: 'STREET_LEVEL',
-    label: 'Street Level',
+    label: 'Street level',
     description: 'Zoom 10-17 (large download)',
     minZoom: 10,
     maxZoom: 17,
@@ -176,7 +176,7 @@ export function MapCachePreview({
       if (err instanceof DOMException && err.name === 'AbortError') {
         setError('Download cancelled');
       } else {
-        setError(err instanceof Error ? err.message : 'Failed to download tiles');
+        setError(err instanceof Error ? err.message : "Couldn't download tiles. Try again.");
       }
     } finally {
       setIsDownloading(false);
@@ -199,7 +199,7 @@ export function MapCachePreview({
       await mapTileCacheService.clearTripTiles(tripId);
       onCacheClear?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to clear cache');
+      setError(err instanceof Error ? err.message : "Couldn't clear cache. Try again.");
     }
   }, [tripId, onCacheClear]);
 
@@ -223,7 +223,7 @@ export function MapCachePreview({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-body">
-              Offline Map Cache
+              Offline map cache
             </h3>
             <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
               Download map tiles for offline access during your trip
@@ -283,7 +283,7 @@ export function MapCachePreview({
       {/* Zoom Level Selection */}
       <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700">
         <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-3">
-          Detail Level
+          Detail level
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ZOOM_OPTIONS.map((option) => {
@@ -375,7 +375,7 @@ export function MapCachePreview({
         <div className="px-6 py-4 border-t border-gray-200 dark:border-dusk-700">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700 dark:text-dusk-300">
-              Downloading tiles...
+              Downloading tiles…
             </span>
             <span className="text-sm text-gray-500 dark:text-dusk-400">
               {progress.current} / {progress.total} ({progress.percentage}%)
@@ -414,7 +414,7 @@ export function MapCachePreview({
             className="btn-secondary flex items-center gap-2"
           >
             <Icon name="close" size={16} />
-            Cancel Download
+            Cancel download
           </button>
         ) : (
           <>
@@ -424,7 +424,7 @@ export function MapCachePreview({
               className="btn-primary flex items-center gap-2"
             >
               <Icon name="download" size={16} />
-              {hasCachedTiles ? 'Update Cache' : 'Download for Offline'}
+              {hasCachedTiles ? 'Update cache' : 'Download for Offline'}
             </button>
 
             {hasCachedTiles && (
@@ -434,7 +434,7 @@ export function MapCachePreview({
                 className="btn-secondary text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
               >
                 <Icon name="delete" size={16} className="mr-2 inline-block" />
-                Clear Cache
+                Clear cache
               </button>
             )}
           </>
@@ -446,7 +446,7 @@ export function MapCachePreview({
         <div className="flex gap-3">
           <Icon name="info" className="text-blue-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-blue-700 dark:text-blue-300">
-            <p className="font-medium">Offline Map Tips</p>
+            <p className="font-medium">Offline map tips</p>
             <ul className="mt-1 list-disc list-inside text-xs space-y-1 opacity-80">
               <li>Higher detail levels require more storage space</li>
               <li>Tiles are stored in your browser's cache</li>

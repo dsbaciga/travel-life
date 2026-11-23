@@ -161,7 +161,7 @@ export class FakeServer implements SyncApi {
       const value = row[field];
       if (value === null || value === undefined) continue;
       if (typeof value !== 'number') {
-        throw new ApiError(`Validation failed: ${field} must be a number`, 400);
+        throw new ApiError("Some of those details aren't valid. Check them and try again.", 400);
       }
       if (!this.table(target).has(value)) {
         throw new ApiError(`Referenced ${target} ${value} does not exist`, 400);
@@ -171,7 +171,7 @@ export class FakeServer implements SyncApi {
 
   async getSnapshot(tripId: number, since?: string): Promise<MobileSyncSnapshot> {
     this.gate();
-    if (tripId !== this.trip.id) throw new ApiError('Trip not found or access denied', 404);
+    if (tripId !== this.trip.id) throw new ApiError("We couldn't find that trip, or you don't have access to it.", 404);
     const sinceMs = since ? Date.parse(since) : null;
     const entities = {} as Record<SyncEntityKind, Row[]>;
     const ids = {} as Record<SyncEntityKind, number[]>;
@@ -205,7 +205,7 @@ export class FakeServer implements SyncApi {
       if (method === 'POST') {
         for (const field of ['sourceId', 'targetId'] as const) {
           if (typeof body[field] !== 'number') {
-            throw new ApiError(`Validation failed: ${field}`, 400);
+            throw new ApiError("Some of those details aren't valid. Check them and try again.", 400);
           }
         }
         const sourceKind = body.sourceType as SyncEntityKind;
@@ -276,9 +276,9 @@ export class FakeServer implements SyncApi {
 
       if (method === 'POST') {
         // Mirrors the real create schemas: null is rejected, absent is fine.
-        for (const [key, value] of Object.entries(row)) {
+        for (const value of Object.values(row)) {
           if (value === null && kind !== 'TRANSPORTATION' && kind !== 'EXPENSE' && kind !== 'FOOD_LOG') {
-            throw new ApiError(`Validation failed: ${key} must not be null on create`, 400);
+            throw new ApiError("Some of those details aren't valid. Check them and try again.", 400);
           }
         }
         if (kind === 'PHOTO' && !request.upload?.uri) {

@@ -287,7 +287,7 @@ export default function FoodLogManager({
       closeForm();
       refresh();
     } catch {
-      toast.error("Could not save entry");
+      toast.error("Couldn't save entry. Try again.");
     } finally {
       setIsSaving(false);
     }
@@ -295,9 +295,9 @@ export default function FoodLogManager({
 
   const handleDelete = async (entry: FoodLogEntry) => {
     const confirmed = await confirm({
-      title: "Delete Entry",
-      message: `Delete "${entry.dish}" at ${entry.restaurantName}?`,
-      confirmLabel: "Delete",
+      title: "Delete entry",
+      message: `"${entry.dish}" at ${entry.restaurantName} is deleted. You can't undo this.`,
+      confirmLabel: "Delete entry",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -306,7 +306,7 @@ export default function FoodLogManager({
       toast.success("Entry deleted");
       refresh();
     } catch {
-      toast.error("Could not delete entry");
+      toast.error("Couldn't delete entry. Try again.");
     }
   };
 
@@ -314,7 +314,7 @@ export default function FoodLogManager({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Food Log</h2>
+          <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">Food log</h2>
           <p className="text-sm text-gray-500 dark:text-dusk-400">
             Dishes, ratings and what to order again
           </p>
@@ -517,7 +517,7 @@ export default function FoodLogManager({
           <div className="flex justify-end gap-3">
             <button type="button" className="btn-secondary" onClick={closeForm} disabled={isSaving}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={isSaving}>
-              {isSaving ? "Saving…" : editingId ? "Save Changes" : "Save Dish"}
+              {isSaving ? "Saving…" : editingId ? "Save changes" : "Save dish"}
             </button>
           </div>
         </form>
@@ -527,8 +527,8 @@ export default function FoodLogManager({
         <EmptyState
           icon="foodLog"
           message="No dishes logged yet"
-          subMessage="Rate what you eat so you remember what to order again"
-          actionLabel="Log a Dish"
+          subMessage="Rate what you eat so you remember what to order again."
+          actionLabel="Log a dish"
           onAction={() => setShowForm(true)}
         />
       ) : (

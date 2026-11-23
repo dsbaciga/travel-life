@@ -323,7 +323,7 @@ export default function PhotosMapView({
     return (
       <div className="flex flex-col items-center justify-center h-96 bg-gray-100 dark:bg-navy-800 rounded-lg">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4" />
-        <p className="text-gray-500 dark:text-dusk-400">Loading photo locations...</p>
+        <p className="text-gray-500 dark:text-dusk-400">Loading photo locations…</p>
       </div>
     );
   }

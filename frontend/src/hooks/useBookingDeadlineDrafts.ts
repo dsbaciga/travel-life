@@ -145,7 +145,7 @@ export function useBookingDeadlineDrafts({
         );
       })
       .catch(() => {
-        if (!cancelled) toast.error('Could not load this booking’s deadlines');
+        if (!cancelled) toast.error("Couldn't load this booking’s deadlines. Try again.");
       });
     return () => {
       cancelled = true;

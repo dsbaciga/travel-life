@@ -48,7 +48,7 @@ export default function KeyboardShortcutsHelp() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-                Keyboard Shortcuts
+                Keyboard shortcuts
               </h2>
               <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1">
                 Boost your productivity with these shortcuts

@@ -175,8 +175,8 @@ export function useEntityFetcher(tripId: number, entityType: EntityType | null) 
       } catch (err) {
         console.error('Failed to fetch entities:', err);
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load items'));
-          toast.error('Failed to load items');
+          setError(err instanceof Error ? err : new Error("Couldn't load items. Try again."));
+          toast.error("Couldn't load items. Try again.");
         }
       } finally {
         if (isMounted) {
@@ -212,7 +212,7 @@ export function useEntityFetcher(tripId: number, entityType: EntityType | null) 
       setHasMore(result.hasMore);
     } catch (err) {
       console.error('Failed to load more photos:', err);
-      toast.error('Failed to load more photos');
+      toast.error("Couldn't load more photos. Try again.");
     } finally {
       setLoadingMore(false);
     }

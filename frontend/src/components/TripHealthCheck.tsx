@@ -24,7 +24,7 @@ const CATEGORY_CONFIG: Record<ValidationIssueCategory, {
     bgColor: 'bg-amber-50 dark:bg-amber-900/20',
   },
   ACCOMMODATIONS: {
-    label: 'Accommodations',
+    label: 'Stays',
     icon: (
       <Icon name="lodging" className="w-5 h-5" />
     ),
@@ -32,7 +32,7 @@ const CATEGORY_CONFIG: Record<ValidationIssueCategory, {
     bgColor: 'bg-blue-50 dark:bg-blue-900/20',
   },
   TRANSPORTATION: {
-    label: 'Transportation',
+    label: 'Transport',
     icon: (
       <Icon name="transportation" className="w-5 h-5" />
     ),
@@ -72,7 +72,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       setValidation(result);
     } catch (error) {
       console.error('Health check failed:', error);
-      toast.error('Failed to check trip health');
+      toast.error("Couldn't check trip health. Try again.");
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       fetchValidation();
     } catch (error) {
       console.error('Failed to dismiss issue:', error);
-      toast.error('Failed to dismiss issue');
+      toast.error("Couldn't dismiss issue. Try again.");
     }
   };
 
@@ -104,7 +104,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       fetchValidation();
     } catch (error) {
       console.error('Failed to restore issue:', error);
-      toast.error('Failed to restore issue');
+      toast.error("Couldn't restore issue. Try again.");
     }
   };
 
@@ -130,7 +130,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       <div className="card">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-500 border-t-transparent" />
-          <span className="text-gray-600 dark:text-dusk-400">Checking trip health...</span>
+          <span className="text-gray-600 dark:text-dusk-400">Checking trip health…</span>
         </div>
       </div>
     );
@@ -139,7 +139,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
   if (!validation) {
     return (
       <div className="card">
-        <p className="text-gray-600 dark:text-dusk-400">Unable to check trip health</p>
+        <p className="text-gray-600 dark:text-dusk-400">Couldn't check this trip. Try again.</p>
         <button
           onClick={fetchValidation}
           className="mt-3 text-sm text-primary-600 dark:text-gold hover:underline"
@@ -158,7 +158,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
       <div className="p-4 border-b border-gray-200 dark:border-navy-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trip Health</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Trip health</h3>
             {/* Status Badge */}
             {isOkay ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
@@ -200,7 +200,7 @@ export default function TripHealthCheck({ tripId, onQuickAction }: TripHealthChe
               <Icon name="success" className="w-6 h-6" />
             </div>
             <p className="font-medium text-gray-900 dark:text-white">Looking good!</p>
-            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">No issues found with your trip.</p>
+            <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">Nothing to fix. Your trip looks good.</p>
           </div>
         ) : (
           <div className="space-y-3">

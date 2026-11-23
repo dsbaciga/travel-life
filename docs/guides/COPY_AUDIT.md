@@ -2,6 +2,19 @@
 
 Inventory of user-facing strings that should change to match the [Voice and Tone guide](VOICE_AND_TONE.md). It is the input for a later copy-pass PR: **no source strings were changed to produce it.**
 
+## Status
+
+Applied to `frontend/` and `mobile/` in the "Apply the voice and tone guide to the web and mobile apps" PR: **all P1 and P2 rows, and the mechanical P3 rules** (Couldn't X. Try again., no "Please" or "successfully", `…` in loading text, sentence case, confirm buttons that name the action). Backend rows ("Backend messages that reach the UI") were applied in the companion backend PR (#248), so both the frontend/mobile and backend rows are now applied.
+
+Decisions taken: Transportation and Lodging are now **Transport** and **Stays** in all user-visible text (code, routes and API fields keep their names); the sign-in button stays "Begin your journey" (sentence case); the "Login successful" toast is gone; registering says "Welcome to Travel Life."
+
+Rows not applied as written:
+
+- `fe:hooks/useBulkOperations.ts` plural fix: the proposed `selectedIds.length == 1 ? 's' : ''` is inverted; the code now picks the singular or plural noun properly.
+- `mob:lib/apiClient.ts` "Token refresh failed": the proposal says the session expired, but that error is thrown for server trouble, where the session is deliberately kept. It reads "The server couldn't refresh your sign-in (error N). Try again." instead.
+- `fe:components/ImmichAlbumPanel.tsx` and `ImmichBulkImportDialog.tsx` keep Immich's own error text (a test pins "shows Immich's permission error as returned"); only the fallback wording changed.
+- Em dashes in running UI text outside the strings above were left alone.
+
 ## How to read this
 
 - `fe:` is `frontend/src/`, `mob:` is `mobile/src/`, `be:` is `backend/src/services/`. Line numbers are from `mobile-dusk-palette` at the time of writing, so re-grep the current text if a line has moved.

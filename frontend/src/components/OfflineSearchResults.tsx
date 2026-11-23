@@ -142,8 +142,8 @@ function getTypeLabel(type: UnifiedSearchResult['type']): string {
     photo: 'Photo',
     journal: 'Journal',
     activity: 'Activity',
-    transportation: 'Transportation',
-    lodging: 'Lodging',
+    transportation: 'Transport',
+    lodging: 'Stay',
   };
   return labels[type] || type;
 }
@@ -179,7 +179,7 @@ function SearchingIndicator() {
     <div className="p-6 flex items-center justify-center">
       <div className="flex items-center gap-3 text-gray-500 dark:text-dusk-400">
         <div className="w-5 h-5 border-2 border-primary-500 dark:border-gold border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm">Searching...</span>
+        <span className="text-sm">Searching…</span>
       </div>
     </div>
   );
@@ -206,9 +206,9 @@ function EmptyState({ query }: { query: string }) {
   return (
     <div className="p-8 text-center">
       <Icon name="search" size={48} className="mx-auto mb-3 text-gray-400 dark:text-dusk-400" />
-      <p className="text-gray-600 dark:text-dusk-400 font-medium">No results found</p>
+      <p className="text-gray-600 dark:text-dusk-400 font-medium">Nothing matches &ldquo;{query}&rdquo;</p>
       <p className="text-sm text-gray-500 dark:text-dusk-400 mt-1">
-        No offline data matches "{query}"
+        Nothing saved on this device matches that.
       </p>
       <p className="text-xs text-gray-400 dark:text-dusk-600 mt-3">
         Try different keywords or check your downloaded trips

@@ -137,7 +137,7 @@ export default function ConflictsList({
             <Icon name="success" size={28} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-charcoal dark:text-warm-gray">No Sync Conflicts</h3>
+            <h3 className="font-semibold text-charcoal dark:text-warm-gray">No sync conflicts</h3>
             <p className="text-sm text-slate dark:text-warm-gray/70 mt-1">
               All your data is synchronized with the server
             </p>
@@ -165,7 +165,7 @@ export default function ConflictsList({
               </div>
               <div>
                 <h3 className="font-semibold text-charcoal dark:text-warm-gray">
-                  Sync Conflicts
+                  Sync conflicts
                 </h3>
                 <p className="text-xs text-amber-700 dark:text-amber-400">
                   {conflicts.length} {conflicts.length === 1 ? 'conflict' : 'conflicts'} need resolution
@@ -189,7 +189,7 @@ export default function ConflictsList({
                   "
                 >
                   <Icon name="smartphone" size={14} />
-                  Keep All Local
+                  Keep all local
                 </button>
                 <button
                   type="button"
@@ -204,7 +204,7 @@ export default function ConflictsList({
                   "
                 >
                   <Icon name="computer" size={14} />
-                  Keep All Server
+                  Keep all server
                 </button>
               </div>
             )}
@@ -345,7 +345,7 @@ export default function ConflictsList({
                   hover:-translate-y-0.5
                 `}
               >
-                {showResolveAllConfirm === 'keep-local' ? 'Keep All Local' : 'Keep All Server'}
+                {showResolveAllConfirm === 'keep-local' ? 'Keep all local' : 'Keep all server'}
               </button>
             </div>
           </div>

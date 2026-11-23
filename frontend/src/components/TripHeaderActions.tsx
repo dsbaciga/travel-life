@@ -55,7 +55,7 @@ export default function TripHeaderActions({
       toast.success(nextArchived ? 'Trip archived.' : 'Trip unarchived.');
     },
     onError: () => {
-      toast.error('Failed to update trip.');
+      toast.error("Couldn't update trip. Try again.");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
@@ -173,7 +173,7 @@ export default function TripHeaderActions({
           to={`/trips/${tripId}/edit`}
           className="btn btn-secondary text-sm sm:text-base px-3 sm:px-4 py-2 whitespace-nowrap"
         >
-          Edit Trip
+          Edit trip
         </Link>
 
         <PdfImportButton tripId={tripId} />

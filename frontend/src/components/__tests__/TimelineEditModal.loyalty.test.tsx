@@ -157,14 +157,14 @@ describe('TimelineEditModal loyalty program', () => {
     await waitFor(() => expect(select.value).toBe('2'));
 
     await user.selectOptions(select, '1');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(lodgingService.updateLodging).toHaveBeenCalledTimes(1));
     expect(vi.mocked(lodgingService.updateLodging).mock.calls[0][1]).toMatchObject({
       loyaltyProgramId: 1,
     });
 
     await user.selectOptions(select, '');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(lodgingService.updateLodging).toHaveBeenCalledTimes(2));
     expect(vi.mocked(lodgingService.updateLodging).mock.calls[1][1]).toMatchObject({
       loyaltyProgramId: null,
@@ -183,14 +183,14 @@ describe('TimelineEditModal loyalty program', () => {
     const select = await findProgramSelect();
 
     await user.selectOptions(select, '1');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(transportationService.updateTransportation).toHaveBeenCalledTimes(1));
     expect(vi.mocked(transportationService.updateTransportation).mock.calls[0][1]).toMatchObject({
       loyaltyProgramId: 1,
     });
 
     await user.selectOptions(select, '');
-    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(transportationService.updateTransportation).toHaveBeenCalledTimes(2));
     expect(vi.mocked(transportationService.updateTransportation).mock.calls[1][1]).toMatchObject({
       loyaltyProgramId: null,

@@ -310,7 +310,7 @@ export default function TodayScreen() {
       {burn ? <BudgetMeter burn={burn} currency={trip.budgetCurrency} /> : null}
 
       {counts.conflict > 0 ? (
-        <Banner tone="warning" text="Someone else changed an item you edited offline. Tap the conflict chip to choose." />
+        <Banner tone="warning" text="Someone changed an item you edited offline. Tap the conflict chip to choose which version to keep." />
       ) : null}
 
       <Row style={styles.dayNav}>

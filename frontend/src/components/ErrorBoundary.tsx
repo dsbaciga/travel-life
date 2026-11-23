@@ -48,10 +48,10 @@ export default class ErrorBoundary extends Component<Props, State> {
             <Icon name="alert" size={24} className="text-red-600 dark:text-red-400" />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-red-800 dark:text-red-200">
-                Something went wrong
+                This section didn't load
               </h3>
               <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                An error occurred while loading this content.
+                We couldn't show this section. Try again, or reload the page if it keeps happening.
               </p>
               {this.state.error && (
                 <details className="mt-3">
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRetry}
                 className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
-                Try Again
+                Try again
               </button>
             </div>
           </div>

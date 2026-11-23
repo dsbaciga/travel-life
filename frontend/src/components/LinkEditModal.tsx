@@ -11,6 +11,7 @@ import {
   getRelationshipLabel,
 } from '../lib/entityConfig';
 import toast from 'react-hot-toast';
+import { getApiErrorMessage } from '../lib/errors';
 
 /** Selector for all focusable elements within a modal */
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -95,7 +96,7 @@ export default function LinkEditModal({
       onSuccess();
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : 'Failed to update link';
+      const message = getApiErrorMessage(error, "Couldn't update link. Try again.");
       toast.error(message);
     },
   });
@@ -125,7 +126,7 @@ export default function LinkEditModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-dusk-700">
           <h3 id="link-edit-title" className="text-lg font-semibold text-gray-900 dark:text-white">
-            Edit Link
+            Edit link
           </h3>
           <button
             onClick={onClose}
@@ -161,7 +162,7 @@ export default function LinkEditModal({
           {/* Relationship type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-1">
-              Relationship Type
+              Relationship type
             </label>
             <select
               value={relationship}
@@ -184,7 +185,7 @@ export default function LinkEditModal({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add a note about this link..."
+              placeholder="Add a note about this link…"
               rows={3}
               maxLength={1000}
               className="input w-full resize-none"
@@ -208,7 +209,7 @@ export default function LinkEditModal({
               disabled={updateMutation.isPending}
               className="btn btn-primary flex-1"
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              {updateMutation.isPending ? 'Saving…' : 'Save changes'}
             </button>
           </div>
         </form>

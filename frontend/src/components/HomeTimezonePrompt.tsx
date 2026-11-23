@@ -37,7 +37,7 @@ export default function HomeTimezonePrompt() {
       await userService.updateSettings({ timezone });
       updateUser({ timezone });
     } catch {
-      toast.error('Failed to save timezone');
+      toast.error("Couldn't save timezone. Try again.");
     } finally {
       setSaving(false);
     }

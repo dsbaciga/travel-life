@@ -2,7 +2,7 @@
  * DeadlinesManager Tests
  *
  * Test cases:
- * - DLM-001: Add Deadline is available even when the trip has no bookings
+ * - DLM-001: Add deadline is available even when the trip has no bookings
  * - DLM-002: With no booking chosen, the form asks for a title and sends a standalone deadline
  * - DLM-003: A standalone deadline without a title is refused before anything is sent
  * - DLM-004: Choosing a booking hides the title and sends the booking
@@ -70,7 +70,7 @@ function renderManager() {
 }
 
 async function openForm() {
-  fireEvent.click(screen.getByRole('button', { name: 'Add Deadline' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Add deadline' }));
   return screen.findByLabelText(/booking \(optional\)/i);
 }
 
@@ -84,10 +84,10 @@ describe('DeadlinesManager', () => {
     vi.mocked(activityService.getActivitiesByTrip).mockResolvedValue([]);
   });
 
-  it('DLM-001: Add Deadline is available even when the trip has no bookings', async () => {
+  it('DLM-001: Add deadline is available even when the trip has no bookings', async () => {
     renderManager();
 
-    const add = await screen.findByRole('button', { name: 'Add Deadline' });
+    const add = await screen.findByRole('button', { name: 'Add deadline' });
     expect(add).toBeEnabled();
 
     const booking = await openForm();
@@ -101,7 +101,7 @@ describe('DeadlinesManager', () => {
 
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: '  Renew passport ' } });
     fireEvent.change(screen.getByLabelText('Due'), { target: { value: '2026-12-01T10:00' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save Deadline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save deadline' }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     const [tripId, input] = vi.mocked(bookingDeadlineService.createDeadline).mock.calls[0];
@@ -130,14 +130,14 @@ describe('DeadlinesManager', () => {
     ]);
     renderManager();
     const booking = await openForm();
-    await screen.findByRole('option', { name: 'Lodging: Hotel Roma' });
+    await screen.findByRole('option', { name: 'Stay: Hotel Roma' });
 
     expect(screen.getByLabelText('Title')).toBeInTheDocument();
     fireEvent.change(booking, { target: { value: 'lodging:7' } });
     expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/^Due/), { target: { value: '2026-12-01T10:00' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save Deadline' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save deadline' }));
 
     await waitFor(() => expect(bookingDeadlineService.createDeadline).toHaveBeenCalledTimes(1));
     const [, input] = vi.mocked(bookingDeadlineService.createDeadline).mock.calls[0];

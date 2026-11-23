@@ -344,7 +344,7 @@ export default function LocationManager({
         // return, so create the place directly here.
         try {
           const created = await locationService.createLocation(createData);
-          toast.success("Location added successfully");
+          toast.success("Location added");
           await createCompanionForPlace(alsoCreate, created);
           invalidateLinkSummary();
           await manager.loadItems();
@@ -352,7 +352,7 @@ export default function LocationManager({
           success = true;
         } catch (error) {
           console.error("Failed to create location:", error);
-          toast.error("Failed to add location");
+          toast.error("Couldn't add location. Try again.");
           success = false;
         }
       }
@@ -389,7 +389,7 @@ export default function LocationManager({
       manager.setItems((prev) =>
         prev.map((l) => (l.id === location.id ? { ...l, isFavorite: !newValue } : l))
       );
-      toast.error("Failed to update favorite");
+      toast.error("Couldn't update favorite. Try again.");
     }
   };
 
@@ -398,11 +398,11 @@ export default function LocationManager({
     const hasChildren = manager.items.some(l => l.parentId === id);
 
     const confirmed = await confirm({
-      title: "Delete Location",
+      title: "Delete location",
       message: hasChildren
-        ? `Delete "${location?.name}" and all its child locations? This action cannot be undone.`
-        : `Delete "${location?.name}"? This action cannot be undone.`,
-      confirmLabel: "Delete",
+        ? `"${location?.name}" and all its child locations are deleted. You can't undo this.`
+        : `"${location?.name}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete location",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -415,9 +415,9 @@ export default function LocationManager({
     if (selectedIds.length === 0) return;
 
     const confirmed = await confirm({
-      title: "Delete Locations",
-      message: `Delete ${selectedIds.length} selected locations? This action cannot be undone.`,
-      confirmLabel: "Delete All",
+      title: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
+      message: `The selected ${selectedIds.length === 1 ? "location is" : "locations are"} deleted. You can't undo this.`,
+      confirmLabel: `Delete ${selectedIds.length} ${selectedIds.length === 1 ? "location" : "locations"}`,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -431,7 +431,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk delete locations:", error);
-      toast.error("Failed to delete some locations");
+      toast.error("Couldn't delete some locations. Try again.");
     } finally {
       setIsBulkDeleting(false);
     }
@@ -452,7 +452,7 @@ export default function LocationManager({
       onUpdate?.();
     } catch (error) {
       console.error("Failed to bulk update locations:", error);
-      toast.error("Failed to update some locations");
+      toast.error("Couldn't update some locations. Try again.");
     } finally {
       setIsBulkEditing(false);
     }
@@ -711,7 +711,7 @@ export default function LocationManager({
               className="btn btn-primary text-sm sm:text-base whitespace-nowrap"
             >
               <span className="sm:hidden">+ Add</span>
-              <span className="hidden sm:inline">+ Add Location</span>
+              <span className="hidden sm:inline">+ Add location</span>
             </button>
           )}
         </div>
@@ -721,7 +721,7 @@ export default function LocationManager({
       <FormModal
         isOpen={manager.showForm}
         onClose={handleCloseForm}
-        title={manager.editingId ? "Edit Location" : "Add Location"}
+        title={manager.editingId ? "Edit location" : "Add location"}
         icon="place"
         maxWidth="2xl"
         formId="location-form"
@@ -730,7 +730,7 @@ export default function LocationManager({
             onCancel={handleCloseForm}
             formId="location-form"
             isSubmitting={isSubmitting}
-            submitLabel={`${manager.editingId ? "Update" : "Add"} Location`}
+            submitLabel={`${manager.editingId ? "Update" : "Add"} location`}
             isEditMode={!!manager.editingId}
             onSaveAndAddAnother={() => addAnother.submit(document.getElementById('location-form'))}
             leftContent={
@@ -795,7 +795,7 @@ export default function LocationManager({
           </FormSection>
 
           {/* Basic Info Section */}
-          <FormSection title="Location Details" icon="place">
+          <FormSection title="Location details" icon="place">
             {/* Create mode: bring an activity or lodging of the same name along */}
             {!manager.editingId && (
               <div>
@@ -814,13 +814,13 @@ export default function LocationManager({
                 >
                   <option value="none">None</option>
                   <option value="activity">Activity</option>
-                  <option value="lodging">Lodging</option>
+                  <option value="lodging">Stay</option>
                 </select>
                 {alsoCreate !== "none" && (
                   <p className="text-xs text-gray-500 dark:text-dusk-400 mt-1">
                     {alsoCreate === "activity"
                       ? "Adds an activity with the same name, linked to this place. It starts unscheduled."
-                      : "Adds a lodging with the same name, linked to this place. It is set as a hotel with no dates; edit it under Lodging."}
+                      : "Adds a stay with the same name, linked to this place. It is set as a hotel with no dates; edit it under Stays."}
                   </p>
                 )}
               </div>
@@ -943,7 +943,7 @@ export default function LocationManager({
 
             <div>
               <label htmlFor="location-opening-hours" className="label">
-                Opening Hours
+                Opening hours
               </label>
               <input
                 type="text"
@@ -1027,9 +1027,9 @@ export default function LocationManager({
         ) : manager.items.length === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoLocations />}
-            message="Pin Your Destinations"
-            subMessage="Mark the places that matter - from iconic landmarks and hidden gems to cozy cafes and stunning viewpoints. Build your personal map of memories."
-            actionLabel="Add Your First Location"
+            message="No places yet"
+            subMessage="Save the places you want to see, from landmarks to the cafe you don't want to miss."
+            actionLabel="Add place"
             onAction={openCreateForm}
           />
         ) : (

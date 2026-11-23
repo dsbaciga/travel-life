@@ -123,7 +123,7 @@ export default function ConflictResolutionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Sync Conflict Detected"
+      title="Choose which version to keep"
       icon="alert"
       maxWidth="4xl"
       closeOnBackdropClick={!isResolving}
@@ -147,12 +147,12 @@ export default function ConflictResolutionModal({
             {isResolving ? (
               <>
                 <Icon name="spinner" size={16} className="animate-spin" />
-                Resolving...
+                Resolving…
               </>
             ) : (
               <>
                 <Icon name="check" size={16} />
-                Apply Resolution
+                Apply resolution
               </>
             )}
           </button>
@@ -191,7 +191,7 @@ export default function ConflictResolutionModal({
         {/* Resolution Options */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-charcoal dark:text-warm-gray">
-            Choose Resolution Method
+            Choose resolution method
           </h4>
 
           <div className="grid gap-3">
@@ -325,7 +325,7 @@ export default function ConflictResolutionModal({
               ))
             ) : (
               <div className="text-center py-8 text-slate dark:text-warm-gray/70">
-                <p>No field differences found (metadata only conflict)</p>
+                <p>The visible details match. Only background data differs.</p>
               </div>
             )}
           </div>
@@ -341,12 +341,12 @@ export default function ConflictResolutionModal({
             {showPreview ? (
               <>
                 <Icon name="collapse" size={16} />
-                Hide Preview
+                Hide preview
               </>
             ) : (
               <>
                 <Icon name="expand" size={16} />
-                Preview Resolved Data
+                Preview resolved data
               </>
             )}
           </button>

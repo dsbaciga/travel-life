@@ -21,6 +21,7 @@ import {
   assertSecureServerUrl,
   assetBaseUrl,
   createApiClient,
+  OFFLINE_MESSAGE,
   isLocalNetworkHost,
   normalizeServerUrl,
   type Session,
@@ -187,6 +188,7 @@ describe('apiClient', () => {
     const error = await make().request('/trips').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBeNull();
+    expect((error as ApiError).message).toBe(OFFLINE_MESSAGE);
   });
 
   it('API-008: error responses carry the server message and status', async () => {

@@ -200,14 +200,14 @@ export default function PhotoUpload({
 
         if (totalFailed > 0) {
           toast.error(
-            `Linked ${totalSuccessful} of ${assets.length} photos successfully (${totalFailed} failed)`,
+            `Linked ${totalSuccessful} of ${assets.length} photos. ${totalFailed} could not be linked.`,
             { duration: 5000 }
           );
           if (allErrors.length > 0) {
             console.error('[PhotoUpload] Errors:', allErrors);
           }
         } else {
-          toast.success(`Successfully linked all ${totalSuccessful} photos!`);
+          toast.success(`Linked all ${totalSuccessful} photos`);
         }
       } else {
         // Use individual linking for smaller selections
@@ -237,7 +237,7 @@ export default function PhotoUpload({
     } catch (err) {
       console.error("Failed to link Immich photos:", err);
       toast.dismiss();
-      toast.error("Failed to link Immich photos");
+      toast.error("Couldn't link Immich photos. Try again.");
     } finally {
       setIsUploading(false);
     }
@@ -254,7 +254,7 @@ export default function PhotoUpload({
       const MAX_PHOTOS_PER_REQUEST = 500; // Max photos per HTTP request
 
       toast.loading(
-        `Importing album "${album.albumName}" with ${assets.length} photos...`,
+        `Importing album "${album.albumName}" with ${assets.length} photos…`,
         { id: 'album-import' }
       );
 
@@ -330,7 +330,7 @@ export default function PhotoUpload({
       // Step 3: Add all photos to the album (in batches if needed)
       if (allPhotoIds.length > 0) {
         toast.loading(
-          `Adding ${allPhotoIds.length} photos to album...`,
+          `Adding ${allPhotoIds.length} photos to album…`,
           { id: 'album-import' }
         );
 
@@ -355,14 +355,14 @@ export default function PhotoUpload({
         );
       } else {
         toast.success(
-          `Successfully imported album "${album.albumName}" with ${totalSuccessful} photos!`
+          `Imported album "${album.albumName}" with ${totalSuccessful} photos`
         );
       }
       onPhotoUploaded();
     } catch (err) {
       console.error("Failed to import album:", err);
       toast.dismiss('album-import');
-      toast.error("Failed to import album");
+      toast.error("Couldn't import album. Try again.");
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -410,7 +410,7 @@ export default function PhotoUpload({
       onPhotoUploaded();
     } catch {
       if (!isMountedRef.current || controller.signal.aborted) return;
-      alert("Failed to upload photos");
+      toast.error("Couldn't upload photos. Try again.");
     } finally {
       if (isMountedRef.current) {
         setIsUploading(false);
@@ -556,7 +556,7 @@ export default function PhotoUpload({
                 />
               </div>
               <p className="text-sm text-gray-600 dark:text-dusk-400 mt-1 text-center">
-                Uploading... {Math.round(uploadProgress)}%
+                Uploading… {Math.round(uploadProgress)}%
               </p>
             </div>
           )}
@@ -568,7 +568,7 @@ export default function PhotoUpload({
             className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-dusk-600 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed"
           >
             {isUploading
-              ? "Uploading..."
+              ? "Uploading…"
               : selectedFiles.length > 0
               ? `Upload ${selectedFiles.length} Photo${
                   selectedFiles.length !== 1 ? "s" : ""

@@ -30,7 +30,7 @@ const TYPE_CONFIG: Record<TimelineItemType, { label: string; shortLabel: string;
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',
   },
   lodging: {
-    label: 'Lodging',
+    label: 'Stays',
     shortLabel: 'Lodge',
     color: 'text-purple-600 dark:text-purple-400',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
@@ -207,7 +207,7 @@ function PrintDropdown({ onPrint }: { onPrint: (option: PrintOption) => void }) 
               className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700 flex items-center gap-2"
             >
               <Icon name="document" className="w-4 h-4" />
-              Print Itinerary
+              Print itinerary
             </button>
             <button
               type="button"

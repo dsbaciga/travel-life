@@ -158,7 +158,7 @@ export default function AlbumsSidebar({
               <Icon name="photos" size={24} className="text-gray-500 dark:text-dusk-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">All Photos</div>
+              <div className="font-medium truncate">All photos</div>
               <div className="text-sm opacity-75">({totalPhotos})</div>
             </div>
           </div>
@@ -268,7 +268,7 @@ export default function AlbumsSidebar({
         >
           <div className="flex items-center justify-center gap-2">
             <Icon name="add" />
-            <span className="font-medium">Create Album</span>
+            <span className="font-medium">Create album</span>
           </div>
         </button>
       </div>

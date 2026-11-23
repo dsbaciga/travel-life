@@ -218,11 +218,11 @@ export default function OfflineDownloadModal({
   const getPhaseLabel = (phase: DownloadProgress['phase']): string => {
     switch (phase) {
       case 'metadata':
-        return 'Downloading trip data...';
+        return 'Downloading trip data…';
       case 'photos':
-        return 'Downloading photos...';
+        return 'Downloading photos…';
       case 'maps':
-        return 'Downloading map tiles...';
+        return 'Downloading map tiles…';
       case 'complete':
         return 'Download complete!';
     }
@@ -242,7 +242,7 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleComplete}
-        title="Download Complete"
+        title="Download complete"
         icon="success"
         maxWidth="md"
         footer={
@@ -259,7 +259,7 @@ export default function OfflineDownloadModal({
             <Icon name="check" size={32} className="text-emerald-600 dark:text-emerald-400" />
           </div>
           <h3 className="text-lg font-semibold text-charcoal dark:text-warm-gray mb-2">
-            Trip Downloaded Successfully
+            Trip saved for offline use
           </h3>
           <p className="text-sm text-slate dark:text-warm-gray/70 max-w-sm">
             {tripTitle ? `"${tripTitle}"` : 'Your trip'} is now available offline.
@@ -281,7 +281,7 @@ export default function OfflineDownloadModal({
       <Modal
         isOpen={isOpen}
         onClose={handleCancel}
-        title="Downloading for Offline"
+        title="Downloading for offline use"
         icon="download"
         maxWidth="md"
         closeOnBackdropClick={false}
@@ -347,7 +347,7 @@ export default function OfflineDownloadModal({
     <Modal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="Download for Offline"
+      title="Download for offline use"
       icon="download"
       maxWidth="md"
       footer={
@@ -384,7 +384,7 @@ export default function OfflineDownloadModal({
               <Icon name="alert" className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-red-700 dark:text-red-300">
-                  Download Failed
+                  Couldn't download this trip
                 </p>
                 <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                   {error}
@@ -407,7 +407,7 @@ export default function OfflineDownloadModal({
                   Trip details & itinerary
                 </p>
                 <p className="text-xs text-slate dark:text-warm-gray/70">
-                  Locations, activities, transportation, lodging, journals, checklists
+                  Locations, activities, transport, stays, journals, checklists
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -509,7 +509,7 @@ export default function OfflineDownloadModal({
             <div className="flex items-center gap-3 mb-2">
               <Icon name="storage" size={16} className="text-slate dark:text-warm-gray/70" />
               <span className="text-xs font-medium text-slate dark:text-warm-gray/70">
-                Storage Usage
+                Storage usage
               </span>
             </div>
             <div className="h-2 bg-navy-200 dark:bg-navy-600 rounded-full overflow-hidden mb-1">

@@ -91,7 +91,7 @@ export default function GlobalAlbumsPage() {
 
   const albumPagination = usePagedPagination<AlbumWithTrip>(loadAlbumsPage, {
     pageSize: 30,
-    onError: () => toast.error("Failed to load albums"),
+    onError: () => toast.error("Couldn't load albums. Try again."),
   });
   const paginationRef = useRef(albumPagination);
   paginationRef.current = albumPagination;
@@ -357,7 +357,7 @@ export default function GlobalAlbumsPage() {
   const handleCreateAlbum = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTripId || !albumName.trim()) {
-      toast.error("Please select a trip and enter an album name");
+      toast.error("Select a trip and enter an album name");
       return;
     }
 
@@ -368,7 +368,7 @@ export default function GlobalAlbumsPage() {
         description: albumDescription || undefined,
       });
 
-      toast.success("Album created successfully!");
+      toast.success("Album created");
       setAlbumName("");
       setAlbumDescription("");
       setSelectedTripId(null);
@@ -382,7 +382,7 @@ export default function GlobalAlbumsPage() {
       navigate(`/trips/${selectedTripId}/albums/${newAlbum.id}`);
     } catch (err) {
       console.error("Failed to create album:", err);
-      toast.error("Failed to create album");
+      toast.error("Couldn't create album. Try again.");
     }
   };
 
@@ -399,7 +399,7 @@ export default function GlobalAlbumsPage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
-                  Photo Albums
+                  Photo albums
                 </h1>
                 {!isInitialLoading && (
                   <p className="text-slate dark:text-warm-gray/70">
@@ -417,7 +417,7 @@ export default function GlobalAlbumsPage() {
               className="btn btn-primary whitespace-nowrap self-start sm:self-auto"
             >
               <Icon name={showCreateForm ? "close" : "add"} size={20} className="mr-1 align-text-bottom" />
-              {showCreateForm ? "Cancel" : "Create Album"}
+              {showCreateForm ? "Cancel" : "Create album"}
             </button>
           </div>
         </div>
@@ -426,7 +426,7 @@ export default function GlobalAlbumsPage() {
         {showCreateForm && (
           <div className="bg-white/80 dark:bg-navy-800/80 backdrop-blur-sm rounded-xl border-2 border-primary-500/10 dark:border-sky/10 p-6 mb-6">
             <h2 className="text-xl font-semibold text-charcoal dark:text-warm-gray mb-4">
-              Create New Album
+              Create new album
             </h2>
             <form onSubmit={handleCreateAlbum} className="space-y-4">
               <div>
@@ -447,7 +447,7 @@ export default function GlobalAlbumsPage() {
                   className="w-full px-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors"
                   required
                 >
-                  <option value="">Choose a trip...</option>
+                  <option value="">Choose a trip…</option>
                   {availableTrips.map((trip) => (
                     <option key={trip.id} value={trip.id}>
                       {trip.title}
@@ -479,13 +479,13 @@ export default function GlobalAlbumsPage() {
                   onChange={(e) => setAlbumDescription(e.target.value)}
                   rows={3}
                   className="w-full px-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray placeholder-slate/50 dark:placeholder-warm-gray/50 border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors resize-none"
-                  placeholder="A collection of our best summer moments..."
+                  placeholder="A collection of our best summer moments…"
                 />
               </div>
 
               <div className="flex gap-3">
                 <button type="submit" className="btn btn-primary">
-                  Create Album
+                  Create album
                 </button>
                 <button
                   type="button"
@@ -512,7 +512,7 @@ export default function GlobalAlbumsPage() {
               <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate/50 dark:text-warm-gray/50" />
               <input
                 type="text"
-                placeholder="Search albums or trips..."
+                placeholder="Search albums or trips…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray placeholder-slate/50 dark:placeholder-warm-gray/50 border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors"
@@ -526,12 +526,12 @@ export default function GlobalAlbumsPage() {
               aria-label="Sort albums by"
               className="px-4 py-2.5 rounded-lg bg-parchment dark:bg-navy-700 text-charcoal dark:text-warm-gray border-2 border-transparent focus:border-primary-500 dark:focus:border-sky focus:outline-none transition-colors cursor-pointer"
             >
-              <option value="tripDate-desc">Newest Trips First</option>
-              <option value="tripDate-asc">Oldest Trips First</option>
+              <option value="tripDate-desc">Newest trips first</option>
+              <option value="tripDate-asc">Oldest trips first</option>
               <option value="name-asc">Album Name A-Z</option>
               <option value="name-desc">Album Name Z-A</option>
-              <option value="photos-desc">Most Photos</option>
-              <option value="photos-asc">Fewest Photos</option>
+              <option value="photos-desc">Most photos</option>
+              <option value="photos-asc">Fewest photos</option>
             </select>
           </div>
 
@@ -582,15 +582,15 @@ export default function GlobalAlbumsPage() {
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-sky mx-auto"></div>
             <p className="mt-4 text-slate dark:text-warm-gray">
-              Loading albums...
+              Loading albums…
             </p>
           </div>
         ) : totalAlbums === 0 ? (
           <EmptyState
             icon={<EmptyIllustrations.NoPhotos />}
-            message="Capture Your Memories"
-            subMessage="Albums help you organize and relive your travel moments. Create albums to group photos by destination, activity, or theme - whether it's 'Sunset Views', 'Street Food Adventures', or 'Mountain Hikes'."
-            actionLabel="Create Your First Album"
+            message="No albums yet"
+            subMessage="Group photos by place, day or theme."
+            actionLabel="Create album"
             onAction={() => setShowCreateForm(true)}
           />
         ) : filteredAlbums.length === 0 ? (
@@ -669,7 +669,7 @@ export default function GlobalAlbumsPage() {
                         onClick={(e) => e.stopPropagation()}
                         className="text-sm text-primary-600 dark:text-sky hover:text-primary-700 dark:hover:text-sky/80 font-medium whitespace-nowrap inline-flex items-center min-h-[44px]"
                       >
-                        View Trip
+                        View trip
                       </Link>
                       <Icon
                         name="expand"

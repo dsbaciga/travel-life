@@ -23,7 +23,7 @@ export default function IntegrationsSection() {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <LoadingSpinner.FullPage message="Loading integrations..." />
+          <LoadingSpinner.FullPage message="Loading integrations…" />
         }
       >
         <div className="space-y-6">

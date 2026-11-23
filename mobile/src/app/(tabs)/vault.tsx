@@ -102,7 +102,7 @@ export default function VaultScreen() {
       setPicking(false);
     } catch (error) {
       // Languages are edited on the server, so this needs a connection.
-      setLanguageError(error instanceof Error ? error.message : 'Could not update languages');
+      setLanguageError(error instanceof Error ? error.message : "Couldn't update languages. Try again.");
     }
   };
   const { data: documents = [] } = useQuery({
@@ -125,7 +125,7 @@ export default function VaultScreen() {
     setLockError(null);
     const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Unlock travel vault' });
     if (result.success) setUnlocked(true);
-    else setLockError('Could not verify it is you. Try again.');
+    else setLockError("Couldn't confirm it's you. Try again.");
   };
 
   const addDocument = async (docType: VaultDocType) => {

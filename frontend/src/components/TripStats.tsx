@@ -91,7 +91,7 @@ export default function TripStats({
       tab: "transportation",
     },
     {
-      label: "Lodging",
+      label: "Stays",
       value: lodgingCount,
       icon: (
         <Icon name="lodging" className="w-6 h-6" />

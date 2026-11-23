@@ -162,7 +162,7 @@ export default function PhotoActivityAutoLinkModal({
         onLinked?.();
         onClose();
       } catch {
-        toast.error("Failed to link photos");
+        toast.error("Couldn't link photos. Try again.");
       }
     });
 
@@ -185,7 +185,7 @@ export default function PhotoActivityAutoLinkModal({
             className="btn btn-primary"
           >
             {isSubmitting
-              ? "Linking..."
+              ? "Linking…"
               : selectedPhotoCount > 0
               ? `Link ${pluralPhotos(selectedPhotoCount)}`
               : "Link photos"}
@@ -198,7 +198,7 @@ export default function PhotoActivityAutoLinkModal({
       ) : isError ? (
         <EmptyState
           icon="alert"
-          message="Could not match photos to activities"
+          message="Couldn't match photos to activities. Try again."
           actionLabel="Try again"
           onAction={() => void refetch()}
         />

@@ -246,7 +246,7 @@ describe('LocalNormsCard', () => {
     await user.selectOptions(screen.getByLabelText(/Choose a country/i), 'FR');
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('Could not save the country for this trip');
+      expect(toast.error).toHaveBeenCalledWith("Couldn't save the country for this trip. Try again.");
     });
   });
 });

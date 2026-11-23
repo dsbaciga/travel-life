@@ -43,7 +43,7 @@ export default function ShareTripModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Share Trip"
+      title="Share trip"
       icon="users"
       maxWidth="lg"
     >

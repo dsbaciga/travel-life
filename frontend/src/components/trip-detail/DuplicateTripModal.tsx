@@ -61,7 +61,7 @@ export default function DuplicateTripModal({
 
   const handleDuplicateTrip = async () => {
     if (!duplicateTripTitle.trim()) {
-      toast.error("Please enter a title for the duplicated trip");
+      toast.error("Enter a title for the duplicated trip");
       return;
     }
 
@@ -70,12 +70,12 @@ export default function DuplicateTripModal({
         title: duplicateTripTitle,
         copyEntities: duplicateOptions,
       });
-      toast.success("Trip duplicated successfully!");
+      toast.success("Trip duplicated");
       onClose();
       onDuplicated(duplicatedTrip.id);
     } catch (error) {
       console.error("Failed to duplicate trip:", error);
-      toast.error("Failed to duplicate trip");
+      toast.error("Couldn't duplicate trip. Try again.");
     }
   };
 
@@ -84,7 +84,7 @@ export default function DuplicateTripModal({
       <div className="bg-white dark:bg-navy-800 rounded-2xl shadow-xl border border-primary-100 dark:border-gold/20 max-w-2xl w-full max-h-[90vh] max-h-[90dvh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="duplicate-trip-heading">
         <div className="flex items-start justify-between gap-3 px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0">
           <h2 id="duplicate-trip-heading" className="text-2xl font-bold text-gray-900 dark:text-white">
-            Duplicate Trip
+            Duplicate trip
           </h2>
           <button
             type="button"
@@ -103,7 +103,7 @@ export default function DuplicateTripModal({
               htmlFor="duplicate-trip-title"
               className="block text-sm font-medium text-gray-700 dark:text-dusk-300 mb-2"
             >
-              New Trip Title
+              New trip title
             </label>
             <input
               id="duplicate-trip-title"
@@ -184,7 +184,7 @@ export default function DuplicateTripModal({
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-dusk-300">
-                  <strong>Transportation</strong> - Flights, trains, buses (dates will be cleared)
+                  <strong>Transport</strong> - Flights, trains, buses (dates will be cleared)
                 </span>
               </label>
 
@@ -201,7 +201,7 @@ export default function DuplicateTripModal({
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-dusk-300">
-                  <strong>Lodging</strong> - Hotels, Airbnb, camping (dates will be cleared)
+                  <strong>Stays</strong> - Hotels, Airbnb, camping (dates will be cleared)
                 </span>
               </label>
 
@@ -218,7 +218,7 @@ export default function DuplicateTripModal({
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-dusk-300">
-                  <strong>Journal Entries</strong> - All journal entries with their associations
+                  <strong>Journal entries</strong> - All journal entries with their associations
                 </span>
               </label>
 
@@ -235,7 +235,7 @@ export default function DuplicateTripModal({
                   className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 />
                 <span className="text-sm text-gray-700 dark:text-dusk-300">
-                  <strong>Photo Albums</strong> - Album organization (requires photos to be copied)
+                  <strong>Photo albums</strong> - Album organization (requires photos to be copied)
                 </span>
               </label>
 
@@ -313,7 +313,7 @@ export default function DuplicateTripModal({
               disabled={!duplicateTripTitle.trim()}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Duplicate Trip
+              Duplicate trip
             </button>
         </div>
       </div>

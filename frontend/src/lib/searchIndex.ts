@@ -498,8 +498,8 @@ export const ENTITY_TYPE_LABELS: Record<SearchableEntityType, string> = {
   LOCATION: 'Locations',
   ACTIVITY: 'Activities',
   JOURNAL: 'Journal Entries',
-  TRANSPORTATION: 'Transportation',
-  LODGING: 'Lodging',
+  TRANSPORTATION: 'Transport',
+  LODGING: 'Stays',
 };
 
 /**

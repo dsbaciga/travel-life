@@ -62,7 +62,7 @@ export default function EntityPickerModal({
       onClose();
     } catch (error) {
       console.error('Failed to link photos:', error);
-      toast.error('Failed to link photos');
+      toast.error("Couldn't link photos. Try again.");
     } finally {
       setLinking(false);
     }
@@ -72,7 +72,7 @@ export default function EntityPickerModal({
     <Modal
       isOpen
       onClose={onClose}
-      title={`Link ${photoIds.length} Photo${photoIds.length !== 1 ? 's' : ''} to...`}
+      title={`Link ${photoIds.length} Photo${photoIds.length !== 1 ? 's' : ''} to…`}
       maxWidth="lg"
       footer={
         <button onClick={onClose} className="btn btn-secondary w-full">
@@ -133,7 +133,7 @@ export default function EntityPickerModal({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
+                  placeholder="Search…"
                   className="input mb-3 w-full"
                 />
               )}

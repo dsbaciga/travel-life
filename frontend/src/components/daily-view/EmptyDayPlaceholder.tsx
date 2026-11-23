@@ -40,7 +40,7 @@ export default function EmptyDayPlaceholder({
         No activities scheduled
       </h3>
       <p className="text-gray-500 dark:text-dusk-400 mb-6 max-w-md">
-        Day {dayNumber} doesn't have any events yet. Add activities, transportation, lodging, or journal entries to fill your day.
+        Day {dayNumber} doesn't have any events yet. Add activities, transport, stays, or journal entries to fill your day.
       </p>
 
       {/* Quick add buttons */}
@@ -69,7 +69,7 @@ export default function EmptyDayPlaceholder({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
         >
           <Icon name="add" size={16} />
-          Lodging
+          Stay
         </button>
 
         <button

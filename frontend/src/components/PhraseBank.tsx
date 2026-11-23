@@ -39,7 +39,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
         setActiveLanguage(data.languages[0].code);
       }
     } catch {
-      toast.error('Failed to load phrases');
+      toast.error("Couldn't load phrases. Try again.");
     } finally {
       setLoading(false);
     }
@@ -49,10 +49,10 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
     try {
       await navigator.clipboard.writeText(phrase.translation);
       setCopiedId(phrase.id);
-      toast.success('Copied to clipboard!');
+      toast.success('Copied to clipboard');
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      toast.error('Failed to copy');
+      toast.error("Couldn't copy. Try again.");
     }
   };
 
@@ -75,7 +75,7 @@ export default function PhraseBank({ tripId }: PhraseBankProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" label="Loading phrases..." />
+        <LoadingSpinner size="lg" label="Loading phrases…" />
       </div>
     );
   }

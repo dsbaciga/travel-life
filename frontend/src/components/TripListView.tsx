@@ -81,7 +81,7 @@ const TripListView: React.FC<TripListViewProps> = ({
         <thead>
           <tr className="bg-parchment dark:bg-navy-800 border-b border-primary-100 dark:border-gold/20">
             <th className="px-4 py-3 text-left text-sm font-semibold text-primary-700 dark:text-primary-200 w-16">
-              <span className="sr-only">Cover Photo</span>
+              <span className="sr-only">Cover photo</span>
             </th>
             <th
               className={`px-4 py-3 text-left text-sm font-semibold text-primary-700 dark:text-primary-200 ${

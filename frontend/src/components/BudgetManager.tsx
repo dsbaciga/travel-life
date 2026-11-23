@@ -85,8 +85,8 @@ const LINKED_ENTITY_TABS = {
 } as const;
 const LINKED_ENTITY_LABELS = {
   activity: "Activity",
-  transportation: "Transportation",
-  lodging: "Lodging",
+  transportation: "Transport",
+  lodging: "Stay",
   customItem: "Custom item",
 } as const;
 
@@ -258,7 +258,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to save budget");
+      toast.error("Couldn't save budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -266,9 +266,9 @@ export default function BudgetManager({
 
   const handleRemoveBudget = async () => {
     const confirmed = await confirm({
-      title: "Remove Budget",
-      message: "Remove the budget for this trip? Expenses will be kept.",
-      confirmLabel: "Remove",
+      title: "Remove budget",
+      message: "The budget for this trip is removed. Your expenses stay.",
+      confirmLabel: "Remove budget",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -280,7 +280,7 @@ export default function BudgetManager({
       setIsEditingBudget(false);
       refreshData();
     } catch {
-      toast.error("Failed to remove budget");
+      toast.error("Couldn't remove budget. Try again.");
     } finally {
       setIsSavingBudget(false);
     }
@@ -462,7 +462,7 @@ export default function BudgetManager({
       closeExpenseForm();
       refreshData();
     } catch {
-      toast.error(editingExpenseId ? "Failed to update expense" : "Failed to add expense");
+      toast.error(editingExpenseId ? "Couldn't update expense. Try again." : "Couldn't add expense. Try again.");
     } finally {
       submitLock.current = false;
       setIsSavingExpense(false);
@@ -487,11 +487,11 @@ export default function BudgetManager({
 
   const handleDeleteExpense = async (expense: TripExpense) => {
     const confirmed = await confirm({
-      title: "Delete Expense",
+      title: "Delete expense",
       message: expense.linkedEntity
-        ? `Delete "${expense.description}"? This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays.`
-        : `Delete "${expense.description}"?`,
-      confirmLabel: "Delete",
+        ? `"${expense.description}" is deleted. This clears the cost of "${expense.linkedEntity.name}"; the ${LINKED_ENTITY_LABELS[expense.linkedEntity.type].toLowerCase()} itself stays. You can't undo this.`
+        : `"${expense.description}" is deleted. You can't undo this.`,
+      confirmLabel: "Delete expense",
       variant: "danger",
     });
     if (!confirmed) return;
@@ -502,7 +502,7 @@ export default function BudgetManager({
       if (editingExpenseId === expense.id) closeExpenseForm();
       refreshData();
     } catch {
-      toast.error("Failed to delete expense");
+      toast.error("Couldn't delete expense. Try again.");
     }
   };
 
@@ -532,7 +532,7 @@ export default function BudgetManager({
             onClick={openCreateExpenseForm}
             className="btn-primary"
           >
-            + Add Expense
+            + Add expense
           </button>
         </div>
       </div>
@@ -544,7 +544,7 @@ export default function BudgetManager({
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-1">
-                  Trip Budget
+                  Trip budget
                 </p>
                 {budget !== null ? (
                   <>
@@ -562,8 +562,8 @@ export default function BudgetManager({
                     )}
                     {budgetNotComparable && (
                       <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                        Could not be converted to {displayCurrency} — progress
-                        below is unavailable.
+                        Couldn't convert this budget to {displayCurrency}, so progress
+                        is unavailable.
                       </p>
                     )}
                   </>
@@ -579,7 +579,7 @@ export default function BudgetManager({
                   onClick={openBudgetEditor}
                   className="btn-secondary"
                 >
-                  {budget !== null ? "Edit Budget" : "Set Budget"}
+                  {budget !== null ? "Edit budget" : "Set budget"}
                 </button>
                 {budget !== null && (
                   <button
@@ -642,7 +642,7 @@ export default function BudgetManager({
                 </div>
               )}
               <p className="mt-2 text-xs text-slate dark:text-warm-gray/60">
-                Includes activity, transportation, and lodging costs plus
+                Includes activity, transport and stay costs plus
                 recorded expenses, converted to {displayCurrency} at the rate
                 in effect on each item&apos;s date.
               </p>
@@ -696,7 +696,7 @@ export default function BudgetManager({
         ) : (
           <div>
             <p className="text-sm font-medium text-slate dark:text-warm-gray/70 mb-3">
-              {budget !== null ? "Edit Trip Budget" : "Set Trip Budget"}
+              {budget !== null ? "Edit trip budget" : "Set trip budget"}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
@@ -741,7 +741,7 @@ export default function BudgetManager({
                 className="btn-primary"
                 disabled={isSavingBudget}
               >
-                {isSavingBudget ? "Saving..." : "Save Budget"}
+                {isSavingBudget ? "Saving…" : "Save budget"}
               </button>
             </div>
           </div>
@@ -779,7 +779,7 @@ export default function BudgetManager({
       <FormModal
         isOpen={showExpenseForm}
         onClose={closeExpenseForm}
-        title={editingExpenseId ? "Edit Expense" : "Add Expense"}
+        title={editingExpenseId ? "Edit expense" : "Add expense"}
         icon="expense"
         formId="expense-form"
         maxWidth="2xl"
@@ -788,7 +788,7 @@ export default function BudgetManager({
             onCancel={closeExpenseForm}
             formId="expense-form"
             isSubmitting={isSavingExpense}
-            submitLabel={editingExpenseId ? "Update Expense" : "Add Expense"}
+            submitLabel={editingExpenseId ? "Update expense" : "Add expense"}
             isEditMode={!!editingExpenseId}
           />
         }
@@ -973,8 +973,8 @@ export default function BudgetManager({
           <EmptyState
             icon="expense"
             message="No expenses recorded yet"
-            subMessage="Track your trip spending by adding expenses"
-            actionLabel="Add Expense"
+            subMessage="Add expenses to track your trip spending."
+            actionLabel="Add expense"
             onAction={openCreateExpenseForm}
           />
         ) : (

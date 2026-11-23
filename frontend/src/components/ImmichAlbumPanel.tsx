@@ -18,7 +18,7 @@ interface ImmichAlbumPanelProps {
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error && error.message ? error.message : "Something went wrong";
+  return error instanceof Error && error.message ? error.message : "Couldn't finish that. Try again.";
 }
 
 function count(n: number, noun: string): string {
@@ -185,7 +185,7 @@ export default function ImmichAlbumPanel({ album, onChanged }: ImmichAlbumPanelP
               disabled={busy !== null}
               className="btn btn-secondary"
             >
-              {busy === "sync" ? "Syncing..." : "Sync from Immich"}
+              {busy === "sync" ? "Syncing…" : "Sync from Immich"}
             </button>
             <button
               type="button"
@@ -193,7 +193,7 @@ export default function ImmichAlbumPanel({ album, onChanged }: ImmichAlbumPanelP
               disabled={busy !== null}
               className="btn btn-secondary"
             >
-              {busy === "export" ? "Working..." : "Update album in Immich..."}
+              {busy === "export" ? "Working…" : "Update album in Immich…"}
             </button>
             <button
               type="button"
@@ -231,7 +231,7 @@ export default function ImmichAlbumPanel({ album, onChanged }: ImmichAlbumPanelP
               disabled={!chosenId || busy !== null}
               className="btn btn-secondary"
             >
-              {busy === "link" ? "Linking..." : "Link"}
+              {busy === "link" ? "Linking…" : "Link"}
             </button>
           </div>
           <div>
@@ -241,7 +241,7 @@ export default function ImmichAlbumPanel({ album, onChanged }: ImmichAlbumPanelP
               disabled={busy !== null}
               className="btn btn-secondary"
             >
-              {busy === "export" ? "Working..." : "Create album in Immich..."}
+              {busy === "export" ? "Working…" : "Create album in Immich…"}
             </button>
           </div>
         </>
