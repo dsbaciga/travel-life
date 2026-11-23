@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import DayHeader from './DayHeader';
@@ -179,12 +180,12 @@ export default function TimelineDaySection({
                 <div className="flex-1 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
+                    <span className="text-gray-500 dark:text-dusk-400 eyebrow">
                       Trip Time ({tripTimezone && getTimezoneAbbr(tripTimezone)})
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-dusk-400 uppercase tracking-wider">
+                    <span className="text-gray-500 dark:text-dusk-400 eyebrow">
                       Home Time ({userTimezone && getTimezoneAbbr(userTimezone)})
                     </span>
                     <div className="w-2 h-2 rounded-full bg-gray-400 dark:bg-dusk-500" />
@@ -228,19 +229,7 @@ export default function TimelineDaySection({
             {dayGroup.unscheduledActivities && dayGroup.unscheduledActivities.length > 0 && (
               <div className={`${isCompact ? 'mt-3' : 'mt-4'} border-t border-gray-200 dark:border-dusk-700 pt-4`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <svg
-                    className="w-4 h-4 text-gray-500 dark:text-dusk-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <Icon name="schedule" className="w-4 h-4 text-gray-500 dark:text-dusk-400" />
                   <h4 className="text-sm font-medium text-gray-700 dark:text-dusk-300">
                     Unscheduled Activities
                   </h4>

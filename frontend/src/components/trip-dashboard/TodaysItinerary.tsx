@@ -1,3 +1,4 @@
+import Icon from '../ui/Icon';
 import { useEffect, useRef, useMemo } from 'react';
 import type { Activity } from '../../types/activity';
 import type { Transportation } from '../../types/transportation';
@@ -36,75 +37,37 @@ interface TodaysItineraryProps {
  */
 function ActivityIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-      />
-    </svg>
+    <Icon name="activity" className={className} />
   );
 }
 
 function TransportIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-      />
-    </svg>
+    <Icon name="transportation" className={className} />
   );
 }
 
 function LodgingIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-      />
-    </svg>
+    <Icon name="lodging" className={className} />
   );
 }
 
 function CheckIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-    </svg>
+    <Icon name="check" className={className} />
   );
 }
 
 function LocationPinIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-      />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
+    <Icon name="place" className={className} />
   );
 }
 
 function ClockIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
+    <Icon name="schedule" className={className} />
   );
 }
 
@@ -257,7 +220,7 @@ function EventItem({
       {/* Event content */}
       <div className="flex-1 min-w-0 rounded-lg px-2 py-1 -mt-0.5 group-hover:bg-gray-50 dark:group-hover:bg-dusk-800/60 transition-colors">
         {/* Time */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-dusk-400">
+        <div className="flex items-center gap-2 text-xs tabular-nums text-gray-500 dark:text-dusk-400">
           <span className={`font-medium ${event.isCompleted ? '' : colors.text}`}>
             {formatEventTime(event.startTime, timezone)}
           </span>
@@ -295,7 +258,7 @@ function EventItem({
         {event.location && (
           <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-dusk-400">
             <LocationPinIcon className="w-3 h-3 flex-shrink-0" />
-            <span className="truncate">{event.location}</span>
+            <span className="truncate place-name">{event.location}</span>
           </div>
         )}
       </div>
@@ -341,19 +304,7 @@ function EmptyState() {
     <div className="relative overflow-hidden flex flex-col items-center justify-center py-8 text-center">
       <ContourBackdrop seed="today-empty" count={6} />
       <div className="relative w-12 h-12 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center mb-3">
-        <svg
-          className="w-6 h-6 text-gray-400 dark:text-dusk-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
+        <Icon name="calendar" className="w-6 h-6 text-gray-400 dark:text-dusk-400" />
       </div>
       <p className="relative text-sm font-medium text-gray-600 dark:text-dusk-400">
         No events scheduled for today
