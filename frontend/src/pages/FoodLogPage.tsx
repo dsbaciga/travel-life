@@ -82,7 +82,7 @@ export default function FoodLogPage() {
         <ListItemSkeleton />
       ) : entries.length === 0 ? (
         <EmptyState
-          icon="🍽️"
+          icon="foodLog"
           message="No meals found"
           subMessage="Log dishes from the Food Log tab of a trip"
         />

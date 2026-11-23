@@ -13,6 +13,7 @@ import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
+import Icon, { type IconName } from '../components/ui/Icon';
 
 export default function ChecklistsPage() {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
@@ -174,18 +175,18 @@ export default function ChecklistsPage() {
     }
   };
 
-  const getChecklistIcon = (type: string) => {
+  const getChecklistIcon = (type: string): IconName => {
     switch (type) {
       case 'airports':
-        return '✈️';
+        return 'flight';
       case 'countries':
-        return '🌍';
+        return 'globe';
       case 'cities':
-        return '🏙️';
+        return 'city';
       case 'us_states':
-        return '🗽';
+        return 'landmark';
       default:
-        return '📋';
+        return 'checklist';
     }
   };
 
@@ -203,7 +204,8 @@ export default function ChecklistsPage() {
   
   if (defaultChecklistsStatus.some(c => !c.exists)) {
     secondaryActions.push({
-      label: '+ Add Defaults',
+      label: 'Add Defaults',
+      icon: 'add' as const,
       onClick: handleOpenAddModal,
       variant: 'secondary' as const,
     });
@@ -235,7 +237,8 @@ export default function ChecklistsPage() {
           subtitle="Track your travel achievements"
           backLink={LIBRARY_BACK_LINK}
           action={{
-            label: showCreateForm ? 'Cancel' : '+ Create Custom List',
+            label: showCreateForm ? 'Cancel' : 'Create Custom List',
+            icon: showCreateForm ? 'close' : 'add',
             onClick: () => setShowCreateForm(!showCreateForm),
           }}
           secondaryActions={secondaryActions}
@@ -313,7 +316,7 @@ export default function ChecklistsPage() {
 
         {checklists.length === 0 ? (
           <EmptyState
-            icon="📋"
+            icon="checklist"
             message="No Checklists Yet"
             subMessage="Get started by initializing default lists or creating your own custom checklist"
             actionLabel={isInitializing ? 'Initializing...' : 'Initialize Default Lists'}
@@ -330,7 +333,7 @@ export default function ChecklistsPage() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-3xl">{getChecklistIcon(checklist.type)}</span>
+                      <Icon name={getChecklistIcon(checklist.type)} size={32} />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {checklist.name}
@@ -353,7 +356,7 @@ export default function ChecklistsPage() {
                         title="Delete checklist"
                         aria-label="Delete checklist"
                       >
-                        🗑️
+                        <Icon name="delete" size={20} />
                       </button>
                     )}
                   </div>

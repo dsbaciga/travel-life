@@ -17,6 +17,7 @@ import LinkButton from '../components/LinkButton';
 import Pagination from '../components/Pagination';
 import { PhotoIcon } from '../components/icons';
 import { stripMarkdown } from '../utils/stripMarkdown';
+import Icon from '../components/ui/Icon';
 
 export default function AlbumsPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -328,7 +329,8 @@ export default function AlbumsPage() {
           title="Photo Albums"
           backLink={{ label: "← Back to Trip", href: `/trips/${tripId}` }}
           action={{
-            label: showCreateForm ? 'Cancel' : '+ Create Album',
+            label: showCreateForm ? 'Cancel' : 'Create Album',
+            icon: showCreateForm ? 'close' : 'add',
             onClick: () => setShowCreateForm(!showCreateForm),
           }}
         />
@@ -375,7 +377,7 @@ export default function AlbumsPage() {
 
       {albumPagination.isEmpty ? (
         <EmptyState
-          icon="📸"
+          icon="album"
           message="No albums yet"
           subMessage="Create your first album to organize your photos!"
           actionLabel="+ Create Album"
@@ -417,9 +419,7 @@ export default function AlbumsPage() {
                       }}
                       className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-dusk-600 text-gray-700 dark:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-500 border border-gray-300 dark:border-dusk-500 transition-colors"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
+                      <Icon name="refresh" size={14} />
                       Retry
                     </button>
                   </div>
@@ -539,19 +539,7 @@ export default function AlbumsPage() {
                 aria-label="Close"
                 className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-dusk-200 hover:bg-gray-100 dark:hover:bg-dusk-700"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <Icon name="close" size={24} />
               </button>
             </div>
 

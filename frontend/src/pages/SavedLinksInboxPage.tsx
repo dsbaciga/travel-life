@@ -244,7 +244,7 @@ export default function SavedLinksInboxPage() {
         <ListItemSkeleton count={3} />
       ) : !links || links.length === 0 ? (
         <EmptyState
-          icon="📥"
+          icon="savedLink"
           message="Inbox is empty"
           subMessage="Links you save without picking a trip will land here"
         />

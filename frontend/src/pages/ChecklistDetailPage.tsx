@@ -6,6 +6,7 @@ import checklistService from "../services/checklist.service";
 import { useConfirmDialog } from "../hooks/useConfirmDialog";
 import Breadcrumbs from "../components/Breadcrumbs";
 import AirportSearchInput from "../components/AirportSearchInput";
+import Icon from '../components/ui/Icon';
 
 export default function ChecklistDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -198,8 +199,9 @@ export default function ChecklistDetailPage() {
           onClick={() => handleDeleteItem(item.id)}
           className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex-shrink-0"
           title="Delete item"
+          aria-label="Delete item"
         >
-          🗑️
+          <Icon name="delete" size={20} />
         </button>
       )}
     </div>
@@ -253,8 +255,9 @@ export default function ChecklistDetailPage() {
                     <button
                       onClick={() => setEditingName(true)}
                       className="text-gray-500 dark:text-dusk-400 hover:text-gray-700 dark:hover:text-dusk-300 shrink-0"
+                      aria-label="Edit name"
                     >
-                      ✏️
+                      <Icon name="edit" size={20} />
                     </button>
                   )}
                 </div>
@@ -303,11 +306,12 @@ export default function ChecklistDetailPage() {
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="btn btn-primary"
               >
+                <Icon name={showAddForm ? "close" : "add"} size={20} className="mr-1 align-text-bottom" />
                 {showAddForm
                   ? "Cancel"
                   : isAirports
-                    ? "+ Add Airport"
-                    : "+ Add Item"}
+                    ? "Add Airport"
+                    : "Add Item"}
               </button>
             )}
           </div>

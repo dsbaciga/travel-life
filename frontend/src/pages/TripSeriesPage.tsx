@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Breadcrumbs from '../components/Breadcrumbs';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
 import { formatDate } from '../utils/dateFormat';
+import Icon from '../components/ui/Icon';
 
 /** Get status badge color classes */
 function getStatusColor(status: string): string {
@@ -257,7 +258,8 @@ export default function TripSeriesPage() {
               ) : (
                 <div className="flex items-center gap-3">
                   <h1 className="min-w-0 break-words [overflow-wrap:anywhere] text-3xl font-display font-bold text-charcoal dark:text-warm-gray">
-                    📚 {series.name}
+                    <Icon name="series" size={28} className="mr-2 align-text-bottom" />
+                    {series.name}
                   </h1>
                   <button
                     onClick={() => {
@@ -268,9 +270,7 @@ export default function TripSeriesPage() {
                     title="Edit name"
                     aria-label="Edit series name"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    <Icon name="edit" size={16} />
                   </button>
                 </div>
               )}
@@ -311,9 +311,7 @@ export default function TripSeriesPage() {
                     title="Edit description"
                     aria-label="Edit series description"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
+                    <Icon name="edit" size={16} />
                   </button>
                 </div>
               )}
@@ -385,9 +383,7 @@ export default function TripSeriesPage() {
                       title="Move up"
                       aria-label={`Move ${trip.title} up`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
+                      <Icon name="arrowUp" size={16} />
                     </button>
                     <button
                       onClick={() => handleMoveDown(index)}
@@ -396,9 +392,7 @@ export default function TripSeriesPage() {
                       title="Move down"
                       aria-label={`Move ${trip.title} down`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <Icon name="arrowDown" size={16} />
                     </button>
                   </div>
 
@@ -409,9 +403,7 @@ export default function TripSeriesPage() {
                     title="Remove from series"
                     aria-label={`Remove ${trip.title} from series`}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon name="close" size={16} />
                   </button>
                   </div>
                 </li>

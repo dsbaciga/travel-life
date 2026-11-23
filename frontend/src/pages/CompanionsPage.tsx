@@ -26,6 +26,7 @@ import FormModalFooter from "../components/shared/FormModalFooter";
 import { TrashIcon, ChevronRightIcon, PlusIcon } from "../components/icons";
 import DietaryTagSelector from "../components/DietaryTagSelector";
 import DietaryBadges from "../components/DietaryBadges";
+import Icon from "../components/ui/Icon";
 
 interface CompanionWithTrips extends Companion {
   tripAssignments?: Array<{
@@ -347,7 +348,8 @@ export default function CompanionsPage() {
         subtitle="Manage your travel companions and add them to trips"
         backLink={LIBRARY_BACK_LINK}
         action={{
-          label: "+ Add Companion",
+          label: "Add Companion",
+          icon: "add",
           onClick: () => setShowForm(true),
         }}
       />
@@ -537,7 +539,10 @@ export default function CompanionsPage() {
                             }
                             className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
                           >
-                            {isExpanded ? "↑ Hide details" : "↓ Show details"}
+                            <span className="inline-flex items-center gap-1">
+                              <Icon name={isExpanded ? "collapse" : "expand"} size={16} />
+                              {isExpanded ? "Hide details" : "Show details"}
+                            </span>
                           </button>
 
                           {isExpanded && (
@@ -684,7 +689,7 @@ export default function CompanionsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState.Compact icon="🏝️" message="No trips found" />
+          <EmptyState.Compact icon="beach" message="No trips found" />
         )}
       </Modal>
 
@@ -736,7 +741,9 @@ export default function CompanionsPage() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className="text-4xl mb-2">✅</div>
+            <div className="mb-2 flex justify-center">
+              <Icon name="success" size={40} className="text-green-600 dark:text-green-400" />
+            </div>
             <p className="text-gray-900 dark:text-white font-semibold mb-1">
               All caught up!
             </p>

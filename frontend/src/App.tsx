@@ -93,7 +93,7 @@ function App() {
   // Global error handler for unhandled errors
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      debugLogger.error('🚨 Global unhandled error', event.error, {
+      debugLogger.error('Global unhandled error', event.error, {
         component: 'App',
         operation: 'window.onerror',
         data: {
@@ -107,7 +107,7 @@ function App() {
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      debugLogger.error('🚨 Global unhandled promise rejection', event.reason, {
+      debugLogger.error('Global unhandled promise rejection', event.reason, {
         component: 'App',
         operation: 'window.onunhandledrejection',
         data: {

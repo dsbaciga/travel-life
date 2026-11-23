@@ -17,6 +17,7 @@ import ComparisonTimeline from '../components/trip-comparison/ComparisonTimeline
 import { formatDateOnly } from '../utils/timezone';
 import { parseIdsParam } from '../utils/tripComparison';
 import { MAX_COMPARE_TRIPS, MIN_COMPARE_TRIPS } from '../types/tripComparison';
+import Icon from '../components/ui/Icon';
 
 interface PickerTrip {
   id: number;
@@ -101,7 +102,8 @@ export default function TripComparisonPage() {
           to="/trips"
           className="text-primary-600 dark:text-gold hover:text-primary-800 dark:hover:text-gold/80 mb-2 inline-flex items-center min-h-[44px]"
         >
-          ← My Trips
+          <Icon name="back" size={16} className="mr-1" />
+          My Trips
         </Link>
         <h1 className="text-3xl font-bold text-charcoal dark:text-warm-gray font-display">
           Compare trips
