@@ -578,7 +578,7 @@ export default function TimelineEditModal(props: TimelineEditModalProps) {
       onClose();
     } catch (error) {
       console.error("Failed to update:", error);
-      toast.error(`Failed to update ${getItemTypeLabel().toLowerCase()}`);
+      toast.error(`Couldn't update ${getItemTypeLabel().toLowerCase()}. Try again.`);
     } finally {
       setSaving(false);
     }

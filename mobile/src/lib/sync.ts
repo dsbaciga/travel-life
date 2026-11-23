@@ -250,7 +250,7 @@ async function run(): Promise<SyncResult | null> {
         ? 'Your session expired. Sign in again to keep syncing.'
         : error instanceof Error
           ? error.message
-          : 'Sync failed',
+          : "Couldn't sync. Your changes are saved on this phone and will upload when it works.",
     });
     return null;
   }

@@ -39,7 +39,7 @@ export default function CaptureScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" message="Pick a trip first, then capture into it." />
+        <EmptyState title="Pick a trip first" message="Choose a trip, then capture into it." />
       </Screen>
     );
   }
@@ -56,7 +56,7 @@ export default function CaptureScreen() {
     if (source === 'camera') {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        setMessage('Camera permission is needed to take a photo.');
+        setMessage('Allow camera access in Settings to take a photo.');
         return;
       }
     }

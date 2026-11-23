@@ -38,6 +38,7 @@ import { getEntityKey } from '../types/entityLink';
 import type { TripLinkSummary } from '../types/entityLink';
 import EmptyState from './EmptyState';
 import { useConfirmDialog } from '../hooks/useConfirmDialog';
+import { getApiErrorMessage } from '../lib/errors';
 import { getActivityPlaceName } from '../lib/itineraryPlaces';
 
 /**
@@ -260,7 +261,7 @@ const Timeline = ({
       onRefresh?.();
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast.error(`Failed to delete ${TIMELINE_TYPE_LABELS[item.type].toLowerCase()}`);
+      toast.error(getApiErrorMessage(error, `Couldn't delete ${TIMELINE_TYPE_LABELS[item.type].toLowerCase()}. Try again.`));
     }
   };
 

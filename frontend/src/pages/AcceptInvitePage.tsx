@@ -341,7 +341,7 @@ export default function AcceptInvitePage() {
             <p className="text-sm text-navy-600 dark:text-dusk-300">
               Already have an account?{' '}
               <Link to="/login" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
-                Log in
+                Sign in
               </Link>
             </p>
           </div>

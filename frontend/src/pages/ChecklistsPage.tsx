@@ -84,7 +84,7 @@ export default function ChecklistsPage() {
       toast.success('Default checklists initialized');
     } catch (err) {
       console.error('Failed to initialize defaults:', err);
-      toast.error('Failed to initialize default checklists. They may already exist.');
+      toast.error("Couldn't add the default checklists. They may already exist.");
     } finally {
       setIsInitializing(false);
     }

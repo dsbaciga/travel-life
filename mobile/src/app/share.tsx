@@ -13,6 +13,7 @@ import { listEntities } from '@/db/repository';
 import { createEntity, type LinkSpec } from '@/domain/mutations';
 import { classifyShare, suggestLinks } from '@/domain/smart';
 import { getDb } from '@/lib/db';
+import { friendlyMessage } from '@/lib/errors';
 import { completeEntity } from '@/lib/entityForms';
 import { useActiveTrip, useUserTimezone } from '@/lib/hooks';
 import { api } from '@/lib/session';
@@ -54,7 +55,7 @@ export default function ShareScreen() {
       void syncNow();
       close();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Couldn't save that. Try again.");
+      setError(friendlyMessage(caught, "Couldn't save that. Try again."));
       setBusy(false);
     }
   };

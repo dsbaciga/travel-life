@@ -80,14 +80,14 @@ export default function SyncScreen() {
       <Button label="Sync now" onPress={() => void syncNow()} loading={syncing} />
 
       {entries.length === 0 ? (
-        <EmptyState title="Everything is synced" message="Changes you make offline wait here until there is a connection." />
+        <EmptyState title="Everything is synced" message="Changes you make offline are saved on this phone and upload when you're back online." />
       ) : null}
 
       {conflicts.length > 0 ? <SectionHeader title="Needs your decision" /> : null}
       {conflicts.map((entry) => (
         <Card key={entry.seq} style={{ borderColor: palette.warning }}>
           <AppText variant="heading">{titleOf(entry)}</AppText>
-          <AppText muted>Someone else changed this while you were offline.</AppText>
+          <AppText muted>Someone changed this while you were offline. Choose which version to keep.</AppText>
           {(entry.conflict ?? []).map((conflict: FieldConflict) => (
             <View key={conflict.field} style={styles.compare}>
               <AppText variant="label">{FIELD_LABEL[conflict.field] ?? conflict.field}</AppText>
@@ -123,13 +123,13 @@ export default function SyncScreen() {
         </Card>
       ))}
 
-      {failed.length > 0 ? <SectionHeader title="Rejected by the server" /> : null}
+      {failed.length > 0 ? <SectionHeader title="Couldn't be saved" /> : null}
       {failed.map((entry) => (
         <Card key={entry.seq} style={{ borderColor: palette.danger }}>
           <AppText variant="heading">
             {OP_LABEL[entry.op]}: {titleOf(entry)}
           </AppText>
-          <AppText color={palette.danger}>{entry.lastError ?? 'Unknown error'}</AppText>
+          <AppText color={palette.danger}>{entry.lastError ?? 'No reason was given. Try again.'}</AppText>
           <Row>
             <Button
               label="Try again"

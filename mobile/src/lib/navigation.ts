@@ -17,7 +17,7 @@ export async function openNavigation(target: NavTarget): Promise<void> {
     platform: Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'desktop',
   });
   if (!links) {
-    Alert.alert('Nothing to navigate to', 'This item has no address or coordinates yet.');
+    Alert.alert('No directions yet', 'Add an address or a pin to this item and directions will work.');
     return;
   }
   try {
@@ -26,7 +26,7 @@ export async function openNavigation(target: NavTarget): Promise<void> {
     try {
       await Linking.openURL(links.fallback);
     } catch {
-      Alert.alert("Couldn't open maps. Try again.", 'No app on this phone could open the directions.');
+      Alert.alert("Couldn't open maps", 'No maps app on this phone could open these directions.');
     }
   }
 }

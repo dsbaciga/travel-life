@@ -410,7 +410,7 @@ export default function AlbumsPage() {
                 ) : failedThumbnails.has(album.id) ? (
                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 dark:text-dusk-400 gap-2">
                     <PhotoIcon className="w-12 h-12" />
-                    <p className="text-xs text-gray-500 dark:text-dusk-400">Failed to load</p>
+                    <p className="text-xs text-gray-500 dark:text-dusk-400">Couldn't load</p>
                     <button
                       type="button"
                       onClick={(e) => {

@@ -379,7 +379,7 @@ export default function TripFormPage() {
           <div className="bg-white dark:bg-dusk-800 rounded-lg shadow-xl p-6 max-w-sm mx-4 border border-gray-200 dark:border-dusk-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Unsaved changes</h3>
             <p className="text-gray-600 dark:text-dusk-400 mb-4">
-              You have unsaved changes. Are you sure you want to leave?
+              Your edits to this trip will be lost if you leave now.
             </p>
             <div className="flex gap-3 justify-end">
               <button

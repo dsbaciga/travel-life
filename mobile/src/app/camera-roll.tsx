@@ -101,7 +101,7 @@ export default function CameraRollScreen() {
   if (!trip) {
     return (
       <Screen>
-        <EmptyState title="No trip selected" />
+        <EmptyState title="Pick a trip first" />
       </Screen>
     );
   }
@@ -201,7 +201,7 @@ export default function CameraRollScreen() {
               </Row>
             ) : (
               <AppText variant="caption" muted>
-                No nearby place or activity found — you can link these later.
+                No place or activity nearby. You can link these later.
               </AppText>
             )}
             <Row>

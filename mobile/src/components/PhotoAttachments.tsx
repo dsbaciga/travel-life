@@ -61,7 +61,7 @@ export default function PhotoAttachments({ photos, onChange, max = 12 }: Props) 
     setMessage(null);
     const picked = await pickPhotos(source);
     if (picked === 'denied') {
-      setMessage('Camera permission is needed to take a photo. You can still choose one from your library.');
+      setMessage('Allow camera access in Settings to take a photo. You can still choose one from your library.');
       return;
     }
     onChange([...photos, ...picked].slice(0, max));
