@@ -6,12 +6,18 @@
  * cannot be read (file missing, Immich unreachable), are left null and counted.
  * Only trips with a cover and no colour yet are touched, so it is safe to re-run.
  *
- * Run with: npx tsx scripts/backfill-trip-cover-color.ts [--dry-run] [--all]
+ * Lives under `src/` (not `backend/scripts/`) so it is compiled into the
+ * production image, which ships only `dist/`.
+ *
+ * Run in production:
+ *   docker exec travel-life-backend node dist/scripts/backfillTripCoverColor.js [--dry-run] [--all]
+ * Run in development:
+ *   npx tsx src/scripts/backfillTripCoverColor.ts [--dry-run] [--all]
  *   --all  also recompute trips that already have a colour
  */
 
-import prisma from '../src/config/database';
-import { computeCoverColor } from '../src/services/tripCoverColor.service';
+import prisma from '../config/database';
+import { computeCoverColor } from '../services/tripCoverColor.service';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const ALL = process.argv.includes('--all');
