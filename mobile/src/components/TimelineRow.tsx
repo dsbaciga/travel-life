@@ -90,6 +90,8 @@ async function adjustWithUndo(
 function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove, route }: TimelineRowProps) {
   const palette = usePalette();
   const stop = route?.stop ?? 'future';
+  // A stay's subtitle is its address; an activity's is a category, a transit leg's a carrier.
+  const isLodging = item.entityKind === 'LODGING';
 
   const open = () =>
     router.push({
@@ -197,7 +199,10 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove, rout
       />
       <View style={[styles.body, stop === 'past' && styles.past]}>
         <Row style={styles.header}>
-          <AppText variant="label" color={stop === 'next' ? palette.primary : palette.textMuted}>
+          <AppText
+            variant="label"
+            color={stop === 'next' ? palette.primary : palette.textMuted}
+            style={styles.tabular}>
             {time}
           </AppText>
           <Row>
@@ -219,7 +224,7 @@ function TimelineRow({ item, tripId, dayKey, pending, tripTimezone, onMove, rout
           {item.title}
         </AppText>
         {item.subtitle ? (
-          <AppText muted numberOfLines={1}>
+          <AppText variant={isLodging ? 'place' : 'body'} muted numberOfLines={1}>
             {item.subtitle}
           </AppText>
         ) : null}
@@ -251,5 +256,6 @@ const styles = StyleSheet.create({
   header: { justifyContent: 'space-between' },
   extras: { alignItems: 'center' },
   struck: { textDecorationLine: 'line-through' },
+  tabular: { fontVariant: ['tabular-nums'] },
   code: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 6 },
 });

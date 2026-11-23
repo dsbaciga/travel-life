@@ -67,7 +67,7 @@ export default function UnscheduledActivityCard({
               }`}
             >
               <LocationIcon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">
+              <span className="truncate place-name">
                 {activity.linkedLocations.map(loc => loc.name).join(', ')}
               </span>
             </div>

@@ -281,9 +281,9 @@ export default function TripDayIndicator({
       <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${getColorClasses()}`}>
         {getIconElement()}
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">{content.label}</span>
+          <span className="font-semibold text-sm tabular-nums">{content.label}</span>
           {content.subLabel && (
-            <span className="text-xs opacity-75">{content.subLabel}</span>
+            <span className="text-xs opacity-75 tabular-nums">{content.subLabel}</span>
           )}
         </div>
       </div>

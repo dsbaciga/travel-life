@@ -258,7 +258,7 @@ export default function TimelineEventCard({
     }
     if (parts.length === 0) return null;
     return (
-      <span className="text-gray-400 dark:text-dusk-400">
+      <span className="text-gray-400 dark:text-dusk-400 tabular-nums">
         {' '}· {parts.join(' · ')}
       </span>
     );
@@ -329,7 +329,7 @@ export default function TimelineEventCard({
         </div>
 
         {/* Time row */}
-        <div className={`text-sm text-gray-500 dark:text-dusk-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16 [@media(hover:none)]:pr-24 [@media(hover:none)]:min-h-[36px]`}>
+        <div className={`text-sm tabular-nums text-gray-500 dark:text-dusk-400 ${isCompact ? 'mb-1' : 'mb-2'} pr-16 [@media(hover:none)]:pr-24 [@media(hover:none)]:min-h-[36px]`}>
           {/* Desktop: columnar layout for dual timezone */}
           {showDualTime && userTimezone && displayTimezone !== userTimezone ? (
             <>
@@ -404,7 +404,7 @@ export default function TimelineEventCard({
           <div className={`flex items-start gap-1.5 text-gray-600 dark:text-dusk-400 ${isCompact ? 'mt-1.5 text-xs' : 'mt-2 text-sm'}`}>
             <LocationIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
-              <div>{item.location}</div>
+              <div className="place-name">{item.location}</div>
               {address && (
                 <div className="text-xs text-gray-500 dark:text-dusk-400 mt-0.5">
                   {address}
@@ -554,7 +554,7 @@ function renderChildActivities(
                   {child.name}
                 </span>
                 {child.startTime && (
-                  <span className="text-xs text-gray-500 dark:text-dusk-400">
+                  <span className="text-xs tabular-nums text-gray-500 dark:text-dusk-400">
                     {formatTime(new Date(child.startTime), timezone)}
                     {childDuration && ` · ${childDuration}`}
                   </span>
