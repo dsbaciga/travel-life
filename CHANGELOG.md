@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **The "Keep on phone" button on the Android Trips screen.** Its taps were lost inside the tappable trip card, and it did almost nothing: a trip you download from "Not on this phone" already stays until you swipe it away, and upcoming and recent trips download by themselves. Trips kept earlier stay kept. Needs a new APK.
+
 ## [8.3.1] - 2026-11-23
 
 ### Added

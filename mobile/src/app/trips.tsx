@@ -7,13 +7,12 @@ import { contourSeed, formatDateOnly } from '@travel-life/shared';
 
 import { useTripTint } from '@/lib/tripTint';
 import { AppText, Banner, Button, Card, Chip, EmptyState, Row, Screen } from '@/components/ui';
-import { listPinnedTripIds, setTripPinned } from '@/db/repository';
+import { listPinnedTripIds } from '@/db/repository';
 import { getDb } from '@/lib/db';
 import { useActiveTrip, useTrips } from '@/lib/hooks';
 import {
   fetchRemoteTrips,
   listDismissedTripIds,
-  notifyLocalChange,
   removeTripFromPhone,
   restoreTripToPhone,
   syncNow,
@@ -64,12 +63,6 @@ export default function TripsScreen() {
     await restoreTripToPhone(trip, true);
   };
 
-  const togglePinned = async (tripId: number, keep: boolean) => {
-    const db = await getDb();
-    await setTripPinned(db, tripId, keep);
-    await notifyLocalChange();
-  };
-
   const remove = async (trip: (typeof trips)[number], kept: boolean) => {
     setNotice(null);
     if (await removeTripFromPhone(trip.id)) {
@@ -83,8 +76,8 @@ export default function TripsScreen() {
   return (
     <Screen>
       <AppText muted>
-        Trips you own and trips shared with you. Upcoming and recent ones download automatically; keep any other trip
-        on the phone to use it offline.
+        Trips you own and trips shared with you. Upcoming and recent ones download automatically. Download any other
+        trip below to use it offline; it stays until you remove it.
       </AppText>
       {notice ? <Banner tone="warning" text={notice} /> : null}
       {undo ? (
@@ -146,14 +139,6 @@ export default function TripsScreen() {
                 {formatDateOnly(trip.startDate) || 'No dates'}
                 {trip.endDate ? ` – ${formatDateOnly(trip.endDate)}` : ''} · {trip.status}
               </AppText>
-              <Row>
-                <Button
-                  label={kept ? 'Kept on phone' : 'Keep on phone'}
-                  variant="secondary"
-                  compact
-                  onPress={() => void togglePinned(trip.id, !kept)}
-                />
-              </Row>
               <AppText muted>Swipe left to remove from this phone.</AppText>
             </Card>
             </Swipeable>
